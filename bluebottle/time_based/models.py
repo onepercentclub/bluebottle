@@ -1,16 +1,22 @@
+from html.parser import HTMLParser
 from urllib.parse import urlencode
 
+import pytz
+
+from timezonefinder import TimezoneFinder
+
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity, Contribution, ContributionValue
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
-from html.parser import HTMLParser
+
+tf = TimezoneFinder()
 
 
 class TimeBasedActivity(Activity):
@@ -25,7 +31,12 @@ class TimeBasedActivity(Activity):
 
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('skill'), blank=True, null=True)
 
-    review = models.NullBooleanField(_('review applications'), null=True, default=None)
+    review = models.NullBooleanField(_('review participants'), null=True, default=None)
+
+    preparation = models.DurationField(
+        _('Preparation time'),
+        null=True, blank=True,
+    )
 
     @property
     def required_fields(self):
@@ -37,61 +48,66 @@ class TimeBasedActivity(Activity):
         return fields
 
     @property
-    def applications(self):
-        return self.contributions.instance_of(PeriodApplication, OnADateApplication)
+    def participants(self):
+        return self.contributors.instance_of(PeriodParticipant, DateParticipant)
 
     @property
-    def active_applications(self):
-        return self.applications.filter(status__in=('accepted', 'new',))
+    def active_participants(self):
+        return self.participants.filter(status__in=('accepted', 'new',))
 
     @property
-    def accepted_applications(self):
-        return self.applications.filter(status='accepted')
+    def accepted_participants(self):
+        return self.participants.filter(status='accepted')
 
     @property
     def durations(self):
-        return Duration.objects.filter(
-            contribution__activity=self
+        return TimeContribution.objects.filter(
+            contributor__activity=self
         )
 
     @property
     def accepted_durations(self):
         return self.durations.filter(
-            contribution__status='accepted'
+            contributor__status='accepted'
         )
 
     @property
     def values(self):
-        return Duration.objects.filter(
-            contribution__activity=self,
+        return TimeContribution.objects.filter(
+            contributor__activity=self,
             status='succeeded'
         )
 
 
-class OnADateActivity(TimeBasedActivity):
+class DateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('activity date'), null=True, blank=True)
-
     duration = models.DurationField(_('duration'), null=True, blank=True)
+
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
 
     duration_period = 'overall'
 
     class Meta:
-        verbose_name = _("On a date activity")
-        verbose_name_plural = _("On A Date Activities")
+        verbose_name = _("Activity on a date")
+        verbose_name_plural = _("Activities on a date")
         permissions = (
-            ('api_read_onadateactivity', 'Can view on a date activities through the API'),
-            ('api_add_onadateactivity', 'Can add on a date activities through the API'),
-            ('api_change_onadateactivity', 'Can change on a date activities through the API'),
-            ('api_delete_onadateactivity', 'Can delete on a date activities through the API'),
+            ('api_read_dateactivity', 'Can view on a date activities through the API'),
+            ('api_add_dateactivity', 'Can add on a date activities through the API'),
+            ('api_change_dateactivity', 'Can change on a date activities through the API'),
+            ('api_delete_dateactivity', 'Can delete on a date activities through the API'),
 
-            ('api_read_own_onadateactivity', 'Can view own on a date activities through the API'),
-            ('api_add_own_onadateactivity', 'Can add own on a date activities through the API'),
-            ('api_change_own_onadateactivity', 'Can change own on a date activities through the API'),
-            ('api_delete_own_onadateactivity', 'Can delete own on a date activities through the API'),
+            ('api_read_own_dateactivity', 'Can view own on a date activities through the API'),
+            ('api_add_own_dateactivity', 'Can add own on a date activities through the API'),
+            ('api_change_own_dateactivity', 'Can change own on a date activities through the API'),
+            ('api_delete_own_dateactivity', 'Can delete own on a date activities through the API'),
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/on-a-dates'
+        resource_name = 'activities/time-based/dates'
+
+    @property
+    def activity_date(self):
+        return self.start
 
     @property
     def required_fields(self):
@@ -101,7 +117,39 @@ class OnADateActivity(TimeBasedActivity):
 
     @property
     def uid(self):
-        return '{}-{}-{}'.format(connection.tenant.client_name, 'onadateactivity', self.pk)
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
+
+    @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
+
+    @property
+    def details(self):
+        details = HTMLParser().unescape(
+            u'{}\n{}'.format(
+                strip_tags(self.description), self.get_absolute_url()
+            )
+        )
+
+        if self.is_online and self.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
+
+        return details
 
     @property
     def google_calendar_link(self):
@@ -116,11 +164,7 @@ class OnADateActivity(TimeBasedActivity):
             'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.start + self.duration)
             ),
-            'details': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'details': self.details,
             'uid': self.uid,
         }
 
@@ -144,11 +188,7 @@ class OnADateActivity(TimeBasedActivity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.start + self.duration),
-            'body': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'body': self.details
         }
 
         if self.location:
@@ -164,9 +204,8 @@ class DurationPeriodChoices(DjangoChoices):
     months = ChoiceItem('months', label=_("per month"))
 
 
-class WithADeadlineActivity(TimeBasedActivity):
+class PeriodActivity(TimeBasedActivity):
     start = models.DateField(_('start'), null=True, blank=True)
-
     deadline = models.DateField(_('deadline'), null=True, blank=True)
 
     duration = models.DurationField(_('duration'), null=True, blank=True)
@@ -178,60 +217,27 @@ class WithADeadlineActivity(TimeBasedActivity):
         choices=DurationPeriodChoices.choices,
     )
 
-    class Meta:
-        verbose_name = _("Activity with a deadline")
-        verbose_name_plural = _("Activities with a deadline")
-        permissions = (
-            ('api_read_withadeadlineactivity', 'Can view activities with a deadline through the API'),
-            ('api_add_withadeadlineactivity', 'Can add activities with a deadline through the API'),
-            ('api_change_withadeadlineactivity', 'Can change activities with a deadline through the API'),
-            ('api_delete_withadeadlineactivity', 'Can delete activities with a deadline through the API'),
-
-            ('api_read_own_withadeadlineactivity', 'Can view own activities with a deadline through the API'),
-            ('api_add_own_withadeadlineactivity', 'Can add own activities with a deadline through the API'),
-            ('api_change_own_withadeadlineactivity', 'Can change own activities with a deadline through the API'),
-            ('api_delete_own_withadeadlineactivity', 'Can delete own activities with a deadline through the API'),
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/with-a-deadlines'
-
     @property
-    def required_fields(self):
-        fields = super().required_fields
-
-        return fields + ['deadline', 'duration', 'duration_period']
-
-
-class OngoingActivity(TimeBasedActivity):
-    start = models.DateField(_('Start of activity'), null=True, blank=True)
-
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-    duration_period = models.CharField(
-        _('duration period'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=DurationPeriodChoices.choices,
-    )
+    def activity_date(self):
+        return self.deadline or self.start
 
     class Meta:
-        verbose_name = _("Ongoing activity")
-        verbose_name_plural = _("Ongoing activities")
+        verbose_name = _("Activity during a period")
+        verbose_name_plural = _("Activities during a period")
         permissions = (
-            ('api_read_ongoingactivity', 'Can view ongoing activities through the API'),
-            ('api_add_ongoingactivity', 'Can add ongoing activities through the API'),
-            ('api_change_ongoingactivity', 'Can change ongoing activities through the API'),
-            ('api_delete_ongoingactivity', 'Can delete ongoing activities through the API'),
+            ('api_read_periodactivity', 'Can view during a period activities through the API'),
+            ('api_add_periodactivity', 'Can add during a period activities through the API'),
+            ('api_change_periodactivity', 'Can change during a period activities through the API'),
+            ('api_delete_periodactivity', 'Can delete during a period activities through the API'),
 
-            ('api_read_own_ongoingactivity', 'Can view own ongoing activities through the API'),
-            ('api_add_own_ongoingactivity', 'Can add own ongoing activities through the API'),
-            ('api_change_own_ongoingactivity', 'Can change own ongoing activities through the API'),
-            ('api_delete_own_ongoingactivity', 'Can delete own ongoing activities through the API'),
+            ('api_read_own_periodactivity', 'Can view own during a period activities through the API'),
+            ('api_add_own_periodactivity', 'Can add own during a period activities through the API'),
+            ('api_change_own_periodactivity', 'Can change own during a period activities through the API'),
+            ('api_delete_own_periodactivity', 'Can delete own during a period activities through the API'),
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/ongoings'
+        resource_name = 'activities/time-based/periods'
 
     @property
     def required_fields(self):
@@ -240,67 +246,84 @@ class OngoingActivity(TimeBasedActivity):
         return fields + ['duration', 'duration_period']
 
 
-class Application():
-    def __str__(self):
-        return self.user.full_name
+class Participant(Contributor):
 
     @property
-    def finished_durations(self):
-        return self.contribution_values.filter(
-            duration__end__lte=timezone.now()
+    def finished_contributions(self):
+        return self.contributions.filter(
+            timecontribution__end__lte=timezone.now()
         )
 
+    class Meta:
+        abstract = True
 
-class OnADateApplication(Application, Contribution):
-    motivation = models.TextField(blank=True)
+
+class DateParticipant(Participant):
+    motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
     class Meta(object):
-        verbose_name = _("On a date application")
-        verbose_name_plural = _("On a date application")
+        verbose_name = _("Participant on a date")
+        verbose_name_plural = _("Participants on a date")
         permissions = (
-            ('api_read_onadateapplication', 'Can view application through the API'),
-            ('api_add_onadateapplication', 'Can add application through the API'),
-            ('api_change_onadateapplication', 'Can change application through the API'),
-            ('api_delete_onadateapplication', 'Can delete application through the API'),
+            ('api_read_dateparticipant', 'Can view participant through the API'),
+            ('api_add_dateparticipant', 'Can add participant through the API'),
+            ('api_change_dateparticipant', 'Can change participant through the API'),
+            ('api_delete_dateparticipant', 'Can delete participant through the API'),
 
-            ('api_read_own_onadateapplication', 'Can view own application through the API'),
-            ('api_add_own_onadateapplication', 'Can add own application through the API'),
-            ('api_change_own_onadateapplication', 'Can change own application through the API'),
-            ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
+            ('api_read_own_dateparticipant', 'Can view own participant through the API'),
+            ('api_add_own_dateparticipant', 'Can add own participant through the API'),
+            ('api_change_own_dateparticipant', 'Can change own participant through the API'),
+            ('api_delete_own_dateparticipant', 'Can delete own participant through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'contributors/time-based/date-participants'
 
-class PeriodApplication(Contribution, Application):
-    motivation = models.TextField(blank=True)
+
+class PeriodParticipant(Participant, Contributor):
+    motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
     current_period = models.DateField(null=True, blank=True)
 
     class Meta(object):
-        verbose_name = _("Period application")
-        verbose_name_plural = _("Period application")
+        verbose_name = _("Participant during a period")
+        verbose_name_plural = _("Participants during a period")
         permissions = (
-            ('api_read_periodapplication', 'Can view application through the API'),
-            ('api_add_periodapplication', 'Can add application through the API'),
-            ('api_change_periodapplication', 'Can change application through the API'),
-            ('api_delete_periodapplication', 'Can delete application through the API'),
+            ('api_read_periodparticipant', 'Can view period participant through the API'),
+            ('api_add_periodparticipant', 'Can add period participant through the API'),
+            ('api_change_periodparticipant', 'Can change period participant through the API'),
+            ('api_delete_periodparticipant', 'Can delete period participant through the API'),
 
-            ('api_read_own_periodapplication', 'Can view own application through the API'),
-            ('api_add_own_periodapplication', 'Can add own application through the API'),
-            ('api_change_own_periodapplication', 'Can change own application through the API'),
-            ('api_delete_own_periodapplication', 'Can delete own application through the API'),
+            ('api_read_own_periodparticipant', 'Can view own period participant through the API'),
+            ('api_add_own_periodparticipant', 'Can add own participant through the API'),
+            ('api_change_own_periodparticipant', 'Can change own period participant through the API'),
+            ('api_delete_own_periodparticipant', 'Can delete own period participant through the API'),
         )
 
     @property
-    def current_duration(self):
-        return self.contribution_values.get(status='new')
+    def current_contribution(self):
+        return self.contributions.get(status='new')
+
+    class JSONAPIMeta:
+        resource_name = 'contributors/time-based/period-participants'
 
 
-class Duration(ContributionValue):
+class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
     start = models.DateTimeField(_('start'))
     end = models.DateTimeField(_('end'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Contribution")
+        verbose_name_plural = _("Contributions")
+
+    def __str__(self):
+        return _("Session {name} {date}").format(
+            name=self.contributor.user,
+            date=self.start.date()
+        )
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

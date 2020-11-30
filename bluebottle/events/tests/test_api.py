@@ -47,6 +47,8 @@ class EventListAPITestCase(BluebottleTestCase):
                     'start': str(start),
                     'duration': 4,
                     'is-online': True,
+                    'is_online': True,
+                    'online_meeting_url': 'https://example.com',
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
@@ -65,6 +67,7 @@ class EventListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
+        self.assertEqual(response.data['online_meeting_url'], 'https://example.com')
         self.assertEqual(
             {
                 transition['name'] for transition in
@@ -258,7 +261,7 @@ class EventListAPITestCase(BluebottleTestCase):
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
-        event = EventFactory.create(title='Pollute Katwijk Beach')
+        event = EventFactory.create(title='Pollute Katwijk Beach', is_online=True)
 
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
@@ -285,7 +288,11 @@ class EventIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), event.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(event.description, event.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    event.description,
+                    event.get_absolute_url(),
+                    event.online_meeting_url
+                )
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
@@ -321,6 +328,7 @@ class EventDetailTestCase(BluebottleTestCase):
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start': str(now() + timedelta(days=21)),
+                    'online_meeting_url': 'https://example.com',
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -341,6 +349,29 @@ class EventDetailTestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertEqual(
+            self.event.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_get_participant(self):
+        participant = ParticipantFactory.create(activity=self.event)
+
+        response = self.client.get(self.url, user=participant.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertEqual(
+            self.event.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_get_non_owner(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertTrue(
+            'online-meeting-url' not in response.json()['data']['attributes']
+        )
 
     def test_get_event_calendar_links(self):
         self.event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
@@ -401,6 +432,11 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(
             response.json()['data']['attributes']['title'],
             self.data['data']['attributes']['title']
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['online-meeting-url'],
+            self.data['data']['attributes']['online_meeting_url']
         )
 
     def test_update_unauthenticated(self):
@@ -631,7 +667,7 @@ class ParticipantListTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'contributions/participants',
+                'type': 'contributors/participants',
                 'attributes': {},
                 'relationships': {
                     'activity': {
@@ -662,7 +698,7 @@ class ParticipantListTestCase(BluebottleTestCase):
         )
         event_data = json.loads(response.content)
         self.assertEqual(
-            len(event_data['data']['relationships']['contributions']['data']),
+            len(event_data['data']['relationships']['contributors']['data']),
             1
         )
         self.assertEqual(
@@ -675,16 +711,16 @@ class ParticipantListTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            event_data['data']['relationships']['contributions']['data'][0]['id'],
+            event_data['data']['relationships']['contributors']['data'][0]['id'],
             data['data']['id']
         )
         self.assertEqual(
-            event_data['data']['relationships']['contributions']['data'][0]['type'],
-            'contributions/participants'
+            event_data['data']['relationships']['contributors']['data'][0]['type'],
+            'contributors/participants'
         )
         self.assertTrue(event_data['data']['attributes']['is-follower'])
 
-        participant_data = get_included(response, 'contributions/participants')
+        participant_data = get_included(response, 'contributors/participants')
 
         self.assertTrue(participant_data['id'], self.participant.pk)
         self.assertTrue('meta' in participant_data)
@@ -756,13 +792,13 @@ class ParticipantListFilterCase(BluebottleTestCase):
         # Requesting an event Random user should see successful participants
         response = self.client.get(self.event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['contributions']), 3)
+        self.assertEqual(len(response.data['contributors']), 3)
 
     def test_list_participants_by_event_owner(self):
         # Requesting an event event owner  should see successful all participants (rejected / no show etc)
         response = self.client.get(self.event_url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['contributions']), 5)
+        self.assertEqual(len(response.data['contributors']), 5)
 
     def test_list_my_participation(self):
         response = self.client.get(
@@ -861,14 +897,14 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'contributions/participant-transitions',
+                'type': 'contributors/participant-transitions',
                 'attributes': {
                     'transition': 'withdraw',
                 },
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'contributions/participants',
+                            'type': 'contributors/participants',
                             'id': self.participant.pk
                         }
                     }
@@ -887,7 +923,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'contributions/participants')
+        self.assertEqual(data['included'][1]['type'], 'contributors/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')
@@ -915,7 +951,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'contributions/participants')
+        self.assertEqual(data['included'][1]['type'], 'contributors/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'new')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')

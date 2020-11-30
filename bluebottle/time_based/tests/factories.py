@@ -4,8 +4,8 @@ import factory.fuzzy
 from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
-    OnADateApplication, PeriodApplication, Duration
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant, TimeContribution
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -28,56 +28,47 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=2)).date()
 
 
-class OnADateActivityFactory(TimeBasedFactory):
+class DateActivityFactory(TimeBasedFactory):
     class Meta:
-        model = OnADateActivity
+        model = DateActivity
 
     start = (now() + timedelta(weeks=4))
     duration = timedelta(hours=2)
 
 
-class WithADeadlineActivityFactory(TimeBasedFactory):
+class PeriodActivityFactory(TimeBasedFactory):
     class Meta:
-        model = WithADeadlineActivity
+        model = PeriodActivity
 
     deadline = date.today() + timedelta(weeks=4)
     duration = timedelta(hours=20)
     duration_period = 'overall'
+    is_online = False
 
     start = (now() + timedelta(weeks=1)).date()
 
 
-class OngoingActivityFactory(TimeBasedFactory):
-    class Meta:
-        model = OngoingActivity
-
-    duration = timedelta(hours=20)
-    duration_period = 'overall'
-
-    start = date.today() + timedelta(weeks=4)
-
-
-class OnADateApplicationFactory(factory.DjangoModelFactory):
+class DateParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = OnADateApplication
+        model = DateParticipant
 
-    activity = factory.SubFactory(OnADateActivityFactory)
+    activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class PeriodApplicationFactory(factory.DjangoModelFactory):
+class PeriodParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = PeriodApplication
+        model = PeriodParticipant
 
-    activity = factory.SubFactory(OnADateActivityFactory)
+    activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class DurationFactory(factory.DjangoModelFactory):
+class ParticipationFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = Duration
+        model = TimeContribution
 
-    contribution = factory.SubFactory(PeriodApplicationFactory)
+    contributor = factory.SubFactory(PeriodParticipantFactory)
 
     value = timedelta(hours=20)
 

@@ -27,6 +27,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text_with_target': 'CO₂ emissions reduced',
                 'text_passed': u'reduce CO₂ emissions by {} kg',
             },
+            'fr': {
+                'name': u'Réduire les émissions de CO₂',
+                'unit': u'kg',
+                'text': u'réduire les émissions de CO₂',
+                'text_with_target': u'Émissions de CO₂ réduites',
+                'text_passed': u'réduire les émissions de CO₂ de {} kg',
+            },
             'nl': {
                 'name': u'CO₂ uitstoot verminderen',
                 'unit': u'kg',
@@ -44,6 +51,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text': u'reach people',
                 'text_with_target': 'reach {} people',
                 'text_passed': u'people reached',
+            },
+            'fr': {
+                'name': u'Touchez les gens',
+                'unit': u'',
+                'text': u'touchez les gens',
+                'text_with_target': 'toucher {} personnes',
+                'text_passed': u'personnes touchés',
             },
             'nl': {
                 'name': u'Mensen bereiken',
@@ -63,6 +77,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text_with_target': 'reduce food waste by {} kg',
                 'text_passed': u'food waste reduced',
             },
+            'fr': {
+                'name': u'Réduisez le gaspillage alimentaire',
+                'unit': u'kg',
+                'text': u'réduisez le gaspillage alimentaire',
+                'text_with_target': 'réduire le gaspillage alimentaire de {} kg',
+                'text_passed': u'gaspillage alimentaire réduit',
+            },
             'nl': {
                 'name': u'Voedselverspilling verminderen',
                 'unit': u'kg',
@@ -80,6 +101,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text': u'save water',
                 'text_with_target': 'save {} l water',
                 'text_passed': u'water saved',
+            },
+            'fr': {
+                'name': u'Économiser l\'eau',
+                'unit': u'l',
+                'text': u'économiser l\'eau',
+                'text_with_target': 'économisez {} l d\'eau',
+                'text_passed': u'eau économisée',
             },
             'nl': {
                 'name': u'Water besparen',
@@ -99,6 +127,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text_with_target': 'save {} kg plastic',
                 'text_passed': u'plastic saved',
             },
+            'fr': {
+                'name': u'Économisez du plastique',
+                'unit': u'kg',
+                'text': u'économisez du plastique',
+                'text_with_target': 'économisez {} kg de plastique',
+                'text_passed': u'plastique économisé',
+            },
             'nl': {
                 'name': u'Plastic besparen',
                 'unit': u'kg',
@@ -117,6 +152,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text_with_target': 'plant {} trees',
                 'text_passed': u'trees planted',
             },
+            'fr': {
+                'name': u'Planter des arbres',
+                'unit': u'',
+                'text': u'planter des arbres',
+                'text_with_target': 'planter {} arbres',
+                'text_passed': u'arbres plantés',
+            },
             'nl': {
                 'name': u'Bomen planten',
                 'unit': u'',
@@ -134,6 +176,13 @@ def create_default_impact_types(apps, schema_editor):
                 'text': u'create jobs',
                 'text_with_target': 'create {} jobs',
                 'text_passed': u'jobs created',
+            },
+            'fr': {
+                'name': u'Créer des emplois',
+                'unit': u'',
+                'text': u'créer des emplois',
+                'text_with_target': 'créer {} emplois',
+                'text_passed': u'emplois créés',
             },
             'nl': {
                 'name': u'Banen creëren',
@@ -156,9 +205,14 @@ def create_default_impact_types(apps, schema_editor):
             if language in definition:
                 ImpactTypeTranslation.objects.update_or_create(
                     language_code=language,
-                    master=impact_type,
+                    master_id=impact_type.id,
                     defaults=definition[language]
                 )
+
+
+def remove_impact_types(apps, schema_editor):
+    ImpactType = apps.get_model('impact', 'ImpactType')
+    ImpactType.objects.all().delete()
 
 
 class Migration(migrations.Migration):
@@ -168,5 +222,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_default_impact_types, migrations.RunPython.noop)
+        migrations.RunPython(create_default_impact_types, remove_impact_types)
     ]

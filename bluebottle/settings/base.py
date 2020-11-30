@@ -273,7 +273,6 @@ SHARED_APPS = (
     'lockdown',
     'django_extensions',
     'raven.contrib.django',
-    'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',
     'geoposition',
@@ -304,6 +303,7 @@ TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
+    'durationwidget',
 
     'rest_framework',
 
@@ -400,8 +400,6 @@ TENANT_APPS = (
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
-    'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 
@@ -456,7 +454,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
             'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
@@ -724,7 +722,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('assignments.Applicant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -742,7 +740,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task contributions'),
+            'title': _('Task contributors'),
         }),
         ('events.Event', {
             'fields': (
@@ -771,7 +769,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('events.Participant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -788,7 +786,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event contributions'),
+            'title': _('Event contributors'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -813,9 +811,9 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.EventResource',
             'title': _('Funding activities'),
         }),
-        ('funding.Donation', {
+        ('funding.Donor', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -831,11 +829,11 @@ EXPORTDB_EXPORT_CONF = {
                 ('name', 'Name'),
 
                 ('activity__funding__deadline', 'Activity date'),
-                ('created', 'Donation date'),
+                ('created', 'Donor date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding contributions'),
+            'title': _('Funding contributors'),
         }),
     ])
 }
@@ -1006,3 +1004,13 @@ AXES_META_PRECEDENCE_ORDER = [
 
 RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
 RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
+USE_X_FORWARDED_HOST = True
+
+
+# Socket is not configured. Lets guess.
+if os.path.exists('/var/run/clamd.scan/'):
+    # Fedora, CentOS
+    CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+else:
+    # This is default for Ubuntu, Debian based distributions
+    CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'

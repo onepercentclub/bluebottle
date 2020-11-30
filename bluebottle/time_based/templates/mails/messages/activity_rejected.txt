@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}
+
+{% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.title  context 'email' %}
+Unfortunately your activity "{{ title }}" has been rejected.
+
+If you have any questions, you can contact the platform manager by replying to this email.
+{% endblocktrans %}{% endblock %}{% endblock %}

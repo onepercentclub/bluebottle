@@ -153,7 +153,7 @@ class EventTestCase(BluebottleTestCase):
             formats.time_format(event.local_start) in mail.outbox[0].body
         )
 
-        for participant in event.contributions.instance_of(Participant):
+        for participant in event.contributors.instance_of(Participant):
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:
@@ -176,7 +176,7 @@ class EventTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in event.contributions.instance_of(Participant):
+        for participant in event.contributors.instance_of(Participant):
             self.assertFalse(participant.user.email in recipients)
 
     def test_date_not_changed(self):
@@ -200,3 +200,41 @@ class EventTestCase(BluebottleTestCase):
             description='<img src="test" onerror="alert(\'XSS\')">',
         )
         self.assertEqual(event.description, '<img src="test">')
+
+    def test_details(self):
+        event = EventFactory(
+            is_online=True
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}\nJoin: {}".format(
+                event.description,
+                event.get_absolute_url(),
+                event.online_meeting_url
+            )
+        )
+
+    def test_details_offline(self):
+        event = EventFactory(
+            is_online=False
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}".format(
+                event.description,
+                event.get_absolute_url(),
+            )
+        )
+
+    def test_details_no_url(self):
+        event = EventFactory(
+            is_online=True,
+            online_meeting_url=''
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}".format(
+                event.description,
+                event.get_absolute_url(),
+            )
+        )

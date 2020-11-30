@@ -15,11 +15,13 @@ from rest_framework import status
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.time_based.tests.factories import (
+    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory
+)
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -429,7 +431,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_get_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create())
         response = self.client.get(
             self.url,
             user=self.owner
@@ -439,13 +441,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 1)
         self.assertEqual(data['relationships']['activities']['data'][0]['id'], str(event.pk))
-        self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
-        activity_data = get_include(response, 'activities/events')
+        self.assertEqual(
+            data['relationships']['activities']['data'][0]['type'],
+            'activities/time-based/dates'
+        )
+        activity_data = get_include(response, 'activities/time-based/dates')
         self.assertEqual(
             activity_data['attributes']['title'],
             event.title
         )
-        self.assertEqual(activity_data['type'], 'activities/events')
+        self.assertEqual(activity_data['type'], 'activities/time-based/dates')
         activity_location = activity_data['relationships']['location']['data']
 
         self.assertTrue(
@@ -454,8 +459,17 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             )
         )
 
+        activity_image = activity_data['relationships']['image']['data']
+
+        self.assertTrue(
+            activity_image in (
+                {'type': included['type'], 'id': included['id']} for included in
+                response.json()['included']
+            )
+        )
+
     def test_deleted_activities(self):
-        EventFactory.create(initiative=self.initiative, status='deleted')
+        DateActivityFactory.create(initiative=self.initiative, status='deleted')
         response = self.client.get(
             self.url,
             user=self.owner
@@ -466,15 +480,30 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(len(data['relationships']['activities']['data']), 0)
 
     def test_get_stats(self):
-        event = EventFactory.create(initiative=self.initiative, status='succeeded')
-        ParticipantFactory.create_batch(3, activity=event, status='succeeded', time_spent=3)
+        period_activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
 
-        assignment = AssignmentFactory.create(initiative=self.initiative, status='succeeded', duration=3)
-        ApplicantFactory.create_batch(3, activity=assignment, status='succeeded', time_spent=3)
+        )
+        PeriodParticipantFactory.create_batch(3, activity=period_activity)
 
-        funding = FundingFactory.create(initiative=self.initiative, status='succeeded')
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
+        date_activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            start=now() - datetime.timedelta(weeks=1)
+        )
+        DateParticipantFactory.create_batch(3, activity=date_activity)
+
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            deadline=now() - datetime.timedelta(weeks=1),
+            status='succeeded'
+        )
+
+        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'EUR')):
+            donor.contributions.get().states.succeed(save=True)
+        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
+            donor.contributions.get().states.succeed(save=True)
 
         response = self.client.get(
             self.url,
@@ -483,9 +512,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
-        self.assertEqual(stats['hours'], 18)
+        self.assertEqual(stats['hours'], 66.0)
         self.assertEqual(stats['activities'], 3)
-        self.assertEqual(stats['contributions'], 12)
+        self.assertEqual(stats['contributors'], 12)
         self.assertEqual(stats['amount'], 75.0)
 
     def test_get_other(self):
@@ -616,7 +645,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='submitted')
 
         with_activity = InitiativeFactory.create(status='submitted')
-        activity = EventFactory.create(owner=self.owner, initiative=with_activity)
+        activity = DateActivityFactory.create(owner=self.owner, initiative=with_activity)
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -817,21 +846,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=second,
             status='open',
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=third,
             status='open',
-            start=now() + datetime.timedelta(days=7)
+            start=now() + datetime.timedelta(days=6)
         )
-        AssignmentFactory.create(
+        PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            date=now() + datetime.timedelta(days=9)
+            deadline=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(
@@ -901,6 +930,34 @@ class InitiativeRedirectTest(TestCase):
 
     def test_initiative(self):
         initiative = InitiativeFactory.create()
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'project',
+                    'params': {'project_id': initiative.slug}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.details'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
+        )
+
+    def test_initiative_duplicate(self):
+        initiative = InitiativeFactory.create()
+        InitiativeFactory.create(slug=initiative.slug)
+
         data = {
             'data': {
                 'type': 'initiative-redirects',

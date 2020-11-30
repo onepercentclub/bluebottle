@@ -20,7 +20,8 @@ install_requires = [
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
-    'celery==3.1.24',
+    'clamd==1.0.2',
+    'celery==4.3',
     'dotted==0.1.8',
     'defusedxml==0.6.0',
     'django-admin-sortable==2.2.1',
@@ -28,10 +29,10 @@ install_requires = [
     'django-adminfilters==0.3',
     'django-appconf==1.0.3',
     'django-axes==4.5.4',
-    'django-celery==3.2.1',
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',
     'django-daterange-filter==1.3.0',
+    'django-durationwidget==1.0.5',
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',
@@ -99,7 +100,7 @@ install_requires = [
     'regex==2017.05.26',
     'requests==2.24.0',
     'schwifty==2.1.0',
-    'sorl-thumbnail @ git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
+    'sorl-thumbnail==12.6.3',
     'South==1.0.2',
     'Sphinx==1.6.3',
     'staticmaps-signature==0.2.0',
@@ -137,7 +138,8 @@ tests_requires = [
     'tblib==1.3.2',
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
-    'sniffer==0.4.0'
+    'sniffer==0.4.0',
+    'vine==1.3.0'
 ]
 
 dev_requires = [

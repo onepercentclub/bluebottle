@@ -42,7 +42,7 @@ class ActivityStatusPermission(ResourcePermission):
         return True
 
 
-class ContributionPermission(ResourcePermission):
+class ContributorPermission(ResourcePermission):
 
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
@@ -64,3 +64,30 @@ class ContributionPermission(ResourcePermission):
                 obj.activity.initiative.owner,
                 obj.activity.initiative.activity_manager
             ]
+
+
+class ContributionPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+    def has_object_action_permission(self, action, user, obj):
+        return user in [
+            obj.contributor.activity.owner,
+            obj.contributor.activity.initiative.owner,
+            obj.contributor.activity.initiative.activity_manager
+        ]
+
+
+class DeleteActivityPermission(ResourcePermission):
+    def has_object_action_permission(self, action, user, obj):
+        if (
+            action == 'DELETE' and
+            obj.status not in ('draft', 'needs_work', )
+        ):
+            return False
+        else:
+            return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True

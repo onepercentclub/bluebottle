@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import str
 from builtins import object
 from django.conf import settings
 from django.db import models
@@ -7,10 +9,12 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField
 )
+
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -28,12 +32,21 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True)
 
     website = models.URLField(_('website'), blank=True)
-    logo = ImageField(_('logo'),
-                      blank=True,
-                      help_text=_('Partner Organization Logo'),
-                      max_length=255,
-                      null=True,
-                      upload_to='partner_organization_logos/')
+    logo = ImageField(
+        _('logo'),
+        blank=True,
+        help_text=_('Partner Organization Logo'),
+        max_length=255,
+        null=True,
+        upload_to='partner_organization_logos/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     required_fields = ['name', 'website']
 
@@ -73,4 +86,4 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
         verbose_name_plural = _('Partner Organization Contacts')
 
     def __str__(self):
-        return self.name
+        return str(self.name)

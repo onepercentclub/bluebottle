@@ -68,5 +68,7 @@ class VitepayBankAccount(BankAccount):
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/vitepay-external-accounts'
 
+    def __str__(self):
+        return u"Vitepay Bankaccount {}".format(self.account_name)
 
 from .states import *  # noqa

@@ -165,7 +165,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         start = response.content.decode().find(csrf) + len(csrf)
         end = response.content.decode().find("'", start)
 
-        return response.content[start:end]
+        return response.content[start:end].decode()
 
 
 class SessionTestMixin(object):

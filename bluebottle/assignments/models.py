@@ -11,7 +11,7 @@ from timezonefinder import TimezoneFinder
 
 import pytz
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.assignments.validators import RegistrationDeadlineValidator
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
@@ -50,6 +50,8 @@ class Assignment(Activity):
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('skill'), blank=True, null=True)
 
     is_online = models.NullBooleanField(null=True, default=None)
+
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, null=True)
 
     location = models.ForeignKey(
         Geolocation, verbose_name=_('task location'),
@@ -98,17 +100,17 @@ class Assignment(Activity):
         return self.date
 
     @property
-    def contribution_date(self):
+    def activity_date(self):
         return self.date
 
     @property
     def stats(self):
-        contributions = self.contributions.instance_of(Applicant)
+        contributors = self.contributors.instance_of(Applicant)
 
-        stats = contributions.filter(
+        stats = contributors.filter(
             status='succeeded').\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
-        committed = contributions.filter(
+        committed = contributors.filter(
             status__in=['active', 'accepted']).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))
         stats.update(committed)
@@ -136,19 +138,19 @@ class Assignment(Activity):
     @property
     def accepted_applicants(self):
         accepted_states = ['accepted', 'active', 'succeeded']
-        return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
+        return self.contributors.instance_of(Applicant).filter(status__in=accepted_states)
 
     @property
     def new_applicants(self):
-        return self.contributions.instance_of(Applicant).filter(status='new')
+        return self.contributors.instance_of(Applicant).filter(status='new')
 
     @property
     def applicants(self):
-        return self.contributions.instance_of(Applicant)
+        return self.contributors.instance_of(Applicant)
 
     @property
     def active_applicants(self):
-        return self.contributions.instance_of(Applicant).filter(status__in=['active'])
+        return self.contributors.instance_of(Applicant).filter(status__in=['active'])
 
     def save(self, *args, **kwargs):
         if self.preparation and self.end_date_type == "deadline":
@@ -157,7 +159,7 @@ class Assignment(Activity):
 
 
 @python_2_unicode_compatible
-class Applicant(Contribution):
+class Applicant(Contributor):
     motivation = models.TextField(blank=True)
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
 
@@ -179,13 +181,10 @@ class Applicant(Contribution):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/applicants'
+        resource_name = 'contributors/applicants'
 
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
-
-    def __str__(self):
-        return self.user.full_name
 
 
 from bluebottle.assignments.periodic_tasks import *  # noqa

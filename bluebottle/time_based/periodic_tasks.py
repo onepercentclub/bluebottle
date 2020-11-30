@@ -5,13 +5,13 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, PeriodApplication, Duration
+    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, DurationStateMachine
+    TimeBasedStateMachine, TimeContributionStateMachine
 )
-from bluebottle.time_based.triggers import has_applications, has_no_applications
-from bluebottle.time_based.effects import CreatePeriodDurationEffect
+from bluebottle.time_based.triggers import has_participants, has_no_participants
+from bluebottle.time_based.effects import CreatePeriodParticipationEffect
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 
@@ -26,18 +26,18 @@ class TimeBasedActivityStartedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.start, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
     def __str__(self):
-        return _("Start an start when start date has passed.")
+        return _("Start an activity when start date has passed.")
 
 
-class WithADeadlineActivityFinishedTask(ModelPeriodicTask):
+class PeriodActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -47,10 +47,10 @@ class WithADeadlineActivityFinishedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -58,7 +58,7 @@ class WithADeadlineActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when deadline has passed.")
 
 
-class NewPeriodForApplicationTask(ModelPeriodicTask):
+class NewPeriodForParticipantTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -68,14 +68,14 @@ class NewPeriodForApplicationTask(ModelPeriodicTask):
         )
 
     effects = [
-        CreatePeriodDurationEffect
+        CreatePeriodParticipationEffect
     ]
 
     def __str__(self):
-        return _("Create a new period for application")
+        return _("Create a new contribution for participant")
 
 
-class OnADateActivityStartedTask(ModelPeriodicTask):
+class DateActivityStartedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -85,10 +85,10 @@ class OnADateActivityStartedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.start, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -96,7 +96,7 @@ class OnADateActivityStartedTask(ModelPeriodicTask):
         return _("Start an start when start date has passed.")
 
 
-class OnADateActivityFinishedTask(ModelPeriodicTask):
+class DateActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -106,10 +106,10 @@ class OnADateActivityFinishedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -117,27 +117,26 @@ class OnADateActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when end time has passed.")
 
 
-class DurationFinishedTask(ModelPeriodicTask):
+class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',
-            contribution__status='accepted'
+            contributor__status='accepted'
         )
 
     effects = [
-        TransitionEffect(DurationStateMachine.succeed),
+        TransitionEffect(TimeContributionStateMachine.succeed),
     ]
 
     def __str__(self):
         return _("Finish an activity when end time has passed.")
 
 
-OnADateActivity.periodic_tasks = [OnADateActivityFinishedTask, OnADateActivityStartedTask]
-WithADeadlineActivity.periodic_tasks = [
-    TimeBasedActivityStartedTask, WithADeadlineActivityFinishedTask
+DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask]
+PeriodActivity.periodic_tasks = [
+    TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
-PeriodApplication.periodic_tasks = [NewPeriodForApplicationTask]
-OngoingActivity.periodic_tasks = [TimeBasedActivityStartedTask]
-Duration.periodic_tasks = [DurationFinishedTask]
+PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
+TimeContribution.periodic_tasks = [TimeContributionFinishedTask]

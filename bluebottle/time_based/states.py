@@ -1,11 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import (
-    ActivityStateMachine, ContributionStateMachine, ContributionValueStateMachine
+    ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
-    OnADateApplication, PeriodApplication, Duration,
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant, TimeContribution,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -38,7 +38,12 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.cancelled, full, running],
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.cancelled,
+            full,
+            running
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -55,8 +60,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
 
-@register(OnADateActivity)
-class OnADateStateMachine(TimeBasedStateMachine):
+@register(DateActivity)
+class DateStateMachine(TimeBasedStateMachine):
     reschedule = Transition(
         [
             TimeBasedStateMachine.running,
@@ -69,8 +74,14 @@ class OnADateStateMachine(TimeBasedStateMachine):
     )
 
 
-@register(WithADeadlineActivity)
-class WithADeadlineStateMachine(TimeBasedStateMachine):
+@register(PeriodActivity)
+class PeriodStateMachine(TimeBasedStateMachine):
+    succeed_manually = Transition(
+        [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=False,
+    )
 
     reschedule = Transition(
         [
@@ -83,83 +94,78 @@ class WithADeadlineStateMachine(TimeBasedStateMachine):
     )
 
 
-@register(OngoingActivity)
-class OngoingStateMachine(TimeBasedStateMachine):
-    pass
-
-
-class ApplicationStateMachine(ContributionStateMachine):
+class ParticipantStateMachine(ContributorStateMachine):
     accepted = State(
         _('accepted'),
         'accepted',
-        _('The application was accepted and will join the activity.')
+        _('The participant was accepted and will join the activity.')
     )
     rejected = State(
         _('rejected'),
         'rejected',
-        _("The application was rejected and will not join the activity.")
+        _("The participant was rejected and will not join the activity.")
     )
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('The application withdrew and will no longer join the activity.')
+        _('The participant withdrew and will no longer join the activity.')
     )
     no_show = State(
         _('no show'),
         'no_show',
-        _('The application did not contribute to the activity.')
+        _('The participant did not contribute to the activity.')
     )
 
     def is_user(self, user):
-        """is application"""
+        """is participant"""
         return self.instance.user == user
 
-    def can_accept_application(self, user):
-        """can accept application"""
+    def can_accept_participant(self, user):
+        """can accept participant"""
         return user in [
             self.instance.activity.owner,
             self.instance.activity.initiative.activity_manager,
             self.instance.activity.initiative.owner
-        ]
+        ] or user.is_staff
 
-    def assignment_is_open(self):
+    def activity_is_open(self):
         """task is open"""
         return self.instance.activity.status == ActivityStateMachine.open.value
 
     initiate = Transition(
         EmptyState(),
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Initiate'),
         description=_("User applied to join the task."),
     )
 
     accept = Transition(
         [
-            ContributionStateMachine.new,
+            ContributorStateMachine.new,
             rejected
         ],
         accepted,
         name=_('Accept'),
-        description=_("Application was accepted."),
+        description=_("Participant was accepted."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
     reject = Transition(
         [
-            ContributionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         rejected,
         name=_('Reject'),
-        description=_("Application was rejected."),
+        description=_("Participant was rejected."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
     withdraw = Transition(
         [
-            ContributionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         withdrawn,
@@ -172,62 +178,65 @@ class ApplicationStateMachine(ContributionStateMachine):
 
     reapply = Transition(
         withdrawn,
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Reapply'),
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
-        conditions=[assignment_is_open],
-        permission=ContributionStateMachine.is_user,
+        conditions=[activity_is_open],
+        permission=ContributorStateMachine.is_user,
     )
 
     mark_absent = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
         description=_("User did not contribute to the task and is marked absent."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
     mark_present = Transition(
         no_show,
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Mark present'),
-        description=_("Application did contribute to the task, after first been marked absent."),
+        description=_("Participant did contribute to the task, after first been marked absent."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
 
-@register(OnADateApplication)
-class OnADateApplicationStateMachine(ApplicationStateMachine):
+@register(DateParticipant)
+class DateParticipantStateMachine(ParticipantStateMachine):
     pass
 
 
-@register(PeriodApplication)
-class PeriodApplicationStateMachine(ApplicationStateMachine):
+@register(PeriodParticipant)
+class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
         'stopped',
-        _('The application (temporarily) stopped. Durations will no longer be created.')
+        _('The participant (temporarily) stopped. Contributions will no longer be created.')
     )
 
     stop = Transition(
-        ApplicationStateMachine.accepted,
+        ParticipantStateMachine.accepted,
         stopped,
         name=_('Stop'),
-        description=_("Application stopped contributing."),
+        permission=ParticipantStateMachine.can_accept_participant,
+        description=_("Participant stopped contributing."),
         automatic=False,
+        conditions=[ParticipantStateMachine.activity_is_open]
     )
 
     start = Transition(
         stopped,
-        ApplicationStateMachine.accepted,
+        ParticipantStateMachine.accepted,
         name=_('Start'),
-        description=_("Application started contributing again."),
+        permission=ParticipantStateMachine.can_accept_participant,
+        description=_("Participant started contributing again."),
         automatic=False,
     )
 
 
-@register(Duration)
-class DurationStateMachine(ContributionValueStateMachine):
+@register(TimeContribution)
+class TimeContributionStateMachine(ContributionStateMachine):
     pass

@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
 
-class DonationAuthentication(BaseAuthentication):
+class DonorAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()

@@ -1,6 +1,7 @@
 from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
+from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
 
 from bluebottle.initiatives.models import Initiative
@@ -8,8 +9,6 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
-from bluebottle.events.models import Event
-from bluebottle.assignments.models import Assignment
 from bluebottle.funding.models import Funding
 from bluebottle.members.models import Member
 
@@ -65,6 +64,7 @@ class InitiativeDocument(DocType):
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
         'title': fields.KeywordField(),
+        'activity_date': fields.DateField(),
     })
 
     place = fields.NestedField(properties={
@@ -87,7 +87,12 @@ class InitiativeDocument(DocType):
     class Meta(object):
         model = Initiative
         related_models = (
-            Geolocation, Member, ProjectTheme, Event, Funding, Assignment
+            Geolocation,
+            Member,
+            ProjectTheme,
+            Funding,
+            PeriodActivity,
+            DateActivity
         )
 
     def get_queryset(self):
@@ -108,6 +113,7 @@ class InitiativeDocument(DocType):
             {
                 'id': activity.pk,
                 'title': activity.title,
+                'activity_date': activity.activity_date
             } for activity in instance.activities.filter(
                 status__in=(
                     'succeeded',
@@ -121,6 +127,8 @@ class InitiativeDocument(DocType):
 
     def prepare_activity_owners(self, instance):
         return [
-            {'id': activity.owner.pk, 'full_name': activity.owner.full_name}
-            for activity in instance.activities.all()
+            {
+                'id': activity.owner.pk,
+                'full_name': activity.owner.full_name
+            } for activity in instance.activities.all()
         ]

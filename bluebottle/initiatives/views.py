@@ -4,7 +4,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
@@ -112,7 +111,13 @@ class InitiativeMapList(generics.ListAPIView):
 
 
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Initiative.objects.all()
+    queryset = Initiative.objects.select_related(
+        'owner', 'reviewer', 'promoter', 'place', 'location',
+        'organization', 'organization_contact',
+    ).prefetch_related(
+        'categories', 'activities'
+    )
+
     serializer_class = InitiativeSerializer
 
     permission_classes = (
@@ -194,20 +199,20 @@ class InitiativeRedirectList(JsonApiViewMixin, CreateAPIView):
         data = serializer.validated_data
         data['pk'] = str(uuid.uuid1())
 
-        try:
-            if data['route'] == 'project':
-                initiative = Initiative.objects.get(slug=data['params']['project_id'])
-                try:
-                    funding = initiative.activities.instance_of(Funding)[0]
-                    data['target_route'] = 'initiatives.activities.details.funding'
-                    data['target_params'] = [funding.pk, funding.slug]
-                except IndexError:
-                    data['target_route'] = 'initiatives.details'
-                    data['target_params'] = [initiative.pk, initiative.slug]
-            else:
+        if data['route'] == 'project':
+            initiative = Initiative.objects.filter(slug=data['params']['project_id']).first()
+            if not initiative:
                 raise NotFound()
 
-            serializer.instance = Instance(**data)
-            return data
-        except ObjectDoesNotExist:
+            try:
+                funding = initiative.activities.instance_of(Funding)[0]
+                data['target_route'] = 'initiatives.activities.details.funding'
+                data['target_params'] = [funding.pk, funding.slug]
+            except IndexError:
+                data['target_route'] = 'initiatives.details'
+                data['target_params'] = [initiative.pk, initiative.slug]
+        else:
             raise NotFound()
+
+        serializer.instance = Instance(**data)
+        return data

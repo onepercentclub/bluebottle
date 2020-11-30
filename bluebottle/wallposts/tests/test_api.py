@@ -7,9 +7,9 @@ from rest_framework import status
 from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory
+    DateActivityFactory
 )
-from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
+from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -29,7 +29,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
-        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
+        self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
         self.assignment = AssignmentFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
@@ -152,7 +152,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.on_a_data_activity.id),
-                         'parent_type': 'on-a-date',
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
@@ -445,7 +445,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             user=self.user,
             activity=self.funding,
             fundraiser=None
@@ -565,7 +565,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
-        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
+        self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
@@ -621,7 +621,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': self.on_a_data_activity.id,
-                         'parent_type': 'on-a-date',
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'share_with_twitter': True}
 
@@ -685,7 +685,7 @@ class FundingWallpostTest(BluebottleTestCase):
         Test that a Wallpost doesn't serializes donation if there isn't one
         """
         TextWallpostFactory.create(content_object=self.funding)
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=None,
             activity=self.funding
@@ -704,14 +704,14 @@ class FundingWallpostTest(BluebottleTestCase):
                 'user': None,
                 'anonymous': False,
                 'reward': None,
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': self.donation.id
             }
         )
         self.assertEqual(response.data['results'][1]['donation'], None)
 
     def test_wallposts_with_fake_name(self):
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=None,
             name='Tante Ans',
@@ -731,7 +731,7 @@ class FundingWallpostTest(BluebottleTestCase):
                 'user': None,
                 'anonymous': False,
                 'reward': None,
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': self.donation.id
             }
         )
@@ -782,6 +782,7 @@ class WallpostPhotoTest(BluebottleTestCase):
             token="JWT {0}".format(self.photo.author.get_jwt_token())
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('jpg' in response.data['photo']['full'])
 
     def test_photo_different_wallpost_owner(self):
         photo_author = BlueBottleUserFactory.create()

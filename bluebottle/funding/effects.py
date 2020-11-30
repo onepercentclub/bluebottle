@@ -1,3 +1,6 @@
+from bluebottle.funding.models import MoneyContribution
+
+from bluebottle.fsm.state import TransitionNotPossible
 from future.utils import python_2_unicode_compatible
 
 import datetime
@@ -53,7 +56,24 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationFromPayoutEffect(Effect):
+class UpdateDonationValueEffect(Effect):
+    conditions = []
+    title = _('Update contribution value')
+
+    display = False
+
+    def post_save(self, **kwargs):
+        contribution = self.instance.contributions.first()
+        if contribution:
+            contribution.value = self.instance.payout_amount
+            contribution.save()
+
+    def __str__(self):
+        return _('Update contribution value')
+
+
+@python_2_unicode_compatible
+class RemoveDonorFromPayoutEffect(Effect):
     conditions = []
     title = _('Remove donation from payout')
 
@@ -105,7 +125,7 @@ class RefundPaymentAtPSPEffect(Effect):
 
 
 @python_2_unicode_compatible
-class GenerateDonationWallpostEffect(Effect):
+class GenerateDonorWallpostEffect(Effect):
     conditions = []
     title = _('Create wallpost')
     template = 'admin/generate_donation_wallpost_effect.html'
@@ -125,7 +145,7 @@ class GenerateDonationWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationWallpostEffect(Effect):
+class RemoveDonorWallpostEffect(Effect):
     conditions = []
     title = _('Delete wallpost')
     template = 'admin/remove_donation_wallpost_effect.html'
@@ -147,11 +167,13 @@ class SubmitConnectedActivitiesEffect(Effect):
     template = 'admin/submit_connected_activities_effect.html'
 
     def post_save(self, **kwargs):
-        for external_account in self.instance.external_accounts.all():
-            for funding in external_account.funding_set.filter(
-                    status__in=('draft', 'needs_work')
-            ):
+        for funding in self.instance.funding_set.filter(
+                status__in=('draft', 'needs_work')
+        ):
+            try:
                 funding.states.submit(save=True)
+            except TransitionNotPossible:
+                pass
 
     def __str__(self):
         return _('Submit connected activities')
@@ -223,3 +245,19 @@ class ClearPayoutDatesEffect(Effect):
 
     def __str__(self):
         return _('Clear payout event dates')
+
+
+@python_2_unicode_compatible
+class CreateDonationEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        money_contribution = MoneyContribution(
+            contributor=self.instance,
+            value=self.instance.amount
+        )
+        money_contribution.save()
+
+    def __str__(self):
+        return _('Create a donation')

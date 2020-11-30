@@ -189,6 +189,33 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'draft')
 
+        self.assertEqual(
+            self.assignment.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_retrieve_applicant(self):
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        response = self.client.get(self.url, user=applicant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'draft')
+
+        self.assertEqual(
+            self.assignment.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_retrieve_non_applicant(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'draft')
+
+        self.assertTrue(
+            'online-meeting-url' not in response.json()['data']['attributes']
+        )
+
     def test_update(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
 
@@ -290,21 +317,21 @@ class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 8)
+                         ['contributors']['meta']['count'], 8)
 
     def test_applicant_list_authenticated(self):
         response = self.client.get(self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 8)
+                         ['contributors']['meta']['count'], 8)
 
     def test_applicant_list_owner(self):
         response = self.client.get(self.url, user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 10)
+                         ['contributors']['meta']['count'], 10)
 
 
 class AssignmentTransitionTestCase(BluebottleTestCase):
@@ -551,7 +578,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assignment.states.submit(save=True)
         self.apply_data = {
             'data': {
-                'type': 'contributions/applicants',
+                'type': 'contributors/applicants',
                 'attributes': {
                     'motivation': 'Pick me! Pick me!',
                 },
@@ -731,14 +758,14 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
             'applicant-detail', args=(self.applicant.id,))
         self.transition_data = {
             'data': {
-                'type': 'contributions/applicant-transitions',
+                'type': 'contributors/applicant-transitions',
                 'attributes': {
                     'transition': 'accept',
                 },
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'contributions/applicants',
+                            'type': 'contributors/applicants',
                             'id': self.applicant.pk
                         }
                     }

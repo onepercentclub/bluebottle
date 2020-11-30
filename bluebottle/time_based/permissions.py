@@ -2,7 +2,7 @@
 from rest_framework import permissions
 
 
-class ApplicationDocumentPermission(permissions.DjangoModelPermissions):
+class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):
         if not obj:

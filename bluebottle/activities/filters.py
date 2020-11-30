@@ -17,7 +17,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     document = activity
 
     sort_fields = {
-        'date': ('-date', ),
+        'date': ('-activity_date', ),
         'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
@@ -38,10 +38,17 @@ class ActivitySearchFilter(ElasticSearchFilter):
     )
 
     search_fields = (
-        'status', 'title', 'description', 'owner.full_name',
-        'initiative.title', 'initiative.pitch', 'initiative.pitch',
-        'initiative_location.name', 'initiative_location.city',
-        'location.formatted_address', 'segments.name',
+        'status',
+        'title',
+        'description',
+        'owner.full_name',
+        'initiative.title',
+        'initiative.pitch',
+        'initiative.pitch',
+        'initiative_location.name',
+        'initiative_location.city',
+        'location.formatted_address',
+        'segments.name',
     )
 
     boost = {
@@ -75,14 +82,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
             functions=[
                 SF(
                     'field_value_factor',
-                    field='contribution_count',
+                    field='contributor_count',
                     missing=0
                 ),
                 SF(
                     'gauss',
                     weight=0.1,
                     multi_value_mode='avg',
-                    contributions={
+                    contributors={
                         'scale': '5d'
                     },
                 ),
@@ -204,7 +211,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
 class ActivityFilter(DjangoFilterBackend):
     """
-    Filter that shows only successful contributions
+    Filter that shows only successful contributors
     """
     public_statuses = [
         ActivityStateMachine.succeeded.value,

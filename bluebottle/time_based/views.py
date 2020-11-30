@@ -1,28 +1,28 @@
+from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.html import strip_tags
 from django.utils.timezone import utc
 
 import icalendar
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributionPermission
+    ContributorPermission, ContributionPermission, DeleteActivityPermission
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
-    OnADateApplication, PeriodApplication
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant,
+    TimeContribution
 )
 from bluebottle.time_based.serializers import (
-    OnADateActivitySerializer,
-    WithADeadlineActivitySerializer,
-    OngoingActivitySerializer,
-    OnADateTransitionSerializer,
-    WithADeadlineTransitionSerializer,
-    OngoingTransitionSerializer,
-    PeriodApplicationSerializer,
-    OnADateApplicationSerializer,
-    OnADateApplicationTransitionSerializer,
-    PeriodApplicationTransitionSerializer
+    DateActivitySerializer,
+    PeriodActivitySerializer,
+    DateTransitionSerializer,
+    PeriodTransitionSerializer,
+    PeriodParticipantSerializer,
+    DateParticipantSerializer,
+    DateParticipantTransitionSerializer,
+    PeriodParticipantTransitionSerializer,
+    TimeContributionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -31,7 +31,8 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
+    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
+    ListAPIView, JsonApiViewMixin,
     PrivateFileView
 )
 
@@ -56,68 +57,84 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateAPIView):
+class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
+        DeleteActivityPermission
     )
 
 
-class OnADateActivityListView(TimeBasedActivityListView):
-    queryset = OnADateActivity.objects.all()
-    serializer_class = OnADateActivitySerializer
+class DateActivityListView(TimeBasedActivityListView):
+    queryset = DateActivity.objects.all()
+    serializer_class = DateActivitySerializer
 
 
-class WithADeadlineActivityListView(TimeBasedActivityListView):
-    queryset = WithADeadlineActivity.objects.all()
-    serializer_class = WithADeadlineActivitySerializer
+class PeriodActivityListView(TimeBasedActivityListView):
+    queryset = PeriodActivity.objects.all()
+    serializer_class = PeriodActivitySerializer
 
 
-class OngoingActivityListView(TimeBasedActivityListView):
-    queryset = OngoingActivity.objects.all()
-    serializer_class = OngoingActivitySerializer
+class DateActivityDetailView(TimeBasedActivityDetailView):
+    queryset = DateActivity.objects.all()
+    serializer_class = DateActivitySerializer
 
 
-class OnADateActivityDetailView(TimeBasedActivityDetailView):
-    queryset = OnADateActivity.objects.all()
-    serializer_class = OnADateActivitySerializer
+class PeriodActivityDetailView(TimeBasedActivityDetailView):
+    queryset = PeriodActivity.objects.all()
+    serializer_class = PeriodActivitySerializer
 
 
-class WithADeadlineActivityDetailView(TimeBasedActivityDetailView):
-    queryset = WithADeadlineActivity.objects.all()
-    serializer_class = WithADeadlineActivitySerializer
-
-
-class OngoingActivityDetailView(TimeBasedActivityDetailView):
-    queryset = OngoingActivity.objects.all()
-    serializer_class = OngoingActivitySerializer
-
-
-class OnADateTransitionList(TransitionList):
-    serializer_class = OnADateTransitionSerializer
-    queryset = OnADateActivity.objects.all()
-
-
-class WithADeadlineTransitionList(TransitionList):
-    serializer_class = WithADeadlineTransitionSerializer
-    queryset = WithADeadlineActivity.objects.all()
-
-
-class OngoingTransitionList(TransitionList):
-    serializer_class = OngoingTransitionSerializer
-    queryset = OngoingActivity.objects.all()
-
-
-class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
+class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
-    prefetch_for_includes = {
-        'assignment': ['assignment'],
-        'user': ['user'],
-        'document': ['document'],
-    }
+    def get_queryset(self):
+        if self.request.user.is_authenticated():
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+            )
+        else:
+            queryset = self.queryset.filter(
+                status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
+
+
+class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+    queryset = DateParticipant.objects.prefetch_related('user')
+    serializer_class = DateParticipantSerializer
+
+
+class PeriodActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+    queryset = PeriodParticipant.objects.prefetch_related('user')
+    serializer_class = PeriodParticipantSerializer
+
+
+class DateTransitionList(TransitionList):
+    serializer_class = DateTransitionSerializer
+    queryset = DateActivity.objects.all()
+
+
+class PeriodTransitionList(TransitionList):
+    serializer_class = PeriodTransitionSerializer
+    queryset = PeriodActivity.objects.all()
+
+
+class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
     def perform_create(self, serializer):
         self.check_related_object_permissions(
@@ -133,71 +150,69 @@ class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-class OnADateApplicationList(ApplicationList):
-    queryset = OnADateApplication.objects.all()
-    serializer_class = OnADateApplicationSerializer
+class DateParticipantList(ParticipantList):
+    queryset = DateParticipant.objects.all()
+    serializer_class = DateParticipantSerializer
 
 
-class PeriodApplicationList(ApplicationList):
-    queryset = PeriodApplication.objects.all()
-    serializer_class = PeriodApplicationSerializer
+class PeriodParticipantList(ParticipantList):
+    queryset = PeriodParticipant.objects.all()
+    serializer_class = PeriodParticipantSerializer
 
 
-class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributionPermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
 
-    prefetch_for_includes = {
-        'activity': ['activity'],
-        'user': ['user'],
-        'document': ['document'],
-    }
+
+class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    queryset = TimeContribution.objects.all()
+    serializer_class = TimeContributionSerializer
+    permission_classes = [ContributionPermission]
 
 
-class OnADateApplicationDetail(ApplicationDetail):
-    queryset = OnADateApplication.objects.all()
-    serializer_class = OnADateApplicationSerializer
+class DateParticipantDetail(ParticipantDetail):
+    queryset = DateParticipant.objects.all()
+    serializer_class = DateParticipantSerializer
 
 
-class PeriodApplicationDetail(ApplicationDetail):
-    queryset = PeriodApplication.objects.all()
-    serializer_class = PeriodApplicationSerializer
+class PeriodParticipantDetail(ParticipantDetail):
+    queryset = PeriodParticipant.objects.all()
+    serializer_class = PeriodParticipantSerializer
 
 
-class ApplicationTransitionList(TransitionList):
-    prefetch_for_includes = {
-        'resource': ['participant', 'participant__activity'],
-    }
+class ParticipantTransitionList(TransitionList):
+    pass
 
 
-class OnADateApplicationTransitionList(ApplicationTransitionList):
-    serializer_class = OnADateApplicationTransitionSerializer
-    queryset = OnADateApplication.objects.all()
+class DateParticipantTransitionList(ParticipantTransitionList):
+    serializer_class = DateParticipantTransitionSerializer
+    queryset = DateParticipant.objects.all()
 
 
-class PeriodApplicationTransitionList(ApplicationTransitionList):
-    serializer_class = PeriodApplicationTransitionSerializer
-    queryset = PeriodApplication.objects.all()
+class PeriodParticipantTransitionList(ParticipantTransitionList):
+    serializer_class = PeriodParticipantTransitionSerializer
+    queryset = PeriodParticipant.objects.all()
 
 
-class ApplicationDocumentDetail(PrivateFileView):
+class ParticipantDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
-    queryset = OnADateApplication.objects
+    queryset = DateParticipant.objects
     relation = 'document'
     field = 'file'
 
 
-class OnADateApplicationDocumentDetail(ApplicationDocumentDetail):
-    queryset = OnADateApplication.objects
+class DateParticipantDocumentDetail(ParticipantDocumentDetail):
+    queryset = DateParticipant.objects
 
 
-class PeriodApplicationDocumentDetail(ApplicationDocumentDetail):
-    queryset = PeriodApplication.objects
+class PeriodParticipantDocumentDetail(ParticipantDocumentDetail):
+    queryset = PeriodParticipant.objects
 
 
-class OnADateActivityIcalView(PrivateFileView):
-    queryset = OnADateActivity.objects.exclude(
+class DateActivityIcalView(PrivateFileView):
+    queryset = DateActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected']
     )
 
@@ -209,10 +224,7 @@ class OnADateActivityIcalView(PrivateFileView):
 
         event = icalendar.Event()
         event.add('summary', instance.title)
-        event.add(
-            'description',
-            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
-        )
+        event.add('description', instance.details)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start.astimezone(utc))
         event.add('dtend', (instance.start + instance.duration).astimezone(utc))

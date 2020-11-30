@@ -125,6 +125,8 @@ def TransitionEffect(transition, field='states', conditions=None, post_save=Fals
 class BaseRelatedTransitionEffect(Effect):
     post_save = True
     display = False
+    description = None
+    transition_effect_class = None
 
     def __init__(self, *args, **kwargs):
         super(BaseRelatedTransitionEffect, self).__init__(*args, **kwargs)
@@ -161,9 +163,11 @@ class BaseRelatedTransitionEffect(Effect):
                 instance.save()
 
     def __str__(self):
-        return '{} related {}'.format(
-            self.transition_effect_class.transition.name,
-            self.relation
+        if self.description:
+            return self.description
+        return _('{transition} related {object}').format(
+            transition=self.transition_effect_class.transition.name,
+            object=self.relation
         )
 
     def __repr__(self):
@@ -176,22 +180,21 @@ class BaseRelatedTransitionEffect(Effect):
                 object=str(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
-        return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.name,
-            object=str(self.relation)
-        )
+        return str(self)
 
 
-def RelatedTransitionEffect(_relation, transition, field='states', conditions=None):
+def RelatedTransitionEffect(_relation, transition, field='states', conditions=None, description=None):
     _transition = transition
     _conditions = conditions or []
     _transition_effect_class = TransitionEffect(transition, field)
+    _description = description
 
     class _RelatedTransitionEffect(BaseRelatedTransitionEffect):
         transition_effect_class = _transition_effect_class
         relation = _relation
         transition = _transition
         conditions = _conditions
+        description = _description
         field = 'states'
 
     return _RelatedTransitionEffect

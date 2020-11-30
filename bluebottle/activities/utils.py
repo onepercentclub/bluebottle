@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -187,7 +187,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionListSerializer(ModelSerializer):
+class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -197,7 +197,7 @@ class BaseContributionListSerializer(ModelSerializer):
     }
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         fields = ('user', 'activity', 'status', 'created', 'updated', )
         meta_fields = ('created', 'updated', )
 
@@ -206,11 +206,11 @@ class BaseContributionListSerializer(ModelSerializer):
             'user',
             'activity',
         ]
-        resource_name = 'contributions'
+        resource_name = 'contributors'
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionSerializer(ModelSerializer):
+class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -223,7 +223,7 @@ class BaseContributionSerializer(ModelSerializer):
     }
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         fields = ('user', 'activity', 'status', )
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )
 
@@ -232,4 +232,19 @@ class BaseContributionSerializer(ModelSerializer):
             'user',
             'activity',
         ]
-        resource_name = 'contributions'
+        resource_name = 'contributors'
+
+
+# This can't be in serializers because of circular imports
+class BaseContributionSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
+
+    class Meta(object):
+        model = Contribution
+        fields = ('value', 'status', )
+        meta_fields = ('permissions', 'created', )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors'

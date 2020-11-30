@@ -29,6 +29,7 @@ class AssignmentFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=2)).date()
 
     location = factory.SubFactory(GeolocationFactory)
+    online_meeting_url = factory.Faker('url')
 
 
 class ApplicantFactory(factory.DjangoModelFactory):

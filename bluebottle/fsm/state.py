@@ -108,7 +108,7 @@ class Transition(BaseTransition):
     def can_execute(self, machine, user=None, **kwargs):
         result = super(Transition, self).can_execute(machine, **kwargs)
 
-        if self.permission and user and not user.is_staff and not self.permission(machine, user):
+        if self.permission and user and not self.permission(machine, user):
             raise TransitionNotPossible(
                 _('You are not allowed to perform this transition')
             )

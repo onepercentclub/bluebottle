@@ -1,34 +1,32 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from builtins import str
-from builtins import range
-from builtins import object
+
 import random
 import string
+from builtins import object
+from builtins import range
 
 from babel.numbers import get_currency_name
-from future.utils import python_2_unicode_compatible
-
-from bluebottle.clients import properties
-
-from bluebottle.fsm.triggers import TriggerMixin
-
-from django.db.models import Count
 from django.core.cache import cache
 from django.db import connection
 from django.db import models
+from django.db.models import Count
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from django.utils import timezone
+from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from bluebottle.activities.models import Activity, Contribution
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
+from bluebottle.activities.models import Activity, Contributor
+from bluebottle.activities.models import Contribution
+from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -183,27 +181,27 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
-    def contribution_date(self):
+    def activity_date(self):
         return self.deadline
 
     @property
     def donations(self):
-        return self.contributions.instance_of(Donation)
+        return self.contributors.instance_of(Donor)
 
     @property
     def amount_donated(self):
         """
-        The sum of all contributions (donations) converted to the targets currency
+        The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonationStateMachine.succeeded.value,
-                    DonationStateMachine.activity_refunded.value,
+                    DonorStateMachine.succeeded.value,
+                    DonorStateMachine.activity_refunded.value,
                 )
             )
             if self.target and self.target.currency:
@@ -216,19 +214,19 @@ class Funding(Activity):
     @property
     def genuine_amount_donated(self):
         """
-        The sum of all contributions (donations) without pledges converted to the targets currency
+        The sum of all contributors (donations) without pledges converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonationStateMachine.succeeded.value,
-                    DonationStateMachine.activity_refunded.value,
+                    DonorStateMachine.succeeded.value,
+                    DonorStateMachine.activity_refunded.value,
                 ),
-                donation__payment__pledgepayment__isnull=True
+                donor__payment__pledgepayment__isnull=True
             )
             if self.target and self.target.currency:
                 total = calculate_total(donations, self.target.currency)
@@ -240,16 +238,16 @@ class Funding(Activity):
     @cached_property
     def amount_pledged(self):
         """
-        The sum of all contributions (donations) converted to the targets currency
+        The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         donations = self.donations.filter(
             status__in=(
-                DonationStateMachine.succeeded.value,
-                DonationStateMachine.activity_refunded.value,
+                DonorStateMachine.succeeded.value,
+                DonorStateMachine.activity_refunded.value,
             ),
-            donation__payment__pledgepayment__isnull=False
+            donor__payment__pledgepayment__isnull=False
         )
         if self.target and self.target.currency:
             total = calculate_total(donations, self.target.currency)
@@ -277,9 +275,9 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         stats = self.donations.filter(
-            status=DonationStateMachine.succeeded.value
+            status=DonorStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id')
         )
@@ -321,9 +319,9 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         return self.donations.filter(
-            status=DonationStateMachine.succeeded.value
+            status=DonorStateMachine.succeeded.value
         ).count()
 
     def __str__(self):
@@ -393,11 +391,11 @@ class Fundraiser(AnonymizationMixin, models.Model):
 
     @cached_property
     def amount_donated(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         donations = self.donations.filter(
             status__in=[
-                DonationStateMachine.succeeded.value,
-                DonationStateMachine.activity_refunded.value,
+                DonorStateMachine.succeeded.value,
+                DonorStateMachine.activity_refunded.value,
             ]
         )
 
@@ -442,7 +440,7 @@ class Payout(TriggerMixin, models.Model):
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.donations.filter(status='succeeded', donation__payout__isnull=True)
+        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -450,7 +448,7 @@ class Payout(TriggerMixin, models.Model):
         for currency, provider in groups:
             donations = [
                 don for don in
-                ready_donations.filter(donation__payout_amount_currency=currency)
+                ready_donations.filter(donor__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
             payout = cls.objects.create(
@@ -477,7 +475,7 @@ class Payout(TriggerMixin, models.Model):
 
 
 @python_2_unicode_compatible
-class Donation(Contribution):
+class Donor(Contributor):
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -496,7 +494,7 @@ class Donation(Contribution):
         if not self.payout_amount:
             self.payout_amount = self.amount
 
-        super(Donation, self).save(*args, **kwargs)
+        super(Donor, self).save(*args, **kwargs)
 
     @property
     def date(self):
@@ -509,14 +507,21 @@ class Donation(Contribution):
         return self.payment.type
 
     class Meta(object):
-        verbose_name = _('Donation')
-        verbose_name_plural = _('Donations')
-
-    def __str__(self):
-        return u'{}'.format(self.amount)
+        verbose_name = _('Donor')
+        verbose_name_plural = _('Donors')
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/donations'
+        resource_name = 'contributors/donations'
+
+
+@python_2_unicode_compatible
+class MoneyContribution(Contribution):
+
+    value = MoneyField()
+
+    class Meta(object):
+        verbose_name = _('Contribution')
+        verbose_name_plural = _('Contributions')
 
 
 @python_2_unicode_compatible
@@ -526,7 +531,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField()
 
-    donation = models.OneToOneField(Donation, related_name='payment')
+    donation = models.OneToOneField(Donor, related_name='payment')
 
     @property
     def can_update(self):
@@ -612,7 +617,7 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, on_delete=models.deletion.SET_NULL)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
@@ -621,8 +626,8 @@ class PlainPayoutAccount(PayoutAccount):
         return self.reviewed
 
     class Meta(object):
-        verbose_name = _('Without payment account')
-        verbose_name_plural = _('Without payment accounts')
+        verbose_name = _('Plain KYC account')
+        verbose_name_plural = _('Plain KYC accounts')
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/plains'
@@ -634,9 +639,12 @@ class PlainPayoutAccount(PayoutAccount):
             required.append('document')
         return required
 
+    def __str__(self):
+        return "KYC account for {}".format(self.owner.full_name)
+
 
 @python_2_unicode_compatible
-class BankAccount(PolymorphicModel):
+class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
@@ -646,13 +654,11 @@ class BankAccount(PolymorphicModel):
         null=True, blank=True,
         related_name='external_accounts')
 
+    status = models.CharField(max_length=40)
+
     @property
     def parent(self):
         return self.connect_account
-
-    @property
-    def verified(self):
-        return (self.connect_account and self.connect_account.verified) and self.reviewed
 
     @property
     def ready(self):

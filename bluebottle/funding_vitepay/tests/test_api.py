@@ -4,7 +4,7 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -26,7 +26,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
 
         self.payment_url = reverse('vitepay-payment-list')
 
@@ -38,7 +38,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -48,7 +48,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
 
     @patch('bluebottle.funding_vitepay.utils.requests.post',
            return_value=type('obj', (object,),
-                             {'status_code': 200, 'content': 'https://vitepay.com/some-path-to-pay'}))
+                             {'status_code': 200, 'content': b'https://vitepay.com/some-path-to-pay'}))
     def test_create_payment(self, vitepay_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 

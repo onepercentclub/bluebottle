@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.title  context 'email' %}
+<p>You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!</p>
+
+<p>Share your experience on the activity page.</p>
+{% endblocktrans %}{% endblock %}{% endblock %}

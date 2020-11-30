@@ -1,10 +1,11 @@
 from datetime import timedelta, date
 
+from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
-    OnADateApplicationFactory, PeriodApplicationFactory
+    DateActivityFactory, PeriodActivityFactory,
+    DateParticipantFactory, PeriodParticipantFactory
 )
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -25,20 +26,25 @@ class TimeBasedActivityTriggerTestCase():
         self.activity = self.factory.create(initiative=self.initiative, review=False)
 
     def test_initial(self):
-        organizer = self.activity.contributions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'new')
 
     def test_delete(self):
         self.activity.states.delete(save=True)
-        organizer = self.activity.contributions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
         self.activity.states.submit()
         self.activity.states.reject(save=True)
-        organizer = self.activity.contributions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your activity "{}" has been rejected'.format(self.activity.title)
+        )
 
     def test_submit_initiative(self):
         self.initiative.states.submit(save=True)
@@ -70,8 +76,24 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'open')
 
-        organizer = self.activity.contributions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'succeeded')
+
+    def test_cancel(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+        self.activity.states.cancel(save=True)
+
+        self.assertEqual(self.activity.status, 'cancelled')
+
+        organizer = self.activity.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your activity "{}" has been cancelled'.format(self.activity.title)
+        )
 
     def test_change_capacity(self):
         self.initiative.states.submit(save=True)
@@ -79,7 +101,7 @@ class TimeBasedActivityTriggerTestCase():
 
         self.activity.refresh_from_db()
 
-        self.application_factory.create_batch(
+        self.participant_factory.create_batch(
             self.activity.capacity - 1,
             activity=self.activity,
             status='accepted'
@@ -115,9 +137,9 @@ class TimeBasedActivityTriggerTestCase():
         self.assertEqual(self.activity.status, 'open')
 
 
-class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = OnADateActivityFactory
-    application_factory = OnADateApplicationFactory
+class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
 
     def test_change_start(self):
         self.initiative.states.submit(save=True)
@@ -131,6 +153,10 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'cancelled')
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'The registration deadline for your activity "{}" has expired'.format(self.activity.title)
+        )
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
@@ -139,17 +165,38 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
 
         self.assertEqual(self.activity.status, 'open')
 
-    def test_change_start_with_contributions(self):
+    def test_change_start_future(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
         self.activity.refresh_from_db()
 
-        self.accepted = self.application_factory.create(
+        self.assertEqual(self.activity.status, 'open')
+
+        self.accepted = self.participant_factory.create(
             activity=self.activity,
         )
 
-        self.rejected = self.application_factory.create(
+        self.activity.start = now() + timedelta(days=100)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'The date and time for your activity "{}" has changed'.format(self.activity.title)
+        )
+
+    def test_change_start_with_contributors(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.accepted = self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.rejected = self.participant_factory.create(
             activity=self.activity,
         )
         self.rejected.states.reject(save=True)
@@ -160,17 +207,21 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'succeeded')
-
         self.assertEqual(
-            self.rejected.contribution_values.get().status, 'failed'
+            mail.outbox[-1].subject,
+            'Your activity "{}" has succeeded 🎉'.format(self.activity.title)
         )
 
         self.assertEqual(
-            self.accepted.contribution_values.get().status, 'succeeded'
+            self.rejected.contributions.get().status, 'failed'
+        )
+
+        self.assertEqual(
+            self.accepted.contributions.get().status, 'succeeded'
         )
 
     def test_change_start_back_again(self):
-        self.test_change_start_with_contributions()
+        self.test_change_start_with_contributors()
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
@@ -180,11 +231,11 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
         self.assertEqual(self.activity.status, 'open')
 
         self.assertEqual(
-            self.rejected.contribution_values.get().status, 'failed'
+            self.rejected.contributions.get().status, 'failed'
         )
 
         self.assertEqual(
-            self.accepted.contribution_values.get().status, 'new'
+            self.accepted.contributions.get().status, 'new'
         )
 
     def test_change_start_full(self):
@@ -193,7 +244,7 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
 
         self.activity.refresh_from_db()
 
-        self.application_factory.create_batch(
+        self.participant_factory.create_batch(
             self.activity.capacity,
             activity=self.activity,
         )
@@ -215,9 +266,9 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
         self.assertEqual(self.activity.status, 'full')
 
 
-class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
-    application_factory = PeriodApplicationFactory
+class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
 
     def test_change_deadline(self):
         self.initiative.states.submit(save=True)
@@ -239,13 +290,30 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.assertEqual(self.activity.status, 'open')
 
-    def test_change_deadline_with_contributions(self):
+    def test_change_deadline_future(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
         self.activity.refresh_from_db()
 
-        self.application_factory.create(
+        self.participant_factory.create(
+            activity=self.activity,
+            status='accepted'
+        )
+        self.assertEqual(self.activity.status, 'open')
+
+        self.activity.deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_change_deadline_with_contributors(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
             activity=self.activity,
             status='accepted'
         )
@@ -269,7 +337,7 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity.refresh_from_db()
 
-        self.application_factory.create_batch(
+        self.participant_factory.create_batch(
             self.activity.capacity,
             activity=self.activity,
         )
@@ -339,7 +407,7 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity.refresh_from_db()
 
-        self.application_factory.create_batch(
+        self.participant_factory.create_batch(
             self.activity.capacity,
             activity=self.activity,
         )
@@ -360,13 +428,34 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.assertEqual(self.activity.status, 'full')
 
+    def test_succeed_manually(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
 
-class OngoingActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+
+        self.activity.states.succeed_manually(save=True)
+        self.assertEqual(self.activity.end, date.today())
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.status, 'succeeded')
+
+        for message in mail.outbox[-self.activity.capacity:]:
+
+            self.assertEqual(
+                message.subject,
+                'The activity "{}" has succeeded 🎉'.format(self.activity.title)
+            )
 
 
-class ApplicationTriggerTestCase():
+class ParticipantTriggerTestCase():
 
     def setUp(self):
         super().setUp()
@@ -387,17 +476,73 @@ class ApplicationTriggerTestCase():
         self.review_activity.refresh_from_db()
 
     def test_initial_review(self):
-        application = self.application_factory.create(activity=self.review_activity)
+        mail.outbox = []
+        participant = self.participant_factory.create(activity=self.review_activity)
 
-        self.assertEqual(application.status, 'new')
+        self.assertEqual(participant.status, 'new')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new participant for your activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
+        )
+
+    def test_accept(self):
+        participant = self.participant_factory.create(activity=self.review_activity)
+
+        mail.outbox = []
+        participant.states.accept(save=True)
+
+        self.assertEqual(participant.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been selected for the activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
+
+    def test_initial_review_not_added(self):
+        mail.outbox = []
+        participant = self.participant_factory.build(activity=self.review_activity)
+        participant.user.save()
+        participant.execute_triggers(user=participant.user, send_messages=True)
+        participant.save()
+
+        self.assertEqual(participant.status, 'new')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new participant for your activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
 
     def test_initial_no_review(self):
-        application = self.application_factory.create(activity=self.activity)
+        mail.outbox = []
+        participant = self.participant_factory.create(activity=self.activity)
 
-        self.assertEqual(application.status, 'accepted')
+        self.assertEqual(participant.status, 'accepted')
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity "{}" 🎉'.format(
+                self.activity.title
+            )
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
+        )
 
     def test_no_review_fill(self):
-        self.application_factory.create_batch(
+        self.participant_factory.create_batch(
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
@@ -405,49 +550,58 @@ class ApplicationTriggerTestCase():
         self.assertEqual(self.activity.status, 'full')
 
     def test_review_fill(self):
-        applications = self.application_factory.create_batch(
+        participants = self.participant_factory.create_batch(
             self.review_activity.capacity, activity=self.review_activity
         )
         self.review_activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'open')
 
-        for application in applications:
-            application.states.accept(save=True)
+        for participant in participants:
+            participant.states.accept(save=True)
 
         self.review_activity.refresh_from_db()
 
         self.assertEqual(self.review_activity.status, 'full')
 
     def test_reject(self):
-        self.applications = self.application_factory.create_batch(
+        self.participants = self.participant_factory.create_batch(
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
-        self.applications[0].states.reject(save=True)
+        mail.outbox = []
+        self.participants[0].states.reject(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
 
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have not been selected for the activity "{}"'.format(
+                self.activity.title
+            )
+        )
+
     def test_reaccept(self):
         self.test_reject()
 
-        self.applications[0].states.accept(save=True)
+        self.participants[0].states.accept(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
 
     def test_withdraw(self):
-        self.applications = self.application_factory.create_batch(
+        self.participants = self.participant_factory.create_batch(
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
 
-        self.applications[0].states.withdraw(save=True)
+        self.participants[0].states.withdraw(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
@@ -455,16 +609,16 @@ class ApplicationTriggerTestCase():
     def test_reapply(self):
         self.test_withdraw()
 
-        self.applications[0].states.reapply(save=True)
+        self.participants[0].states.reapply(save=True)
 
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
 
 
-class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = OnADateActivityFactory
-    application_factory = OnADateApplicationFactory
+class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
 
     def test_no_review_succeed_after_cancel(self):
         self.activity.start = now() - timedelta(days=1)
@@ -472,7 +626,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
 
         self.assertEqual(self.activity.status, 'cancelled')
 
-        self.application_factory.create(activity=self.activity)
+        self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()
 
@@ -482,7 +636,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_initial_no_review()
 
         self.assertEqual(
-            self.activity.accepted_applications.get().contribution_values.get().status,
+            self.activity.accepted_participants.get().contributions.get().status,
             'new'
         )
 
@@ -490,7 +644,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_initial_review()
 
         self.assertEqual(
-            self.review_activity.applications.get().contribution_values.get().status,
+            self.review_activity.participants.get().contributions.get().status,
             'new'
         )
 
@@ -498,7 +652,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_withdraw()
 
         self.assertEqual(
-            self.applications[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'failed'
         )
 
@@ -506,7 +660,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_reapply()
 
         self.assertEqual(
-            self.applications[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'new'
         )
 
@@ -514,7 +668,7 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_reject()
 
         self.assertEqual(
-            self.applications[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'failed'
         )
 
@@ -522,14 +676,14 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         super().test_reaccept()
 
         self.assertEqual(
-            self.applications[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'new'
         )
 
 
-class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
-    application_factory = PeriodApplicationFactory
+class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
 
     def test_no_review_succeed(self):
         self.activity.deadline = date.today() - timedelta(days=1)
@@ -537,13 +691,8 @@ class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, Bluebo
 
         self.assertEqual(self.activity.status, 'cancelled')
 
-        self.application_factory.create(activity=self.activity)
+        self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
-
-
-class OngoingApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory

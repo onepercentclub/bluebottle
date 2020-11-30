@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Organizer
+from bluebottle.activities.models import Organizer, OrganizerContribution
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -49,7 +49,7 @@ class ActivityStateMachine(ModelStateMachine):
     open = State(
         _('open'),
         'open',
-        _('The activity is accepting new contributions.')
+        _('The activity is accepting new contributors.')
     )
     succeeded = State(
         _('succeeded'),
@@ -185,7 +185,7 @@ class ActivityStateMachine(ModelStateMachine):
         cancelled,
         name=_('Expire'),
         description=_(
-            "The activity didn't have any contributions before the deadline to apply and is cancelled."
+            "The activity didn't have any contributors before the deadline to apply and is cancelled."
         ),
         automatic=True,
     )
@@ -211,7 +211,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
 
-class ContributionStateMachine(ModelStateMachine):
+class ContributorStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -245,7 +245,7 @@ class ContributionStateMachine(ModelStateMachine):
     )
 
 
-class ContributionValueStateMachine(ModelStateMachine):
+class ContributionStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -271,6 +271,7 @@ class ContributionValueStateMachine(ModelStateMachine):
         name=_('initiate'),
         description=_('The contribution was created.')
     )
+
     fail = Transition(
         (new, succeeded, ),
         failed,
@@ -294,28 +295,33 @@ class ContributionValueStateMachine(ModelStateMachine):
 
 
 @register(Organizer)
-class OrganizerStateMachine(ContributionStateMachine):
+class OrganizerStateMachine(ContributorStateMachine):
     succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('succeed'),
         description=_('The organizer was successful in setting up the activity.')
     )
     fail = Transition(
         AllStates(),
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('fail'),
         description=_('The organizer failed to set up the activity.')
     )
     reset = Transition(
         [
-            ContributionStateMachine.succeeded,
-            ContributionStateMachine.failed
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('reset'),
         description=_('The organizer is still busy setting up the activity.')
     )
+
+
+@register(OrganizerContribution)
+class OrganizerContributionStateMachine(ContributionStateMachine):
+    pass

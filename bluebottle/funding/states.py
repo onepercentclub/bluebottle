@@ -1,9 +1,9 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
+from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
 
 
 @register(Funding)
@@ -222,8 +222,8 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
 
-@register(Donation)
-class DonationStateMachine(ContributionStateMachine):
+@register(Donor)
+class DonorStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -237,14 +237,14 @@ class DonationStateMachine(ContributionStateMachine):
 
     def is_successful(self):
         """donation is successful"""
-        return self.instance.status == ContributionStateMachine.succeeded
+        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The donation has been completed"),
         automatic=True,
@@ -252,10 +252,10 @@ class DonationStateMachine(ContributionStateMachine):
 
     fail = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded
         ],
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
@@ -263,8 +263,8 @@ class DonationStateMachine(ContributionStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
         ],
         refunded,
         name=_('Refund'),
@@ -273,7 +273,7 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     activity_refund = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
         description=_(
@@ -318,8 +318,8 @@ class BasePaymentStateMachine(ModelStateMachine):
     def donation_not_refunded(self):
         """donation doesn't have status refunded or activity refunded"""
         return self.instance.donation.status not in [
-            DonationStateMachine.refunded.value,
-            DonationStateMachine.activity_refunded.value,
+            DonorStateMachine.refunded.value,
+            DonorStateMachine.activity_refunded.value,
         ]
 
     initiate = Transition(
@@ -466,6 +466,60 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
 
+class BankAccountStateMachine(ModelStateMachine):
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Bank account is verified")
+    )
+    incomplete = State(
+        _('incomplete'),
+        'incomplete',
+        _("Bank account details are missing or incorrect")
+    )
+    unverified = State(
+        _('unverified'),
+        'unverified',
+        _("Bank account still needs to be verified")
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _("Bank account is rejected")
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        unverified,
+        name=_("Initiate"),
+        description=_("Bank account details are entered.")
+    )
+
+    request_changes = Transition(
+        [verified, unverified],
+        incomplete,
+        name=_('Request changes'),
+        description=_("Bank account is missing details"),
+        automatic=False
+    )
+
+    reject = Transition(
+        [verified, unverified, incomplete],
+        rejected,
+        name=_('Reject'),
+        description=_("Reject bank account"),
+        automatic=False
+    )
+
+    verify = Transition(
+        [incomplete, unverified],
+        verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=False
+    )
+
+
 class PayoutAccountStateMachine(ModelStateMachine):
     new = State(
         _('new'),
@@ -526,7 +580,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         name=_('Verify'),
         description=_("Verify the payout account."),
         automatic=False,
-        permission=can_approve,
+        permission=can_approve
     )
 
     reject = Transition(
@@ -534,7 +588,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject the payout account."),
-        automatic=False,
+        automatic=False
     )
 
     set_incomplete = Transition(
@@ -549,4 +603,34 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 @register(PlainPayoutAccount)
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
+    model = PlainPayoutAccount
+    verify = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.pending,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.rejected
+        ],
+        PayoutAccountStateMachine.verified,
+        name=_('Verify'),
+        description=_("Verify the KYC account. You will hereby confirm that you verified the users identity."),
+        automatic=False,
+        permission=PayoutAccountStateMachine.can_approve
+    )
+    reject = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.verified
+        ],
+        PayoutAccountStateMachine.rejected,
+        name=_('Reject'),
+        description=_("Reject the payout account. The uploaded ID scan "
+                      "will be removed with this step."),
+        automatic=False
+    )
+
+
+@register(MoneyContribution)
+class DonationStateMachine(ContributionStateMachine):
     pass

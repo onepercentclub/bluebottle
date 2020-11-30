@@ -280,7 +280,7 @@ class ReactionAdmin(admin.ModelAdmin):
 admin.site.register(Reaction, ReactionAdmin)
 
 
-class DonationWallpostInline(admin.TabularInline):
+class DonorWallpostInline(admin.TabularInline):
 
     model = Wallpost
     readonly_fields = ('wallpost', 'donation', 'author', 'content_type', 'text')

@@ -7,8 +7,8 @@ from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
-from bluebottle.funding.models import Funding, Donation
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.funding.models import Funding, Donor
+from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MoneySerializer
@@ -47,12 +47,10 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
             data = ContentType.objects.get_for_model(Assignment)
         elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
-        elif data == 'on-a-date':
-            data = ContentType.objects.get_for_model(OnADateActivity)
-        elif data == 'with-a-deadline':
-            data = ContentType.objects.get_for_model(WithADeadlineActivity)
-        elif data == 'ongoing':
-            data = ContentType.objects.get_for_model(OngoingActivity)
+        elif data == 'date':
+            data = ContentType.objects.get_for_model(DateActivity)
+        elif data == 'period':
+            data = ContentType.objects.get_for_model(PeriodActivity)
 
         return data
 
@@ -63,7 +61,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
 
     class Meta(object):
-        model = Donation
+        model = Donor
         fields = (
             'type',
             'id',
@@ -75,14 +73,14 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
             'anonymous',)
 
     def get_type(self, obj):
-        return 'contributions/donations'
+        return 'contributors/donations'
 
     def get_fields(self):
         """
         If the donation is anonymous, we do not return the user.
         """
         fields = super(WallpostDonationSerializer, self).get_fields()
-        if isinstance(self.instance, Donation) and self.instance.anonymous:
+        if isinstance(self.instance, Donor) and self.instance.anonymous:
             del fields['user']
         return fields
 
@@ -99,7 +97,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = serializers.IntegerField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
-    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)
+    donation = serializers.PrimaryKeyRelatedField(queryset=Donor.objects, required=False, allow_null=True)
 
     def to_representation(self, instance):
         # We want to connect a donation by just sending the id,
@@ -118,9 +116,11 @@ class WallpostSerializerBase(serializers.ModelSerializer):
 
 class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
     photo = PhotoSerializer(required=False)
-    mediawallpost = serializers.PrimaryKeyRelatedField(required=False,
-                                                       read_only=False,
-                                                       queryset=MediaWallpost.objects)
+    mediawallpost = serializers.PrimaryKeyRelatedField(
+        required=False,
+        read_only=False,
+        queryset=MediaWallpost.objects
+    )
 
     def validate(self, data):
         if 'mediawallpost' in data and data['mediawallpost'].author != self.instance.author:
@@ -140,9 +140,11 @@ class MediaWallpostSerializer(WallpostSerializerBase):
     model it's a Wallpost about. See ProjectMediaWallpost for an example.
     """
     text = ContentTextField(required=False)
-    video_html = OEmbedField(source='video_url',
-                             maxwidth='560',
-                             maxheight='315')
+    video_html = OEmbedField(
+        source='video_url',
+        maxwidth='560',
+        maxheight='315'
+    )
     photos = MediaWallpostPhotoSerializer(many=True, required=False)
     video_url = serializers.CharField(required=False, allow_blank=True)
 

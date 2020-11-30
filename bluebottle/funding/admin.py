@@ -1,15 +1,18 @@
 from __future__ import division
+
 from past.utils import old_div
 from builtins import object
 import logging
 
 from babel.numbers import get_currency_symbol
+from bluebottle.utils.utils import reverse_signed
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models
+from django.db import models, connection
 from django.http import HttpResponseRedirect
+from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -18,29 +21,29 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
+from bluebottle.funding.filters import DonorAdminStatusFilter, DonorAdminCurrencyFilter, DonorAdminPledgeFilter
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
-    Funding, Donation, Payment, PaymentProvider,
+    Funding, Donor, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings)
-from bluebottle.funding.states import DonationStateMachine
+    FundingPlatformSettings, MoneyContribution)
+from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, StripePayment
-from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment
+from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment, TelesomBankAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
-from bluebottle.wallposts.admin import DonationWallpostInline
+from bluebottle.wallposts.admin import DonorWallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +145,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donations_link', 'started',
+        'donors_link', 'started',
     ]
 
     list_display = ActivityChildAdmin.list_display + [
@@ -180,7 +183,7 @@ class FundingAdmin(ActivityChildAdmin):
         'amount_matching',
         'amount_donated',
         'amount_raised',
-        'donations_link',
+        'donors_link',
         'bank_account',
     )
 
@@ -191,7 +194,7 @@ class FundingAdmin(ActivityChildAdmin):
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
         ('deadline', 'Deadline'),
-        ('duration', 'Duration'),
+        ('contribution', 'MoneyContribution'),
         ('target', 'Target'),
         ('country', 'Country'),
         ('owner__full_name', 'Owner'),
@@ -204,20 +207,20 @@ class FundingAdmin(ActivityChildAdmin):
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
-    def donations_link(self, obj):
-        url = reverse('admin:funding_donation_changelist')
-        total = obj.donations.filter(status=DonationStateMachine.succeeded.value).count()
+    def donors_link(self, obj):
+        url = reverse('admin:funding_donor_changelist')
+        total = obj.donations.filter(status=DonorStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
-    donations_link.short_description = _("Donations")
+    donors_link.short_description = _("Donations")
 
 
-class DonationAdminForm(StateMachineModelForm):
+class DonorAdminForm(StateMachineModelForm):
     class Meta(object):
-        model = Donation
+        model = Donor
         exclude = ()
 
     def __init__(self, *args, **kwargs):
-        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        super(DonorAdminForm, self).__init__(*args, **kwargs)
         if self.instance:
             if self.instance.id:
                 # You can only select a reward if the project is set on the donation
@@ -226,32 +229,51 @@ class DonationAdminForm(StateMachineModelForm):
                 self.fields['reward'].queryset = Reward.objects.none()
 
 
-@admin.register(Donation)
-class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
-    model = Donation
-    form = DonationAdminForm
+class MoneyContributionInlineAdmin(admin.StackedInline):
+    model = MoneyContribution
+    extra = 0
+    readonly_fields = ('status', 'created', 'value')
+
+
+@admin.register(MoneyContribution)
+class MoneyContributionAdmin(ContributionChildAdmin):
+    model = MoneyContribution
+
+
+@admin.register(Donor)
+class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
+    model = Donor
+    form = DonorAdminForm
 
     raw_id_fields = ['activity', 'payout', 'user']
-    readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'payout_amount',
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
+        'amount_value', 'payout_amount_value',
+        'payment_link', 'sync_payment_link'
     ]
-    list_display = ['payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link',
+                    'state_name', 'amount', 'payout_amount']
     list_filter = [
-        DonationAdminStatusFilter,
-        DonationAdminCurrencyFilter,
-        DonationAdminPledgeFilter,
+        DonorAdminStatusFilter,
+        DonorAdminCurrencyFilter,
+        DonorAdminPledgeFilter,
     ]
     date_hierarchy = 'created'
 
-    inlines = [DonationWallpostInline]
+    inlines = [
+        MoneyContributionInlineAdmin,
+        DonorWallpostInline
+    ]
 
     superadmin_fields = [
         'force_status',
-        'amount'
+        'amount',
+        'payout_amount',
+        'sync_payment_link'
     ]
 
     fields = [
-        'created', 'activity', 'payout', 'user', 'payout_amount',
+        'created', 'activity', 'payout', 'user',
+        'amount_value', 'payout_amount_value',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
 
@@ -268,6 +290,16 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         ('anonymous', 'Anonymous'),
     )
 
+    def amount_value(self, obj):
+        if obj:
+            return obj.amount
+    amount_value.short_description = _('Amount')
+
+    def payout_amount_value(self, obj):
+        if obj:
+            return obj.payout_amount
+    payout_amount_value.short_description = _('Payout amount')
+
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def user_link(self, obj):
@@ -283,6 +315,69 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
+
+    def get_urls(self):
+        urls = super(StateMachineAdminMixin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<pk>.+)/sync/$',
+                self.admin_site.admin_view(self.sync_payment),
+                name='funding_donation_sync',
+            )
+        ]
+        return custom_urls + urls
+
+    def sync_payment(self, request, pk=None):
+        donor = Donor.objects.get(pk=pk)
+        if str(donor.amount.currency) == 'NGN':
+            try:
+                donor.payment
+            except Payment.DoesNotExist:
+                payment = FlutterwavePayment.objects.create(
+                    donation=donor,
+                    tx_ref=donor.pk
+                )
+                payment.save()
+                self.message_user(
+                    request,
+                    'Generated missing payment',
+                    level='SUCCESS'
+                )
+            donor.payment.update()
+            self.message_user(
+                request,
+                'Checked payment status for {}'.format(donor.payment),
+                level='INFO'
+            )
+        else:
+            try:
+                if donor.payment.update:
+                    donor.payment.update()
+                    self.message_user(
+                        request,
+                        'Checked payment status for {}'.format(donor.payment),
+                        level='INFO'
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        'Warning cannot check status for {}'.format(donor.payment),
+                        level='INFO'
+                    )
+            except Payment.DoesNotExist:
+                self.message_user(
+                    request,
+                    'Payment not found',
+                    level='WARNING'
+                )
+
+        donor_url = reverse('admin:funding_donor_change', args=(donor.id,))
+        response = HttpResponseRedirect(donor_url)
+        return response
+
+    def sync_payment_link(self, obj):
+        sync_url = reverse('admin:funding_donation_sync', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', sync_url, _('Sync donation with payment.'))
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -465,26 +560,34 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('connect_account', 'reviewed', ) + readonly_fields
+    readonly_fields = ('document', 'funding_links', 'created', 'updated')
+    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
     show_in_index = True
 
-    def get_form(self, request, obj=None, **kwargs):
-        help_texts = {
-            'verified': _('To verify this bank account review details here and also review the connected account.')
-        }
-        kwargs.update({'help_texts': help_texts})
-        return super(BankAccountChildAdmin, self).get_form(request, obj, **kwargs)
+    def document(self, obj):
+        if obj.connect_account and \
+                isinstance(obj.connect_account, PlainPayoutAccount) and \
+                obj.connect_account.document and \
+                obj.connect_account.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.connect_account.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.connect_account.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
     search_fields = ['externalaccount__account_id',
@@ -499,6 +602,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
         LipishaBankAccount,
         VitepayBankAccount,
         PledgeBankAccount,
+        TelesomBankAccount
     ]
 
 
@@ -518,11 +622,24 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-    fields = PayoutAccountChildAdmin.fields + ['document']
+    readonly_fields = ['document_link']
+    fields = PayoutAccountChildAdmin.fields + ['document', 'document_link']
+
+    def document_link(self, obj):
+        if obj.document and obj.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
-class DonationInline(PaymentLinkMixin, admin.TabularInline):
-    model = Donation
+class DonorInline(PaymentLinkMixin, admin.TabularInline):
+    model = Donor
     readonly_fields = ('created', 'amount', 'status', 'payment_link')
     fields = readonly_fields
     extra = 0
@@ -535,7 +652,7 @@ class DonationInline(PaymentLinkMixin, admin.TabularInline):
 @admin.register(Payout)
 class PayoutAdmin(StateMachineAdmin):
     model = Payout
-    inlines = [DonationInline]
+    inlines = [DonorInline]
     raw_id_fields = ('activity', )
     readonly_fields = [
         'status',

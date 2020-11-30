@@ -15,7 +15,7 @@ from future import standard_library
 from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
 
@@ -31,6 +31,7 @@ class Event(Activity):
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
@@ -53,14 +54,14 @@ class Event(Activity):
     @property
     def stats(self):
         from .states import ParticipantStateMachine
-        contributions = self.contributions.instance_of(Participant)
+        contributors = self.contributors.instance_of(Participant)
 
-        stats = contributions.filter(
+        stats = contributors.filter(
             status=ParticipantStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id'), hours=Sum('participant__time_spent')
         )
-        committed = contributions.filter(
+        committed = contributors.filter(
             status=ParticipantStateMachine.new.value
         ).aggregate(
             committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent')
@@ -78,6 +79,10 @@ class Event(Activity):
             return pytz.timezone(tz_name)
 
     @property
+    def activity_date(self):
+        return self.start
+
+    @property
     def local_timezone_name(self):
         return self.local_timezone.tzname(self.local_start)
 
@@ -90,7 +95,7 @@ class Event(Activity):
             return self.start
 
     @property
-    def contribution_date(self):
+    def contributor_date(self):
         return self.start
 
     class Meta(object):
@@ -123,12 +128,12 @@ class Event(Activity):
 
     @property
     def all_participants(self):
-        return self.contributions.instance_of(Participant)
+        return self.contributors.instance_of(Participant)
 
     @property
     def participants(self):
         from .states import ParticipantStateMachine
-        return self.contributions.filter(
+        return self.contributors.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
                 ParticipantStateMachine.succeeded.value
@@ -138,6 +143,19 @@ class Event(Activity):
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'event', self.pk)
+
+    @property
+    def details(self):
+        details = HTMLParser().unescape(
+            u'{}\n{}'.format(
+                strip_tags(self.description), self.get_absolute_url()
+            )
+        )
+
+        if self.is_online and self.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
+
+        return details
 
     @property
     def google_calendar_link(self):
@@ -152,11 +170,7 @@ class Event(Activity):
             'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'details': self.details,
             'uid': self.uid,
         }
 
@@ -180,11 +194,7 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'body': self.details
         }
 
         if self.location:
@@ -194,7 +204,7 @@ class Event(Activity):
 
 
 @python_2_unicode_compatible
-class Participant(Contribution):
+class Participant(Contributor):
     time_spent = models.FloatField(default=0)
 
     class Meta(object):
@@ -214,16 +224,13 @@ class Participant(Contribution):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/participants'
+        resource_name = 'contributors/participants'
 
     def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.activity.start
+        if not self.contributor_date:
+            self.contributor_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return self.user.full_name
 
 
 from bluebottle.events.periodic_tasks import *  # noqa

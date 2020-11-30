@@ -1,10 +1,7 @@
 import csv
-import six
-from builtins import object
 from builtins import str
 
-from adminfilters.multiselect import UnionFieldListFilter
-from django.conf import settings
+import six
 from django.contrib import admin
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
@@ -13,13 +10,12 @@ from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django_singleton_admin.admin import SingletonAdmin
 from django.utils.encoding import smart_str
-
+from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.utils.exchange_rates import convert
@@ -101,7 +97,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         if header:
             row = labels if labels else field_names
-            if queryset.model is Member or issubclass(queryset.model, Contribution):
+            if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
@@ -117,7 +113,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value)
-            if isinstance(obj, Contribution):
+            if isinstance(obj, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.user.extra.get(field=field).value
@@ -152,31 +148,9 @@ class TotalAmountAdminChangeList(ChangeList):
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 
-class LatLongMapPickerMixin(object):
-
-    class Media(object):
-        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
-            css = {
-                'all': ('css/admin/location_picker.css',),
-            }
-            js = (
-                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
-                'js/admin/location_picker.js',
-            )
-
-
 class BasePlatformSettingsAdmin(SingletonAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-class TranslatedUnionFieldListFilter(UnionFieldListFilter):
-
-    def __init__(self, field, request, params, model, model_admin, field_path):
-        super(TranslatedUnionFieldListFilter, self).__init__(
-            field, request, params, model, model_admin, field_path)
-        # Remove duplicates and order by title
-        self.lookup_choices = sorted(list(set(self.lookup_choices)), key=lambda tup: tup[1])
 
 
 def log_action(obj, user, change_message='Changed', action_flag=CHANGE):

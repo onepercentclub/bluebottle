@@ -7,7 +7,7 @@ from djmoney.money import Money
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, BankAccountFactory, DonationFactory,
+    FundingFactory, BankAccountFactory, DonorFactory,
     BudgetLineFactory, RewardFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
@@ -23,7 +23,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        bank_account = BankAccountFactory.create()
+        bank_account = BankAccountFactory.create(status='verified')
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
@@ -60,7 +60,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.states.submit()
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             activity=self.funding,
             amount=Money(70, 'EUR')
         )
@@ -96,18 +96,18 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        account = StripePayoutAccountFactory.create()
-        bank_account = ExternalAccountFactory.create(connect_account=account)
+        account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=account, status='verified')
 
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
             bank_account=bank_account
         )
-        self.admin_url = reverse('admin:funding_donation_changelist')
+        self.admin_url = reverse('admin:funding_donor_changelist')
 
     def test_donation_total(self):
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
             2,
             activity=self.funding,
             amount=Money(100, 'NGN')
@@ -121,27 +121,27 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         )
 
     def test_donation_admin_pledge_filter(self):
-        for donation in DonationFactory.create_batch(2, activity=self.funding):
+        for donation in DonorFactory.create_batch(2, activity=self.funding):
             PledgePaymentFactory.create(donation=donation)
 
-        for donation in DonationFactory.create_batch(7, activity=self.funding):
+        for donation in DonorFactory.create_batch(7, activity=self.funding):
             StripePaymentFactory.create(donation=donation)
 
         self.client.force_login(self.superuser)
 
         response = self.client.get(self.admin_url, {'status__exact': 'all'})
-        self.assertContains(response, '9 Donations')
+        self.assertContains(response, '9 Donors')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'paid'})
-        self.assertContains(response, '7 Donations')
+        self.assertContains(response, '7 Donors')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'pledged'})
-        self.assertContains(response, '2 Donations')
+        self.assertContains(response, '2 Donors')
 
     def test_donation_reward(self):
-        donation = DonationFactory.create(activity=self.funding)
+        donation = DonorFactory.create(activity=self.funding)
 
-        url = reverse('admin:funding_donation_change', args=(donation.pk, ))
+        url = reverse('admin:funding_donor_change', args=(donation.pk, ))
         first = RewardFactory.create(title='First', activity=self.funding)
         second = RewardFactory.create(title='Second', activity=self.funding)
         third = RewardFactory.create(title='Third')
@@ -158,8 +158,8 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()
-        self.payout_account = StripePayoutAccountFactory.create()
-        self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account)
+        self.payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))
         self.bank_account_url = reverse('admin:funding_bankaccount_change', args=(self.bank_account.id,))
         self.client.force_login(self.superuser)

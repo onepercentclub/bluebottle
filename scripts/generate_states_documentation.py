@@ -104,40 +104,26 @@ models = [
         'page_id': '1050148912'
     },
 
-    # Events
-    {
-        'title': 'States - Event',
-        'model': 'bluebottle.events.models.Event',
-        'page_id': '742654166'
-    },
-    {
-        'title': 'States - Event - Participant',
-        'model': 'bluebottle.events.models.Participant',
-        'page_id': '742654190'
-    },
-
-    # Assignments/Tasks
-    {
-        'title': 'States - Task',
-        'model': 'bluebottle.assignments.models.Assignment',
-        'page_id': '742326537'
-    },
-    {
-        'title': 'States - Task - Applicant',
-        'model': 'bluebottle.assignments.models.Applicant',
-        'page_id': '742359221'
-    },
-
     # Time-based Activities
     {
         'title': 'States - Time based - Activity on a date',
-        'model': 'bluebottle.time_based.models.OnADateActivity',
+        'model': 'bluebottle.time_based.models.DateActivity',
         'page_id': '1120731198'
     },
     {
-        'title': 'States - Time based - Activity over time',
-        'model': 'bluebottle.assignments.models.OngoingActivity',
+        'title': 'States - Time based - Participant on a date',
+        'model': 'bluebottle.time_based.models.DateParticipant',
+        'page_id': '1180041279'
+    },
+    {
+        'title': 'States - Time based - Activity over a period',
+        'model': 'bluebottle.time_based.models.PeriodActivity',
         'page_id': '1120731205'
+    },
+    {
+        'title': 'States - Time based - Participant over a period',
+        'model': 'bluebottle.time_based.models.PeriodParticipant',
+        'page_id': '1179975839'
     },
 
 ]

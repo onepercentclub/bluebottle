@@ -10,6 +10,7 @@ from bluebottle.time_based.models import TimeContribution
 
 
 class CreateDateParticipationEffect(Effect):
+    title = _('Create contribution')
     template = 'admin/create_on_a_date_duration.html'
 
     def post_save(self, **kwargs):
@@ -26,7 +27,7 @@ class CreateDateParticipationEffect(Effect):
 
 
 class CreatePeriodParticipationEffect(Effect):
-    title = _('Create contribution duration')
+    title = _('Create contribution')
     template = 'admin/create_period_duration.html'
 
     def post_save(self, **kwargs):
@@ -56,7 +57,7 @@ class CreatePeriodParticipationEffect(Effect):
             contribution.save()
 
     def __str__(self):
-        return _('Create contribution duration')
+        return _('Create contribution')
 
 
 class SetEndDateEffect(Effect):

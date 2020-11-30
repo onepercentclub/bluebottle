@@ -88,6 +88,11 @@ class BaseTransitionEffect(Effect):
         return '<Effect: {}>'.format(self.transition)
 
     def __str__(self):
+        if self.instance:
+            return _('{transition} {object}').format(
+                transition=self.transition.name,
+                object=str(self.instance)
+            )
         return str(self.transition.target)
 
     @ property

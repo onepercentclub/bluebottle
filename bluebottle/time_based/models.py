@@ -312,8 +312,6 @@ class PeriodParticipant(Participant, Contributor):
 
 class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
-    start = models.DateTimeField(_('start'))
-    end = models.DateTimeField(_('end'), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Contribution")

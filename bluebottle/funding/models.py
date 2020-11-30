@@ -52,6 +52,8 @@ class PaymentCurrency(models.Model):
 @python_2_unicode_compatible
 class PaymentProvider(PolymorphicModel):
 
+    title = 'Payment Service Provider'
+
     public_settings = {}
     private_settings = {}
 

@@ -14,6 +14,9 @@ class PledgePayment(Payment):
 
 
 class PledgePaymentProvider(PaymentProvider):
+
+    title = 'Pledges only'
+
     @property
     def payment_methods(self):
         return []

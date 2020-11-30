@@ -1,5 +1,8 @@
 from __future__ import print_function
 from builtins import str
+from datetime import timedelta
+
+from django.utils.timezone import now
 
 from bluebottle.funding_pledge.models import PledgePayment
 from django.core.exceptions import FieldDoesNotExist
@@ -7,11 +10,11 @@ from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
 from bluebottle.fsm.triggers import TransitionTrigger
-from bluebottle.events.models import Event
-from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment
+from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
+    TimeContribution
 
 
 def get_doc(element):
@@ -84,6 +87,13 @@ class Command(BaseCommand):
             instance.activity = Funding(title="the campaign")
             instance.user = Member(first_name='the', last_name='donor')
 
+        if isinstance(instance, MoneyContribution):
+            donor = Donor()
+            donor.activity = Funding(title="the campaign")
+            donor.user = Member(first_name='the', last_name='donor')
+            PledgePayment(donation=donor)
+            instance.contributor = donor
+
         if isinstance(instance, Payment):
             instance.donation = Donor()
 
@@ -92,7 +102,7 @@ class Command(BaseCommand):
             instance.owner = Member(first_name='activity', last_name='owner')
 
         if isinstance(instance, PeriodParticipant):
-            instance.activity = Event(title="the activity")
+            instance.activity = PeriodActivity(title="the activity")
             instance.user = Member(first_name='the', last_name='participant')
 
         if isinstance(instance, DateActivity):
@@ -102,6 +112,14 @@ class Command(BaseCommand):
         if isinstance(instance, DateParticipant):
             instance.activity = DateActivity(title="the activity")
             instance.user = Member(first_name='the', last_name='participant')
+
+        if isinstance(instance, TimeContribution):
+            contributor = PeriodParticipant()
+            contributor.activity = PeriodActivity(title="the activity")
+            contributor.user = Member(first_name='the', last_name='participant')
+            instance.contributor = contributor
+            instance.start = now() + timedelta(days=4)
+            instance.value = timedelta(hours=4)
 
         if isinstance(instance, PayoutAccount):
             instance.owner = Member(first_name='the', last_name='owner')

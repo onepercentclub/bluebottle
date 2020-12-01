@@ -32,7 +32,9 @@ from bluebottle.time_based.states import (
 
 
 def is_full(effect):
-    "the activity is full"
+    """
+    the activity is full
+    """
     return (
         effect.instance.capacity and
         effect.instance.capacity <= len(effect.instance.accepted_participants)
@@ -40,7 +42,9 @@ def is_full(effect):
 
 
 def is_not_full(effect):
-    "the activity is not full"
+    """
+    the activity is not full
+    """
     return (
         effect.instance.capacity and
         effect.instance.capacity > len(effect.instance.accepted_participants)
@@ -48,14 +52,21 @@ def is_not_full(effect):
 
 
 def has_participants(effect):
+    """ has participants"""
     return len(effect.instance.active_participants) > 0
 
 
 def has_no_participants(effect):
+    """
+    has no participants
+    """
     return len(effect.instance.active_participants) == 0
 
 
 def is_finished(effect):
+    """
+    is finished
+    """
     return (
         effect.instance.start and
         effect.instance.duration and
@@ -64,6 +75,9 @@ def is_finished(effect):
 
 
 def is_not_finished(effect):
+    """
+    is not finished
+    """
     return (
         effect.instance.start and
         effect.instance.duration and
@@ -72,6 +86,9 @@ def is_not_finished(effect):
 
 
 def registration_deadline_is_passed(effect):
+    """
+    registration deadline has passed
+    """
     return (
         effect.instance.registration_deadline and
         effect.instance.registration_deadline < date.today()
@@ -79,6 +96,9 @@ def registration_deadline_is_passed(effect):
 
 
 def registration_deadline_is_not_passed(effect):
+    """
+    egistration deadline hasn't passed
+    """
     return (
         effect.instance.registration_deadline and
         effect.instance.registration_deadline > date.today()
@@ -86,7 +106,9 @@ def registration_deadline_is_not_passed(effect):
 
 
 def deadline_is_passed(effect):
-
+    """
+    deadline has passed
+    """
     return (
         effect.instance.deadline and
         effect.instance.deadline < date.today()
@@ -94,6 +116,9 @@ def deadline_is_passed(effect):
 
 
 def deadline_is_not_passed(effect):
+    """
+    deadline hasn't passed
+    """
     return (
         effect.instance.deadline and
         effect.instance.deadline > date.today()
@@ -101,6 +126,9 @@ def deadline_is_not_passed(effect):
 
 
 def start_is_not_passed(effect):
+    """
+    start date hasn't passed
+    """
     return (
         effect.instance.start and
         effect.instance.start > date.today()
@@ -108,6 +136,9 @@ def start_is_not_passed(effect):
 
 
 def is_started(effect):
+    """
+    has started
+    """
     to_compare = now()
 
     if not isinstance(effect.instance, DateActivity):
@@ -120,6 +151,9 @@ def is_started(effect):
 
 
 def is_not_started(effect):
+    """
+    hasn't started yet
+    """
     to_compare = now()
 
     if not isinstance(effect.instance, DateActivity):
@@ -344,15 +378,23 @@ class PeriodTriggers(TimeBasedTriggers):
 
 
 def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
     return not effect.instance.activity.review
 
 
 def needs_review(effect):
+    """
+    needs review
+    """
     return effect.instance.activity.review
 
 
 def activity_will_be_full(effect):
-    "the activity is full"
+    """
+    the activity is full
+    """
     activity = effect.instance.activity
     return (
         activity.capacity and
@@ -361,7 +403,9 @@ def activity_will_be_full(effect):
 
 
 def activity_will_not_be_full(effect):
-    "the activity is full"
+    """
+    the activity is full
+    """
     activity = effect.instance.activity
     return (
         activity.capacity and
@@ -370,6 +414,9 @@ def activity_will_not_be_full(effect):
 
 
 def activity_is_finished(effect):
+    """
+    the activity has finished
+    """
     activity = effect.instance.activity
 
     if isinstance(activity, DateActivity):
@@ -530,6 +577,9 @@ class PeriodParticipantTriggers(ParticipantTriggers):
 
 
 def duration_is_finished(effect):
+    """
+    contribution (session) has finished
+    """
     return effect.instance.end is None or effect.instance.end < now()
 
 

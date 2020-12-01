@@ -34,7 +34,7 @@ class TimeBasedActivityStartedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Start an activity when start date has passed.")
+        return str(_("Start an activity when start date has passed."))
 
 
 class PeriodActivityFinishedTask(ModelPeriodicTask):
@@ -55,7 +55,7 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Finish an activity when deadline has passed.")
+        return str(_("Finish an activity when deadline has passed."))
 
 
 class NewPeriodForParticipantTask(ModelPeriodicTask):
@@ -72,7 +72,7 @@ class NewPeriodForParticipantTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Create a new contribution for participant")
+        return str(_("Create a new contribution for participant"))
 
 
 class DateActivityStartedTask(ModelPeriodicTask):
@@ -93,7 +93,7 @@ class DateActivityStartedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Start an start when start date has passed.")
+        return str(_("Start an start when start date has passed."))
 
 
 class DateActivityFinishedTask(ModelPeriodicTask):
@@ -114,7 +114,7 @@ class DateActivityFinishedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Finish an activity when end time has passed.")
+        return str(_("Finish an activity when end time has passed."))
 
 
 class TimeContributionFinishedTask(ModelPeriodicTask):
@@ -131,7 +131,7 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Finish an activity when end time has passed.")
+        return str(_("Finish an activity when end time has passed."))
 
 
 DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask]

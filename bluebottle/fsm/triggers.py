@@ -52,7 +52,7 @@ class ModelChangedTrigger(Trigger):
         super(ModelChangedTrigger, self).__init__(*args, **kwargs)
         self.field = field
 
-    @ property
+    @property
     def title(self):
         return 'change the {}'.format(self.field)
 
@@ -61,8 +61,7 @@ class ModelChangedTrigger(Trigger):
 
     def __str__(self):
         if self.field:
-            field_name = self.instance._meta.get_field(self.field).verbose_name
-            return str(_("{} has been changed").format(field_name.capitalize()))
+            return str(_("{} has been changed").format(self.field.capitalize()))
         return str(_("Object has been changed"))
 
 
@@ -82,11 +81,10 @@ class TransitionTrigger(Trigger):
         return str(_("Model has changed status"))
 
     def title(self):
-        import ipdb
-        ipdb.set_trace()
+        return "MISSING TITLE"
 
 
-@ receiver(pre_state_transition)
+@receiver(pre_state_transition)
 def transition_trigger(sender, instance, transition, **kwargs):
     if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
         for trigger in instance.triggers.triggers:
@@ -97,7 +95,6 @@ def transition_trigger(sender, instance, transition, **kwargs):
 def register(model_cls):
     def _register(TriggerManager):
         model_cls.triggers = TriggerManager()
-
         return TriggerManager
 
     return _register
@@ -124,14 +121,14 @@ class TriggerMixin(object):
             if not field.is_relation
         )
 
-    @ classmethod
+    @classmethod
     def get_periodic_tasks(cls):
         result = []
         for task in cls.periodic_tasks:
             result.append(task(cls))
         return result
 
-    @ classmethod
+    @classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
         instance._initial_values = dict(list(zip(field_names, values)))

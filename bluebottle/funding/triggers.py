@@ -2,7 +2,7 @@ from django.utils import timezone
 
 from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
-from bluebottle.activities.triggers import ActivityTriggers
+from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -25,7 +25,8 @@ from bluebottle.funding.messages import (
     FundingCancelledMessage, FundingApprovedMessage
 
 )
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount, \
+    MoneyContribution
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
@@ -389,8 +390,15 @@ class DonorTriggers(ContributorTriggers):
     ]
 
 
+@register(MoneyContribution)
+class MoneyContributionTriggers(ContributionTriggers):
+    triggers = []
+
+
 def donation_not_refunded(effect):
-    """donation doesn't have status refunded or activity refunded"""
+    """
+    donation doesn't have status refunded or activity refunded
+    """
     return effect.instance.donation.status not in [
         DonorStateMachine.refunded.value,
         DonorStateMachine.activity_refunded.value,

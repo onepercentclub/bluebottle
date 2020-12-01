@@ -7,12 +7,20 @@ from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContri
 
 
 def initiative_is_approved(effect):
+    """
+    The initiative is approved
+    """
     return effect.instance.initiative.status == 'approved'
 
 
 class ActivityTriggers(TriggerManager):
     triggers = [
-        TransitionTrigger(ActivityStateMachine.initiate, effects=[CreateOrganizer]),
+        TransitionTrigger(
+            ActivityStateMachine.initiate,
+            effects=[
+                CreateOrganizer
+            ]
+        ),
 
         TransitionTrigger(
             ActivityStateMachine.submit,

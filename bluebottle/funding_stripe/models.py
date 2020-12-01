@@ -212,6 +212,8 @@ class StripeSourcePayment(Payment):
 
 class StripePaymentProvider(PaymentProvider):
 
+    title = 'Stripe'
+
     stripe_payment_methods = [
         PaymentMethod(
             provider='stripe',

@@ -8,6 +8,8 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 class VitepayPaymentProvider(PaymentProvider):
 
+    title = 'Vitepay / Orange Money'
+
     api_secret = models.CharField(max_length=100)
     prefix = models.CharField(max_length=10, default='goodup')
     api_key = models.CharField(max_length=100)

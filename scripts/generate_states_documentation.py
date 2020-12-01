@@ -27,6 +27,11 @@ models = [
         'page_id': '739999825'
     },
     {
+        'title': 'States - Funding - Money Contribution',
+        'model': 'bluebottle.funding.models.MoneyContribution',
+        'page_id': '1179975917'
+    },
+    {
         'title': 'States - Funding - Fundraising Campaign',
         'model': 'bluebottle.funding.models.Funding',
         'page_id': '742359054'
@@ -124,6 +129,11 @@ models = [
         'title': 'States - Time based - Participant over a period',
         'model': 'bluebottle.time_based.models.PeriodParticipant',
         'page_id': '1179975839'
+    },
+    {
+        'title': 'States - Time based - Time contribution',
+        'model': 'bluebottle.time_based.models.TimeContribution',
+        'page_id': '1180008621'
     },
 
 ]

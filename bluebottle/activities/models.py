@@ -181,6 +181,9 @@ class Contribution(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
+    start = models.DateTimeField(_('start'), null=True, blank=True)
+    end = models.DateTimeField(_('end'), null=True, blank=True)
+
     contributor = models.ForeignKey(
         Contributor, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE
     )

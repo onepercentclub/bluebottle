@@ -15,7 +15,7 @@ def update_contribution_dates(apps, schema_editor):
     UPDATE {0}.activities_contribution c
         SET "start" = tc.old_start, "end" = tc.old_end 
         FROM time_based_timecontribution tc 
-        WHERE tc.contribution_ptr_id = c.id;    
+        WHERE tc.contribution_ptr_id = c.id;
     """.format(connection.tenant.schema_name)
 
     if connection.tenant.schema_name != 'public':

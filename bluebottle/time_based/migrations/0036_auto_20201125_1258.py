@@ -172,7 +172,7 @@ def migrate_contributors(apps, schema_editor):
             'start': participant['activity__event__start'],
             'end': participant['activity__event__start'] + timedelta(duration),
             'value': timedelta(hours=participant['time_spent'] or 0) 
-        });
+        })
 
     for applicant in Applicant.objects.values(
         'contributor_ptr_id', 'time_spent', 'motivation', 'document_id', 'activity__assignment__date', 
@@ -206,7 +206,7 @@ def migrate_contributors(apps, schema_editor):
             'start': applicant['created'],
             'end': applicant['activity__assignment__date'],
             'value': timedelta(hours=applicant['time_spent'] or 0) 
-        });
+        })
 
     insert('time_based_dateparticipant', date_participant_fields, date_participants)
     insert('time_based_periodparticipant', period_participant_fields, period_participants)
@@ -247,6 +247,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('time_based', '0035_auto_20201120_1318'),
+        ('assignments', '0024_auto_20201112_1519'),
+        ('events', '0020_auto_20201112_1519')
     ]
 
     operations = [

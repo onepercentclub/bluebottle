@@ -11,6 +11,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('activities', '0028_auto_20201112_1439'),
         ('time_based', '0027_auto_20201110_1613'),
     ]
 

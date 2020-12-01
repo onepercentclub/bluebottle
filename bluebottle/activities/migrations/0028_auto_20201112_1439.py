@@ -30,7 +30,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('activities', '0027_contributionvalue'),
         ('time_based', '0027_auto_20201110_1613'),
-
     ]
 
     operations = [

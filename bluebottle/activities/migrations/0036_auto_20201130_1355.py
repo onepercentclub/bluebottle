@@ -40,6 +40,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('activities', '0035_auto_20201130_1337'),
+        ('time_based', '0042_merge_20201201_1259'),
+        ('funding', '0060_auto_20201127_0922')
     ]
 
     operations = [

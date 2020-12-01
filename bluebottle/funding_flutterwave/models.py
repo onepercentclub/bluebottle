@@ -20,6 +20,8 @@ class FlutterwavePayment(Payment):
 
 class FlutterwavePaymentProvider(PaymentProvider):
 
+    title = 'Flutterwave'
+
     pub_key = models.CharField(max_length=100)
     sec_key = models.CharField(max_length=100)
     prefix = models.CharField(max_length=100, default='goodup')

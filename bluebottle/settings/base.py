@@ -324,8 +324,6 @@ TENANT_APPS = (
     'django.contrib.admindocs',
     'django.contrib.auth',
 
-    'bb_salesforce',
-
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 
@@ -520,11 +518,6 @@ LOGGING = {
             'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
-        },
-        'bluebottle.salesforce': {
-            'handlers': ['mail_admins'],
-            'propagate': True,
-            'level': 'ERROR',
         },
     }
 }
@@ -878,11 +871,6 @@ SHARE_OPTIONS = {
 }
 
 SHOW_DONATION_AMOUNTS = True
-
-# Salesforce connection settings
-SALESFORCE_QUERY_TIMEOUT = 15
-REQUESTS_MAX_RETRIES = 0
-SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link',  # needed starting from protocol v2.4

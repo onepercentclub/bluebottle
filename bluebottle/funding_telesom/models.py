@@ -7,6 +7,8 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 class TelesomPaymentProvider(PaymentProvider):
 
+    title = 'Telesom / Zaad'
+
     merchant_uid = models.CharField(max_length=100)
     api_user_id = models.CharField(max_length=100)
     api_key = models.CharField(max_length=100)

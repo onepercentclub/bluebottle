@@ -24,7 +24,7 @@ def update_contribution_dates(apps, schema_editor):
             cn.end as transition_date,
             cn.start,
             cn.end
-        FROM dll.activities_contribution cn
+        FROM {0}.activities_contribution cn
             LEFT JOIN {0}.activities_contributor cr ON cn.contributor_id = cr.id
             LEFT JOIN {0}.time_based_timecontribution tc ON tc.contribution_ptr_id = cn.id
             LEFT JOIN {0}.funding_moneycontribution mc ON mc.contribution_ptr_id = cn.id

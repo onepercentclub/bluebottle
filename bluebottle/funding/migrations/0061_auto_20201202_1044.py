@@ -35,6 +35,7 @@ def create_money_contributions(apps, schema_editor):
 
     contribution_fields = [
         'status',
+        'start',
         'contributor_id',
         'created',
         'polymorphic_ctype_id'
@@ -62,6 +63,7 @@ def create_money_contributions(apps, schema_editor):
         contributions.append({
             'polymorphic_ctype_id': money_contribution_ctype,
             'status': status,
+            'start': donor['contributor_date'],
             'contributor_id': donor['id'],
             'created': donor['created']
         })

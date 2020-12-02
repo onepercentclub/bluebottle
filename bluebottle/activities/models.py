@@ -164,7 +164,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        return _('Guest')
+        return str(_('Guest'))
 
 
 @python_2_unicode_compatible

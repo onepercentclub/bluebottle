@@ -223,6 +223,16 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
 class TimeContributionAdmin(ContributionChildAdmin):
     basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
 
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        }
+    }
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             (_('Basic'), {'fields': self.basic_fields}),

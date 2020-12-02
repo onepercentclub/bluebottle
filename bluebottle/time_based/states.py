@@ -183,7 +183,8 @@ class ParticipantStateMachine(ContributorStateMachine):
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
         conditions=[activity_is_open],
-        permission=ContributorStateMachine.is_user,
+        permission=is_user,
+        hide_from_admin=True,
     )
 
     mark_absent = Transition(

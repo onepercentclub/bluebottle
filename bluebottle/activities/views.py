@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -12,8 +13,6 @@ from bluebottle.activities.serializers import (
     ActivityListSerializer,
     ContributorListSerializer
 )
-from bluebottle.assignments.models import Applicant
-from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
@@ -83,11 +82,9 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         return Contributor.objects.prefetch_related(
-            'user', 'activity'
+            'user', 'activity', 'contributions'
         ).instance_of(
             Donor,
-            Applicant,
-            Participant,
             DateParticipant,
             PeriodParticipant
         ).filter(
@@ -96,7 +93,11 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             status__in=['rejected', 'failed']
         ).exclude(
             donor__status__in=['new']
-        ).order_by('-created')
+        ).order_by(
+            '-created'
+        ).annotate(
+            total_duration=Sum('contributions__timecontribution__value'),
+        )
 
     serializer_class = ContributorListSerializer
 

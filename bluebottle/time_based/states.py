@@ -151,6 +151,16 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=can_accept_participant,
     )
 
+    add = Transition(
+        [
+            ContributorStateMachine.new
+        ],
+        accepted,
+        name=_('Add'),
+        description=_("Participant was added through back office."),
+        automatic=True
+    )
+
     reject = Transition(
         [
             ContributorStateMachine.new,

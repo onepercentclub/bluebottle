@@ -218,7 +218,7 @@ class TimeBasedTriggers(ActivityTriggers):
     ]
 
 
-@ register(DateActivity)
+@register(DateActivity)
 class DateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
@@ -280,9 +280,8 @@ class DateTriggers(TimeBasedTriggers):
     ]
 
 
-@ register(PeriodActivity)
+@register(PeriodActivity)
 class PeriodTriggers(TimeBasedTriggers):
-
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
             PeriodStateMachine.reschedule,
@@ -391,6 +390,24 @@ def needs_review(effect):
     return effect.instance.activity.review
 
 
+def is_not_user(effect):
+    """
+    User is not the participant
+    """
+    if 'user' in effect.options:
+        return effect.instance.user != effect.options['user']
+    return True
+
+
+def is_user(effect):
+    """
+    User is the participant
+    """
+    if 'user' in effect.options:
+        return effect.instance.user == effect.options['user']
+    return False
+
+
 def activity_will_be_full(effect):
     """
     the activity is full
@@ -441,14 +458,21 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantCreatedNotification,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                        is_user
+                    ]
                 ),
-                NotificationEffect(
-                    ParticipantAddedNotification
+                TransitionEffect(
+                    ParticipantStateMachine.add,
+                    conditions=[is_not_user]
                 ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
-                    conditions=[automatically_accept]
+                    conditions=[
+                        automatically_accept,
+                        is_user
+                    ]
                 ),
 
             ]
@@ -466,6 +490,36 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.reset,
                 )
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[activity_will_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                ),
+
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+
+                RelatedTransitionEffect(
+                    'finished_contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
             ]
         ),
 
@@ -551,7 +605,7 @@ class ParticipantTriggers(ContributorTriggers):
     ]
 
 
-@ register(DateParticipant)
+@register(DateParticipant)
 class OnADateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -563,7 +617,7 @@ class OnADateParticipantTriggers(ParticipantTriggers):
     ]
 
 
-@ register(PeriodParticipant)
+@register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -583,7 +637,7 @@ def duration_is_finished(effect):
     return effect.instance.end is None or effect.instance.end < now()
 
 
-@ register(TimeContribution)
+@register(TimeContribution)
 class TimeContributionTriggers(ContributionTriggers):
     triggers = ContributionTriggers.triggers + [
         TransitionTrigger(

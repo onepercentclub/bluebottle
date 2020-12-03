@@ -464,6 +464,7 @@ class ParticipantTriggerTestCase():
         )
 
         self.user = BlueBottleUserFactory()
+        self.admin_user = BlueBottleUserFactory(is_staff=True)
         self.initiative = InitiativeFactory(owner=self.user)
 
         self.activity = self.factory.create(initiative=self.initiative, review=False)
@@ -477,7 +478,12 @@ class ParticipantTriggerTestCase():
 
     def test_initial_review(self):
         mail.outbox = []
-        participant = self.participant_factory.create(activity=self.review_activity)
+        participant = self.participant_factory.build(
+            activity=self.review_activity
+        )
+        participant.user.save()
+        participant.execute_triggers(user=participant.user, send_messages=True)
+        participant.save()
 
         self.assertEqual(participant.status, 'new')
         self.assertEqual(
@@ -486,13 +492,27 @@ class ParticipantTriggerTestCase():
                 self.review_activity.title
             )
         )
+
+    def test_initial_added_through_admin(self):
+        mail.outbox = []
+        participant = self.participant_factory.build(
+            activity=self.review_activity
+        )
+        participant.user.save()
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+
+        self.assertEqual(participant.status, 'accepted')
         self.assertEqual(
-            mail.outbox[1].subject,
+            mail.outbox[0].subject,
             'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
         )
 
     def test_accept(self):
-        participant = self.participant_factory.create(activity=self.review_activity)
+        participant = self.participant_factory.create(
+            activity=self.review_activity,
+            status='new'
+        )
 
         mail.outbox = []
         participant.states.accept(save=True)
@@ -506,9 +526,11 @@ class ParticipantTriggerTestCase():
             )
         )
 
-    def test_initial_review_not_added(self):
+    def test_initial_review_(self):
         mail.outbox = []
-        participant = self.participant_factory.build(activity=self.review_activity)
+        participant = self.participant_factory.build(
+            activity=self.review_activity
+        )
         participant.user.save()
         participant.execute_triggers(user=participant.user, send_messages=True)
         participant.save()
@@ -524,20 +546,17 @@ class ParticipantTriggerTestCase():
 
     def test_initial_no_review(self):
         mail.outbox = []
-        participant = self.participant_factory.create(activity=self.activity)
+        participant = self.participant_factory.build(
+            activity=self.activity
+        )
+        participant.user.save()
+        participant.execute_triggers(user=participant.user, send_messages=True)
+        participant.save()
 
         self.assertEqual(participant.status, 'accepted')
-
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have been added to the activity "{}" 🎉'.format(
-                self.activity.title
-            )
-        )
-
-        self.assertEqual(
-            mail.outbox[1].subject,
             'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
         )
 
@@ -550,7 +569,7 @@ class ParticipantTriggerTestCase():
         self.assertEqual(self.activity.status, 'full')
 
     def test_review_fill(self):
-        participants = self.participant_factory.create_batch(
+        participants = self.participant_factory.build_batch(
             self.review_activity.capacity, activity=self.review_activity
         )
         self.review_activity.refresh_from_db()
@@ -558,6 +577,9 @@ class ParticipantTriggerTestCase():
         self.assertEqual(self.activity.status, 'open')
 
         for participant in participants:
+            participant.user.save()
+            participant.execute_triggers(user=participant.user, send_messages=True)
+            participant.save()
             participant.states.accept(save=True)
 
         self.review_activity.refresh_from_db()

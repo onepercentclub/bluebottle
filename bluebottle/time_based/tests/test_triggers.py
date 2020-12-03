@@ -637,6 +637,29 @@ class ParticipantTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'full')
 
+    def test_cancel_activity(self):
+        withdrawn = self.participant_factory.create(activity=self.activity)
+        withdrawn.states.withdraw(save=True)
+        rejected = self.participant_factory.create(activity=self.activity)
+        rejected.states.reject(save=True)
+        accepted = self.participant_factory.create(activity=self.activity)
+        self.activity.states.cancel(save=True)
+        withdrawn.refresh_from_db()
+        rejected.refresh_from_db()
+        accepted.refresh_from_db()
+        self.assertEqual(self.activity.status, 'cancelled')
+        self.assertEqual(withdrawn.status, 'withdrawn')
+        self.assertEqual(rejected.status, 'rejected')
+        self.assertEqual(accepted.status, 'cancelled')
+        self.activity.states.restore(save=True)
+        withdrawn.refresh_from_db()
+        rejected.refresh_from_db()
+        accepted.refresh_from_db()
+        self.assertEqual(self.activity.status, 'needs_work')
+        self.assertEqual(withdrawn.status, 'withdrawn')
+        self.assertEqual(rejected.status, 'rejected')
+        self.assertEqual(accepted.status, 'new')
+
 
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = DateActivityFactory

@@ -207,6 +207,19 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.cancel,
             effects=[
                 NotificationEffect(ActivityCancelledNotification),
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    ParticipantStateMachine.cancel_activity
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'cancelled_participants',
+                    ParticipantStateMachine.restore_activity
+                ),
             ]
         ),
         TransitionTrigger(

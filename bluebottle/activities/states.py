@@ -24,16 +24,17 @@ class ActivityStateMachine(ModelStateMachine):
         _('rejected'),
         'rejected',
         _(
-            'The activity doesn\'t fit the program or the rules of the game. '
-            'The activity won\'t show up on the search page in the front end, '
-            'but does count in the reporting. The activity cannot be edited by the activity manager.'
+            'The activity does not fit the programme or does not comply with the rules. '
+            'The activity does not appear on the platform, but counts in the report. '
+            'The activity cannot be edited by the activity manager.'
         )
     )
     deleted = State(
         _('deleted'),
         'deleted',
         _(
-            'The activity is not visible in the frontend and does not count in the reporting. '
+            'The activity has been removed. The activity does not appear on '
+            'the platform and does not count in the report. '
             'The activity cannot be edited by the activity manager.'
         )
     )
@@ -41,15 +42,14 @@ class ActivityStateMachine(ModelStateMachine):
         _('cancelled'),
         'cancelled',
         _(
-            'The activity is not executed. The activity won\'t show up on the search page '
-            'in the front end, but does count in the reporting. The activity cannot be '
-            'edited by the activity manager.'
+            'The activity is not executed. The activity does not appear on the platform, '
+            'but counts in the report. The activity cannot be edited by the activity manager.'
         )
     )
     open = State(
         _('open'),
         'open',
-        _('The activity is accepting new contributors.')
+        _('The activity is accepting new contributions.')
     )
     succeeded = State(
         _('succeeded'),
@@ -91,7 +91,7 @@ class ActivityStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         draft,
-        name=_('Start'),
+        name=_('Create'),
         description=_('The acivity will be created.'),
     )
 
@@ -116,10 +116,12 @@ class ActivityStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_(
-            'Reject in case this activity doesn\'t fit your program or the rules of the game. '
-            'The activity owner will not be able to edit the activity and it won\'t show up on '
-            'the search page in the front end. The activity will still be available in the '
-            'back office and appear in your reporting.'
+            'Reject the activity if it does not fit the programme or '
+            'if it does not comply with the rules. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back '
+            'office and will continue to count in the reporting.'
         ),
         automatic=False,
         permission=is_staff,
@@ -160,9 +162,11 @@ class ActivityStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         description=_(
-            'Cancel if the activity will not be executed. The activity manager will not be able '
-            'to edit the activity and it won\'t show up on the search page in the front end. The '
-            'activity will still be available in the back office and appear in your reporting.'
+            'Cancel if the activity will not be executed. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back office '
+            'and will continue to count in the reporting.'
         ),
         automatic=False,
     )
@@ -175,7 +179,11 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         needs_work,
         name=_('Restore'),
-        description=_("Restore a cancelled, rejected or deleted activity."),
+        description=_(
+            "The activity status is changed to 'Needs work'. "
+            "The manager of the activity has to enter a new date and can make changes. "
+            "The activity will then be reopened to participants."
+        ),
         automatic=False,
         permission=is_staff,
     )
@@ -185,7 +193,7 @@ class ActivityStateMachine(ModelStateMachine):
         cancelled,
         name=_('Expire'),
         description=_(
-            "The activity didn't have any contributors before the deadline to apply and is cancelled."
+            "The activity will be cancelled because no one has signed up for the registration deadline."
         ),
         automatic=True,
     )
@@ -198,8 +206,9 @@ class ActivityStateMachine(ModelStateMachine):
         permission=is_owner,
         hide_from_admin=True,
         description=_(
-            'Delete the activity if you don\'t want it to appear in your reporting. '
-            'The activity will still be available in the back office.'
+            'Delete the activity if you do not want it to be included in the report. '
+            'The activity will no longer be visible on the platform, '
+            'but will still be available in the back office.'
         ),
     )
 

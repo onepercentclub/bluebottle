@@ -11,8 +11,16 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
-    full = State(_('full'), 'full', _('The event is full, users can no longer apply.'))
-    running = State(_('running'), 'running', _('The event is running, users can no longer apply.'))
+    full = State(
+        _('full'),
+        'full',
+        _('The number of people needed is reached and people can no longer register.')
+    )
+    running = State(
+        _('running'),
+        'running',
+        _('The activity is taking place and people can\'t participate any more.')
+    )
 
     lock = Transition(
         [
@@ -23,7 +31,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
         full,
         name=_("Lock"),
         description=_(
-            "People can no longer join the event. Triggered when the attendee limit is reached."
+            "People can no longer join the event. "
+            "Triggered when the attendee limit is reached."
         )
     )
 
@@ -32,8 +41,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_("Reopen"),
         description=_(
-            "People can join the event again. Triggered when the number of attendees become "
-            "less than the attendee limit."
+            "The number of participants has fallen below the required number. "
+            "People can sign up again for the task."
         )
     )
 
@@ -46,6 +55,10 @@ class TimeBasedStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
+        description=_(
+            'The activity ends and people can no longer register. '
+            'Participants will keep their spent hours, '
+            'but will no longer be allocated new hours.'),
         automatic=True,
     )
 
@@ -70,7 +83,10 @@ class DateStateMachine(TimeBasedStateMachine):
         ],
         ActivityStateMachine.open,
         name=_("Reschedule"),
-        description=_("People can join the event again, because the date has changed."),
+        description=_(
+            "The date of the activity has been changed to a date in the future. "
+            "The status of the activity will be recalculated."
+        ),
     )
 
 
@@ -90,30 +106,44 @@ class PeriodStateMachine(TimeBasedStateMachine):
         ],
         ActivityStateMachine.open,
         name=_("Reschedule"),
-        description=_("People can join the event again, because the date has changed."),
+        description=_(
+            "The date of the activity has been changed to a date in the future. "
+            "The status of the activity will be recalculated."
+        ),
     )
 
 
 class ParticipantStateMachine(ContributorStateMachine):
+    new = State(
+        _('pending'),
+        'new',
+        _("This person has applied and must be reviewed.")
+    )
     accepted = State(
-        _('accepted'),
+        _('participating'),
         'accepted',
-        _('The participant was accepted and will join the activity.')
+        _('This person takes part in the activity.')
+    )
+    succeeded = State(
+        _('finished'),
+        'succeeded',
+        _("This person's contribution is finished. Spent hours are retained.")
     )
     rejected = State(
-        _('rejected'),
+        _('removed'),
         'rejected',
-        _("The participant was rejected and will not join the activity.")
+        _("This person's contribution is removed and the spent hours are reset to zero.")
     )
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('The participant withdrew and will no longer join the activity.')
+        _('This person has withdrawn. Spent hours are retained.')
     )
-    no_show = State(
-        _('no show'),
-        'no_show',
-        _('The participant did not contribute to the activity.')
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _("The activity has been cancelled. This person's contribution "
+          "is removed and the spent hours are reset to zero.")
     )
 
     def is_user(self, user):
@@ -146,9 +176,19 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         accepted,
         name=_('Accept'),
-        description=_("Participant was accepted."),
+        description=_("Accept this person as a participant to the Activity."),
         automatic=False,
         permission=can_accept_participant,
+    )
+
+    add = Transition(
+        [
+            ContributorStateMachine.new
+        ],
+        accepted,
+        name=_('Add'),
+        description=_("Add this person as a participant to the activity."),
+        automatic=True
     )
 
     reject = Transition(
@@ -158,7 +198,20 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         rejected,
         name=_('Reject'),
-        description=_("Participant was rejected."),
+        description=_("Reject this person as a participant in the activity."),
+        automatic=False,
+        permission=can_accept_participant,
+    )
+
+    remove = Transition(
+        [
+            ContributorStateMachine.succeeded,
+            accepted
+        ],
+        rejected,
+        name=_('remove'),
+        description=_("The participant's hours spent will be reset to "
+                      "zero and new hours will no longer be allocated."),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -170,7 +223,8 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         withdrawn,
         name=_('Withdraw'),
-        description=_("User withdrew and will no longer join the activity."),
+        description=_("Stop your participation in the activity. "
+                      "Any hours spent will be kept, but no new hours will be allocated."),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,
@@ -188,19 +242,48 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     mark_absent = Transition(
         ContributorStateMachine.succeeded,
-        no_show,
+        rejected,
         name=_('Mark absent'),
         description=_("User did not contribute to the task and is marked absent."),
         automatic=False,
         permission=can_accept_participant,
     )
+
     mark_present = Transition(
-        no_show,
+        rejected,
         ContributorStateMachine.succeeded,
         name=_('Mark present'),
         description=_("Participant did contribute to the task, after first been marked absent."),
         automatic=False,
         permission=can_accept_participant,
+    )
+
+    cancel_activity = Transition(
+        [
+            ContributorStateMachine.new,
+            accepted,
+            ContributorStateMachine.succeeded,
+        ],
+        cancelled,
+        name=_('Cancel activity'),
+        description=_("The activity has been cancelled. "
+                      "This person's contribution is removed and the spent hours are reset to zero."),
+        automatic=True,
+    )
+
+    restore_activity = Transition(
+        cancelled,
+        ContributorStateMachine.new,
+        name=_('Restore activity'),
+        description=_("The activity has been restored."),
+        automatic=True,
+    )
+
+    succeed = Transition(
+        new,
+        succeeded,
+        name=_('finish'),
+        description=_("The participant keeps their hours, but will no longer be allocated any new hours."),
     )
 
 

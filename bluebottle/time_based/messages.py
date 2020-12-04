@@ -101,11 +101,8 @@ class ParticipantAddedNotification(TransitionMessage):
     }
 
     def get_recipients(self):
-        """activity owner"""
-        if self.options.get('user') != self.obj.user:
-            return [self.obj.user]
-        else:
-            return []
+        """participant"""
+        return [self.obj.user]
 
 
 class ParticipantCreatedNotification(TransitionMessage):
@@ -140,7 +137,7 @@ class ParticipantAcceptedNotification(TransitionMessage):
     }
 
     def get_recipients(self):
-        """activity owner"""
+        """participant"""
         return [self.obj.user]
 
 
@@ -152,5 +149,5 @@ class ParticipantRejectedNotification(TransitionMessage):
     }
 
     def get_recipients(self):
-        """activity owner"""
+        """participant"""
         return [self.obj.user]

@@ -155,7 +155,7 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 class ContributionTypeFilter(admin.SimpleListFilter):
 
-    title = _('Contributor type')
+    title = _('Type')
     parameter_name = 'contributor_type'
 
     def lookups(self, request, model_admin):
@@ -185,11 +185,14 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['created', 'contributor_type', 'contributor_link', 'state_name', 'value']
-    list_filter = (ContributionTypeFilter, StateMachineFilter,)
-    date_hierarchy = 'created'
+    list_display = ['start', 'contributor_type', 'contributor_link', 'state_name', 'value']
+    list_filter = (
+        ContributionTypeFilter,
+        StateMachineFilter
+    )
+    date_hierarchy = 'start'
 
-    ordering = ('-created',)
+    ordering = ('-start',)
 
     def contributor_link(self, obj):
         if obj:

@@ -246,6 +246,7 @@ class TimeBasedDetailAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.data = response.json()['data']
+
         self.assertTrue(
             {'name': 'cancel', 'target': 'cancelled', 'available': True}
             in self.data['meta']['transitions']
@@ -498,6 +499,19 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         })
 
     def test_get_open(self):
+        super().test_get_open()
+
+        self.assertFalse(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+    def test_get_open_with_participant(self):
+        self.activity.duration_period = 'weeks'
+        self.activity.save()
+
+        PeriodParticipantFactory.create(activity=self.activity)
+
         super().test_get_open()
 
         self.assertTrue(

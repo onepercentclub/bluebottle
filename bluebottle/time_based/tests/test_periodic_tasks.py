@@ -244,12 +244,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
 
         self.assertEqual(
             len(self.participant.contributions.filter(status='succeeded')),
-            3
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            1
+            4
         )
 
     def test_cancel(self):

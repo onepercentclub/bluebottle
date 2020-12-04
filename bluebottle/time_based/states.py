@@ -49,7 +49,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     succeed = Transition(
         [
             ActivityStateMachine.open,
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             full,
             running
         ],
@@ -72,13 +72,32 @@ class TimeBasedStateMachine(ActivityStateMachine):
         description=_("Start the event.")
     )
 
+    cancel = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            full,
+            running
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_(
+            'Cancel if the activity will not be executed. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back office '
+            'and will continue to count in the reporting.'
+        ),
+        automatic=False,
+    )
+
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
     reschedule = Transition(
         [
             TimeBasedStateMachine.running,
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -92,16 +111,20 @@ class DateStateMachine(TimeBasedStateMachine):
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
+    def can_succeed(self):
+        return self.instance.duration_period != 'overall' and len(self.instance.active_participants) > 0
+
     succeed_manually = Transition(
         [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,
+        conditions=[can_succeed],
     )
 
     reschedule = Transition(
         [
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -258,27 +281,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=can_accept_participant,
     )
 
-    cancel_activity = Transition(
-        [
-            ContributorStateMachine.new,
-            accepted,
-            ContributorStateMachine.succeeded,
-        ],
-        cancelled,
-        name=_('Cancel activity'),
-        description=_("The activity has been cancelled. "
-                      "This person's contribution is removed and the spent hours are reset to zero."),
-        automatic=True,
-    )
-
-    restore_activity = Transition(
-        cancelled,
-        ContributorStateMachine.new,
-        name=_('Restore activity'),
-        description=_("The activity has been restored."),
-        automatic=True,
-    )
-
     succeed = Transition(
         new,
         succeeded,
@@ -287,12 +289,12 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
 
-@register(DateParticipant)
+@ register(DateParticipant)
 class DateParticipantStateMachine(ParticipantStateMachine):
     pass
 
 
-@register(PeriodParticipant)
+@ register(PeriodParticipant)
 class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
@@ -320,6 +322,6 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     )
 
 
-@register(TimeContribution)
+@ register(TimeContribution)
 class TimeContributionStateMachine(ContributionStateMachine):
     pass

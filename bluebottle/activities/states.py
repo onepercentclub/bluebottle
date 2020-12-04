@@ -46,6 +46,15 @@ class ActivityStateMachine(ModelStateMachine):
             'but counts in the report. The activity cannot be edited by the activity manager.'
         )
     )
+
+    expired = State(
+        _('expired'),
+        'expired',
+        _(
+            'The activity has ended, but did have any contributions . The activity does not appear on the platform, '
+            'but counts in the report. The activity cannot be edited by the activity manager.'
+        )
+    )
     open = State(
         _('open'),
         'open',
@@ -175,7 +184,8 @@ class ActivityStateMachine(ModelStateMachine):
         [
             rejected,
             cancelled,
-            deleted
+            deleted,
+            expired,
         ],
         needs_work,
         name=_('Restore'),
@@ -190,7 +200,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     expire = Transition(
         [open, submitted, succeeded],
-        cancelled,
+        expired,
         name=_('Expire'),
         description=_(
             "The activity will be cancelled because no one has signed up for the registration deadline."

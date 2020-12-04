@@ -70,9 +70,9 @@ class TimeBasedActivity(Activity):
         )
 
     @property
-    def accepted_durations(self):
+    def active_durations(self):
         return self.durations.filter(
-            contributor__status='accepted'
+            contributor__status__in=('new', 'accepted')
         )
 
     @property

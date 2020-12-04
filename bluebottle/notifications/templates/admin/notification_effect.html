@@ -1,5 +1,18 @@
 {% load i18n %}
 <h3>{% trans "Send email" %}</h3>
 
-<p>{{effects.0.description}}</p>
-<p><i>{{effects.0.help}}</i></p>
+<p>{{subject}}</p>
+<p>
+    <i>
+
+        {% blocktrans with recipient=recipients.0 %}
+            To "{{ recipient }}"
+        {% endblocktrans %}
+
+        {% if recipients|length > 1 %}
+            {% blocktrans with extra=effects|length|add:"-1" %}
+                and {{ extra }} others 
+            {% endblocktrans %}
+        {% endif %}
+    </i>
+</p>

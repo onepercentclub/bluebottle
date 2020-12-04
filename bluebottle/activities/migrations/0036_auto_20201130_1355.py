@@ -28,7 +28,7 @@ def update_contribution_dates(apps, schema_editor):
             LEFT JOIN {0}.activities_contributor cr ON cn.contributor_id = cr.id
             LEFT JOIN {0}.time_based_timecontribution tc ON tc.contribution_ptr_id = cn.id
             LEFT JOIN {0}.funding_moneycontribution mc ON mc.contribution_ptr_id = cn.id
-            LEFT JOIN {0}.funding_donor don ON don.contributor_ptr_id = cr.id
+            LEFT JOIN {0}.funding_donation don ON don.contributor_ptr_id = cr.id
             JOIN {0}.django_content_type ct ON cr.polymorphic_ctype_id = ct.id;
     """.format(connection.tenant.schema_name)
 
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('activities', '0035_auto_20201130_1337'),
         ('time_based', '0042_merge_20201201_1259'),
-        ('funding', '0060_auto_20201127_0922')
+        ('funding', '0059_auto_20201202_1044')
     ]
 
     operations = [

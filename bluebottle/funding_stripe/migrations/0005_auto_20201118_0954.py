@@ -10,13 +10,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('funding_stripe', '0004_auto_20200318_1504'),
-        ('funding', '0058_auto_20201118_0954')
+        ('funding', '0058_auto_20201120_1306')
     ]
 
     operations = [
         migrations.AlterField(
             model_name='paymentintent',
             name='donation',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='funding.Donor'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='funding.Donation'),
         ),
     ]

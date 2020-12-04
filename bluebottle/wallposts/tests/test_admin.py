@@ -6,7 +6,7 @@ from bluebottle.events.tests.factories import EventFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from django.urls.base import reverse
 
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory
 )
@@ -50,7 +50,7 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
 
     def test_project_systemwallpost_admin(self):
         funding = FundingFactory.create()
-        donation = DonorFactory(activity=funding)
+        donation = DonationFactory(activity=funding)
         self.wallpost = MediaWallpostFactory.create(content_object=funding, donation=donation)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)

@@ -1,4 +1,4 @@
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory, VitepayPaymentProviderFactory
 
@@ -16,7 +16,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonorFactory.create(activity=self.funding)
+        self.donation = DonationFactory.create(activity=self.funding)
 
     def test_create(self):
         payment = VitepayPaymentFactory(donation=self.donation)

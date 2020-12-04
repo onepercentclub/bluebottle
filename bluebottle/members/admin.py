@@ -31,7 +31,7 @@ from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.events.models import Participant
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
@@ -415,12 +415,12 @@ class MemberAdmin(UserAdmin):
     def funding(self, obj):
         donations = []
         donation_url = reverse('admin:funding_donation_changelist')
-        if Donor.objects.filter(status='succeeded', user=obj).count():
+        if Donation.objects.filter(status='succeeded', user=obj).count():
             link = donation_url + '?user_id={}'.format(obj.id)
             donations.append(format_html(
                 '<a href="{}">{}</a> donations',
                 link,
-                Donor.objects.filter(status='succeeded', user=obj).count(),
+                Donation.objects.filter(status='succeeded', user=obj).count(),
             ))
         return format_html('<br/>'.join(donations)) or _('None')
     funding.short_description = _('Funding donations')

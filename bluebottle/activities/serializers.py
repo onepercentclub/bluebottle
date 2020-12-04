@@ -24,7 +24,7 @@ from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
-    DonorListSerializer, TinyFundingSerializer
+    DonationListSerializer, TinyFundingSerializer
 )
 
 
@@ -157,7 +157,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonorListSerializer,
+        DonationListSerializer,
 
         DateParticipantSerializer,
         PeriodParticipantSerializer
@@ -185,7 +185,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonorListSerializer,
+        DonationListSerializer,
 
         DateParticipantListSerializer,
         PeriodParticipantListSerializer

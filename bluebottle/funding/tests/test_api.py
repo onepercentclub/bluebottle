@@ -15,10 +15,10 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, RewardFactory, DonorFactory,
+    FundingFactory, RewardFactory, DonationFactory,
     BudgetLineFactory
 )
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donation
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
@@ -401,17 +401,17 @@ class FundingDetailTestCase(BluebottleTestCase):
 
     def test_view_funding_owner(self):
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
-        DonorFactory.create(
+        DonationFactory.create(
             user=co_financer,
             amount=Money(200, 'EUR'),
             activity=self.funding,
             status='succeeded')
-        DonorFactory.create_batch(
+        DonationFactory.create_batch(
             4,
             amount=Money(200, 'EUR'),
             activity=self.funding,
             status='succeeded')
-        DonorFactory.create_batch(
+        DonationFactory.create_batch(
             2,
             amount=Money(100, 'EUR'),
             activity=self.funding,
@@ -470,7 +470,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         export_url = data['data']['attributes']['supporters-export-url']['url']
 
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Donor Date' in export_response.content)
+        self.assertTrue(b'Email,Name,Donation Date' in export_response.content)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -506,8 +506,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
 
     def test_other_user(self):
-        DonorFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
-        DonorFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
+        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
 
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id='some-external-account-id',
@@ -717,7 +717,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        donation = Donor.objects.get(pk=data['data']['id'])
+        donation = Donation.objects.get(pk=data['data']['id'])
         donation.states.succeed()
         donation.save()
 
@@ -738,7 +738,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['anonymous'], True)
-        donation = Donor.objects.get(pk=data['data']['id'])
+        donation = Donation.objects.get(pk=data['data']['id'])
         self.assertTrue(donation.user, self.user)
 
         donation.states.succeed()
@@ -775,7 +775,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
 
-    def test_update_set_donor_name(self):
+    def test_update_set_donation_name(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1324,7 +1324,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             self.funding.states.approve()
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
                 payment=PledgePaymentFactory.create()
@@ -1332,7 +1332,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             PledgePaymentFactory.create(donation=donation)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(300, 'USD'),
                 payout_amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
@@ -1341,7 +1341,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 StripeSourcePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1409,14 +1409,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             VitepayPaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1451,14 +1451,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             LipishaPaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1493,14 +1493,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             FlutterwavePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1535,14 +1535,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             PledgePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1578,7 +1578,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonorFactory.create(
+            donation = DonationFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
@@ -1652,7 +1652,7 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
         self.assertPostNotAllowed(url, self.user)
 
     def test_donation_list(self):
-        DonorFactory.create(status='succeeded')
+        DonationFactory.create(status='succeeded')
         url = reverse('funding-donation-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

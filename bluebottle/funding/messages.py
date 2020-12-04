@@ -17,7 +17,7 @@ class DonationSuccessDonorMessage(TransitionMessage):
     template = 'messages/donation_success_donor'
 
     def get_recipients(self):
-        """the donor (unless it is a guest donation)"""
+        """the donation (unless it is a guest donation)"""
         if self.obj.user:
             return [self.obj.user]
         # Guest donation. Return empty list so no mails are send.
@@ -33,7 +33,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
     }
 
     def get_recipients(self):
-        """the donor (unless it is a guest donation)"""
+        """the donation (unless it is a guest donation)"""
         if self.obj.user:
             return [self.obj.user]
         # Guest donation. Return empty list so no mails are send.
@@ -49,7 +49,7 @@ class DonationActivityRefundedDonorMessage(TransitionMessage):
     }
 
     def get_recipients(self):
-        """the donor (unless it is a guest donation)"""
+        """the donation (unless it is a guest donation)"""
         if self.obj.user:
             return [self.obj.user]
         # Guest donation. Return empty list so no mails are send.

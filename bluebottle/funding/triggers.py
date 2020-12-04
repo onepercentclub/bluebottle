@@ -10,11 +10,11 @@ from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
 from bluebottle.funding.effects import (
-    GeneratePayoutsEffect, GenerateDonorWallpostEffect,
-    RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
+    GeneratePayoutsEffect, GenerateDonationWallpostEffect,
+    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
+    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
 )
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
@@ -25,11 +25,11 @@ from bluebottle.funding.messages import (
     FundingCancelledMessage, FundingApprovedMessage
 
 )
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount, \
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount, \
     MoneyContribution
 from bluebottle.funding.states import (
-    FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
+    FundingStateMachine, DonationStateMachine, BasePaymentStateMachine,
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, MoneyContributionStateMachine
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -154,7 +154,7 @@ class FundingTriggers(ActivityTriggers):
         TransitionTrigger(
             FundingStateMachine.refund,
             effects=[
-                RelatedTransitionEffect('donations', DonorStateMachine.activity_refund),
+                RelatedTransitionEffect('donations', DonationStateMachine.activity_refund),
                 DeletePayoutsEffect,
                 NotificationEffect(FundingRefundedMessage)
             ]
@@ -325,55 +325,55 @@ def is_successful(instance):
     return instance.instance.status == ContributorStateMachine.succeeded
 
 
-@register(Donor)
-class DonorTriggers(ContributorTriggers):
+@register(Donation)
+class DonationTriggers(ContributorTriggers):
     triggers = [
         TransitionTrigger(
-            DonorStateMachine.initiate,
+            DonationStateMachine.initiate,
             effects=[
                 CreateDonationEffect
             ]
         ),
 
         TransitionTrigger(
-            DonorStateMachine.succeed,
+            DonationStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contributions', DonationStateMachine.succeed),
+                RelatedTransitionEffect('contributions', MoneyContributionStateMachine.succeed),
                 NotificationEffect(DonationSuccessActivityManagerMessage),
                 NotificationEffect(DonationSuccessDonorMessage),
-                GenerateDonorWallpostEffect,
+                GenerateDonationWallpostEffect,
                 FollowActivityEffect,
                 UpdateFundingAmountsEffect
             ]
         ),
 
         TransitionTrigger(
-            DonorStateMachine.fail,
+            DonationStateMachine.fail,
             effects=[
-                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
+                RelatedTransitionEffect('contributions', MoneyContributionStateMachine.fail),
+                RemoveDonationWallpostEffect,
                 UpdateFundingAmountsEffect,
-                RemoveDonorFromPayoutEffect
+                RemoveDonationFromPayoutEffect
             ]
         ),
 
         TransitionTrigger(
-            DonorStateMachine.refund,
+            DonationStateMachine.refund,
             effects=[
-                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
+                RelatedTransitionEffect('contributions', MoneyContributionStateMachine.fail),
+                RemoveDonationWallpostEffect,
                 UnFollowActivityEffect,
                 UpdateFundingAmountsEffect,
-                RemoveDonorFromPayoutEffect,
+                RemoveDonationFromPayoutEffect,
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
                 NotificationEffect(DonationRefundedDonorMessage)
             ]
         ),
 
         TransitionTrigger(
-            DonorStateMachine.activity_refund,
+            DonationStateMachine.activity_refund,
             effects=[
-                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
+                RelatedTransitionEffect('contributions', MoneyContributionStateMachine.fail),
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
                 NotificationEffect(DonationActivityRefundedDonorMessage)
             ]
@@ -400,8 +400,8 @@ def donation_not_refunded(effect):
     donation doesn't have status refunded or activity refunded
     """
     return effect.instance.donation.status not in [
-        DonorStateMachine.refunded.value,
-        DonorStateMachine.activity_refunded.value,
+        DonationStateMachine.refunded.value,
+        DonationStateMachine.activity_refunded.value,
     ]
 
 
@@ -411,21 +411,21 @@ class BasePaymentTriggers(TriggerManager):
         TransitionTrigger(
             BasePaymentStateMachine.authorize,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+                RelatedTransitionEffect('donation', DonationStateMachine.succeed)
             ]
         ),
 
         TransitionTrigger(
             BasePaymentStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+                RelatedTransitionEffect('donation', DonationStateMachine.succeed)
             ]
         ),
 
         TransitionTrigger(
             BasePaymentStateMachine.fail,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.fail)
+                RelatedTransitionEffect('donation', DonationStateMachine.fail)
             ]
         ),
 
@@ -441,7 +441,7 @@ class BasePaymentTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'donation',
-                    DonorStateMachine.refund,
+                    DonationStateMachine.refund,
                     conditions=[
                         donation_not_refunded
                     ]

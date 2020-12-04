@@ -7,7 +7,7 @@ from djmoney.money import Money
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, BankAccountFactory, DonorFactory,
+    FundingFactory, BankAccountFactory, DonationFactory,
     BudgetLineFactory, RewardFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
@@ -60,7 +60,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.states.submit()
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
-        donation = DonorFactory.create(
+        donation = DonationFactory.create(
             activity=self.funding,
             amount=Money(70, 'EUR')
         )
@@ -104,10 +104,10 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             bank_account=bank_account
         )
-        self.admin_url = reverse('admin:funding_donor_changelist')
+        self.admin_url = reverse('admin:funding_donation_changelist')
 
     def test_donation_total(self):
-        for donation in DonorFactory.create_batch(
+        for donation in DonationFactory.create_batch(
             2,
             activity=self.funding,
             amount=Money(100, 'NGN')
@@ -121,27 +121,27 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         )
 
     def test_donation_admin_pledge_filter(self):
-        for donation in DonorFactory.create_batch(2, activity=self.funding):
+        for donation in DonationFactory.create_batch(2, activity=self.funding):
             PledgePaymentFactory.create(donation=donation)
 
-        for donation in DonorFactory.create_batch(7, activity=self.funding):
+        for donation in DonationFactory.create_batch(7, activity=self.funding):
             StripePaymentFactory.create(donation=donation)
 
         self.client.force_login(self.superuser)
 
         response = self.client.get(self.admin_url, {'status__exact': 'all'})
-        self.assertContains(response, '9 Donors')
+        self.assertContains(response, '9 Donations')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'paid'})
-        self.assertContains(response, '7 Donors')
+        self.assertContains(response, '7 Donations')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'pledged'})
-        self.assertContains(response, '2 Donors')
+        self.assertContains(response, '2 Donations')
 
     def test_donation_reward(self):
-        donation = DonorFactory.create(activity=self.funding)
+        donation = DonationFactory.create(activity=self.funding)
 
-        url = reverse('admin:funding_donor_change', args=(donation.pk, ))
+        url = reverse('admin:funding_donation_change', args=(donation.pk, ))
         first = RewardFactory.create(title='First', activity=self.funding)
         second = RewardFactory.create(title='Second', activity=self.funding)
         third = RewardFactory.create(title='Third')

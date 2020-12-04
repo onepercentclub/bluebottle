@@ -188,22 +188,22 @@ class Funding(Activity):
 
     @property
     def donations(self):
-        return self.contributors.instance_of(Donor)
+        return self.contributors.instance_of(Donation)
 
     @property
     def amount_donated(self):
         """
         The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonorStateMachine.succeeded.value,
-                    DonorStateMachine.activity_refunded.value,
+                    DonationStateMachine.succeeded.value,
+                    DonationStateMachine.activity_refunded.value,
                 )
             )
             if self.target and self.target.currency:
@@ -218,17 +218,17 @@ class Funding(Activity):
         """
         The sum of all contributors (donations) without pledges converted to the targets currency
         """
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonorStateMachine.succeeded.value,
-                    DonorStateMachine.activity_refunded.value,
+                    DonationStateMachine.succeeded.value,
+                    DonationStateMachine.activity_refunded.value,
                 ),
-                donor__payment__pledgepayment__isnull=True
+                donation__payment__pledgepayment__isnull=True
             )
             if self.target and self.target.currency:
                 total = calculate_total(donations, self.target.currency)
@@ -242,14 +242,14 @@ class Funding(Activity):
         """
         The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
         donations = self.donations.filter(
             status__in=(
-                DonorStateMachine.succeeded.value,
-                DonorStateMachine.activity_refunded.value,
+                DonationStateMachine.succeeded.value,
+                DonationStateMachine.activity_refunded.value,
             ),
-            donor__payment__pledgepayment__isnull=False
+            donation__payment__pledgepayment__isnull=False
         )
         if self.target and self.target.currency:
             total = calculate_total(donations, self.target.currency)
@@ -277,9 +277,9 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         stats = self.donations.filter(
-            status=DonorStateMachine.succeeded.value
+            status=DonationStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id')
         )
@@ -321,9 +321,9 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         return self.donations.filter(
-            status=DonorStateMachine.succeeded.value
+            status=DonationStateMachine.succeeded.value
         ).count()
 
     def __str__(self):
@@ -393,11 +393,11 @@ class Fundraiser(AnonymizationMixin, models.Model):
 
     @cached_property
     def amount_donated(self):
-        from .states import DonorStateMachine
+        from .states import DonationStateMachine
         donations = self.donations.filter(
             status__in=[
-                DonorStateMachine.succeeded.value,
-                DonorStateMachine.activity_refunded.value,
+                DonationStateMachine.succeeded.value,
+                DonationStateMachine.activity_refunded.value,
             ]
         )
 
@@ -442,7 +442,7 @@ class Payout(TriggerMixin, models.Model):
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
+        ready_donations = activity.donations.filter(status='succeeded', donation__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -450,7 +450,7 @@ class Payout(TriggerMixin, models.Model):
         for currency, provider in groups:
             donations = [
                 don for don in
-                ready_donations.filter(donor__payout_amount_currency=currency)
+                ready_donations.filter(donation__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
             payout = cls.objects.create(
@@ -477,7 +477,7 @@ class Payout(TriggerMixin, models.Model):
 
 
 @python_2_unicode_compatible
-class Donor(Contributor):
+class Donation(Contributor):
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -485,7 +485,7 @@ class Donor(Contributor):
     fundraiser = models.ForeignKey(Fundraiser, null=True, blank=True, related_name="donations")
     name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Fake name'),
-                            help_text=_('Override donor name / Name for guest donation'))
+                            help_text=_('Override donation name / Name for guest donation'))
     anonymous = models.BooleanField(_('anonymous'), default=False)
     payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
 
@@ -496,7 +496,7 @@ class Donor(Contributor):
         if not self.payout_amount:
             self.payout_amount = self.amount
 
-        super(Donor, self).save(*args, **kwargs)
+        super(Donation, self).save(*args, **kwargs)
 
     @property
     def date(self):
@@ -533,7 +533,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField()
 
-    donation = models.OneToOneField(Donor, related_name='payment')
+    donation = models.OneToOneField(Donation, related_name='payment')
 
     @property
     def can_update(self):

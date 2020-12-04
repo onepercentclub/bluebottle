@@ -1,4 +1,4 @@
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory
 
@@ -17,7 +17,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonorFactory.create(activity=self.funding)
+        self.donation = DonationFactory.create(activity=self.funding)
 
     def test_create(self):
         payment = LipishaPaymentFactory(donation=self.donation)

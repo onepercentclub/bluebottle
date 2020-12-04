@@ -1,4 +1,4 @@
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_telesom.models import TelesomPaymentProvider
 from bluebottle.funding_telesom.tests.factories import TelesomPaymentFactory, TelesomPaymentProviderFactory
 
@@ -17,7 +17,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonorFactory.create(activity=self.funding)
+        self.donation = DonationFactory.create(activity=self.funding)
 
     def test_create(self):
         payment = TelesomPaymentFactory(donation=self.donation)

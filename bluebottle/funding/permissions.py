@@ -1,12 +1,12 @@
 from bluebottle.utils.permissions import IsOwner
 
 
-class DonorOwnerPermission(IsOwner):
+class DonationOwnerPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated and request.auth and obj.client_secret:
             return obj.client_secret == request.auth
 
-        return super(DonorOwnerPermission, self).has_object_permission(request, view, obj)
+        return super(DonationOwnerPermission, self).has_object_permission(request, view, obj)
 
 
 class PaymentPermission(IsOwner):

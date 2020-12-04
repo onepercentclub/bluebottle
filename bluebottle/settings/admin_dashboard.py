@@ -77,8 +77,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_funding']
             },
             {
-                'name': 'funding.donor',
-                'permissions': ['funding.change_donor']
+                'name': 'funding.donation',
+                'permissions': ['funding.change_donation']
             },
             {
                 'name': 'funding.payment',

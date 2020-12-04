@@ -15,7 +15,7 @@ from rest_framework import status
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory
 )
@@ -500,10 +500,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             status='succeeded'
         )
 
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'EUR')):
-            donor.contributions.get().states.succeed(save=True)
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
-            donor.contributions.get().states.succeed(save=True)
+        for donation in DonationFactory.create_batch(3, activity=funding, amount=Money(10, 'EUR')):
+            donation.contributions.get().states.succeed(save=True)
+        for donation in DonationFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
+            donation.contributions.get().states.succeed(save=True)
 
         response = self.client.get(
             self.url,

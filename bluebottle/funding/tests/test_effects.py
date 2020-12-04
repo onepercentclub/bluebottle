@@ -5,10 +5,10 @@ from django.utils.timezone import now
 from djmoney.money import Money
 
 from bluebottle.funding.effects import GeneratePayoutsEffect, DeletePayoutsEffect, UpdateFundingAmountsEffect, \
-    SetDeadlineEffect, GenerateDonorWallpostEffect, RemoveDonorWallpostEffect, \
+    SetDeadlineEffect, GenerateDonationWallpostEffect, RemoveDonationWallpostEffect, \
     SubmitConnectedActivitiesEffect, SetDateEffect, ClearPayoutDatesEffect
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonorFactory, PayoutFactory
+    PlainPayoutAccountFactory, DonationFactory, PayoutFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -32,7 +32,7 @@ class FundingEffectsTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         self.funding.states.submit(save=True)
-        self.donation = DonorFactory.create(
+        self.donation = DonationFactory.create(
             activity=self.funding,
             amount=Money(100, 'EUR'),
             status='succeeded'
@@ -69,17 +69,17 @@ class FundingEffectsTests(BluebottleTestCase):
 
     def test_generate_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
-        effect = GenerateDonorWallpostEffect(self.donation)
+        effect = GenerateDonationWallpostEffect(self.donation)
         self.assertEqual(str(effect), 'Generate wallpost for donation')
         effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 1)
 
     def test_remove_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
-        effect = GenerateDonorWallpostEffect(self.donation)
+        effect = GenerateDonationWallpostEffect(self.donation)
         effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 1)
-        effect = RemoveDonorWallpostEffect(self.donation)
+        effect = RemoveDonationWallpostEffect(self.donation)
         self.assertEqual(str(effect), 'Delete wallpost for donation')
         effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 0)

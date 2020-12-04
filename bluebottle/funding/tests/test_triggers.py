@@ -5,7 +5,7 @@ from djmoney.money import Money
 
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonorFactory
+    PlainPayoutAccountFactory, DonationFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -30,7 +30,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
@@ -47,7 +47,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
@@ -61,7 +61,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
 
 
-class DonorTriggerTests(BluebottleTestCase):
+class DonationTriggerTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
@@ -75,32 +75,32 @@ class DonorTriggerTests(BluebottleTestCase):
         bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)
-        self.donor = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        self.payment = PledgePaymentFactory.create(donation=self.donor)
+        self.donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        self.payment = PledgePaymentFactory.create(donation=self.donation)
 
-    def test_change_donor_amount(self):
-        self.assertEqual(self.donor.amount, Money(500, 'EUR'))
-        self.assertEqual(self.donor.payout_amount, Money(500, 'EUR'))
-        contribution = self.donor.contributions.get()
+    def test_change_donation_amount(self):
+        self.assertEqual(self.donation.amount, Money(500, 'EUR'))
+        self.assertEqual(self.donation.payout_amount, Money(500, 'EUR'))
+        contribution = self.donation.contributions.get()
         self.assertEqual(contribution.value, Money(500, 'EUR'))
         self.assertEqual(self.funding.amount_donated, Money(500, 'EUR'))
 
-        self.donor.amount = Money(200, 'EUR')
-        self.donor.payout_amount = Money(200, 'EUR')
-        self.donor.save()
+        self.donation.amount = Money(200, 'EUR')
+        self.donation.payout_amount = Money(200, 'EUR')
+        self.donation.save()
 
         self.funding.refresh_from_db()
-        self.assertEqual(self.donor.amount, Money(200, 'EUR'))
-        self.assertEqual(self.donor.payout_amount, Money(200, 'EUR'))
-        contribution = self.donor.contributions.get()
+        self.assertEqual(self.donation.amount, Money(200, 'EUR'))
+        self.assertEqual(self.donation.payout_amount, Money(200, 'EUR'))
+        contribution = self.donation.contributions.get()
         self.assertEqual(contribution.value, Money(200, 'EUR'))
         self.assertEqual(self.funding.amount_donated, Money(200, 'EUR'))
 
-        self.donor.payout_amount = Money(250, 'USD')
-        self.donor.save()
+        self.donation.payout_amount = Money(250, 'USD')
+        self.donation.save()
         self.funding.refresh_from_db()
-        self.assertEqual(self.donor.amount, Money(200, 'EUR'))
-        self.assertEqual(self.donor.payout_amount, Money(250, 'USD'))
-        contribution = self.donor.contributions.get()
+        self.assertEqual(self.donation.amount, Money(200, 'EUR'))
+        self.assertEqual(self.donation.payout_amount, Money(250, 'USD'))
+        contribution = self.donation.contributions.get()
         self.assertEqual(contribution.value, Money(250, 'USD'))
         self.assertEqual(self.funding.amount_donated, Money(200, 'EUR'))

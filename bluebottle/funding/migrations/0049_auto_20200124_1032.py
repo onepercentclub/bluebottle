@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='donation',
             name='name',
-            field=models.CharField(blank=True, help_text='Override donor name / Name for guest donation', max_length=200, null=True, verbose_name='Fake name'),
+            field=models.CharField(blank=True, help_text='Override donation name / Name for guest donation', max_length=200, null=True, verbose_name='Fake name'),
         ),
         migrations.AlterField(
             model_name='donation',

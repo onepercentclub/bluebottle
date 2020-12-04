@@ -2,7 +2,7 @@ from builtins import object
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donation
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount,
@@ -15,10 +15,10 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
     intent_id = serializers.CharField(read_only=True)
     client_secret = serializers.CharField(read_only=True)
 
-    donation = ResourceRelatedField(queryset=Donor.objects.all())
+    donation = ResourceRelatedField(queryset=Donation.objects.all())
 
     included_serializers = {
-        'donation': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation': 'bluebottle.funding.serializers.DonationSerializer',
     }
 
     class Meta(object):

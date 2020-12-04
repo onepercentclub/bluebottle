@@ -2,7 +2,7 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
 from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
 from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected
-from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
+from bluebottle.funding.states import DonationStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.models import StripeSourcePayment, StripePayoutAccount, ExternalAccount
 from bluebottle.funding_stripe.states import StripeSourcePaymentStateMachine, StripeBankAccountStateMachine
@@ -15,28 +15,28 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
         TransitionTrigger(
             StripeSourcePaymentStateMachine.authorize,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+                RelatedTransitionEffect('donation', DonationStateMachine.succeed)
             ]
         ),
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+                RelatedTransitionEffect('donation', DonationStateMachine.succeed)
             ]
         ),
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.fail)
+                RelatedTransitionEffect('donation', DonationStateMachine.fail)
             ]
         ),
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.dispute,
             effects=[
-                RelatedTransitionEffect('donation', DonorStateMachine.refund)
+                RelatedTransitionEffect('donation', DonationStateMachine.refund)
             ]
         ),
     ]

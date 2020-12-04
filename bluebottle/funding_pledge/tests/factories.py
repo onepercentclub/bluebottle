@@ -2,7 +2,7 @@ from builtins import object
 import factory.fuzzy
 
 from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_pledge.models import (
     PledgePayment, PledgePaymentProvider, PledgeBankAccount
 )
@@ -13,7 +13,7 @@ class PledgePaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PledgePayment
 
-    donation = factory.SubFactory(DonorFactory)
+    donation = factory.SubFactory(DonationFactory)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):

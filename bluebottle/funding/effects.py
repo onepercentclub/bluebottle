@@ -73,7 +73,7 @@ class UpdateDonationValueEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonorFromPayoutEffect(Effect):
+class RemoveDonationFromPayoutEffect(Effect):
     conditions = []
     title = _('Remove donation from payout')
 
@@ -125,7 +125,7 @@ class RefundPaymentAtPSPEffect(Effect):
 
 
 @python_2_unicode_compatible
-class GenerateDonorWallpostEffect(Effect):
+class GenerateDonationWallpostEffect(Effect):
     conditions = []
     title = _('Create wallpost')
     template = 'admin/generate_donation_wallpost_effect.html'
@@ -145,7 +145,7 @@ class GenerateDonorWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonorWallpostEffect(Effect):
+class RemoveDonationWallpostEffect(Effect):
     conditions = []
     title = _('Delete wallpost')
     template = 'admin/remove_donation_wallpost_effect.html'

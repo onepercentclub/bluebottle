@@ -9,17 +9,17 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission
 )
-from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
-    Funding, Donor, Reward,
+    Funding, Donation, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
     Payout
 )
-from bluebottle.funding.permissions import DonorOwnerPermission, PaymentPermission
+from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.funding.serializers import (
-    FundingSerializer, DonorSerializer, FundingTransitionSerializer,
+    FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, FundingListSerializer,
+    DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer, PlainPayoutAccountSerializer,
     PayoutSerializer
 )
@@ -240,8 +240,8 @@ class PlainPayoutAccountDocumentDetail(PrivateFileView):
 
 
 class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
-    queryset = Donor.objects.all()
-    serializer_class = DonorCreateSerializer
+    queryset = Donation.objects.all()
+    serializer_class = DonationCreateSerializer
 
     permission_classes = (
     )
@@ -258,14 +258,14 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
 
 
 class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Donor.objects.all()
-    serializer_class = DonorSerializer
+    queryset = Donation.objects.all()
+    serializer_class = DonationSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication, DonationAuthentication,
     )
 
-    permission_classes = (DonorOwnerPermission,)
+    permission_classes = (DonationOwnerPermission,)
 
     prefetch_for_includes = {
         'activity': ['activity'],
@@ -286,7 +286,7 @@ class SupportersExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
-        ('created', 'Donor Date'),
+        ('created', 'Donation Date'),
         ('amount_currency', 'Currency'),
         ('amount', 'Amount'),
         ('reward__title', 'Reward'),
@@ -307,7 +307,7 @@ class SupportersExportView(PrivateFileView):
         for donation in instance.contributors.filter(
             status='succeeded'
         ).instance_of(
-            Donor
+            Donation
         ):
             writer.writerow([
                 prep_field(request, donation, field[0]) for field in self.fields

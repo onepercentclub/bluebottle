@@ -389,7 +389,7 @@ class CoFinancerSerializer(serializers.Serializer):
     def get_total(self, obj):
         return {
             'amount': obj['total'],
-            'currency': obj['contributor__donor__amount_currency']
+            'currency': obj['contributor__donation__amount_currency']
         }
 
     class Meta(object):
@@ -419,9 +419,9 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
         totals = Member.objects.filter(**filters)
 
         totals = totals.values(
-            'pk', 'contributor__donor__amount_currency'
+            'pk', 'contributor__donation__amount_currency'
         ).annotate(
-            total=Sum('contributor__donor__amount', distinct=True)
+            total=Sum('contributor__donation__amount', distinct=True)
         )
 
         return CoFinancerSerializer(

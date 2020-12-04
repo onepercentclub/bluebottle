@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
 from bluebottle.fsm.triggers import TransitionTrigger
-from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
+from bluebottle.funding.models import Donation, Funding, PayoutAccount, Payment, MoneyContribution
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
@@ -82,20 +82,20 @@ class Command(BaseCommand):
         if isinstance(instance, Funding):
             instance.title = "the campaign"
 
-        if isinstance(instance, Donor):
+        if isinstance(instance, Donation):
             PledgePayment(donation=instance)
             instance.activity = Funding(title="the campaign")
-            instance.user = Member(first_name='the', last_name='donor')
+            instance.user = Member(first_name='the', last_name='donation')
 
         if isinstance(instance, MoneyContribution):
-            donor = Donor()
-            donor.activity = Funding(title="the campaign")
-            donor.user = Member(first_name='the', last_name='donor')
-            PledgePayment(donation=donor)
-            instance.contributor = donor
+            donation = Donation()
+            donation.activity = Funding(title="the campaign")
+            donation.user = Member(first_name='the', last_name='donation')
+            PledgePayment(donation=donation)
+            instance.contributor = donation
 
         if isinstance(instance, Payment):
-            instance.donation = Donor()
+            instance.donation = Donation()
 
         if isinstance(instance, PeriodActivity):
             instance.title = "the activity"

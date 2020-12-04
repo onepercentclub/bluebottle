@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='donation',
             name='name',
-            field=models.CharField(blank=True, db_index=True, max_length=200, null=True, verbose_name='Name of donor'),
+            field=models.CharField(blank=True, db_index=True, max_length=200, null=True, verbose_name='Name of donation'),
         ),
         migrations.AlterField(
             model_name='donation',

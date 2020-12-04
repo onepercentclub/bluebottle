@@ -19,9 +19,9 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
-from bluebottle.funding.filters import DonorListFilter
+from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
-    Funding, Donor, Reward, BudgetLine, PaymentMethod,
+    Funding, Donation, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
     Payout, FundingPlatformSettings)
 from bluebottle.funding.models import PlainPayoutAccount
@@ -215,7 +215,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
-    contributors = FilteredRelatedField(many=True, filter_backend=DonorListFilter)
+    contributors = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
 
     bank_account = PolymorphicResourceRelatedField(
@@ -282,7 +282,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         **{
             'rewards': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'budget_lines': 'bluebottle.funding.serializers.RewardSerializer',
-            'contributors': 'bluebottle.funding.serializers.DonorSerializer',
+            'contributors': 'bluebottle.funding.serializers.DonationSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
         }
@@ -347,7 +347,7 @@ def reward_amount_matches(data):
         )
 
 
-class DonorMemberValidator(object):
+class DonationMemberValidator(object):
     """
     Validates that the reward activity is the same as the donation activity
     """
@@ -364,7 +364,7 @@ class DonorMemberValidator(object):
             raise ValidationError(self.message)
 
 
-class DonorListSerializer(BaseContributorListSerializer):
+class DonationListSerializer(BaseContributorListSerializer):
     amount = MoneySerializer()
 
     user = ResourceRelatedField(
@@ -380,7 +380,7 @@ class DonorListSerializer(BaseContributorListSerializer):
     }
 
     class Meta(BaseContributorListSerializer.Meta):
-        model = Donor
+        model = Donation
         fields = BaseContributorListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
@@ -392,7 +392,7 @@ class DonorListSerializer(BaseContributorListSerializer):
         ]
 
 
-class DonorSerializer(BaseContributorSerializer):
+class DonationSerializer(BaseContributorSerializer):
     amount = MoneySerializer()
 
     user = ResourceRelatedField(
@@ -410,12 +410,12 @@ class DonorSerializer(BaseContributorSerializer):
 
     validators = [
         IsRelatedToActivity('reward'),
-        DonorMemberValidator(),
+        DonationMemberValidator(),
         reward_amount_matches,
     ]
 
     class Meta(BaseContributorSerializer.Meta):
-        model = Donor
+        model = Donation
         fields = BaseContributorSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -428,21 +428,21 @@ class DonorSerializer(BaseContributorSerializer):
 
     def get_fields(self):
         """
-        If the donor is anonymous, we do not return the user.
+        If the donation is anonymous, we do not return the user.
         """
-        fields = super(DonorSerializer, self).get_fields()
-        if isinstance(self.instance, Donor) and self.instance.anonymous:
+        fields = super(DonationSerializer, self).get_fields()
+        if isinstance(self.instance, Donation) and self.instance.anonymous:
             del fields['user']
 
         return fields
 
 
-class DonorCreateSerializer(DonorSerializer):
+class DonationCreateSerializer(DonationSerializer):
     amount = MoneySerializer()
 
-    class Meta(DonorSerializer.Meta):
-        model = Donor
-        fields = DonorSerializer.Meta.fields + ('client_secret',)
+    class Meta(DonationSerializer.Meta):
+        model = Donation
+        fields = DonationSerializer.Meta.fields + ('client_secret',)
 
 
 class KycDocumentSerializer(PrivateDocumentSerializer):
@@ -554,7 +554,7 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
             'amount',
             'status'
         )
-        model = Donor
+        model = Donation
 
 
 class PayoutFundingSerializer(BaseActivityListSerializer):

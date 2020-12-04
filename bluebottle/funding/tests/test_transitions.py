@@ -13,7 +13,7 @@ from bluebottle.activities.models import Organizer
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tasks import funding_tasks
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, \
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory, BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -122,7 +122,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
     def test_some_donations(self):
         user = BlueBottleUserFactory.create(first_name='Bill')
-        donation = DonorFactory.create(
+        donation = DonationFactory.create(
             user=user,
             activity=self.funding,
             amount=Money(50, 'EUR'))
@@ -135,7 +135,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
-        # Donor amount should appear in both emails
+        # Donation amount should appear in both emails
         self.assertTrue(u'50.00 €' in mail.outbox[0].body)
         self.assertTrue(u'50.00 €' in mail.outbox[1].body)
 
@@ -159,9 +159,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue(url in mail.outbox[0].body)
 
     def test_enough_donations(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(300, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(300, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        donation = DonorFactory.create(activity=self.funding, amount=Money(450, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(450, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(len(mail.outbox), 4)
         self.assertEqual(donation.status, 'succeeded')
@@ -192,7 +192,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(organizer.status, organizer.states.succeeded.value)
 
     def test_extend(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
         self.funding.deadline = now() + timedelta(days=1)
@@ -215,7 +215,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.status, 'open')
 
     def test_extend_past_deadline(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
         self.funding.deadline = now() - timedelta(days=1)
@@ -233,7 +233,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             self.funding.states.extend(save=True)
 
     def test_refund(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(50, 'EUR'))
+        donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
         self.funding.deadline = now() - timedelta(days=1)

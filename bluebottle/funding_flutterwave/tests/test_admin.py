@@ -4,7 +4,7 @@ from djmoney.money import Money
 from mock import patch
 
 from bluebottle.funding.tests.factories import (
-    DonorFactory, FundingFactory
+    DonationFactory, FundingFactory
 )
 from bluebottle.funding_flutterwave.tests.factories import FlutterwaveBankAccountFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -25,7 +25,7 @@ class FlutterwavePaymentAdminTestCase(BluebottleAdminTestCase):
         bank_account = FlutterwaveBankAccountFactory.create()
         funding = FundingFactory.create(bank_account=bank_account)
         self.client.force_login(self.superuser)
-        self.donation = DonorFactory(
+        self.donation = DonationFactory(
             amount=Money(10000, 'NGN'),
             activity=funding
         )

@@ -4,7 +4,7 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory, LipishaBankAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -54,7 +54,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 
         bank_account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=bank_account)
-        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
 
         self.payment_url = reverse('lipisha-payment-list')
 

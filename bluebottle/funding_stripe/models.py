@@ -21,7 +21,7 @@ from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
@@ -33,7 +33,7 @@ from bluebottle.utils.models import ValidatorError
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
-    donation = models.ForeignKey(Donor)
+    donation = models.ForeignKey(Donation)
 
     def save(self, *args, **kwargs):
         if not self.pk:

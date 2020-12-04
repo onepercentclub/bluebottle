@@ -4,7 +4,7 @@ from djmoney.money import Money
 from mock import patch
 import stripe
 
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonationFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
     StripePaymentFactory, ExternalAccountFactory
@@ -36,7 +36,7 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
     @patch('stripe.Source.modify')
     def setUp(self, mock_modify):
         super(StripeSourcePaymentStateMachineTests, self).setUp()
-        self.donation = DonorFactory.create(activity=self.funding)
+        self.donation = DonationFactory.create(activity=self.funding)
         self.payment = StripeSourcePaymentFactory.create(
             charge_token='some_token',
             donation=self.donation
@@ -104,7 +104,7 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
 
     @patch('stripe.PaymentIntent.retrieve')
     def test_request_refund(self, mock_retrieve):
-        donation = DonorFactory.create(activity=self.funding)
+        donation = DonationFactory.create(activity=self.funding)
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')

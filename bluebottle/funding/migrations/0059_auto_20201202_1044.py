@@ -24,7 +24,7 @@ def insert(table, fields, values):
 
 
 def create_money_contributions(apps, schema_editor):
-    Donor = apps.get_model('funding', 'Donor')
+    Donation = apps.get_model('funding', 'Donation')
     Contribution = apps.get_model('activities', 'Contribution')
     ContentType = apps.get_model('contenttypes', 'ContentType')
     MoneyContribution = apps.get_model('funding', 'MoneyContribution')
@@ -46,7 +46,7 @@ def create_money_contributions(apps, schema_editor):
         'value_currency'
     ]
 
-    for donor in Donor.objects.values(
+    for donation in Donation.objects.values(
             'id',
             'status',
             'created',
@@ -54,23 +54,23 @@ def create_money_contributions(apps, schema_editor):
             'amount_currency',
             'contributor_ptr_id',
             'contributor_date'):
-        if donor['status'] in ('pending', 'new'):
+        if donation['status'] in ('pending', 'new'):
             status = 'new'
-        elif donor['status'] in ('failed', 'refunded', 'activity_refunded', 'cancelled'):
+        elif donation['status'] in ('failed', 'refunded', 'activity_refunded', 'cancelled'):
             status = 'failed'
         else:
-            status = donor['status']
+            status = donation['status']
         contributions.append({
             'polymorphic_ctype_id': money_contribution_ctype,
             'status': status,
-            'start': donor['contributor_date'],
-            'contributor_id': donor['id'],
-            'created': donor['created']
+            'start': donation['contributor_date'],
+            'contributor_id': donation['id'],
+            'created': donation['created']
         })
         money_contributions.append({
-            'value': donor['amount'],
-            'value_currency': donor['amount_currency'],
-            'contributor_id': donor['id'],
+            'value': donation['amount'],
+            'value_currency': donation['amount_currency'],
+            'contributor_id': donation['id'],
         })
 
     insert('activities_contribution', contribution_fields, contributions)
@@ -85,7 +85,7 @@ def create_money_contributions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('funding', '0060_auto_20201127_0922'),
+        ('funding', '0058_auto_20201120_1306'),
     ]
 
     operations = [

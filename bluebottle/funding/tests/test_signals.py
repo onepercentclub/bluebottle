@@ -1,7 +1,7 @@
 from django.core import mail
 from djmoney.money import Money
 
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import SystemWallpost
@@ -19,7 +19,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created for the project wall
         when a user does a successful donation
         """
-        self.donation = DonorFactory(
+        self.donation = DonationFactory(
             amount=Money(35, 'EUR'),
             user=self.user,
             activity=self.funding
@@ -35,7 +35,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created for the project wall
         when a user does a successful donation
         """
-        self.donation = DonorFactory(
+        self.donation = DonationFactory(
             amount=Money(35, 'EUR'),
             user=self.user,
             activity=self.funding
@@ -52,7 +52,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created without an author when a donation is anonymous
         """
         self.assertEqual(SystemWallpost.objects.count(), 0)
-        self.donation = DonorFactory(
+        self.donation = DonationFactory(
             amount=Money(35, 'EUR'),
             user=None,
             activity=self.funding

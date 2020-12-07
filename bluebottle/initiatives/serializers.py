@@ -184,13 +184,16 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ).order_by()
 
         stats['hours'] = stats['hours'].total_seconds() / 3600 if stats['hours'] else 0
-        stats['amount'] = sum(
-            convert(
-                Money(c['amount'], c['moneycontribution__value_currency']),
-                default_currency
-            ).amount
-            for c in amounts if c['amount']
-        )
+        stats['amount'] = {
+            'amount': sum(
+                convert(
+                    Money(c['amount'], c['moneycontribution__value_currency']),
+                    default_currency
+                ).amount
+                for c in amounts if c['amount']
+            ),
+            'currency': default_currency
+        }
         return stats
 
     included_serializers = {

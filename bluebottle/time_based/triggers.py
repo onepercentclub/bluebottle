@@ -24,7 +24,8 @@ from bluebottle.time_based.messages import (
     NewParticipantNotification
 )
 from bluebottle.time_based.effects import (
-    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
+    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect,
+    ClearStartEffect, ClearDeadlineEffect
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
@@ -245,6 +246,13 @@ class DateTriggers(TimeBasedTriggers):
             ]
         ),
 
+        TransitionTrigger(
+            DateStateMachine.manually_reopen,
+            effects=[
+                ClearStartEffect,
+            ]
+        ),
+
         ModelChangedTrigger(
             'start',
             effects=[
@@ -274,6 +282,7 @@ class DateTriggers(TimeBasedTriggers):
                 ),
             ]
         )
+
     ]
 
 
@@ -290,6 +299,12 @@ class PeriodTriggers(TimeBasedTriggers):
             ]
         ),
 
+        TransitionTrigger(
+            DateStateMachine.manually_reopen,
+            effects=[
+                ClearDeadlineEffect,
+            ]
+        ),
 
         TransitionTrigger(
             PeriodStateMachine.succeed_manually,

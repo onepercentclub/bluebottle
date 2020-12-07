@@ -14,6 +14,9 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
+from bluebottle.time_based.validators import (
+    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator
+)
 
 
 tf = TimezoneFinder()
@@ -90,6 +93,8 @@ class DateActivity(TimeBasedActivity):
     online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
 
     duration_period = 'overall'
+
+    validators = [DateActivityRegistrationDeadlineValidator]
 
     class Meta:
         verbose_name = _("Activity on a date")
@@ -220,6 +225,8 @@ class PeriodActivity(TimeBasedActivity):
         null=True,
         choices=DurationPeriodChoices.choices,
     )
+
+    validators = [PeriodActivityRegistrationDeadlineValidator]
 
     @property
     def activity_date(self):

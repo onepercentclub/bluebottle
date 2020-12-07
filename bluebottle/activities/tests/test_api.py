@@ -872,6 +872,7 @@ class ContributorListAPITestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(len(data['data']), 6)
+
         for contributor in data['data']:
             self.assertTrue(
                 contributor['type'] in (
@@ -888,16 +889,23 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 )
             )
 
+            if contributor['type'] in (
+                'activities/time-based/date-participant',
+                'activities/time-based/period-participant',
+            ):
+                self.assertTrue('total-duration' in contributor['attributes'])
+
         for i in data['included']:
-            if i['type'] == 'activities/events':
+            if i['type'] == 'activities/time-based/date':
                 self.assertTrue('start' in i['attributes'])
                 self.assertTrue('duration' in i['attributes'])
                 self.assertTrue('slug' in i['attributes'])
                 self.assertTrue('title' in i['attributes'])
 
-            if i['type'] == 'activities/assignments':
-                self.assertTrue('date' in i['attributes'])
-                self.assertTrue('end-date-type' in i['attributes'])
+            if i['type'] == 'activities/time-based/period':
+                self.assertTrue('deadline' in i['attributes'])
+                self.assertTrue('duration-type' in i['attributes'])
+                self.assertTrue('duration' in i['attributes'])
                 self.assertTrue('slug' in i['attributes'])
                 self.assertTrue('title' in i['attributes'])
 

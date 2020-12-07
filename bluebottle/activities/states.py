@@ -92,7 +92,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     def is_owner(self, user):
         """user is the owner"""
-        return user == self.instance.owner
+        return user == self.instance.owner or user.is_staff
 
     def should_auto_approve(self):
         return self.instance.auto_approve

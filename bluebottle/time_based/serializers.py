@@ -265,6 +265,10 @@ class ParticipantListSerializer(BaseContributorSerializer):
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
+    total_duration = serializers.DurationField(read_only=True)
+
+    class Meta(BaseContributorSerializer.Meta):
+        fields = BaseContributorSerializer.Meta.fields + ('total_duration', )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/participants'

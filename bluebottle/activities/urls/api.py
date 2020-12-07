@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^$',
         ActivityList.as_view(),
         name='activity-list'),
-    url(r'^/contributions$',
+    url(r'^/contributors$',
         ContributorList.as_view(),
         name='contributor-list'),
 

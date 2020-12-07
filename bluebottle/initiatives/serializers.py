@@ -1,5 +1,5 @@
 from builtins import object
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
@@ -172,7 +172,11 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         stats = contributions.aggregate(
             hours=Sum('timecontribution__value'),
-            activities=Count('contributor__activity', distinct=True),
+            activities=Count(
+                'contributor__activity',
+                filter=Q(contributor__activity__status='succeeded'),
+                distinct=True
+            ),
             contributors=Count('contributor', distinct=True)
 
         )

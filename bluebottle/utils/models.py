@@ -169,7 +169,7 @@ class ValidatedModelMixin(object):
         for field in self.required_fields:
             try:
                 value = attrgetter(field)(self)
-                if value in (None, ''):
+                if value in (None, '', timedelta(0)):
                     yield field
             except ObjectDoesNotExist:
                 yield field

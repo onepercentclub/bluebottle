@@ -183,8 +183,6 @@ class ContributorSerializer(PolymorphicModelSerializer):
 
 class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
-        ParticipantListSerializer,
-        ApplicantListSerializer,
         DonorListSerializer,
 
         DateParticipantListSerializer,

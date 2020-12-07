@@ -201,7 +201,6 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
         )
         activity.states.submit(save=True)
         participant = self.participant_factory.create(activity=activity)
-        participant.states.accept(save=True)
 
         self.run_tasks(activity.start + timedelta(minutes=1))
         self.run_tasks(activity.start + timedelta(weeks=1, days=1))
@@ -285,7 +284,10 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
             duration_period='weeks'
         )
         self.activity.states.submit(save=True)
-        self.participant = self.participant_factory.create(activity=self.activity)
+        self.participant = self.participant_factory.build(activity=self.activity)
+        self.participant.user.save()
+        self.participant.execute_triggers(user=self.participant.user, send_messages=True)
+        self.participant.save()
 
     def refresh(self):
         with LocalTenant(self.tenant, clear_tenant=True):

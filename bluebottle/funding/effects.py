@@ -6,7 +6,7 @@ from future.utils import python_2_unicode_compatible
 import datetime
 
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
@@ -255,6 +255,7 @@ class CreateDonationEffect(Effect):
     def post_save(self, **kwargs):
         money_contribution = MoneyContribution(
             contributor=self.instance,
+            start=now(),
             value=self.instance.amount
         )
         money_contribution.save()

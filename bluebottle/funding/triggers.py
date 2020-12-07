@@ -392,7 +392,7 @@ class DonorTriggers(ContributorTriggers):
 
 @register(MoneyContribution)
 class MoneyContributionTriggers(ContributionTriggers):
-    triggers = []
+    pass
 
 
 def donation_not_refunded(effect):

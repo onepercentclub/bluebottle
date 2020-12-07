@@ -1,6 +1,5 @@
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
@@ -153,30 +152,6 @@ class OrganizerAdmin(ContributorChildAdmin):
     )
 
 
-class ContributionTypeFilter(admin.SimpleListFilter):
-
-    title = _('Contributor type')
-    parameter_name = 'contributor_type'
-
-    def lookups(self, request, model_admin):
-        choices = []
-        for child_model in ContributorAdmin.child_models:
-            ct = ContentType.objects.get_for_model(child_model, for_concrete_model=False)
-            choices.append((ct.id, child_model._meta.verbose_name))
-        return choices
-
-    def queryset(self, request, queryset):
-        try:
-            value = int(self.value())
-        except TypeError:
-            value = None
-        if value:
-            for choice_value, t in self.lookup_choices:
-                if choice_value == value:
-                    return queryset.filter(contributor__polymorphic_ctype_id=choice_value)
-        return queryset
-
-
 @admin.register(Contribution)
 class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
@@ -185,11 +160,14 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['created', 'contributor_type', 'contributor_link', 'state_name', 'value']
-    list_filter = (ContributionTypeFilter, StateMachineFilter,)
-    date_hierarchy = 'created'
+    list_display = ['start', 'polymorphic_ctype', 'contributor_link', 'state_name', 'value']
+    list_filter = (
+        PolymorphicChildModelFilter,
+        StateMachineFilter
+    )
+    date_hierarchy = 'start'
 
-    ordering = ('-created',)
+    ordering = ('-start',)
 
     def contributor_link(self, obj):
         if obj:

@@ -55,12 +55,16 @@ class TimeBasedActivity(Activity):
         return self.contributors.instance_of(PeriodParticipant, DateParticipant)
 
     @property
+    def cancelled_participants(self):
+        return self.participants.filter(status='cancelled')
+
+    @property
     def active_participants(self):
-        return self.participants.filter(status__in=('accepted', 'new',))
+        return self.participants.filter(status__in=('accepted', 'new'))
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status='accepted')
+        return self.participants.filter(status__in=('accepted', 'succeeded'))
 
     @property
     def durations(self):
@@ -321,7 +325,7 @@ class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
 
     class Meta:
-        verbose_name = _("Contribution")
+        verbose_name = _("Time contribution")
         verbose_name_plural = _("Contributions")
 
     def __str__(self):

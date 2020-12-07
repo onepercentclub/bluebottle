@@ -153,7 +153,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'expired')
-        self.activity.states.manually_reopen(save=True)
+        self.activity.states.reopen_manually(save=True)
         self.assertEqual(self.activity.status, 'draft')
         self.assertIsNone(self.activity.start)
 
@@ -298,7 +298,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'expired')
-        self.activity.states.manually_reopen(save=True)
+        self.activity.states.reopen_manually(save=True)
         self.assertEqual(self.activity.status, 'draft')
         self.assertIsNone(self.activity.deadline)
 

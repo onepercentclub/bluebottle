@@ -247,7 +247,7 @@ class DateTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
-            DateStateMachine.manually_reopen,
+            DateStateMachine.reopen_manually,
             effects=[
                 ClearStartEffect,
             ]
@@ -300,7 +300,7 @@ class PeriodTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
-            DateStateMachine.manually_reopen,
+            DateStateMachine.reopen_manually,
             effects=[
                 ClearDeadlineEffect,
             ]

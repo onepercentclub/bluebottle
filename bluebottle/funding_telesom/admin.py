@@ -13,6 +13,7 @@ class TelesomPaymentAdmin(PaymentChildAdmin):
         'reference_id', 'transaction_id', 'transaction_amount', 'issuer_transaction_id',
         'amount', 'currency'
     ]
+    list_display = ['created', 'account_name', 'account_number', 'amount', 'status']
 
 
 @admin.register(TelesomPaymentProvider)

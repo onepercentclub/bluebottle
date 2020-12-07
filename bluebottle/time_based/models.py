@@ -318,7 +318,7 @@ class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
 
     class Meta:
-        verbose_name = _("Contribution")
+        verbose_name = _("Time contribution")
         verbose_name_plural = _("Contributions")
 
     def __str__(self):

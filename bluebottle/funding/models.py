@@ -522,7 +522,7 @@ class MoneyContribution(Contribution):
     value = MoneyField()
 
     class Meta(object):
-        verbose_name = _('Contribution')
+        verbose_name = _('Donation')
         verbose_name_plural = _('Contributions')
 
 

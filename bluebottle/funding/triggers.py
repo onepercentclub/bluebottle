@@ -14,7 +14,8 @@ from bluebottle.funding.effects import (
     RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
+    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect,
+    SetContributionDateEffect
 )
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
@@ -392,7 +393,14 @@ class DonorTriggers(ContributorTriggers):
 
 @register(MoneyContribution)
 class MoneyContributionTriggers(ContributionTriggers):
-    triggers = []
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            OrganizerStateMachine.initiate,
+            effects=[
+                SetContributionDateEffect
+            ]
+        ),
+    ]
 
 
 def donation_not_refunded(effect):

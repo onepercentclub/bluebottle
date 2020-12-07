@@ -336,6 +336,17 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation.states.succeed(save=True)
         self.assertEqual(donation.status, 'succeeded')
 
+        money_contribution = donation.contributions.get()
+        self.assertEqual(
+            money_contribution.status,
+            'succeeded'
+        )
+        self.assertAlmostEqual(
+            money_contribution.start,
+            now(),
+            delta=timedelta(minutes=2)
+        )
+
     def test_succeed_update_amounts(self):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)

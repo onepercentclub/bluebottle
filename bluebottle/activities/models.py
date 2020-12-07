@@ -201,7 +201,7 @@ class Contribution(TriggerMixin, PolymorphicModel):
 
 class OrganizerContribution(Contribution):
     class Meta(object):
-        verbose_name = _("Contribution")
+        verbose_name = _("Organising")
         verbose_name_plural = _("Contributions")
 
 

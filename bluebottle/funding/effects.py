@@ -6,7 +6,7 @@ from future.utils import python_2_unicode_compatible
 import datetime
 
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
@@ -158,6 +158,19 @@ class RemoveDonorWallpostEffect(Effect):
 
     def __str__(self):
         return _('Delete wallpost for donation')
+
+
+@python_2_unicode_compatible
+class SetContributionDateEffect(Effect):
+    conditions = []
+    title = _('Set donation date')
+    template = 'admin/set_contribution_date.html'
+
+    def pre_save(self, **kwargs):
+        self.instance.start = now()
+
+    def __str__(self):
+        return _('Set the contribution date.')
 
 
 @python_2_unicode_compatible

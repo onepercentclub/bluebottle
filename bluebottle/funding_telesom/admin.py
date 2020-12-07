@@ -8,6 +8,7 @@ from bluebottle.funding_telesom.models import TelesomPayment, TelesomPaymentProv
 @admin.register(TelesomPayment)
 class TelesomPaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    fields = PaymentChildAdmin.fields + ['account_name', 'account_number', 'response']
 
 
 @admin.register(TelesomPaymentProvider)

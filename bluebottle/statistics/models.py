@@ -81,15 +81,12 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         ('participants', _('Participants')),
 
         ('activities_succeeded', _('Activities succeeded')),
-        ('assignments_succeeded', _('Tasks succeeded')),
-        ('events_succeeded', _('Events succeeded')),
-        ('fundings_succeeded', _('Funding activities succeeded')),
+        ('time_activities_succeeded', _('Time based activities succeeded')),
+        ('fundings_succeeded', _('Crowdfunding campaigns succeeded')),
 
-        ('assignment_members', _('Task applicants')),
-        ('event_members', _('Event participants')),
+        ('activity_participants', _('Activity Participants')),
 
-        ('assignments_online', _('Tasks online')),
-        ('events_online', _('Events online')),
+        ('time_activities_online', _('Time based activities online')),
         ('fundings_online', _('Funding activities online')),
 
         ('donations', _('Donations')),
@@ -120,12 +117,10 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
             'participants': 'people',
 
             'activities_succeeded': 'default',
-            'assignments_succeeded': 'task-completed',
-            'events_succeeded': 'event-completed',
+            'time_activities_online': 'event-completed',
             'fundings_succeeded': 'funding-completed',
 
-            'assignment_members': 'people',
-            'event_members': 'people',
+            'participants': 'people',
 
             'assignments_online': 'task',
             'events_online': 'event',

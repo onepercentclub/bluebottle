@@ -264,7 +264,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
     mark_absent = Transition(
-        ContributorStateMachine.succeeded,
+        accepted,
         rejected,
         name=_('Mark absent'),
         description=_("User did not contribute to the task and is marked absent."),

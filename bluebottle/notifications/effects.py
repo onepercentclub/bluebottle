@@ -1,6 +1,7 @@
 from future.utils import python_2_unicode_compatible
 
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 from bluebottle.fsm.effects import Effect
 
@@ -55,7 +56,23 @@ class BaseNotificationEffect(Effect):
 
     @property
     def description(self):
-        return u'"{}"'.format(self.message(self.instance).generic_subject)
+        return '"{}"'.format(self.message(self.instance).generic_subject)
+
+    @classmethod
+    def render(cls, effects):
+        message = effects[0].message(effects[0].instance)
+        recipients = [
+            recipient.email for effect in effects
+            for recipient in effect.message(effect.instance).get_recipients()
+        ]
+
+        context = {
+            'opts': effects[0].instance.__class__._meta,
+            'effects': effects,
+            'subject': message.generic_subject,
+            'recipients': recipients
+        }
+        return render_to_string(cls.template, context)
 
     @property
     def help(self):

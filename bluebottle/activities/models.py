@@ -158,8 +158,8 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     class Meta(object):
         ordering = ('-created',)
-        verbose_name = _('Contributor')
-        verbose_name_plural = _('Contributors')
+        verbose_name = _('Contribution')
+        verbose_name_plural = _('Contributions')
 
     def __str__(self):
         if self.user:
@@ -194,14 +194,16 @@ class Contribution(TriggerMixin, PolymorphicModel):
 
     class Meta(object):
         ordering = ('-created',)
+        verbose_name = _("Contribution amount")
+        verbose_name_plural = _("Contribution amounts")
 
     def __str__(self):
-        return str(_('Contribution'))
+        return str(_('Contribution amount'))
 
 
 class OrganizerContribution(Contribution):
     class Meta(object):
-        verbose_name = _("Contribution")
+        verbose_name = _("Organising")
         verbose_name_plural = _("Contributions")
 
 

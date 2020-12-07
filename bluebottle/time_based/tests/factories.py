@@ -25,7 +25,7 @@ class TimeBasedFactory(factory.DjangoModelFactory):
 
     expertise = factory.SubFactory(SkillFactory)
     location = factory.SubFactory(GeolocationFactory)
-    registration_deadline = (now() + timedelta(weeks=2)).date()
+    registration_deadline = (now() + timedelta(weeks=1)).date()
 
 
 class DateActivityFactory(TimeBasedFactory):
@@ -45,7 +45,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     duration_period = 'overall'
     is_online = False
 
-    start = (now() + timedelta(weeks=1)).date()
+    start = (now() + timedelta(weeks=2)).date()
 
 
 class DateParticipantFactory(factory.DjangoModelFactory):
@@ -72,5 +72,5 @@ class ParticipationFactory(factory.DjangoModelFactory):
 
     value = timedelta(hours=20)
 
-    start = now() + timedelta(weeks=1)
-    end = now() + timedelta(weeks=2)
+    start = now() + timedelta(weeks=2)
+    end = now() + timedelta(weeks=3)

@@ -161,19 +161,6 @@ class RemoveDonorWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class SetContributionDateEffect(Effect):
-    conditions = []
-    title = _('Set donation date')
-    template = 'admin/set_contribution_date.html'
-
-    def pre_save(self, **kwargs):
-        self.instance.start = now()
-
-    def __str__(self):
-        return _('Set the contribution date.')
-
-
-@python_2_unicode_compatible
 class SubmitConnectedActivitiesEffect(Effect):
     conditions = []
     title = _('Submit activities')
@@ -268,6 +255,7 @@ class CreateDonationEffect(Effect):
     def post_save(self, **kwargs):
         money_contribution = MoneyContribution(
             contributor=self.instance,
+            start=now(),
             value=self.instance.amount
         )
         money_contribution.save()

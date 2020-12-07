@@ -1,9 +1,9 @@
-from bluebottle.activities.models import Organizer
+from bluebottle.activities.models import Organizer, OrganizerContribution
 from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, OrganizerContributionStateMachine
-from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution
+from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
 
 
 def initiative_is_approved(effect):
@@ -109,6 +109,18 @@ class OrganizerTriggers(TriggerManager):
             OrganizerStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect('contributions', OrganizerContributionStateMachine.succeed)
+            ]
+        ),
+    ]
+
+
+@register(OrganizerContribution)
+class OrganizerContributionTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            OrganizerContributionStateMachine.succeed,
+            effects=[
+                SetContributionDateEffect
             ]
         ),
     ]

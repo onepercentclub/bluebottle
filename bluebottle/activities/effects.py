@@ -1,4 +1,4 @@
-from future.utils import python_2_unicode_compatible
+from django.utils.timezone import now
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -6,7 +6,6 @@ from bluebottle.fsm.effects import Effect
 from bluebottle.activities.models import Organizer, OrganizerContribution
 
 
-@python_2_unicode_compatible
 class CreateOrganizer(Effect):
     "Create an organizer for the activity"
 
@@ -30,3 +29,17 @@ class CreateOrganizerContribution(Effect):
 
     def __str__(self):
         return str(_('Create organizer contribution'))
+
+
+class SetContributionDateEffect(Effect):
+    "Set the contribution date"
+
+    conditions = []
+    title = _('Set contribution date')
+    template = 'admin/set_contribution_date.html'
+
+    def pre_save(self, **kwargs):
+        self.instance.start = now()
+
+    def __str__(self):
+        return _('Set the contribution date.')

@@ -1,3 +1,8 @@
+from datetime import timedelta
+
+from django.utils.timezone import now
+
+from bluebottle.activities.models import Organizer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
 )
@@ -101,6 +106,22 @@ class TimeBasedActivityStatesTestCase():
         self.assertTrue(
             TimeBasedStateMachine.succeed in
             self.activity.states.possible_transitions()
+        )
+
+        organizer = self.activity.contributors.instance_of(Organizer).get()
+        self.assertEqual(
+            organizer.status,
+            'succeeded'
+        )
+        organizer_contribution = organizer.contributions.get()
+        self.assertEqual(
+            organizer_contribution.status,
+            'succeeded'
+        )
+        self.assertAlmostEqual(
+            organizer_contribution.start,
+            now(),
+            delta=timedelta(minutes=2)
         )
 
     def test_succeeded(self):

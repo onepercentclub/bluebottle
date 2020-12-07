@@ -509,8 +509,8 @@ class Donor(Contributor):
         return self.payment.type
 
     class Meta(object):
-        verbose_name = _('Donor')
-        verbose_name_plural = _('Donors')
+        verbose_name = _('Donation')
+        verbose_name_plural = _('Donations')
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/donations'

@@ -260,7 +260,6 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'created'
 
     inlines = [
-        MoneyContributionInlineAdmin,
         DonorWallpostInline
     ]
 

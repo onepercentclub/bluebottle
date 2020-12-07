@@ -230,12 +230,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     ]
 
     basic_fields = (
-        'title',
-        'slug',
-        'image',
-        'video_url',
         'initiative',
         'owner',
+        'title',
+        'slug',
         'highlight',
         'created',
         'updated',
@@ -267,6 +265,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     detail_fields = (
         'description',
+        'image',
+        'video_url',
     )
 
     list_display = [

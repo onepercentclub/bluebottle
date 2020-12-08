@@ -234,13 +234,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     ]
 
     detail_fields = (
-        'title',
-        'slug',
-        'initiative',
-        'owner',
     )
 
     description_fields = (
+        'title',
+        'slug',
         'description',
         'image',
         'video_url',
@@ -248,6 +246,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     status_fields = (
+        'initiative',
+        'owner',
         'created',
         'updated',
         'status',
@@ -308,7 +308,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def stats_data(self, obj):
         template = loader.get_template(
-            'admin/activity-stats.html'
+            'admin/activity_stats.html'
         )
 
         return template.render({'stats': obj.stats})
@@ -329,11 +329,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
+        template = loader.get_template(
+            'admin/validation_steps.html'
+        )
+        return template.render({'errors': errors})
 
-    valid.short_description = _('Steps to complete activity')
+    valid.short_description = _('Validation')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()

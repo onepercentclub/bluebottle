@@ -147,11 +147,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         'accepted',
         _('This person takes part in the activity.')
     )
-    succeeded = State(
-        _('finished'),
-        'succeeded',
-        _("This person's contribution is finished. Spent hours are retained.")
-    )
     rejected = State(
         _('removed'),
         'rejected',
@@ -226,19 +221,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=can_accept_participant,
     )
 
-    remove = Transition(
-        [
-            ContributorStateMachine.succeeded,
-            accepted
-        ],
-        rejected,
-        name=_('remove'),
-        description=_("The participant's hours spent will be reset to "
-                      "zero and new hours will no longer be allocated."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
-
     withdraw = Transition(
         [
             ContributorStateMachine.new,
@@ -263,38 +245,13 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=ContributorStateMachine.is_user,
     )
 
-    mark_absent = Transition(
-        accepted,
-        rejected,
-        name=_('Mark absent'),
-        description=_("User did not contribute to the task and is marked absent."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
 
-    mark_present = Transition(
-        rejected,
-        ContributorStateMachine.succeeded,
-        name=_('Mark present'),
-        description=_("Participant did contribute to the task, after first been marked absent."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
-
-    succeed = Transition(
-        new,
-        succeeded,
-        name=_('finish'),
-        description=_("The participant keeps their hours, but will no longer be allocated any new hours."),
-    )
-
-
-@ register(DateParticipant)
+@register(DateParticipant)
 class DateParticipantStateMachine(ParticipantStateMachine):
     pass
 
 
-@ register(PeriodParticipant)
+@register(PeriodParticipant)
 class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
@@ -322,6 +279,6 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     )
 
 
-@ register(TimeContribution)
+@register(TimeContribution)
 class TimeContributionStateMachine(ContributionStateMachine):
     pass

@@ -566,15 +566,6 @@ class ParticipantTriggers(ContributorTriggers):
             ]
         ),
 
-        TransitionTrigger(
-            ParticipantStateMachine.mark_absent,
-            effects=[
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.fail,
-                )
-            ]
-        ),
 
         TransitionTrigger(
             ParticipantStateMachine.withdraw,

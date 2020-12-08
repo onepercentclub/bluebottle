@@ -50,7 +50,7 @@
 <!-- Container -->
 <div id="container">
 
-    {% if not is_popup %}
+{% if not is_popup %}
     <!-- Header -->
     <div id="header">
         <div id="branding">
@@ -63,18 +63,18 @@
         {% block usertools %}
 
         {% if user.is_active and user.is_staff or has_permission %}
-        <div id="user-tools">
-            {% block welcome-msg %}
-                {% trans 'Welcome,' %}
-                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-            {% endblock %}
-            {% block userlinks %}
-                {% if user.has_usable_password %}
-                    <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
-                {% endif %}
-                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
-            {% endblock %}
-        </div>
+            <div id="user-tools">
+                {% block welcome-msg %}
+                    {% trans 'Welcome,' %}
+                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                {% endblock %}
+                {% block userlinks %}
+                    {% if user.has_usable_password %}
+                        <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+                    {% endif %}
+                    <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                {% endblock %}
+            </div>
         {% endif %}
         {% endblock %}
     </div>
@@ -102,6 +102,7 @@
             {% if title %} &rsaquo; {{ title }}{% endif %}
         </div>
     {% endblock %}
+
     {% endif %}
 
     {% block messages %}

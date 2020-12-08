@@ -234,10 +234,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     ]
 
     detail_fields = (
+        'title',
+        'initiative',
+        'owner',
     )
 
     description_fields = (
-        'title',
         'slug',
         'description',
         'image',
@@ -246,8 +248,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     status_fields = (
-        'initiative',
-        'owner',
         'created',
         'updated',
         'status',

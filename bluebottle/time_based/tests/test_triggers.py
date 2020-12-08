@@ -141,6 +141,22 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    def test_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'open')
+
+        self.activity.start = now() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'expired')
+        self.activity.states.reopen_manually(save=True)
+        self.assertEqual(self.activity.status, 'draft')
+        self.assertIsNone(self.activity.start)
+
     def test_change_start(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -269,6 +285,22 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
 class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'open')
+
+        self.activity.deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'expired')
+        self.activity.states.reopen_manually(save=True)
+        self.assertEqual(self.activity.status, 'draft')
+        self.assertIsNone(self.activity.deadline)
 
     def test_change_deadline(self):
         self.initiative.states.submit(save=True)
@@ -459,7 +491,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.refresh_from_db()
 
         self.activity.states.succeed_manually(save=True)
-        self.assertEqual(self.activity.end, date.today())
+        self.assertEqual(self.activity.deadline, date.today())
 
         for duration in self.activity.durations:
             self.assertEqual(duration.status, 'succeeded')
@@ -491,7 +523,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         mail.outbox = []
 
         self.activity.states.succeed_manually(save=True)
-        self.assertEqual(self.activity.end, date.today())
+        self.assertEqual(self.activity.deadline, date.today())
 
         for duration in self.activity.durations:
             self.assertEqual(duration.status, 'succeeded')

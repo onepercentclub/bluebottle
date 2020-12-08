@@ -46,6 +46,18 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
+    reopen_manually = Transition(
+        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        ActivityStateMachine.draft,
+        name=_("Reopen"),
+        permission=ActivityStateMachine.is_owner,
+        automatic=False,
+        description=_(
+            "The number of participants has fallen below the required number. "
+            "People can sign up again for the task."
+        )
+    )
+
     succeed = Transition(
         [
             ActivityStateMachine.open,
@@ -120,6 +132,7 @@ class PeriodStateMachine(TimeBasedStateMachine):
         name=_('Succeed'),
         automatic=False,
         conditions=[can_succeed],
+        permission=ActivityStateMachine.is_owner,
     )
 
     reschedule = Transition(

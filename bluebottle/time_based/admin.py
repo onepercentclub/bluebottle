@@ -5,7 +5,7 @@ from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
-from durationwidget.widgets import TimeDurationWidget
+from durationwidget.widgets import TimeDurationWidget, get_human_readable_duration
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter
@@ -159,7 +159,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [
-        'deadline', 'duration', 'duration_period'
+        'start', 'end_date', 'duration_string'
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
@@ -176,6 +176,20 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         ('duration_period', 'TimeContribution period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+    def end_date(self, obj):
+        if not obj.deadline:
+            return _('indefinitely')
+        return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        if not obj.duration_period or obj.duration_period != 'overall':
+            return _('{duration} per {time_unit}').format(
+                duration=duration,
+                time_unit=obj.duration_period[0:-1])
+        return duration
+    duration_string.short_description = _('Duration')
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

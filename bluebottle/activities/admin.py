@@ -270,10 +270,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     list_display = [
-        '__str__', 'initiative', 'created', 'state_name',
-        'highlight'
+        '__str__', 'initiative_link', 'state_name',
 
     ]
+
+    def initiative_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
+            obj.initiative
+        )
+    initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

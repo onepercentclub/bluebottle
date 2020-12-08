@@ -185,7 +185,6 @@ class ActivityStateMachine(ModelStateMachine):
             rejected,
             cancelled,
             deleted,
-            expired,
         ],
         needs_work,
         name=_('Restore'),
@@ -195,7 +194,6 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will then be reopened to participants."
         ),
         automatic=False,
-        permission=is_staff,
     )
 
     expire = Transition(

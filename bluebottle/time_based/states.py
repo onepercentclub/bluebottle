@@ -189,6 +189,10 @@ class ParticipantStateMachine(ContributorStateMachine):
             self.instance.activity.initiative.owner
         ] or user.is_staff
 
+    def can_reject_participant(self, user):
+        """can accept participant"""
+        return self.can_accept_participant(user) and not user == self.instance.user
+
     def activity_is_open(self):
         """task is open"""
         return self.instance.activity.status == ActivityStateMachine.open.value
@@ -231,7 +235,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
         automatic=False,
-        permission=can_accept_participant,
+        permission=can_reject_participant,
     )
 
     withdraw = Transition(

@@ -23,6 +23,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
     TimeContribution
+from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
 
@@ -106,7 +107,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated'
+        'created', 'updated', 'type'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -114,7 +115,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.fields}),
+            (_('Details'), {'fields': self.fields}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -131,6 +132,9 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
         return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
 
     activity_link.short_description = _('Activity')
+
+    def type(self, obj):
+        return obj.polymorphic_ctype
 
 
 @admin.register(Organizer)
@@ -186,7 +190,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         if type == 'MoneyContribution':
             return obj.moneycontribution.value
         if type == 'TimeContribution':
-            return obj.timecontribution.value
+            return get_human_readable_duration(str(obj.timecontribution.value)).lower()
         return '-'
 
 
@@ -194,6 +198,28 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
+
+    fields = [
+        'contributor',
+        'start',
+        'status',
+        'states',
+        'created'
+    ]
+
+    superadmin_fields = [
+        'force_status',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Details'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
 
 
 @admin.register(OrganizerContribution)

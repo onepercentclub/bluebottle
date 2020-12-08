@@ -244,19 +244,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Basic'), {'fields': self.basic_fields}),
-        )
-        if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
-            )
-        return fieldsets
+    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 @admin.register(DateParticipant)

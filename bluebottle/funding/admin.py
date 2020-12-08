@@ -236,6 +236,8 @@ class MoneyContributionInlineAdmin(admin.StackedInline):
 class MoneyContributionAdmin(ContributionChildAdmin):
     model = MoneyContribution
 
+    fields = ContributionChildAdmin.fields + ['value']
+
 
 @admin.register(Donor)
 class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):

@@ -160,7 +160,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['start', 'polymorphic_ctype', 'contributor_link', 'state_name', 'value']
+    list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
     list_filter = (
         PolymorphicChildModelFilter,
         StateMachineFilter
@@ -173,6 +173,10 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         if obj:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
+    contributor_link.short_description = _('Contributor')
+
+    def contribution_type(self, obj):
+        return obj.polymorphic_ctype
 
     def contributor_type(self, obj):
         return obj.contributor.get_real_instance_class()._meta.verbose_name
@@ -229,29 +233,39 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'send_impact_reminder_message_link',
     ]
 
-    basic_fields = (
+    detail_fields = (
         'title',
         'slug',
-        'image',
-        'video_url',
         'initiative',
         'owner',
+    )
+
+    description_fields = (
+        'description',
+        'image',
+        'video_url',
         'highlight',
+    )
+
+    status_fields = (
         'created',
         'updated',
-        'stats_data',
+        'status',
+        'states'
     )
 
     def get_status_fields(self, request, obj):
-        fields = ('status', 'states',)
-
+        fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
             fields = ('valid',) + fields
 
         return fields
 
     def get_detail_fields(self, request, obj):
-        fields = self.detail_fields
+        return self.detail_fields
+
+    def get_description_fields(self, request, obj):
+        fields = self.description_fields
 
         if Segment.objects.filter(type__is_active=True).count():
             fields = fields + ('segments',)
@@ -264,10 +278,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             fields = fields + ('send_impact_reminder_message_link',)
 
         return fields
-
-    detail_fields = (
-        'description',
-    )
 
     list_display = [
         '__str__', 'initiative_link', 'state_name',
@@ -284,8 +294,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.basic_fields}),
-            (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Detail'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:

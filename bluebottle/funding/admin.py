@@ -140,8 +140,17 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    basic_fields = ActivityChildAdmin.basic_fields[0:ActivityChildAdmin.basic_fields.index('updated') + 1] + \
-        ('started',) + ActivityChildAdmin.basic_fields[ActivityChildAdmin.basic_fields.index('updated') + 1:]
+    detail_fields = ActivityChildAdmin.detail_fields + (
+        'started',
+        'duration',
+        'deadline',
+        'target',
+        'amount_matching',
+        'amount_donated',
+        'amount_raised',
+        'donors_link',
+        'bank_account',
+    )
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
@@ -174,18 +183,6 @@ class FundingAdmin(ActivityChildAdmin):
     def amount_donated(self, obj):
         return obj.amount_donated
     amount_donated.short_description = _('amount donated')
-
-    detail_fields = (
-        'description',
-        'duration',
-        'deadline',
-        'target',
-        'amount_matching',
-        'amount_donated',
-        'amount_raised',
-        'donors_link',
-        'bank_account',
-    )
 
     export_to_csv_fields = (
         ('title', 'Title'),

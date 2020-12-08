@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
+from django.forms import Textarea
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
-from durationwidget.widgets import TimeDurationWidget, get_human_readable_duration
+from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter
@@ -78,7 +79,15 @@ class TimeBasedAdmin(ActivityChildAdmin):
                 show_hours=True,
                 show_minutes=True,
                 show_seconds=False)
-        }
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
     }
 
     search_fields = ['title', 'description']
@@ -111,6 +120,15 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('review', 'Review participants')
     )
 
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        if not obj.duration_period or obj.duration_period != 'overall':
+            return _('{duration} per {time_unit}').format(
+                duration=duration,
+                time_unit=obj.duration_period[0:-1])
+        return duration
+    duration_string.short_description = _('Duration')
+
 
 class TimeBasedActivityAdminForm(StateMachineModelForm):
 
@@ -132,7 +150,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'duration',
+        'start', 'duration_string',
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
@@ -181,15 +199,6 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         if not obj.deadline:
             return _('indefinitely')
         return obj.deadline
-
-    def duration_string(self, obj):
-        duration = get_human_readable_duration(str(obj.duration)).lower()
-        if not obj.duration_period or obj.duration_period != 'overall':
-            return _('{duration} per {time_unit}').format(
-                duration=duration,
-                time_unit=obj.duration_period[0:-1])
-        return duration
-    duration_string.short_description = _('Duration')
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

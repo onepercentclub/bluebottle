@@ -282,13 +282,12 @@
   color: $top-link-color;
   font-size: 1.2rem;
   font-weight: 700;
-  display: inline-block;
-  margin: 16px 0 0 24px;
+  padding: 16px 10px 8px 20px;
   text-transform: capitalize;
-  float: left;
 }
 
 .site-title-login {
+  margin: 20px 0px -30px;
   font-size: 1.4rem;
   text-align: center;
 }

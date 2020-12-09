@@ -680,7 +680,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.InitiativeResource',
             'title': _('Initiatives'),
         }),
-        ('assignments.Assignment', {
+        ('time_based.PeriodActivity', {
             'fields': (
                 ('id', 'Task ID'),
                 ('initiative__title', 'Initiative Title'),
@@ -700,40 +700,17 @@ EXPORTDB_EXPORT_CONF = {
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
                 ('preparation', 'Preparation time'),
-                ('start_time', 'Start time'),
+                ('start', 'Start'),
                 ('people_applied', 'People applied'),
-                ('date', 'End date'),
-                ('end_date_type', 'End date type'),
+                ('deadline', 'Deadline'),
 
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.AssignmentResource',
-            'title': _('Tasks'),
+            'resource_class': 'bluebottle.exports.resources.PeriodActivityResource',
+            'title': _('Activities during a period'),
         }),
-        ('assignments.Applicant', {
-            'fields': (
-                ('id', 'Contributor ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-
-                ('time_spent', 'Time spent'),
-
-
-                ('activity__assignment__date', 'Activity date'),
-                ('created', 'Date registered'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task contributors'),
-        }),
-        ('events.Event', {
+        ('time_based.DateActivity', {
             'fields': (
                 ('id', 'Task ID'),
                 ('initiative__title', 'Initiative Title'),
@@ -755,29 +732,30 @@ EXPORTDB_EXPORT_CONF = {
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.EventResource',
-            'title': _('Events'),
+            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
+            'title': _('Activities on a date'),
         }),
-        ('events.Participant', {
+        ('time_based.TimeContribution', {
             'fields': (
                 ('id', 'Contributor ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
+                ('contributor__activity__title', 'Activity Title'),
+                ('contributor__activity__initiative__title', 'Initiative Title'),
+                ('contributor__activity__id', 'Activity ID'),
+                ('contributor__activity__status', 'Activity status'),
+                ('contributor__user__id', 'User ID'),
+                ('contributor__user__remote_id', 'Remote ID'),
+                ('contributor__user__email', 'Email'),
                 ('status', 'Status'),
 
-                ('time_spent', 'Time spent'),
+                ('value', 'Time spent'),
 
-                ('activity__event__start', 'Activity date'),
+                ('start', 'Start of contribution'),
+                ('end', 'End of contribution'),
                 ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event contributors'),
+            'resource_class': 'bluebottle.exports.resources.TimeContributionResource',
+            'title': _('Time contributions'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -799,7 +777,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('created', 'created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.EventResource',
+            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
             'title': _('Funding activities'),
         }),
         ('funding.Donor', {

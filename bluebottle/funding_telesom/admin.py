@@ -8,6 +8,13 @@ from bluebottle.funding_telesom.models import TelesomPayment, TelesomPaymentProv
 @admin.register(TelesomPayment)
 class TelesomPaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    fields = PaymentChildAdmin.fields + [
+        'account_name', 'account_number', 'response', 'unique_id',
+        'reference_id', 'transaction_id', 'transaction_amount', 'issuer_transaction_id',
+        'amount', 'currency'
+    ]
+    search_fields = ['account_name', 'account_number']
+    list_display = ['created', 'account_name', 'account_number', 'amount', 'status']
 
 
 @admin.register(TelesomPaymentProvider)

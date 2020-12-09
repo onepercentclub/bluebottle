@@ -46,10 +46,22 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
+    reopen_manually = Transition(
+        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        ActivityStateMachine.draft,
+        name=_("Reopen"),
+        permission=ActivityStateMachine.is_owner,
+        automatic=False,
+        description=_(
+            "The number of participants has fallen below the required number. "
+            "People can sign up again for the task."
+        )
+    )
+
     succeed = Transition(
         [
             ActivityStateMachine.open,
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             full,
             running
         ],
@@ -72,13 +84,32 @@ class TimeBasedStateMachine(ActivityStateMachine):
         description=_("Start the event.")
     )
 
+    cancel = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            full,
+            running
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_(
+            'Cancel if the activity will not be executed. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back office '
+            'and will continue to count in the reporting.'
+        ),
+        automatic=False,
+    )
+
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
     reschedule = Transition(
         [
             TimeBasedStateMachine.running,
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -92,16 +123,21 @@ class DateStateMachine(TimeBasedStateMachine):
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
+    def can_succeed(self):
+        return self.instance.duration_period != 'overall' and len(self.instance.active_participants) > 0
+
     succeed_manually = Transition(
         [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,
+        conditions=[can_succeed],
+        permission=ActivityStateMachine.is_owner,
     )
 
     reschedule = Transition(
         [
-            ActivityStateMachine.cancelled,
+            ActivityStateMachine.expired,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -123,11 +159,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         _('participating'),
         'accepted',
         _('This person takes part in the activity.')
-    )
-    succeeded = State(
-        _('finished'),
-        'succeeded',
-        _("This person's contribution is finished. Spent hours are retained.")
     )
     rejected = State(
         _('removed'),
@@ -157,6 +188,10 @@ class ParticipantStateMachine(ContributorStateMachine):
             self.instance.activity.initiative.activity_manager,
             self.instance.activity.initiative.owner
         ] or user.is_staff
+
+    def can_reject_participant(self, user):
+        """can accept participant"""
+        return self.can_accept_participant(user) and not user == self.instance.user
 
     def activity_is_open(self):
         """task is open"""
@@ -200,20 +235,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
         automatic=False,
-        permission=can_accept_participant,
-    )
-
-    remove = Transition(
-        [
-            ContributorStateMachine.succeeded,
-            accepted
-        ],
-        rejected,
-        name=_('remove'),
-        description=_("The participant's hours spent will be reset to "
-                      "zero and new hours will no longer be allocated."),
-        automatic=False,
-        permission=can_accept_participant,
+        permission=can_reject_participant,
     )
 
     withdraw = Transition(
@@ -238,52 +260,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         automatic=False,
         conditions=[activity_is_open],
         permission=ContributorStateMachine.is_user,
-    )
-
-    mark_absent = Transition(
-        ContributorStateMachine.succeeded,
-        rejected,
-        name=_('Mark absent'),
-        description=_("User did not contribute to the task and is marked absent."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
-
-    mark_present = Transition(
-        rejected,
-        ContributorStateMachine.succeeded,
-        name=_('Mark present'),
-        description=_("Participant did contribute to the task, after first been marked absent."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
-
-    cancel_activity = Transition(
-        [
-            ContributorStateMachine.new,
-            accepted,
-            ContributorStateMachine.succeeded,
-        ],
-        cancelled,
-        name=_('Cancel activity'),
-        description=_("The activity has been cancelled. "
-                      "This person's contribution is removed and the spent hours are reset to zero."),
-        automatic=True,
-    )
-
-    restore_activity = Transition(
-        cancelled,
-        ContributorStateMachine.new,
-        name=_('Restore activity'),
-        description=_("The activity has been restored."),
-        automatic=True,
-    )
-
-    succeed = Transition(
-        new,
-        succeeded,
-        name=_('finish'),
-        description=_("The participant keeps their hours, but will no longer be allocated any new hours."),
     )
 
 

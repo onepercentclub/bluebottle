@@ -1,0 +1,9 @@
+
+{% load i18n %}
+<h3>{%trans "Clear the start" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Clear the start date of the activity, so that it has to be set to a new value in the future.
+{% endblocktrans %}
+</p>

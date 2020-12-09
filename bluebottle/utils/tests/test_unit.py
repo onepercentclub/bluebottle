@@ -6,7 +6,7 @@ import mock
 import unittest
 import uuid
 
-from bluebottle.events.models import Event
+from bluebottle.time_based.models import DateActivity
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
@@ -511,27 +511,27 @@ class TestRelatedResourceOwnerPermission(BluebottleTestCase):
         self.user.groups.clear()
 
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_event')
+            Permission.objects.get(codename='api_read_own_dateactivity')
         )
 
     def test_permission(self):
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Event
+                'GET', self.user, DateActivity
             )
         )
 
     def test_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Event
+                'POST', self.user, DateActivity
             )
         )
 
     def test_object_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Event
+                'POST', self.user, DateActivity
             )
         )
 

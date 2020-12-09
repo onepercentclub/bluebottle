@@ -3,6 +3,7 @@ from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.time_based.states import TimeBasedStateMachine
 
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
@@ -45,6 +46,7 @@ class InitiativeTriggers(TriggerManager):
             ReviewStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.cancel),
+                RelatedTransitionEffect('activities', TimeBasedStateMachine.cancel),
                 NotificationEffect(InitiativeCancelledOwnerMessage)
             ]
         ),

@@ -540,7 +540,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         third = DateActivityFactory.create(status='open')
         DateParticipantFactory.create(activity=third)
         fourth = DateActivityFactory.create(status='open', initiative=initiative)
-        DateParticipantFactory.create(activity=fourth)
 
         response = self.client.get(
             self.url + '?sort=popularity',

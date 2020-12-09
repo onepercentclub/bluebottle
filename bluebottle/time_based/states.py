@@ -239,7 +239,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     remove = Transition(
         [
-            ContributorStateMachine.accepted,
+            accepted,
         ],
         rejected,
         name=_('Remove'),

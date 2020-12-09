@@ -2,13 +2,9 @@
 {% load i18n %}
 
 {% block message %}
-    {% if custom_message %}
-        {{custom_message}}
-    {% else %}
-        {% blocktrans with title=obj.activity.title manager=obj.activity.owner.full_name context 'email' %}
-            <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
+    {% blocktrans with title=obj.activity.title manager=obj.activity.owner.full_name context 'email' %}
+        <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
 
-            <p>{{ manager }}, the activity manager, will follow-up with more info soon.</p>
-        {% endblocktrans %}
-    {% endif %}
+        <p>{{ manager }}, the activity manager, will follow-up with more info soon.</p>
+    {% endblocktrans %}
 {% endblock %}

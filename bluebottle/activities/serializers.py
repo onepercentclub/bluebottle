@@ -69,6 +69,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'goals.type',
             'initiative.image',
             'initiative.place',
+            'initiative.location',
         ]
 
 

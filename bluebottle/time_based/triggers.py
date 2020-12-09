@@ -9,6 +9,9 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
+)
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -478,7 +481,7 @@ class ParticipantTriggers(ContributorTriggers):
                         is_user
                     ]
                 ),
-
+                FollowActivityEffect
             ]
         ),
 
@@ -493,7 +496,8 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
-                )
+                ),
+                FollowActivityEffect
             ]
         ),
 
@@ -559,6 +563,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'finished_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
+                FollowActivityEffect
             ]
         ),
 
@@ -577,7 +582,8 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                UnFollowActivityEffect
             ]
         ),
 
@@ -596,7 +602,9 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                UnFollowActivityEffect
+
             ]
         ),
 
@@ -612,7 +620,8 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                UnFollowActivityEffect
             ]
         ),
     ]

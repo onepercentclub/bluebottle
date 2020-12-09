@@ -556,23 +556,6 @@ class ParticipantTriggerTestCase():
         self.activity.refresh_from_db()
         self.review_activity.refresh_from_db()
 
-    def test_initial_review(self):
-        mail.outbox = []
-        participant = self.participant_factory.build(
-            activity=self.review_activity
-        )
-        participant.user.save()
-        participant.execute_triggers(user=participant.user, send_messages=True)
-        participant.save()
-
-        self.assertEqual(participant.status, 'new')
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have a new participant for your activity "{}" 🎉'.format(
-                self.review_activity.title
-            )
-        )
-
     def test_initial_added_through_admin(self):
         mail.outbox = []
         participant = self.participant_factory.build(
@@ -606,7 +589,7 @@ class ParticipantTriggerTestCase():
             )
         )
 
-    def test_initial_review_(self):
+    def test_initial_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
             activity=self.review_activity

@@ -2,9 +2,14 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name context 'email' %}
-    <p>Hi {{ recipient_name }},</p>
-{% endblocktrans %}
+    {% blocktrans with recipient_name=to.first_name context 'email' %}
+        <p>Hi {{ recipient_name }},</p>
+    {% endblocktrans %}
+    {% if custom_message %}
+        <p>{{custom_message|linebreaks}}</p>
+    {% else %}
+        {% block message %}{% endblock %}
+    {% endif %}
 {% endblock %}
 
 {% block action %}

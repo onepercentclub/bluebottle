@@ -1,26 +1,26 @@
 from django.core import mail
 from django.test import TestCase
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.wallposts import MediaWallpostFactory, ReactionFactory
-from bluebottle.follow.tests.factories import EventFollowFactory
+from bluebottle.follow.tests.factories import DateActivityFollowFactory
 
 
 class ActivityWallpostTestCase(TestCase):
 
     def setUp(self):
-        self.activity = EventFactory.create()
+        self.activity = DateActivityFactory.create()
 
         self.follower = BlueBottleUserFactory.create()
-        EventFollowFactory.create(
+        DateActivityFollowFactory.create(
             user=self.follower, instance=self.activity
         )
-        EventFollowFactory.create(
+        DateActivityFollowFactory.create(
             user=BlueBottleUserFactory(campaign_notifications=False),
             instance=self.activity
         )
 
-        EventFollowFactory.create(user=self.activity.owner, instance=self.activity)
+        DateActivityFollowFactory.create(user=self.activity.owner, instance=self.activity)
 
     def test_wallpost(self):
         wallpost_user = BlueBottleUserFactory.create()

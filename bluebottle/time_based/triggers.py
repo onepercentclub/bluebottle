@@ -400,7 +400,7 @@ def is_not_user(effect):
     """
     if 'user' in effect.options:
         return effect.instance.user != effect.options['user']
-    return True
+    return False
 
 
 def is_user(effect):
@@ -409,7 +409,7 @@ def is_user(effect):
     """
     if 'user' in effect.options:
         return effect.instance.user == effect.options['user']
-    return False
+    return True
 
 
 def activity_will_be_full(effect):

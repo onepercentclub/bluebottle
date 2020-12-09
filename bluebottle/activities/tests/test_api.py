@@ -489,6 +489,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
+        import ipdb
+        ipdb.set_trace()
         self.assertEqual(data['data'][0]['id'], str(fifth.pk))
         self.assertEqual(data['data'][1]['id'], str(fourth.pk))
         self.assertEqual(data['data'][2]['id'], str(third.pk))
@@ -540,7 +542,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         third = DateActivityFactory.create(status='open')
         DateParticipantFactory.create(activity=third)
         fourth = DateActivityFactory.create(status='open', initiative=initiative)
-        DateParticipantFactory.create(activity=fourth)
 
         response = self.client.get(
             self.url + '?sort=popularity',

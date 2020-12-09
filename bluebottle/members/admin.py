@@ -24,13 +24,12 @@ from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
-from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.events.models import Participant
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.funding.models import Donor
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
@@ -273,7 +272,7 @@ class MemberAdmin(UserAdmin):
                     _('Engagement'),
                     {
                         'fields':
-                        ['initiatives', 'events', 'assignments', 'funding']
+                        ['initiatives', 'date_activities', 'period_activities', 'funding']
                     }
                 ],
             ]
@@ -308,7 +307,7 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'events', 'assignments', 'funding'
+            'initiatives', 'period_activities', 'date_activities', 'funding'
         ]
 
         user_groups = request.user.groups.all()
@@ -383,34 +382,35 @@ class MemberAdmin(UserAdmin):
         return format_html('<br/>'.join(initiatives)) or _('None')
     initiatives.short_description = _('Initiatives')
 
-    def events(self, obj):
+    def date_activities(self, obj):
         participants = []
-        participant_url = reverse('admin:events_participant_changelist')
-        for status in ['new', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
-            if Participant.objects.filter(status=status, user=obj).count():
+        participant_url = reverse('admin:time_based_dateparticipant_changelist')
+        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
+            if DateParticipant.objects.filter(status=status, user=obj).count():
                 link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
                 participants.append(format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    Participant.objects.filter(status=status, user=obj).count(),
+                    DateParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
         return format_html('<br/>'.join(participants)) or _('None')
-    events.short_description = _('Event participation')
+    date_activities.short_description = _('Activity on a date participation')
 
-    def assignments(self, obj):
+    def period_activities(self, obj):
         applicants = []
-        applicant_url = reverse('admin:assignments_applicant_changelist')
-        for status in ['new', 'accepted', 'active', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
-            if Applicant.objects.filter(status=status, user=obj).count():
+        applicant_url = reverse('admin:time_based_periodparticipant_changelist')
+        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
+            if PeriodParticipant.objects.filter(status=status, user=obj).count():
                 link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
                 applicants.append(format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    Applicant.objects.filter(status=status, user=obj).count(),
+                    PeriodParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
         return format_html('<br/>'.join(applicants)) or _('None')
+    date_activities.short_description = _('Activity during a date participation')
 
     def funding(self, obj):
         donations = []

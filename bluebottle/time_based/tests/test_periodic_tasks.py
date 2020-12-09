@@ -194,7 +194,6 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
     def test_contribution_value_is_succeeded_months(self):
         activity = self.factory.create(
             initiative=self.initiative,
-            review=True,
             duration=timedelta(hours=2),
             duration_period='months',
             deadline=None

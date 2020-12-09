@@ -139,6 +139,7 @@ class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.L
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
+
         serializer.save()
 
 

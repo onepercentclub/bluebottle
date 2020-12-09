@@ -117,14 +117,13 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
             'participants': 'people',
 
             'activities_succeeded': 'default',
-            'time_activities_online': 'event-completed',
+            'time_activities_succeeded': 'event-completed',
             'fundings_succeeded': 'funding-completed',
 
             'participants': 'people',
 
-            'assignments_online': 'task',
-            'events_online': 'event',
             'fundings_online': 'funding',
+            'time_activities_online': 'event',
 
             'donations': 'money',
             'donated_total': 'money',

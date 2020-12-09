@@ -515,7 +515,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['hours'], 66.0)
         self.assertEqual(stats['activities'], 3)
         self.assertEqual(stats['contributors'], 12)
-        self.assertEqual(stats['amount'], 75.0)
+        self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
     def test_get_other(self):
         response = self.client.get(

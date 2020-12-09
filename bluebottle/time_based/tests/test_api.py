@@ -350,19 +350,14 @@ class TimeBasedDetailAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_rejected(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        self.activity.refresh_from_db()
-        self.activity.states.reject(save=True)
-
+    def test_update_deleted(self):
+        self.activity.states.delete(save=True)
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_deleted(self):
-        self.activity.states.delete(save=True)
+    def test_update_rejected(self):
+        self.activity.states.reject(save=True)
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

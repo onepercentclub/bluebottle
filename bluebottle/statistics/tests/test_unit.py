@@ -175,7 +175,7 @@ class DateActivityStatisticsTest(StatisticsTest):
         contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
         self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
-        contribution.states.mark_absent(save=True)
+        contribution.states.reject(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0

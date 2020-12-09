@@ -21,7 +21,7 @@ from bluebottle.time_based.messages import (
     ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    NewParticipantNotification
+    ParticipantRemovedNotification, NewParticipantNotification
 )
 from bluebottle.time_based.effects import (
     CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect,
@@ -581,6 +581,24 @@ class ParticipantTriggers(ContributorTriggers):
             ]
         ),
 
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                NotificationEffect(
+                    ParticipantRemovedNotification
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[activity_will_not_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                )
+            ]
+        ),
 
         TransitionTrigger(
             ParticipantStateMachine.withdraw,

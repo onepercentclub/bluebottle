@@ -229,11 +229,21 @@ class ParticipantStateMachine(ContributorStateMachine):
     reject = Transition(
         [
             ContributorStateMachine.new,
-            accepted
         ],
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
+        automatic=False,
+        permission=can_reject_participant,
+    )
+
+    remove = Transition(
+        [
+            ContributorStateMachine.accepted,
+        ],
+        rejected,
+        name=_('Remove'),
+        description=_("Remove this person as a participant from the activity."),
         automatic=False,
         permission=can_reject_participant,
     )

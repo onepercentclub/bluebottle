@@ -242,6 +242,17 @@ def migrate_contributors(apps, schema_editor):
         status='accepted'
     )
 
+    DateParticipant.objects.filter(
+        status__in=('failed', )
+    ).update(
+        status='rejected'
+    )
+
+    PeriodParticipant.objects.filter(
+        status__in=('failed', )
+    ).update(
+        status='rejected'
+    )
 
 class Migration(migrations.Migration):
 

@@ -9,8 +9,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory, GeolocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.events.tests.factories import EventFactory
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -80,21 +79,21 @@ class UsedCountryListTestCase(GeoTestCase):
         location_tr = LocationFactory.create(country=turkey)
         LocationFactory.create(country=Country.objects.get(translations__name='France'))
 
-        EventFactory.create(
+        DateActivityFactory.create(
             status='open',
             location=location_be
         )
-        EventFactory.create(
+        DateActivityFactory.create(
             status='full',
             location=location_bg
         )
 
-        AssignmentFactory.create(
+        PeriodActivityFactory.create(
             status='draft',
             location=location_de
         )
 
-        EventFactory.create(
+        DateActivityFactory.create(
             status='submitted',
             location=location_de
         )

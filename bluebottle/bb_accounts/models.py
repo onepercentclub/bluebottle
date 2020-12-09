@@ -5,6 +5,7 @@ import os
 import random
 import string
 import uuid
+import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import (
@@ -326,11 +327,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_volunteer(self):
-        from bluebottle.assignments.models import Applicant
-        from bluebottle.events.models import Participant
-        from bluebottle.activities.states import ActivityStateMachine
-        return bool(self.contributor_set.instance_of(Applicant, Participant).
-                    filter(status=ActivityStateMachine.succeeded.value).count())
+        from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+        from bluebottle.time_based.states import ParticipantStateMachine
+        return bool(self.contributor_set.instance_of(DateParticipant, PeriodParticipant).
+                    filter(status=ParticipantStateMachine.accepted.value).count())
 
     @cached_property
     def amount_donated(self):
@@ -344,12 +344,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def time_spent(self):
-        from bluebottle.assignments.models import Applicant
-        from bluebottle.events.models import Participant
-        from bluebottle.activities.states import ActivityStateMachine
-        contributors = self.contributor_set.instance_of(Applicant, Participant).\
-            filter(status=ActivityStateMachine.succeeded.value).all()
-        return sum([c.time_spent for c in contributors])
+        from bluebottle.time_based.models import TimeContribution, TimeContributionStateMachine
+        total = TimeContribution.objects.filter(
+            contributor__user=self,
+            status=TimeContributionStateMachine.succeeded
+        ).aggregate(
+            time_spent=models.Sum('value')
+        )['time_spent'] or datetime.timedelta()
+
+        return total.total_seconds() / 3600
 
     @cached_property
     def subscribed(self):

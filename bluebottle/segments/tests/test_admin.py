@@ -1,8 +1,8 @@
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
-from bluebottle.events.models import Event
+from bluebottle.time_based.models import DateActivity
 
-from bluebottle.events.admin import EventAdmin
+from bluebottle.time_based.admin import DateActivityAdmin
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
@@ -19,16 +19,16 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.site = AdminSite()
         self.segment_admin = SegmentAdmin(Segment, self.site)
-        self.event_admin = EventAdmin(Event, self.site)
+        self.event_admin = DateActivityAdmin(DateActivity, self.site)
 
     def test_activity_segment_admin(self):
-        event = EventFactory.create()
-        event_url = reverse('admin:events_event_change', args=(event.id,))
-        response = self.client.get(event_url)
+        activity = DateActivityFactory.create()
+        activity_url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
+        response = self.client.get(activity_url)
         self.assertNotContains(response, 'Segment:')
         segment_type = SegmentTypeFactory.create()
         SegmentFactory.create_batch(5, type=segment_type)
-        response = self.client.get(event_url)
+        response = self.client.get(activity_url)
         self.assertContains(response, 'Segment:')
 
     def test_segment_admin(self):

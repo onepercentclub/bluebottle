@@ -4,11 +4,7 @@ from django.core.urlresolvers import reverse
 from djmoney.money import Money
 from rest_framework import status
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
-from bluebottle.events.tests.factories import EventFactory
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory
-)
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -28,9 +24,9 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
-        self.event = EventFactory.create(owner=self.owner)
+        self.activity = DateActivityFactory.create(owner=self.owner)
         self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
-        self.assignment = AssignmentFactory.create(owner=self.owner)
+        self.period_activity = PeriodActivityFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
@@ -80,12 +76,12 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             'Random user can nog share wallpost.'
         )
 
-    def test_permissions_on_assignment_wallpost_sharing(self):
+    def test_permissions_on_period_activity_wallpost_sharing(self):
         """
-        Tests that only the assignment creator can share a wallpost.
+        Tests that only the period activity creator can share a wallpost.
         """
-        wallpost_data = {'parent_id': str(self.assignment.id),
-                         'parent_type': 'assignment',
+        wallpost_data = {'parent_id': str(self.period_activity.id),
+                         'parent_type': 'period',
                          'text': 'I can share stuff!',
                          'email_followers': True}
 
@@ -96,11 +92,11 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assignment.initiative.promoter = BlueBottleUserFactory.create()
-        self.assignment.initiative.save()
-        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
+        self.period_activity.initiative.promoter = BlueBottleUserFactory.create()
+        self.period_activity.initiative.save()
+        promoter_token = "JWT {0}".format(self.period_activity.initiative.promoter.get_jwt_token())
 
-        # Assignment owner can share a post
+        # Period activity owner can share a post
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)
@@ -108,7 +104,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
         # Promoters users can share a post
-        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
+        promoter_token = "JWT {0}".format(self.period_activity.initiative.promoter.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)
@@ -116,12 +112,12 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
 
-    def test_permissions_on_assignment_wallpost_non_sharing(self):
+    def test_permissions_on_period_activity_wallpost_non_sharing(self):
         """
         Tests other can post, without sharing
         """
-        wallpost_data = {'parent_id': str(self.assignment.id),
-                         'parent_type': 'assignment',
+        wallpost_data = {'parent_id': str(self.period_activity.id),
+                         'parent_type': 'period',
                          'email_followers': False,
                          'text': 'I can share stuff!'}
 
@@ -132,12 +128,12 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code, status.HTTP_201_CREATED)
 
-    def test_permissions_on_event_wallpost_sharing(self):
+    def test_permissions_on_date_acivity_wallpost_sharing(self):
         """
-        Tests that only the event creator can share a wallpost.
+        Tests that only the date activity creator can share a wallpost.
         """
-        wallpost_data = {'parent_id': str(self.event.id),
-                         'parent_type': 'event',
+        wallpost_data = {'parent_id': str(self.activity.id),
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
@@ -149,7 +145,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
     def test_permissions_on_on_a_date_wallpost_sharing(self):
         """
-        Tests that only the event creator can share a wallpost.
+        Tests that only the date activity creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.on_a_data_activity.id),
                          'parent_type': 'date',
@@ -162,7 +158,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     token=self.other_token)
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_filter_on_assignment_wallpost_list(self):
+    def test_filter_on_period_activity_wallpost_list(self):
         self.initiative.activity_manager = BlueBottleUserFactory.create()
         self.initiative.promoter = BlueBottleUserFactory.create()
         self.initiative.save()
@@ -251,8 +247,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.manager = BlueBottleUserFactory.create()
         self.manager_token = "JWT {0}".format(
             self.manager.get_jwt_token())
-        self.event = EventFactory.create(owner=self.manager)
-        self.some_wallpost = TextWallpostFactory.create(content_object=self.event)
+        self.activity = DateActivityFactory.create(owner=self.manager)
+        self.some_wallpost = TextWallpostFactory.create(content_object=self.activity)
         self.another_wallpost = TextWallpostFactory.create()
 
         self.some_user = BlueBottleUserFactory.create(
@@ -564,7 +560,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
-        self.event = EventFactory.create(owner=self.owner)
+        self.activity = DateActivityFactory.create(owner=self.owner)
         self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
@@ -618,7 +614,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
     def test_create_on_a_date_wallpost(self):
         """
-        Tests that only the event creator can share a wallpost.
+        Tests that only the date activity creator can share a wallpost.
         """
         wallpost_data = {'parent_id': self.on_a_data_activity.id,
                          'parent_type': 'date',
@@ -632,14 +628,14 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.assertEqual(
             wallpost.status_code, status.HTTP_201_CREATED,
-            'Event owners can share a wallpost.')
+            'Date activity owners can share a wallpost.')
 
     def test_create_wallpost_empty_donation(self):
         """
-        Tests that only the event creator can share a wallpost.
+        Tests that only the date activity creator can share a wallpost.
         """
-        wallpost_data = {'parent_id': self.event.id,
-                         'parent_type': 'event',
+        wallpost_data = {'parent_id': self.activity.id,
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'donation': None}
 
@@ -650,14 +646,14 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.assertEqual(
             wallpost.status_code, status.HTTP_201_CREATED,
-            'Event owners can post a wallpost with empty donation set.')
+            'Date acitivity owners can post a wallpost with empty donation set.')
 
-    def test_create_event_wallpost_other(self):
+    def test_create_date_activity_wallpost_other(self):
         """
-        Tests that only the event creator can share a wallpost.
+        Tests that only the date activity creator can share a wallpost.
         """
-        wallpost_data = {'parent_id': self.event.id,
-                         'parent_type': 'event',
+        wallpost_data = {'parent_id': self.activity.id,
+                         'parent_type': 'date',
                          'text': 'I want to share stuff!',
                          'share_with_twitter': True}
 

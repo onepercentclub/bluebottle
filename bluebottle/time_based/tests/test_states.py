@@ -5,8 +5,9 @@ from django.utils.timezone import now
 from bluebottle.activities.models import Organizer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
+    DateParticipantFactory, PeriodParticipantFactory
 )
-from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.time_based.states import TimeBasedStateMachine, PeriodStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -153,7 +154,51 @@ class TimeBasedActivityStatesTestCase():
 
 class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
     factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
 
 
 class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def test_succeed_manually_no_participants(self):
+        self.activity.duration_period = 'weeks'
+        self.activity.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+        self.assertFalse(
+            PeriodStateMachine.succeed_manually in
+            self.activity.states.possible_transitions()
+        )
+
+    def test_succeed_manually_overall(self):
+        self.activity.duration_period = 'overall'
+
+        self.activity.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.participant_factory.create(activity=self.activity)
+
+        self.activity.refresh_from_db()
+
+        self.assertFalse(
+            PeriodStateMachine.succeed_manually in
+            self.activity.states.possible_transitions()
+        )
+
+    def test_succeed_manually_(self):
+        self.activity.duration_period = 'weeks'
+
+        self.activity.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.participant_factory.create(activity=self.activity)
+
+        self.activity.refresh_from_db()
+
+        self.activity.states.succeed_manually()
+        self.assertEqual(
+            self.activity.status, 'succeeded'
+        )
+        self.assertTrue(
+            PeriodStateMachine.cancel in
+            self.activity.states.possible_transitions()
+        )

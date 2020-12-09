@@ -14,7 +14,7 @@ from bluebottle.statistics.tests.factories import (
 from bluebottle.impact.tests.factories import (
     ImpactTypeFactory, ImpactGoalFactory
 )
-from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -37,20 +37,20 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
 
         initiative = InitiativeFactory.create()
-        event = EventFactory.create(
+        activity = DateActivityFactory.create(
             initiative=initiative,
             owner=initiative.owner,
             start=timezone.now() - datetime.timedelta(hours=1),
-            duration=0.1
+            duration=datetime.timedelta(minutes=6)
 
         )
 
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
 
-        ParticipantFactory.create_batch(5, activity=event)
+        DateParticipantFactory.create_batch(5, activity=activity)
 
         self.impact_type = ImpactTypeFactory.create()
 

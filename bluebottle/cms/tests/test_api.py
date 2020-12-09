@@ -22,7 +22,7 @@ from bluebottle.cms.models import (
     LinksContent, WelcomeContent, StepsContent, ActivitiesContent
 )
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -148,9 +148,9 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(quotes['quotes'][0]['quote'], self.quote.quote)
 
     def test_results_activities(self):
-        event = EventFactory.create(status='open')
+        activity = DateActivityFactory.create(status='open')
         block = ActivitiesContent.objects.create_for_placeholder(self.placeholder)
-        block.activities.add(event)
+        block.activities.add(activity)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -160,10 +160,10 @@ class ResultPageTestCase(BluebottleTestCase):
 
         projects = response.data['blocks'][0]
         self.assertEqual(projects['type'], 'activities')
-        self.assertEqual(projects['activities'][0]['title'], event.title)
+        self.assertEqual(projects['activities'][0]['title'], activity.title)
 
     def test_results_share_results(self):
-        share_text = '{people} donated {donated} and did {tasks} tasks and joined {events} events.'
+        share_text = '{people} donated {donated} and did {tasks} tasks and joined {activities} activities.'
         ShareResultsContent.objects.create_for_placeholder(
             self.placeholder, title='Share', share_text=share_text
         )
@@ -179,7 +179,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(share['title'], 'Share')
         self.assertEqual(share['share_text'], share_text)
 
-        for key in ['people', 'amount', 'hours', 'events', 'tasks', 'fundraisers']:
+        for key in ['people', 'amount', 'hours', 'time', 'fundraisers']:
             self.assertTrue(key in share['statistics'])
 
     def test_results_map(self):
@@ -288,7 +288,7 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][0]['html'], '<p>Test content</p>')
 
     def test_activities_from_homepage(self):
-        EventFactory.create_batch(10, status='open', highlight=True)
+        DateActivityFactory.create_batch(10, status='open', highlight=True)
         ActivitiesContent.objects.create_for_placeholder(self.placeholder, highlighted=True)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)

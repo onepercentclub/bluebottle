@@ -46,6 +46,15 @@ class ActivityStateMachine(ModelStateMachine):
             'but counts in the report. The activity cannot be edited by the activity manager.'
         )
     )
+
+    expired = State(
+        _('expired'),
+        'expired',
+        _(
+            'The activity has ended, but did have any contributions . The activity does not appear on the platform, '
+            'but counts in the report. The activity cannot be edited by the activity manager.'
+        )
+    )
     open = State(
         _('open'),
         'open',
@@ -83,7 +92,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     def is_owner(self, user):
         """user is the owner"""
-        return user == self.instance.owner
+        return user == self.instance.owner or user.is_staff
 
     def should_auto_approve(self):
         return self.instance.auto_approve
@@ -175,7 +184,7 @@ class ActivityStateMachine(ModelStateMachine):
         [
             rejected,
             cancelled,
-            deleted
+            deleted,
         ],
         needs_work,
         name=_('Restore'),
@@ -185,12 +194,11 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will then be reopened to participants."
         ),
         automatic=False,
-        permission=is_staff,
     )
 
     expire = Transition(
         [open, submitted, succeeded],
-        cancelled,
+        expired,
         name=_('Expire'),
         description=_(
             "The activity will be cancelled because no one has signed up for the registration deadline."

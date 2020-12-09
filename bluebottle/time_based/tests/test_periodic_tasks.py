@@ -194,7 +194,6 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
     def test_contribution_value_is_succeeded_months(self):
         activity = self.factory.create(
             initiative=self.initiative,
-            review=True,
             duration=timedelta(hours=2),
             duration_period='months',
             deadline=None
@@ -244,12 +243,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
 
         self.assertEqual(
             len(self.participant.contributions.filter(status='succeeded')),
-            2
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            1
+            3
         )
 
     def test_cancel(self):

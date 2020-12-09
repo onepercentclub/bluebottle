@@ -1,12 +1,12 @@
 from django.core import mail
 from django.test import TestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.wallposts import MediaWallpostFactory, ReactionFactory
 from bluebottle.follow.tests.factories import (
-    EventFollowFactory, FundingFollowFactory
+    DateActivityFollowFactory, FundingFollowFactory
 )
 
 
@@ -16,8 +16,8 @@ class InitiativeWallpostTestCase(TestCase):
         self.initiative = InitiativeFactory.create()
 
         self.follower = BlueBottleUserFactory.create()
-        EventFollowFactory.create(
-            instance=EventFactory.create(
+        DateActivityFollowFactory.create(
+            instance=DateActivityFactory.create(
                 status='open',
                 initiative=self.initiative
             ),
@@ -31,16 +31,16 @@ class InitiativeWallpostTestCase(TestCase):
             user=self.follower
         )
 
-        EventFollowFactory.create(
-            instance=EventFactory.create(
+        DateActivityFollowFactory.create(
+            instance=DateActivityFactory.create(
                 status='open',
                 initiative=self.initiative
             ),
             user=BlueBottleUserFactory(campaign_notifications=False),
         )
 
-        EventFollowFactory.create(
-            instance=EventFactory.create(
+        DateActivityFollowFactory.create(
+            instance=DateActivityFactory.create(
                 status='open',
                 initiative=self.initiative
             ),

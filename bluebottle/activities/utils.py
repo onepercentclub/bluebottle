@@ -37,6 +37,7 @@ class BaseActivitySerializer(ModelSerializer):
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
+        'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -82,6 +83,7 @@ class BaseActivitySerializer(ModelSerializer):
             'goals.type',
             'initiative.place',
             'initiative.location',
+            'initiative.activity_manager',
             'initiative.image',
         ]
         resource_name = 'activities'

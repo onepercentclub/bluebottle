@@ -309,7 +309,7 @@ class PeriodActivityStatisticsTest(StatisticsTest):
 
     def test_participant_rejected(self):
         contribution = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
-        contribution.states.reject(save=True)
+        contribution.states.remove(save=True)
         self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
 

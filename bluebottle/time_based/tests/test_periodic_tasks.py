@@ -30,10 +30,6 @@ class TimeBasedActivityPeriodicTasksTestCase():
         self.activity.states.submit(save=True)
         self.tenant = connection.tenant
 
-    @property
-    def before(self):
-        return self.activity.start - timedelta(days=1)
-
     def test_nothing(self):
         self.assertEqual(self.activity.status, 'open')
 
@@ -44,6 +40,23 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
         self.assertEqual(self.activity.status, 'open')
 
+    def test_expired_after_registration_deadline(self):
+        self.run_task(self.after_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'expired')
+
+    def test_full_after_registration_deadline(self):
+        self.participant_factory.create(activity=self.activity)
+        self.run_task(self.after_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'full')
+
     def test_expire(self):
         self.assertEqual(self.activity.status, 'open')
 
@@ -52,7 +65,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, 'cancelled')
+        self.assertEqual(self.activity.status, 'expired')
 
     def test_expire_after_start(self):
         self.assertEqual(self.activity.status, 'open')
@@ -62,7 +75,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, 'cancelled')
+        self.assertEqual(self.activity.status, 'expired')
 
     def test_start(self):
         self.assertEqual(self.activity.status, 'open')
@@ -93,7 +106,30 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):
-            on_a_date_tasks()
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                on_a_date_tasks()
+
+    @property
+    def before(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day - 1
+            )
+        )
+
+    @property
+    def after_registration_deadline(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day + 1
+            )
+        )
 
     @property
     def during(self):
@@ -114,6 +150,14 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
             mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
             with_a_deadline_tasks()
+
+    @property
+    def after_registration_deadline(self):
+        return self.activity.registration_deadline + timedelta(days=1)
+
+    @property
+    def before(self):
+        return self.activity.registration_deadline - timedelta(days=1)
 
     @property
     def during(self):

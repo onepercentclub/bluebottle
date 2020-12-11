@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from ..views import CountryList, CountryDetail, LocationList, GeolocationList, OfficeList
+from ..views import CountryList, CountryDetail, LocationList, GeolocationList, OfficeList, OfficeDetail
 
 urlpatterns = [
     url(r'^countries/$', CountryList.as_view(),
@@ -14,6 +14,9 @@ urlpatterns = [
 
     url(r'^offices/$', OfficeList.as_view(),
         name='office-list'),
+    url(r'^offices/(?P<pk>\d+)$', OfficeDetail.as_view(),
+        name='office-detail'),
+
     url(r'^geolocations$', GeolocationList.as_view(),
         name='geolocation-list'),
 ]

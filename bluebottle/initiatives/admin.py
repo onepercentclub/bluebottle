@@ -127,26 +127,35 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         return filters
 
     def get_fieldsets(self, request, obj=None):
-        details = ['pitch', 'story', 'theme', 'categories']
+        detail_fields = [
+            'title', 'slug', 'owner',
+            'theme', 'categories'
+        ]
 
         if Location.objects.count():
-            details.append('location')
+            detail_fields.append('location')
         else:
-            details.append('place')
+            detail_fields.append('place')
 
         fieldsets = (
-            (_('Basic'), {'fields': (
-                'title', 'link', 'slug', 'owner',
-                'image', 'video_url',
-                'created', 'updated')}),
-            (_('Details'), {'fields': details}),
-            (_('Organization'), {'fields': (
-                'has_organization', 'organization',
-                'organization_contact')}),
+            (_('Details'), {'fields': detail_fields}),
+            (_('Description'), {
+                'fields': (
+                    'pitch', 'story', 'image', 'video_url',
+                )
+            }),
+            (_('Organization'), {
+                'fields': (
+                    'has_organization', 'organization',
+                    'organization_contact'
+                )
+            }),
             (_('Status'), {'fields': (
                 'valid',
                 'reviewer', 'activity_manager',
-                'promoter', 'status', 'states')}),
+                'promoter', 'status', 'states',
+                'created', 'updated',
+            )}),
         )
         if request.user.is_superuser:
             fieldsets += (

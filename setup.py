@@ -32,7 +32,6 @@ install_requires = [
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',
     'django-daterange-filter==1.3.0',
-    'django-durationwidget==1.0.5',
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',

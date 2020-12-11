@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
+from django.forms import Textarea
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
-from durationwidget.widgets import TimeDurationWidget
+from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter
@@ -78,7 +79,15 @@ class TimeBasedAdmin(ActivityChildAdmin):
                 show_hours=True,
                 show_minutes=True,
                 show_seconds=False)
-        }
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
     }
 
     search_fields = ['title', 'description']
@@ -111,6 +120,15 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('review', 'Review participants')
     )
 
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        if not obj.duration_period or obj.duration_period != 'overall':
+            return _('{duration} per {time_unit}').format(
+                duration=duration,
+                time_unit=obj.duration_period[0:-1])
+        return duration
+    duration_string.short_description = _('Duration')
+
 
 class TimeBasedActivityAdminForm(StateMachineModelForm):
 
@@ -132,7 +150,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'duration',
+        'start', 'duration_string',
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
@@ -159,7 +177,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [
-        'deadline', 'duration', 'duration_period'
+        'start', 'end_date', 'duration_string'
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
@@ -176,6 +194,11 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         ('duration_period', 'TimeContribution period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+    def end_date(self, obj):
+        if not obj.deadline:
+            return _('indefinitely')
+        return obj.deadline
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):
@@ -221,19 +244,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Basic'), {'fields': self.basic_fields}),
-        )
-        if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
-            )
-        return fieldsets
+    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 @admin.register(DateParticipant)

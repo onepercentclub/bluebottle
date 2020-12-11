@@ -23,6 +23,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
     TimeContribution
+from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
 
@@ -106,7 +107,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated'
+        'created', 'updated', 'type'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -114,7 +115,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.fields}),
+            (_('Details'), {'fields': self.fields}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -131,6 +132,9 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
         return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
 
     activity_link.short_description = _('Activity')
+
+    def type(self, obj):
+        return obj.polymorphic_ctype
 
 
 @admin.register(Organizer)
@@ -160,7 +164,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['start', 'polymorphic_ctype', 'contributor_link', 'state_name', 'value']
+    list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
     list_filter = (
         PolymorphicChildModelFilter,
         StateMachineFilter
@@ -173,6 +177,10 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         if obj:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
+    contributor_link.short_description = _('Contributor')
+
+    def contribution_type(self, obj):
+        return obj.polymorphic_ctype
 
     def contributor_type(self, obj):
         return obj.contributor.get_real_instance_class()._meta.verbose_name
@@ -182,7 +190,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         if type == 'MoneyContribution':
             return obj.moneycontribution.value
         if type == 'TimeContribution':
-            return obj.timecontribution.value
+            return get_human_readable_duration(str(obj.timecontribution.value)).lower()
         return '-'
 
 
@@ -190,6 +198,28 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
+
+    fields = [
+        'contributor',
+        'start',
+        'status',
+        'states',
+        'created'
+    ]
+
+    superadmin_fields = [
+        'force_status',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Details'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
 
 
 @admin.register(OrganizerContribution)
@@ -229,29 +259,39 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'send_impact_reminder_message_link',
     ]
 
-    basic_fields = (
+    detail_fields = (
         'title',
-        'slug',
-        'image',
-        'video_url',
         'initiative',
         'owner',
+    )
+
+    description_fields = (
+        'slug',
+        'description',
+        'image',
+        'video_url',
         'highlight',
+    )
+
+    status_fields = (
         'created',
         'updated',
-        'stats_data',
+        'status',
+        'states'
     )
 
     def get_status_fields(self, request, obj):
-        fields = ('status', 'states',)
-
+        fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
             fields = ('valid',) + fields
 
         return fields
 
     def get_detail_fields(self, request, obj):
-        fields = self.detail_fields
+        return self.detail_fields
+
+    def get_description_fields(self, request, obj):
+        fields = self.description_fields
 
         if Segment.objects.filter(type__is_active=True).count():
             fields = fields + ('segments',)
@@ -265,20 +305,23 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
         return fields
 
-    detail_fields = (
-        'description',
-    )
-
     list_display = [
-        '__str__', 'initiative', 'created', 'state_name',
-        'highlight'
+        '__str__', 'initiative_link', 'state_name',
 
     ]
 
+    def initiative_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
+            obj.initiative
+        )
+    initiative_link.short_description = _('Initiative')
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.basic_fields}),
-            (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Detail'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
@@ -291,7 +334,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def stats_data(self, obj):
         template = loader.get_template(
-            'admin/activity-stats.html'
+            'admin/activity_stats.html'
         )
 
         return template.render({'stats': obj.stats})
@@ -312,11 +355,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
+        template = loader.get_template(
+            'admin/validation_steps.html'
+        )
+        return template.render({'errors': errors})
 
-    valid.short_description = _('Steps to complete activity')
+    valid.short_description = _('Validation')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()

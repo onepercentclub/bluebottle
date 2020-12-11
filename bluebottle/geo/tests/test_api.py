@@ -141,14 +141,16 @@ class LocationListTestCase(GeoTestCase):
         """
         Ensure get request returns 200.
         """
-        response = self.client.get(reverse('location-list'))
+        response = self.client.get(reverse('office-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), self.count)
-        self.assertEqual(response.data[0]['name'], self.locations[0].name)
-        self.assertEqual(response.data[0]['description'], self.locations[0].description)
+        data = response.json()
 
-        static_map_url = response.data[0]['static_map_url']
+        self.assertEqual(len(data['data']), 10)
+        self.assertEqual(data['data'][0]['attributes']['name'], self.locations[0].name)
+        self.assertEqual(data['data'][0]['attributes']['description'], self.locations[0].description)
+
+        static_map_url = data['data'][0]['attributes']['static-map-url']
         self.assertTrue(
             static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
         )

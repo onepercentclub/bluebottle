@@ -50,6 +50,8 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
     serializer_class = OfficeSerializer
     queryset = Location.objects.all()
 
+    pagination_class = None
+
 
 # Remove this after we deployed json-api office locations
 class LocationList(ListAPIView):

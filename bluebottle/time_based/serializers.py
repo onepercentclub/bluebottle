@@ -4,7 +4,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from rest_framework_json_api.serializers import PolymorphicModelSerializer
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
+    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField,
 )
 
 from bluebottle.activities.utils import (
@@ -21,15 +21,16 @@ from bluebottle.time_based.models import (
 )
 
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
-from bluebottle.time_based.filters import ParticipantListFilter
 
-from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+from bluebottle.utils.serializers import (
+    ResourcePermissionField,
+    HyperlinkedRelatedField
+)
 from bluebottle.utils.utils import reverse_signed
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
-    contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -40,7 +41,9 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
-            'contributors'
+            'my_contributor',
+            'contributors',
+            'new_contributors'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -66,12 +69,20 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True,
         source='get_my_contributor'
     )
-    contributors = FilteredRelatedField(
+    contributors = HyperlinkedRelatedField(
         many=True,
-        filter_backend=ParticipantListFilter,
+        read_only=True,
         related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id',
+    )
 
-        related_link_url_kwarg='activity_id'
+    new_contributors = HyperlinkedRelatedField(
+        source='contributors',
+        many=True,
+        read_only=True,
+        related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id',
+        query_params={'review': 1}
     )
     links = serializers.SerializerMethodField()
 
@@ -93,7 +104,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links', 'my_contributor',
+            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links',
             'preparation',
         )
 
@@ -117,12 +128,20 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = FilteredRelatedField(
+    contributors = HyperlinkedRelatedField(
         many=True,
-        filter_backend=ParticipantListFilter,
+        read_only=True,
         related_link_view_name='period-participants',
-        related_link_url_kwarg='activity_id'
+        related_link_url_kwarg='activity_id',
+    )
 
+    new_contributors = HyperlinkedRelatedField(
+        source='contributors',
+        many=True,
+        read_only=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id',
+        query_params={'review': 1}
     )
 
     def get_my_contributor(self, instance):
@@ -133,7 +152,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period', 'my_contributor',
+            'start', 'deadline', 'duration', 'duration_period',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

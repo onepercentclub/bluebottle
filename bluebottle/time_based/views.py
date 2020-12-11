@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, IntegerField
 from django.http import HttpResponse
 from django.utils.timezone import utc
 
@@ -98,13 +98,28 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     pagination_class = RelatedParticipantPagination
 
     def get_queryset(self):
+
         if self.request.user.is_authenticated():
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status='accepted')
-            )
+            if 'review' in self.request.query_params:
+                queryset = self.queryset.filter(
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__activity_manager=self.request.user)
+                ).filter(status='new')
+            else:
+                queryset = self.queryset.filter(
+                    Q(user=self.request.user) |
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__activity_manager=self.request.user) |
+                    Q(status='accepted')
+                ).exclude(status='new')
+
+            queryset = queryset.annotate(
+                current_user=Case(
+                    When(user_id=self.request.user.pk, then=0),
+                    default=1,
+                    output_field=IntegerField()
+                ),
+            ).order_by('current_user')
         else:
             queryset = self.queryset.filter(
                 status='accepted'

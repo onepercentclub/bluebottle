@@ -4,6 +4,7 @@ from builtins import str
 from builtins import object
 import json
 from html.parser import HTMLParser
+from urllib.parse import urlencode
 
 from urllib.error import HTTPError
 from django.conf import settings
@@ -15,7 +16,10 @@ from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.utils import model_meta
-from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
+from rest_framework_json_api.relations import (
+    SerializerMethodResourceRelatedField,
+    HyperlinkedRelatedField as BaseHyperLinkRelatedField
+)
 
 from captcha import client
 
@@ -148,6 +152,7 @@ class PermissionField(BasePermissionField):
 
     (E.g.) the permissions field on the current user object
     """
+
     def _method_permissions(self, method, user, view, value):
         return all(perm.has_action_permission(
             method, user, view.model
@@ -181,6 +186,7 @@ class FilteredRelatedField(SerializerMethodResourceRelatedField):
     `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
     Note: `many=True` is required
     """
+
     def __init__(self, **kwargs):
         self.filter_backend = kwargs.pop('filter_backend', None)
         kwargs['read_only'] = True
@@ -225,6 +231,18 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
             view=self.context['view']
         )
         return queryset
+
+
+class HyperlinkedRelatedField(BaseHyperLinkRelatedField):
+    def __init__(self, *args, **kwargs):
+        if 'query_params' in kwargs:
+            self.query_params = kwargs.pop('query_params')
+
+        super().__init__(*args, **kwargs)
+
+    def get_url(self, *args, **kwargs):
+        url = super().get_url(*args, **kwargs)
+        return '{}?{}'.format(url, urlencode(self.query_params))
 
 
 class CaptchaField(serializers.CharField):

@@ -1115,13 +1115,16 @@ class RelatedParticipantsAPIViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
-        self.activity = self.factory.create()
+        self.activity = self.factory.create(review=True)
         self.participants = self.participant_factory.create_batch(
-            6,
+            10,
             activity=self.activity
         )
-        self.participants[0].states.remove(save=True)
-        self.participants[1].states.withdraw(save=True)
+        for participant in self.participants[0:4]:
+            participant.states.accept(save=True)
+
+        self.participants[4].states.reject(save=True)
+        self.participants[5].states.withdraw(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
@@ -1136,7 +1139,14 @@ class RelatedParticipantsAPIViewTestCase():
             resource for resource in response.json()['included']
             if resource['type'] == 'contributions/time-contributions'
         ]
+
         self.assertEqual(len(included_contributions), 5)
+
+        data = response.json()
+        for participant in data['data']:
+            self.assertTrue(
+                participant['attributes']['status'] in ('accepted', 'rejected', 'withdrawn')
+            )
 
     def test_get_owner_all(self):
         response = self.client.get(self.url + "?page[size]=6", user=self.activity.owner)
@@ -1145,12 +1155,66 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.assertEqual(len(response.json()['data']), 6)
 
+        data = response.json()
+        for participant in data['data']:
+            self.assertTrue(
+                participant['attributes']['status'] in ('accepted', 'rejected', 'withdrawn')
+            )
+
+    def test_get_owner_new(self):
+        response = self.client.get(self.url + "?review", user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 4)
+
+        for participant in data['data']:
+            self.assertEqual(participant['attributes']['status'], 'new')
+
+    def test_get_new_user(self):
+        response = self.client.get(self.url + "?review", user=self.participants[0].user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 0)
+
     def test_get_anonymous(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(response.json()['data']), 4)
+        data = response.json()
+        self.assertEqual(len(data['data']), 4)
+        for participant in data['data']:
+            self.assertEqual(participant['attributes']['status'], 'accepted')
+
+    def test_get_user_withdrawn(self):
+        participant = self.participants[5]
+        response = self.client.get(self.url, user=participant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data['data']), 5)
+        self.assertEqual(data['data'][0]['id'], str(participant.pk))
+        for participant in data['data']:
+            self.assertTrue(participant['attributes']['status'] in ('accepted', 'withdrawn'))
+
+    def test_get_user_new(self):
+        participant = self.participants[7]
+        response = self.client.get(self.url, user=participant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data['data']), 4)
+
+        for participant in data['data']:
+            self.assertEqual(participant['attributes']['status'], 'accepted')
 
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -1172,78 +1236,6 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'period'
-    url_name = 'period-participants'
-    participant_type = 'contributors/time-based/period-participant'
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-
-class RelatedReviewParticipantsAPIViewTestCase():
-    def setUp(self):
-        super().setUp()
-        self.client = JSONAPITestClient()
-        self.activity = self.factory.create(review=True)
-        self.participants = self.participant_factory.create_batch(
-            6,
-            activity=self.activity
-        )
-        self.participants[1].states.accept(save=True)
-
-        self.url = reverse(self.url_name, args=(self.activity.pk,))
-
-    def test_get_owner(self):
-        response = self.client.get(self.url, user=self.activity.owner)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(response.json()['data']), 5)
-
-    def test_get_owner_all(self):
-        response = self.client.get(self.url + "?page[size]=6", user=self.activity.owner)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(response.json()['data']), 6)
-
-    def test_get_anonymous(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(response.json()['data']), 1)
-
-    def test_get_user(self):
-        response = self.client.get(self.url, user=self.participants[0].user)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(response.json()['data']), 2)
-
-    def test_get_closed_site(self):
-        MemberPlatformSettings.objects.update(closed=True)
-        group = Group.objects.get(name='Anonymous')
-        group.permissions.remove(Permission.objects.get(codename='api_read_dateparticipant'))
-        group.permissions.remove(Permission.objects.get(codename='api_read_periodparticipant'))
-
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
-class RelatedDateReviewParticipantAPIViewTestCase(
-    RelatedReviewParticipantsAPIViewTestCase, BluebottleTestCase
-):
-    type = 'date'
-    url_name = 'date-participants'
-    participant_type = 'contributors/time-based/date-participant'
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-
-class RelatedPeriodReviewParticipantAPIViewTestCase(
-    RelatedReviewParticipantsAPIViewTestCase, BluebottleTestCase
-):
     type = 'period'
     url_name = 'period-participants'
     participant_type = 'contributors/time-based/period-participant'

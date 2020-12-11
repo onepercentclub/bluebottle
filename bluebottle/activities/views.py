@@ -90,7 +90,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).filter(
             user=self.request.user
         ).exclude(
-            status__in=['rejected', 'failed']
+            status='failed'
         ).exclude(
             donor__status__in=['new']
         ).order_by(

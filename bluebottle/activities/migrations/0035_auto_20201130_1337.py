@@ -5,23 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations, connection
 
 
-def update_contribution_dates(apps, schema_editor):
-    sql = """
-    UPDATE {0}.activities_contribution c
-        SET "start" = cr.contributor_date
-        FROM activities_contributor cr 
-        WHERE c.contributor_id = cr.id;
-
-    UPDATE {0}.activities_contribution c
-        SET "start" = tc.old_start, "end" = tc.old_end 
-        FROM time_based_timecontribution tc 
-        WHERE tc.contribution_ptr_id = c.id;
-    """.format(connection.tenant.schema_name)
-
-    if connection.tenant.schema_name != 'public':
-        schema_editor.execute(sql)
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -29,5 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_contribution_dates, migrations.RunPython.noop)
     ]

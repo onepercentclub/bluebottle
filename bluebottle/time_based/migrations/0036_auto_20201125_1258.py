@@ -203,9 +203,9 @@ def migrate_contributors(apps, schema_editor):
         })
         time_contributions.append({
             'contributor_id': applicant['contributor_ptr_id'],
-            'start': applicant['created'],
-            'end': applicant['contributor_date'],
-            'value': timedelta(hours=applicant['time_spent'] or 0) 
+            'start': applicant['contributor_date'],
+            'end': None,
+            'value': timedelta(hours=applicant['time_spent'] or 0)
         })
 
     insert('time_based_dateparticipant', date_participant_fields, date_participants)

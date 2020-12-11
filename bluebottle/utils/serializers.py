@@ -235,8 +235,7 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
 
 class HyperlinkedRelatedField(BaseHyperLinkRelatedField):
     def __init__(self, *args, **kwargs):
-        if 'query_params' in kwargs:
-            self.query_params = kwargs.pop('query_params')
+        self.query_params = kwargs.pop('query_params', {})
 
         super().__init__(*args, **kwargs)
 

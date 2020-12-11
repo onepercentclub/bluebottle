@@ -4,6 +4,8 @@ from django.utils.timezone import utc
 
 import icalendar
 
+from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission
@@ -85,10 +87,15 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
+class RelatedParticipantPagination(JsonApiPageNumberPagination):
+    page_size = 5
+
+
 class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+    pagination_class = RelatedParticipantPagination
 
     def get_queryset(self):
         if self.request.user.is_authenticated():

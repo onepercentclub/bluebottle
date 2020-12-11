@@ -1117,10 +1117,11 @@ class RelatedParticipantsAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
         self.participants = self.participant_factory.create_batch(
-            5,
+            6,
             activity=self.activity
         )
         self.participants[0].states.remove(save=True)
+        self.participants[1].states.withdraw(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
@@ -1136,6 +1137,13 @@ class RelatedParticipantsAPIViewTestCase():
             if resource['type'] == 'contributions/time-contributions'
         ]
         self.assertEqual(len(included_contributions), 5)
+
+    def test_get_owner_all(self):
+        response = self.client.get(self.url + "?page[size]=6", user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 6)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
@@ -1153,6 +1161,94 @@ class RelatedParticipantsAPIViewTestCase():
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    url_name = 'date-participants'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+
+class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    url_name = 'period-participants'
+    participant_type = 'contributors/time-based/period-participant'
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class RelatedReviewParticipantsAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = self.factory.create(review=True)
+        self.participants = self.participant_factory.create_batch(
+            6,
+            activity=self.activity
+        )
+        self.participants[1].states.accept(save=True)
+
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_get_owner(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 5)
+
+    def test_get_owner_all(self):
+        response = self.client.get(self.url + "?page[size]=6", user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 6)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 1)
+
+    def test_get_user(self):
+        response = self.client.get(self.url, user=self.participants[0].user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 2)
+
+    def test_get_closed_site(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateparticipant'))
+        group.permissions.remove(Permission.objects.get(codename='api_read_periodparticipant'))
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RelatedDateReviewParticipantAPIViewTestCase(
+    RelatedReviewParticipantsAPIViewTestCase, BluebottleTestCase
+):
+    type = 'date'
+    url_name = 'date-participants'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+
+class RelatedPeriodReviewParticipantAPIViewTestCase(
+    RelatedReviewParticipantsAPIViewTestCase, BluebottleTestCase
+):
+    type = 'period'
+    url_name = 'period-participants'
+    participant_type = 'contributors/time-based/period-participant'
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
 
 
 class TimeContributionDetailAPIViewTestCase():
@@ -1230,22 +1326,6 @@ class OnADateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCa
 
 
 class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-
-class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'date'
-    url_name = 'date-participants'
-    participant_type = 'contributors/time-based/date-participant'
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-
-class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'period'
-    url_name = 'period-participants'
-    participant_type = 'contributors/time-based/period-participant'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 

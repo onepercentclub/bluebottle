@@ -110,6 +110,7 @@ install_requires = [
     'timezonefinder==3.4.2',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
+    'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
 
     # Github requirements

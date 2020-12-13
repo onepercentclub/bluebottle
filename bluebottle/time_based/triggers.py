@@ -9,6 +9,9 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
+)
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -21,7 +24,7 @@ from bluebottle.time_based.messages import (
     ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    NewParticipantNotification
+    ParticipantRemovedNotification, NewParticipantNotification
 )
 from bluebottle.time_based.effects import (
     CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect,
@@ -478,7 +481,7 @@ class ParticipantTriggers(ContributorTriggers):
                         is_user
                     ]
                 ),
-
+                FollowActivityEffect
             ]
         ),
 
@@ -493,7 +496,8 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
-                )
+                ),
+                FollowActivityEffect
             ]
         ),
 
@@ -559,6 +563,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'finished_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
+                FollowActivityEffect
             ]
         ),
 
@@ -577,10 +582,31 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                UnFollowActivityEffect
             ]
         ),
 
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                NotificationEffect(
+                    ParticipantRemovedNotification
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[activity_will_not_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                UnFollowActivityEffect
+
+            ]
+        ),
 
         TransitionTrigger(
             ParticipantStateMachine.withdraw,
@@ -594,7 +620,8 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                UnFollowActivityEffect
             ]
         ),
     ]

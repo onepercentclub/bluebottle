@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message%}{% blocktrans with title=obj.activity.title application=obj.user.full_name  context 'email' %}
-<p>{{ applicant }} heeft zich aangemeld voor je activiteit "{{ title}}".!</p>
+<p>{{ applicant }} heeft zich aangemeld voor je activiteit "{{ title}}"!</p>
 
 <p>Geef de nieuwe deelnemer een warm welkom.</p>
 {% endblocktrans %}{% endblock %}

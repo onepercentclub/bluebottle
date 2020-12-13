@@ -96,15 +96,12 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=[
-                    'new', 'accepted', 'succeeded'
-                ])
+                Q(status='accepted')
             )
         else:
             queryset = self.queryset.filter(
-                status__in=[
-                    'new', 'accepted', 'succeeded'
-                ])
+                status='accepted'
+            )
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

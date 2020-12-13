@@ -796,7 +796,7 @@ class ParticipantDetailViewTestCase():
         )
 
         self.assertTrue(
-            {'name': 'reject', 'target': 'rejected', 'available': True}
+            {'name': 'remove', 'target': 'rejected', 'available': True}
             in self.data['meta']['transitions']
         )
 
@@ -897,7 +897,7 @@ class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Blue
     def test_get_owner(self):
         super().test_get_owner()
         self.assertTrue(
-            {'name': 'reject', 'target': 'rejected', 'available': True}
+            {'name': 'remove', 'target': 'rejected', 'available': True}
             in self.data['meta']['transitions']
         )
 
@@ -908,6 +908,108 @@ class ParticipantTransitionAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
+        self.participant = self.participant_factory.create(
+            activity=self.activity
+        )
+
+        self.url = reverse(self.url_name)
+        self.data = {
+            'data': {
+                'type': '{}-transitions'.format(self.participant_type),
+                'attributes': {},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': '{}s'.format(self.participant_type),
+                            'id': self.participant.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_withdraw_by_user(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['included'][0]['type'],
+            '{}s'.format(self.participant_type)
+        )
+        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+
+    def test_withdraw_by_other_user(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_remove_by_activity_owner(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['included'][0]['type'],
+            '{}s'.format(self.participant_type)
+        )
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+
+    def test_remove_by_user(self):
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    url_name = 'date-participant-transition-list'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+
+class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    participant_type = 'contributors/time-based/period-participant'
+    url_name = 'period-participant-transition-list'
+
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class ReviewParticipantTransitionAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.activity = self.factory.create(review=True)
         self.participant = self.participant_factory.create(
             activity=self.activity
         )
@@ -988,7 +1090,9 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
+class OnADateReviewParticipantTransitionAPIViewTestCase(
+    ReviewParticipantTransitionAPIViewTestCase, BluebottleTestCase
+):
     type = 'date'
     url_name = 'date-participant-transition-list'
     participant_type = 'contributors/time-based/date-participant'
@@ -996,7 +1100,9 @@ class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTe
     participant_factory = DateParticipantFactory
 
 
-class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
+class PeriodReviewParticipantTransitionAPIViewTestCase(
+    ReviewParticipantTransitionAPIViewTestCase, BluebottleTestCase
+):
     type = 'period'
     participant_type = 'contributors/time-based/period-participant'
     url_name = 'period-participant-transition-list'
@@ -1014,7 +1120,7 @@ class RelatedParticipantsAPIViewTestCase():
             5,
             activity=self.activity
         )
-        self.participants[0].states.reject(save=True)
+        self.participants[0].states.remove(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 

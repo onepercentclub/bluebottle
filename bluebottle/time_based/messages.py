@@ -143,6 +143,18 @@ class ParticipantAcceptedNotification(TransitionMessage):
 
 class ParticipantRejectedNotification(TransitionMessage):
     subject = _('You have not been selected for the activity "{title}"')
+    template = 'messages/participant_removed'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantRemovedNotification(TransitionMessage):
+    subject = _('You have been removed as participant for the activity "{title}"')
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title'

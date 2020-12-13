@@ -215,7 +215,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.rejected = self.participant_factory.create(
             activity=self.activity,
         )
-        self.rejected.states.reject(save=True)
+        self.rejected.states.remove(save=True)
 
         self.assertEqual(self.activity.status, 'open')
 
@@ -570,6 +570,7 @@ class ParticipantTriggerTestCase():
             mail.outbox[0].subject,
             'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
         )
+        self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
 
     def test_accept(self):
         participant = self.participant_factory.create(
@@ -606,6 +607,7 @@ class ParticipantTriggerTestCase():
                 self.review_activity.title
             )
         )
+        self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
 
     def test_initial_no_review(self):
         mail.outbox = []
@@ -622,6 +624,7 @@ class ParticipantTriggerTestCase():
             mail.outbox[0].subject,
             'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
         )
+        self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
 
     def test_no_review_fill(self):
         self.participant_factory.create_batch(
@@ -660,7 +663,7 @@ class ParticipantTriggerTestCase():
 
         self.assertEqual(self.review_activity.status, 'full')
 
-    def test_reject(self):
+    def test_remove(self):
         self.participants = self.participant_factory.create_batch(
             self.activity.capacity, activity=self.activity
         )
@@ -668,7 +671,7 @@ class ParticipantTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'full')
         mail.outbox = []
-        self.participants[0].states.reject(save=True)
+        self.participants[0].states.remove(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
@@ -676,18 +679,37 @@ class ParticipantTriggerTestCase():
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have not been selected for the activity "{}"'.format(
+            'You have been removed as participant for the activity "{}"'.format(
                 self.activity.title
             )
         )
+        self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
+
+    def test_reject(self):
+        self.participants = self.participant_factory.create_batch(
+            self.activity.capacity, activity=self.review_activity
+        )
+
+        mail.outbox = []
+        self.participants[0].states.reject(save=True)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have not been selected for the activity "{}"'.format(
+                self.review_activity.title
+            )
+        )
+        self.assertFalse(self.review_activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_reaccept(self):
-        self.test_reject()
+        self.test_remove()
 
         self.participants[0].states.accept(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
+        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_withdraw(self):
         self.participants = self.participant_factory.create_batch(
@@ -701,6 +723,7 @@ class ParticipantTriggerTestCase():
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
+        self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_reapply(self):
         self.test_withdraw()
@@ -710,6 +733,7 @@ class ParticipantTriggerTestCase():
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
 
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):

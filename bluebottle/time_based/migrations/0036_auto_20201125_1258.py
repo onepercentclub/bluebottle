@@ -170,7 +170,7 @@ def migrate_contributors(apps, schema_editor):
         time_contributions.append({
             'contributor_id': participant['contributor_ptr_id'],
             'start': participant['contributor_date'],
-            'end': participant['contributor_date'] + timedelta(duration),
+            'end': None,
             'value': timedelta(hours=participant['time_spent'] or 0) 
         })
 

@@ -101,6 +101,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
+        hide_from_admin=True,
     )
 
 
@@ -195,7 +196,11 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def activity_is_open(self):
         """task is open"""
-        return self.instance.activity.status == ActivityStateMachine.open.value
+        return self.instance.activity.status in (
+            TimeBasedStateMachine.open.value,
+            TimeBasedStateMachine.running.value,
+            TimeBasedStateMachine.full.value
+        )
 
     initiate = Transition(
         EmptyState(),

@@ -10,7 +10,7 @@
         {% endblocktrans %}
 
         {% if recipients|length > 1 %}
-            {% blocktrans with extra=effects|length|add:"-1" %}
+            {% blocktrans with extra=recipients|length|add:"-1" %}
                 and {{ extra }} others 
             {% endblocktrans %}
         {% endif %}

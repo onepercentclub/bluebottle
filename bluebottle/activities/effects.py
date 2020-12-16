@@ -35,8 +35,7 @@ class SetContributionDateEffect(Effect):
     "Set the contribution date"
 
     conditions = []
-    title = _('Set contribution date')
-    template = 'admin/set_contribution_date.html'
+    display = False
 
     def pre_save(self, **kwargs):
         self.instance.start = now()

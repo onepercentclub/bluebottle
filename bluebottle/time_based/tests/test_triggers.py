@@ -608,6 +608,10 @@ class ParticipantTriggerTestCase():
             )
         )
         self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
+        self.assertEqual(
+            participant.contributions.get().status,
+            'new'
+        )
 
     def test_initial_no_review(self):
         mail.outbox = []
@@ -625,6 +629,10 @@ class ParticipantTriggerTestCase():
             'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
         )
         self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
+        self.assertEqual(
+            self.activity.accepted_participants.get().contributions.get().status,
+            'new'
+        )
 
     def test_no_review_fill(self):
         self.participant_factory.create_batch(
@@ -673,6 +681,11 @@ class ParticipantTriggerTestCase():
         mail.outbox = []
         self.participants[0].states.remove(save=True)
 
+        self.assertEqual(
+            self.participants[0].contributions.get().status,
+            'failed'
+        )
+
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
 
@@ -693,6 +706,11 @@ class ParticipantTriggerTestCase():
         mail.outbox = []
         self.participants[0].states.reject(save=True)
 
+        self.assertEqual(
+            self.participants[0].contributions.get().status,
+            'failed'
+        )
+
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
@@ -709,6 +727,11 @@ class ParticipantTriggerTestCase():
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
+
+        self.assertEqual(
+            self.participants[0].contributions.get().status,
+            'new'
+        )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_withdraw(self):
@@ -723,6 +746,12 @@ class ParticipantTriggerTestCase():
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
+
+        self.assertEqual(
+            self.participants[0].contributions.get().status,
+            'failed'
+        )
+
         self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_reapply(self):
@@ -733,6 +762,10 @@ class ParticipantTriggerTestCase():
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(
+            self.participants[0].contributions.get().status,
+            'new'
+        )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
 
@@ -746,58 +779,14 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
 
         self.assertEqual(self.activity.status, 'expired')
 
-        self.participant_factory.create(activity=self.activity)
+        participant = self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
-
-    def test_initial_no_review(self):
-        super().test_initial_no_review()
-
         self.assertEqual(
-            self.activity.accepted_participants.get().contributions.get().status,
-            'new'
-        )
-
-    def test_initial_review(self):
-        super().test_initial_review()
-
-        self.assertEqual(
-            self.review_activity.participants.get().contributions.get().status,
-            'new'
-        )
-
-    def test_withdraw(self):
-        super().test_withdraw()
-
-        self.assertEqual(
-            self.participants[0].contributions.get().status,
-            'failed'
-        )
-
-    def test_reapply(self):
-        super().test_reapply()
-
-        self.assertEqual(
-            self.participants[0].contributions.get().status,
-            'new'
-        )
-
-    def test_reject(self):
-        super().test_reject()
-
-        self.assertEqual(
-            self.participants[0].contributions.get().status,
-            'failed'
-        )
-
-    def test_reaccept(self):
-        super().test_reaccept()
-
-        self.assertEqual(
-            self.participants[0].contributions.get().status,
-            'new'
+            participant.contributions.get().status,
+            'succeeded'
         )
 
 
@@ -811,8 +800,13 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
 
         self.assertEqual(self.activity.status, 'expired')
 
-        self.participant_factory.create(activity=self.activity)
+        participant = self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
+
+        self.assertEqual(
+            participant.contributions.get().status,
+            'succeeded'
+        )

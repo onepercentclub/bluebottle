@@ -1,6 +1,7 @@
 from datetime import date
 from django.db.models import DateTimeField, ExpressionWrapper, F
 
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -80,12 +81,22 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
 
 
 class NewPeriodForParticipantTask(ModelPeriodicTask):
+    """
+    Create a new contribution when, the participant is new or
+    accepted, and the activity is running or when the activity
+    has no start and is open or full.
+    """
 
     def get_queryset(self):
         return self.model.objects.filter(
             current_period__lte=date.today(),
-            activity__status='running',
             status__in=('accepted', 'new', )
+        ).filter(
+            Q(activity__status='running') |
+            Q(
+                activity__status__in=['open', 'full'],
+                activity__timebasedactivity__periodactivity__start__isnull=True,
+            )
         )
 
     effects = [
@@ -144,7 +155,7 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',
-            contributor__status='accepted'
+            contributor__status__in=('accepted', 'stopped')
         )
 
     effects = [

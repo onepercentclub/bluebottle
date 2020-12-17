@@ -12,9 +12,9 @@ from polymorphic.admin import (
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
-from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.events.models import Event, Participant
+from bluebottle.events.models import Event
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -31,9 +31,7 @@ from bluebottle.wallposts.admin import WallpostInline
 class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contributor
     child_models = (
-        Participant,
         Donor,
-        Applicant,
         Organizer,
         DateParticipant,
         PeriodParticipant
@@ -453,9 +451,7 @@ class ContributorInline(admin.TabularInline):
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (
-        Event,
         Funding,
-        Assignment,
         PeriodActivity,
         DateActivity,
     )

@@ -93,15 +93,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter, 'is_online']
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'capacity',
-        'is_online',
-        'location',
-        'location_hint',
-        'review',
-        'registration_deadline',
-    )
-
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     export_to_csv_fields = (
@@ -153,11 +144,22 @@ class DateActivityAdmin(TimeBasedAdmin):
         'start', 'duration_string',
     ]
 
-    detail_fields = TimeBasedAdmin.detail_fields + (
+    detail_fields = ActivityChildAdmin.detail_fields + (
         'start',
         'duration',
+
         'preparation',
+        'registration_deadline',
+
+        'is_online',
+        'location',
+        'location_hint',
         'online_meeting_url',
+
+        'expertise',
+        'capacity',
+        'review',
+
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -180,12 +182,23 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string'
     ]
 
-    detail_fields = TimeBasedAdmin.detail_fields + (
+    detail_fields = ActivityChildAdmin.detail_fields + (
         'start',
-        'duration',
-        'preparation',
         'deadline',
+        'registration_deadline',
+
+        'duration',
         'duration_period',
+        'preparation',
+
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+
+        'expertise',
+        'capacity',
+        'review',
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (

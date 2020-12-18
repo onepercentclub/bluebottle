@@ -112,17 +112,19 @@ class BaseTransitionEffect(Effect):
         )
 
 
-def TransitionEffect(transition, field='states', conditions=None, post_save=False):
+def TransitionEffect(transition, field='states', conditions=None, post_save=False, display=True):
     _transition = transition
     _field = field
     _conditions = conditions
     _post_save = post_save
+    _display = display
 
     class _TransitionEffect(BaseTransitionEffect):
         transition = _transition
         field = _field
         conditions = _conditions or []
         post_save = _post_save
+        display = _display
 
     return _TransitionEffect
 
@@ -188,10 +190,12 @@ class BaseRelatedTransitionEffect(Effect):
         return str(self)
 
 
-def RelatedTransitionEffect(_relation, transition, field='states', conditions=None, description=None):
+def RelatedTransitionEffect(
+    _relation, transition, field='states', conditions=None, description=None, display=True
+):
     _transition = transition
     _conditions = conditions or []
-    _transition_effect_class = TransitionEffect(transition, field)
+    _transition_effect_class = TransitionEffect(transition, field, display=display)
     _description = description
 
     class _RelatedTransitionEffect(BaseRelatedTransitionEffect):

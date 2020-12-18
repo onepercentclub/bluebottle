@@ -331,7 +331,7 @@ class TimeContribution(Contribution):
     def __str__(self):
         return _("Session {name} {date}").format(
             name=self.contributor.user,
-            date=self.start.date()
+            date=self.start.date() if self.start else ''
         )
 
 

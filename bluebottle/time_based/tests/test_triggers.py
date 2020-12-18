@@ -397,12 +397,55 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'succeeded')
 
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your activity "{}" has succeeded 🎉'.format(self.activity.title)
+        )
+        self.assertFalse(
+            (
+                'Head over to your activity page and enter the impact your activity made, '
+                'so that everybody can see how effective your activity was'
+            ) in mail.outbox[-1].body
+        )
+
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
         self.activity.deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
+
+    def test_change_deadline_full_enable_impact(self):
+        InitiativePlatformSettingsFactory.create(enable_impact=True)
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity.deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'succeeded')
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your activity "{}" has succeeded 🎉'.format(self.activity.title)
+        )
+        self.assertTrue(
+            (
+                'Head over to your activity page and enter the impact your activity made, '
+                'so that everybody can see how effective your activity was'
+            ) in mail.outbox[-1].body
+        )
 
     def test_change_start(self):
         self.initiative.states.submit(save=True)
@@ -497,7 +540,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             self.assertEqual(duration.status, 'succeeded')
 
         for message in mail.outbox[-self.activity.capacity:]:
-
             self.assertEqual(
                 message.subject,
                 'The activity "{}" has succeeded 🎉'.format(self.activity.title)

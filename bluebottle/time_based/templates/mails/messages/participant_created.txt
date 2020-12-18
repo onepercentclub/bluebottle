@@ -1,11 +1,11 @@
 {% extends "mails/messages/participant_base.txt" %}
 {% load i18n %}
 
-{% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.activity.title applicant=obj.user.full_name context 'email' %}
+{% block message%}{% blocktrans with title=obj.activity.title applicant=obj.user.full_name context 'email' %}
 {{ applicant }} applied to your activity "{{ title}}".
 
 Review the application and decide if this person is the right fit.
-{% endblocktrans %}{% endblock %}{% endblock %}
+{% endblocktrans %}{% endblock %}
 {% block action %}
 {% trans 'Review the application' context 'email' %}: {{ obj.activity.get_absolute_url }}
 {% endblock %}`

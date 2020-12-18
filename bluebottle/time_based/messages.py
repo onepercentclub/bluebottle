@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.initiatives.models import InitiativePlatformSettings
 
 
 class DateChanged(TransitionMessage):
@@ -37,6 +38,12 @@ class ActivitySucceededNotification(TransitionMessage):
     context = {
         'title': 'title'
     }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['impact'] = InitiativePlatformSettings.load().enable_impact
+
+        return context
 
     def get_recipients(self):
         """activity owner"""

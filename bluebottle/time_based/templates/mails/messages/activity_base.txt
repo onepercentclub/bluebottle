@@ -5,9 +5,9 @@
 {% blocktrans with recipient_name=to.first_name context 'email' %}
 Hi {{ recipient_name }},
 {% endblocktrans %}
+{% block message %}{% endblock %}
 {% endblock %}
 
-{% block message %}{% endblock %}
 {% block action %}
    {% trans 'Go to your activity' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

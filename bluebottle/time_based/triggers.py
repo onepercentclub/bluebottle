@@ -701,8 +701,8 @@ def duration_is_finished(effect):
     """
     return (
         (effect.instance.end is None or effect.instance.end < now()) and
-        effect.instance.contributor.status == 'accepted' and
-        effect.instance.contributor.activity.status == 'open'
+        effect.instance.contributor.status in ('accepted', 'new') and
+        effect.instance.contributor.activity.status in ('open', 'succeeded')
     )
 
 

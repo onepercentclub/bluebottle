@@ -48,6 +48,9 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'location',
             'expertise',
             'my_contributor',
+            'my_contributor.contributions',
+            'my_contributor.document',
+            'my_contributor.contributions',
         ]
 
     included_serializers = dict(
@@ -55,6 +58,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
         }
     )
 

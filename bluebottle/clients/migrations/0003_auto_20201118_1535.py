@@ -16,7 +16,7 @@ def create_update_function(apps, schema_editor):
         BEGIN
           FOR col IN SELECT DISTINCT column_name FROM information_schema.columns
             WHERE table_name = my_table
-            AND column_name NOT IN ('column_name', 'id', 'password', 'tenant', 'place')
+            AND column_name NOT IN ('column_name', 'password', 'tenant', 'place')
           LOOP
           column_names := column_names || format(', %I', col);
           END LOOP;

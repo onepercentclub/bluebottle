@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django.db import migrations, connection
 
 
-def update_contribution_dates(apps, schema_editor):
+def create_contribution_view(apps, schema_editor):
     sql = """
         DROP VIEW IF EXISTS contributions;
         CREATE VIEW contributions AS
@@ -45,5 +45,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_contribution_dates, migrations.RunPython.noop)
+        migrations.RunPython(create_contribution_view, migrations.RunPython.noop)
     ]

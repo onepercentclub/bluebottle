@@ -149,7 +149,7 @@ def migrate_contributors(apps, schema_editor):
 
     for participant in Participant.objects.values(
         'contributor_ptr_id', 'time_spent', 'activity__event__start', 'activity__event__duration',
-        'status', 'created'
+        'status', 'created', 'contributor_date'
     ):
         duration = participant['activity__event__duration']
         date_participants.append({'contributor_ptr_id': participant['contributor_ptr_id']})
@@ -169,14 +169,14 @@ def migrate_contributors(apps, schema_editor):
         })
         time_contributions.append({
             'contributor_id': participant['contributor_ptr_id'],
-            'start': participant['activity__event__start'],
-            'end': participant['activity__event__start'] + timedelta(duration),
+            'start': participant['contributor_date'],
+            'end': None,
             'value': timedelta(hours=participant['time_spent'] or 0) 
         })
 
     for applicant in Applicant.objects.values(
         'contributor_ptr_id', 'time_spent', 'motivation', 'document_id', 'activity__assignment__date', 
-        'activity__assignment__end_date_type', 'created', 'status',
+        'activity__assignment__end_date_type', 'created', 'status', 'contributor_date'
     ):
         participant = {
             'contributor_ptr_id': applicant['contributor_ptr_id'],
@@ -203,9 +203,9 @@ def migrate_contributors(apps, schema_editor):
         })
         time_contributions.append({
             'contributor_id': applicant['contributor_ptr_id'],
-            'start': applicant['created'],
-            'end': applicant['activity__assignment__date'],
-            'value': timedelta(hours=applicant['time_spent'] or 0) 
+            'start': applicant['contributor_date'],
+            'end': None,
+            'value': timedelta(hours=applicant['time_spent'] or 0)
         })
 
     insert('time_based_dateparticipant', date_participant_fields, date_participants)

@@ -23,16 +23,30 @@ tf = TimezoneFinder()
 
 
 class TimeBasedActivity(Activity):
+    ONLINE_CHOICES = (
+        (None, 'Not set yet'),
+        (True, 'Yes, participants can join from anywhere or online'),
+        (False, 'No, enter a location')
+    )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(_('is online'), null=True, default=None)
+    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
+    registration_deadline = models.DateField(
+        _('registration deadline'),
+        null=True,
+        blank=True
+    )
 
-    expertise = models.ForeignKey('tasks.Skill', verbose_name=_('skill'), blank=True, null=True)
+    expertise = models.ForeignKey(
+        'tasks.Skill',
+        verbose_name=_('skill'),
+        blank=True,
+        null=True
+    )
 
     review = models.NullBooleanField(_('review participants'), null=True, default=None)
 
@@ -84,53 +98,6 @@ class TimeBasedActivity(Activity):
             contributor__activity=self,
             status='succeeded'
         )
-
-
-class DateActivity(TimeBasedActivity):
-    start = models.DateTimeField(_('activity date'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-
-    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
-
-    duration_period = 'overall'
-
-    validators = [DateActivityRegistrationDeadlineValidator]
-
-    class Meta:
-        verbose_name = _("Activity on a date")
-        verbose_name_plural = _("Activities on a date")
-        permissions = (
-            ('api_read_dateactivity', 'Can view on a date activities through the API'),
-            ('api_add_dateactivity', 'Can add on a date activities through the API'),
-            ('api_change_dateactivity', 'Can change on a date activities through the API'),
-            ('api_delete_dateactivity', 'Can delete on a date activities through the API'),
-
-            ('api_read_own_dateactivity', 'Can view own on a date activities through the API'),
-            ('api_add_own_dateactivity', 'Can add own on a date activities through the API'),
-            ('api_change_own_dateactivity', 'Can change own on a date activities through the API'),
-            ('api_delete_own_dateactivity', 'Can delete own on a date activities through the API'),
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/dates'
-
-    @property
-    def activity_date(self):
-        return self.start
-
-    @property
-    def required_fields(self):
-        fields = super().required_fields
-
-        return fields + ['start', 'duration']
-
-    @property
-    def uid(self):
-        return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
-
-    @property
-    def end(self):
-        return self.start + self.duration
 
     @property
     def local_timezone(self):
@@ -206,24 +173,94 @@ class DateActivity(TimeBasedActivity):
         return u'{}?{}'.format(url, urlencode(params))
 
 
+class DateActivity(TimeBasedActivity):
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
+
+    online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default=''
+    )
+
+    duration_period = 'overall'
+
+    validators = [DateActivityRegistrationDeadlineValidator]
+
+    class Meta:
+        verbose_name = _("Activity on a date")
+        verbose_name_plural = _("Activities on a date")
+        permissions = (
+            ('api_read_dateactivity', 'Can view on a date activities through the API'),
+            ('api_add_dateactivity', 'Can add on a date activities through the API'),
+            ('api_change_dateactivity', 'Can change on a date activities through the API'),
+            ('api_delete_dateactivity', 'Can delete on a date activities through the API'),
+
+            ('api_read_own_dateactivity', 'Can view own on a date activities through the API'),
+            ('api_add_own_dateactivity', 'Can add own on a date activities through the API'),
+            ('api_change_own_dateactivity', 'Can change own on a date activities through the API'),
+            ('api_delete_own_dateactivity', 'Can delete own on a date activities through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/dates'
+
+    @property
+    def activity_date(self):
+        return self.start
+
+    @property
+    def required_fields(self):
+        fields = super().required_fields
+
+        return fields + ['start', 'duration']
+
+    @property
+    def uid(self):
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
+
+    @property
+    def end(self):
+        return self.start + self.duration
+
+
 class DurationPeriodChoices(DjangoChoices):
-    overall = ChoiceItem('overall', label=_("overall"))
+    overall = ChoiceItem('overall', label=_("in total"))
     days = ChoiceItem('days', label=_("per day"))
     weeks = ChoiceItem('weeks', label=_("per week"))
     months = ChoiceItem('months', label=_("per month"))
 
 
 class PeriodActivity(TimeBasedActivity):
-    start = models.DateField(_('start'), null=True, blank=True)
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    start = models.DateField(
+        _('Start date'),
+        null=True,
+        blank=True
+    )
 
-    duration = models.DurationField(_('duration'), null=True, blank=True)
+    deadline = models.DateField(
+        _('End date'),
+        null=True,
+        blank=True
+    )
+
+    duration = models.DurationField(
+        _('Time per period'),
+        null=True,
+        blank=True
+    )
+
     duration_period = models.CharField(
-        _('duration period'),
+        _('period'),
         max_length=20,
         blank=True,
         null=True,
         choices=DurationPeriodChoices.choices,
+    )
+
+    online_meeting_url = models.TextField(
+        _('Online Meeting URL'),
+        blank=True,
+        default=''
     )
 
     validators = [PeriodActivityRegistrationDeadlineValidator]
@@ -331,7 +368,7 @@ class TimeContribution(Contribution):
     def __str__(self):
         return _("Session {name} {date}").format(
             name=self.contributor.user,
-            date=self.start.date()
+            date=self.start.date() if self.start else ''
         )
 
 

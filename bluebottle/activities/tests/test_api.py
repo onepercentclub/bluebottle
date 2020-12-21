@@ -977,6 +977,8 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
 
     def test_no_max_age(self):
         response = self.client.get(self.old_url, user=self.owner)
+        self.new_date_activity.initiative.promoter = BlueBottleUserFactory.create()
+        self.new_date_activity.initiative.save()
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
@@ -996,7 +998,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 2)
+        self.assertEqual(len(members), 3)
         self.assertEqual(len(anonymous), 0)
 
         contributors_response = self.client.get(

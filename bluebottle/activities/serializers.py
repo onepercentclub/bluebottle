@@ -103,6 +103,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -133,6 +134,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'initiative.place',
             'initiative.location',
             'initiative.activity_manager',
+            'initiative.promoter',
             'initiative.organization',
             'initiative.organization_contact',
         ]

@@ -30,10 +30,10 @@ def get_currency_settings():
 
 def calculate_total(queryset, target='EUR'):
     totals = queryset.values(
-        'donation__amount_currency'
+        'donor__amount_currency'
     ).annotate(
-        total=Sum('donation__amount')
+        total=Sum('donor__amount')
     )
-    amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
+    amounts = [Money(tot['total'], tot['donor__amount_currency']) for tot in totals]
     amounts = [convert(amount, target) for amount in amounts]
     return sum(amounts) or Money(0, target)

@@ -7,34 +7,105 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
-    StackedPolymorphicInline)
+    StackedPolymorphicInline, PolymorphicInlineSupportMixin)
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contribution, Organizer
-from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
+from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.events.models import Event, Participant
+from bluebottle.events.models import Event
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
+    TimeContribution
+from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
-    base_model = Contribution
+@admin.register(Contributor)
+class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Contributor
+    child_models = (
+        Donor,
+        Organizer,
+        DateParticipant,
+        PeriodParticipant
+    )
+    list_display = ['created', 'owner', 'type', 'activity', 'state_name']
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    date_hierarchy = 'created'
+
+    ordering = ('-created',)
+
+    def type(self, obj):
+        return obj.get_real_instance_class()._meta.verbose_name
+
+
+class ContributionInlineChild(StackedPolymorphicInline.Child):
+    def state_name(self, obj):
+        if obj.states.current_state:
+            return obj.states.current_state.name
+
+    state_name.short_description = _('status')
+
+    def contributor_link(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj._meta.app_label,
+            obj._meta.model_name),
+            args=(obj.id,)
+        )
+        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+
+    contributor_link.short_description = _('Edit contributor')
+
+
+class ContributionAdminInline(StackedPolymorphicInline):
+    model = Contribution
+    readonly_fields = ['created']
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    class OrganizerContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link']
+        fields = readonly_fields
+        model = OrganizerContribution
+
+    class TimeContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'start', 'end', 'value']
+        fields = readonly_fields
+        model = TimeContribution
+
+    class MoneyContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'amount']
+        fields = readonly_fields
+        model = MoneyContribution
+
+    child_inlines = (
+        OrganizerContributionInline,
+        TimeContributionInline,
+        MoneyContributionInline
+    )
+
+
+class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
-    ordering = ('-created', )
+    ordering = ('-created',)
     show_in_index = True
+    raw_id_fields = ('user', 'activity')
+
+    date_hierarchy = 'contributor_date'
 
     readonly_fields = [
-        'contribution_date',
-        'created',
-        'activity_link',
+        'transition_date', 'contributor_date',
+        'created', 'updated', 'type'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -42,7 +113,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.fields}),
+            (_('Details'), {'fields': self.fields}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -57,19 +128,22 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             args=(obj.activity.id,)
         )
         return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
+
     activity_link.short_description = _('Activity')
+
+    def type(self, obj):
+        return obj.polymorphic_ctype
 
 
 @admin.register(Organizer)
-class OrganizerAdmin(ContributionChildAdmin):
+class OrganizerAdmin(ContributorChildAdmin):
     model = Organizer
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributionChildAdmin.readonly_fields + \
-        ['status', 'created', 'transition_date']
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
 
-    date_hierarchy = 'contribution_date'
+    date_hierarchy = 'created'
 
     export_to_csv_fields = (
         ('status', 'Status'),
@@ -77,40 +151,93 @@ class OrganizerAdmin(ContributionChildAdmin):
         ('activity', 'Activity'),
         ('user__full_name', 'Owner'),
         ('user__email', 'Email'),
-        ('contribution_date', 'Contribution Date'),
     )
 
 
 @admin.register(Contribution)
 class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
-    child_models = (Participant, Donation, Applicant, Organizer)
-    list_display = ['created', 'contribution_date',
-                    'owner', 'type', 'activity', 'state_name']
-    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
-    date_hierarchy = 'contribution_date'
+    child_models = (
+        MoneyContribution,
+        TimeContribution,
+        OrganizerContribution
+    )
+    list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
+    list_filter = (
+        PolymorphicChildModelFilter,
+        StateMachineFilter
+    )
+    date_hierarchy = 'start'
 
-    ordering = ('-created', )
+    ordering = ('-start',)
 
-    def type(self, obj):
-        return obj.get_real_instance_class()._meta.verbose_name
+    def contributor_link(self, obj):
+        if obj:
+            url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
+            return format_html('<a href="{}">{}</a>', url, obj.contributor)
+    contributor_link.short_description = _('Contributor')
+
+    def contribution_type(self, obj):
+        return obj.polymorphic_ctype
+
+    def contributor_type(self, obj):
+        return obj.contributor.get_real_instance_class()._meta.verbose_name
+
+    def value(self, obj):
+        type = obj.get_real_instance_class().__name__
+        if type == 'MoneyContribution':
+            return obj.moneycontribution.value
+        if type == 'TimeContribution':
+            return get_human_readable_duration(str(obj.timecontribution.value)).lower()
+        return '-'
+
+
+class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Contribution
+    raw_id_fields = ('contributor',)
+    readonly_fields = ['status', 'created', ]
+
+    fields = [
+        'contributor',
+        'start',
+        'status',
+        'states',
+        'created'
+    ]
+
+    superadmin_fields = [
+        'force_status',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Details'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
+
+
+@admin.register(OrganizerContribution)
+class OrganizerContributionAdmin(ContributionChildAdmin):
+    model = OrganizerContribution
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline, WallpostInline, )
+    inlines = (FollowAdminInline, WallpostInline,)
 
     def get_inline_instances(self, request, obj=None):
-        inlines = super(ActivityChildAdmin,
-                        self).get_inline_instances(request, obj)
-
+        inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
         if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             if (
-                impact_goal_inline.has_add_permission(request) and
-                impact_goal_inline.has_change_permission(request, obj) and
-                impact_goal_inline.has_delete_permission(request, obj)
+                    impact_goal_inline.has_add_permission(request) and
+                    impact_goal_inline.has_change_permission(request, obj) and
+                    impact_goal_inline.has_delete_permission(request, obj)
             ):
                 inlines.append(impact_goal_inline)
 
@@ -118,7 +245,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     show_in_index = True
 
-    ordering = ('-created', )
+    ordering = ('-created',)
 
     readonly_fields = [
         'created',
@@ -130,50 +257,69 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'send_impact_reminder_message_link',
     ]
 
-    basic_fields = (
+    detail_fields = (
         'title',
-        'slug',
-        'image',
-        'video_url',
         'initiative',
         'owner',
+    )
+
+    description_fields = (
+        'slug',
+        'description',
+        'image',
+        'video_url',
+        'highlight',
+    )
+
+    status_fields = (
         'created',
         'updated',
-        'stats_data',
+        'status',
+        'states'
     )
 
     def get_status_fields(self, request, obj):
-        fields = ('status', 'states', )
-
+        fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
-            fields = ('valid', ) + fields
+            fields = ('valid',) + fields
 
         return fields
 
     def get_detail_fields(self, request, obj):
-        fields = self.detail_fields
+        return self.detail_fields
+
+    def get_description_fields(self, request, obj):
+        fields = self.description_fields
 
         if Segment.objects.filter(type__is_active=True).count():
             fields = fields + ('segments',)
 
         if (
-            obj and
-            obj.status in ('succeeded', 'partially_funded') and
-            InitiativePlatformSettings.objects.get().enable_impact
+                obj and
+                obj.status in ('succeeded', 'partially_funded') and
+                InitiativePlatformSettings.objects.get().enable_impact
         ):
-            fields = fields + ('send_impact_reminder_message_link', )
+            fields = fields + ('send_impact_reminder_message_link',)
 
         return fields
 
-    detail_fields = (
-        'description',
-        'highlight'
-    )
+    list_display = [
+        '__str__', 'initiative_link', 'state_name',
+
+    ]
+
+    def initiative_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
+            obj.initiative
+        )
+    initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.basic_fields}),
-            (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Detail'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
@@ -186,10 +332,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def stats_data(self, obj):
         template = loader.get_template(
-            'admin/activity-stats.html'
+            'admin/activity_stats.html'
         )
 
         return template.render({'stats': obj.stats})
+
     stats_data.short_description = _('Statistics')
 
     def valid(self, obj):
@@ -206,11 +353,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
+        template = loader.get_template(
+            'admin/validation_steps.html'
+        )
+        return template.render({'errors': errors})
 
-    valid.short_description = _('Steps to complete activity')
+    valid.short_description = _('Validation')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()
@@ -243,7 +391,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             name=activity.owner.full_name)
         self.message_user(request, message)
 
-        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
+        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id,)))
+
     send_impact_reminder_message.short_description = _('impact reminder')
 
     def send_impact_reminder_message_link(self, obj):
@@ -258,6 +407,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             u"<a href='{}'>{}</a>",
             url, _('Send reminder message')
         )
+
     send_impact_reminder_message.short_description = _('Impact Reminder')
 
     def get_form(self, request, obj=None, **kwargs):
@@ -271,16 +421,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
-class ContributionInline(admin.TabularInline):
-    raw_id_fields = ('user', )
-    readonly_fields = ('created', 'edit', 'state_name', )
-    fields = ('edit', 'user', 'created', 'state_name', )
+class ContributorInline(admin.TabularInline):
+    raw_id_fields = ('user',)
+    readonly_fields = ('contributor_date', 'created', 'edit', 'state_name',)
+    fields = ('edit', 'user', 'created', 'state_name',)
 
     extra = 0
 
     def state_name(self, obj):
         if obj.states.current_state:
             return obj.states.current_state.name
+
     state_name.short_description = _('status')
 
     def edit(self, obj):
@@ -292,13 +443,18 @@ class ContributionInline(admin.TabularInline):
             args=(obj.id,)
         )
         return format_html('<a href="{}">{}</a>', url, obj.id)
+
     edit.short_description = _('edit')
 
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
-    child_models = (Event, Funding, Assignment)
+    child_models = (
+        Funding,
+        PeriodActivity,
+        DateActivity,
+    )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')
@@ -315,7 +471,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
     link.short_description = _("Show on site")
 
-    ordering = ('-created', )
+    ordering = ('-created',)
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
@@ -325,6 +481,7 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
     def state_name(self, obj):
         if obj.states.current_state:
             return obj.states.current_state.name
+
     state_name.short_description = _('status')
 
     def activity_link(self, obj):
@@ -368,8 +525,23 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = Assignment
 
+    class DateInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'duration', 'state_name']
+
+        fields = readonly_fields
+        model = DateActivity
+
+    class PeriodInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'deadline', 'state_name']
+        fields = readonly_fields
+        model = PeriodActivity
+
     child_inlines = (
         EventInline,
         FundingInline,
-        AssignmentInline
+        AssignmentInline,
+        PeriodInline,
+        DateInline,
     )

@@ -2894,10 +2894,9 @@ pbkdf2@^3.0.3:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
-perfect-scrollbar@0.6.5-1:
-  version "0.6.5-1"
-  resolved "https://registry.yarnpkg.com/perfect-scrollbar/-/perfect-scrollbar-0.6.5-1.tgz#4d8182ce53fa1ee5582c267c4fc4415e222e0366"
-  integrity sha1-TYGCzlP6HuVYLCZ8T8RBXiIuA2Y=
+"perfect-scrollbar@git://github.com/mdbootstrap/perfect-scrollbar#0.6.5":
+  version "0.6.5"
+  resolved "git://github.com/mdbootstrap/perfect-scrollbar#6cbb4a9b9d9fb4cb66eea3aa0277deff9466312f"
 
 performance-now@^2.1.0:
   version "2.1.0"

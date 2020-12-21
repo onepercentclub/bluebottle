@@ -5,7 +5,7 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment
 from bluebottle.funding_telesom.tests.factories import TelesomPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -35,7 +35,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
 
         self.payment_url = reverse('telesom-payment-list')
 
@@ -47,7 +47,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }

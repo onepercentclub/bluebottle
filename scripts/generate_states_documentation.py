@@ -22,9 +22,14 @@ models = [
 
     # Funding
     {
-        'title': 'States - Funding - Donation',
-        'model': 'bluebottle.funding.models.Donation',
+        'title': 'States - Funding - Donor',
+        'model': 'bluebottle.funding.models.Donor',
         'page_id': '739999825'
+    },
+    {
+        'title': 'States - Funding - Money Contribution',
+        'model': 'bluebottle.funding.models.MoneyContribution',
+        'page_id': '1179975917'
     },
     {
         'title': 'States - Funding - Fundraising Campaign',
@@ -104,28 +109,31 @@ models = [
         'page_id': '1050148912'
     },
 
-    # Events
+    # Time-based Activities
     {
-        'title': 'States - Event',
-        'model': 'bluebottle.events.models.Event',
-        'page_id': '742654166'
+        'title': 'States - Time based - Activity on a date',
+        'model': 'bluebottle.time_based.models.DateActivity',
+        'page_id': '1120731198'
     },
     {
-        'title': 'States - Event - Participant',
-        'model': 'bluebottle.events.models.Participant',
-        'page_id': '742654190'
-    },
-
-    # Assignments/Tasks
-    {
-        'title': 'States - Task',
-        'model': 'bluebottle.assignments.models.Assignment',
-        'page_id': '742326537'
+        'title': 'States - Time based - Participant on a date',
+        'model': 'bluebottle.time_based.models.DateParticipant',
+        'page_id': '1180041279'
     },
     {
-        'title': 'States - Task - Applicant',
-        'model': 'bluebottle.assignments.models.Applicant',
-        'page_id': '742359221'
+        'title': 'States - Time based - Activity over a period',
+        'model': 'bluebottle.time_based.models.PeriodActivity',
+        'page_id': '1120731205'
+    },
+    {
+        'title': 'States - Time based - Participant over a period',
+        'model': 'bluebottle.time_based.models.PeriodParticipant',
+        'page_id': '1179975839'
+    },
+    {
+        'title': 'States - Time based - Time contribution',
+        'model': 'bluebottle.time_based.models.TimeContribution',
+        'page_id': '1180008621'
     },
 
 ]

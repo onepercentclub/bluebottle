@@ -2,7 +2,7 @@ import mock
 import stripe
 from moneyed import Money
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, BudgetLineFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, BudgetLineFactory
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory,
 )
@@ -27,7 +27,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             amount=Money(150, 'EUR'),
             activity=self.funding,
             status='succeeded'

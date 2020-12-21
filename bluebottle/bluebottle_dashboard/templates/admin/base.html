@@ -50,7 +50,7 @@
 <!-- Container -->
 <div id="container">
 
-    {% if not is_popup %}
+{% if not is_popup %}
     <!-- Header -->
     <div id="header">
         <div id="branding">
@@ -63,18 +63,18 @@
         {% block usertools %}
 
         {% if user.is_active and user.is_staff or has_permission %}
-        <div id="user-tools">
-            {% block welcome-msg %}
-                {% trans 'Welcome,' %}
-                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-            {% endblock %}
-            {% block userlinks %}
-                {% if user.has_usable_password %}
-                    <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
-                {% endif %}
-                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
-            {% endblock %}
-        </div>
+            <div id="user-tools">
+                {% block welcome-msg %}
+                    {% trans 'Welcome,' %}
+                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                {% endblock %}
+                {% block userlinks %}
+                    {% if user.has_usable_password %}
+                        <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+                    {% endif %}
+                    <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                {% endblock %}
+            </div>
         {% endif %}
         {% endblock %}
     </div>
@@ -102,6 +102,7 @@
             {% if title %} &rsaquo; {{ title }}{% endif %}
         </div>
     {% endblock %}
+
     {% endif %}
 
     {% block messages %}
@@ -207,6 +208,12 @@
                                 <span class="sidebar-link-label">
                                     <span class="sidebar-link-icon icon-task"></span>
                                     {% trans 'Activities' %}
+                                </span>
+                            </a>
+                            <a href="{% url 'admin:activities_contribution_changelist' %}" class="sidebar-link icon">
+                                <span class="sidebar-link-label">
+                                    <span class="sidebar-link-icon icon-hammer"></span>
+                                    {% trans 'Contributions' %}
                                 </span>
                             </a>
                             <a href="https://support.goodup.com" target="_blank" class="sidebar-link icon">

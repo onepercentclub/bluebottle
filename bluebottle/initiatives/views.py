@@ -111,7 +111,13 @@ class InitiativeMapList(generics.ListAPIView):
 
 
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Initiative.objects.all()
+    queryset = Initiative.objects.select_related(
+        'owner', 'reviewer', 'promoter', 'place', 'location',
+        'organization', 'organization_contact',
+    ).prefetch_related(
+        'categories', 'activities'
+    )
+
     serializer_class = InitiativeSerializer
 
     permission_classes = (

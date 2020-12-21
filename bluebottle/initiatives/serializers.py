@@ -1,10 +1,13 @@
 from builtins import object
+from django.db.models import Sum, Count, Q
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
+
+from moneyed import Money
 
 from bluebottle.activities.filters import ActivityFilter
 from bluebottle.activities.serializers import ActivityListSerializer
@@ -13,17 +16,22 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
+from bluebottle.clients import properties
 from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.funding.models import MoneyContribution
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.activities.models import Contribution
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.time_based.models import TimeContribution
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import (
     SafeField,
     ValidationErrorsField,
@@ -154,8 +162,45 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
 
-    stats = serializers.ReadOnlyField()
+    stats = serializers.SerializerMethodField()
     transitions = AvailableTransitionsField(source='states')
+
+    def get_stats(self, obj):
+        default_currency = properties.DEFAULT_CURRENCY
+
+        contributions = Contribution.objects.filter(
+            contributor__activity__initiative=obj, status='succeeded'
+        ).instance_of(TimeContribution, MoneyContribution)
+
+        stats = contributions.aggregate(
+            hours=Sum('timecontribution__value'),
+            activities=Count(
+                'contributor__activity',
+                filter=Q(contributor__activity__status='succeeded'),
+                distinct=True
+            ),
+            contributors=Count('contributor', distinct=True)
+
+        )
+
+        amounts = contributions.values(
+            'moneycontribution__value_currency'
+        ).annotate(
+            amount=Sum('moneycontribution__value')
+        ).order_by()
+
+        stats['hours'] = stats['hours'].total_seconds() / 3600 if stats['hours'] else 0
+        stats['amount'] = {
+            'amount': sum(
+                convert(
+                    Money(c['amount'], c['moneycontribution__value_currency']),
+                    default_currency
+                ).amount
+                for c in amounts if c['amount']
+            ),
+            'currency': default_currency
+        }
+        return stats
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',

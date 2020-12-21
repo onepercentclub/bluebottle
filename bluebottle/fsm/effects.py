@@ -1,14 +1,16 @@
+from collections import Iterable
+
 from builtins import str
 from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 from future.utils import python_2_unicode_compatible
 
+from bluebottle.fsm.state import TransitionNotPossible
+
 
 @python_2_unicode_compatible
 class Effect(object):
-    effects = []
-    save = False
     post_save = False
     conditions = []
     display = True
@@ -28,37 +30,17 @@ class Effect(object):
 
     def __init__(self, instance, **kwargs):
         self.instance = instance
-
         self.options = kwargs
 
     def __eq__(self, other):
         return self.instance == other.instance and type(self) == type(other)
 
-    def do(self, post_save, **kwargs):
-        if self.is_valid and self.post_save == post_save:
-            self.execute(**kwargs)
-            if self.save:
-                self.instance.save(perform_effects=False)
-
-    def all_effects(self, result=None):
-        result = result or []
-
-        if self.is_valid:
-            result.append(self)
-
-            for effect in self.effects:
-                if effect.is_valid and effect not in result:
-                    for sub_effect in effect.all_effects(result):
-                        if sub_effect.is_valid and sub_effect not in result:
-                            result.append(sub_effect)
-        return result
-
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         pass
 
     @property
     def is_valid(self):
-        return True
+        return all(condition(self) for condition in self.conditions)
 
     def __str__(self):
         return self.__class__.__name__
@@ -83,23 +65,17 @@ class BaseTransitionEffect(Effect):
         return getattr(self.instance, self.field)
 
     @property
-    def transition(self):
-        return self.machine.transitions.get(self.name)
-
-    @property
     def is_valid(self):
-        return self.transition and (
-            all(condition(self.machine) for condition in self.conditions) and
+        return (
+            super().is_valid and
             self.transition in self.machine.possible_transitions()
         )
 
-    @property
-    def effects(self):
-        for effect_class in self.transition.effects:
-            yield effect_class(self.instance)
-
-    def execute(self, effects=False, **kwargs):
-        self.transition.execute(self.machine, effects=effects)
+    def pre_save(self, **kwargs):
+        try:
+            self.transition.execute(self.machine)
+        except TransitionNotPossible:
+            pass
 
     def __eq__(self, other):
         return (
@@ -112,9 +88,14 @@ class BaseTransitionEffect(Effect):
         return '<Effect: {}>'.format(self.transition)
 
     def __str__(self):
+        if self.instance:
+            return _('{transition} {object}').format(
+                transition=self.transition.name,
+                object=str(self.instance)
+            )
         return str(self.transition.target)
 
-    @property
+    @ property
     def help(self):
         return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
 
@@ -131,18 +112,19 @@ class BaseTransitionEffect(Effect):
         )
 
 
-def TransitionEffect(transition_name, field='states', conditions=None, save=False, post_save=False):
+def TransitionEffect(transition, field='states', conditions=None, post_save=False, display=True):
+    _transition = transition
     _field = field
     _conditions = conditions
-    _save = save
     _post_save = post_save
+    _display = display
 
     class _TransitionEffect(BaseTransitionEffect):
-        name = transition_name
+        transition = _transition
         field = _field
         conditions = _conditions or []
-        save = _save
         post_save = _post_save
+        display = _display
 
     return _TransitionEffect
 
@@ -151,77 +133,75 @@ class BaseRelatedTransitionEffect(Effect):
     post_save = True
     display = False
     description = None
-
     transition_effect_class = None
 
-    @property
-    def machine(self):
-        return getattr(self.instance, self.field)
+    def __init__(self, *args, **kwargs):
+        super(BaseRelatedTransitionEffect, self).__init__(*args, **kwargs)
+        self.executed = False
 
-    @property
-    def is_valid(self):
-        return all(condition(self.machine) for condition in self.conditions)
+        relation = getattr(self.instance, self.relation)
 
-    @property
-    def instances(self):
-        value = getattr(self.instance, self.relation)
+        try:
+            self.instances = list(relation.all())
+        except AttributeError:
+            if isinstance(relation, Iterable):
+                self.instances = relation
+            else:
+                self.instances = [relation]
 
-        if value:
-            try:
-                for instance in value.all().iterator():
-                    yield instance
-            except AttributeError:
-                try:
-                    for instance in value:
-                        yield instance
-                except TypeError:
-                    yield value
-
-    @property
-    def effects(self):
+    def pre_save(self, effects):
         for instance in self.instances:
-            yield self.transition_effect_class(instance)
 
-    def do(self, post_save, **kwargs):
-        if self.is_valid and self.post_save == post_save:
-            for effect in self.effects:
-                effect.do(post_save, **kwargs)
+            effect = self.transition_effect_class(
+                instance, parent=self.instance, **self.options
+            )
 
-    def all_effects(self, result=None):
-        result = super(BaseRelatedTransitionEffect, self).all_effects(result)
-        result = super(BaseRelatedTransitionEffect, self).all_effects(result)
-        if self.is_valid:
-            for effect in self.effects:
-                if effect not in result and effect.is_valid:
-                    result.append(effect)
+            if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
+                self.executed = True
+                effect.pre_save(effects=effects)
 
-        return result
+                effects.append(effect)
+
+            instance.execute_triggers(effects=effects)
+
+    def post_save(self):
+        if self.executed:
+            for instance in self.instances:
+                instance.save()
 
     def __str__(self):
         if self.description:
             return self.description
         return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.name,
+            transition=self.transition_effect_class.transition.name,
             object=self.relation
         )
 
+    def __repr__(self):
+        return '<Related Transition Effect: {} on {}>'.format(self.transition, list(self.instances))
+
     def to_html(self):
         if self.conditions:
-            return _('{effect} if {conditions}').format(
-                effect=str(self),
+            return _('{transition} related {object} if {conditions}').format(
+                transition=self.transition_effect_class.transition.name,
+                object=str(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return str(self)
 
 
-def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None, description=None):
-    _transition_effect_class = TransitionEffect(transition_name, field, save=True, post_save=True)
+def RelatedTransitionEffect(
+    _relation, transition, field='states', conditions=None, description=None, display=True
+):
+    _transition = transition
     _conditions = conditions or []
+    _transition_effect_class = TransitionEffect(transition, field, display=display)
     _description = description
 
     class _RelatedTransitionEffect(BaseRelatedTransitionEffect):
         transition_effect_class = _transition_effect_class
         relation = _relation
+        transition = _transition
         conditions = _conditions
         description = _description
         field = 'states'

@@ -1,14 +1,20 @@
 from __future__ import print_function
 from builtins import str
+from datetime import timedelta
+
+from django.utils.timezone import now
+
+from bluebottle.funding_pledge.models import PledgePayment
 from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
-from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.events.models import Event, Participant
-from bluebottle.funding.models import Donation, Funding, PayoutAccount
+from bluebottle.fsm.triggers import TransitionTrigger
+from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
+    TimeContribution
 
 
 def get_doc(element):
@@ -76,23 +82,44 @@ class Command(BaseCommand):
         if isinstance(instance, Funding):
             instance.title = "the campaign"
 
-        if isinstance(instance, Donation):
+        if isinstance(instance, Donor):
+            PledgePayment(donation=instance)
             instance.activity = Funding(title="the campaign")
             instance.user = Member(first_name='the', last_name='donor')
 
-        if isinstance(instance, Event):
-            instance.title = "the event"
+        if isinstance(instance, MoneyContribution):
+            donor = Donor()
+            donor.activity = Funding(title="the campaign")
+            donor.user = Member(first_name='the', last_name='donor')
+            PledgePayment(donation=donor)
+            instance.contributor = donor
 
-        if isinstance(instance, Participant):
-            instance.activity = Event(title="the event")
+        if isinstance(instance, Payment):
+            instance.donation = Donor()
+
+        if isinstance(instance, PeriodActivity):
+            instance.title = "the activity"
+            instance.owner = Member(first_name='activity', last_name='owner')
+
+        if isinstance(instance, PeriodParticipant):
+            instance.activity = PeriodActivity(title="the activity")
             instance.user = Member(first_name='the', last_name='participant')
 
-        if isinstance(instance, Assignment):
-            instance.title = "the assignment"
+        if isinstance(instance, DateActivity):
+            instance.title = "the activity"
+            instance.owner = Member(first_name='activity', last_name='owner')
 
-        if isinstance(instance, Applicant):
-            instance.activity = Assignment(title="the assignment")
-            instance.user = Member(first_name='the', last_name='applicant')
+        if isinstance(instance, DateParticipant):
+            instance.activity = DateActivity(title="the activity")
+            instance.user = Member(first_name='the', last_name='participant')
+
+        if isinstance(instance, TimeContribution):
+            contributor = PeriodParticipant()
+            contributor.activity = PeriodActivity(title="the activity")
+            contributor.user = Member(first_name='the', last_name='participant')
+            instance.contributor = contributor
+            instance.start = now() + timedelta(days=4)
+            instance.value = timedelta(hours=4)
 
         if isinstance(instance, PayoutAccount):
             instance.owner = Member(first_name='the', last_name='owner')
@@ -118,58 +145,75 @@ class Command(BaseCommand):
         text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
                 u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
-        for transition in list(machine.transitions.values()):
-            str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
-                  u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
+        for transition in machine.transitions.values():
+            html = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
+                   u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
 
-            text += str.format(
-                transition.name,
-                transition.description,
-                u"".join(u"<li>{}</li>".format(state.name.capitalize()) for state in transition.sources),
-                transition.target.name.capitalize(),
-                "Automatic" if transition.automatic else "Manual",
-                u"".join(
-                    u"<li>{}</li>".format(get_doc(condition))
-                    for condition
-                    in transition.conditions
-                ),
-                u"".join(
-                    u"<li>{}</li>".format(effect(instance).to_html())
-                    for effect
-                    in transition.effects
+            triggers = [
+                trigger for trigger in instance.triggers.triggers
+                if isinstance(trigger, TransitionTrigger) and trigger.transition == transition
+            ]
+            effects = sum([trigger.effects for trigger in triggers], [])
+            try:
+                text += html.format(
+                    transition.name,
+                    transition.description,
+                    u"".join(u"<li>{}</li>".format(state.name.capitalize()) for state in transition.sources),
+                    transition.target.name.capitalize(),
+                    "Automatic" if transition.automatic else "Manual",
+                    u"".join(
+                        u"<li>{}</li>".format(get_doc(condition))
+                        for condition
+                        in transition.conditions
+                    ),
+                    u"".join(
+                        u"<li>{}</li>".format(effect(instance).to_html())
+                        for effect
+                        in effects
+                    )
                 )
-            )
+            except TypeError as e:
+                print(e)
         text += u"</table>"
 
-        if model.triggers:
-            text += u"<h2>Triggers</h2>"
-            text += u"<em>These are events that get triggered when the instance changes, " \
-                    u"other then through a transition. " \
-                    u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
-            text += u"<table data-layout=\"full-width\">" \
-                    u"<tr><th>When</th>" \
-                    u"<th>Effects</th></tr>"
+        triggers = [
+            trigger for trigger in model.triggers.triggers
+            if not isinstance(trigger, TransitionTrigger)
+        ]
+        if triggers:
+            try:
+                text += u"<h2>Triggers</h2>"
+                text += u"<em>These are events that get triggered when the instance changes, " \
+                        u"other then through a transition. " \
+                        u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
+                text += u"<table data-layout=\"full-width\">" \
+                        u"<tr><th>When</th>" \
+                        u"<th>Effects</th></tr>"
 
-            for trigger in model.triggers:
-                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    trigger(instance),
-                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
-                )
-            text += u"</table>"
+                for trigger in triggers:
+                    text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                        str(trigger),
+                        "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger.effects])
+                    )
+                text += u"</table>"
+            except (TypeError, AttributeError) as e:
+                print(e)
+        if model.periodic_tasks:
+            try:
+                text += u"<h2>Periodic tasks</h2>"
+                text += u"<em>These are events that get triggered when certain dates are passed. " \
+                        u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
 
-        if model.triggers:
-            text += u"<h2>Periodic tasks</h2>"
-            text += u"<em>These are events that get triggered when certain dates are passed. " \
-                    u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+                text += u"<table data-layout=\"full-width\">" \
+                        u"<tr><th>When</th>" \
+                        u"<th>Effects</th></tr>"
 
-            text += u"<table data-layout=\"full-width\">" \
-                    u"<tr><th>When</th>" \
-                    u"<th>Effects</th></tr>"
-
-            for task in model.periodic_tasks:
-                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    task(instance),
-                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
-                )
-            text += u"</table>"
+                for task in model.periodic_tasks:
+                    text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                        task(instance),
+                        "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
+                    )
+                text += u"</table>"
+            except(TypeError, AttributeError) as e:
+                print(e)
         print(text)

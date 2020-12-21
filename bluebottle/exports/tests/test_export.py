@@ -5,8 +5,10 @@ from django.db import connection
 from django.test import override_settings
 from django.utils.timezone import now
 
-from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import (
+    PeriodActivityFactory, PeriodParticipantFactory,
+    DateActivityFactory
+)
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
@@ -38,8 +40,8 @@ class TestExportAdmin(BluebottleTestCase):
         tenant = connection.tenant
         initiatives = InitiativeFactory.create_batch(4)
         for initiative in initiatives:
-            EventFactory.create_batch(3, initiative=initiative)
-            AssignmentFactory.create_batch(2, initiative=initiative)
+            DateActivityFactory.create_batch(3, initiative=initiative)
+            PeriodActivityFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
 
         result = plain_export(Exporter, tenant=tenant, **data)
@@ -61,33 +63,33 @@ class TestExportAdmin(BluebottleTestCase):
             5
         )
         self.assertEqual(
-            book.sheet_by_name('Events').nrows,
+            book.sheet_by_name('Activities on a date').nrows,
             13
         )
         self.assertEqual(
-            book.sheet_by_name('Events').cell(0, 13).value,
+            book.sheet_by_name('Activities on a date').cell(0, 13).value,
             'Start'
         )
         self.assertEqual(
-            book.sheet_by_name('Events').cell(0, 14).value,
+            book.sheet_by_name('Activities on a date').cell(0, 14).value,
             'Time needed'
         )
 
         self.assertEqual(
-            book.sheet_by_name('Tasks').nrows,
+            book.sheet_by_name('Activities during a period').nrows,
             9
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 16).value,
+            book.sheet_by_name('Activities during a period').cell(0, 16).value,
             'Preparation time'
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 17).value,
-            'Start time'
+            book.sheet_by_name('Activities during a period').cell(0, 17).value,
+            'Start'
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 19).value,
-            'End date'
+            book.sheet_by_name('Activities during a period').cell(0, 19).value,
+            'Deadline'
         )
 
     def test_export_custom_user_fields(self):
@@ -109,8 +111,8 @@ class TestExportAdmin(BluebottleTestCase):
             value='Parblue Yellow'
         )
         initiative = InitiativeFactory.create(owner=user)
-        assignment = AssignmentFactory.create(owner=user, initiative=initiative)
-        ApplicantFactory.create(activity=assignment, user=user)
+        activity = PeriodActivityFactory.create(owner=user, initiative=initiative)
+        PeriodParticipantFactory.create(activity=activity, user=user)
 
         data = {
             'from_date': from_date,
@@ -135,11 +137,11 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(0, 13).value,
+            book.sheet_by_name('Time contributions').cell(0, 14).value,
             'Favourite colour'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(1, 13).value,
+            book.sheet_by_name('Time contributions').cell(1, 14).value,
             'Parblue Yellow'
         )
 
@@ -152,13 +154,13 @@ class TestExportAdmin(BluebottleTestCase):
         rubbish = SegmentFactory.create(type=segment_type, name='Rubbish')
         users[0].segments.add(engineering)
         initiative = InitiativeFactory.create(owner=users[0])
-        assignment = AssignmentFactory.create(
+        activity = PeriodActivityFactory.create(
             owner=users[1],
             initiative=initiative
         )
-        assignment.segments.add(engineering)
-        assignment.segments.add(rubbish)
-        ApplicantFactory.create(activity=assignment, user=users[2])
+        activity.segments.add(engineering)
+        activity.segments.add(rubbish)
+        PeriodParticipantFactory.create(activity=activity, user=users[2])
 
         data = {
             'from_date': from_date,
@@ -188,7 +190,7 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 23).value,
+            book.sheet_by_name('Activities during a period').cell(0, 22).value,
             'Department'
         )
 
@@ -196,7 +198,7 @@ class TestExportAdmin(BluebottleTestCase):
         while t < book.sheet_by_name('Users').nrows:
             if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
                 self.assertTrue(
-                    book.sheet_by_name('Tasks').cell(t, 23).value in
+                    book.sheet_by_name('Activities during a period').cell(t, 22).value in
                     ['Engineering, Rubbish', 'Rubbish, Engineering']
                 )
             t += 1
@@ -215,12 +217,12 @@ class TestExportAdmin(BluebottleTestCase):
 
         initiative = InitiativeFactory.create(owner=users[0])
 
-        assignment = AssignmentFactory.create(
+        activity = PeriodActivityFactory.create(
             owner=users[1],
             initiative=initiative
         )
-        assignment.goals.create(type=co2, realized=300)
-        assignment.goals.create(type=water, realized=750)
+        activity.goals.create(type=co2, realized=300)
+        activity.goals.create(type=water, realized=750)
 
         data = {
             'from_date': from_date,
@@ -232,18 +234,18 @@ class TestExportAdmin(BluebottleTestCase):
         book = xlrd.open_workbook(result)
 
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 23).value,
+            book.sheet_by_name('Activities during a period').cell(0, 22).value,
             u'Reduce CO\u2082 emissions'
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(1, 23).value,
+            book.sheet_by_name('Activities during a period').cell(1, 22).value,
             300
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(0, 24).value,
+            book.sheet_by_name('Activities during a period').cell(0, 23).value,
             u'Save water'
         )
         self.assertEqual(
-            book.sheet_by_name('Tasks').cell(1, 24).value,
+            book.sheet_by_name('Activities during a period').cell(1, 23).value,
             750
         )

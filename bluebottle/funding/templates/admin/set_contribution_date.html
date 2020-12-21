@@ -1,0 +1,15 @@
+{% load i18n %}
+<h3>{% trans "Set contribution date" %}</h3>
+
+<p>
+    {% blocktrans %}
+        Set the contribution date for
+    {% endblocktrans %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other donations
+        {% endblocktrans %}
+    {% endif %}
+    {% trans "to now" %}
+</p>

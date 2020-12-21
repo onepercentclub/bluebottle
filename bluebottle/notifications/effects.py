@@ -1,21 +1,22 @@
 from future.utils import python_2_unicode_compatible
 
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 from bluebottle.fsm.effects import Effect
 
 
 @python_2_unicode_compatible
 class BaseNotificationEffect(Effect):
-    post_save = True
     title = _('Send email')
     template = 'admin/notification_effect.html'
 
-    def execute(self, send_messages=True, **kwargs):
-        if send_messages and self.is_valid:
+    def post_save(self, **kwargs):
+        if self.options.get('send_messages', True) and self.is_valid:
             self.message(
                 self.instance,
-                custom_message=self.options.get('message')
+                custom_message=self.options.get('message'),
+                **self.options
             ).compose_and_send()
 
     def __repr__(self):
@@ -46,8 +47,8 @@ class BaseNotificationEffect(Effect):
     @property
     def is_valid(self):
         return (
-            all([condition(self.instance) for condition in self.conditions]) and
-            self.message(self.instance).get_recipients()
+            all([condition(self) for condition in self.conditions]) and
+            len(self.message(self.instance, **self.options).get_recipients()) > 0
         )
 
     def to_html(self):
@@ -55,7 +56,23 @@ class BaseNotificationEffect(Effect):
 
     @property
     def description(self):
-        return u'"{}"'.format(self.message(self.instance).generic_subject)
+        return '"{}"'.format(self.message(self.instance).generic_subject)
+
+    @classmethod
+    def render(cls, effects):
+        message = effects[0].message(effects[0].instance)
+        recipients = [
+            recipient.email for effect in effects
+            for recipient in effect.message(effect.instance).get_recipients()
+        ]
+
+        context = {
+            'opts': effects[0].instance.__class__._meta,
+            'effects': effects,
+            'subject': message.generic_subject,
+            'recipients': recipients
+        }
+        return render_to_string(cls.template, context)
 
     @property
     def help(self):

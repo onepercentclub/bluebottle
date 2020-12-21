@@ -7,7 +7,7 @@ from mock import patch
 
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonationFactory, PayoutFactory
+    PlainPayoutAccountFactory, DonorFactory, PayoutFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory, StripeSourcePaymentFactory
@@ -128,13 +128,13 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_approve_organizer_succeed(self):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_start_dat(self):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_deadline(self):
@@ -165,7 +165,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
@@ -210,14 +210,14 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_delete(self):
         self.funding.states.delete(save=True)
         self.assertEqual(self.funding.status, 'deleted')
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'failed')
 
     def _prepare_succeeded(self):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
-        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.funding.deadline = now() - timedelta(days=1)
 
@@ -291,7 +291,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.reject(save=True)
         self.assertEqual(self.funding.status, 'rejected')
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'failed')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
@@ -301,7 +301,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_close_with_donations(self):
         mail.outbox = []
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         with self.assertRaisesMessage(
                 TransitionNotPossible,
@@ -328,66 +328,77 @@ class DonationStateMachineTests(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
     def test_initiate(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         self.assertEqual(donation.status, 'new')
 
     def test_succeed(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(donation.status, 'succeeded')
 
+        money_contribution = donation.contributions.get()
+        self.assertEqual(
+            money_contribution.status,
+            'succeeded'
+        )
+        self.assertAlmostEqual(
+            money_contribution.start,
+            now(),
+            delta=timedelta(minutes=2)
+        )
+
     def test_succeed_update_amounts(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
 
     def test_succeed_generate_wallpost(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         wallpost = Wallpost.objects.last()
         self.assertEqual(wallpost.donation, donation)
 
     def test_succeed_mail_supporter(self):
         mail.outbox = []
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(mail.outbox[0].subject, u'You have a new donation!\U0001f4b0')
 
     def test_succeed_mail_activity_manager(self):
         mail.outbox = []
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(mail.outbox[1].subject, u'Thanks for your donation!')
 
     def test_succeed_follow(self):
         mail.outbox = []
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
 
     def test_fail(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.fail(save=True)
         self.assertEqual(donation.status, 'failed')
 
     def test_fail_update_amounts(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
         donation.states.fail(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
 
     def test_fail_remove_wallpost(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(Wallpost.objects.count(), 1)
         donation.states.fail(save=True)
         self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, 'succeeded')
 
@@ -414,7 +425,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         )
 
     def test_refund_payment_request_refund(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.funding.states.succeed(save=True)
@@ -424,49 +435,51 @@ class DonationStateMachineTests(BluebottleTestCase):
         self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund_remove_wallpost(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(Wallpost.objects.count(), 1)
         donation.payment.states.refund(save=True)
         self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund_update_amounts(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
         donation.payment.states.refund(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
 
     def test_refund_unfollow(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
+
         self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
         donation.payment.states.refund(save=True)
         self.assertFalse(self.funding.followers.filter(user=donation.user).exists())
 
     def test_refund_activity(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, 'succeeded')
         donation.states.activity_refund(save=True)
         self.assertEqual(donation.status, 'activity_refunded')
 
     def test_refund_activity_payment_request_refund(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.funding.states.succeed(save=True)
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             self.funding.states.refund(save=True)
+
             refund.assert_called_once()
 
         payment.refresh_from_db()
         self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund_activity_mail_supporter(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         mail.outbox = []
         donation.states.activity_refund(save=True)
@@ -494,42 +507,42 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
     def test_initiate(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         self.assertEqual(payment.status, 'new')
 
     def test_succeed(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
 
     def test_succeed_donation_succeed(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(donation.status, 'succeeded')
 
     def test_fail(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.fail(save=True)
         self.assertEqual(payment.status, 'failed')
 
     def test_authorize(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.authorize(save=True)
         self.assertEqual(payment.status, 'pending')
 
     def test_authorize_donation_success(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.authorize(save=True)
         self.assertEqual(donation.status, 'succeeded')
 
     def test_request_refund(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
@@ -538,14 +551,14 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
         self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         payment.states.refund(save=True)
         self.assertEqual(payment.status, 'refunded')
 
     def test_refund_donation_refunded(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         payment.states.refund(save=True)

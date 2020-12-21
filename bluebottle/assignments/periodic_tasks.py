@@ -7,6 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.assignments.messages import AssignmentReminderDeadline, AssignmentReminderOnDate
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.states import AssignmentStateMachine
+from bluebottle.assignments.triggers import (
+    has_accepted_applicants, has_no_accepted_applicants,
+    has_new_or_accepted_applicants, has_no_new_or_accepted_applicants,
+    is_on_date, has_deadline
+)
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
@@ -25,8 +30,11 @@ class AssignmentStartOnDateTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('start', conditions=[
-            AssignmentStateMachine.has_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.start, conditions=[
+            has_accepted_applicants
+        ]),
+        TransitionEffect(AssignmentStateMachine.expire, conditions=[
+            has_no_accepted_applicants
         ]),
     ]
 
@@ -47,8 +55,11 @@ class AssignmentStartDeadlineTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('start', conditions=[
-            AssignmentStateMachine.has_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.start, conditions=[
+            has_new_or_accepted_applicants
+        ]),
+        TransitionEffect(AssignmentStateMachine.expire, conditions=[
+            has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -70,11 +81,11 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[
-            AssignmentStateMachine.has_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.succeed, conditions=[
+            has_new_or_accepted_applicants
         ]),
-        TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.expire, conditions=[
+            has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -96,11 +107,11 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[
-            AssignmentStateMachine.has_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.succeed, conditions=[
+            has_new_or_accepted_applicants
         ]),
-        TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.expire, conditions=[
+            has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -121,11 +132,11 @@ class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('lock', conditions=[
-            AssignmentStateMachine.has_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.lock, conditions=[
+            has_new_or_accepted_applicants
         ]),
-        TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_new_or_accepted_applicants
+        TransitionEffect(AssignmentStateMachine.expire, conditions=[
+            has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -143,14 +154,6 @@ class AssignmentRegistrationReminderTask(ModelPeriodicTask):
                 AssignmentStateMachine.open
             ]
         )
-
-    def is_on_date(assignment):
-        """task is on a specific date"""
-        return getattr(assignment, 'end_date_type') == 'on_date'
-
-    def has_deadline(assignment):
-        """task has a deadline"""
-        return getattr(assignment, 'end_date_type') == 'deadline'
 
     effects = [
         NotificationEffect(

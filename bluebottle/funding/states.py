@@ -1,34 +1,13 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
-from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
-from bluebottle.fsm.effects import (
-    TransitionEffect,
-    RelatedTransitionEffect
-)
-from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState
-from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWallpostEffect, \
-    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
-    DeletePayoutsEffect, \
-    SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
-    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
-from bluebottle.funding.messages import (
-    DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
-    FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
-    PayoutAccountVerified, PayoutAccountRejected,
-    DonationRefundedDonorMessage, DonationActivityRefundedDonorMessage,
-    FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
-    FundingCancelledMessage, FundingApprovedMessage
-
-)
-from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount
-from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
+from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
+from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
 
 
+@register(Funding)
 class FundingStateMachine(ActivityStateMachine):
-    model = Funding
-
     partially_funded = State(
         _('partially funded'),
         'partially_funded',
@@ -83,19 +62,6 @@ class FundingStateMachine(ActivityStateMachine):
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
-    submit = Transition(
-        [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
-        ActivityStateMachine.submitted,
-        automatic=False,
-        name=_('Submit'),
-        description=_('The campaign will be submitted for review.'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_submitted
-        ],
-    )
-
     approve = Transition(
         [
             ActivityStateMachine.needs_work,
@@ -103,7 +69,8 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
-        description=_('The campaign will be visible in the frontend and people can donate.'),
+        description=_(
+            'The campaign will be visible in the frontend and people can donate.'),
         automatic=False,
         permission=can_approve,
         conditions=[
@@ -111,16 +78,6 @@ class FundingStateMachine(ActivityStateMachine):
             ActivityStateMachine.is_valid,
             ActivityStateMachine.is_complete
         ],
-        effects=[
-            RelatedTransitionEffect('organizer', 'succeed'),
-            SetDateEffect('started'),
-            SetDeadlineEffect,
-            TransitionEffect(
-                'expire',
-                conditions=[should_finish]
-            ),
-            NotificationEffect(FundingApprovedMessage)
-        ]
     )
 
     cancel = Transition(
@@ -139,10 +96,6 @@ class FundingStateMachine(ActivityStateMachine):
         conditions=[
             no_donations
         ],
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail'),
-            NotificationEffect(FundingCancelledMessage)
-        ]
     )
 
     request_changes = Transition(
@@ -179,10 +132,6 @@ class FundingStateMachine(ActivityStateMachine):
             no_donations
         ],
         permission=ActivityStateMachine.is_staff,
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail'),
-            NotificationEffect(FundingRejectedMessage)
-        ]
     )
 
     expire = Transition(
@@ -191,15 +140,12 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.cancelled,
         name=_('Expire'),
-        description=_("The campaign didn't receive any donations before the deadline and is cancelled."),
+        description=_(
+            "The campaign didn't receive any donations before the deadline and is cancelled."),
         automatic=True,
         conditions=[
             no_donations,
         ],
-        effects=[
-            NotificationEffect(FundingExpiredMessage),
-            RelatedTransitionEffect('organizer', 'fail'),
-        ]
     )
 
     extend = Transition(
@@ -210,16 +156,13 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Extend'),
-        description=_("The campaign will be extended and can receive more donations."),
+        description=_(
+            "The campaign will be extended and can receive more donations."),
         automatic=True,
         conditions=[
             without_approved_payouts,
             deadline_in_future
         ],
-        effects=[
-            DeletePayoutsEffect,
-            NotificationEffect(FundingExtendedMessage)
-        ]
     )
 
     succeed = Transition(
@@ -234,10 +177,6 @@ class FundingStateMachine(ActivityStateMachine):
             "the deadline passes."
         ),
         automatic=True,
-        effects=[
-            GeneratePayoutsEffect,
-            NotificationEffect(FundingRealisedOwnerMessage)
-        ]
     )
 
     recalculate = Transition(
@@ -247,14 +186,12 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.succeeded,
         name=_('Recalculate'),
-        description=_("The amount of donations received has changed and the payouts will be recalculated."),
+        description=_(
+            "The amount of donations received has changed and the payouts will be recalculated."),
         automatic=False,
         conditions=[
             target_reached
         ],
-        effects=[
-            GeneratePayoutsEffect
-        ]
     )
 
     partial = Transition(
@@ -266,10 +203,6 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Partial'),
         description=_("The campaign ends but the target isn't reached."),
         automatic=True,
-        effects=[
-            GeneratePayoutsEffect,
-            NotificationEffect(FundingPartiallyFundedMessage)
-        ]
     )
 
     refund = Transition(
@@ -279,22 +212,18 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         refunded,
         name=_('Refund'),
-        description=_("The campaign will be refunded and all donations will be returned to the donors."),
+        description=_(
+            "The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
         conditions=[
             psp_allows_refunding,
             without_approved_payouts
         ],
-        effects=[
-            RelatedTransitionEffect('donations', 'activity_refund'),
-            DeletePayoutsEffect,
-            NotificationEffect(FundingRefundedMessage)
-        ]
     )
 
 
-class DonationStateMachine(ContributionStateMachine):
-    model = Donation
+@register(Donor)
+class DonorStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -308,73 +237,52 @@ class DonationStateMachine(ContributionStateMachine):
 
     def is_successful(self):
         """donation is successful"""
-        return self.instance.status == ContributionStateMachine.succeeded
+        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The donation has been completed"),
         automatic=True,
-        effects=[
-            NotificationEffect(DonationSuccessActivityManagerMessage),
-            NotificationEffect(DonationSuccessDonorMessage),
-            GenerateDonationWallpostEffect,
-            FollowActivityEffect,
-            UpdateFundingAmountsEffect
-        ]
     )
 
     fail = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded
         ],
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
-        effects=[
-            RemoveDonationWallpostEffect,
-            UpdateFundingAmountsEffect,
-            RemoveDonationFromPayoutEffect
-        ]
     )
 
     refund = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
         ],
         refunded,
         name=_('Refund'),
         description=_("Refund this donation."),
         automatic=True,
-        effects=[
-            RemoveDonationWallpostEffect,
-            UnFollowActivityEffect,
-            UpdateFundingAmountsEffect,
-            RemoveDonationFromPayoutEffect,
-            NotificationEffect(DonationRefundedDonorMessage)
-        ]
     )
 
     activity_refund = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
-        description=_("Refund the donation, because the entire activity will be refunded."),
+        description=_(
+            "Refund the donation, because the entire activity will be refunded."),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('payment', 'request_refund'),
-            NotificationEffect(DonationActivityRefundedDonorMessage)
-        ]
     )
 
 
+@register(Payment)
 class BasePaymentStateMachine(ModelStateMachine):
     new = State(
         _('new'),
@@ -410,8 +318,8 @@ class BasePaymentStateMachine(ModelStateMachine):
     def donation_not_refunded(self):
         """donation doesn't have status refunded or activity refunded"""
         return self.instance.donation.status not in [
-            DonationStateMachine.refunded.value,
-            DonationStateMachine.activity_refunded.value,
+            DonorStateMachine.refunded.value,
+            DonorStateMachine.activity_refunded.value,
         ]
 
     initiate = Transition(
@@ -427,9 +335,6 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Authorise'),
         description=_("Payment has been authorized."),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
     )
 
     succeed = Transition(
@@ -438,9 +343,6 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Succeed'),
         description=_("Payment has been completed."),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'succeed')
-        ]
     )
 
     fail = Transition(
@@ -449,9 +351,6 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Fail'),
         description=_("Payment failed."),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect('donation', 'fail')
-        ]
     )
 
     request_refund = Transition(
@@ -460,9 +359,6 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Request refund'),
         description=_("Request to refund the payment."),
         automatic=False,
-        effects=[
-            RefundPaymentAtPSPEffect
-        ]
     )
 
     refund = Transition(
@@ -475,20 +371,11 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Refund'),
         description=_("Payment was refunded."),
         automatic=True,
-        effects=[
-            RelatedTransitionEffect(
-                'donation', 'refund',
-                conditions=[
-                    donation_not_refunded
-                ]
-            ),
-        ]
     )
 
 
+@register(Payout)
 class PayoutStateMachine(ModelStateMachine):
-    model = Payout
-
     new = State(
         _('new'),
         'new',
@@ -531,12 +418,9 @@ class PayoutStateMachine(ModelStateMachine):
         [new, approved],
         approved,
         name=_('Approve'),
-        description=_("Approve the payout so it will be scheduled for execution."),
+        description=_(
+            "Approve the payout so it will be scheduled for execution."),
         automatic=False,
-        effects=[
-            SubmitPayoutEffect,
-            SetDateEffect('date_approved')
-        ]
     )
 
     schedule = Transition(
@@ -545,9 +429,6 @@ class PayoutStateMachine(ModelStateMachine):
         name=_('Schedule'),
         description=_("Schedule payout. Triggered by payout app."),
         automatic=True,
-        effects=[
-            ClearPayoutDatesEffect
-        ]
     )
 
     start = Transition(
@@ -556,9 +437,6 @@ class PayoutStateMachine(ModelStateMachine):
         name=_('Start'),
         description=_("Start payout. Triggered by payout app."),
         automatic=True,
-        effects=[
-            SetDateEffect('date_started')
-        ]
     )
 
     reset = Transition(
@@ -568,9 +446,6 @@ class PayoutStateMachine(ModelStateMachine):
         description=_("Payout was rejected by the payout app. "
                       "Adjust information as needed an approve the payout again."),
         automatic=True,
-        effects=[
-            ClearPayoutDatesEffect
-        ]
     )
 
     succeed = Transition(
@@ -579,9 +454,6 @@ class PayoutStateMachine(ModelStateMachine):
         name=_('Succeed'),
         description=_("Payout was successful. Triggered by payout app."),
         automatic=True,
-        effects=[
-            SetDateEffect('date_completed')
-        ]
     )
 
     fail = Transition(
@@ -636,14 +508,7 @@ class BankAccountStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject bank account"),
-        automatic=False,
-        effects=[
-            RelatedTransitionEffect(
-                'connect_account',
-                'reject',
-                description='Reject connected KYC account'
-            )
-        ]
+        automatic=False
     )
 
     verify = Transition(
@@ -651,15 +516,7 @@ class BankAccountStateMachine(ModelStateMachine):
         verified,
         name=_('Verify'),
         description=_("Verify that the bank account is complete."),
-        automatic=False,
-        effects=[
-            SubmitConnectedActivitiesEffect,
-            RelatedTransitionEffect(
-                'connect_account',
-                'verify',
-                description='Verify connected KYC account'
-            )
-        ]
+        automatic=False
     )
 
 
@@ -723,11 +580,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         name=_('Verify'),
         description=_("Verify the payout account."),
         automatic=False,
-        permission=can_approve,
-        effects=[
-            NotificationEffect(PayoutAccountVerified),
-            RelatedTransitionEffect('external_accounts', 'verify')
-        ]
+        permission=can_approve
     )
 
     reject = Transition(
@@ -735,22 +588,20 @@ class PayoutAccountStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject the payout account."),
-        automatic=False,
-        effects=[
-            NotificationEffect(PayoutAccountRejected),
-            RelatedTransitionEffect('external_accounts', 'reject')
-        ]
+        automatic=False
     )
 
     set_incomplete = Transition(
         [new, pending, rejected, verified],
         incomplete,
         name=_('Set incomplete'),
-        description=_("Mark the payout account as incomplete. The initiator will have to add more information."),
+        description=_(
+            "Mark the payout account as incomplete. The initiator will have to add more information."),
         automatic=False
     )
 
 
+@register(PlainPayoutAccount)
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
     model = PlainPayoutAccount
     verify = Transition(
@@ -764,11 +615,7 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         name=_('Verify'),
         description=_("Verify the KYC account. You will hereby confirm that you verified the users identity."),
         automatic=False,
-        permission=PayoutAccountStateMachine.can_approve,
-        effects=[
-            NotificationEffect(PayoutAccountVerified),
-            DeleteDocumentEffect
-        ]
+        permission=PayoutAccountStateMachine.can_approve
     )
     reject = Transition(
         [
@@ -780,9 +627,10 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         name=_('Reject'),
         description=_("Reject the payout account. The uploaded ID scan "
                       "will be removed with this step."),
-        automatic=False,
-        effects=[
-            NotificationEffect(PayoutAccountRejected),
-            DeleteDocumentEffect
-        ]
+        automatic=False
     )
+
+
+@register(MoneyContribution)
+class DonationStateMachine(ContributionStateMachine):
+    pass

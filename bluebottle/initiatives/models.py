@@ -8,10 +8,8 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
-from moneyed import Money
 from multiselectfield import MultiSelectField
 
-from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
@@ -19,7 +17,6 @@ from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -147,22 +144,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             return self.location.position
 
     @property
-    def stats(self):
-        activities = self.activities.filter(status='succeeded')
-        stats = [activity.stats for activity in activities]
-        currency = properties.DEFAULT_CURRENCY
-
-        return {
-            'activities': len(activities),
-            'contributions': sum(stat['count'] for stat in stats),
-            'hours': sum(stat['hours'] or 0 for stat in stats if 'hours' in stat),
-            'amount': sum(
-                convert(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount
-                for stat in stats if 'amount' in stat
-            ),
-        }
-
-    @property
     def required_fields(self):
         fields = [
             'title', 'pitch', 'owner',
@@ -238,9 +219,11 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
-        ('event', _('Events')),
-        ('assignment', _('Assignment')),
+
+        ('periodactivity', _('Activity during a period')),
+        ('dateactivity', _('Activity on a specific date')),
     )
+
     ACTIVITY_SEARCH_FILTERS = (
         ('location', _('Office location')),
         ('country', _('Country')),
@@ -276,4 +259,3 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 from bluebottle.initiatives.wallposts import *  # noqa
-from bluebottle.initiatives.states import *  # noqa

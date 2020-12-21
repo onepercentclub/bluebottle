@@ -15,7 +15,7 @@ from future import standard_library
 from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
 
@@ -54,14 +54,14 @@ class Event(Activity):
     @property
     def stats(self):
         from .states import ParticipantStateMachine
-        contributions = self.contributions.instance_of(Participant)
+        contributors = self.contributors.instance_of(Participant)
 
-        stats = contributions.filter(
+        stats = contributors.filter(
             status=ParticipantStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id'), hours=Sum('participant__time_spent')
         )
-        committed = contributions.filter(
+        committed = contributors.filter(
             status=ParticipantStateMachine.new.value
         ).aggregate(
             committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent')
@@ -79,6 +79,10 @@ class Event(Activity):
             return pytz.timezone(tz_name)
 
     @property
+    def activity_date(self):
+        return self.start
+
+    @property
     def local_timezone_name(self):
         return self.local_timezone.tzname(self.local_start)
 
@@ -91,7 +95,7 @@ class Event(Activity):
             return self.start
 
     @property
-    def contribution_date(self):
+    def contributor_date(self):
         return self.start
 
     class Meta(object):
@@ -123,9 +127,13 @@ class Event(Activity):
         super(Event, self).save(*args, **kwargs)
 
     @property
+    def all_participants(self):
+        return self.contributors.instance_of(Participant)
+
+    @property
     def participants(self):
         from .states import ParticipantStateMachine
-        return self.contributions.filter(
+        return self.contributors.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
                 ParticipantStateMachine.succeeded.value
@@ -196,7 +204,7 @@ class Event(Activity):
 
 
 @python_2_unicode_compatible
-class Participant(Contribution):
+class Participant(Contributor):
     time_spent = models.FloatField(default=0)
 
     class Meta(object):
@@ -216,18 +224,13 @@ class Participant(Contribution):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/participants'
+        resource_name = 'contributors/participants'
 
     def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.activity.start
+        if not self.contributor_date:
+            self.contributor_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return self.user.full_name
 
-
-from bluebottle.events.states import *  # noqa
-from bluebottle.events.triggers import *  # noqa
 from bluebottle.events.periodic_tasks import *  # noqa

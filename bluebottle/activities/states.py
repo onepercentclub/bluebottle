@@ -1,23 +1,7 @@
-from builtins import str
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Organizer
-from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
-
-
-class CreateOrganizer(Effect):
-    "Create an organizer for the activity"
-    post_save = True
-
-    def execute(self, **kwargs):
-        Organizer.objects.get_or_create(
-            activity=self.instance,
-            defaults={'user': self.instance.owner}
-        )
-
-    def __str__(self):
-        return str(_('Create organizer'))
+from bluebottle.activities.models import Organizer, OrganizerContribution
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
 class ActivityStateMachine(ModelStateMachine):
@@ -40,16 +24,17 @@ class ActivityStateMachine(ModelStateMachine):
         _('rejected'),
         'rejected',
         _(
-            'The activity doesn\'t fit the program or the rules of the game. '
-            'The activity won\'t show up on the search page in the front end, '
-            'but does count in the reporting. The activity cannot be edited by the activity manager.'
+            'The activity does not fit the programme or does not comply with the rules. '
+            'The activity does not appear on the platform, but counts in the report. '
+            'The activity cannot be edited by the activity manager.'
         )
     )
     deleted = State(
         _('deleted'),
         'deleted',
         _(
-            'The activity is not visible in the frontend and does not count in the reporting. '
+            'The activity has been removed. The activity does not appear on '
+            'the platform and does not count in the report. '
             'The activity cannot be edited by the activity manager.'
         )
     )
@@ -57,9 +42,17 @@ class ActivityStateMachine(ModelStateMachine):
         _('cancelled'),
         'cancelled',
         _(
-            'The activity is not executed. The activity won\'t show up on the search page '
-            'in the front end, but does count in the reporting. The activity cannot be '
-            'edited by the activity manager.'
+            'The activity is not executed. The activity does not appear on the platform, '
+            'but counts in the report. The activity cannot be edited by the activity manager.'
+        )
+    )
+
+    expired = State(
+        _('expired'),
+        'expired',
+        _(
+            'The activity has ended, but did have any contributions . The activity does not appear on the platform, '
+            'but counts in the report. The activity cannot be edited by the activity manager.'
         )
     )
     open = State(
@@ -99,14 +92,16 @@ class ActivityStateMachine(ModelStateMachine):
 
     def is_owner(self, user):
         """user is the owner"""
-        return user == self.instance.owner
+        return user == self.instance.owner or user.is_staff
+
+    def should_auto_approve(self):
+        return self.instance.auto_approve
 
     initiate = Transition(
         EmptyState(),
         draft,
-        name=_('Start'),
+        name=_('Create'),
         description=_('The acivity will be created.'),
-        effects=[CreateOrganizer]
     )
 
     auto_submit = Transition(
@@ -121,6 +116,22 @@ class ActivityStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
     )
 
+    reject = Transition(
+        AllStates(),
+        rejected,
+        name=_('Reject'),
+        description=_(
+            'Reject the activity if it does not fit the programme or '
+            'if it does not comply with the rules. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back '
+            'office and will continue to count in the reporting.'
+        ),
+        automatic=False,
+        permission=is_staff,
+    )
+
     submit = Transition(
         [
             draft,
@@ -131,30 +142,21 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         name=_('Submit'),
         conditions=[is_complete, is_valid, initiative_is_submitted],
-        effects=[
-            TransitionEffect('auto_approve', conditions=[initiative_is_approved])
-        ]
     )
 
-    reject = Transition(
+    auto_approve = Transition(
         [
-            draft,
-            needs_work,
-            submitted
+            submitted,
+            rejected
         ],
-        rejected,
-        name=_('Reject'),
+        open,
+        name=_('Approve'),
+        automatic=True,
+        conditions=[should_auto_approve],
         description=_(
-            'Reject in case this acivity doesn\'t fit your program or the rules of the game. '
-            'The activity manager will not be able to edit the activity and it won\'t show up '
-            'on the search page in the front end. The activity will still be available in the '
-            'back office and appear in your reporting.'
+            "The activity will be visible in the frontend and people can apply to "
+            "the activity."
         ),
-        automatic=False,
-        permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     cancel = Transition(
@@ -164,46 +166,54 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         cancelled,
         name=_('Cancel'),
-        description=_('Cancel the activity.'),
+        description=_(
+            'Cancel if the activity will not be executed. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The activity will still be visible in the back office '
+            'and will continue to count in the reporting.'
+        ),
         automatic=False,
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     restore = Transition(
         [
             rejected,
             cancelled,
-            deleted
+            deleted,
         ],
         needs_work,
         name=_('Restore'),
         description=_(
-            'The status of the activity is set to "Needs work". The activity manager can edit '
-            'the activity again.'
+            "The activity status is changed to 'Needs work'. "
+            "The manager of the activity has to enter a new date and can make changes. "
+            "The activity will then be reopened to participants."
         ),
         automatic=False,
-        permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('organizer', 'reset')
-        ]
+    )
+
+    expire = Transition(
+        [open, submitted, succeeded],
+        expired,
+        name=_('Expire'),
+        description=_(
+            "The activity will be cancelled because no one has signed up for the registration deadline."
+        ),
+        automatic=True,
     )
 
     delete = Transition(
-        [draft],
+        [draft, needs_work],
         deleted,
         name=_('Delete'),
         automatic=False,
         permission=is_owner,
         hide_from_admin=True,
         description=_(
-            'Delete the activity if you don\'t want it to appear in your reporting. '
-            'The activity will still be available in the back office.'
+            'Delete the activity if you do not want it to be included in the report. '
+            'The activity will no longer be visible on the platform, '
+            'but will still be available in the back office.'
         ),
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     succeed = Transition(
@@ -214,7 +224,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
 
-class ContributionStateMachine(ModelStateMachine):
+class ContributorStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -248,30 +258,83 @@ class ContributionStateMachine(ModelStateMachine):
     )
 
 
-class OrganizerStateMachine(ContributionStateMachine):
-    model = Organizer
+class ContributionStateMachine(ModelStateMachine):
+    new = State(
+        _('new'),
+        'new',
+        _("The user started a contribution")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("The contribution failed.")
+    )
+
+    def is_user(self, user):
+        return self.instance.user == user
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('initiate'),
+        description=_('The contribution was created.')
+    )
+
+    fail = Transition(
+        (new, succeeded, ),
+        failed,
+        name=_('fail'),
+        description=_("The contribution failed. It will not be visible in reports."),
+    )
 
     succeed = Transition(
+        [new, failed],
+        succeeded,
+        name=_('succeeded'),
+        description=_("The contribution succeeded. It will be visible in reports."),
+    )
+
+    reset = Transition(
+        [failed, succeeded],
+        new,
+        name=_('reset'),
+        description=_("The contribution is reset."),
+    )
+
+
+@register(Organizer)
+class OrganizerStateMachine(ContributorStateMachine):
+    succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('succeed'),
         description=_('The organizer was successful in setting up the activity.')
     )
     fail = Transition(
         AllStates(),
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('fail'),
         description=_('The organizer failed to set up the activity.')
     )
     reset = Transition(
         [
-            ContributionStateMachine.succeeded,
-            ContributionStateMachine.failed
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('reset'),
         description=_('The organizer is still busy setting up the activity.')
     )
+
+
+@register(OrganizerContribution)
+class OrganizerContributionStateMachine(ContributionStateMachine):
+    pass

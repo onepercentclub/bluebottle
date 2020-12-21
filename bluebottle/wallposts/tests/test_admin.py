@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from bluebottle.assignments.tests.factories import AssignmentFactory
 
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from django.urls.base import reverse
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory
 )
@@ -33,24 +32,24 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
         self.assertContains(response, initiative.title)
 
     def test_fundraiser_textwallpost_admin(self):
-        event = EventFactory()
-        self.wallpost = MediaWallpostFactory.create(content_object=event)
+        activity = DateActivityFactory()
+        self.wallpost = MediaWallpostFactory.create(content_object=activity)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertContains(response, event.title)
+        self.assertContains(response, activity.title)
 
-    def test_task_textwallpost_admin(self):
-        task = AssignmentFactory.create()
-        self.wallpost = MediaWallpostFactory.create(content_object=task)
+    def test_period_activity_textwallpost_admin(self):
+        activity = PeriodActivityFactory.create()
+        self.wallpost = MediaWallpostFactory.create(content_object=activity)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertContains(response, task.title)
+        self.assertContains(response, activity.title)
 
     def test_project_systemwallpost_admin(self):
         funding = FundingFactory.create()
-        donation = DonationFactory(activity=funding)
+        donation = DonorFactory(activity=funding)
         self.wallpost = MediaWallpostFactory.create(content_object=funding, donation=donation)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)

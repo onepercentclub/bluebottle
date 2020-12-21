@@ -10,6 +10,19 @@ class TransitionNotPossible(Exception):
     pass
 
 
+def register(model_cls):
+    def _register(state_machine_cls):
+        if not hasattr(model_cls, '_state_machines'):
+            model_cls._state_machines = {}
+        else:
+            model_cls._state_machines = dict(model_cls._state_machines)
+
+        model_cls._state_machines[state_machine_cls.name] = state_machine_cls
+        return state_machine_cls
+
+    return _register
+
+
 @python_2_unicode_compatible
 class BaseTransition(object):
     def __init__(self, sources, target, name='', description='',
@@ -26,7 +39,8 @@ class BaseTransition(object):
         self.effects = effects or []
         self.description = description
 
-        assert not (not self.automatic and not self.name), 'Automatic transitions should have a name'
+        assert not (
+            not self.automatic and not self.name), 'Automatic transitions should have a name'
 
         self.options = options
 
@@ -44,7 +58,8 @@ class BaseTransition(object):
         self.is_valid(machine)
         if not automatic and self.automatic:
             raise TransitionNotPossible(
-                _('Cannot transition from {} to {}').format(machine.state, self.target)
+                _('Cannot transition from {} to {}').format(
+                    machine.state, self.target)
             )
 
         if not (
@@ -52,7 +67,8 @@ class BaseTransition(object):
             (AllStates() in self.sources)
         ):
             raise TransitionNotPossible(
-                _('Cannot transition from {} to {}').format(machine.state, self.target)
+                _('Cannot transition from {} to {}').format(
+                    machine.state, self.target)
             )
 
     def on_execute(self, machine):
@@ -63,7 +79,7 @@ class BaseTransition(object):
         self.on_execute(machine, **kwargs)
 
     def __get__(self, instance, owner):
-        if instance:
+        if instance and isinstance(instance, StateMachine):
             def func(**kwargs):
                 return self.execute(instance, **kwargs)
 
@@ -78,8 +94,10 @@ class BaseTransition(object):
         return str(self.name or self.field)
 
 
-pre_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'])
-post_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'])
+pre_state_transition = Signal(
+    providing_args=['instance', 'transition', 'kwargs'])
+post_state_transition = Signal(
+    providing_args=['instance', 'transition', 'kwargs'])
 
 
 class Transition(BaseTransition):
@@ -90,7 +108,7 @@ class Transition(BaseTransition):
     def can_execute(self, machine, user=None, **kwargs):
         result = super(Transition, self).can_execute(machine, **kwargs)
 
-        if self.permission and user and not user.is_staff and not self.permission(machine, user):
+        if self.permission and user and not self.permission(machine, user):
             raise TransitionNotPossible(
                 _('You are not allowed to perform this transition')
             )
@@ -98,7 +116,7 @@ class Transition(BaseTransition):
         else:
             return result
 
-    def on_execute(self, machine, save=False, effects=True, **kwargs):
+    def on_execute(self, machine, save=False, **kwargs):
         pre_state_transition.send(
             sender=machine.instance.__class__,
             instance=machine.instance,
@@ -107,12 +125,6 @@ class Transition(BaseTransition):
         )
 
         super(Transition, self).on_execute(machine)
-
-        if effects:
-            for effect in self.effects:
-                for effect in effect(machine.instance, **kwargs).all_effects():
-                    if effect not in machine.instance._effects:
-                        machine.instance._effects.append(effect)
 
         if save:
             machine.save()
@@ -240,15 +252,7 @@ class ModelStateMachineMeta(StateMachineMeta):
         if 'name' not in dct:
             dct['name'] = 'states'
 
-        result = StateMachineMeta.__new__(cls, name, bases, dct)
-
-        if hasattr(result, 'model'):
-            if not hasattr(result.model, '_state_machines'):
-                result.model._state_machines = {}
-
-            result.model._state_machines[result.name] = result
-
-        return result
+        return StateMachineMeta.__new__(cls, name, bases, dct)
 
 
 class ModelStateMachine(with_metaclass(ModelStateMachineMeta, StateMachine)):

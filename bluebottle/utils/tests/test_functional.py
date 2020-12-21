@@ -23,8 +23,8 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.save()
 
         # Login user
-        self.assertTrue(
-            self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing')
+        self.client.login(
+            request=RequestFactory().post('/'), email=self.user.email, password='testing'
         )
 
     def tearDown(self):

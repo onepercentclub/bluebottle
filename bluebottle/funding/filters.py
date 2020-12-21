@@ -3,35 +3,35 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
-from bluebottle.funding.models import PaymentProvider, Donation
-from bluebottle.funding.states import DonationStateMachine
+from bluebottle.funding.models import PaymentProvider, Donor
+from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_pledge.models import PledgePayment
 
 
-class DonationListFilter(DjangoFilterBackend):
+class DonorListFilter(DjangoFilterBackend):
     """
-    Filter that shows only successful contributions
+    Filter that shows only successful contributors
     """
     def filter_queryset(self, request, queryset, view):
         queryset = queryset.prefetch_related(
             'activity', 'user'
-        ).instance_of(Donation).filter(status__in=[
-            DonationStateMachine.succeeded.value,
-            DonationStateMachine.activity_refunded.value
+        ).instance_of(Donor).filter(status__in=[
+            DonorStateMachine.succeeded.value,
+            DonorStateMachine.activity_refunded.value
         ])
 
-        return super(DonationListFilter, self).filter_queryset(request, queryset, view)
+        return super(DonorListFilter, self).filter_queryset(request, queryset, view)
 
 
-class DonationAdminStatusFilter(SimpleListFilter):
+class DonorAdminStatusFilter(SimpleListFilter):
     title = _('Status')
 
     parameter_name = 'status__exact'
-    default_status = DonationStateMachine.succeeded.value
+    default_status = DonorStateMachine.succeeded.value
 
     def lookups(self, request, model_admin):
         return [('all', _('All'))] + [
-            (s.value, s.name.title()) for s in list(DonationStateMachine.states.values())
+            (s.value, s.name.title()) for s in list(DonorStateMachine.states.values())
         ]
 
     def choices(self, cl):
@@ -51,7 +51,7 @@ class DonationAdminStatusFilter(SimpleListFilter):
         return queryset.filter(status=self.value())
 
 
-class DonationAdminCurrencyFilter(SimpleListFilter):
+class DonorAdminCurrencyFilter(SimpleListFilter):
     title = _('Currency')
 
     parameter_name = 'amount_currency__exact'
@@ -74,11 +74,11 @@ class DonationAdminCurrencyFilter(SimpleListFilter):
         return queryset
 
 
-class DonationAdminPledgeFilter(SimpleListFilter):
+class DonorAdminPledgeFilter(SimpleListFilter):
     title = _('Pledged')
 
     parameter_name = 'pledge'
-    default_status = DonationStateMachine.succeeded.value
+    default_status = DonorStateMachine.succeeded.value
 
     def lookups(self, request, model_admin):
         return (

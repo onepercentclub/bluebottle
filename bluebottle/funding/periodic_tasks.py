@@ -8,6 +8,23 @@ from bluebottle.funding.models import Funding
 from bluebottle.funding.states import FundingStateMachine
 
 
+def target_reached(effect):
+    """target amount has been reached (100% or more)"""
+    if not effect.instance.target:
+        return False
+    return effect.instance.amount_raised >= effect.instance.target
+
+
+def target_not_reached(effect):
+    """target amount has not been reached (less then 100%, but more then 0)"""
+    return effect.instance.amount_raised.amount and effect.instance.amount_raised < effect.instance.target
+
+
+def no_donations(effect):
+    """no (successful) donations have been made"""
+    return not effect.instance.donations.filter(status='succeeded').count()
+
+
 class FundingFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
@@ -17,14 +34,14 @@ class FundingFinishedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[
-            FundingStateMachine.target_reached
+        TransitionEffect(FundingStateMachine.succeed, conditions=[
+            target_reached
         ]),
-        TransitionEffect('partial', conditions=[
-            FundingStateMachine.target_not_reached
+        TransitionEffect(FundingStateMachine.partial, conditions=[
+            target_not_reached
         ]),
-        TransitionEffect('expire', conditions=[
-            FundingStateMachine.no_donations
+        TransitionEffect(FundingStateMachine.expire, conditions=[
+            no_donations
         ]),
     ]
 

@@ -39,6 +39,8 @@ class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
+    field = 'states'
+
     def save(self):
         resource = self.validated_data['resource']
         transition_name = self.validated_data['transition']
@@ -54,7 +56,9 @@ class TransitionSerializer(serializers.Serializer):
 
         self.instance = Transition(resource, transition_name, message)
 
-        transition.execute(states, save=True, user=user, send_messages=True, message=message)
+        transition.execute(states)
+        resource.execute_triggers(user=user, send_messages=True, message=message)
+        resource.save()
 
     class Meta(object):
         fields = ('id', 'transition', 'message', 'resource')

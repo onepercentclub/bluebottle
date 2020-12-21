@@ -22,6 +22,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['activities.change_activity']
             },
             {
+                'name': 'activities.contributor',
+                'permissions': ['activities.change_contributor']
+            },
+            {
                 'name': 'activities.contribution',
                 'permissions': ['activities.change_contribution']
             },
@@ -49,40 +53,20 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
     {
-        'label': _('Events'),
-        'app_label': 'events',
+        'label': _('Time Based'),
+        'app_label': 'time_based',
         'permissions': ['activities.change_activity'],
         'items': [
             {
-                'name': 'events.event',
-                'permissions': ['events.change_event']
+                'name': 'time_based.dateactivity',
+                'permissions': ['time_based.change_dateactivity']
             },
             {
-                'name': 'events.participant',
-                'permissions': ['events.change_participant']
+                'name': 'time_based.periodactivity',
+                'permissions': ['time_based.change_periodactivity']
             },
         ]
     },
-    {
-        'label': _('Tasks'),
-        'app_label': 'assignments',
-        'permissions': ['activities.change_activity'],
-        'items': [
-            {
-                'name': 'assignments.assignment',
-                'permissions': ['assignments.change_assignment']
-            },
-            {
-                'name': 'assignments.applicant',
-                'permissions': ['assignments.change_assignment']
-            },
-            {
-                'name': 'tasks.skill',
-                'permissions': ['tasks.change_skill']
-            },
-        ]
-    },
-
     {
         'label': _('Funding'),
         'app_label': 'funding',
@@ -93,8 +77,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_funding']
             },
             {
-                'name': 'funding.donation',
-                'permissions': ['funding.change_donation']
+                'name': 'funding.donor',
+                'permissions': ['funding.change_donor']
             },
             {
                 'name': 'funding.payment',

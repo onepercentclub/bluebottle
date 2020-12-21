@@ -1,0 +1,17 @@
+Loop over all tenant dirs
+
+Create hosts for:
+    * the hostname
+    * testing / staging etc hostnames
+    * tenant group
+
+Read settings and create settings files for:
+    * tenant group
+    * staging
+    * prod
+
+Simplify site_tenants script:
+    * Only do tenant steps
+    * include letsencrypt for tenant
+    * remove tenant vars script
+

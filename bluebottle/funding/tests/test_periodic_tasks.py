@@ -8,7 +8,7 @@ from djmoney.money import Money
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.funding.tasks import funding_tasks
-from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import (
@@ -18,7 +18,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-@mock.patch('bluebottle.funding.models.Funding.triggers', [])
 class FundingScheduledTasksTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -53,7 +52,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         )
 
     def test_funding_scheduled_task_succeed(self):
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             activity=self.funding,
             user=BlueBottleUserFactory.create(),
             amount=Money(1000, 'EUR')
@@ -66,6 +65,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
@@ -74,7 +74,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         )
 
     def test_funding_scheduled_task_partial(self):
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             activity=self.funding,
             user=BlueBottleUserFactory.create(),
             amount=Money(500, 'EUR')

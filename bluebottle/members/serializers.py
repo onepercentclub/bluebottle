@@ -14,7 +14,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
-from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
+from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
@@ -198,7 +198,6 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
         read_only=True, source='partner_organization')

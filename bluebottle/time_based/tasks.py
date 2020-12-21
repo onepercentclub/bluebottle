@@ -14,7 +14,7 @@ logger = logging.getLogger('bluebottle')
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(minute='*/15')),
     name="on_a_date_tasks",
     ignore_result=True
 )
@@ -26,7 +26,7 @@ def on_a_date_tasks():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(minute='*/15')),
     name="with_a_deadline_tasks",
     ignore_result=True
 )
@@ -38,7 +38,7 @@ def with_a_deadline_tasks():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(minute='*/15')),
     name="date_participant_tasks",
     ignore_result=True
 )
@@ -50,7 +50,7 @@ def date_participant_tasks():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(minute='*/15')),
     name="period_participant_tasks",
     ignore_result=True
 )
@@ -62,7 +62,7 @@ def period_participant_tasks():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(minute='*/15')),
     name="time_contribution_tasks",
     ignore_result=True
 )

@@ -125,7 +125,7 @@ class DateStateMachine(TimeBasedStateMachine):
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
-        return self.instance.duration_period != 'overall' and len(self.instance.active_participants) > 0
+        return len(self.instance.active_participants) > 0
 
     succeed_manually = Transition(
         [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],

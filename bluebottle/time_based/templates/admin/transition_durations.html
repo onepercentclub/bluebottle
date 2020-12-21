@@ -1,0 +1,12 @@
+{% load i18n %}
+<h3>{{transition|capfirst}} contributed time</h3>
+
+<p>
+    {{transition|capfirst}} the contributed time by {{users.0.full_name}}  
+
+    {% if users|length > 1 %}
+        {% blocktrans with extra=users|length|add:"-1" %}
+            and {{ extra }} others
+        {% endblocktrans %}
+    {% endif %}
+</p>

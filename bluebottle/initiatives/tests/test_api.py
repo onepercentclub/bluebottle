@@ -480,18 +480,26 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(len(data['relationships']['activities']['data']), 0)
 
     def test_get_stats(self):
+        self.initiative.states.approve(save=True)
+
         period_activity = PeriodActivityFactory.create(
             initiative=self.initiative,
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
 
         )
+
+        period_activity.states.submit(save=True)
         PeriodParticipantFactory.create_batch(3, activity=period_activity)
 
         date_activity = DateActivityFactory.create(
             initiative=self.initiative,
-            start=now() - datetime.timedelta(weeks=1)
+            start=now() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
+
         )
+        date_activity.states.submit(save=True)
         DateParticipantFactory.create_batch(3, activity=date_activity)
 
         funding = FundingFactory.create(
@@ -514,8 +522,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 66.0)
         self.assertEqual(stats['activities'], 3)
-        self.assertEqual(stats['contributors'], 12)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
+        self.assertEqual(stats['contributors'], 12)
 
     def test_get_other(self):
         response = self.client.get(

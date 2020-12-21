@@ -180,7 +180,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
 
         self.activity.refresh_from_db()
 
-        self.assertFalse(
+        self.assertTrue(
             PeriodStateMachine.succeed_manually in
             self.activity.states.possible_transitions()
         )

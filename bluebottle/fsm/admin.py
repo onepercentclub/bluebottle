@@ -68,8 +68,8 @@ class StateMachineAdminMixin(object):
                         self.save_form(request, form, change=True)
                         effects += form.instance.execute_triggers(user=request.user, send_messages=send_messages)
 
-            if effects:
-                rendered_effects = get_effects(effects)
+            rendered_effects = get_effects(effects)
+            if rendered_effects:
 
                 cancel_link = reverse(
                     'admin:{}_{}_change'.format(

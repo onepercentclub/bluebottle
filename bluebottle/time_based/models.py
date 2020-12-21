@@ -354,6 +354,10 @@ class PeriodParticipant(Participant, Contributor):
     def current_contribution(self):
         return self.contributions.get(status='new')
 
+    @property
+    def finished_contributions(self):
+        return self.contributions.filter(end__lt=timezone.now())
+
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'
 

@@ -101,6 +101,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
+        hide_from_admin=True,
     )
 
 
@@ -124,7 +125,7 @@ class DateStateMachine(TimeBasedStateMachine):
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
-        return self.instance.duration_period != 'overall' and len(self.instance.active_participants) > 0
+        return len(self.instance.active_participants) > 0
 
     succeed_manually = Transition(
         [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
@@ -195,7 +196,11 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def activity_is_open(self):
         """task is open"""
-        return self.instance.activity.status == ActivityStateMachine.open.value
+        return self.instance.activity.status in (
+            TimeBasedStateMachine.open.value,
+            TimeBasedStateMachine.running.value,
+            TimeBasedStateMachine.full.value
+        )
 
     initiate = Transition(
         EmptyState(),

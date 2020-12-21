@@ -20,6 +20,7 @@ from bluebottle.clients import properties
 from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.funding.models import MoneyContribution
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
@@ -29,6 +30,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.time_based.models import TimeContribution
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import (
     SafeField,
@@ -168,7 +170,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         contributions = Contribution.objects.filter(
             contributor__activity__initiative=obj, status='succeeded'
-        )
+        ).instance_of(TimeContribution, MoneyContribution)
 
         stats = contributions.aggregate(
             hours=Sum('timecontribution__value'),

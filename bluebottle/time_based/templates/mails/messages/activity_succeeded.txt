@@ -3,7 +3,7 @@
 
 {% block message%}{% blocktrans with title=obj.title  context 'email' %}
 You did it! Your activity "{{ title }}" has succeeded, that calls for a celebration!
-{{% endblocktrans %}
+{% endblocktrans %}
 
 {% if impact %}{% blocktrans %}Head over to your activity page and enter the impact your activity made, so that everybody can see how effective your activity was.{% endblocktrans %}{% endif %}
 

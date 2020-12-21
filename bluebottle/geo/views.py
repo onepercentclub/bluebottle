@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.geo.models import Location, Country, Geolocation
-from bluebottle.geo.serializers import LocationSerializer, GeolocationSerializer
+from bluebottle.geo.serializers import LocationSerializer, GeolocationSerializer, OfficeSerializer
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 from .serializers import CountrySerializer
 
@@ -45,6 +45,19 @@ class CountryDetail(RetrieveAPIView):
         return qs
 
 
+class OfficeList(JsonApiViewMixin, ListAPIView):
+    serializer_class = OfficeSerializer
+    queryset = Location.objects.all()
+
+    pagination_class = None
+
+
+class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = OfficeSerializer
+    queryset = Location.objects.all()
+
+
+# Remove this after we deployed json-api office locations
 class LocationList(ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()

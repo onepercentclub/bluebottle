@@ -259,7 +259,7 @@ class Statistics(object):
             ).distinct('owner').values_list('owner_id', flat=True)
         )
 
-        return initiative_owner_count + self.actiity_participants
+        return initiative_owner_count + self.activity_participants
 
     @property
     @memoize(timeout=timeout)

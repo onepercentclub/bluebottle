@@ -256,12 +256,12 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
 
 
 class DateParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'period-participant-document'
+    content_view_name = 'date-participant-document'
     relationship = 'dateparticipant_set'
 
 
 class PeriodParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'date-participant-document'
+    content_view_name = 'period-participant-document'
     relationship = 'periodparticipant_set'
 
 

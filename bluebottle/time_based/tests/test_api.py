@@ -12,6 +12,7 @@ import icalendar
 
 from rest_framework import status
 
+from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory
@@ -1123,10 +1124,15 @@ class RelatedParticipantsAPIViewTestCase():
         super().setUp()
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
-        self.participants = self.participant_factory.create_batch(
-            5,
-            activity=self.activity
-        )
+        self.participants = []
+        for i in range(5):
+            self.participants.append(
+                self.participant_factory.create(
+                    activity=self.activity,
+                    document=PrivateDocumentFactory.create()
+                )
+            )
+
         self.participants[0].states.remove(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
@@ -1137,6 +1143,12 @@ class RelatedParticipantsAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(len(response.json()['data']), 5)
+
+        included_documents = [
+            resource for resource in response.json()['included']
+            if resource['type'] == 'private-documents'
+        ]
+        self.assertEqual(len(included_documents), 5)
 
         included_contributions = [
             resource for resource in response.json()['included']
@@ -1150,6 +1162,12 @@ class RelatedParticipantsAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(len(response.json()['data']), 4)
+
+        included_documents = [
+            resource for resource in response.json()['included']
+            if resource['type'] == 'private-documents'
+        ]
+        self.assertEqual(len(included_documents), 0)
 
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)

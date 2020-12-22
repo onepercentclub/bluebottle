@@ -45,13 +45,12 @@ class PrivateDocumentField(DocumentField):
     def to_representation(self, value):
         parent = self.parent.instance
         # We might have a list when getting this for included serializers
-        if isinstance(parent, QuerySet):
-            for par in parent:
-                if not self.has_parent_permissions(par):
-                    return None
-        else:
-            if not self.has_parent_permissions(parent):
-                return None
+        if isinstance(parent, (QuerySet, tuple, list)):
+            parent = self.context['view'].get_queryset().get(**{self.field_name: value.pk})
+
+        if not self.has_parent_permissions(parent):
+            return None
+
         return super(PrivateDocumentField, self).to_representation(value)
 
 

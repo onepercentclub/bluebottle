@@ -681,6 +681,11 @@ class ParticipantListViewTestCase():
             data['relationships']['document']['data']['id'],
             document_data['data']['id']
         )
+        self.assertTrue(
+            response.json()['included'][2]['attributes']['link'].startswith(
+                '{}?signature='.format(reverse(self.document_url_name, args=(data['id'], )))
+            )
+        )
 
     def test_create_duplicate(self):
         self.client.post(self.url, json.dumps(self.data), user=self.user)
@@ -704,6 +709,7 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     participant_factory = DateParticipantFactory
 
     url_name = 'on-a-date-participant-list'
+    document_url_name = 'date-participant-document'
     application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
@@ -715,6 +721,7 @@ class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebott
     participant_factory = PeriodParticipantFactory
 
     url_name = 'period-participant-list'
+    document_url_name = 'period-participant-document'
     participant_type = 'contributors/time-based/period-participants'
 
 

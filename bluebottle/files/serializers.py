@@ -3,7 +3,6 @@ import hashlib
 import os
 
 from django.core.urlresolvers import reverse
-from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -44,14 +43,14 @@ class PrivateDocumentField(DocumentField):
 
     def to_representation(self, value):
         parent = self.parent.instance
-        # We might have a list when getting this for included serializers
-        if isinstance(parent, QuerySet):
-            for par in parent:
-                if not self.has_parent_permissions(par):
-                    return None
-        else:
-            if not self.has_parent_permissions(parent):
-                return None
+        if not value.pk:
+            return None
+        p_list = [p for p in self.parent.instance if getattr(p, self.field_name + "_id") == value.pk]
+        if not len(p_list):
+            return None
+        parent = p_list[0]
+        if not self.has_parent_permissions(parent):
+            return None
         return super(PrivateDocumentField, self).to_representation(value)
 
 

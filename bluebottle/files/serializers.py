@@ -42,13 +42,7 @@ class PrivateDocumentField(DocumentField):
         return queryset
 
     def to_representation(self, value):
-        parent = self.parent.instance
-        if not value.pk:
-            return None
-        p_list = [p for p in self.parent.instance if getattr(p, self.field_name + "_id") == value.pk]
-        if not len(p_list):
-            return None
-        parent = p_list[0]
+        parent = self.context['view'].get_queryset().get(document=value.pk)
         if not self.has_parent_permissions(parent):
             return None
         return super(PrivateDocumentField, self).to_representation(value)

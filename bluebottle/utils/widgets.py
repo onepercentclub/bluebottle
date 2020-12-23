@@ -30,6 +30,8 @@ def get_time_factors(td):
     :param td: timedelta
     :return: tuple(days, hours, minutes, seconds)
     """
+    if not td:
+        return (0, 0, 0, 0)
     return (
         td.days,  # returns number of days
         td.seconds // 3600,  # returns number of hours

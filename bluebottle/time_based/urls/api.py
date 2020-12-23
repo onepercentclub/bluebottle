@@ -35,11 +35,11 @@ urlpatterns = [
 
     url(r'^/date/slots$',
         DateSlotListView.as_view(),
-        name='date-slots-list'),
+        name='date-slot-list'),
 
     url(r'^/date/slots/(?P<pk>\d+)$',
         DateSlotDetailView.as_view(),
-        name='date-slots-detail'),
+        name='date-slot-detail'),
 
     url(r'^/date/ical/(?P<pk>\d+)$',
         DateActivityIcalView.as_view(),

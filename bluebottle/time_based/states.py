@@ -5,9 +5,9 @@ from bluebottle.activities.states import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution,
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot,
 )
-from bluebottle.fsm.state import register, State, Transition, EmptyState
+from bluebottle.fsm.state import register, State, Transition, EmptyState, ModelStateMachine
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
@@ -148,6 +148,134 @@ class PeriodStateMachine(TimeBasedStateMachine):
             "The status of the activity will be recalculated."
         ),
     )
+
+
+class ActivitySlotStateMachine(ModelStateMachine):
+    draft = State(
+        _('draft'),
+        'draft',
+        _('The slot has been created, but not yet completed. The activity manager is still editing the activity.')
+    )
+    expired = State(
+        _('expired'),
+        'expired',
+        _(
+            'The slot has ended, but did have any contributions . The slot does not appear on the platform, '
+            'but counts in the report. The slot cannot be edited by the activity manager.'
+        )
+    )
+    open = State(
+        _('open'),
+        'open',
+        _('The slot is accepting new contributions.')
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _('The slot has ended successfully.')
+    )
+    full = State(
+        _('full'),
+        'full',
+        _('The number of people needed is reached and people can no longer register.')
+    )
+    running = State(
+        _('running'),
+        'running',
+        _('The slot is taking place and people can\'t register any more.')
+    )
+
+    lock = Transition(
+        [
+            open,
+            succeeded,
+            running
+        ],
+        full,
+        name=_("Lock"),
+        description=_(
+            "People can no longer join the slot. "
+            "Triggered when the attendee limit is reached."
+        )
+    )
+
+    reopen = Transition(
+        [running, full],
+        ActivityStateMachine.open,
+        name=_("Reopen"),
+        description=_(
+            "The number of participants has fallen below the required number. "
+            "People can sign up again for the slot."
+        )
+    )
+
+    reopen_manually = Transition(
+        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        ActivityStateMachine.draft,
+        name=_("Reopen"),
+        permission=ActivityStateMachine.is_owner,
+        automatic=False,
+        description=_(
+            "The number of participants has fallen below the required number. "
+            "People can sign up again for the slot."
+        )
+    )
+
+    succeed = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.expired,
+            full,
+            running
+        ],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_(
+            'The slot ends and people can no longer register. '
+            'Participants will keep their spent hours, '
+            'but will no longer be allocated new hours.'),
+        automatic=True,
+    )
+
+    start = Transition(
+        [
+            ActivityStateMachine.open,
+            full
+        ],
+        running,
+        name=_("Start"),
+        description=_("Start the slot.")
+    )
+
+    cancel = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            full,
+            running
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_(
+            'Cancel if the slot will not be executed. '
+            'The activity manager can no longer edit the activity '
+            'and it will no longer be visible on the platform. '
+            'The slot will still be visible in the back office '
+            'and will continue to count in the reporting.'
+        ),
+        automatic=False,
+        hide_from_admin=True,
+    )
+
+
+@register(DateActivitySlot)
+class DateActivitySlotStateMachine(ActivitySlotStateMachine):
+    pass
+
+
+@register(PeriodActivitySlot)
+class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
+    pass
 
 
 class ParticipantStateMachine(ContributorStateMachine):

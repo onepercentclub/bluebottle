@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateSession
+    DateActivitySlot
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -24,7 +24,7 @@ from bluebottle.time_based.serializers import (
     DateParticipantTransitionSerializer,
     PeriodParticipantTransitionSerializer,
     TimeContributionSerializer,
-    DateSessionSerializer
+    DateSlotSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -87,21 +87,21 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class DateSessionListView(JsonApiViewMixin, CreateAPIView):
+class DateSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = (
         ActivityOwnerPermission
     )
 
-    queryset = DateSession.objects.all()
-    serializer_class = DateSessionSerializer
+    queryset = DateActivitySlot.objects.all()
+    serializer_class = DateSlotSerializer
 
 
-class DateSessionDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    related_permission_classes = (
-        ActivityOwnerPermission
-    )
-    queryset = DateSession.objects.all()
-    serializer_class = DateSessionSerializer
+class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    # related_permission_classes = (
+    #     ActivityOwnerPermission
+    # )
+    queryset = DateActivitySlot.objects.all()
+    serializer_class = DateSlotSerializer
 
 
 class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):

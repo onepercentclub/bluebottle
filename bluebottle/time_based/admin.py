@@ -9,10 +9,10 @@ from django_summernote.widgets import SummernoteWidget
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
-from bluebottle.fsm.admin import StateMachineFilter
+from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot
 )
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -142,7 +142,8 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'duration_string',
+        'start',
+        'duration_string',
     ]
 
     detail_fields = ActivityChildAdmin.detail_fields + (
@@ -214,6 +215,83 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         if not obj.deadline:
             return _('indefinitely')
         return obj.deadline
+
+
+class SlotAdmin(StateMachineAdmin):
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
+    }
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        return duration
+    duration_string.short_description = _('Duration')
+
+    readonly_fields = [
+        'created',
+        'updated'
+    ]
+    detail_fields = []
+    status_fields = [
+        'status',
+        'states',
+        'created',
+        'updated'
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Detail'), {'fields': self.detail_fields}),
+            (_('Status'), {'fields': self.status_fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
+
+
+@admin.register(DateActivitySlot)
+class DateSlotAdmin(SlotAdmin):
+    model = DateActivity
+
+    # inlines = (DateSeesionParticipantInlines,)
+
+    raw_id_fields = ['activity', 'location']
+    # list_filter = ['expertise']
+
+    date_hierarchy = 'start'
+    list_display = [
+        'start', 'duration_string',
+    ]
+
+    detail_fields = SlotAdmin.detail_fields + [
+        'activity',
+        'start',
+        'duration',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+        'capacity',
+    ]
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

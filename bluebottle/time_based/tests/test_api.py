@@ -589,7 +589,7 @@ class TimeBasedTransitionAPIViewTestCase():
         self.assertEqual(data['errors'][0], "Transition is not available")
 
 
-class OnADatteTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+class DateTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
@@ -995,7 +995,7 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
+class DateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     url_name = 'date-participant-transition-list'
     participant_type = 'contributors/time-based/date-participant'
@@ -1098,7 +1098,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class OnADateReviewParticipantTransitionAPIViewTestCase(
+class DateReviewParticipantTransitionAPIViewTestCase(
     ReviewParticipantTransitionAPIViewTestCase, BluebottleTestCase
 ):
     type = 'date'
@@ -1249,7 +1249,7 @@ class TimeContributionDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class OnADateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
+class DateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 

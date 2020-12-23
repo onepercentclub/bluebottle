@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -46,6 +46,21 @@ class PeriodActivityFactory(TimeBasedFactory):
     is_online = False
 
     start = (now() + timedelta(weeks=2)).date()
+
+
+class DateSessionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = DateActivitySlot
+
+    activity = factory.SubFactory(DateActivityFactory)
+    title = factory.Faker('sentence')
+    capacity = 10
+    is_online = False
+
+    location = factory.SubFactory(GeolocationFactory)
+    registration_deadline = (now() + timedelta(weeks=1)).date()
+    start = (now() + timedelta(weeks=4))
+    duration = timedelta(hours=2)
 
 
 class DateParticipantFactory(factory.DjangoModelFactory):

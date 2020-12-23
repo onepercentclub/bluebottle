@@ -1,7 +1,7 @@
 from datetime import date
 from django.utils.timezone import now
 
-from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
+from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -15,7 +15,7 @@ from bluebottle.follow.effects import (
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot
 )
 from bluebottle.time_based.messages import (
     DateChanged, DeadlineChanged,
@@ -325,6 +325,15 @@ class DateTriggers(TimeBasedTriggers):
     ]
 
 
+class ActivitySlotTriggers(TriggerManager):
+    triggers = []
+
+
+@register(DateActivitySlot)
+class DateActivitySlotTriggers(ActivitySlotTriggers):
+    triggers = ActivitySlotTriggers.triggers + []
+
+
 @register(PeriodActivity)
 class PeriodTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
@@ -414,6 +423,11 @@ class PeriodTriggers(TimeBasedTriggers):
             ]
         )
     ]
+
+
+@register(PeriodActivitySlot)
+class PeriodActivitySlotTriggers(ActivitySlotTriggers):
+    triggers = ActivitySlotTriggers.triggers + []
 
 
 def automatically_accept(effect):
@@ -697,7 +711,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
 
 def duration_is_finished(effect):
     """
-    contribution (session) has finished
+    contribution (slot) has finished
     """
     return (
         (effect.instance.end is None or effect.instance.end < now()) and

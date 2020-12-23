@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from rest_framework_json_api.serializers import PolymorphicModelSerializer
+from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
 )
@@ -13,11 +13,11 @@ from bluebottle.activities.utils import (
 )
 
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
-from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField
 
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot
 )
 
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
@@ -99,7 +99,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start', 'duration', 'utc_offset', 'online_meeting_url', 'links', 'my_contributor',
-            'preparation',
+            'preparation'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -108,7 +108,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer'
+            'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         }
     )
 
@@ -255,6 +255,52 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
         resource_name = 'activities/time-based/period'
 
 
+class SlotSerializer(ModelSerializer):
+    permissions = ResourcePermissionField('date-slots-detail', view_args=('pk',))
+    transitions = AvailableTransitionsField(source='states')
+
+    class Meta:
+        fields = (
+            'activity',
+            'start',
+            'duration',
+            'transitions',
+        )
+        meta_fields = (
+            'permissions',
+            'transitions',
+            'created',
+            'updated',
+        )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'activity',
+        ]
+
+
+class DateSlotSerializer(SlotSerializer):
+    class Meta(SlotSerializer.Meta):
+        model = DateActivitySlot
+        fields = SlotSerializer.Meta.fields + (
+            'start',
+            'duration',
+            'utc_offset',
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
+        )
+
+    class JSONAPIMeta(SlotSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/date/slot'
+
+    included_serializers = {
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activity': 'bluebottle.time_based.serializers.DateActivityListSerializer',
+    }
+
+
 class DateParticipantDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'date-participant-document'
     relationship = 'dateparticipant_set'
@@ -283,7 +329,7 @@ class ParticipantListSerializer(BaseContributorSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

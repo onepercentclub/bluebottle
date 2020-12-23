@@ -6,7 +6,6 @@ import pytz
 from timezonefinder import TimezoneFinder
 
 from bluebottle.fsm.triggers import TriggerMixin
-from polymorphic.models import PolymorphicModel
 
 from django.db import models, connection
 from django.utils import timezone
@@ -227,27 +226,59 @@ class DateActivity(TimeBasedActivity):
         return self.start + self.duration
 
 
-class Session(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=40)
-    name = models.CharField(_('name'), null=True, blank=True)
+    title = models.CharField(
+        _('title'),
+        max_length=255,
+        null=True, blank=True)
+    capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
+
+    class Meta:
+        abstract = True
 
 
-class DateSession(Session):
-    name = models.CharField(_('name'), null=True, blank=True)
-    activity = models.ForeignKey(DateActivity)
+class DateActivitySlot(ActivitySlot):
+    activity = models.ForeignKey(DateActivity, related_name='slots')
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
+    is_online = models.NullBooleanField(
+        _('is online'),
+        choices=DateActivity.ONLINE_CHOICES,
+        null=True, default=None
+    )
 
     online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default=''
     )
 
-    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
-                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location = models.ForeignKey(
+        Geolocation,
+        verbose_name=_('location'),
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
 
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
+    @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
 
 class DurationPeriodChoices(DjangoChoices):
@@ -319,6 +350,12 @@ class PeriodActivity(TimeBasedActivity):
         fields = super().required_fields
 
         return fields + ['duration', 'duration_period']
+
+
+class PeriodActivitySlot(ActivitySlot):
+    activity = models.ForeignKey(PeriodActivity, related_name='slots')
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
 
 class Participant(Contributor):
@@ -397,7 +434,7 @@ class TimeContribution(Contribution):
         verbose_name_plural = _("Contributions")
 
     def __str__(self):
-        return _("Session {name} {date}").format(
+        return _("ActivitySlot {name} {date}").format(
             name=self.contributor.user,
             date=self.start.date() if self.start else ''
         )

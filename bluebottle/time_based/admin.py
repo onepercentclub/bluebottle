@@ -131,11 +131,27 @@ class TimeBasedActivityAdminForm(StateMachineModelForm):
         }
 
 
+class DateActivityASlotInline(admin.TabularInline):
+    model = DateActivitySlot
+
+    readonly_fields = [
+        'duration'
+    ]
+
+    fields = [
+        'title',
+        'start',
+        'duration',
+        'capacity'
+    ]
+    extra = 0
+
+
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
     list_filter = TimeBasedAdmin.list_filter + ['expertise']

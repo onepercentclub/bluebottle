@@ -98,7 +98,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links', 'my_contributor',
+            'start', 'duration', 'utc_offset',
+            'online_meeting_url', 'links',
+            'my_contributor', 'slots',
             'preparation'
         )
 
@@ -109,6 +111,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         TimeBasedBaseSerializer.included_serializers,
         **{
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
 
@@ -255,7 +258,7 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
         resource_name = 'activities/time-based/period'
 
 
-class SlotSerializer(ModelSerializer):
+class ActivitySlotSerializer(ModelSerializer):
     permissions = ResourcePermissionField('date-slots-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 
@@ -279,10 +282,10 @@ class SlotSerializer(ModelSerializer):
         ]
 
 
-class DateSlotSerializer(SlotSerializer):
-    class Meta(SlotSerializer.Meta):
+class DateActivitySlotSerializer(ActivitySlotSerializer):
+    class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
-        fields = SlotSerializer.Meta.fields + (
+        fields = ActivitySlotSerializer.Meta.fields + (
             'start',
             'duration',
             'utc_offset',
@@ -292,8 +295,8 @@ class DateSlotSerializer(SlotSerializer):
             'online_meeting_url',
         )
 
-    class JSONAPIMeta(SlotSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/date/slot'
+    class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/date-slots'
 
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',

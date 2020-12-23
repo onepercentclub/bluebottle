@@ -434,7 +434,7 @@ class TimeContribution(Contribution):
         verbose_name_plural = _("Contributions")
 
     def __str__(self):
-        return _("ActivitySlot {name} {date}").format(
+        return _("Contribution {name} {date}").format(
             name=self.contributor.user,
             date=self.start.date() if self.start else ''
         )

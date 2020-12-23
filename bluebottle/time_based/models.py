@@ -5,6 +5,9 @@ import pytz
 
 from timezonefinder import TimezoneFinder
 
+from bluebottle.fsm.triggers import TriggerMixin
+from polymorphic.models import PolymorphicModel
+
 from django.db import models, connection
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -17,6 +20,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator
 )
+from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
 
 tf = TimezoneFinder()
@@ -221,6 +225,29 @@ class DateActivity(TimeBasedActivity):
     @property
     def end(self):
         return self.start + self.duration
+
+
+class Session(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+    status = models.CharField(max_length=40)
+    name = models.CharField(_('name'), null=True, blank=True)
+
+
+class DateSession(Session):
+    name = models.CharField(_('name'), null=True, blank=True)
+    activity = models.ForeignKey(DateActivity)
+
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
+
+    online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default=''
+    )
+
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
+                                 null=True, blank=True, on_delete=models.SET_NULL)
+
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
 
 class DurationPeriodChoices(DjangoChoices):

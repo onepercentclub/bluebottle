@@ -11,7 +11,8 @@ from bluebottle.activities.permissions import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
-    TimeContribution
+    TimeContribution,
+    DateSession
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -22,7 +23,8 @@ from bluebottle.time_based.serializers import (
     DateParticipantSerializer,
     DateParticipantTransitionSerializer,
     PeriodParticipantTransitionSerializer,
-    TimeContributionSerializer
+    TimeContributionSerializer,
+    DateSessionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -32,7 +34,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
-    ListAPIView, JsonApiViewMixin,
+    CreateAPIView, ListAPIView, JsonApiViewMixin,
     PrivateFileView
 )
 
@@ -83,6 +85,23 @@ class DateActivityDetailView(TimeBasedActivityDetailView):
 class PeriodActivityDetailView(TimeBasedActivityDetailView):
     queryset = PeriodActivity.objects.all()
     serializer_class = PeriodActivitySerializer
+
+
+class DateSessionListView(JsonApiViewMixin, CreateAPIView):
+    related_permission_classes = (
+        ActivityOwnerPermission
+    )
+
+    queryset = DateSession.objects.all()
+    serializer_class = DateSessionSerializer
+
+
+class DateSessionDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    related_permission_classes = (
+        ActivityOwnerPermission
+    )
+    queryset = DateSession.objects.all()
+    serializer_class = DateSessionSerializer
 
 
 class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):

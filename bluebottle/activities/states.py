@@ -76,7 +76,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     def initiative_is_approved(self):
         """the initiative has been approved"""
-        return self.instance.initiative.status == 'approved'
+        return self.instance.initiative_id and self.instance.initiative.status == 'approved'
 
     def initiative_is_submitted(self):
         """the initiative has been submitted"""

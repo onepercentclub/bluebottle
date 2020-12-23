@@ -12,7 +12,6 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('geo', '0018_auto_20201223_1240'),
         ('time_based', '0043_auto_20201217_0743'),
     ]
 

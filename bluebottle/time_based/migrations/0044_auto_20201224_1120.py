@@ -17,9 +17,10 @@ def fix_wallpost_ctype(apps, schema_editor):
     event_ctype = ContentType.objects.get_for_model(Event)
     posts = Wallpost.objects.filter(content_type__in=[event_ctype, assigment_ctype])
     for post in posts:
-        act = Activity.objects.get(pk=post.object_id)
-        post.content_type = act.polymorphic_ctype
-        post.save()
+        act = Activity.objects.filter(pk=post.object_id).first()
+        if act:
+            post.content_type = act.polymorphic_ctype
+            post.save()
 
 
 class Migration(migrations.Migration):

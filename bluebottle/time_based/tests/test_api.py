@@ -162,7 +162,35 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
             'duration': '4:00:00',
         })
 
-    def add_slots(self):
+    def add_slots_by_owner(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        slot_url = reverse('date-slot-list')
+        activity_id = response.json()['data']['id']
+        slot_data = {
+            'data': {
+                'type': 'activities/time-based/date-slots',
+                'attributes': {
+                    'title': 'Kick-off',
+                    'is-online': True,
+                    'start': '2020-12-01T10:00:00+01:00',
+                    'duration': '2:30:00',
+                    'capacity': 10,
+                },
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/time-based/dates',
+                            'id': activity_id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         slot_url = reverse('date-slot-list')

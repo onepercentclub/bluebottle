@@ -55,7 +55,6 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
         serializer.save(owner=self.request.user)
 
 
@@ -88,19 +87,19 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 
 class DateSlotListView(JsonApiViewMixin, CreateAPIView):
-    # related_permission_classes = (
-    #     ActivityOwnerPermission
-    # )
-
+    related_permission_classes = {
+        'activity': [ActivityOwnerPermission]
+    }
+    permission_classes = []
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    # related_permission_classes = (
-    #     ActivityOwnerPermission
-    # )
-
+    related_permission_classes = {
+        'activity': [ActivityOwnerPermission]
+    }
+    permission_classes = []
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 

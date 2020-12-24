@@ -189,6 +189,14 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
         }
         response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        slot_data['data']['attributes']['title'] = 'Second meeting'
+        slot_data['data']['attributes']['start'] = '2020-12-05T10:00:00+01:00'
+        response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        activity_url = reverse('date-detail', args=(activity_id,))
+        response = self.client.get(activity_url, user=self.user)
+        self.assertEqual(1, 0, "Check we can find the added slots")
 
     def add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
@@ -215,8 +223,9 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
                 }
             }
         }
-        response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        other = BlueBottleUserFactory.create()
+        response = self.client.post(slot_url, json.dumps(slot_data), user=other)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):

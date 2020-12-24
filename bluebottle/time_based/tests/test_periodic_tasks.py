@@ -117,8 +117,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             datetime(
                 self.activity.registration_deadline.year,
                 self.activity.registration_deadline.month,
-                self.activity.registration_deadline.day - 1
-            )
+                self.activity.registration_deadline.day
+            ) - timedelta(days=1)
         )
 
     @property
@@ -127,8 +127,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             datetime(
                 self.activity.registration_deadline.year,
                 self.activity.registration_deadline.month,
-                self.activity.registration_deadline.day + 1
-            )
+                self.activity.registration_deadline.day
+            ) + timedelta(days=1)
         )
 
     @property

@@ -151,6 +151,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
+        included_resources = ['slots', ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,

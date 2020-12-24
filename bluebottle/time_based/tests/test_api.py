@@ -20,7 +20,7 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_all_included_by_type
 
 
 class TimeBasedListAPIViewTestCase():
@@ -196,7 +196,10 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
         activity_url = reverse('date-detail', args=(activity_id,))
         response = self.client.get(activity_url, user=self.user)
-        self.assertEqual(1, 0, "Check we can find the added slots")
+        relationships = response.json()['data']['relationships']
+        self.assertEqual(len(relationships['slots']['data']), 2)
+        slots = get_all_included_by_type(response, 'activities/time-based/date-slots')
+        self.assertEqual(len(slots), 2)
 
     def add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)

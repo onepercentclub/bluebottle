@@ -263,6 +263,11 @@ class JSONAPITestClient(Client):
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
 
 
-def get_included(response, type):
+def get_first_included_by_type(response, type):
     included = response.json()['included']
     return [include for include in included if include['type'] == type][0]
+
+
+def get_all_included_by_type(response, type):
+    included = response.json()['included']
+    return [include for include in included if include['type'] == type]

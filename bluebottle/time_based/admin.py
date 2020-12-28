@@ -295,7 +295,7 @@ class DateSlotAdmin(SlotAdmin):
 
     date_hierarchy = 'start'
     list_display = [
-        'start', 'duration_string',
+        '__str__', 'start', 'duration_string',
     ]
 
     detail_fields = SlotAdmin.detail_fields + [

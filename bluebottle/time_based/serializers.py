@@ -1,3 +1,4 @@
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -78,6 +79,8 @@ class ActivitySlotSerializer(ModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
+            'required',
+            'errors',
             'created',
             'updated',
         )
@@ -89,6 +92,9 @@ class ActivitySlotSerializer(ModelSerializer):
 
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
         fields = ActivitySlotSerializer.Meta.fields + (
@@ -151,7 +157,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
-        included_resources = ['slots', ]
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'slots',
+        ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,

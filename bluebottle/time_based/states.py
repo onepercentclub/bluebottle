@@ -156,6 +156,11 @@ class ActivitySlotStateMachine(ModelStateMachine):
         'draft',
         _('The slot has been created, but not yet completed. The activity manager is still editing the activity.')
     )
+    sunmitted = State(
+        _('submitted'),
+        'submitted',
+        _('The slot is submitted.')
+    )
     expired = State(
         _('expired'),
         'expired',

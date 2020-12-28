@@ -48,7 +48,6 @@ class ElasticSearchFilter(filters.SearchFilter):
 
     def get_filters(self, request):
         filter_fields = self.get_filter_fields(request)
-
         return [
             self.get_filter(request, field)
             for field in filter_fields
@@ -78,7 +77,6 @@ class ElasticSearchFilter(filters.SearchFilter):
 
     def get_filter(self, request, field):
         value = request.GET['filter[{}]'.format(field)]
-
         if '.' in field:
             path = field.split('.')[0]
             return Nested(path=path, query=Term(**{field: value}))

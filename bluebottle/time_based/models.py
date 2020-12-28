@@ -17,7 +17,7 @@ from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator
+    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
@@ -60,11 +60,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'is_online', 'review', ]
-
-        if not self.is_online:
-            fields.append('location')
-
+        fields = ['title', 'description', 'review', ]
         return fields
 
     @property
@@ -187,7 +183,10 @@ class DateActivity(TimeBasedActivity):
 
     duration_period = 'overall'
 
-    validators = [DateActivityRegistrationDeadlineValidator]
+    validators = [
+        DateActivityRegistrationDeadlineValidator,
+        CompletedSlotsValidator
+    ]
 
     class Meta:
         verbose_name = _("Activity on a date")
@@ -210,12 +209,6 @@ class DateActivity(TimeBasedActivity):
     @property
     def activity_date(self):
         return self.start
-
-    @property
-    def required_fields(self):
-        fields = super().required_fields
-
-        return fields + ['start', 'duration']
 
     @property
     def uid(self):
@@ -266,6 +259,15 @@ class DateActivitySlot(ActivitySlot):
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     @property
+    def required_fields(self):
+        fields = [
+            'start', 'duration', 'is_online'
+        ]
+        if self.is_online:
+            fields.append('location')
+        return fields
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -279,6 +281,9 @@ class DateActivitySlot(ActivitySlot):
         tz = self.local_timezone or timezone.get_current_timezone()
         if self.start and tz:
             return self.start.astimezone(tz).utcoffset().total_seconds() / 60
+
+    def __str__(self):
+        return self.title or "Slot ID {}".format(self.id)
 
 
 class DurationPeriodChoices(DjangoChoices):
@@ -348,8 +353,9 @@ class PeriodActivity(TimeBasedActivity):
     @property
     def required_fields(self):
         fields = super().required_fields
-
-        return fields + ['duration', 'duration_period']
+        if not self.is_online:
+            fields.append('location')
+        return fields + ['duration', 'is_online', 'duration_period']
 
 
 class PeriodActivitySlot(ActivitySlot):

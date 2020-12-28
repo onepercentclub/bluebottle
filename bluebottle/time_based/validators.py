@@ -1,3 +1,4 @@
+from django.db.models import Min
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.utils.models import Validator
@@ -20,10 +21,27 @@ class RegistrationDeadlineValidator(Validator):
 class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
-        return self.instance.start.date()
+        if self.instance.slots.filter(start__isnull=False).count():
+            return self.instance.slots.filter(start__isnull=False).aggregate(start=Min('start'))['start'].date()
 
 
 class PeriodActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
         return self.instance.start or self.instance.deadline
+
+
+class CompletedSlotsValidator(Validator):
+    field = 'slots'
+    code = 'slots'
+    message = _('Should have at least one time slot.')
+    ready_states = [
+        'submitted',
+        'full',
+        'open',
+        'running',
+        'expired'
+    ]
+
+    def is_valid(self):
+        return self.instance.slots.filter(status__in=self.ready_states).count() > 0

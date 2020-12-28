@@ -8,8 +8,8 @@ from bluebottle.tasks.models import Skill
 
 
 class SkillAdmin(TranslatableAdmin):
-    list_display = ('name', 'task_link', 'member_link')
-    readonly_fields = ('task_link', 'member_link')
+    list_display = ('name', 'member_link')
+    readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
     ordering = ('translations__name',)
 
@@ -18,19 +18,6 @@ class SkillAdmin(TranslatableAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
-
-    def has_delete_permission(self, request, obj=None):
-        if obj and obj.assignment_set.count() == 0:
-            return True
-        return False
-
-    def task_link(self, obj):
-        url = "{}?expertise_filter={}".format(reverse('admin:assignments_assignment_changelist'), obj.id)
-        return format_html(
-            "<a href='{}'>{} {}</a>",
-            url, obj.assignment_set.count(), _('tasks')
-        )
-    task_link.short_description = _('Tasks with this skill')
 
     def member_link(self, obj):
         url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)

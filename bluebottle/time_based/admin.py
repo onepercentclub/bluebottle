@@ -138,6 +138,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     inlines = (DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
@@ -176,6 +177,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     form = TimeBasedActivityAdminForm
+    list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [

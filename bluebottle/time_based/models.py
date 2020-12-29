@@ -17,7 +17,8 @@ from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator
+    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
+    HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
@@ -185,7 +186,8 @@ class DateActivity(TimeBasedActivity):
 
     validators = [
         DateActivityRegistrationDeadlineValidator,
-        CompletedSlotsValidator
+        CompletedSlotsValidator,
+        HasSlotValidator
     ]
 
     class Meta:

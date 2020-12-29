@@ -151,12 +151,16 @@ class PeriodStateMachine(TimeBasedStateMachine):
 
 
 class ActivitySlotStateMachine(ModelStateMachine):
+
+    def is_complete(self):
+        return self.instance.is_complete
+
     draft = State(
         _('draft'),
         'draft',
         _('The slot has been created, but not yet completed. The activity manager is still editing the activity.')
     )
-    sunmitted = State(
+    submitted = State(
         _('submitted'),
         'submitted',
         _('The slot is submitted.')
@@ -188,6 +192,27 @@ class ActivitySlotStateMachine(ModelStateMachine):
         _('running'),
         'running',
         _('The slot is taking place and people can\'t register any more.')
+    )
+
+    initial = Transition(
+        EmptyState(),
+        ActivityStateMachine.draft,
+        name=_('Initial'),
+        description=_(
+            'The slot was created.'
+        ),
+    )
+
+    submit = Transition(
+        [
+            ActivityStateMachine.draft,
+        ],
+        ActivityStateMachine.submitted,
+        name=_('Submit'),
+        description=_('The slot has all required information and will be submitted.'),
+        conditions=[
+            is_complete
+        ]
     )
 
     lock = Transition(

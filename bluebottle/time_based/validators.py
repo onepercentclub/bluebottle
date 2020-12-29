@@ -34,14 +34,16 @@ class PeriodActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator)
 class CompletedSlotsValidator(Validator):
     field = 'slots'
     code = 'slots'
-    message = _('Should have at least one time slot.')
-    ready_states = [
-        'submitted',
-        'full',
-        'open',
-        'running',
-        'expired'
-    ]
+    message = _('All time slots should have all required fields filled out.')
 
     def is_valid(self):
-        return self.instance.slots.filter(status__in=self.ready_states).count() > 0
+        return len([slot for slot in self.instance.slots.all() if not slot.is_complete]) == 0
+
+
+class HasSlotValidator(Validator):
+    field = 'slots'
+    code = 'slots'
+    message = _('Should have at least one time slot.')
+
+    def is_valid(self):
+        return self.instance.slots.count() > 0

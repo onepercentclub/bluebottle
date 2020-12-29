@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
 from django.forms import Textarea
+from django.template import loader
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -258,9 +259,31 @@ class SlotAdmin(StateMachineAdmin):
         return duration
     duration_string.short_description = _('Duration')
 
+    def valid(self, obj):
+        errors = list(obj.errors)
+        required = list(obj.required)
+        if not errors and obj.states.initiative_is_approved() and not required:
+            return '-'
+
+        errors += [
+            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            for field in required
+        ]
+
+        if not obj.states.initiative_is_approved():
+            errors.append(_('The initiative is not approved'))
+
+        template = loader.get_template(
+            'admin/validation_steps.html'
+        )
+        return template.render({'errors': errors})
+
+    valid.short_description = _('Validation')
+
     readonly_fields = [
         'created',
-        'updated'
+        'updated',
+        'valid'
     ]
     detail_fields = []
     status_fields = [
@@ -270,10 +293,17 @@ class SlotAdmin(StateMachineAdmin):
         'updated'
     ]
 
+    def get_status_fields(self, request, obj):
+        fields = self.status_fields
+        if obj and obj.status in ('draft', ):
+            fields = ['valid'] + fields
+
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             (_('Detail'), {'fields': self.detail_fields}),
-            (_('Status'), {'fields': self.status_fields}),
+            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
             fieldsets += (

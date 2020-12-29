@@ -88,14 +88,22 @@ admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'position', 'group', 'initiatives')
+
+    def lookup_allowed(self, key, value):
+        if key in ('subregion__region__id__exact',):
+            return True
+        return super(LocationAdmin, self).lookup_allowed(key, value)
+
+    list_display = ('name', 'slug', 'subregion_link', 'region_link', 'initiatives')
     model = Location
     search_fields = ('name', 'description', 'city')
     verbose_name_plural = 'test'
 
+    list_filter = ('subregion', 'subregion__region')
+
     def initiatives(self, obj):
         return format_html(
-            u'<a href="{}?location={}">{}</a>',
+            u'<a href="{}?location__id__exact={}">{}</a>',
             reverse('admin:initiatives_initiative_changelist'),
             obj.id,
             len(Initiative.objects.filter(location=obj))
@@ -109,8 +117,22 @@ class LocationAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         return dict([self.make_action(group) for group in LocationGroup.objects.all()])
 
+    def subregion_link(self, obj):
+        if not obj.subregion_id:
+            return "-"
+        url = reverse('admin:offices_officesubregion_change', args=(obj.subregion_id,))
+        return format_html('<a href="{}">{}</a>', url, obj.subregion)
+    subregion_link.short_description = _('Office subregion')
+
+    def region_link(self, obj):
+        if not obj.subregion_id or not obj.subregion.region_id:
+            return "-"
+        url = reverse('admin:offices_officeregion_change', args=(obj.subregion.region_id,))
+        return format_html('<a href="{}">{}</a>', url, obj.subregion.region)
+    region_link.short_description = _('Office region')
+
     fieldsets = (
-        (_('Info'), {'fields': ('name', 'description', 'group', 'city', 'country', 'image')}),
+        (_('Info'), {'fields': ('name', 'subregion', 'description', 'city', 'country', 'image')}),
         (_('Map'), {'fields': ('position', )})
     )
 

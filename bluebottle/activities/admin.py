@@ -229,6 +229,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline,)
+    readonly_fields = ['location']
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
@@ -278,6 +279,22 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'states'
     )
 
+    def get_list_filter(self, instance):
+        filters = self.list_filter
+        from bluebottle.geo.models import Location
+        if Location.objects.count() and 'initiative__location' not in filters:
+            filters += ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_impact:
+                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+        return filters
+
+    def get_list_display(self, request):
+        fields = self.list_display
+        from bluebottle.geo.models import Location
+        if Location.objects.count() and 'location' not in fields:
+            fields += ['location']
+        return fields
+
     def get_status_fields(self, request, obj):
         fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
@@ -305,7 +322,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     list_display = [
         '__str__', 'initiative_link', 'state_name',
-
     ]
 
     def initiative_link(self, obj):
@@ -315,6 +331,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             obj.initiative
         )
     initiative_link.short_description = _('Initiative')
+
+    def location(self, obj):
+        if obj.initiative:
+            return obj.initiative.location
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -456,12 +476,33 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DateActivity,
     )
     date_hierarchy = 'transition_date'
-    readonly_fields = ['link', 'review_status']
-    list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')
+    readonly_fields = ['link', 'review_status', 'location']
+    list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight']
+
+    def get_list_filter(self, instance):
+        filters = self.list_filter
+        from bluebottle.geo.models import Location
+        if Location.objects.count() and 'initiative__location' not in filters:
+            filters += ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_impact:
+                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+        return filters
+
     list_editable = ('highlight',)
 
     list_display = ['__str__', 'created', 'type', 'state_name',
                     'link', 'highlight']
+
+    def location(self, obj):
+        if obj.initiative:
+            return obj.initiative.location
+
+    def get_list_display(self, request):
+        fields = self.list_display
+        from bluebottle.geo.models import Location
+        if Location.objects.count() and 'location' not in fields:
+            fields += ['location']
+        return fields
 
     search_fields = ('title', 'description',
                      'owner__first_name', 'owner__last_name')

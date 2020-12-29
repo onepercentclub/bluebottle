@@ -131,10 +131,20 @@ class Location(models.Model):
     slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
 
     position = GeopositionField(null=True)
-    group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
-                              null=True, blank=True)
+    group = models.ForeignKey(
+        'geo.LocationGroup',
+        verbose_name=_('location group'),
+        null=True, blank=True)
+    subregion = models.ForeignKey(
+        'offices.OfficeSubRegion',
+        verbose_name=_('subregion'),
+        help_text=_('The organizational group this office belongs too.'),
+        null=True, blank=True)
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
+    country = models.ForeignKey(
+        'geo.Country',
+        help_text=_('The (geographic) country this office is located in.'),
+        blank=True, null=True)
     description = models.TextField(_('description'), blank=True)
     image = ImageField(
         _('image'), max_length=255, null=True, blank=True,

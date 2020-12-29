@@ -252,6 +252,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
     enable_impact = models.BooleanField(default=False)
+    enable_office_regions = models.BooleanField(default=False)
 
     class Meta(object):
         verbose_name_plural = _('initiative settings')

@@ -100,7 +100,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
         if Location.objects.count() and 'location' not in filters:
             filters += ['location']
-            if InitiativePlatformSettings.objects.get().enable_impact:
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
                 filters += ['location__subregion', 'location__subregion__region']
         elif InitiativeCountryFilter not in filters:
             filters.append(InitiativeCountryFilter)

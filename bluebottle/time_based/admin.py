@@ -270,9 +270,6 @@ class SlotAdmin(StateMachineAdmin):
             for field in required
         ]
 
-        if not obj.states.initiative_is_approved():
-            errors.append(_('The initiative is not approved'))
-
         template = loader.get_template(
             'admin/validation_steps.html'
         )

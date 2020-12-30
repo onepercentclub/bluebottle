@@ -8,7 +8,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory, LocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -54,8 +54,9 @@ class OfficeAdminTest(BluebottleTestCase):
         self.activities_url = reverse('admin:activities_activity_changelist')
         InitiativeFactory.create(location=self.location1)
         InitiativeFactory.create_batch(3, location=self.location2)
-        InitiativeFactory.create_batch(6, location=self.location3)
-        InitiativeFactory.create_batch(8, location=self.location4)
+        InitiativeFactory.create_batch(2, location=self.location3)
+        InitiativeFactory.create_batch(4, location=self.location4)
+        InitiativeFactory.create_batch(8, location=self.location5)
 
     def test_initiatives_link(self):
         initiatives_link = self.location_admin.initiatives(self.location1)
@@ -66,11 +67,11 @@ class OfficeAdminTest(BluebottleTestCase):
             ) in initiatives_link
         )
 
-        initiatives_link = self.location_admin.initiatives(self.location4)
+        initiatives_link = self.location_admin.initiatives(self.location5)
         self.assertTrue('>8<' in initiatives_link)
         self.assertTrue(
             '/en/admin/initiatives/initiative/?location__id__exact={}'.format(
-                self.location4.id
+                self.location5.id
             ) in initiatives_link
         )
 
@@ -86,8 +87,8 @@ class OfficeAdminTest(BluebottleTestCase):
             ) in initiatives_link
         )
 
-        initiatives_link = self.region_admin.initiatives(self.europe)
-        self.assertTrue('>10<' in initiatives_link)
+        initiatives_link = self.region_admin.initiatives(self.africa)
+        self.assertTrue('>8<' in initiatives_link)
         self.assertTrue(
             '/en/admin/initiatives/initiative/?location__subregion__region__id__exact={}'.format(
                 self.africa.id
@@ -115,9 +116,10 @@ class OfficeAdminTest(BluebottleTestCase):
             pass
 
         request = MockRequest()
+        LocationFactory.create()
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.initiative_admin.get_list_filter(request)
-        self.assertTrue('subregion' in filters)
-        self.assertTrue('region' in filters)
+        self.assertTrue('location__subregion' in filters)
+        self.assertTrue('location__subregion__region' in filters)

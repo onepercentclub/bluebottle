@@ -5,7 +5,9 @@ from tenant_schemas.urlresolvers import reverse
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleAdminTestCase, ApiClient
+from bluebottle.members.models import MemberPlatformSettings
 
 
 class MainDashboardTestCase(BluebottleAdminTestCase):
@@ -87,3 +89,35 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 302)
         self.dashboard.refresh_from_db()
         self.assertEquals(self.dashboard.title, 'Nice Links')
+
+
+class AdminMenuTestCase(BluebottleAdminTestCase):
+    """
+    Test main admin menu
+    """
+
+    def setUp(self):
+        super(AdminMenuTestCase, self).setUp()
+        self.client.force_login(self.superuser)
+        self.admin_url = reverse('admin:index')
+
+    def test_main_menu_options_disabeld(self):
+        response = self.client.get(self.admin_url)
+        self.assertNotContains(response, 'Offices')
+        self.assertNotContains(response, 'Impact types')
+        self.assertNotContains(response, 'Segment types')
+
+    def test_main_menu_options_enabled(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.enable_segments = True
+        member_settings.save()
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_impact = True
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+
+        response = self.client.get(self.admin_url)
+        self.assertContains(response, 'Offices')
+        self.assertContains(response, 'Impact types')
+        self.assertContains(response, 'Segment types')

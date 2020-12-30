@@ -89,13 +89,13 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     def get_list_display(self, request):
         fields = self.list_display
-        if Location.objects.count():
+        if Location.objects.count() and 'location_link' not in fields:
             fields += ['location_link']
         return fields
 
     list_filter = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
 
-    def get_list_filter(self, instance):
+    def get_list_filter(self, request):
         filters = self.list_filter
 
         if Location.objects.count() and 'location' not in filters:

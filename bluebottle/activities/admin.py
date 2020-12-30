@@ -229,20 +229,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline,)
-    readonly_fields = ['location']
-
-    def get_inline_instances(self, request, obj=None):
-        inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
-        if InitiativePlatformSettings.objects.get().enable_office_regions:
-            impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
-            if (
-                    impact_goal_inline.has_add_permission(request) and
-                    impact_goal_inline.has_change_permission(request, obj) and
-                    impact_goal_inline.has_delete_permission(request, obj)
-            ):
-                inlines.append(impact_goal_inline)
-
-        return inlines
 
     show_in_index = True
 
@@ -279,12 +265,25 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'states'
     )
 
-    def get_list_filter(self, instance):
+    def get_inline_instances(self, request, obj=None):
+        inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
+        if InitiativePlatformSettings.objects.get().enable_office_regions:
+            impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
+            if (
+                    impact_goal_inline.has_add_permission(request) and
+                    impact_goal_inline.has_change_permission(request, obj) and
+                    impact_goal_inline.has_delete_permission(request, obj)
+            ):
+                inlines.append(impact_goal_inline)
+
+        return inlines
+
+    def get_list_filter(self, request):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count() and 'initiative__location' not in filters:
             filters += ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_impact:
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
                 filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
         return filters
 
@@ -479,7 +478,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     readonly_fields = ['link', 'review_status', 'location']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight']
 
-    def get_list_filter(self, instance):
+    def get_list_filter(self, request):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count() and 'initiative__location' not in filters:

@@ -95,6 +95,7 @@ class ActivityStateMachine(ModelStateMachine):
         return user == self.instance.owner or user.is_staff
 
     def should_auto_approve(self):
+        """the activity should approved automatically"""
         return self.instance.auto_approve
 
     initiate = Transition(

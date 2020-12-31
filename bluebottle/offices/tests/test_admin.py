@@ -8,8 +8,12 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory, LocationFactory
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.test.utils import BluebottleTestCase
+
+
+class MockRequest(object):
+    pass
 
 
 class OfficeAdminTest(BluebottleTestCase):
@@ -95,28 +99,16 @@ class OfficeAdminTest(BluebottleTestCase):
             ) in initiatives_link
         )
 
-    def test_initiative_filters(self):
-        class MockRequest(object):
-            pass
-        request = MockRequest()
-        filters = self.initiative_admin.get_list_filter(request)
-        self.assertEquals(filters, ['subregion', 'region'])
-
     def test_office_filters(self):
-        class MockRequest(object):
-            pass
         request = MockRequest()
         filters = self.initiative_admin.get_list_filter(request)
         self.assertTrue('location' in filters)
-        self.assertFalse('subregion' in filters)
-        self.assertFalse('region' in filters)
+        self.assertFalse('location__subregion_exact_id' in filters)
+        self.assertFalse('location__subregion__region_exact_id' in filters)
 
     def test_office_filters_regions_enabled(self):
-        class MockRequest(object):
-            pass
-
+        self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         request = MockRequest()
-        LocationFactory.create()
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()

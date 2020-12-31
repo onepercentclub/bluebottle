@@ -97,8 +97,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     def get_list_filter(self, request):
         filters = self.list_filter
-        if Location.objects.count() and 'location' not in filters:
-            filters += ['location']
+        if Location.objects.count():
+            if 'location' not in filters:
+                filters += ['location']
             if InitiativePlatformSettings.objects.get().enable_office_regions:
                 filters += ['location__subregion', 'location__subregion__region']
         elif InitiativeCountryFilter not in filters:

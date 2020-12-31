@@ -136,16 +136,21 @@ class DateActivityASlotInline(admin.TabularInline):
     model = DateActivitySlot
 
     readonly_fields = [
-        'duration'
+        'duration',
+        'link'
     ]
 
     fields = [
-        'title',
+        'link',
         'start',
-        'duration',
-        'capacity'
+        'duration'
     ]
+
     extra = 0
+
+    def link(self, obj):
+        url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(DateActivity)

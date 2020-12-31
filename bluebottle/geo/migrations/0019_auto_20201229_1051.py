@@ -27,9 +27,10 @@ def migrate_to_office_regions(apps, schema_editor):
             if location.group:
                 region, _created = OfficeRegion.objects.get_or_create(name=location.group.name)
             else:
-                region = CountryRegionTranslation.objects.get(
+                region_name = CountryRegionTranslation.objects.get(
                     master_id=location.country.subregion.region.id,
                     language_code=lang)
+                region, _created = OfficeRegion.objects.get_or_create(name=region_name.name)
             if not subregion.region:
                 subregion.region = region
                 subregion.save()

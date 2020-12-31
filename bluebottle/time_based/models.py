@@ -265,7 +265,7 @@ class DateActivitySlot(ActivitySlot):
         fields = [
             'start', 'duration', 'is_online'
         ]
-        if self.is_online:
+        if not self.is_online:
             fields.append('location')
         return fields
 

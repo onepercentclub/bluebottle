@@ -8,6 +8,17 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 
 
+class OfficeInline(admin.TabularInline):
+    model = Location
+    fields = ['link', 'name']
+    readonly_fields = ['link']
+    extra = 0
+
+    def link(self, obj):
+        url = reverse('admin:geo_location_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+
 @admin.register(OfficeSubRegion)
 class OfficeSubRegionAdmin(admin.ModelAdmin):
     list_display = ('name', 'region', 'offices', 'initiatives')
@@ -16,6 +27,8 @@ class OfficeSubRegionAdmin(admin.ModelAdmin):
     raw_id_fields = ('region',)
     readonly_fields = ('offices', 'initiatives')
     list_filter = ('region',)
+
+    inlines = [OfficeInline]
 
     def offices(self, obj):
         return format_html(
@@ -36,12 +49,24 @@ class OfficeSubRegionAdmin(admin.ModelAdmin):
     fields = ('name', 'description', 'region', 'offices', 'initiatives')
 
 
+class OfficeSubRegionInline(admin.TabularInline):
+    model = OfficeSubRegion
+    fields = ['link', 'name']
+    readonly_fields = ['link']
+    extra = 0
+
+    def link(self, obj):
+        url = reverse('admin:offices_officesubregion_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+
 @admin.register(OfficeRegion)
 class OfficeRegionAdmin(admin.ModelAdmin):
     list_display = ('name', 'subregions_link', 'offices', 'initiatives')
     model = OfficeRegion
     search_fields = ('name', 'description')
     readonly_fields = ('offices', 'subregions_link', 'initiatives')
+    inlines = [OfficeSubRegionInline]
 
     def subregions_link(self, obj):
         return format_html(

@@ -1,5 +1,5 @@
-from builtins import object
 import importlib
+from builtins import object
 
 import rules
 from django.urls.base import reverse_lazy
@@ -10,7 +10,9 @@ from jet.dashboard.modules import LinkList
 
 from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
-from bluebottle.initiatives.dashboard import RecentInitiatives, MyReviewingInitiatives
+from bluebottle.initiatives.dashboard import MyReviewingInitiatives, MyOfficeInitiatives, \
+    MyOfficeSubRegionInitiatives, MyOfficeRegionInitiatives
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.dashboard import RecentMembersDashboard
 
 
@@ -24,8 +26,14 @@ class CustomIndexDashboard(Dashboard):
         self.available_children.append(modules.LinkList)
 
         # Initiatives
-        self.children.append(RecentInitiatives())
         self.children.append(MyReviewingInitiatives())
+
+        user = context.request.user
+        if user.location:
+            self.children.append(MyOfficeInitiatives())
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                self.children.append(MyOfficeSubRegionInitiatives())
+                self.children.append(MyOfficeRegionInitiatives())
 
         # Activities
         self.children.append(RecentActivities())

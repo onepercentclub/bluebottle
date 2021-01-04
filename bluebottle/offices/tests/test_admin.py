@@ -123,3 +123,21 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Office subregion')
         self.assertContains(response, 'Office region')
+
+    def test_dashboards_office_admin(self):
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        self.superuser.location = self.location3
+        self.superuser.save()
+        self.client.force_login(self.superuser)
+        url = reverse('admin:index')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'Recently submitted initiatives for my office:')
+        self.assertContains(response, 'Recently submitted initiatives for my office region:')
+        self.assertContains(response, 'Recently submitted initiatives for my office subregion:')
+
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = False
+        initiative_settings.save()

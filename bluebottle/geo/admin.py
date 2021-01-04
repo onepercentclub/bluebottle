@@ -109,14 +109,6 @@ class LocationAdmin(admin.ModelAdmin):
             len(Initiative.objects.filter(location=obj))
         )
 
-    def make_action(self, group):
-        name = 'select_%s' % group
-        action = lambda modeladmin, req, qset: qset.update(group=group)
-        return (name, (action, name, "Move selected to %s" % group))
-
-    def get_actions(self, request):
-        return dict([self.make_action(group) for group in LocationGroup.objects.all()])
-
     def subregion_link(self, obj):
         if not obj.subregion_id:
             return "-"

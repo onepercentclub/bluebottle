@@ -6,6 +6,7 @@ from tenant_schemas.urlresolvers import reverse
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, ApiClient
 from bluebottle.members.models import MemberPlatformSettings
 
@@ -22,10 +23,12 @@ class MainDashboardTestCase(BluebottleAdminTestCase):
         self.admin_url = reverse('admin:index')
 
     def test_main_dashboard(self):
+        self.superuser.location = LocationFactory.create()
+        self.superuser.save()
         response = self.client.get(self.admin_url)
-        self.assertContains(response, 'Recently submitted initiatives')
         self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Export metrics')
+        self.assertContains(response, 'Recently submitted initiatives')
 
 
 class CustomAppDashboardTestCase(BluebottleAdminTestCase):

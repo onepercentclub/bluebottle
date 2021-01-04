@@ -124,6 +124,21 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Office subregion')
         self.assertContains(response, 'Office region')
 
+    def test_activity_admin_region_filters(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin:activities_activity_changelist')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertNotContains(response, 'By subregion')
+        self.assertNotContains(response, 'by region')
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'By subregion')
+        self.assertContains(response, 'By region')
+
     def test_dashboards_office_admin(self):
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
@@ -132,6 +147,24 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.superuser.save()
         self.client.force_login(self.superuser)
         url = reverse('admin:index')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'Recently submitted initiatives for my office:')
+        self.assertContains(response, 'Recently submitted initiatives for my office region:')
+        self.assertContains(response, 'Recently submitted initiatives for my office subregion:')
+
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = False
+        initiative_settings.save()
+
+    def test_dashboards_initiative_admin(self):
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        self.superuser.location = self.location3
+        self.superuser.save()
+        self.client.force_login(self.superuser)
+        url = reverse('admin:app_list', args=('initiatives',))
         response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Recently submitted initiatives for my office:')

@@ -9,14 +9,14 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class MockRequest(object):
     pass
 
 
-class OfficeAdminTest(BluebottleTestCase):
+class OfficeAdminTest(BluebottleAdminTestCase):
     """
     Test Offices in admin
     """
@@ -115,3 +115,11 @@ class OfficeAdminTest(BluebottleTestCase):
         filters = self.initiative_admin.get_list_filter(request)
         self.assertTrue('location__subregion' in filters)
         self.assertTrue('location__subregion__region' in filters)
+
+    def test_office_admin(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin:geo_location_changelist')
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'Office subregion')
+        self.assertContains(response, 'Office region')

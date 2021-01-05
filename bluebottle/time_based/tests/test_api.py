@@ -1125,7 +1125,7 @@ class RelatedParticipantsAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
         self.participants = []
-        for i in range(5):
+        for i in range(10):
             self.participants.append(
                 self.participant_factory.create(
                     activity=self.activity,
@@ -1142,26 +1142,26 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(response.json()['data']), 5)
+        self.assertEqual(len(response.json()['data']), 10)
 
         included_documents = [
             resource for resource in response.json()['included']
             if resource['type'] == 'private-documents'
         ]
-        self.assertEqual(len(included_documents), 5)
+        self.assertEqual(len(included_documents), 10)
 
         included_contributions = [
             resource for resource in response.json()['included']
             if resource['type'] == 'contributions/time-contributions'
         ]
-        self.assertEqual(len(included_contributions), 5)
+        self.assertEqual(len(included_contributions), 10)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(response.json()['data']), 4)
+        self.assertEqual(len(response.json()['data']), 9)
 
         included_documents = [
             resource for resource in response.json()['included']

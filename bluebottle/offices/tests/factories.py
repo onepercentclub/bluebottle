@@ -1,5 +1,5 @@
 import factory
-from geoposition import Geoposition
+from django.contrib.gis.geos import Point
 
 from bluebottle.geo.models import Location
 from bluebottle.offices.models import OfficeRegion, OfficeSubRegion
@@ -26,5 +26,5 @@ class LocationFactory(factory.DjangoModelFactory):
         model = Location
 
     name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
-    position = Geoposition(52.5, 13.4)
+    position = Point(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)

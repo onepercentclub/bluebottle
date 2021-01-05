@@ -130,7 +130,8 @@ class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
 
-    position = GeopositionField(null=True)
+    position = PointField(null=True)
+
     group = models.ForeignKey(
         'geo.LocationGroup',
         verbose_name=_('location group'),

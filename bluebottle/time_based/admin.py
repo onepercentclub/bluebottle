@@ -338,7 +338,6 @@ class DateSlotAdmin(SlotAdmin):
         'location',
         'location_hint',
         'online_meeting_url',
-        'capacity',
     ]
 
 

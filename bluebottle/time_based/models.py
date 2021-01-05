@@ -287,6 +287,10 @@ class DateActivitySlot(ActivitySlot):
     def __str__(self):
         return self.title or "Slot ID {}".format(self.id)
 
+    class Meta:
+        verbose_name = _('slot')
+        verbose_name_plural = _('slots')
+
 
 class DurationPeriodChoices(DjangoChoices):
     overall = ChoiceItem('overall', label=_("in total"))

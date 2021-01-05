@@ -8,7 +8,6 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
-from geoposition.fields import GeopositionField
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
 
@@ -183,7 +182,7 @@ class Place(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = GeopositionField()
+    position = PointField()
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -200,7 +199,7 @@ class InitiativePlace(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = GeopositionField()
+    position = PointField()
 
 
 @python_2_unicode_compatible

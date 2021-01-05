@@ -1,35 +1,23 @@
 import csv
-import six
-from builtins import object
 from builtins import str
 
-from adminfilters.multiselect import UnionFieldListFilter
-from django.conf import settings
-from django.conf.urls import url
-from django.contrib import admin, messages
+import six
+from django.contrib import admin
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django.http import HttpResponseRedirect
-from django.template import loader
-from django.template.response import TemplateResponse
-from django_singleton_admin.admin import SingletonAdmin
 from django.utils.encoding import smart_str
-
+from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
-from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
-from bluebottle.utils.forms import FSMModelForm
-from bluebottle.utils.forms import TransitionConfirmationForm
 from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
 
@@ -109,7 +97,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         if header:
             row = labels if labels else field_names
-            if queryset.model is Member or issubclass(queryset.model, Contribution):
+            if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
@@ -125,7 +113,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value)
-            if isinstance(obj, Contribution):
+            if isinstance(obj, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.user.extra.get(field=field).value
@@ -160,31 +148,9 @@ class TotalAmountAdminChangeList(ChangeList):
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 
-class LatLongMapPickerMixin(object):
-
-    class Media(object):
-        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
-            css = {
-                'all': ('css/admin/location_picker.css',),
-            }
-            js = (
-                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
-                'js/admin/location_picker.js',
-            )
-
-
 class BasePlatformSettingsAdmin(SingletonAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-class TranslatedUnionFieldListFilter(UnionFieldListFilter):
-
-    def __init__(self, field, request, params, model, model_admin, field_path):
-        super(TranslatedUnionFieldListFilter, self).__init__(
-            field, request, params, model, model_admin, field_path)
-        # Remove duplicates and order by title
-        self.lookup_choices = sorted(list(set(self.lookup_choices)), key=lambda tup: tup[1])
 
 
 def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
@@ -196,113 +162,6 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         action_flag=action_flag,
         change_message=change_message
     )
-
-
-class FSMAdminMixin(object):
-    form = FSMModelForm
-
-    readonly_fields = ['status']
-
-    def get_transition(self, instance, name, field_name):
-        transitions = getattr(instance, field_name).all_transitions
-        for transition in transitions:
-            if transition.name == name:
-                return transition
-
-    def transition(self, request, pk, field_name, transition_name, send_messages=True):
-        link = reverse(
-            'admin:{}_{}_change'.format(
-                self.model._meta.app_label, self.model._meta.model_name
-            ),
-            args=(pk, )
-        )
-
-        # perform actual check for change permission. using self.model
-        permission = '{}.change_{}'.format(
-            self.model._meta.app_label, self.model._meta.model_name
-        )
-        if not request.user.has_perm(permission):
-            messages.error(request, 'Missing permission: {}'.format(permission))
-            return HttpResponseRedirect(link)
-
-        instance = self.model.objects.get(pk=pk)
-        form = TransitionConfirmationForm(request.POST)
-        transition = self.get_transition(instance, transition_name, field_name)
-
-        if not transition:
-            messages.error(
-                request,
-                'Transition not allowed: {}'.format(transition_name)
-            )
-            return HttpResponseRedirect(link)
-
-        if 'confirm' in request.POST and request.POST['confirm']:
-            if form.is_valid():
-                send_messages = form.cleaned_data['send_messages']
-
-                try:
-                    transitions = getattr(instance, field_name)
-                    getattr(transitions, transition.name)(
-                        send_messages=send_messages
-                    )
-
-                    instance.save()
-                    log_action(
-                        instance,
-                        request.user,
-                        'Changed status to {}'.format(transition.name)
-                    )
-
-                    return HttpResponseRedirect(link)
-                except TransitionNotPossible:
-                    errors = transition.errors(instance.transitions)
-                    if errors:
-                        template = loader.get_template(
-                            'admin/transition_errors.html'
-                        )
-                        error_message = template.render({'errors': errors})
-                    else:
-                        error_message = 'Transition not allowed: {}'.format(transition.name)
-
-                    messages.error(request, error_message)
-
-                    return HttpResponseRedirect(link)
-
-        transition_messages = []
-        for message_list in [message(instance).get_messages() for message in transition.options.get('messages', [])]:
-            transition_messages += message_list
-
-        context = dict(
-            self.admin_site.each_context(request),
-            title=TransitionConfirmationForm.title,
-            action=transition.name,
-            opts=self.model._meta,
-            obj=instance,
-            pk=instance.pk,
-            form=form,
-            source=instance.status,
-            notifications=transition_messages,
-            target=transition.name,
-        )
-
-        return TemplateResponse(
-            request, 'admin/transition_confirmation.html', context
-        )
-
-    def get_urls(self):
-        urls = super(FSMAdminMixin, self).get_urls()
-        custom_urls = [
-            url(
-                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
-                self.admin_site.admin_view(self.transition),
-                name='{}_{}_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
-            ),
-        ]
-        return custom_urls + urls
-
-
-class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
-    pass
 
 
 @admin.register(TranslationPlatformSettings)

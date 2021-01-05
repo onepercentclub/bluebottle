@@ -1,8 +1,8 @@
 from builtins import str
 from django.core import mail
 
-from bluebottle.events.messages import EventRejectedOwnerMessage
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.messages import ActivityRejectedNotification
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -14,12 +14,14 @@ class NotificationEffectsTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(
             email='faal@haas.nl'
         )
-        event = EventFactory.create(
+        activity = DateActivityFactory.create(
             title='Bound to fail',
             owner=user
         )
-        subject = 'Your event "Bound to fail" has been rejected'
-        effect = NotificationEffect(EventRejectedOwnerMessage)(event)
+        subject = 'Your activity "Bound to fail" has been rejected'
+        effect = NotificationEffect(ActivityRejectedNotification)(activity)
+
         self.assertEqual(str(effect), 'Message {} to faal@haas.nl'.format(subject))
-        effect.execute()
+        effect.post_save()
+
         self.assertEqual(mail.outbox[0].subject, subject)

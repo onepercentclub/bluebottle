@@ -20,6 +20,7 @@ install_requires = [
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
+    'clamd==1.0.2',
     'celery==4.3',
     'dotted==0.1.8',
     'defusedxml==0.6.0',
@@ -98,7 +99,7 @@ install_requires = [
     'regex==2017.05.26',
     'requests==2.24.0',
     'schwifty==2.1.0',
-    'sorl-thumbnail @ git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
+    'sorl-thumbnail==12.6.3',
     'South==1.0.2',
     'Sphinx==1.6.3',
     'staticmaps-signature==0.2.0',
@@ -109,13 +110,13 @@ install_requires = [
     'timezonefinder==3.4.2',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
+    'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
 
     # Github requirements
     'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras @ git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.14#egg=django-tenant-extras-2.0.14',
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
-    'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
 ]
 

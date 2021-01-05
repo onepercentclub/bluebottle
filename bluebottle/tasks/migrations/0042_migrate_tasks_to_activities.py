@@ -229,6 +229,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tasks', '0041_remove_untranslated_fields'),
+        ('assignments', '0011_applicant_document'),
+        ('events', '0015_auto_20200226_0838'),
+        ('wallposts', '0001_initial'),
     ]
 
     operations = [

@@ -61,6 +61,21 @@ class LocationSerializer(serializers.ModelSerializer):
         resource_name = 'locations'
 
 
+class OfficeSerializer(ModelSerializer):
+    latitude = serializers.DecimalField(source='position.latitude', required=False, max_digits=10, decimal_places=3)
+    longitude = serializers.DecimalField(source='position.longitude', required=False, max_digits=10, decimal_places=3)
+    image = ImageSerializer(required=False)
+
+    static_map_url = StaticMapsField(source='position')
+
+    class Meta(object):
+        model = Location
+        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
+
+    class JSONAPIMeta(object):
+        resource_name = 'locations'
+
+
 class PlaceSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Place

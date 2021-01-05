@@ -24,9 +24,6 @@ class ActivityDocument(DocType):
     status_score = fields.FloatField()
     created = fields.DateField()
 
-    date = fields.DateField()
-    deadline = fields.DateField()
-
     type = fields.KeywordField()
 
     owner = fields.NestedField(properties={
@@ -89,13 +86,17 @@ class ActivityDocument(DocType):
         }
     )
 
-    contributions = fields.DateField()
-    contribution_count = fields.IntegerField()
+    contributors = fields.DateField()
+    contributor_count = fields.IntegerField()
 
+    start = fields.DateField()
+    end = fields.DateField()
     activity_date = fields.DateField()
 
     class Meta(object):
         model = Activity
+
+    date_field = None
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -112,17 +113,17 @@ class ActivityDocument(DocType):
             model=cls._doc_type.model
         )
 
-    def prepare_contributions(self, instance):
+    def prepare_contributors(self, instance):
         return [
-            contribution.created for contribution
-            in instance.contributions.filter(status__in=('new', 'success'))
+            contributor.created for contributor
+            in instance.contributors.filter(status__in=('new', 'success', 'accepted'))
         ]
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
 
-    def prepare_contribution_count(self, instance):
-        return len(instance.contributions.filter(status__in=('new', 'success')))
+    def prepare_contributor_count(self, instance):
+        return instance.contributors.filter(status__in=('new', 'success', 'accepted')).count()
 
     def prepare_country(self, instance):
         if instance.initiative.location:
@@ -144,8 +145,8 @@ class ActivityDocument(DocType):
     def prepare_position(self, instance):
         return None
 
-    def prepare_deadline(self, instance):
+    def prepare_end(self, instance):
         return None
 
-    def prepare_date(self, instance):
+    def prepare_start(self, instance):
         return None

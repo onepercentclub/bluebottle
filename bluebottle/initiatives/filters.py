@@ -11,7 +11,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     sort_fields = {
         'date': ('-created', ),
         'activity_date': ({
-            'activities.contribution_date': {
+            'activities.activity_date': {
                 'order': 'desc',
                 'mode': 'max',
                 'nested': {

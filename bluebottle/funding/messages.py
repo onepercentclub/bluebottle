@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.funding.models import Donation, Funding, PayoutAccount
+from bluebottle.funding.models import Donor, Funding, PayoutAccount
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -11,7 +11,7 @@ class DonationSuccessActivityManagerMessage(TransitionMessage):
     """
     subject = _(u"You have a new donation!💰")
     template = 'messages/donation_success_owner'
-    model = Donation
+    model = Donor
 
     def get_recipients(self):
         """the activity organizer"""
@@ -24,7 +24,7 @@ class DonationSuccessDonorMessage(TransitionMessage):
     """
     subject = _("Thanks for your donation!")
     template = 'messages/donation_success_donor'
-    model = Donation
+    model = Donor
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
@@ -40,7 +40,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
     """
     subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_refunded_donor'
-    model = Donation
+    model = Donor
 
     context = {
         'title': 'activity.title'
@@ -57,7 +57,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 class DonationActivityRefundedDonorMessage(TransitionMessage):
     subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_activity_refunded_donor'
-    model = Donation
+    model = Donor
 
     context = {
         'title': 'activity.title'

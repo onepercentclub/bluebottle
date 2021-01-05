@@ -1,8 +1,8 @@
 from django.core import mail
 
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
-from bluebottle.events.states import EventStateMachine
+from bluebottle.time_based.states import DateStateMachine
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
@@ -196,16 +196,16 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_submit_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        activity = DateActivityFactory.create(initiative=self.initiative)
         funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         BudgetLineFactory.create(activity=funding)
 
-        incomplete_event = EventFactory.create(initiative=self.initiative, title='')
+        incomplete_activity = DateActivityFactory.create(initiative=self.initiative, title='')
         self.initiative.states.submit(save=True)
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
         self.assertEqual(
-            event.status, ReviewStateMachine.submitted.value
+            activity.status, ReviewStateMachine.submitted.value
         )
 
         funding.refresh_from_db()
@@ -213,9 +213,9 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             funding.status, ReviewStateMachine.submitted.value
         )
 
-        incomplete_event.refresh_from_db()
+        incomplete_activity.refresh_from_db()
         self.assertEqual(
-            incomplete_event.status, ReviewStateMachine.draft.value
+            incomplete_activity.status, ReviewStateMachine.draft.value
         )
 
     def test_needs_work(self):
@@ -251,8 +251,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
     def test_approve_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
-        incomplete_event = EventFactory.create(initiative=self.initiative, title='')
+        activity = DateActivityFactory.create(initiative=self.initiative)
+        incomplete_activity = DateActivityFactory.create(initiative=self.initiative, title='')
         funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         BudgetLineFactory.create(activity=funding)
 
@@ -262,13 +262,13 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.approved.value
         )
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
         self.assertEqual(
-            event.status, EventStateMachine.open.value
+            activity.status, DateStateMachine.open.value
         )
-        incomplete_event.refresh_from_db()
+        incomplete_activity.refresh_from_db()
         self.assertEqual(
-            incomplete_event.status, EventStateMachine.draft.value
+            incomplete_activity.status, DateStateMachine.draft.value
         )
         funding.refresh_from_db()
         self.assertEqual(
@@ -288,17 +288,17 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
     def test_reject_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        activity = DateActivityFactory.create(initiative=self.initiative)
         self.initiative.states.reject(save=True)
 
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.rejected.value
         )
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.rejected.value
+            activity.status, DateStateMachine.rejected.value
         )
 
     def test_cancel(self):
@@ -319,10 +319,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def test_cancel_with_activities(self):
         self.initiative.states.submit(save=True)
 
-        self.initiative.states.approve()
+        self.initiative.states.approve(save=True)
 
-        event = EventFactory.create(initiative=self.initiative)
-        event.states.submit(save=True)
+        activity = DateActivityFactory.create(initiative=self.initiative)
+        activity.states.submit(save=True)
 
         self.initiative.states.cancel(save=True)
 
@@ -330,10 +330,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.cancelled.value
         )
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.cancelled.value
+            activity.status, DateStateMachine.cancelled.value
         )
 
     def test_delete(self):
@@ -343,17 +343,17 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_delete_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        activity = DateActivityFactory.create(initiative=self.initiative)
         self.initiative.states.delete(save=True)
 
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.deleted.value
         )
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.deleted.value
+            activity.status, DateStateMachine.deleted.value
         )
 
     def test_restore(self):
@@ -364,7 +364,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_restore_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        activity = DateActivityFactory.create(initiative=self.initiative)
 
         self.initiative.states.reject(save=True)
         self.initiative.states.restore(save=True)
@@ -373,8 +373,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
-        event.refresh_from_db()
+        activity.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.needs_work.value
+            activity.status, DateStateMachine.needs_work.value
         )

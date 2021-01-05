@@ -31,16 +31,24 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
-        'date',
+        'start',
+        'end',
         'initiative_location.id',
         'segment',
     )
 
     search_fields = (
-        'status', 'title', 'description', 'owner.full_name',
-        'initiative.title', 'initiative.pitch', 'initiative.pitch',
-        'initiative_location.name', 'initiative_location.city',
-        'location.formatted_address', 'segments.name',
+        'status',
+        'title',
+        'description',
+        'owner.full_name',
+        'initiative.title',
+        'initiative.pitch',
+        'initiative.pitch',
+        'initiative_location.name',
+        'initiative_location.city',
+        'location.formatted_address',
+        'segments.name',
     )
 
     boost = {
@@ -74,14 +82,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
             functions=[
                 SF(
                     'field_value_factor',
-                    field='contribution_count',
+                    field='contributor_count',
                     missing=0
                 ),
                 SF(
                     'gauss',
                     weight=0.1,
                     multi_value_mode='avg',
-                    contributions={
+                    contributors={
                         'scale': '5d'
                     },
                 ),
@@ -158,11 +166,13 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return score
 
-    def get_date_filter(self, value, request):
+    def get_start_filter(self, value, request):
         date = dateutil.parser.parse(value).date()
-        start = date.replace(date.year, date.month, 1)
-        end = start + dateutil.relativedelta.relativedelta(day=31)
-        return Range(activity_date={'gte': start, 'lte': end})
+        return Range(end={'gte': date}) | ~Q('exists', field='end')
+
+    def get_end_filter(self, value, request):
+        date = dateutil.parser.parse(value).date()
+        return Range(start={'lt': date}) | ~Q('exists', field='start')
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)
@@ -201,7 +211,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
 class ActivityFilter(DjangoFilterBackend):
     """
-    Filter that shows only successful contributions
+    Filter that shows only successful contributors
     """
     public_statuses = [
         ActivityStateMachine.succeeded.value,

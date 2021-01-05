@@ -1,16 +1,24 @@
+import mimetypes
 from builtins import object
+import logging
 import os
 
 import magic
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
+from clamd import ConnectionError, ClamdUnixSocket
 
 from localflavor.be.forms import BEPostalCodeField
 from localflavor.ca.forms import CAPostalCodeField
 from localflavor.de.forms import DEZipCodeField
 from localflavor.fr.forms import FRZipCodeField
 from localflavor.nl.forms import NLZipCodeField
+
+
+logger = logging.getLogger(__name__)
 
 
 mime = magic.Magic(mime=True)
@@ -99,8 +107,21 @@ class FileMimetypeValidator(object):
             self.code = code
 
     def __call__(self, value):
-        mimetype = mime.from_buffer(value.file.read(1000))
+        mimetype = mime.from_buffer(value.file.read(2048))
         value.file.seek(0)
+        _name, extension = os.path.splitext(value.name)
+
+        if extension.lower() not in mimetypes.guess_all_extensions(mimetype):
+            raise ValidationError(
+                message=_(
+                    "Mime type '%(mimetype)s' doesn't match the filename extension '%(extension)s'."
+                ),
+                code=self.code,
+                params={
+                    'mimetype': mimetype,
+                    'extension': extension
+                }
+            )
 
         if self.allowed_mimetypes is not None and mimetype not in self.allowed_mimetypes:
             raise ValidationError(
@@ -131,3 +152,29 @@ class FileMimetypeValidator(object):
             ),
             {}
         )
+
+
+def validate_file_infection(file):
+    # Taken from: https://github.com/vstoykov/django-clamd
+    # with a small change that will prevent failure when clamd is not running
+    # If django-clamd is disabled (for debugging) then do not check the file.
+    # Ensure file pointer is at begingin of the file
+    file.seek(0)
+    try:
+        scanner = ClamdUnixSocket(settings.CLAMD_SOCKET)
+        result = scanner.instream(file)
+    except ConnectionError:
+        logger.warn('Clamav connection failed')
+        return
+    except IOError:
+        # Ping the server if it fails than the server is down
+        scanner.ping()
+        # Server is up. This means that the file is too big.
+        logger.warn('The file is too large for ClamD to scan it. Bytes Read {}'.format(file.tell()))
+        file.seek(0)
+        return
+
+    if result and result['stream'][0] == 'FOUND':
+        raise ValidationError(_('File is infected with malware.'), code='infected')
+    # Return file pointer at initial state
+    file.seek(0)

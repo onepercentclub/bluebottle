@@ -5,7 +5,7 @@ from mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
-    DonationFactory, FundingFactory
+    DonorFactory, FundingFactory
 )
 from bluebottle.funding_stripe.tests.factories import StripeSourcePaymentFactory, ExternalAccountFactory
 from bluebottle.funding_stripe.tests.utils import generate_stripe_payout_account
@@ -19,7 +19,7 @@ class StripeSourcePaymentAdminTestCase(BluebottleAdminTestCase):
         bank_account = ExternalAccountFactory.create(connect_account=account)
         funding = FundingFactory.create(bank_account=bank_account)
         self.client.force_login(self.superuser)
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(100, 'EUR'),
             activity=funding
         )

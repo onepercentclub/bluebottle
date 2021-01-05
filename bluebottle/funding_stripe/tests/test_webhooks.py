@@ -9,9 +9,9 @@ from django.urls import reverse
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding.tests.factories import (
-    FundingFactory, DonationFactory, BudgetLineFactory
+    FundingFactory, DonorFactory, BudgetLineFactory
 )
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.models import StripeSourcePayment
@@ -45,7 +45,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.intent = StripePaymentIntentFactory.create(donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
 
@@ -85,7 +85,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         self.intent.refresh_from_db()
         payment = self.intent.payment
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(donation.payout_amount, Money(25, 'EUR'))
@@ -115,7 +115,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'failed')
         self.assertEqual(payment.status, 'failed')
@@ -144,7 +144,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'failed')
         self.assertEqual(payment.status, 'failed')
@@ -236,10 +236,56 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(payment.status, 'refunded')
+
+    def test_refund_no_intent(self):
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.intent.intent_id
+
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.succeeded', data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['payment_intent'] = None
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            self.assertEqual(response.content, b'Not an intent payment')
 
     def test_refund_from_requested_refund(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
@@ -292,7 +338,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         self.intent.payment.refresh_from_db()
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(self.intent.payment.status, 'refunded')
@@ -310,7 +356,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
 
         with mock.patch(
             'stripe.Source.modify'
@@ -323,7 +369,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.webhook = reverse('stripe-source-webhook')
 
     def _refresh(self):
-        self.donation = Donation.objects.get(pk=self.donation.pk)
+        self.donation = Donor.objects.get(pk=self.donation.pk)
         self.payment = StripeSourcePayment.objects.get(pk=self.payment.pk)
 
     def test_source_failed(self):
@@ -482,6 +528,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -538,7 +585,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'id': self.payment.charge_token,
-                'transfer': 'tr_some_id'
+                'transfer': 'tr_some_id',
+                'payment_intent': None
             }
         }
         transfer = stripe.Transfer(data['object']['transfer'])
@@ -574,13 +622,52 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
         self.assertEqual(self.payment.status, 'succeeded')
 
+    def test_charge_succeeded_intent(self):
+        self.payment.charge_token = 'some-charge-token'
+        self.payment.states.charge(save=True)
+
+        data = {
+            'object': {
+                'id': 'blabla',
+                'transfer': 'tr_some_id',
+                'payment_intent': 'pi_23456789'
+
+            }
+        }
+        transfer = stripe.Transfer(data['object']['transfer'])
+        transfer.update({
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.succeeded',
+                data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.donation.status, 'new')
+
     def test_charge_failed(self):
         self.payment.charge_token = 'some-charge-token'
         self.payment.states.charge(save=True)
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -607,7 +694,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -639,7 +727,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -667,7 +756,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'charge': self.payment.charge_token,
-                'status': 'lost'
+                'status': 'lost',
+                'payment_intent': None
             }
         }
 

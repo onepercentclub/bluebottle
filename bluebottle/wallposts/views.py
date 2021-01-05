@@ -1,6 +1,7 @@
 import django_filters
 from builtins import object
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
 
@@ -58,7 +59,38 @@ class WallpostOwnerFilterMixin(object):
         return qs
 
 
-class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
+class ParentTypeFilterMixin(object):
+
+    content_type_mapping = {
+        'activities/time-based/date': 'dateactivity',
+        'activities/time-based/period': 'periodactivity',
+        'activities/funding': 'fundingactivity',
+    }
+
+    def get_queryset(self):
+        queryset = super(ParentTypeFilterMixin, self).get_queryset()
+        parent_type = self.request.query_params.get('parent_type', None)
+        if parent_type in ['date', 'period']:
+            parent_type = '{}activity'.format(parent_type)
+
+        parent_id = self.request.query_params.get('parent_id', None)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
+        try:
+            parent_type = self.content_type_mapping[parent_type]
+        except KeyError:
+            pass
+        try:
+            content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        except ContentType.DoesNotExist:
+            raise ValidationError("ContentType does not exist {}".format(parent_type))
+
+        queryset = queryset.filter(content_type=content_type)
+        queryset = queryset.filter(object_id=parent_id)
+        queryset = queryset.order_by('-pinned', '-created')
+        return queryset
+
+
+class WallpostList(WallpostOwnerFilterMixin, ParentTypeFilterMixin, ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -68,25 +100,12 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         RelatedManagementOrReadOnlyPermission
     )
 
-    def get_queryset(self, queryset=queryset):
-        queryset = super(WallpostList, self).get_queryset()
-
-        # Some custom filtering projects slugs.
-        parent_type = self.request.query_params.get('parent_type', None)
-        parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
-        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
-        queryset = queryset.filter(content_type=content_type)
-        queryset = queryset.filter(object_id=parent_id)
-        queryset = queryset.order_by('-pinned', '-created')
-        return queryset
-
 
 class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView):
+class TextWallpostList(WallpostOwnerFilterMixin, ParentTypeFilterMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -97,17 +116,6 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
         RelatedManagementOrReadOnlyPermission,
         DonationOwnerPermission,
     )
-
-    def get_queryset(self, queryset=None):
-        queryset = super(TextWallpostList, self).get_queryset()
-        parent_type = self.request.query_params.get('parent_type', None)
-        parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
-        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
-        queryset = queryset.filter(content_type=content_type)
-        queryset = queryset.filter(object_id=parent_id)
-        queryset = queryset.order_by('-created')
-        return queryset
 
     def perform_create(self, serializer):
         self.check_object_permissions(

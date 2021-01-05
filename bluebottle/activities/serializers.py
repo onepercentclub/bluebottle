@@ -2,7 +2,7 @@ from builtins import object
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Contribution, Activity
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.assignments.serializers import (
     AssignmentListSerializer, AssignmentSerializer,
     ApplicantListSerializer, TinyAssignmentSerializer
@@ -11,12 +11,20 @@ from bluebottle.events.serializers import (
     EventListSerializer, EventSerializer,
     ParticipantListSerializer, TinyEventSerializer
 )
+from bluebottle.time_based.serializers import (
+    DateActivityListSerializer,
+    PeriodActivityListSerializer,
+
+    DateActivitySerializer,
+    PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
+    DateParticipantListSerializer, PeriodParticipantListSerializer,
+)
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
-    DonationListSerializer, TinyFundingSerializer
+    DonorListSerializer, TinyFundingSerializer
 )
 
 
@@ -36,7 +44,10 @@ class ActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         EventListSerializer,
         FundingListSerializer,
-        AssignmentListSerializer
+        AssignmentListSerializer,
+
+        DateActivityListSerializer,
+        PeriodActivityListSerializer,
     ]
 
     included_serializers = {
@@ -69,6 +80,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'goals.type',
             'initiative.image',
             'initiative.place',
+            'initiative.location',
         ]
 
 
@@ -77,7 +89,10 @@ class ActivitySerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         EventSerializer,
         FundingSerializer,
-        AssignmentSerializer
+        AssignmentSerializer,
+
+        DateActivitySerializer,
+        PeriodActivitySerializer,
     ]
 
     included_serializers = {
@@ -87,6 +102,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -116,6 +132,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'initiative.image',
             'initiative.place',
             'initiative.location',
+            'initiative.activity_manager',
             'initiative.organization',
             'initiative.organization_contact',
         ]
@@ -125,7 +142,10 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TinyEventSerializer,
         TinyAssignmentSerializer,
-        TinyFundingSerializer
+        TinyFundingSerializer,
+
+        DateActivityListSerializer,
+        PeriodActivityListSerializer,
     ]
 
     class Meta(object):
@@ -136,11 +156,14 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         )
 
 
-class ContributionSerializer(PolymorphicModelSerializer):
+class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonationListSerializer
+        DonorListSerializer,
+
+        DateParticipantSerializer,
+        PeriodParticipantSerializer
     ]
 
     included_serializers = {
@@ -155,17 +178,18 @@ class ContributionSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )
 
 
-class ContributionListSerializer(PolymorphicModelSerializer):
+class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
-        ParticipantListSerializer,
-        ApplicantListSerializer,
-        DonationListSerializer
+        DonorListSerializer,
+
+        DateParticipantListSerializer,
+        PeriodParticipantListSerializer
     ]
 
     included_serializers = {
@@ -180,7 +204,7 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )

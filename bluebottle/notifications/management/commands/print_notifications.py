@@ -7,20 +7,19 @@ from django.utils.module_loading import import_string
 from djmoney.money import Money
 
 from bluebottle.activities.models import Activity
-from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.events.models import Event, Participant
-from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.models import Funding, Donation, PayoutAccount
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.events.models import Participant
+from bluebottle.funding.models import Funding, Donor, PayoutAccount
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory, ReactionFactory
+from bluebottle.time_based.models import DateActivity, PeriodActivity, PeriodParticipant
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory, DateParticipantFactory
 from bluebottle.wallposts.models import Wallpost, Reaction
 
 
@@ -51,49 +50,49 @@ class Command(BaseCommand):
             return initiative
 
         if model == Activity:
-            assignment = AssignmentFactory.create(
+            assignment = DateActivityFactory.create(
                 initiative=initiative,
-                title='Do Good Task',
+                title='Do Good Activity',
                 owner=self.user
             )
             return assignment
 
-        if model == Assignment:
-            assignment = AssignmentFactory.create(
+        if model == PeriodActivity:
+            activity = PeriodActivityFactory.create(
                 initiative=initiative,
-                title='Do Good Task',
+                title='Do Good Activity',
                 owner=self.user
             )
-            return assignment
+            return activity
 
-        if model == Applicant:
-            assignment = AssignmentFactory.create(
+        if model == PeriodParticipant:
+            activity = PeriodActivityFactory.create(
                 initiative=initiative,
                 title='Do Good Task',
                 owner=self.user
             )
-            applicant = ApplicantFactory.create(
-                activity=assignment,
+            particiant = DateParticipantFactory.create(
+                activity=activity,
                 user=self.someone
             )
-            return applicant
+            return particiant
 
-        if model == Event:
-            event = EventFactory.create(
+        if model == DateActivity:
+            activity = DateActivity.create(
                 initiative=initiative,
                 title='Do Good Event',
                 owner=self.user
             )
-            return event
+            return activity
 
         if model == Participant:
-            event = EventFactory.create(
+            activity = DateActivityFactory.create(
                 initiative=initiative,
                 title='Do Good Event',
                 owner=self.user
             )
-            participant = ParticipantFactory.create(
-                activity=event,
+            participant = DateParticipantFactory.create(
+                activity=activity,
                 user=self.someone
             )
             return participant
@@ -132,13 +131,13 @@ class Command(BaseCommand):
             )
             return reaction
 
-        if model == Donation:
+        if model == Donor:
             funding = FundingFactory.create(
                 initiative=initiative,
                 title='Do Good Funding Campaign',
                 owner=self.user
             )
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 activity=funding, user=self.user,
                 amount=Money(35, 'EUR')
             )
@@ -153,11 +152,11 @@ class Command(BaseCommand):
 
     def clean_html(self, content):
         soup = BeautifulSoup(content, "html")
-        for elem in soup.find_all(['html', 'body', 'table', 'tbody', 'tr', 'td', 'th']):
+        for elem in soup.find_all(['html', 'body', 'table', 'tbody', 'tr', 'td', 'th', 'center']):
             elem.unwrap()
         soup.head.extract()
         soup.contents[0].extract()
-        return self.clean_text(unicode(soup))
+        return self.clean_text(str(soup))
 
     def handle(self, *args, **options):
         client = Client.objects.get(schema_name='goodup_demo')
@@ -185,20 +184,20 @@ class Command(BaseCommand):
             text = u""
             for Message in messages:
                 message = Message(self.init_model(Message.model))
-                str = u"<h3>{}</h3>" \
-                      u"<table>" \
-                      u"<colgroup>" \
-                      u"<col style='width: 150px;' />" \
-                      u"<col style='width: 650x;' />" \
-                      u"</colgroup>" \
-                      u"<tr><th>Class</th><td>{}</td></tr>" \
-                      u"<tr><th>Template</th><td>{}</td></tr>" \
-                      u"<tr><th>To</th><td>{}</td></tr>" \
-                      u"<tr><th>Subject</th><td>{}</td></tr>" \
-                      u"</table>" \
-                      u"<ac:structured-macro ac:name=\"code\"><ac:plain-text-body>" \
-                      u"<![CDATA[{}]]></ac:plain-text-body></ac:structured-macro>" \
-                      u"<blockquote>{}</blockquote>"
+                str = "<h3>{}</h3>" \
+                      "<table>" \
+                      "<colgroup>" \
+                      "<col style='width: 150px;' />" \
+                      "<col style='width: 650x;' />" \
+                      "</colgroup>" \
+                      "<tr><th>Class</th><td>{}</td></tr>" \
+                      "<tr><th>Template</th><td>{}</td></tr>" \
+                      "<tr><th>To</th><td>{}</td></tr>" \
+                      "<tr><th>Subject</th><td>{}</td></tr>" \
+                      "</table>" \
+                      "<ac:structured-macro ac:name=\"code\"><ac:plain-text-body>" \
+                      "<![CDATA[{}]]></ac:plain-text-body></ac:structured-macro>" \
+                      "<blockquote>{}</blockquote>"
                 text += str.format(
                     get_doc(message),
                     "{}.{}".format(options["app"], Message.__name__),

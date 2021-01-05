@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer,
+    BaseActivitySerializer, BaseContributorSerializer,
     BaseActivityListSerializer, BaseTinyActivitySerializer
 )
 from bluebottle.events.filters import ParticipantListFilter
@@ -16,14 +16,14 @@ from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelate
 from bluebottle.utils.serializers import NoCommitMixin
 
 
-class ParticipantListSerializer(BaseContributionSerializer):
+class ParticipantListSerializer(BaseContributorSerializer):
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseContributorSerializer.Meta):
         model = Participant
-        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributorSerializer.Meta.fields + ('time_spent', )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/participants'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/participants'
         included_resources = [
             'user',
             'activity'
@@ -35,11 +35,11 @@ class ParticipantListSerializer(BaseContributionSerializer):
     }
 
 
-class ParticipantSerializer(BaseContributionSerializer):
+class ParticipantSerializer(BaseContributorSerializer):
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseContributorSerializer.Meta):
         model = Participant
-        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributorSerializer.Meta.fields + ('time_spent', )
 
         validators = [
             UniqueTogetherValidator(
@@ -48,8 +48,8 @@ class ParticipantSerializer(BaseContributionSerializer):
             )
         ]
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/participants'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/participants'
         included_resources = [
             'user',
             'activity'
@@ -70,7 +70,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/participant-transitions'
+        resource_name = 'contributors/participant-transitions'
         included_resources = [
             'resource',
             'resource.activity'
@@ -110,7 +110,7 @@ class EventListSerializer(BaseActivityListSerializer):
 
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
-    contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+    contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
@@ -120,6 +120,26 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'outlook': instance.outlook_link,
         }
 
+    def get_fields(self):
+        fields = super(EventSerializer, self).get_fields()
+        user = self.context['request'].user
+
+        if (
+            not user.is_authenticated or (
+                self.instance and (
+                    user not in [
+                        self.instance.owner,
+                        self.instance.initiative.owner,
+                        self.instance.initiative.activity_manager
+                    ] and
+                    not len(self.instance.participants.filter(user=user))
+                )
+            )
+        ):
+            del fields['online_meeting_url']
+
+        return fields
+
     class Meta(BaseActivitySerializer.Meta):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
@@ -128,19 +148,20 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'local_start',
             'duration',
             'is_online',
+            'online_meeting_url',
             'location',
             'location_hint',
             'permissions',
             'registration_deadline',
-            'contributions',
+            'contributors',
             'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
-            'contributions',
-            'contributions.user'
+            'contributors',
+            'contributors.user'
         ]
         resource_name = 'activities/events'
 
@@ -148,7 +169,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
         BaseActivitySerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
+            'contributors': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )
 

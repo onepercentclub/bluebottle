@@ -87,7 +87,7 @@ class TokenLogoutView(TemplateView):
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
-        return self.render_to_response()
+        return self.render_to_response({})
 
 
 class TokenErrorView(TemplateView):

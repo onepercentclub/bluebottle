@@ -1,25 +1,27 @@
+from bluebottle.funding.models import MoneyContribution
+
+from bluebottle.fsm.state import TransitionNotPossible
 from future.utils import python_2_unicode_compatible
 
 import datetime
 
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.funding.models import Payout
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.wallposts.models import SystemWallpost
 
 
 @python_2_unicode_compatible
 class GeneratePayoutsEffect(Effect):
-    post_save = True
     conditions = []
     title = _('Generate payouts')
     template = 'admin/generate_payout_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
+        from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
 
     def __str__(self):
@@ -28,12 +30,11 @@ class GeneratePayoutsEffect(Effect):
 
 @python_2_unicode_compatible
 class DeletePayoutsEffect(Effect):
-    post_save = True
     conditions = []
     title = _('Delete payouts')
     template = 'admin/delete_payout_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         self.instance.payouts.all().delete()
 
     def __str__(self):
@@ -42,13 +43,12 @@ class DeletePayoutsEffect(Effect):
 
 @python_2_unicode_compatible
 class UpdateFundingAmountsEffect(Effect):
-    post_save = True
     conditions = []
     title = _('Update amounts')
 
     display = False
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         self.instance.activity.update_amounts()
 
     def __str__(self):
@@ -56,14 +56,30 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationFromPayoutEffect(Effect):
-    post_save = False
+class UpdateDonationValueEffect(Effect):
+    conditions = []
+    title = _('Update contribution value')
+
+    display = False
+
+    def post_save(self, **kwargs):
+        contribution = self.instance.contributions.first()
+        if contribution:
+            contribution.value = self.instance.payout_amount
+            contribution.save()
+
+    def __str__(self):
+        return _('Update contribution value')
+
+
+@python_2_unicode_compatible
+class RemoveDonorFromPayoutEffect(Effect):
     conditions = []
     title = _('Remove donation from payout')
 
     display = False
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         self.instance.payout = None
 
     def __str__(self):
@@ -72,12 +88,11 @@ class RemoveDonationFromPayoutEffect(Effect):
 
 @python_2_unicode_compatible
 class SetDeadlineEffect(Effect):
-    post_save = False
     conditions = []
     title = _('Set deadline')
     template = 'admin/set_deadline_effect.html'
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         if not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = get_current_timezone().localize(
@@ -97,13 +112,12 @@ class SetDeadlineEffect(Effect):
 
 @python_2_unicode_compatible
 class RefundPaymentAtPSPEffect(Effect):
-    post_save = False
 
     title = _('Refund payment')
 
     template = 'admin/execute_refund_effect.html'
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         self.instance.refund()
 
     def __str__(self):
@@ -111,13 +125,12 @@ class RefundPaymentAtPSPEffect(Effect):
 
 
 @python_2_unicode_compatible
-class GenerateDonationWallpostEffect(Effect):
-    post_save = True
+class GenerateDonorWallpostEffect(Effect):
     conditions = []
     title = _('Create wallpost')
     template = 'admin/generate_donation_wallpost_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,
@@ -132,13 +145,12 @@ class GenerateDonationWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationWallpostEffect(Effect):
-    post_save = True
+class RemoveDonorWallpostEffect(Effect):
     conditions = []
     title = _('Delete wallpost')
     template = 'admin/remove_donation_wallpost_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         SystemWallpost.objects.filter(
             author=self.instance.user,
             donation=self.instance,
@@ -150,16 +162,18 @@ class RemoveDonationWallpostEffect(Effect):
 
 @python_2_unicode_compatible
 class SubmitConnectedActivitiesEffect(Effect):
-    post_save = True
     conditions = []
     title = _('Submit activities')
     template = 'admin/submit_connected_activities_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         for funding in self.instance.funding_set.filter(
                 status__in=('draft', 'needs_work')
         ):
-            funding.states.submit(save=True)
+            try:
+                funding.states.submit(save=True)
+            except TransitionNotPossible:
+                pass
 
     def __str__(self):
         return _('Submit connected activities')
@@ -167,12 +181,11 @@ class SubmitConnectedActivitiesEffect(Effect):
 
 @python_2_unicode_compatible
 class DeleteDocumentEffect(Effect):
-    post_save = False
     conditions = []
     title = _('Delete uploaded document')
     template = 'admin/delete_uploaded_document_effect.html'
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         if self.instance.document:
             self.instance.document.delete()
             self.instance.document = None
@@ -183,12 +196,12 @@ class DeleteDocumentEffect(Effect):
 
 @python_2_unicode_compatible
 class SubmitPayoutEffect(Effect):
-    post_save = False
     conditions = []
+
     title = _('Trigger payout')
     template = 'admin/submit_payout_effect.html'
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         adapter = DoradoPayoutAdapter(self.instance)
         adapter.trigger_payout()
 
@@ -198,14 +211,13 @@ class SubmitPayoutEffect(Effect):
 
 @python_2_unicode_compatible
 class BaseSetDateEffect(Effect):
-    post_save = False
     conditions = []
     field = 'date'
     title = _('Set date')
 
     display = False
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         setattr(self.instance, self.field, timezone.now())
 
     def __str__(self):
@@ -222,15 +234,31 @@ def SetDateEffect(_field):
 
 @python_2_unicode_compatible
 class ClearPayoutDatesEffect(Effect):
-    post_save = False
     conditions = []
     field = 'date'
     display = False
 
-    def execute(self, **kwargs):
+    def pre_save(self, **kwargs):
         self.instance.date_approved = None
         self.instance.date_started = None
         self.instance.date_completed = None
 
     def __str__(self):
         return _('Clear payout event dates')
+
+
+@python_2_unicode_compatible
+class CreateDonationEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        money_contribution = MoneyContribution(
+            contributor=self.instance,
+            start=now(),
+            value=self.instance.amount
+        )
+        money_contribution.save()
+
+    def __str__(self):
+        return _('Create a donation')

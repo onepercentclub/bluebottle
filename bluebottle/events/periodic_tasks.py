@@ -6,6 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.events.messages import EventReminderMessage
 from bluebottle.events.models import Event
 from bluebottle.events.states import EventStateMachine
+from bluebottle.events.triggers import (
+    event_should_finish, event_has_participants, event_has_no_participants, event_should_start
+)
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
@@ -20,13 +23,13 @@ class EventFinishedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[
-            EventStateMachine.should_finish,
-            EventStateMachine.has_participants
+        TransitionEffect(EventStateMachine.succeed, conditions=[
+            event_should_finish,
+            event_has_participants
         ]),
-        TransitionEffect('cancel', conditions=[
-            EventStateMachine.should_finish,
-            EventStateMachine.has_no_participants
+        TransitionEffect(EventStateMachine.cancel, conditions=[
+            event_should_finish,
+            event_has_no_participants
         ]),
     ]
 
@@ -43,13 +46,9 @@ class EventStartTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect('start', conditions=[
-            EventStateMachine.should_start,
-            EventStateMachine.has_participants
-        ]),
-        TransitionEffect('expire', conditions=[
-            EventStateMachine.should_start,
-            EventStateMachine.has_no_participants
+        TransitionEffect(EventStateMachine.start, conditions=[
+            event_should_start,
+            event_has_participants
         ]),
     ]
 

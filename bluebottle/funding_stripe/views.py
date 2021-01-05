@@ -10,11 +10,11 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
-from bluebottle.funding.authentication import DonationAuthentication
+from bluebottle.funding.authentication import DonorAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
 )
@@ -36,7 +36,7 @@ class StripeSourcePaymentList(PaymentList):
     serializer_class = StripeSourcePaymentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonationAuthentication,
+        JSONWebTokenAuthentication, DonorAuthentication,
     )
 
     permission_classes = (PaymentPermission, )
@@ -47,7 +47,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     serializer_class = PaymentIntentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonationAuthentication,
+        JSONWebTokenAuthentication, DonorAuthentication,
     )
 
     permission_classes = (PaymentPermission, )
@@ -180,6 +180,9 @@ class IntentWebHookView(View):
                 return HttpResponse('Updated payment')
 
             elif event.type == 'charge.refunded':
+                if not event.data.object.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
                 payment = self.get_payment(event.data.object.payment_intent)
                 payment.states.refund(save=True)
 
@@ -200,7 +203,7 @@ class IntentWebHookView(View):
                 intent.donation.payment.payment_intent = intent
                 intent.donation.payment.save()
                 return intent.payment
-            except Donation.payment.RelatedObjectDoesNotExist:
+            except Donor.payment.RelatedObjectDoesNotExist:
                 return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
 
 
@@ -238,6 +241,8 @@ class SourceWebHookView(View):
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.failed':
+                if event.data.object.payment_intent:
+                    return HttpResponse('Not a source payment')
                 payment = self.get_payment_from_charge(event.data.object.id)
                 if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
@@ -245,6 +250,8 @@ class SourceWebHookView(View):
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.succeeded':
+                if event.data.object.payment_intent:
+                    return HttpResponse('Not a source payment')
                 payment = self.get_payment_from_charge(event.data.object.id)
                 if payment.status != payment.states.succeeded.value:
                     transfer = stripe.Transfer.retrieve(event.data.object.transfer)
@@ -257,17 +264,23 @@ class SourceWebHookView(View):
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.pending':
+                if event.data.object.payment_intent:
+                    return HttpResponse('Not a source payment')
                 payment = self.get_payment_from_charge(event.data.object.id)
                 payment.states.authorize(save=True)
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.refunded':
+                if event.data.object.payment_intent:
+                    return HttpResponse('Not a source payment')
                 payment = self.get_payment_from_charge(event.data.object.id)
                 payment.states.refund(save=True)
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
+                if event.data.object.payment_intent:
+                    return HttpResponse('Not a source payment')
                 payment = self.get_payment_from_charge(event.data.object.charge)
                 payment.states.dispute(save=True)
                 return HttpResponse('Updated payment')

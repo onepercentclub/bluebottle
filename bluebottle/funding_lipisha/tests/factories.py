@@ -1,7 +1,7 @@
 from builtins import object
 import factory.fuzzy
 
-from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
 
@@ -9,7 +9,7 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBan
 class LipishaPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = LipishaPayment
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
 
 
 class LipishaPaymentProviderFactory(factory.DjangoModelFactory):

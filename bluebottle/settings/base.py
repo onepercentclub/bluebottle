@@ -303,7 +303,6 @@ TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
-
     'rest_framework',
 
     'admin_tools',
@@ -317,17 +316,15 @@ TENANT_APPS = (
     # FB Auth
     'bluebottle.auth',
 
+    'bluebottle.fsm',
     'django.contrib.admin',
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
 
-    'bb_salesforce',
-
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 
-    'bluebottle.fsm',
     'bluebottle.looker',
     'bluebottle.exports',
 
@@ -339,8 +336,9 @@ TENANT_APPS = (
     'bluebottle.transitions',
     'bluebottle.files',
     'bluebottle.follow',
-    'bluebottle.initiatives',
     'bluebottle.activities',
+    'bluebottle.initiatives',
+    'bluebottle.time_based',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.funding',
@@ -398,8 +396,6 @@ TENANT_APPS = (
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
-    'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 
@@ -520,11 +516,6 @@ LOGGING = {
             'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
-        },
-        'bluebottle.salesforce': {
-            'handlers': ['mail_admins'],
-            'propagate': True,
-            'level': 'ERROR',
         },
     }
 }
@@ -689,7 +680,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.InitiativeResource',
             'title': _('Initiatives'),
         }),
-        ('assignments.Assignment', {
+        ('time_based.PeriodActivity', {
             'fields': (
                 ('id', 'Task ID'),
                 ('initiative__title', 'Initiative Title'),
@@ -709,40 +700,17 @@ EXPORTDB_EXPORT_CONF = {
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
                 ('preparation', 'Preparation time'),
-                ('start_time', 'Start time'),
+                ('start', 'Start'),
                 ('people_applied', 'People applied'),
-                ('date', 'End date'),
-                ('end_date_type', 'End date type'),
+                ('deadline', 'Deadline'),
 
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.AssignmentResource',
-            'title': _('Tasks'),
+            'resource_class': 'bluebottle.exports.resources.PeriodActivityResource',
+            'title': _('Activities during a period'),
         }),
-        ('assignments.Applicant', {
-            'fields': (
-                ('id', 'Contribution ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-
-                ('time_spent', 'Time spent'),
-
-
-                ('activity__assignment__date', 'Activity date'),
-                ('created', 'Date registered'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task contributions'),
-        }),
-        ('events.Event', {
+        ('time_based.DateActivity', {
             'fields': (
                 ('id', 'Task ID'),
                 ('initiative__title', 'Initiative Title'),
@@ -764,29 +732,30 @@ EXPORTDB_EXPORT_CONF = {
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.EventResource',
-            'title': _('Events'),
+            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
+            'title': _('Activities on a date'),
         }),
-        ('events.Participant', {
+        ('time_based.TimeContribution', {
             'fields': (
-                ('id', 'Contribution ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
+                ('id', 'Contributor ID'),
+                ('contributor__activity__title', 'Activity Title'),
+                ('contributor__activity__initiative__title', 'Initiative Title'),
+                ('contributor__activity__id', 'Activity ID'),
+                ('contributor__activity__status', 'Activity status'),
+                ('contributor__user__id', 'User ID'),
+                ('contributor__user__remote_id', 'Remote ID'),
+                ('contributor__user__email', 'Email'),
                 ('status', 'Status'),
 
-                ('time_spent', 'Time spent'),
+                ('value', 'Time spent'),
 
-                ('activity__event__start', 'Activity date'),
+                ('start', 'Start of contribution'),
+                ('end', 'End of contribution'),
                 ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event contributions'),
+            'resource_class': 'bluebottle.exports.resources.TimeContributionResource',
+            'title': _('Time contributions'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -808,12 +777,12 @@ EXPORTDB_EXPORT_CONF = {
                 ('created', 'created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.EventResource',
+            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
             'title': _('Funding activities'),
         }),
-        ('funding.Donation', {
+        ('funding.Donor', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -829,11 +798,11 @@ EXPORTDB_EXPORT_CONF = {
                 ('name', 'Name'),
 
                 ('activity__funding__deadline', 'Activity date'),
-                ('created', 'Donation date'),
+                ('created', 'Donor date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding contributions'),
+            'title': _('Funding contributors'),
         }),
     ])
 }
@@ -878,11 +847,6 @@ SHARE_OPTIONS = {
 }
 
 SHOW_DONATION_AMOUNTS = True
-
-# Salesforce connection settings
-SALESFORCE_QUERY_TIMEOUT = 15
-REQUESTS_MAX_RETRIES = 0
-SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link',  # needed starting from protocol v2.4
@@ -1004,3 +968,13 @@ AXES_META_PRECEDENCE_ORDER = [
 
 RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
 RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
+USE_X_FORWARDED_HOST = True
+
+
+# Socket is not configured. Lets guess.
+if os.path.exists('/var/run/clamd.scan/'):
+    # Fedora, CentOS
+    CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+else:
+    # This is default for Ubuntu, Debian based distributions
+    CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'

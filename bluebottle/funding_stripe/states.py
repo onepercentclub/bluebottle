@@ -1,20 +1,19 @@
-from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
+from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import Transition, State, EmptyState
+from bluebottle.fsm.state import register
 from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine, BankAccountStateMachine
 from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount, ExternalAccount
 
 
+@register(StripePayment)
 class StripePaymentStateMachine(BasePaymentStateMachine):
-    model = StripePayment
+    pass
 
 
+@register(StripeSourcePayment)
 class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
-
-    model = StripeSourcePayment
-
     charged = State(_('charged'), 'charged')
     canceled = State(_('canceled'), 'canceled')
     disputed = State(_('disputed'), 'disputed')
@@ -84,12 +83,13 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
     )
 
 
+@register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
-    model = StripePayoutAccount
+    pass
 
 
+@register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):
-    model = ExternalAccount
 
     def account_verified(self):
         """the related connect account is verified"""
@@ -99,13 +99,7 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
         EmptyState(),
         BankAccountStateMachine.unverified,
         name=_("Initiate"),
-        description=_("Bank account details are entered."),
-        effects=[
-            TransitionEffect(
-                'verify',
-                conditions=[account_verified]
-            )
-        ]
+        description=_("Bank account details are entered.")
     )
 
     reject = Transition(
@@ -121,14 +115,12 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
 
     verify = Transition(
         [
+            BankAccountStateMachine.rejected,
             BankAccountStateMachine.incomplete,
             BankAccountStateMachine.unverified
         ],
         BankAccountStateMachine.verified,
         name=_('Verify'),
         description=_("Verify that the bank account is complete."),
-        automatic=True,
-        effects=[
-            SubmitConnectedActivitiesEffect
-        ]
+        automatic=True
     )

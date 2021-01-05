@@ -1,14 +1,16 @@
 # coding=utf-8
 from builtins import object
 import os
+from datetime import timedelta
 
 from djmoney.money import Money
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonorFactory
 
-from bluebottle.assignments.tests.factories import ApplicantFactory
+from bluebottle.time_based.tests.factories import (
+    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+)
 
-from bluebottle.events.tests.factories import ParticipantFactory
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -270,7 +272,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'events', 'assignments', 'funding',
+            'initiatives', 'period_activities', 'date_activities', 'funding',
             'is_superuser'
         ))
 
@@ -281,7 +283,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'events', 'assignments', 'funding',
+            'initiatives', 'date_activities', 'period_activities', 'funding',
             'is_superuser'
         ))
 
@@ -336,10 +338,23 @@ class MemberAdminExportTest(BluebottleTestCase):
         field = CustomMemberFieldSettings.objects.create(name='How are you')
         CustomMemberField.objects.create(member=member, value='Fine', field=field)
 
-        ParticipantFactory.create(time_spent=5, user=member, status='succeeded')
-        ParticipantFactory.create(time_spent=12, user=member, status='succeeded')
-        ApplicantFactory.create_batch(3, time_spent=10, user=member, status='succeeded')
-        DonationFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
+        ParticipationFactory.create(
+            value=timedelta(hours=5),
+            contributor=DateParticipantFactory(user=member, status='accepted'),
+            status='succeeded'
+        )
+        ParticipationFactory.create(
+            value=timedelta(hours=12),
+            contributor=PeriodParticipantFactory(user=member, status='accepted'),
+            status='succeeded'
+        )
+        ParticipationFactory.create_batch(
+            3,
+            value=timedelta(hours=10),
+            contributor=DateParticipantFactory(user=member, status='accepted'),
+            status='succeeded'
+        )
+        DonorFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
 
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))

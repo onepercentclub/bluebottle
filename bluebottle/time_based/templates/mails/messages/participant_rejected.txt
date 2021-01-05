@@ -1,0 +1,8 @@
+{% extends "mails/messages/participant_base.txt" %}
+{% load i18n %}
+
+{% block message%}{% blocktrans with title=obj.activity.title  context 'email' %}
+Unfortunately, you have not been selected for the activity ‘{{ title }}’.
+
+Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.
+{% endblocktrans %}{% endblock %}

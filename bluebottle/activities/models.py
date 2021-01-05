@@ -1,19 +1,18 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-from django.contrib.contenttypes.fields import GenericRelation
+from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
-
-from bluebottle.fsm.triggers import TriggerMixin
-
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
-from bluebottle.initiatives.models import Initiative
 from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -32,8 +31,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(
-        _('contribution date'),
-        help_text=_('Date the contribution took place.'),
+        _('transition date'),
+        help_text=_('Date of the last transition.'),
         null=True, blank=True
     )
 
@@ -75,6 +74,12 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
+
+    auto_approve = True
+
+    @property
+    def activity_date(self):
+        raise NotImplementedError
 
     @property
     def stats(self):
@@ -122,7 +127,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     @property
     def organizer(self):
-        return self.contributions.instance_of(Organizer).first()
+        return self.contributors.instance_of(Organizer).first()
 
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
@@ -131,15 +136,15 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
-class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(null=True, blank=True)
-    contribution_date = models.DateTimeField()
+    contributor_date = models.DateTimeField(null=True, blank=True)
 
-    activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
+    activity = models.ForeignKey(Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
 
     @property
@@ -148,41 +153,57 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     @property
     def date(self):
-        return self.activity.contribution_date
-
-    def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.date
-
-        super(Contribution, self).save(*args, **kwargs)
+        return self.activity.contributor_date
 
     class Meta(object):
         ordering = ('-created',)
+        verbose_name = _('Contribution')
+        verbose_name_plural = _('Contributions')
 
     def __str__(self):
-        return str(_('Contribution'))
+        if self.user:
+            return str(self.user)
+        return str(_('Guest'))
 
 
 @python_2_unicode_compatible
-class Organizer(Contribution):
+class Organizer(Contributor):
     class Meta(object):
         verbose_name = _("Activity owner")
         verbose_name_plural = _("Activity owners")
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/organizers'
+        resource_name = 'contributors/organizers'
 
-    def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.activity.created
 
-        super(Organizer, self).save()
+class Contribution(TriggerMixin, PolymorphicModel):
+    status = models.CharField(max_length=40)
+
+    created = models.DateTimeField(default=timezone.now)
+    start = models.DateTimeField(_('start'), null=True, blank=True)
+    end = models.DateTimeField(_('end'), null=True, blank=True)
+
+    contributor = models.ForeignKey(
+        Contributor, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE
+    )
+
+    @property
+    def owner(self):
+        return self.contributor.user
+
+    class Meta(object):
+        ordering = ('-created',)
+        verbose_name = _("Contribution amount")
+        verbose_name_plural = _("Contribution amounts")
 
     def __str__(self):
-        if self.user:
-            return self.user.full_name
-        else:
-            return _('Activity owner')
+        return str(_('Contribution amount'))
+
+
+class OrganizerContribution(Contribution):
+    class Meta(object):
+        verbose_name = _("Organising")
+        verbose_name_plural = _("Contributions")
 
 
 from bluebottle.activities.signals import *  # noqa

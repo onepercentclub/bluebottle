@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -36,6 +36,8 @@ class BaseActivitySerializer(ModelSerializer):
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
+        'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -80,6 +82,8 @@ class BaseActivitySerializer(ModelSerializer):
             'goals',
             'goals.type',
             'initiative.place',
+            'initiative.location',
+            'initiative.activity_manager',
             'initiative.image',
         ]
         resource_name = 'activities'
@@ -98,6 +102,7 @@ class BaseActivityListSerializer(ModelSerializer):
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
+        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
@@ -187,7 +192,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionListSerializer(ModelSerializer):
+class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -197,7 +202,7 @@ class BaseContributionListSerializer(ModelSerializer):
     }
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         fields = ('user', 'activity', 'status', 'created', 'updated', )
         meta_fields = ('created', 'updated', )
 
@@ -206,11 +211,11 @@ class BaseContributionListSerializer(ModelSerializer):
             'user',
             'activity',
         ]
-        resource_name = 'contributions'
+        resource_name = 'contributors'
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionSerializer(ModelSerializer):
+class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -223,7 +228,7 @@ class BaseContributionSerializer(ModelSerializer):
     }
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         fields = ('user', 'activity', 'status', )
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )
 
@@ -232,4 +237,19 @@ class BaseContributionSerializer(ModelSerializer):
             'user',
             'activity',
         ]
-        resource_name = 'contributions'
+        resource_name = 'contributors'
+
+
+# This can't be in serializers because of circular imports
+class BaseContributionSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
+
+    class Meta(object):
+        model = Contribution
+        fields = ('value', 'status', )
+        meta_fields = ('permissions', 'created', )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors'

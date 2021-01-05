@@ -1,5 +1,5 @@
 {% load i18n %}
-{% trans "Donation" %} {% if obj.reward %} - {{ obj.reward.title }} {% endif %}
+{% trans "Donor" %} {% if obj.reward %} - {{ obj.reward.title }} {% endif %}
 {{ obj.amount }}
 {{ obj.activity.title }}
 {{ obj.activity.get_absolute_url }}

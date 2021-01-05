@@ -1,22 +1,22 @@
+from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributionListSerializer
+    ContributorListSerializer
 )
-from bluebottle.assignments.models import Applicant
-from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
@@ -73,27 +73,33 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributions': ['contributions']
+        'contributors': ['contributors']
     }
 
 
-class ContributionList(JsonApiViewMixin, ListAPIView):
-    model = Contribution
+class ContributorList(JsonApiViewMixin, ListAPIView):
+    model = Contributor
 
     def get_queryset(self):
-        return Contribution.objects.prefetch_related(
-            'user', 'activity'
+        return Contributor.objects.prefetch_related(
+            'user', 'activity', 'contributions'
         ).instance_of(
-            Donation, Applicant, Participant
+            Donor,
+            DateParticipant,
+            PeriodParticipant
         ).filter(
             user=self.request.user
         ).exclude(
             status__in=['rejected', 'failed']
         ).exclude(
-            donation__status__in=['new']
-        ).order_by('-created')
+            donor__status__in=['new']
+        ).order_by(
+            '-created'
+        ).annotate(
+            total_duration=Sum('contributions__timecontribution__value'),
+        )
 
-    serializer_class = ContributionListSerializer
+    serializer_class = ContributorListSerializer
 
     pagination_class = None
 

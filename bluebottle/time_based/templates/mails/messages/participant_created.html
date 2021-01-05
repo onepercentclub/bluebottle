@@ -1,0 +1,12 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message%}{% blocktrans with title=obj.activity.title applicant=obj.activity.user.full_name context 'email' %}
+<p>{{ applicant }} applied to your activity "{{ title}}".<p>
+
+<p>Review the application and decide if this person is the right fit.</p>
+{% endblocktrans %}{% endblock %}
+{% block action %}
+    <a href="{{ obj.activity.get_absolute_url }}"
+       class="action-email">{% trans 'Review the application' context 'email' %}</a>
+{% endblock %}`

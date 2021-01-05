@@ -1,15 +1,10 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
-from bluebottle.fsm.effects import RelatedTransitionEffect
-from bluebottle.initiatives.messages import (
-    InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
-    InitiativeCancelledOwnerMessage
-)
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, register
 from bluebottle.initiatives.models import Initiative
-from bluebottle.notifications.effects import NotificationEffect
 
 
+@register(Initiative)
 class ReviewStateMachine(ModelStateMachine):
     field = 'status'
     model = Initiative
@@ -98,9 +93,6 @@ class ReviewStateMachine(ModelStateMachine):
         description=_("The initiative will be submitted for review."),
         conditions=[is_complete, is_valid],
         automatic=False,
-        effects=[
-            RelatedTransitionEffect('activities', 'auto_submit'),
-        ]
     )
 
     approve = Transition(
@@ -112,10 +104,6 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('activities', 'auto_approve'),
-            NotificationEffect(InitiativeApprovedOwnerMessage)
-        ]
     )
 
     request_changes = Transition(
@@ -143,10 +131,6 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office and appear in your reporting. "),
         automatic=False,
         permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('activities', 'reject'),
-            NotificationEffect(InitiativeRejectedOwnerMessage)
-        ]
     )
 
     cancel = Transition(
@@ -158,10 +142,6 @@ class ReviewStateMachine(ModelStateMachine):
                       "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
-        effects=[
-            RelatedTransitionEffect('activities', 'cancel'),
-            NotificationEffect(InitiativeCancelledOwnerMessage)
-        ]
     )
 
     delete = Transition(
@@ -172,9 +152,6 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office."),
         automatic=False,
         hide_from_admin=True,
-        effects=[
-            RelatedTransitionEffect('activities', 'delete'),
-        ]
     )
 
     restore = Transition(
@@ -189,7 +166,4 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiator can edit and submit the initiative again."),
         automatic=False,
         permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('activities', 'restore'),
-        ]
     )

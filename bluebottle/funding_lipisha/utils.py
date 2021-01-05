@@ -4,9 +4,9 @@ from lipisha import Lipisha, lipisha
 from moneyed import Money
 
 from bluebottle.clients import properties
-from bluebottle.fsm import TransitionNotPossible
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
@@ -22,11 +22,14 @@ def init_client():
     else:
         env = lipisha.SANDBOX_ENV
     credentials = get_credentials()
-    return Lipisha(
+    lip = Lipisha(
         credentials['api_key'],
         credentials['api_signature'],
         api_environment=env
     )
+    if live_mode:
+        lip.api_base_url = 'https://api.lypa.io/v2/api/'
+    return lip
 
 
 def initiate_push_payment(payment):
@@ -199,7 +202,7 @@ def initiate_payment(data):
 
         name = data['transaction_name'].replace('+', ' ').title()
 
-        donation = Donation.objects.create(
+        donation = Donor.objects.create(
             amount=Money(data['transaction_amount'], data['transaction_currency']),
             name=name,
             activity=funding)

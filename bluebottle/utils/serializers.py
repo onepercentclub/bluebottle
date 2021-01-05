@@ -3,7 +3,6 @@ standard_library.install_aliases()
 from builtins import str
 from builtins import object
 import json
-import re
 from html.parser import HTMLParser
 
 from urllib.error import HTTPError
@@ -17,14 +16,11 @@ from moneyed import Money
 from rest_framework import serializers
 from rest_framework.utils import model_meta
 from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
-from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
 from captcha import client
 
-from bluebottle.utils.fields import FSMField
 from bluebottle.utils.utils import get_client_ip
-from .models import Address, Language, TranslationPlatformSettings
-from .validators import validate_postal_code
+from .models import Language, TranslationPlatformSettings
 
 
 class MaxAmountValidator(BaseValidator):
@@ -37,28 +33,6 @@ class MinAmountValidator(BaseValidator):
     compare = lambda self, a, b: a.amount < b
     message = _('Ensure this value is greater than or equal to %(limit_value)s.')
     code = 'min_amount'
-
-
-class ProjectCurrencyValidator(object):
-    """
-    Validates that the currency of the field is the same as the projects currency
-    """
-
-    message = _('Currency does not match project any of the currencies')
-
-    def __init__(self, fields=None, message=None):
-        if fields is None:
-            fields = ['amount']
-
-        self.fields = fields
-        self.message = message or self.message
-
-    def __call__(self, data):
-        for field in self.fields:
-            if str(data[field].currency) not in data['project'].currencies:
-                raise serializers.ValidationError(
-                    _('Currency does not match project any of the currencies.')
-                )
 
 
 class MoneySerializer(serializers.DecimalField):
@@ -99,23 +73,6 @@ class MoneySerializer(serializers.DecimalField):
             return Money(data.get('amount', 0), data['currency'])
 
 
-class MoneyTotalSerializer(serializers.ListField):
-    """
-    Serialize money totals with multiple currencies, e.g.
-    [(450, 'EUR'), (23050, 'XEF')]
-    """
-    child = MoneySerializer()
-
-
-class ShareSerializer(serializers.Serializer):
-    share_name = serializers.CharField(max_length=256, required=True)
-    share_email = serializers.EmailField(required=True)
-    share_motivation = serializers.CharField(default="")
-    share_cc = serializers.BooleanField(default=False)
-
-    project = serializers.CharField(max_length=256, required=True)
-
-
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Language
@@ -134,42 +91,6 @@ class MLStripper(HTMLParser):
 
     def get_data(self):
         return ''.join(self.fed)
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    def validate_postal_code(self, attrs, source):
-        value = attrs[source]
-        if value:
-            country_code = ''
-            if 'country' in attrs:
-                country_code = attrs['country']
-            elif self.object and self.object.country:
-                country_code = self.object.country.alpha2_code
-
-            if country_code:
-                validate_postal_code(value, country_code)
-        return attrs
-
-    class Meta(object):
-        model = Address
-        fields = (
-            'id', 'line1', 'line2', 'city', 'state', 'country', 'postal_code')
-
-
-SCHEME_PATTERN = r'^https?://'
-
-
-class URLField(serializers.URLField):
-    """ URLField allowing absence of url scheme """
-
-    def to_internal_value(self, value):
-        """ Allow exclusion of http(s)://, add it if it's missing """
-        if not value:
-            return None
-        m = re.match(SCHEME_PATTERN, value)
-        if not m:  # no scheme
-            value = "http://%s" % value
-        return value
 
 
 class BasePermissionField(serializers.Field):
@@ -253,51 +174,11 @@ class RelatedResourcePermissionField(BasePermissionField):
             for perm in view.get_permissions())
 
 
-class FSMModelSerializer(JSONAPIModelSerializer):
-    def update(self, instance, validated_data):
-        fsm_fields = dict(
-            (key, validated_data.pop(key)) for key, field in list(self.fields.items())
-            if isinstance(field, FSMField) and key in validated_data
-        )
-        for key, value in list(fsm_fields.items()):
-            transitions = getattr(
-                instance,
-                'get_available_{}_transitions'.format(key)
-            )()
-            transition = [
-                transition for transition in transitions if
-                transition.target == value
-            ][0]
-            getattr(instance, transition.name)()
-
-        return super(FSMModelSerializer, self).update(instance, validated_data)
-
-
-class FSMSerializer(serializers.ModelSerializer):
-    def update(self, instance, validated_data):
-        fsm_fields = dict(
-            (key, validated_data.pop(key)) for key, field in list(self.fields.items())
-            if isinstance(field, FSMField)
-        )
-        for key, value in list(fsm_fields.items()):
-            transitions = getattr(
-                instance,
-                'get_available_{}_transitions'.format(key)
-            )()
-            transition = [
-                transition for transition in transitions if
-                transition.target == value
-            ][0]
-            getattr(instance, transition.name)()
-
-        return super(FSMSerializer, self).update(instance, validated_data)
-
-
 class FilteredRelatedField(SerializerMethodResourceRelatedField):
     """
     Filter a related queryset based on `filter_backend`.
     Example:
-    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
     Note: `many=True` is required
     """
     def __init__(self, **kwargs):
@@ -320,7 +201,7 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
     """
     Filter a related queryset based on `filter_backend`.
     Example:
-    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
     Note: `many=True` is required
     """
 
@@ -344,29 +225,6 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
             view=self.context['view']
         )
         return queryset
-
-
-class RelatedField(serializers.Field):
-    def __init__(self, queryset, *args, **kwargs):
-        self.queryset = queryset
-        super(RelatedField, self).__init__(*args, **kwargs)
-
-    def to_internal_value(self, data):
-        if not data:
-            return data
-
-        try:
-            data = data['id']
-        except TypeError:
-            pass
-
-        return self.queryset.get(pk=data)
-
-    def to_representation(self, value):
-        if hasattr(value, 'pk'):
-            value = value.pk
-
-        return value
 
 
 class CaptchaField(serializers.CharField):

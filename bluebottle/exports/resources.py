@@ -58,38 +58,29 @@ class InitiativeResource(DateRangeResource):
     )
 
 
-class AssignmentResource(ImpactMixin, SegmentMixin, DateRangeResource):
+class PeriodActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
 
 
-class ApplicantResource(DateRangeResource):
-    select_related = (
-        'activity', 'user'
-    )
-
-    def get_extra_fields(self):
-        return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
-            for extra in CustomMemberFieldSettings.objects.all()
-        ])
-
-
-class EventResource(ImpactMixin, SegmentMixin, DateRangeResource):
+class DateActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
 
 
-class ParticipantResource(DateRangeResource):
+class TimeContributionResource(DateRangeResource):
     select_related = (
-        'activity', 'user'
+        'contributor',
+        'contributor__activity',
+        'contributor__user',
+        'contributor__activity__initiative',
     )
 
     def get_extra_fields(self):
         return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
+            ("contributor__user__extra_{}".format(extra.name), extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
 

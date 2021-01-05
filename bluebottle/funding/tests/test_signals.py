@@ -1,7 +1,7 @@
 from django.core import mail
 from djmoney.money import Money
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import SystemWallpost
@@ -19,7 +19,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created for the project wall
         when a user does a successful donation
         """
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=self.user,
             activity=self.funding
@@ -35,18 +35,16 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created for the project wall
         when a user does a successful donation
         """
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=self.user,
             activity=self.funding
         )
-        self.donation.states.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.first().content_object, self.funding)
-        self.donation.states.fail()
-        self.donation.states.succeed()
-        self.donation.save()
+        self.donation.states.fail(save=True)
+        self.donation.states.succeed(save=True)
         self.assertEqual(SystemWallpost.objects.count(), 1)
 
     def test_successfull_anonymous_donation(self):
@@ -54,7 +52,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         Test that a SystemWallpost is created without an author when a donation is anonymous
         """
         self.assertEqual(SystemWallpost.objects.count(), 0)
-        self.donation = DonationFactory(
+        self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=None,
             activity=self.funding

@@ -1,5 +1,4 @@
 from django.http import HttpResponse
-from django.utils.html import strip_tags
 from django.utils.timezone import utc
 
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -70,7 +69,7 @@ class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributions': ['contributions'],
+        'contributors': ['contributors'],
     }
 
 
@@ -133,10 +132,7 @@ class EventIcalView(PrivateFileView):
 
         event = icalendar.Event()
         event.add('summary', instance.title)
-        event.add(
-            'description',
-            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
-        )
+        event.add('description', instance.details)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start.astimezone(utc))
         event.add('dtend', instance.end.astimezone(utc))

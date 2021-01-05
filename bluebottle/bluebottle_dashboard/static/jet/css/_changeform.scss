@@ -891,12 +891,13 @@ form .related-widget-wrapper ul {
   &-button {
     &, &:visited, &:hover {
       max-width: 250px;
+      font-weight: normal;
       text-overflow: ellipsis;
       display: inline-block;
     }
 
     &-icon {
-      font-weight: 500;
+      font-weight: normal;
       vertical-align: middle;
       line-height: 32px;
       font-size: 0.8rem;

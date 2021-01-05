@@ -7,6 +7,8 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 class TelesomPaymentProvider(PaymentProvider):
 
+    title = 'Telesom / Zaad'
+
     merchant_uid = models.CharField(max_length=100)
     api_user_id = models.CharField(max_length=100)
     api_key = models.CharField(max_length=100)
@@ -41,12 +43,12 @@ class TelesomPayment(Payment):
     account_number = models.CharField(max_length=30, blank=True, null=True)
     account_name = models.CharField(max_length=30, blank=True, null=True)
 
-    unique_id = models.CharField(max_length=30)
+    unique_id = models.CharField(max_length=30, blank=True, null=True)
 
-    reference_id = models.CharField(max_length=100)
-    transaction_id = models.CharField(max_length=100)
-    transaction_amount = models.CharField(max_length=100)
-    issuer_transaction_id = models.CharField(max_length=100)
+    reference_id = models.CharField(max_length=100, blank=True, null=True)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    transaction_amount = models.CharField(max_length=100, blank=True, null=True)
+    issuer_transaction_id = models.CharField(max_length=100, blank=True, null=True)
     amount = models.DecimalField(default=10.0, max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default='USD')
     response = models.TextField(default='')

@@ -1,7 +1,7 @@
-from StringIO import StringIO
+import sys
+from io import StringIO
 
 import requests
-import sys
 from django.conf import settings
 from django.core.management import call_command
 
@@ -17,19 +17,14 @@ apps = [
         'page_id': '961773675'
     },
     {
-        'title': 'Notifications - Tasks',
-        'app': 'bluebottle.assignments',
-        'page_id': '830701653'
-    },
-    {
-        'title': 'Notifications - Events',
-        'app': 'bluebottle.events',
-        'page_id': '833192109'
-    },
-    {
         'title': 'Notifications - Funding',
         'app': 'bluebottle.funding',
         'page_id': '833192116'
+    },
+    {
+        'title': 'Notifications - Time-based',
+        'app': 'bluebottle.time_based',
+        'page_id': '830701653'
     },
 ]
 
@@ -68,7 +63,7 @@ def run(*args):
         url += '?expand=body.storage'
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
         if response.status_code == 200:
-            print "[OK] {}".format(app['title'])
+            print("[OK] {}".format(app['title']))
         else:
-            print "[ERROR] {}".format(app['title'])
-            print response.content
+            print("[ERROR] {}".format(app['title']))
+            print(response.content)

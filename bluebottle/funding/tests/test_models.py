@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.funding.models import Payout
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
@@ -111,14 +111,14 @@ class PayoutTestCase(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
                 3,
                 amount=Money(150, 'EUR'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
                 2,
                 amount=Money(200, 'USD'),
                 payout_amount=(150, 'EUR'),
@@ -126,14 +126,14 @@ class PayoutTestCase(BluebottleTestCase):
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
                 5,
                 amount=Money(100, 'USD'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             amount=Money(750, 'EUR'),
             activity=self.funding,
             status='succeeded')
@@ -141,14 +141,14 @@ class PayoutTestCase(BluebottleTestCase):
 
         self.donation = donation
 
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
                 5,
                 amount=Money(150, 'EUR'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
-        for donation in DonationFactory.create_batch(
+        for donation in DonorFactory.create_batch(
                 5,
                 amount=Money(100, 'USD'),
                 activity=self.funding,
@@ -169,10 +169,10 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         # More donations
-        for donation in DonationFactory.create_batch(5,
-                                                     amount=Money(150, 'EUR'),
-                                                     activity=self.funding,
-                                                     status='succeeded'):
+        for donation in DonorFactory.create_batch(5,
+                                                  amount=Money(150, 'EUR'),
+                                                  activity=self.funding,
+                                                  status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
         # Recalculate should generate new payouts. One should be higher now.
@@ -189,10 +189,10 @@ class PayoutTestCase(BluebottleTestCase):
                 payout.save()
 
         # More donations after approved payouts
-        for donation in DonationFactory.create_batch(8,
-                                                     amount=Money(250, 'EUR'),
-                                                     activity=self.funding,
-                                                     status='succeeded'):
+        for donation in DonorFactory.create_batch(8,
+                                                  amount=Money(250, 'EUR'),
+                                                  activity=self.funding,
+                                                  status='succeeded'):
             StripePaymentFactory.create(donation=donation)
 
         # Recalculate should generate an additional payout
@@ -203,6 +203,3 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertTrue(Money(2000, 'EUR') in payout_amounts)
         self.assertTrue(Money(2250, 'EUR') in payout_amounts)
         self.assertTrue(Money(750, 'EUR') in payout_amounts)
-
-    def test_donation_contribution_date(self):
-        self.assertEqual(self.donation.contribution_date, self.donation.created)

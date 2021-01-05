@@ -4,7 +4,7 @@ from djmoney.money import Money
 from mock import patch
 import stripe
 
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
     StripePaymentFactory, ExternalAccountFactory
@@ -36,7 +36,7 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
     @patch('stripe.Source.modify')
     def setUp(self, mock_modify):
         super(StripeSourcePaymentStateMachineTests, self).setUp()
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.payment = StripeSourcePaymentFactory.create(
             charge_token='some_token',
             donation=self.donation
@@ -104,7 +104,7 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
 
     @patch('stripe.PaymentIntent.retrieve')
     def test_request_refund(self, mock_retrieve):
-        donation = DonationFactory.create(activity=self.funding)
+        donation = DonorFactory.create(activity=self.funding)
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
@@ -155,13 +155,37 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         })
         with patch('stripe.Account.retrieve', return_value=self.stripe_account):
             self.account.save()
+            self.bank_account = ExternalAccountFactory.create(connect_account=self.account)
 
     def test_initial(self):
         self.assertEqual(self.account.status, 'new')
 
-    def test_accept(self):
+    def test_verify(self):
         self.account.states.verify(save=True)
         self.assertEqual(self.account.status, 'verified')
+
+    def test_verify_submit_activities(self):
+        initiative = InitiativeFactory.create()
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        complete_funding = FundingFactory.create(
+            bank_account=self.bank_account,
+            initiative=initiative,
+            target=Money(1000, 'EUR')
+        )
+        BudgetLineFactory.create(activity=complete_funding)
+
+        incomplete_funding = FundingFactory.create(
+            bank_account=self.bank_account,
+            initiative=initiative,
+            target=Money(1000, 'EUR')
+        )
+        self.account.states.verify(save=True)
+        self.assertEqual(self.account.status, 'verified')
+        incomplete_funding.refresh_from_db()
+        self.assertEqual(incomplete_funding.status, 'draft')
+        complete_funding.refresh_from_db()
+        self.assertEqual(complete_funding.status, 'submitted')
 
     def test_accept_mail(self):
         self.account.states.verify(save=True)
@@ -238,3 +262,10 @@ class StripeBankAccountStateMachineTests(BluebottleTestCase):
         new_bank_account = ExternalAccountFactory.create(connect_account=self.account)
         new_bank_account.refresh_from_db()
         self.assertEqual(new_bank_account.status, 'verified')
+
+    def test_rejeceted_bank_verifies(self):
+        self.bank_account.states.reject(save=True)
+        self.account.states.verify(save=True)
+        self.assertEqual(self.account.status, 'verified')
+        self.bank_account.refresh_from_db()
+        self.assertEqual(self.bank_account.status, 'verified')

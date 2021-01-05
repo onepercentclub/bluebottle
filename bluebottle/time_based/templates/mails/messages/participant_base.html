@@ -1,0 +1,18 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=to.first_name context 'email' %}
+        <p>Hi {{ recipient_name }},</p>
+    {% endblocktrans %}
+    {% if custom_message %}
+        <p>{{custom_message|linebreaks}}</p>
+    {% else %}
+        {% block message %}{% endblock %}
+    {% endif %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.activity.get_absolute_url }}"
+       class="action-email">{% trans 'Got to your activity' context 'email' %}</a>
+{% endblock %}`

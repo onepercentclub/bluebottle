@@ -10,7 +10,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.impact.tests.factories import (
     ImpactTypeFactory, ImpactGoalFactory
 )
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -79,7 +79,7 @@ class ImpactGoalListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super(ImpactGoalListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
-        self.activity = EventFactory.create()
+        self.activity = DateActivityFactory.create()
         self.type = ImpactTypeFactory.create()
         self.url = reverse('impact-goal-list')
 
@@ -165,7 +165,7 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
     def setUp(self):
         super(ImpactGoalDetailsAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
-        self.activity = EventFactory.create()
+        self.activity = DateActivityFactory.create()
         self.type = ImpactTypeFactory.create()
         self.goal = ImpactGoalFactory(type=self.type, activity=self.activity)
         self.url = reverse('impact-goal-details', args=(self.goal.pk, ))
@@ -217,7 +217,7 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
     def test_get_closed_anonymous(self):
         anonymous = Group.objects.get(name='Anonymous')
         anonymous.permissions.remove(
-            Permission.objects.get(codename='api_read_event')
+            Permission.objects.get(codename='api_read_dateactivity')
         )
 
         MemberPlatformSettings.objects.update(closed=True)

@@ -276,7 +276,7 @@ class TimeBasedDetailAPIViewTestCase():
         contributor_data = contributor_response.json()
         self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            contributor_data['meta']['pagination']['count'], len(contributor_ids)
+            len(contributor_data['data']), len(contributor_ids)
         )
         for contributor in contributor_data['data']:
             self.assertTrue(

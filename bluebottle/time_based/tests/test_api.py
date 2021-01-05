@@ -437,7 +437,7 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         details = (
             u"{}\n"
             u"http://testserver/en/initiatives/activities/details/"
-            u"dateactivity/{}/{}"
+            u"time-based/date/{}/{}"
         ).format(
             self.activity.description, self.activity.pk, self.activity.slug
         )

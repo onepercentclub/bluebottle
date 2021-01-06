@@ -29,7 +29,7 @@ def migrate_to_slots(apps, schema_editor):
 
     for activity in DateActivity.objects.all():
         status = map_status(activity.status)
-        slot = DateActivitySlot.objects.create(
+        slot = DateActivitySlot(
             status=status,
             activity_id=activity.id,
             start=activity.start,
@@ -40,9 +40,12 @@ def migrate_to_slots(apps, schema_editor):
             location_hint=activity.location_hint
         )
 
-        if slot.status == 'draft' and slot.is_complete:
+        if slot.status == 'draft' \
+                and slot.start \
+                and slot.duration \
+                and (slot.is_online or slot.location):
             slot.status = 'ready'
-            slot.save()
+        slot.save()
 
 
 class Migration(migrations.Migration):

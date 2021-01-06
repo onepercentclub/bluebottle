@@ -33,7 +33,7 @@ from bluebottle.time_based.effects import (
     ActiveDurationsTransitionEffect
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
+    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
     ParticipantStateMachine, TimeContributionStateMachine
 )
 
@@ -325,8 +325,107 @@ class DateTriggers(TimeBasedTriggers):
     ]
 
 
+def slot_is_complete(effect):
+    return effect.instance.is_complete
+
+
+def slot_is_incomplete(effect):
+    return not effect.instance.is_complete
+
+
+def slot_is_started(effect):
+    return effect.instance.is_complete and effect.instance.start < now()
+
+
+def slot_is_not_started(effect):
+    return not slot_is_started(effect)
+
+
+def slot_is_finished(effect):
+    return effect.instance.is_complete and effect.instance.end < now()
+
+
+def slot_is_not_finished(effect):
+    return not slot_is_finished(effect)
+
+
+def slot_is_full(effect):
+    return False
+
+
+def slot_is_not_full(effect):
+    return not slot_is_full(effect)
+
+
 class ActivitySlotTriggers(TriggerManager):
-    triggers = []
+    triggers = [
+        ModelChangedTrigger(
+            ['start', 'duration', 'is_online', 'location'],
+            effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.complete,
+                    conditions=[slot_is_complete]
+                ),
+                TransitionEffect(
+                    ActivitySlotStateMachine.incomplete,
+                    conditions=[slot_is_incomplete]
+                ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                # NotificationEffect(
+                #     DeadlineChanged,
+                #     conditions=[
+                #         slot_is_not_started
+                #     ]
+                # ),
+
+                TransitionEffect(
+                    ActivitySlotStateMachine.start,
+                    conditions=[slot_is_started, slot_is_not_finished]
+                ),
+
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
+
+                TransitionEffect(
+                    ActivitySlotStateMachine.reschedule,
+                    conditions=[slot_is_not_started]
+                ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'capacity',
+            effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.lock,
+                    conditions=[slot_is_full]
+                ),
+
+                TransitionEffect(
+                    ActivitySlotStateMachine.unlock,
+                    conditions=[slot_is_not_full]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            ActivitySlotStateMachine.reschedule,
+            effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.lock,
+                    conditions=[slot_is_full]
+                ),
+            ]
+        ),
+
+    ]
 
 
 @register(DateActivitySlot)

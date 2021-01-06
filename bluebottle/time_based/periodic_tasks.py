@@ -6,10 +6,10 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution
+    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, TimeContributionStateMachine
+    TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine
 )
 from bluebottle.time_based.triggers import has_participants, has_no_participants
 from bluebottle.time_based.effects import CreatePeriodParticipationEffect
@@ -107,7 +107,7 @@ class NewPeriodForParticipantTask(ModelPeriodicTask):
         return str(_("Create a new contribution for participant"))
 
 
-class DateActivityStartedTask(ModelPeriodicTask):
+class SlotStartedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -116,19 +116,14 @@ class DateActivityStartedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(TimeBasedStateMachine.start, conditions=[
-            has_participants
-        ]),
-        TransitionEffect(TimeBasedStateMachine.expire, conditions=[
-            has_no_participants
-        ]),
+        TransitionEffect(ActivitySlotStateMachine.start),
     ]
 
     def __str__(self):
-        return str(_("Start or close the activity."))
+        return str(_("Start the slot."))
 
 
-class DateActivityFinishedTask(ModelPeriodicTask):
+class SlotFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -137,16 +132,11 @@ class DateActivityFinishedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_participants
-        ]),
-        TransitionEffect(TimeBasedStateMachine.expire, conditions=[
-            has_no_participants
-        ]),
+        TransitionEffect(ActivitySlotStateMachine.finish),
     ]
 
     def __str__(self):
-        return str(_("Finish an activity when end time has passed."))
+        return str(_("Finish a slot when end time has passed."))
 
 
 class TimeContributionFinishedTask(ModelPeriodicTask):
@@ -167,10 +157,12 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 
 
 DateActivity.periodic_tasks = [
-    DateActivityFinishedTask,
-    DateActivityStartedTask,
     TimeBasedActivityRegistrationDeadlinePassedTask
 ]
+DateActivitySlot.periodic_tasks = [
+    SlotStartedTask, SlotFinishedTask,
+]
+
 PeriodActivity.periodic_tasks = [
     PeriodActivityStartedTask,
     PeriodActivityFinishedTask,

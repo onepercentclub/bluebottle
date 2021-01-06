@@ -197,7 +197,7 @@ class FundingTriggers(ActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            field='target',
+            'target',
             effects=[
                 TransitionEffect(
                     FundingStateMachine.succeed,

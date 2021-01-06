@@ -270,6 +270,10 @@ class DateActivitySlot(ActivitySlot):
         return fields
 
     @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(

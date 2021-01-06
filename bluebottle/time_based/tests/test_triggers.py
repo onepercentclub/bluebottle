@@ -5,7 +5,8 @@ from django.utils.timezone import now
 
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, PeriodParticipantFactory,
+    DateSlotFactory
 )
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -575,6 +576,60 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 message.subject,
                 'The activity "{}" has succeeded 🎉'.format(self.activity.title)
             )
+
+
+class DateActivitySlotTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
+        self.slot = DateSlotFactory.create(activity=self.activity)
+
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+    def test_incomplete(self):
+        self.slot.start = None
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'draft')
+
+    def test_complete(self):
+        self.test_incomplete()
+        self.slot.start = now() + timedelta(days=2)
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'open')
+
+    def test_start(self):
+        self.slot.start = now() - timedelta(hours=1)
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'running')
+
+    def test_finish(self):
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'finished')
+
+    def test_reschedule_open(self):
+        self.test_finish()
+        self.slot.start = now() + timedelta(days=1)
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'open')
+
+    def test_reschedule_running(self):
+        self.test_finish()
+        self.slot.start = now() - timedelta(hours=1)
+        self.slot.save()
+
+        self.assertEqual(self.slot.status, 'running')
 
 
 class ParticipantTriggerTestCase():

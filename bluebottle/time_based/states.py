@@ -7,7 +7,9 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot,
 )
-from bluebottle.fsm.state import register, State, Transition, EmptyState, ModelStateMachine
+from bluebottle.fsm.state import (
+    register, State, Transition, EmptyState, AllStates, ModelStateMachine
+)
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
@@ -152,75 +154,89 @@ class PeriodStateMachine(TimeBasedStateMachine):
 
 class ActivitySlotStateMachine(ModelStateMachine):
 
-    def is_complete(self):
-        return self.instance.is_complete
-
     draft = State(
         _('draft'),
-        'draft',
-        _('The slot has been created, but not yet completed. The activity manager is still editing the activity.')
+        'open',
+        _('The slot is incomplete.')
     )
-    submitted = State(
-        _('submitted'),
-        'submitted',
-        _('The slot is submitted.')
-    )
-    expired = State(
-        _('expired'),
-        'expired',
-        _(
-            'The slot has ended, but did have any contributions . The slot does not appear on the platform, '
-            'but counts in the report. The slot cannot be edited by the activity manager.'
-        )
-    )
+
     open = State(
         _('open'),
         'open',
-        _('The slot is accepting new contributions.')
+        _('The slot is accepting new participants.')
     )
-    succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _('The slot has ended successfully.')
-    )
+
     full = State(
         _('full'),
         'full',
         _('The number of people needed is reached and people can no longer register.')
     )
+
     running = State(
         _('running'),
         'running',
-        _('The slot is taking place and people can\'t register any more.')
+        _('The slot is currently taking place.')
+    )
+
+    finished = State(
+        _('finished'),
+        'finished',
+        _('The slot has ended.')
+    )
+
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The slot is cancelled.')
     )
 
     initial = Transition(
         EmptyState(),
-        ActivityStateMachine.draft,
+        draft,
         name=_('Initial'),
         description=_(
             'The slot was created.'
         ),
     )
 
-    submit = Transition(
-        [
-            ActivityStateMachine.draft,
-        ],
-        ActivityStateMachine.submitted,
-        name=_('Submit'),
-        description=_('The slot has all required information and will be submitted.'),
-        conditions=[
-            is_complete
-        ]
+    complete = Transition(
+        draft,
+        open,
+        name=_('Complete'),
+        description=_(
+            'The slot was completed.'
+        ),
+    )
+
+    incomplete = Transition(
+        open,
+        draft,
+        name=_('Incomplete'),
+        description=_(
+            'The slot was made incomplete.'
+        ),
+    )
+
+    cancel = Transition(
+        AllStates(),
+        cancelled,
+        name=_('Cancel'),
+        description=_(
+            'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
+        ),
+    )
+
+    reopen = Transition(
+        cancelled,
+        open,
+        name=_('Reopen'),
+        description=_(
+            'Reopen a cancelled slot. People can apply again. Contributions are counted again'
+        ),
     )
 
     lock = Transition(
-        [
-            open,
-            succeeded,
-            running
-        ],
+        open,
         full,
         name=_("Lock"),
         description=_(
@@ -229,72 +245,42 @@ class ActivitySlotStateMachine(ModelStateMachine):
         )
     )
 
-    reopen = Transition(
-        [running, full],
-        ActivityStateMachine.open,
-        name=_("Reopen"),
+    unlock = Transition(
+        full,
+        open,
+        name=_("Unlock"),
         description=_(
             "The number of participants has fallen below the required number. "
             "People can sign up again for the slot."
         )
-    )
-
-    reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
-        ActivityStateMachine.draft,
-        name=_("Reopen"),
-        permission=ActivityStateMachine.is_owner,
-        automatic=False,
-        description=_(
-            "The number of participants has fallen below the required number. "
-            "People can sign up again for the slot."
-        )
-    )
-
-    succeed = Transition(
-        [
-            ActivityStateMachine.open,
-            ActivityStateMachine.expired,
-            full,
-            running
-        ],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_(
-            'The slot ends and people can no longer register. '
-            'Participants will keep their spent hours, '
-            'but will no longer be allocated new hours.'),
-        automatic=True,
     )
 
     start = Transition(
-        [
-            ActivityStateMachine.open,
-            full
-        ],
+        [open, finished],
         running,
         name=_("Start"),
-        description=_("Start the slot.")
+        description=_(
+            "The slot is currently taking place."
+        )
+    )
+    finish = Transition(
+        [open, running, full],
+        finished,
+        name=_("Finish"),
+        description=_(
+            "The slot has ended. "
+            "Triggered when slot has ended."
+        )
     )
 
-    cancel = Transition(
-        [
-            ActivityStateMachine.open,
-            ActivityStateMachine.succeeded,
-            full,
-            running
-        ],
-        ActivityStateMachine.cancelled,
-        name=_('Cancel'),
+    reschedule = Transition(
+        [running, finished],
+        open,
+        name=_("Rescheduke"),
         description=_(
-            'Cancel if the slot will not be executed. '
-            'The activity manager can no longer edit the activity '
-            'and it will no longer be visible on the platform. '
-            'The slot will still be visible in the back office '
-            'and will continue to count in the reporting.'
-        ),
-        automatic=False,
-        hide_from_admin=True,
+            "Reopen the slot. "
+            "Triggered when start of the slot is changed."
+        )
     )
 
 

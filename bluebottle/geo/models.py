@@ -182,7 +182,7 @@ class Place(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = PointField()
+    position = PointField(null=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

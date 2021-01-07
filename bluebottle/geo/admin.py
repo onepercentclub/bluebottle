@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from bluebottle.geo.models import (
-    Location, LocationGroup, Region, SubRegion, Country, Place,
+    Location, Country, Place,
     InitiativePlace, Geolocation)
 from bluebottle.initiatives.models import Initiative
 
@@ -37,54 +37,13 @@ class LocationFilter(admin.SimpleListFilter):
             return queryset
 
 
-class LocationGroupFilter(admin.SimpleListFilter):
-    title = _('location group')
-    parameter_name = 'location_group'
-
-    def lookups(self, request, model_admin):
-        groups = [obj.location.group for obj in model_admin.model.objects.order_by(
-            'location__group__name').distinct('location__group__name').exclude(
-            location__group__isnull=True).all()]
-        return [(gr.id, gr.name) for gr in groups]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(location__group__id__exact=self.value())
-        else:
-            return queryset
-
-
-class RegionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'numeric_code')
-
-
-admin.site.register(Region, RegionAdmin)
-
-
-class SubRegionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'numeric_code')
-    list_filter = ('region',)
-
-
-admin.site.register(SubRegion, SubRegionAdmin)
-
-
 class CountryAdmin(TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
-    list_filter = ('subregion__region', 'subregion')
     search_fields = ('name', 'alpha2_code', 'alpha3_code')
-    fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code', 'subregion')
+    fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
 
 admin.site.register(Country, CountryAdmin)
-
-
-class LocationGroupAdmin(admin.ModelAdmin):
-    list_display = ('name', )
-    model = LocationGroup
-
-
-admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):

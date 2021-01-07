@@ -106,7 +106,7 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
 
     def test_main_menu_options_disabeld(self):
         response = self.client.get(self.admin_url)
-        self.assertNotContains(response, 'Offices')
+        self.assertNotContains(response, 'Office groups')
         self.assertNotContains(response, 'Impact types')
         self.assertNotContains(response, 'Segment types')
 
@@ -121,6 +121,6 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         initiative_settings.save()
 
         response = self.client.get(self.admin_url)
-        self.assertContains(response, 'Offices')
+        self.assertContains(response, 'Office groups')
         self.assertContains(response, 'Impact types')
         self.assertContains(response, 'Segment types')

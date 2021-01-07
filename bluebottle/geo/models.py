@@ -159,8 +159,8 @@ class Location(models.Model):
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
-        verbose_name = _('office location')
-        verbose_name_plural = _('office locations')
+        verbose_name = _('office')
+        verbose_name_plural = _('offices')
 
     def save(self, *args, **kwargs):
         if not self.slug:

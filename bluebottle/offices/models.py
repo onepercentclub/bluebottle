@@ -11,7 +11,7 @@ class OfficeRegion(models.Model):
     class Meta(object):
         ordering = ['name']
         verbose_name = _('office region')
-        verbose_name_plural = _('office region')
+        verbose_name_plural = _('office regions')
 
     def __str__(self):
         return self.name
@@ -27,8 +27,8 @@ class OfficeSubRegion(models.Model):
 
     class Meta(object):
         ordering = ['name']
-        verbose_name = _('office subregion')
-        verbose_name_plural = _('office subregion')
+        verbose_name = _('office group')
+        verbose_name_plural = _('office groups')
 
     def __str__(self):
         return self.name

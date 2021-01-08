@@ -48,7 +48,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     start = (now() + timedelta(weeks=2)).date()
 
 
-class DateSessionFactory(factory.DjangoModelFactory):
+class DateSlotFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = DateActivitySlot
 
@@ -58,7 +58,6 @@ class DateSessionFactory(factory.DjangoModelFactory):
     is_online = False
 
     location = factory.SubFactory(GeolocationFactory)
-    registration_deadline = (now() + timedelta(weeks=1)).date()
     start = (now() + timedelta(weeks=4))
     duration = timedelta(hours=2)
 

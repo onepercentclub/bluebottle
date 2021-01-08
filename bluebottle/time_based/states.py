@@ -156,7 +156,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
 
     draft = State(
         _('draft'),
-        'open',
+        'draft',
         _('The slot is incomplete.')
     )
 
@@ -199,7 +199,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         ),
     )
 
-    complete = Transition(
+    mark_complete = Transition(
         draft,
         open,
         name=_('Complete'),
@@ -208,10 +208,10 @@ class ActivitySlotStateMachine(ModelStateMachine):
         ),
     )
 
-    incomplete = Transition(
+    mark_incomplete = Transition(
         open,
         draft,
-        name=_('Incomplete'),
+        name=_('Mark incomplete'),
         description=_(
             'The slot was made incomplete.'
         ),

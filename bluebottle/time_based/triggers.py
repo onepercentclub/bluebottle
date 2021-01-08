@@ -363,11 +363,11 @@ class ActivitySlotTriggers(TriggerManager):
             ['start', 'duration', 'is_online', 'location'],
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.complete,
+                    ActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
                 ),
                 TransitionEffect(
-                    ActivitySlotStateMachine.incomplete,
+                    ActivitySlotStateMachine.mark_incomplete,
                     conditions=[slot_is_incomplete]
                 ),
             ]

@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
+from django.utils.timezone import now
 
 
 def map_status(status):
@@ -15,7 +16,7 @@ def map_status(status):
         'deleted': 'draft',
         'cancelled': 'draft',
         'expired': 'finished',
-        'open': 'ready',
+        'open': 'open',
         'succeeded': 'finished',
         'full': 'full',
         'running': 'running'
@@ -39,12 +40,16 @@ def migrate_to_slots(apps, schema_editor):
             location=activity.location,
             location_hint=activity.location_hint
         )
+        if slot.start and slot.duration and slot.start + slot.duration < now():
+            slot.status = 'finished'
 
         if slot.status == 'draft' \
                 and slot.start \
                 and slot.duration \
                 and (slot.is_online or slot.location):
-            slot.status = 'ready'
+            slot.status = 'open'
+
+        slot.execute_triggers(send_messages=False)
         slot.save()
 
 

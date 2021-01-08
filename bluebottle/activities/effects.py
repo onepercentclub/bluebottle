@@ -9,6 +9,8 @@ from bluebottle.activities.models import Organizer, OrganizerContribution
 class CreateOrganizer(Effect):
     "Create an organizer for the activity"
 
+    display = False
+
     def post_save(self, **kwargs):
         Organizer.objects.get_or_create(
             activity=self.instance,
@@ -21,6 +23,8 @@ class CreateOrganizer(Effect):
 
 class CreateOrganizerContribution(Effect):
     "Create an contribution for the organizer of the activity"
+
+    display = False
 
     def post_save(self, **kwargs):
         OrganizerContribution.objects.get_or_create(

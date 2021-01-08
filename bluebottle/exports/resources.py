@@ -64,9 +64,21 @@ class PeriodActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
+class PeriodParticipantResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'activity', 'activity__initiative',
+    )
+
+
 class DateActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
+    )
+
+
+class DateParticipantResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'activity', 'activity__initiative',
     )
 
 

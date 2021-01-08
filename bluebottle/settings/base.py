@@ -710,6 +710,21 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.PeriodActivityResource',
             'title': _('Activities during a period'),
         }),
+        ('time_based.PeriodParticipant', {
+            'fields': (
+                ('id', 'Participant ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
+                ('user__id', 'User ID'),
+                ('user__remote_id', 'Remote ID'),
+                ('user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.PeriodParticipantResource',
+            'title': _('Particpipants over a period'),
+        }),
         ('time_based.DateActivity', {
             'fields': (
                 ('id', 'Task ID'),
@@ -735,9 +750,25 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.DateActivityResource',
             'title': _('Activities on a date'),
         }),
+        ('time_based.DateParticipant', {
+            'fields': (
+                ('id', 'Participant ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
+                ('user__id', 'User ID'),
+                ('user__remote_id', 'Remote ID'),
+                ('user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.DateParticipantResource',
+            'title': _('Particpipants over a period'),
+        }),
         ('time_based.TimeContribution', {
             'fields': (
-                ('id', 'Contributor ID'),
+                ('id', 'Contribution ID'),
+                ('contributor__id', 'Participant ID'),
                 ('contributor__activity__title', 'Activity Title'),
                 ('contributor__activity__initiative__title', 'Initiative Title'),
                 ('contributor__activity__id', 'Activity ID'),

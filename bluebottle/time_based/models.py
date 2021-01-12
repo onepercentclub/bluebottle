@@ -480,6 +480,7 @@ class SlotParticipant(TriggerMixin, models.Model):
             ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
             ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
         )
+        unique_together = ['slot', 'participant']
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'

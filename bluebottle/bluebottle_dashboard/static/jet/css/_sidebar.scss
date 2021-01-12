@@ -433,6 +433,14 @@
     -webkit-overflow-scrolling: touch;
     top: 410px;
 
+    @media (max-height: 900px) {
+      top: 250px;
+   }
+
+    @media (max-height: 700px) {
+      top: 0;
+   }
+
     @include for-mobile {
       top: 360px;
       width: 200px;

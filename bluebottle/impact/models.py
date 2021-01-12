@@ -109,7 +109,7 @@ class ImpactGoal(models.Model):
     target = models.FloatField(
         _('target'),
         help_text=_('Set a target for the impact you expect to make'),
-        blank=False,
+        blank=True,
         null=True
     )
 

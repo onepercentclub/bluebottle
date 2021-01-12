@@ -21,6 +21,7 @@ from bluebottle.time_based.validators import (
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 tf = TimezoneFinder()
@@ -208,6 +209,15 @@ class DateActivity(TimeBasedActivity):
     class JSONAPIMeta:
         resource_name = 'activities/time-based/dates'
 
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/details/time-based/date/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+
     @property
     def activity_date(self):
         return self.start
@@ -359,6 +369,15 @@ class PeriodActivity(TimeBasedActivity):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/periods'
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/details/time-based/period/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     @property
     def required_fields(self):

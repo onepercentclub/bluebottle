@@ -77,7 +77,7 @@ install_requires = [
     'influxdb==4.1.1',
     'lipisha==0.2.4',
     'lxml==4.3.0',
-    'micawber==0.3.4',
+    'micawber==0.5.2',
     'mixpanel==4.3.2',
     'munch==2.5.0',
     'django-multiselectfield==0.1.8',

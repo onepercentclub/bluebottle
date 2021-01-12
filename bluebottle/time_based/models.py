@@ -459,10 +459,15 @@ class SlotParticipant(TriggerMixin, models.Model):
 
     slot = models.ForeignKey(DateActivitySlot)
     participant = models.ForeignKey(DateParticipant)
+    status = models.CharField(max_length=40)
 
     @property
     def user(self):
         return self.participant.user
+
+    @property
+    def activity(self):
+        return self.slot.activity
 
     class Meta(object):
         verbose_name = _("Slot participant")
@@ -486,7 +491,7 @@ class SlotParticipant(TriggerMixin, models.Model):
 class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
 
-    slot_participant = models.ForeignKey(SlotParticipant, null=True)
+    slot_participant = models.ForeignKey(SlotParticipant, null=True, related_name='contributions')
 
     class Meta:
         verbose_name = _("Time contribution")

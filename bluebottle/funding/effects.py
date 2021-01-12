@@ -117,7 +117,7 @@ class RefundPaymentAtPSPEffect(Effect):
 
     template = 'admin/execute_refund_effect.html'
 
-    def pre_save(self, **kwargs):
+    def post_save(self, **kwargs):
         self.instance.refund()
 
     def __str__(self):
@@ -185,7 +185,7 @@ class DeleteDocumentEffect(Effect):
     title = _('Delete uploaded document')
     template = 'admin/delete_uploaded_document_effect.html'
 
-    def pre_save(self, **kwargs):
+    def post_save(self, **kwargs):
         if self.instance.document:
             self.instance.document.delete()
             self.instance.document = None
@@ -201,7 +201,7 @@ class SubmitPayoutEffect(Effect):
     title = _('Trigger payout')
     template = 'admin/submit_payout_effect.html'
 
-    def pre_save(self, **kwargs):
+    def post_save(self, **kwargs):
         adapter = DoradoPayoutAdapter(self.instance)
         adapter.trigger_payout()
 

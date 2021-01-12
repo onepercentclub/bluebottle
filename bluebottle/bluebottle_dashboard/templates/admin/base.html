@@ -368,5 +368,9 @@
 </div>
 <!-- END Container -->
 
+<script>
+    // Fix for gettext issues
+    django.gettext = window.gettext
+</script>
 </body>
 </html>{% endblock %}

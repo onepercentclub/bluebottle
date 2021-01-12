@@ -12,9 +12,7 @@ from polymorphic.admin import (
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
-from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.events.models import Event
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -549,23 +547,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
-    class EventInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'duration', 'state_name']
-        fields = readonly_fields
-        model = Event
-
     class FundingInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
                            'link', 'target', 'deadline', 'state_name']
         fields = readonly_fields
         model = Funding
-
-    class AssignmentInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'date', 'duration', 'state_name']
-        fields = readonly_fields
-        model = Assignment
 
     class DateInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
@@ -581,9 +567,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         model = PeriodActivity
 
     child_inlines = (
-        EventInline,
         FundingInline,
-        AssignmentInline,
         PeriodInline,
         DateInline,
     )

@@ -89,6 +89,7 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+    pagination_class = None
 
     def get_queryset(self):
         if self.request.user.is_authenticated():

@@ -97,7 +97,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(
-        'geo.Location', verbose_name=_('Office location'),
+        'geo.Location', verbose_name=_('office'),
         null=True, blank=True, on_delete=models.SET_NULL)
 
     has_organization = models.NullBooleanField(null=True, default=None)

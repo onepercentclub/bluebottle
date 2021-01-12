@@ -100,7 +100,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         if Location.objects.count():
             if 'location' not in filters:
                 filters += ['location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
+            if InitiativePlatformSettings.objects.get().enable_office_regions \
+                    and 'location__subregion' not in filters:
                 filters += ['location__subregion', 'location__subregion__region']
         elif InitiativeCountryFilter not in filters:
             filters.append(InitiativeCountryFilter)
@@ -112,6 +113,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             return "-"
         url = reverse('admin:geo_location_change', args=(obj.location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.location)
+    location_link.short_description = _('office')
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']

@@ -137,8 +137,8 @@ class Location(models.Model):
         null=True, blank=True)
     subregion = models.ForeignKey(
         'offices.OfficeSubRegion',
-        verbose_name=_('subregion'),
-        help_text=_('The organizational group this office belongs too.'),
+        verbose_name=_('office group'),
+        help_text=_('The organisational group this office belongs too.'),
         null=True, blank=True)
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey(
@@ -148,7 +148,7 @@ class Location(models.Model):
     description = models.TextField(_('description'), blank=True)
     image = ImageField(
         _('image'), max_length=255, null=True, blank=True,
-        upload_to='location_images/', help_text=_('Location picture'),
+        upload_to='location_images/', help_text=_('Office picture'),
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,

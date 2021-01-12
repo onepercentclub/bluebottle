@@ -22,7 +22,7 @@ class OfficeSubRegion(models.Model):
     description = models.TextField(_('description'), blank=True)
     region = models.ForeignKey(
         'offices.OfficeRegion',
-        verbose_name=_('region'),
+        verbose_name=_('office region'),
         null=True, blank=True)
 
     class Meta(object):

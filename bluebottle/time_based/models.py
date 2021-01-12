@@ -455,7 +455,7 @@ class PeriodParticipant(Participant, Contributor):
 class SlotParticipant(TriggerMixin, models.Model):
 
     slot = models.ForeignKey(DateActivitySlot)
-    participant = models.ForeignKey(DateParticipant)
+    participant = models.ForeignKey(DateParticipant, related_name='slot_participants')
     status = models.CharField(max_length=40)
 
     @property

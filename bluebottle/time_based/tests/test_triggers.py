@@ -907,3 +907,24 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             participant.contributions.get().status,
             'succeeded'
         )
+
+
+class SlotParticipantTriggerTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.activity = DateActivityFactory.create(slots=[])
+        self.slot1 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+
+    def test_apply(self):
+        participant = DateParticipantFactory.create(
+            activity=self.activity
+        )
+        self.assertEqual(
+            participant.slot_participants.count(),
+            2
+        )
+        self.assertEqual(
+            participant.status,
+            'accepted'
+        )

@@ -28,12 +28,27 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=1)).date()
 
 
+class DateSlotFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = DateActivitySlot
+
+    title = factory.Faker('sentence')
+    capacity = 10
+    is_online = False
+
+    location = factory.SubFactory(GeolocationFactory)
+    start = (now() + timedelta(weeks=4))
+    duration = timedelta(hours=2)
+
+
 class DateActivityFactory(TimeBasedFactory):
     class Meta:
         model = DateActivity
 
-    start = (now() + timedelta(weeks=4))
-    duration = timedelta(hours=2)
+    slots = factory.RelatedFactory(
+        DateSlotFactory,
+        factory_related_name='activity'
+    )
 
 
 class PeriodActivityFactory(TimeBasedFactory):
@@ -46,20 +61,6 @@ class PeriodActivityFactory(TimeBasedFactory):
     is_online = False
 
     start = (now() + timedelta(weeks=2)).date()
-
-
-class DateSlotFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = DateActivitySlot
-
-    activity = factory.SubFactory(DateActivityFactory)
-    title = factory.Faker('sentence')
-    capacity = 10
-    is_online = False
-
-    location = factory.SubFactory(GeolocationFactory)
-    start = (now() + timedelta(weeks=4))
-    duration = timedelta(hours=2)
 
 
 class DateParticipantFactory(factory.DjangoModelFactory):

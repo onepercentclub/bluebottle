@@ -9,7 +9,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine
+    TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine, PeriodStateMachine
 )
 from bluebottle.time_based.triggers import has_participants, has_no_participants
 from bluebottle.time_based.effects import CreatePeriodParticipationEffect
@@ -47,10 +47,10 @@ class PeriodActivityStartedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(TimeBasedStateMachine.start, conditions=[
+        TransitionEffect(PeriodStateMachine.start, conditions=[
             has_participants
         ]),
-        TransitionEffect(TimeBasedStateMachine.expire, conditions=[
+        TransitionEffect(PeriodStateMachine.expire, conditions=[
             has_no_participants
         ]),
     ]

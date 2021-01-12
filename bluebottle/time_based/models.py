@@ -14,7 +14,7 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
+    PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
@@ -198,7 +198,6 @@ class DateActivity(TimeBasedActivity):
     duration_period = 'overall'
 
     validators = [
-        DateActivityRegistrationDeadlineValidator,
         CompletedSlotsValidator,
         HasSlotValidator
     ]
@@ -275,9 +274,7 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = [
-            'start', 'duration', 'is_online'
-        ]
+        fields = ['is_online']
         if not self.is_online:
             fields.append('location')
         return fields

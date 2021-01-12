@@ -23,7 +23,6 @@ class TimeBasedActivityStatesTestCase():
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
         self.initiative.states.submit(save=True)
-
         self.activity = self.factory.create(initiative=self.initiative)
 
     def test_initial(self):
@@ -200,5 +199,33 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
         )
         self.assertTrue(
             PeriodStateMachine.cancel in
+            self.activity.states.possible_transitions()
+        )
+
+
+class DateActivitySlotStatesTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative.states.submit(save=True)
+        self.activity = DateActivityFactory.create(initiative=self.initiative)
+
+    def test_initial(self):
+        self.assertEqual(
+            self.activity.status, 'draft'
+        )
+        self.assertTrue(
+            TimeBasedStateMachine.submit in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertTrue(
+            TimeBasedStateMachine.delete in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertTrue(
+            TimeBasedStateMachine.reject in
             self.activity.states.possible_transitions()
         )

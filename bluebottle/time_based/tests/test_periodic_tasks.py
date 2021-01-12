@@ -57,6 +57,66 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
         self.assertEqual(self.activity.status, 'full')
 
+
+class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, 'now', return_value=when):
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                on_a_date_tasks()
+
+    @property
+    def before(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day
+            ) - timedelta(days=1)
+        )
+
+    @property
+    def after_registration_deadline(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day
+            ) + timedelta(days=1)
+        )
+
+
+class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def run_task(self, when):
+        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+            mock_date.today.return_value = when
+            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+            with_a_deadline_tasks()
+
+    @property
+    def after_registration_deadline(self):
+        return self.activity.registration_deadline + timedelta(days=1)
+
+    @property
+    def before(self):
+        return self.activity.registration_deadline - timedelta(days=1)
+
+    @property
+    def during(self):
+        return self.activity.start
+
+    @property
+    def after(self):
+        return self.activity.deadline + timedelta(days=1)
+
     def test_expire(self):
         self.assertEqual(self.activity.status, 'open')
 
@@ -98,74 +158,6 @@ class TimeBasedActivityPeriodicTasksTestCase():
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
-
-
-class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    def run_task(self, when):
-        with mock.patch.object(timezone, 'now', return_value=when):
-            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-                mock_date.today.return_value = when.date()
-                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                on_a_date_tasks()
-
-    @property
-    def before(self):
-        return timezone.get_current_timezone().localize(
-            datetime(
-                self.activity.registration_deadline.year,
-                self.activity.registration_deadline.month,
-                self.activity.registration_deadline.day
-            ) - timedelta(days=1)
-        )
-
-    @property
-    def after_registration_deadline(self):
-        return timezone.get_current_timezone().localize(
-            datetime(
-                self.activity.registration_deadline.year,
-                self.activity.registration_deadline.month,
-                self.activity.registration_deadline.day
-            ) + timedelta(days=1)
-        )
-
-    @property
-    def during(self):
-        return self.activity.start + timedelta(hours=1)
-
-    @property
-    def after(self):
-        return self.activity.start + self.activity.duration + timedelta(hours=1)
-
-
-class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def run_task(self, when):
-        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-            mock_date.today.return_value = when
-            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-            with_a_deadline_tasks()
-
-    @property
-    def after_registration_deadline(self):
-        return self.activity.registration_deadline + timedelta(days=1)
-
-    @property
-    def before(self):
-        return self.activity.registration_deadline - timedelta(days=1)
-
-    @property
-    def during(self):
-        return self.activity.start
-
-    @property
-    def after(self):
-        return self.activity.deadline + timedelta(days=1)
 
 
 class PeriodParticipantPeriodicTest(BluebottleTestCase):

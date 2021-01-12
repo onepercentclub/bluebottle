@@ -28,7 +28,7 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=1)).date()
 
 
-class DateSlotFactory(factory.DjangoModelFactory):
+class DateActivitySlotFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = DateActivitySlot
 
@@ -46,7 +46,7 @@ class DateActivityFactory(TimeBasedFactory):
         model = DateActivity
 
     slots = factory.RelatedFactory(
-        DateSlotFactory,
+        DateActivitySlotFactory,
         factory_related_name='activity'
     )
 

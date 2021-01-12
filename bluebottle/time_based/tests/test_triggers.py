@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateSlotFactory
+    DateActivitySlotFactory
 )
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -585,7 +585,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user)
 
         self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
-        self.slot = DateSlotFactory.create(activity=self.activity)
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)

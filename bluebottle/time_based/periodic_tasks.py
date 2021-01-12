@@ -159,6 +159,7 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask
 ]
+
 DateActivitySlot.periodic_tasks = [
     SlotStartedTask, SlotFinishedTask,
 ]

@@ -5,9 +5,9 @@ from django.utils.timezone import now
 from bluebottle.activities.models import Organizer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
 )
-from bluebottle.time_based.states import TimeBasedStateMachine, PeriodStateMachine
+from bluebottle.time_based.states import TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -209,23 +209,40 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
         self.initiative.states.submit(save=True)
-        self.activity = DateActivityFactory.create(initiative=self.initiative)
+        self.activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+        )
 
     def test_initial(self):
         self.assertEqual(
-            self.activity.status, 'draft'
+            self.slot.status, 'open'
         )
         self.assertTrue(
-            TimeBasedStateMachine.submit in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.delete in
-            self.activity.states.possible_transitions()
+            DateActivitySlotStateMachine.cancel in
+            self.slot.states.possible_transitions()
         )
 
+    def test_cancel(self):
+        self.slot.states.cancel(save=True)
+        self.assertEqual(
+            self.slot.status, 'cancelled'
+        )
         self.assertTrue(
-            TimeBasedStateMachine.reject in
-            self.activity.states.possible_transitions()
+            DateActivitySlotStateMachine.reopen in
+            self.slot.states.possible_transitions()
+        )
+
+    def test_reopen(self):
+        self.test_cancel()
+        self.slot.states.reopen(save=True)
+        self.assertEqual(
+            self.slot.status, 'open'
+        )
+        self.assertTrue(
+            DateActivitySlotStateMachine.cancel in
+            self.slot.states.possible_transitions()
         )

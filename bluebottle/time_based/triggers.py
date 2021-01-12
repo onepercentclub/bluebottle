@@ -1,9 +1,6 @@
 from datetime import date
-from django.utils.timezone import now
 
-from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.notifications.effects import NotificationEffect
+from django.utils.timezone import now
 
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
@@ -12,10 +9,14 @@ from bluebottle.activities.triggers import (
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
-
-from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects import (
+    CreatePeriodParticipationEffect, SetEndDateEffect,
+    ClearStartEffect, ClearDeadlineEffect,
+    RescheduleDurationsEffect,
+    ActiveDurationsTransitionEffect, CreateSlotParticipantsEffect, CreateSlotTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
     DateChanged, DeadlineChanged,
@@ -26,15 +27,13 @@ from bluebottle.time_based.messages import (
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification
 )
-from bluebottle.time_based.effects import (
-    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect,
-    ClearStartEffect, ClearDeadlineEffect,
-    RescheduleDurationsEffect,
-    ActiveDurationsTransitionEffect
+from bluebottle.time_based.models import (
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
-    ParticipantStateMachine, TimeContributionStateMachine
+    ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine
 )
 
 
@@ -604,6 +603,14 @@ def activity_is_finished(effect):
         return False
 
 
+def slot_selection_is_all(effect):
+    """
+    all slots ar selected when participant applies
+    """
+    activity = effect.instance.activity
+    return activity.slot_selection == 'all'
+
+
 class ParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -774,12 +781,65 @@ class ParticipantTriggers(ContributorTriggers):
 
 
 @register(DateParticipant)
-class OnADateParticipantTriggers(ParticipantTriggers):
+class DateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreateDateParticipationEffect,
+                CreateSlotParticipantsEffect
+            ]
+        ),
+    ]
+
+
+def participant_slot_is_finished(effect):
+    return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+
+
+@register(SlotParticipant)
+class SlotParticipantTriggers(TriggerManager):
+
+    triggers = [
+        TransitionTrigger(
+            SlotParticipantStateMachine.initiate,
+            effects=[
+                CreateSlotTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            SlotParticipantStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            SlotParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            SlotParticipantStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                )
             ]
         ),
     ]

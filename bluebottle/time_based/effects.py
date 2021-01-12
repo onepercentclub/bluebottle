@@ -6,11 +6,11 @@ from django.utils.translation import ugettext as _
 from django.utils.timezone import get_current_timezone
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.models import TimeContribution, SlotParticipant
 from django.template.loader import render_to_string
 
 
-class CreateDateParticipationEffect(Effect):
+class CreateTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_on_a_date_duration.html'
 
@@ -20,6 +20,24 @@ class CreateDateParticipationEffect(Effect):
             end = activity.start + activity.duration
             contribution = TimeContribution(
                 contributor=self.instance,
+                value=activity.duration + (activity.preparation or timedelta()),
+                start=activity.start,
+                end=end
+            )
+            contribution.save()
+
+
+class CreateSlotTimeContributionEffect(Effect):
+    title = _('Create contribution')
+    template = 'admin/create_on_a_date_duration.html'
+
+    def post_save(self, **kwargs):
+        activity = self.instance.slot.activity
+        if activity.start and activity.duration:
+            end = activity.start + activity.duration
+            contribution = TimeContribution(
+                contributor=self.instance.participant,
+                slot_participant=self.instance,
                 value=activity.duration + (activity.preparation or timedelta()),
                 start=activity.start,
                 end=end
@@ -163,3 +181,19 @@ def ActiveDurationsTransitionEffect(transition, conditions=None):
         conditions = _conditions
 
     return _ActiveDurationsTransitionEffect
+
+
+class CreateSlotParticipantsEffect(Effect):
+    title = _('Add participants to all slots if slot selection is set to "all"')
+    template = 'admin/create_slot_participants.html'
+
+    @property
+    def display(self):
+        return self.instance.activity.slot_selection == 'all' and self.instance.activity.slots.count() > 1
+
+    def post_save(self, **kwargs):
+        participant = self.instance
+        activity = self.instance.activity
+        if activity.slot_selection == 'all':
+            for slot in activity.slots.all():
+                SlotParticipant.objects.create(participant=participant, slot=slot)

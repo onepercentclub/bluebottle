@@ -5,7 +5,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot,
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
 )
 from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, AllStates, ModelStateMachine
@@ -452,6 +452,105 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant started contributing again."),
         automatic=False,
+    )
+
+
+@register(SlotParticipant)
+class SlotParticipantStateMachine(ModelStateMachine):
+    registered = State(
+        _('registered'),
+        'registered',
+        _("This person registered to this slot.")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    removed = State(
+        _('removed'),
+        'removed',
+        _('This person no longer takes part in this slot.')
+    )
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _('This person has withdrawn from this slot. Spent hours are retained.')
+    )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _("The slot has been cancelled. This person's contribution "
+          "is removed and the spent hours are reset to zero.")
+    )
+
+    def is_user(self, user):
+        """is participant"""
+        return self.instance.user == user
+
+    def can_accept_participant(self, user):
+        """can accept participant"""
+        return user in [
+            self.instance.activity.owner,
+            self.instance.activity.initiative.activity_manager,
+            self.instance.activity.initiative.owner
+        ] or user.is_staff
+
+    def can_reject_participant(self, user):
+        """can accept participant"""
+        return self.can_accept_participant(user) and not user == self.instance.user
+
+    def slot_is_open(self):
+        """task is open"""
+        return self.instance.slot.status in (
+            DateActivitySlotStateMachine.open.value,
+            DateActivitySlotStateMachine.running.value,
+            DateActivitySlotStateMachine.full.value
+        )
+
+    initiate = Transition(
+        EmptyState(),
+        registered,
+        name=_('Initiate'),
+        description=_("User registered to join the slot."),
+    )
+
+    accept = Transition(
+        removed,
+        registered,
+        name=_('Accept'),
+        description=_("Accept the previously person as a participant to the slot."),
+        automatic=False,
+        permission=can_accept_participant,
+    )
+
+    remove = Transition(
+        registered,
+        removed,
+        name=_('Remove'),
+        description=_("Remove this person as a participant from the slot."),
+        automatic=False,
+        permission=can_reject_participant,
+    )
+
+    withdraw = Transition(
+        registered,
+        withdrawn,
+        name=_('Withdraw'),
+        description=_("Stop your participation in the slot."),
+        automatic=False,
+        permission=is_user,
+        hide_from_admin=True,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        registered,
+        name=_('Reapply'),
+        description=_("User re-applies to the slot after previously withdrawing."),
+        automatic=False,
+        conditions=[slot_is_open],
+        permission=is_user,
     )
 
 

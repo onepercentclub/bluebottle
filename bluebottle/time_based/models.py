@@ -2,26 +2,22 @@ from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 import pytz
-
-from timezonefinder import TimezoneFinder
-
-from bluebottle.fsm.triggers import TriggerMixin
-
 from django.db import models, connection
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
+from timezonefinder import TimezoneFinder
 
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-
 
 tf = TimezoneFinder()
 
@@ -173,6 +169,11 @@ class TimeBasedActivity(Activity):
         return u'{}?{}'.format(url, urlencode(params))
 
 
+class SlotSelectionChoices(DjangoChoices):
+    all = ChoiceItem('all', label=_("All"))
+    free = ChoiceItem('free', label=_("Free"))
+
+
 class DateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
@@ -180,6 +181,18 @@ class DateActivity(TimeBasedActivity):
     online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default=''
+    )
+
+    slot_selection = models.CharField(
+        _('Slot selection'),
+        help_text=_(
+            'All: Participant will join all time slots. '
+            'Free: Participant can pick any number of slots to join.'),
+        max_length=20,
+        blank=True,
+        null=True,
+        default=SlotSelectionChoices.all,
+        choices=SlotSelectionChoices.choices,
     )
 
     duration_period = 'overall'
@@ -442,8 +455,43 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
+class SlotParticipant(TriggerMixin, models.Model):
+
+    slot = models.ForeignKey(DateActivitySlot)
+    participant = models.ForeignKey(DateParticipant)
+    status = models.CharField(max_length=40)
+
+    @property
+    def user(self):
+        return self.participant.user
+
+    @property
+    def activity(self):
+        return self.slot.activity
+
+    class Meta(object):
+        verbose_name = _("Slot participant")
+        verbose_name_plural = _("Slot participants")
+        permissions = (
+            ('api_read_slotparticipant', 'Can view slot participant through the API'),
+            ('api_add_slotparticipant', 'Can add slot participant through the API'),
+            ('api_change_slotparticipant', 'Can change slot participant through the API'),
+            ('api_delete_slotparticipant', 'Can delete slot participant through the API'),
+
+            ('api_read_own_slotparticipant', 'Can view own slot participant through the API'),
+            ('api_add_own_slotparticipant', 'Can add own slot participant through the API'),
+            ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
+            ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'contributors/time-based/slot-participants'
+
+
 class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
+
+    slot_participant = models.ForeignKey(SlotParticipant, null=True, related_name='contributions')
 
     class Meta:
         verbose_name = _("Time contribution")

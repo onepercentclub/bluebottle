@@ -7,16 +7,17 @@ from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
-from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
+    SlotParticipant
 )
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
 class BaseParticipantAdminInline(admin.TabularInline):
@@ -172,6 +173,8 @@ class DateActivityAdmin(TimeBasedAdmin):
         'start',
         'duration',
 
+        'slot_selection',
+
         'preparation',
         'registration_deadline',
 
@@ -239,7 +242,15 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         return obj.deadline
 
 
+class SlotParticipantInline(admin.TabularInline):
+    model = SlotParticipant
+    extra = 0
+    raw_id_fields = ['participant', 'slot']
+
+
 class SlotAdmin(StateMachineAdmin):
+
+    inlines = [SlotParticipantInline]
 
     formfield_overrides = {
         models.DurationField: {
@@ -318,9 +329,7 @@ class SlotAdmin(StateMachineAdmin):
 
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
-    model = DateActivity
-
-    # inlines = (DateSeesionParticipantInlines,)
+    model = DateActivitySlot
 
     raw_id_fields = ['activity', 'location']
     # list_filter = ['expertise']
@@ -374,6 +383,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
     readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
     fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
+    list_display = ['__str__', 'activity_link', 'status']
 
     def total(self, obj):
         if not obj:
@@ -389,5 +399,9 @@ class TimeContributionAdmin(ContributionChildAdmin):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
-    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [
+        SlotParticipantInline,
+        TimeContributionInlineAdmin
+    ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
+    list_display = ['__str__', 'activity_link', 'status']

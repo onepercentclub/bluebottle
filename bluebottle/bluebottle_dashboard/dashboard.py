@@ -28,12 +28,13 @@ class CustomIndexDashboard(Dashboard):
         # Initiatives
         self.children.append(MyReviewingInitiatives())
 
-        user = context.request.user
-        if user.location:
-            self.children.append(MyOfficeInitiatives())
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
-                self.children.append(MyOfficeSubRegionInitiatives())
-                self.children.append(MyOfficeRegionInitiatives())
+        if hasattr(context, 'request'):
+            user = context.request.user
+            if user.location:
+                self.children.append(MyOfficeInitiatives())
+                if InitiativePlatformSettings.objects.get().enable_office_regions:
+                    self.children.append(MyOfficeSubRegionInitiatives())
+                    self.children.append(MyOfficeRegionInitiatives())
 
         # Activities
         self.children.append(RecentActivities())

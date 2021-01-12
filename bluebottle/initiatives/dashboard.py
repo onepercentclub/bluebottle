@@ -32,9 +32,10 @@ class MyOfficeInitiatives(DashboardModule):
 
     def load_from_model(self):
         super(MyOfficeInitiatives, self).load_from_model()
-        location = self.context.request.user.location
-        self.title = self.title.format(location=location)
-        self.title_url += "?location__id__exact={}".format(location.id)
+        if hasattr(self.context, 'request'):
+            location = self.context.request.user.location
+            self.title = self.title.format(location=location)
+            self.title_url += "?location__id__exact={}".format(location.id)
 
 
 class MyOfficeSubRegionInitiatives(DashboardModule):
@@ -52,9 +53,10 @@ class MyOfficeSubRegionInitiatives(DashboardModule):
 
     def load_from_model(self):
         super(MyOfficeSubRegionInitiatives, self).load_from_model()
-        location = self.context.request.user.location
-        self.title = self.title.format(location=location.subregion)
-        self.title_url += "?location__subregion__id__exact={}".format(location.subregion.id)
+        if hasattr(self.context, 'request'):
+            location = self.context.request.user.location
+            self.title = self.title.format(location=location.subregion)
+            self.title_url += "?location__subregion__id__exact={}".format(location.subregion.id)
 
 
 class MyOfficeRegionInitiatives(DashboardModule):
@@ -72,9 +74,10 @@ class MyOfficeRegionInitiatives(DashboardModule):
 
     def load_from_model(self):
         super(MyOfficeRegionInitiatives, self).load_from_model()
-        location = self.context.request.user.location
-        self.title = self.title.format(location=location.subregion.region)
-        self.title_url += "?location__subregion__region__id__exact={}".format(location.subregion.region.id)
+        if hasattr(self.context, 'request'):
+            location = self.context.request.user.location
+            self.title = self.title.format(location=location.subregion.region)
+            self.title_url += "?location__subregion__region__id__exact={}".format(location.subregion.region.id)
 
 
 class MyReviewingInitiatives(DashboardModule):

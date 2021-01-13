@@ -15,7 +15,8 @@ from rest_framework import status
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, PeriodParticipantFactory,
+    DateSlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -1222,7 +1223,15 @@ class RelatedParticipantsAPIViewTestCase():
             resource for resource in response.json()['included']
             if resource['type'] == 'contributions/time-contributions'
         ]
-        self.assertEqual(len(included_contributions), 5)
+        # No participant slot is created for the rejected user, since that user is already
+        # accepted
+        self.assertEqual(len(included_contributions), 4)
+
+        included_slot_participants = [
+            resource for resource in response.json()['included']
+            if resource['type'] == 'contributors/time-based/slot-participants'
+        ]
+        self.assertEqual(len(included_slot_participants), 4)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
@@ -1246,6 +1255,110 @@ class RelatedParticipantsAPIViewTestCase():
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    url_name = 'date-participants'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+
+        DateSlotFactory.create(activity=self.activity)
+
+
+class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    url_name = 'period-participants'
+    participant_type = 'contributors/time-based/period-participant'
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = DateActivityFactory.create(review=False, slot_selection='free')
+        self.slot = DateSlotFactory.create(activity=self.activity)
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.url = reverse('slot-participant-list')
+
+        self.data = {
+            'data': {
+                'type': 'contributors/time-based/slot-participants',
+                'relationships': {
+                    'slot': {
+                        'data': {
+                            'type': 'activities/time-based/date-slots', 'id': self.slot.id
+                        },
+                    },
+                    'participant': {
+                        'data': {
+                            'type': 'contributors/time-based/date-participants',
+                            'id': self.participant.id
+                        },
+                    },
+                }
+            }
+        }
+
+    def test_create_participant_user(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['relationships']['slot']['data']['id'], str(self.slot.pk)
+        )
+
+        self.assertEqual(
+            data['relationships']['participant']['data']['id'], str(self.participant.pk)
+        )
+
+        self.assertEqual(data['id'], str(self.participant.slots.get().pk))
+
+    def test_create_participant_user_twice(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_different_user(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=BlueBottleUserFactory.create())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_activity_owner(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_no_user(self):
+        response = self.client.post(self.url, json.dumps(self.data))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_different_slot(self):
+        slot = DateSlotFactory.create()
+        self.data['data']['relationships']['slot']['data']['id'] = slot.pk
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_missing_slot(self):
+        del self.data['data']['relationships']['slot']
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_missing_participant(self):
+        del self.data['data']['relationships']['participant']
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TimeContributionDetailAPIViewTestCase():
@@ -1323,22 +1436,6 @@ class DateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase,
 
 
 class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-
-class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'date'
-    url_name = 'date-participants'
-    participant_type = 'contributors/time-based/date-participant'
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-
-class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'period'
-    url_name = 'period-participants'
-    participant_type = 'contributors/time-based/period-participant'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 

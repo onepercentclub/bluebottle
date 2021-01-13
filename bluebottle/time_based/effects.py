@@ -184,9 +184,9 @@ def ActiveDurationsTransitionEffect(transition, conditions=None):
     return _ActiveDurationsTransitionEffect
 
 
-class CreateSlotParticipantsEffect(Effect):
+class CreateSlotParticipantsForSlotsEffect(Effect):
     title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants.html'
+    template = 'admin/create_slot_participants_for_slots.html'
 
     @property
     def display(self):
@@ -197,4 +197,20 @@ class CreateSlotParticipantsEffect(Effect):
         activity = self.instance.activity
         if activity.slot_selection == 'all':
             for slot in activity.slots.all():
+                SlotParticipant.objects.create(participant=participant, slot=slot)
+
+
+class CreateSlotParticipantsForParticipantsEffect(Effect):
+    title = _('Add participants to all slots if slot selection is set to "all"')
+    template = 'admin/create_slot_participants_for_participants.html'
+
+    @property
+    def display(self):
+        return self.instance.activity.slot_selection == 'all'
+
+    def post_save(self, **kwargs):
+        slot = self.instance
+        activity = self.instance.activity
+        if activity.slot_selection == 'all':
+            for participant in activity.accepted_participants:
                 SlotParticipant.objects.create(participant=participant, slot=slot)

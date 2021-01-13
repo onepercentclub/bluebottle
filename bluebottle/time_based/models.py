@@ -326,6 +326,9 @@ class DateActivitySlot(ActivitySlot):
         verbose_name = _('slot')
         verbose_name_plural = _('slots')
 
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/date-slots'
+
 
 class DurationPeriodChoices(DjangoChoices):
     overall = ChoiceItem('overall', label=_("in total"))
@@ -477,6 +480,7 @@ class SlotParticipant(TriggerMixin, models.Model):
 
     slot = models.ForeignKey(DateActivitySlot, related_name='slot_participants')
     participant = models.ForeignKey(DateParticipant, related_name='slot_participants')
+
     status = models.CharField(max_length=40)
     auto_approve = True
 

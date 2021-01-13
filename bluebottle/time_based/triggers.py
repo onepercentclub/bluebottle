@@ -16,7 +16,8 @@ from bluebottle.time_based.effects import (
     CreatePeriodParticipationEffect, SetEndDateEffect,
     ClearStartEffect, ClearDeadlineEffect,
     RescheduleDurationsEffect,
-    ActiveDurationsTransitionEffect, CreateSlotParticipantsEffect, CreateSlotTimeContributionEffect
+    ActiveDurationsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
+    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
     DeadlineChanged,
@@ -325,6 +326,12 @@ def slot_is_not_full(effect):
 class ActivitySlotTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
+            ActivitySlotStateMachine.initiate,
+            effects=[
+                CreateSlotParticipantsForParticipantsEffect
+            ]
+        ),
+        TransitionTrigger(
             ActivitySlotStateMachine.finish,
             effects=[
                 ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
@@ -416,7 +423,7 @@ class ActivitySlotTriggers(TriggerManager):
     ]
 
 
-@register(DateActivitySlot)
+@ register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
         TransitionTrigger(
@@ -552,7 +559,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
     ]
 
 
-@register(PeriodActivitySlot)
+@ register(PeriodActivitySlot)
 class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
 
@@ -815,7 +822,7 @@ class DateParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsEffect
+                CreateSlotParticipantsForSlotsEffect
             ]
         ),
     ]

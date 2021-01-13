@@ -18,7 +18,8 @@ from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransition
 
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
+    SlotParticipant
 )
 
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
@@ -350,9 +351,16 @@ class ParticipantListSerializer(BaseContributorSerializer):
 class DateParticipantListSerializer(ParticipantListSerializer):
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
+        fields = ParticipantListSerializer.Meta.fields + ('slots', )
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
+        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slots', ]
+
+    included_serializers = dict(
+        ParticipantListSerializer.included_serializers,
+        **{'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'}
+    )
 
 
 class PeriodParticipantListSerializer(ParticipantListSerializer):
@@ -417,6 +425,7 @@ class ParticipantSerializer(BaseContributorSerializer):
 class DateParticipantSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
+        fields = ParticipantSerializer.Meta.fields + ('slots', )
 
         validators = [
             UniqueTogetherValidator(
@@ -427,10 +436,14 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slots', ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer'}
+        **{
+            'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
+            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'
+        }
     )
 
 
@@ -452,6 +465,41 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         ParticipantSerializer.included_serializers,
         **{'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer'}
     )
+
+
+def activity_matches_participant_and_slot(value):
+    if value['slot'].activity != value['participant'].activity:
+        raise serializers.ValidationError(
+            'The activity of the slot does not match the activity of the participant.'
+        )
+
+
+class SlotParticipantSerializer(ModelSerializer):
+    class Meta:
+        model = SlotParticipant
+        fields = ['id', 'status', 'slot', 'participant']
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=SlotParticipant.objects.all(),
+                fields=('slot', 'participant')
+            ),
+            activity_matches_participant_and_slot
+        ]
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/slot-participants'
+
+
+class SlotParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=SlotParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'contributors/time-based/slot-participant-transitions'
 
 
 class TimeContributionSerializer(BaseContributionSerializer):

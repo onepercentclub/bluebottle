@@ -178,10 +178,10 @@ class ActivitySlotStateMachine(ModelStateMachine):
         _('The slot is cancelled.')
     )
 
-    initial = Transition(
+    initiate = Transition(
         EmptyState(),
         draft,
-        name=_('Initial'),
+        name=_('Initiate'),
         description=_(
             'The slot was created.'
         ),

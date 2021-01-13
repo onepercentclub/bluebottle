@@ -15,7 +15,8 @@ from rest_framework import status
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, PeriodParticipantFactory,
+    DateActivitySlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -1206,20 +1207,20 @@ class RelatedParticipantsAPIViewTestCase():
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
     def test_get_owner(self):
-        response = self.client.get(self.url, user=self.activity.owner)
+        self.response = self.client.get(self.url, user=self.activity.owner)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(response.json()['data']), 5)
+        self.assertEqual(len(self.response.json()['data']), 5)
 
         included_documents = [
-            resource for resource in response.json()['included']
+            resource for resource in self.response.json()['included']
             if resource['type'] == 'private-documents'
         ]
         self.assertEqual(len(included_documents), 5)
 
         included_contributions = [
-            resource for resource in response.json()['included']
+            resource for resource in self.response.json()['included']
             if resource['type'] == 'contributions/time-contributions'
         ]
         self.assertEqual(len(included_contributions), 5)
@@ -1246,6 +1247,258 @@ class RelatedParticipantsAPIViewTestCase():
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    url_name = 'date-participants'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+
+        DateActivitySlotFactory.create(activity=self.activity)
+
+    def test_get_owner(self):
+        super().test_get_owner()
+
+        included_slot_participants = [
+            resource for resource in self.response.json()['included']
+            if resource['type'] == 'contributors/time-based/slot-participants'
+        ]
+        self.assertEqual(len(included_slot_participants), 5)
+
+
+class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    url_name = 'period-participants'
+    participant_type = 'contributors/time-based/period-participant'
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = DateActivityFactory.create(review=False, slot_selection='free')
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.url = reverse('slot-participant-list')
+
+        self.data = {
+            'data': {
+                'type': 'contributors/time-based/slot-participants',
+                'relationships': {
+                    'slot': {
+                        'data': {
+                            'type': 'activities/time-based/date-slots', 'id': self.slot.id
+                        },
+                    },
+                    'participant': {
+                        'data': {
+                            'type': 'contributors/time-based/date-participants',
+                            'id': self.participant.id
+                        },
+                    },
+                }
+            }
+        }
+
+    def test_create_participant_user(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['relationships']['slot']['data']['id'], str(self.slot.pk)
+        )
+
+        self.assertEqual(
+            data['relationships']['participant']['data']['id'], str(self.participant.pk)
+        )
+
+        self.assertEqual(data['id'], str(self.participant.slot_participants.get().pk))
+
+    def test_create_participant_user_twice(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_different_user(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=BlueBottleUserFactory.create())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_activity_owner(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_no_user(self):
+        response = self.client.post(self.url, json.dumps(self.data))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_different_slot(self):
+        slot = DateActivitySlotFactory.create()
+        self.data['data']['relationships']['slot']['data']['id'] = slot.pk
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_missing_slot(self):
+        del self.data['data']['relationships']['slot']
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_missing_participant(self):
+        del self.data['data']['relationships']['participant']
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = DateActivityFactory.create()
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+        self.slot_participant = self.participant.slot_participants.get(
+            participant=self.participant, slot=self.slot
+        )
+
+        self.url = reverse('slot-participant-transition-list')
+        self.data = {
+            'data': {
+                'type': 'contributors/time-based/slot-participant-transitions',
+                'attributes': {},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributors/time-based/slot-participants',
+                            'id': self.slot_participant.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_withdraw_by_user(self):
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['included'][0]['type'],
+            'contributors/time-based/slot-participants'
+        )
+        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+
+    def test_reapply_by_user(self):
+        self.test_withdraw_by_user()
+
+        self.data['data']['attributes']['transition'] = 'reapply'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+
+    def test_withdraw_by_owner(self):
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reapply_by_owner(self):
+        self.test_withdraw_by_user()
+
+        self.data['data']['attributes']['transition'] = 'reapply'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_remove_by_owner(self):
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'removed')
+
+    def test_accept_by_owner(self):
+        self.test_remove_by_owner()
+
+        self.data['data']['attributes']['transition'] = 'accept'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+
+    def test_remove_by_user(self):
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_accept_by_user(self):
+        self.test_remove_by_owner()
+        self.data['data']['attributes']['transition'] = 'accept'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TimeContributionDetailAPIViewTestCase():
@@ -1323,22 +1576,6 @@ class DateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase,
 
 
 class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-
-class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'date'
-    url_name = 'date-participants'
-    participant_type = 'contributors/time-based/date-participant'
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-
-class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
-    type = 'period'
-    url_name = 'period-participants'
-    participant_type = 'contributors/time-based/period-participant'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 

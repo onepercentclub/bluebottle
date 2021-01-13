@@ -178,12 +178,10 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
                     is_not_full,
-                    is_not_started,
                     registration_deadline_is_not_passed
                 ]),
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[
                     is_full,
-                    is_not_started,
                     registration_deadline_is_not_passed
                 ]),
             ]

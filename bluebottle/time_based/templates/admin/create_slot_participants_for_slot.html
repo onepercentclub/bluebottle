@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Add participant to all slots" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Add all accepted participants to {{instance}}
+{% endblocktrans %}
+

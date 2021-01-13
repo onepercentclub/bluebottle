@@ -12,8 +12,9 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot
+    DateActivitySlot, SlotParticipant
 )
+from bluebottle.time_based.permissions import SlotParticipantPermission
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     PeriodActivitySerializer,
@@ -24,7 +25,9 @@ from bluebottle.time_based.serializers import (
     DateParticipantTransitionSerializer,
     PeriodParticipantTransitionSerializer,
     TimeContributionSerializer,
-    DateActivitySlotSerializer
+    DateActivitySlotSerializer,
+    SlotParticipantSerializer,
+    SlotParticipantTransitionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -176,16 +179,16 @@ class PeriodParticipantList(ParticipantList):
     serializer_class = PeriodParticipantSerializer
 
 
-class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
-
-
 class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
     serializer_class = TimeContributionSerializer
     permission_classes = [ContributionPermission]
+
+
+class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
+    )
 
 
 class DateParticipantDetail(ParticipantDetail):
@@ -210,6 +213,23 @@ class DateParticipantTransitionList(ParticipantTransitionList):
 class PeriodParticipantTransitionList(ParticipantTransitionList):
     serializer_class = PeriodParticipantTransitionSerializer
     queryset = PeriodParticipant.objects.all()
+
+
+class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantTransitionList(TransitionList):
+    serializer_class = SlotParticipantTransitionSerializer
+    queryset = SlotParticipant.objects.all()
 
 
 class ParticipantDocumentDetail(PrivateFileView):

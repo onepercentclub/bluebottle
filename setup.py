@@ -84,6 +84,7 @@ install_requires = [
     'openpyxl==2.4.8',
     'pendulum==1.2.4',
     'psycopg2-binary==2.8.6',
+    'py-moneyed==0.8',
     'pyasn1==0.4.2',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',

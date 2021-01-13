@@ -129,15 +129,15 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:activities_activity_changelist')
         response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
-        self.assertNotContains(response, 'By subregion')
-        self.assertNotContains(response, 'by region')
+        self.assertNotContains(response, 'By office group')
+        self.assertNotContains(response, 'by office region')
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'By subregion')
-        self.assertContains(response, 'By region')
+        self.assertContains(response, 'By office group')
+        self.assertContains(response, 'By office region')
 
     def test_dashboards_office_admin(self):
         initiative_settings = InitiativePlatformSettings.objects.get()

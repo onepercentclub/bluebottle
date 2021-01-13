@@ -243,6 +243,22 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         null=True, blank=True)
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
+    @property
+    def accepted_participants(self):
+        return self.slot_participants.filter(status__in=('registered',))
+
+    @property
+    def durations(self):
+        return TimeContribution.objects.filter(
+            slot_participant__slot=self
+        )
+
+    @property
+    def active_durations(self):
+        return self.durations.filter(
+            slot_participant__participant__status__in=('new', 'accepted')
+        )
+
     class Meta:
         abstract = True
 
@@ -454,9 +470,10 @@ class PeriodParticipant(Participant, Contributor):
 
 class SlotParticipant(TriggerMixin, models.Model):
 
-    slot = models.ForeignKey(DateActivitySlot)
+    slot = models.ForeignKey(DateActivitySlot, related_name='slot_participants')
     participant = models.ForeignKey(DateParticipant, related_name='slot_participants')
     status = models.CharField(max_length=40)
+    auto_approve = True
 
     @property
     def user(self):

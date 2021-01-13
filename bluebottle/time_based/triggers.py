@@ -238,7 +238,7 @@ class TimeBasedTriggers(ActivityTriggers):
 
 
 @register(DateActivity)
-class DateTriggers(TimeBasedTriggers):
+class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
 
         TransitionTrigger(
@@ -318,6 +318,30 @@ def slot_is_not_full(effect):
 
 class ActivitySlotTriggers(TriggerManager):
     triggers = [
+        TransitionTrigger(
+            ActivitySlotStateMachine.finish,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.cancel,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.reopen,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.reschedule,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+            ]
+        ),
         ModelChangedTrigger(
             ['start', 'duration', 'is_online', 'location'],
             effects=[
@@ -331,7 +355,6 @@ class ActivitySlotTriggers(TriggerManager):
                 ),
             ]
         ),
-
         ModelChangedTrigger(
             'start',
             effects=[

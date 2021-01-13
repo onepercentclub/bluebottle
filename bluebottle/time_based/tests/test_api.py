@@ -1207,31 +1207,23 @@ class RelatedParticipantsAPIViewTestCase():
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
     def test_get_owner(self):
-        response = self.client.get(self.url, user=self.activity.owner)
+        self.response = self.client.get(self.url, user=self.activity.owner)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(response.json()['data']), 5)
+        self.assertEqual(len(self.response.json()['data']), 5)
 
         included_documents = [
-            resource for resource in response.json()['included']
+            resource for resource in self.response.json()['included']
             if resource['type'] == 'private-documents'
         ]
         self.assertEqual(len(included_documents), 5)
 
         included_contributions = [
-            resource for resource in response.json()['included']
+            resource for resource in self.response.json()['included']
             if resource['type'] == 'contributions/time-contributions'
         ]
-        # No participant slot is created for the rejected user, since that user is already
-        # accepted
-        self.assertEqual(len(included_contributions), 4)
-
-        included_slot_participants = [
-            resource for resource in response.json()['included']
-            if resource['type'] == 'contributors/time-based/slot-participants'
-        ]
-        self.assertEqual(len(included_slot_participants), 4)
+        self.assertEqual(len(included_contributions), 5)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
@@ -1268,6 +1260,15 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         super().setUp()
 
         DateSlotFactory.create(activity=self.activity)
+
+    def test_get_owner(self):
+        super().test_get_owner()
+
+        included_slot_participants = [
+            resource for resource in self.response.json()['included']
+            if resource['type'] == 'contributors/time-based/slot-participants'
+        ]
+        self.assertEqual(len(included_slot_participants), 5)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
@@ -1321,7 +1322,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
             data['relationships']['participant']['data']['id'], str(self.participant.pk)
         )
 
-        self.assertEqual(data['id'], str(self.participant.slots.get().pk))
+        self.assertEqual(data['id'], str(self.participant.slot_participants.get().pk))
 
     def test_create_participant_user_twice(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)

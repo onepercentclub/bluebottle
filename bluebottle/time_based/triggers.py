@@ -20,13 +20,13 @@ from bluebottle.time_based.effects import (
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
-    DateChanged, DeadlineChanged,
+    DeadlineChanged,
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    ParticipantRemovedNotification, NewParticipantNotification
+    ParticipantRemovedNotification, NewParticipantNotification, SlotDateChanged
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -239,17 +239,8 @@ class TimeBasedTriggers(ActivityTriggers):
 
 
 @register(DateActivity)
-class DateTriggers(TimeBasedTriggers):
+class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
-
-        TransitionTrigger(
-            DateStateMachine.reschedule,
-            effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset),
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
-            ]
-        ),
-
 
         TransitionTrigger(
             DateStateMachine.reopen_manually,
@@ -274,37 +265,6 @@ class DateTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'start',
-            effects=[
-                NotificationEffect(
-                    DateChanged,
-                    conditions=[
-                        is_not_finished
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.succeed,
-                    conditions=[
-                        is_finished, has_participants
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.expire,
-                    conditions=[
-                        is_finished, has_no_participants
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.reschedule,
-                    conditions=[
-                        is_not_finished
-                    ]
-                ),
-                RescheduleDurationsEffect
             ]
         ),
 
@@ -365,6 +325,30 @@ class ActivitySlotTriggers(TriggerManager):
                 CreateSlotParticipantsForParticipantsEffect
             ]
         ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.finish,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.cancel,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.reopen,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.reschedule,
+            effects=[
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+            ]
+        ),
         ModelChangedTrigger(
             ['start', 'duration', 'is_online', 'location'],
             effects=[
@@ -378,7 +362,6 @@ class ActivitySlotTriggers(TriggerManager):
                 ),
             ]
         ),
-
         ModelChangedTrigger(
             'start',
             effects=[
@@ -434,12 +417,45 @@ class ActivitySlotTriggers(TriggerManager):
     ]
 
 
-@register(DateActivitySlot)
+@ register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
-    triggers = ActivitySlotTriggers.triggers + []
+    triggers = ActivitySlotTriggers.triggers + [
+        TransitionTrigger(
+            ActivitySlotStateMachine.reschedule,
+            effects=[
+                TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                NotificationEffect(
+                    SlotDateChanged,
+                    conditions=[
+                        is_not_finished
+                    ]
+                ),
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[
+                        is_finished
+                    ]
+                ),
+                TransitionEffect(
+                    ActivitySlotStateMachine.reschedule,
+                    conditions=[
+                        is_not_finished
+                    ]
+                ),
+                RescheduleDurationsEffect
+            ]
+        ),
+
+    ]
 
 
-@register(PeriodActivity)
+@ register(PeriodActivity)
 class PeriodTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
@@ -478,23 +494,8 @@ class PeriodTriggers(TimeBasedTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    DateStateMachine.start,
+                    ActivitySlotStateMachine.start,
                     conditions=[is_started]
-                ),
-
-                TransitionEffect(
-                    DateStateMachine.reopen,
-                    conditions=[is_not_started, is_not_full]
-                ),
-
-                TransitionEffect(
-                    DateStateMachine.lock,
-                    conditions=[is_not_started, is_full]
-                ),
-
-                TransitionEffect(
-                    TimeBasedStateMachine.lock,
-                    conditions=[is_not_started, registration_deadline_is_passed]
                 )
             ]
         ),
@@ -530,7 +531,7 @@ class PeriodTriggers(TimeBasedTriggers):
     ]
 
 
-@register(PeriodActivitySlot)
+@ register(PeriodActivitySlot)
 class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
 

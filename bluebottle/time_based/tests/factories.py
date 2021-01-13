@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -28,12 +28,27 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=1)).date()
 
 
+class DateActivitySlotFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = DateActivitySlot
+
+    title = factory.Faker('sentence')
+    capacity = 10
+    is_online = False
+
+    location = factory.SubFactory(GeolocationFactory)
+    start = (now() + timedelta(weeks=4))
+    duration = timedelta(hours=2)
+
+
 class DateActivityFactory(TimeBasedFactory):
     class Meta:
         model = DateActivity
 
-    start = (now() + timedelta(weeks=4))
-    duration = timedelta(hours=2)
+    slots = factory.RelatedFactory(
+        DateActivitySlotFactory,
+        factory_related_name='activity'
+    )
 
 
 class PeriodActivityFactory(TimeBasedFactory):
@@ -46,20 +61,6 @@ class PeriodActivityFactory(TimeBasedFactory):
     is_online = False
 
     start = (now() + timedelta(weeks=2)).date()
-
-
-class DateSlotFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = DateActivitySlot
-
-    activity = factory.SubFactory(DateActivityFactory)
-    title = factory.Faker('sentence')
-    capacity = 10
-    is_online = False
-
-    location = factory.SubFactory(GeolocationFactory)
-    start = (now() + timedelta(weeks=4))
-    duration = timedelta(hours=2)
 
 
 class DateParticipantFactory(factory.DjangoModelFactory):
@@ -88,3 +89,11 @@ class ParticipationFactory(factory.DjangoModelFactory):
 
     start = now() + timedelta(weeks=2)
     end = now() + timedelta(weeks=3)
+
+
+class SlotParticipantFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SlotParticipant
+
+    slot = factory.SubFactory(DateActivitySlotFactory)
+    participant = factory.SubFactory(DateParticipantFactory)

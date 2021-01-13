@@ -76,16 +76,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
-    start = Transition(
-        [
-            ActivityStateMachine.open,
-            full
-        ],
-        running,
-        name=_("Start"),
-        description=_("Start the event.")
-    )
-
     cancel = Transition(
         [
             ActivityStateMachine.open,
@@ -109,25 +99,23 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
-    reschedule = Transition(
-        [
-            TimeBasedStateMachine.running,
-            ActivityStateMachine.expired,
-            ActivityStateMachine.succeeded
-        ],
-        ActivityStateMachine.open,
-        name=_("Reschedule"),
-        description=_(
-            "The date of the activity has been changed to a date in the future. "
-            "The status of the activity will be recalculated."
-        ),
-    )
+    pass
 
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
+
+    start = Transition(
+        [
+            ActivityStateMachine.open,
+            TimeBasedStateMachine.full
+        ],
+        TimeBasedStateMachine.running,
+        name=_("Start"),
+        description=_("Start the activity.")
+    )
 
     succeed_manually = Transition(
         [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
@@ -276,7 +264,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     reschedule = Transition(
         [running, finished],
         open,
-        name=_("Rescheduke"),
+        name=_("Reschedule"),
         description=_(
             "Reopen the slot. "
             "Triggered when start of the slot is changed."

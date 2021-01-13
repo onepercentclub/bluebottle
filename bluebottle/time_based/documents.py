@@ -1,7 +1,9 @@
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import (
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
+)
 
 SCORE_MAP = {
     'open': 1,
@@ -16,17 +18,6 @@ class TimeBasedActivityDocument:
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
 
-    def prepare_country(self, instance):
-        if not instance.is_online and instance.location:
-            return instance.location.country_id
-        else:
-            return super().prepare_country(instance)
-
-    def prepare_position(self, instance):
-        if not instance.is_online and instance.location:
-            position = instance.location.position
-            return {'lat': position.get_y(), 'lon': position.get_x()}
-
 
 @activity.doc_type
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
@@ -37,21 +28,49 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return DateActivity.objects.filter(owner=related_instance)
         if isinstance(related_instance, DateParticipant):
             return DateActivity.objects.filter(contributors=related_instance)
+        if isinstance(related_instance, DateActivitySlot):
+            return related_instance.activity
 
     class Meta(object):
-        related_models = (Initiative, Member, DateParticipant)
+        related_models = (Initiative, Member, DateParticipant, DateActivitySlot)
         model = DateActivity
 
+    def prepare_location(self, instance):
+        return [
+            {'id': slot.location.id, 'formatted_address': slot.location.formatted_address}
+            for slot in instance.slots.all()
+            if not slot.is_online and slot.location
+        ]
+
     def prepare_start(self, instance):
-        return instance.start
+        return [slot.start for slot in instance.slots.all()]
 
     def prepare_end(self, instance):
-        if instance.start and instance.duration:
-            return instance.start + instance.duration
-        return None
+        return [
+            slot.start + slot.duration
+            for slot in instance.slots.all()
+            if slot.start and slot.duration
+        ]
+
+    def prepare_country(self, instance):
+        return [
+            slot.location.country_id for slot in instance.slots.all()
+            if not slot.is_online and slot.location
+        ]
+
+    def prepare_position(self, instance):
+        if not instance.is_online and instance.location:
+            position = instance.location.position
+            return {'lat': position.get_y(), 'lon': position.get_x()}
+
+        return [
+            {'lat': slot.location.position.get_y(), 'lon': slot.location.position.get_x()}
+            for slot in instance.slots.all()
+            if not slot.is_online and slot.location
+        ]
 
 
-@activity.doc_type
+@ activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
@@ -64,6 +83,17 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(object):
         related_models = (Initiative, Member, PeriodParticipant)
         model = PeriodActivity
+
+    def prepare_country(self, instance):
+        if not instance.is_online and instance.location:
+            return instance.location.country_id
+        else:
+            return super().prepare_country(instance)
+
+    def prepare_position(self, instance):
+        if not instance.is_online and instance.location:
+            position = instance.location.position
+            return {'lat': position.get_y(), 'lon': position.get_x()}
 
     def prepare_end(self, instance):
         return instance.deadline

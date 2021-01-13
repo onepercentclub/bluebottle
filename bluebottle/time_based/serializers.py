@@ -1,4 +1,4 @@
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -475,6 +475,8 @@ def activity_matches_participant_and_slot(value):
 
 
 class SlotParticipantSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+
     class Meta:
         model = SlotParticipant
         fields = ['id', 'status', 'slot', 'participant']

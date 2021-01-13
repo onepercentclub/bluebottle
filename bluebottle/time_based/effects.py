@@ -32,14 +32,14 @@ class CreateSlotTimeContributionEffect(Effect):
     template = 'admin/create_on_a_date_duration.html'
 
     def post_save(self, **kwargs):
-        activity = self.instance.slot.activity
-        if activity.start and activity.duration:
-            end = activity.start + activity.duration
+        slot = self.instance.slot
+        if slot.start and slot.duration:
+            end = slot.start + slot.duration
             contribution = TimeContribution(
                 contributor=self.instance.participant,
                 slot_participant=self.instance,
-                value=activity.duration + (activity.preparation or timedelta()),
-                start=activity.start,
+                value=slot.duration,
+                start=slot.start,
                 end=end
             )
             contribution.save()

@@ -246,6 +246,7 @@ class SlotParticipantInline(admin.TabularInline):
     model = SlotParticipant
     extra = 0
     raw_id_fields = ['participant', 'slot']
+    readonly_fields = ['status']
 
 
 class SlotAdmin(StateMachineAdmin):

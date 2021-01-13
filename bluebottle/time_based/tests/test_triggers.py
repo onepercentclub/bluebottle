@@ -1,12 +1,13 @@
 from datetime import timedelta, date
 
 from django.core import mail
+from django.db import IntegrityError
 from django.utils.timezone import now
 
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateSlotFactory
+    DateActivitySlotFactory, SlotParticipantFactory
 )
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -585,7 +586,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user)
 
         self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
-        self.slot = DateSlotFactory.create(activity=self.activity)
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -907,3 +908,137 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             participant.contributions.get().status,
             'succeeded'
         )
+
+
+class AllSlotParticipantTriggerTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create()
+        self.activity = DateActivityFactory.create(
+            slots=[],
+            capacity=True,
+            slot_selection='all',
+            initiative=self.initiative
+        )
+        self.slot1 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+        self.participant = DateParticipantFactory.create(
+            activity=self.activity
+        )
+        self.slot1_participant = self.participant.slot_participants.filter(slot=self.slot1).first()
+        self.slot2_participant = self.participant.slot_participants.filter(slot=self.slot2).first()
+        self.contribution1 = self.slot1_participant.contributions.first()
+        self.contribution2 = self.slot2_participant.contributions.first()
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_apply(self):
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'new')
+        self.assertStatus(self.slot2_participant, 'registered')
+        self.assertStatus(self.contribution2, 'new')
+
+    def test_remove_participant(self):
+        self.participant.states.remove(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'failed')
+        self.assertStatus(self.slot2_participant, 'registered')
+        self.assertStatus(self.contribution2, 'failed')
+
+    def test_remove_participant_from_slot(self):
+        self.slot1_participant.states.remove(save=True)
+        self.assertEqual(self.slot1_participant.status, 'removed')
+        self.assertStatus(self.contribution1, 'failed')
+
+    def test_withdraw_from_slot(self):
+        self.slot1_participant.states.withdraw(save=True)
+        self.assertStatus(self.slot1_participant, 'withdrawn')
+        self.assertStatus(self.contribution1, 'failed')
+
+    def test_cancel_slot(self):
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'failed')
+
+    def test_finish_slot(self):
+        self.slot1.states.finish(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'succeeded')
+
+    def test_reschedule_slot(self):
+        self.slot1.states.finish(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'succeeded')
+        self.slot1.states.reschedule(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'new')
+
+    def test_cancel_activity(self):
+        self.activity.states.cancel(save=True)
+        self.assertStatus(self.slot1_participant, 'registered')
+        self.assertStatus(self.contribution1, 'failed')
+
+
+class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create()
+        self.activity = DateActivityFactory.create(
+            slots=[],
+            capacity=True,
+            slot_selection='free',
+            initiative=self.initiative
+        )
+        self.slot1 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.activity.states.submit()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_apply(self):
+        self.participant = DateParticipantFactory.create(
+            activity=self.activity
+        )
+        self.assertEqual(
+            self.participant.slot_participants.count(),
+            0
+        )
+        slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.assertEqual(
+            self.participant.slot_participants.count(),
+            1
+        )
+        self.assertStatus(slot_participant, 'registered')
+
+    def test_apply_double(self):
+        self.participant = DateParticipantFactory.create(
+            activity=self.activity
+        )
+        self.assertEqual(
+            self.participant.slot_participants.count(),
+            0
+        )
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        with self.assertRaises(IntegrityError):
+            SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.assertEqual(
+            self.participant.slot_participants.count(),
+            1
+        )
+
+    def test_withdraw_from_slot(self):
+        self.test_apply()
+        slot_participant = self.participant.slot_participants.first()
+        slot_participant.states.withdraw(save=True)
+        self.assertStatus(slot_participant, 'withdrawn')

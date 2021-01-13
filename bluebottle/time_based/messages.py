@@ -18,6 +18,20 @@ class DateChanged(TransitionMessage):
         ]
 
 
+class SlotDateChanged(TransitionMessage):
+    subject = _('The date and time for a slot of your activity "{title}" has changed')
+    template = 'messages/slot_date_changed'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
 class DeadlineChanged(TransitionMessage):
     subject = _('The deadline for your activity "{title}" changed')
     template = 'messages/deadline_changed'

@@ -14,7 +14,7 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, DateActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
+    PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
@@ -198,7 +198,6 @@ class DateActivity(TimeBasedActivity):
     duration_period = 'overall'
 
     validators = [
-        DateActivityRegistrationDeadlineValidator,
         CompletedSlotsValidator,
         HasSlotValidator
     ]
@@ -244,6 +243,22 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         null=True, blank=True)
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
+    @property
+    def accepted_participants(self):
+        return self.slot_participants.filter(status__in=('registered',))
+
+    @property
+    def durations(self):
+        return TimeContribution.objects.filter(
+            slot_participant__slot=self
+        )
+
+    @property
+    def active_durations(self):
+        return self.durations.filter(
+            slot_participant__participant__status__in=('new', 'accepted')
+        )
+
     class Meta:
         abstract = True
 
@@ -275,9 +290,7 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = [
-            'start', 'duration', 'is_online'
-        ]
+        fields = ['is_online']
         if not self.is_online:
             fields.append('location')
         return fields
@@ -457,9 +470,10 @@ class PeriodParticipant(Participant, Contributor):
 
 class SlotParticipant(TriggerMixin, models.Model):
 
-    slot = models.ForeignKey(DateActivitySlot)
-    participant = models.ForeignKey(DateParticipant)
+    slot = models.ForeignKey(DateActivitySlot, related_name='slot_participants')
+    participant = models.ForeignKey(DateParticipant, related_name='slot_participants')
     status = models.CharField(max_length=40)
+    auto_approve = True
 
     @property
     def user(self):
@@ -483,6 +497,7 @@ class SlotParticipant(TriggerMixin, models.Model):
             ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
             ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
         )
+        unique_together = ['slot', 'participant']
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'

@@ -37,7 +37,7 @@ class DateActivitySlotFactory(factory.DjangoModelFactory):
     is_online = False
 
     location = factory.SubFactory(GeolocationFactory)
-    start = (now() + timedelta(weeks=4))
+    start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
 
 

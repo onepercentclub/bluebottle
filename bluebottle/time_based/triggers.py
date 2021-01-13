@@ -299,7 +299,7 @@ def slot_is_incomplete(effect):
 
 
 def slot_is_started(effect):
-    return effect.instance.is_complete and effect.instance.start < now()
+    return effect.instance.is_complete and effect.instance.start and effect.instance.start < now()
 
 
 def slot_is_not_started(effect):
@@ -307,7 +307,7 @@ def slot_is_not_started(effect):
 
 
 def slot_is_finished(effect):
-    return effect.instance.is_complete and effect.instance.end < now()
+    return effect.instance.is_complete and effect.instance.end and effect.instance.end < now()
 
 
 def slot_is_not_finished(effect):

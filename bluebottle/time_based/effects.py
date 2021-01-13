@@ -127,10 +127,11 @@ class RescheduleDurationsEffect(Effect):
 
     def post_save(self, **kwargs):
         if self.instance.start:
+            preparation = getattr(self.instance, 'preparation', timedelta())
             self.instance.durations.update(
                 start=self.instance.start,
                 end=self.instance.start + self.instance.duration,
-                value=self.instance.duration + (self.instance.preparation or timedelta())
+                value=self.instance.duration + preparation
             )
 
 

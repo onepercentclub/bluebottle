@@ -290,14 +290,19 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = ['is_online']
+        fields = [
+            'is_online',
+            'start',
+            'duration'
+        ]
         if not self.is_online:
             fields.append('location')
         return fields
 
     @property
     def end(self):
-        return self.start + self.duration
+        if self.start and self.duration:
+            return self.start + self.duration
 
     @property
     def local_timezone(self):

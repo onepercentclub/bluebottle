@@ -1,21 +1,22 @@
 from datetime import timedelta, date, datetime
-from django.db import connection
+
 import mock
+from django.db import connection
 from django.utils import timezone
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.initiatives.tests.factories import (
+    InitiativeFactory
+)
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tasks import (
     on_a_date_tasks, with_a_deadline_tasks,
     period_participant_tasks, time_contribution_tasks
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
 )
-from bluebottle.initiatives.tests.factories import (
-    InitiativeFactory
-)
-from bluebottle.test.utils import BluebottleTestCase
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -368,6 +369,78 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
 
         for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, 'failed')
+
+
+class SlotActivityPeriodicTasksTest(BluebottleTestCase):
+
+    def setUp(self):
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.initiative.save()
+        self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
+        self.activity.states.submit(save=True)
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.tenant = connection.tenant
+
+    @property
+    def before(self):
+        return self.slot.start - timedelta(days=1)
+
+    @property
+    def during(self):
+        return self.slot.start + timedelta(seconds=10)
+
+    @property
+    def after(self):
+        return self.slot.start + self.slot.duration + timedelta(seconds=10)
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, 'now', return_value=when):
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                on_a_date_tasks()
+
+    def test_finish(self):
+        self.assertEqual(self.slot.status, 'open')
+
+        self.run_task(self.after)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.slot.status, 'finished')
+
+    def test_after_start_dont_expire(self):
+        self.assertEqual(self.slot.status, 'open')
+
+        self.run_task(self.during)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_start(self):
+        self.assertEqual(self.slot.status, 'open')
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.run_task(self.during)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.slot.status, 'running')
+
+    def test_succeed(self):
+        self.assertEqual(self.slot.status, 'open')
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.run_task(self.after)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.slot.status, 'finished')
 
 
 class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):

@@ -291,15 +291,24 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
 
 class DateActivityListSerializer(TimeBasedActivityListSerializer):
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
+    slots = ResourceRelatedField(many=True, required=False, read_only=True, model=DateActivitySlot)
 
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = DateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'duration',
+            'start', 'duration', 'slots'
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
+        included_resources = TimeBasedActivityListSerializer.JSONAPIMeta.included_resources + ['slots']
+
+    included_serializers = dict(
+        TimeBasedActivityListSerializer.included_serializers,
+        **{
+            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        }
+    )
 
 
 class PeriodActivityListSerializer(TimeBasedActivityListSerializer):

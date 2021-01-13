@@ -13,7 +13,7 @@ from bluebottle.time_based.views import (
     PeriodParticipantTransitionList, PeriodParticipantDocumentDetail,
     TimeContributionDetail,
     DateSlotDetailView, DateSlotListView,
-    SlotParticipantListView, SlotParticipantDetailView
+    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList
 )
 
 urlpatterns = [
@@ -89,6 +89,9 @@ urlpatterns = [
     url(r'^/slot-participants/(?P<pk>\d+)$',
         SlotParticipantDetailView.as_view(),
         name='slot-participant-detail'),
+    url(r'^/slot-participants/transitions$',
+        SlotParticipantTransitionList.as_view(),
+        name='slot-participant-transition-list'),
 
     url(r'^/participants/period$',
         PeriodParticipantList.as_view(),

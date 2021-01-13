@@ -16,7 +16,7 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateSlotFactory
+    DateActivitySlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -1259,7 +1259,7 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
     def setUp(self):
         super().setUp()
 
-        DateSlotFactory.create(activity=self.activity)
+        DateActivitySlotFactory.create(activity=self.activity)
 
     def test_get_owner(self):
         super().test_get_owner()
@@ -1284,7 +1284,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         super().setUp()
         self.client = JSONAPITestClient()
         self.activity = DateActivityFactory.create(review=False, slot_selection='free')
-        self.slot = DateSlotFactory.create(activity=self.activity)
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.participant = DateParticipantFactory.create(activity=self.activity)
 
         self.url = reverse('slot-participant-list')
@@ -1344,7 +1344,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_different_slot(self):
-        slot = DateSlotFactory.create()
+        slot = DateActivitySlotFactory.create()
         self.data['data']['relationships']['slot']['data']['id'] = slot.pk
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1359,6 +1359,145 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         del self.data['data']['relationships']['participant']
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = DateActivityFactory.create()
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+        self.slot_participant = self.participant.slot_participants.get(
+            participant=self.participant, slot=self.slot
+        )
+
+        self.url = reverse('slot-participant-transition-list')
+        self.data = {
+            'data': {
+                'type': 'contributors/time-based/slot-participant-transitions',
+                'attributes': {},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributors/time-based/slot-participants',
+                            'id': self.slot_participant.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_withdraw_by_user(self):
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['included'][0]['type'],
+            'contributors/time-based/slot-participants'
+        )
+        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+
+    def test_reapply_by_user(self):
+        self.test_withdraw_by_user()
+
+        self.data['data']['attributes']['transition'] = 'reapply'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+
+    def test_withdraw_by_owner(self):
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reapply_by_owner(self):
+        self.test_withdraw_by_user()
+
+        self.data['data']['attributes']['transition'] = 'reapply'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_remove_by_owner(self):
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'removed')
+
+    def test_accept_by_owner(self):
+        self.test_remove_by_owner()
+
+        self.data['data']['attributes']['transition'] = 'accept'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+
+    def test_remove_by_user(self):
+        self.data['data']['attributes']['transition'] = 'remove'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_accept_by_user(self):
+        self.test_remove_by_owner()
+        self.data['data']['attributes']['transition'] = 'accept'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 

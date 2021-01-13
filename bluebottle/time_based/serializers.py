@@ -477,7 +477,7 @@ def activity_matches_participant_and_slot(value):
 class SlotParticipantSerializer(ModelSerializer):
     class Meta:
         model = SlotParticipant
-        fields = ['id', 'slot', 'participant']
+        fields = ['id', 'status', 'slot', 'participant']
 
         validators = [
             UniqueTogetherValidator(
@@ -489,6 +489,17 @@ class SlotParticipantSerializer(ModelSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
+
+
+class SlotParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=SlotParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'contributors/time-based/slot-participant-transitions'
 
 
 class TimeContributionSerializer(BaseContributionSerializer):

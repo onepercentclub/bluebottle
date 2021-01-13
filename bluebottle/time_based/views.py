@@ -27,6 +27,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
+    SlotParticipantTransitionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -200,18 +201,6 @@ class PeriodParticipantDetail(ParticipantDetail):
     serializer_class = PeriodParticipantSerializer
 
 
-class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
-    permission_classes = [SlotParticipantPermission]
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
-
-
-class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = [SlotParticipantPermission]
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
-
-
 class ParticipantTransitionList(TransitionList):
     pass
 
@@ -224,6 +213,23 @@ class DateParticipantTransitionList(ParticipantTransitionList):
 class PeriodParticipantTransitionList(ParticipantTransitionList):
     serializer_class = PeriodParticipantTransitionSerializer
     queryset = PeriodParticipant.objects.all()
+
+
+class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantTransitionList(TransitionList):
+    serializer_class = SlotParticipantTransitionSerializer
+    queryset = SlotParticipant.objects.all()
 
 
 class ParticipantDocumentDetail(PrivateFileView):

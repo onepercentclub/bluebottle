@@ -21,7 +21,8 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_all_included_by_type
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_all_included_by_type, \
+    get_first_included_by_type
 
 
 class TimeBasedListAPIViewTestCase():
@@ -746,13 +747,16 @@ class ParticipantListViewTestCase():
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
+        self.assertEqual(response.status_code, 201)
+
         data = response.json()['data']
         self.assertEqual(
             data['relationships']['document']['data']['id'],
             document_data['data']['id']
         )
+        private_doc = get_first_included_by_type(response, 'private-documents')
         self.assertTrue(
-            response.json()['included'][2]['attributes']['link'].startswith(
+            private_doc['attributes']['link'].startswith(
                 '{}?signature='.format(reverse(self.document_url_name, args=(data['id'], )))
             )
         )
@@ -778,7 +782,6 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
-    url_name = 'on-a-date-participant-list'
     document_url_name = 'date-participant-document'
     application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'

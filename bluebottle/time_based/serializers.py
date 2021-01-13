@@ -423,6 +423,11 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 
 class DateParticipantSerializer(ParticipantSerializer):
+    slots = ResourceRelatedField(
+        source='slot_participants',
+        many=True,
+        read_only=True)
+
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
         fields = ParticipantSerializer.Meta.fields + ('slots', )

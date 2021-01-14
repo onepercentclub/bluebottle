@@ -351,15 +351,15 @@ class ParticipantListSerializer(BaseContributorSerializer):
 class DateParticipantListSerializer(ParticipantListSerializer):
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantListSerializer.Meta.fields + ('slots', )
+        fields = ParticipantListSerializer.Meta.fields + ('slot_participants', )
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
-        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slots', ]
+        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slot_participants', ]
 
     included_serializers = dict(
         ParticipantListSerializer.included_serializers,
-        **{'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'}
+        **{'slot_participants': 'bluebottle.time_based.serializers.SlotParticipantSerializer'}
     )
 
 

@@ -13,7 +13,7 @@ from bluebottle.funding_pledge.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class PaymentTestCase(BluebottleTestCase):
@@ -120,7 +120,7 @@ class PledgePayoutAccountListTestCase(BluebottleTestCase):
 
         response = self.client.get(self.payout_account_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        bank_details = get_first_included_by_type(response, 'payout-accounts/pledge-external-accounts')
+        bank_details = self.included_by_type(response, 'payout-accounts/pledge-external-accounts')[0]
         self.assertEqual(bank_details['attributes']['account-number'], '123456789')
         self.assertEqual(bank_details['attributes']['account-holder-name'], 'Habari Gani')
 

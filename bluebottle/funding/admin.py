@@ -669,6 +669,20 @@ class PayoutAdmin(StateMachineAdmin):
         'states',
     ] + readonly_fields
 
+    export_to_csv_fields = (
+        ('id', 'Id'),
+        ('status', 'Status'),
+        ('date_started', 'date_started'),
+        ('date_approved', 'date_approved'),
+        ('activity__title', 'Activity'),
+        ('activity__initiative__title', 'Initiative'),
+        ('total_amount', 'Amount'),
+        ('currency', 'Currency'),
+        ('provider', 'Provider'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)

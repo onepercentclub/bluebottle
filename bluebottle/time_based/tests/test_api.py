@@ -1575,17 +1575,18 @@ class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCas
     participant_factory = PeriodParticipantFactory
 
 
-class DateIcalTestCase(BluebottleTestCase):
+class SlotIcalTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
 
         self.activity = DateActivityFactory.create(title='Pollute Katwijk Beach')
-
-        self.activity_url = reverse('date-detail', args=(self.activity.pk,))
-        response = self.client.get(self.activity_url)
-
+        self.slot = self.activity.slots.first()
+        self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']
-        self.unsigned_url = reverse('date-ical', args=(self.activity.pk,))
+        self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
 
     def test_get(self):
         response = self.client.get(self.signed_url)
@@ -1608,6 +1609,68 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertAlmostEqual(
                 ical_event['dtend'].dt,
                 self.activity.start + self.activity.duration,
+                delta=timedelta(seconds=10)
+            )
+
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
+            self.assertEqual(str(ical_event['summary']), self.activity.title)
+            self.assertEqual(
+                str(ical_event['description']),
+                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+            )
+            self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+
+    def test_get_no_signature(self):
+        response = self.client.get(self.unsigned_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(self.unsigned_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class DateIcalTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.activity = DateActivityFactory.create(
+            title='Pollute Katwijk Beach',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(activity=self.activity)
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        self.activity_url = reverse('date-detail', args=(self.activity.pk,))
+        response = self.client.get(self.activity_url, user=self.user)
+        self.signed_url = response.json()['data']['attributes']['links']['ical']
+        self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
+
+    def test_get(self):
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.get('content-type'), 'text/calendar')
+        self.assertEqual(
+            response.get('content-disposition'),
+            'attachment; filename="{}.ics"'.format(self.activity.slug)
+        )
+
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        slot = self.activity.active_slots.first()
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(
+                ical_event['dtstart'].dt,
+                slot.start,
+                delta=timedelta(seconds=10)
+            )
+            self.assertAlmostEqual(
+                ical_event['dtend'].dt,
+                slot.start + slot.duration,
                 delta=timedelta(seconds=10)
             )
 

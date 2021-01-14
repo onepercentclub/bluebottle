@@ -56,6 +56,21 @@ class TimeBasedActivity(Activity):
     )
 
     @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
+
+    @property
     def required_fields(self):
         fields = ['title', 'description', 'review', ]
         return fields
@@ -96,21 +111,6 @@ class TimeBasedActivity(Activity):
         )
 
     @property
-    def local_timezone(self):
-        if self.location and self.location.position:
-            tz_name = tf.timezone_at(
-                lng=self.location.position.x,
-                lat=self.location.position.y
-            )
-            return pytz.timezone(tz_name)
-
-    @property
-    def utc_offset(self):
-        tz = self.local_timezone or timezone.get_current_timezone()
-        if self.start and tz:
-            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
-
-    @property
     def details(self):
         details = HTMLParser().unescape(
             u'{}\n{}'.format(
@@ -122,51 +122,6 @@ class TimeBasedActivity(Activity):
             details += _('\nJoin: {url}').format(url=self.online_meeting_url)
 
         return details
-
-    @property
-    def google_calendar_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-        url = u'https://calendar.google.com/calendar/render'
-        params = {
-            'action': u'TEMPLATE',
-            'text': self.title,
-            'dates': u'{}/{}'.format(
-                format_date(self.start), format_date(self.start + self.duration)
-            ),
-            'details': self.details,
-            'uid': self.uid,
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
-
-    @property
-    def outlook_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-
-        url = 'https://outlook.live.com/owa/'
-
-        params = {
-            'rru': 'addevent',
-            'path': '/calendar/action/compose&rru=addevent',
-            'allday': False,
-            'subject': self.title,
-            'startdt': format_date(self.start),
-            'enddt': format_date(self.start + self.duration),
-            'body': self.details
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
 
 
 class SlotSelectionChoices(DjangoChoices):
@@ -201,6 +156,60 @@ class DateActivity(TimeBasedActivity):
         CompletedSlotsValidator,
         HasSlotValidator
     ]
+
+    @property
+    def active_slots(self):
+        return self.slots.filter(status__in=['open', 'full', 'running'])
+
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        if self.active_slots.count() == 1:
+            slot = self.active_slots.first()
+            url = u'https://calendar.google.com/calendar/render'
+            params = {
+                'action': u'TEMPLATE',
+                'text': self.title,
+                'dates': u'{}/{}'.format(
+                    format_date(slot.start), format_date(slot.start + slot.duration)
+                ),
+                'details': self.details,
+                'uid': slot.uid,
+            }
+
+            if slot.location:
+                params['location'] = slot.location.formatted_address
+
+            return u'{}?{}'.format(url, urlencode(params))
+        raise NotImplementedError("Can't create calendar link with multiple dates.")
+
+    @property
+    def outlook_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
+        if self.active_slots.count() == 1:
+            slot = self.active_slots.first()
+
+            url = 'https://outlook.live.com/owa/'
+
+            params = {
+                'rru': 'addevent',
+                'path': '/calendar/action/compose&rru=addevent',
+                'allday': False,
+                'subject': self.title,
+                'startdt': format_date(slot.start),
+                'enddt': format_date(slot.start + slot.duration),
+                'body': self.details
+            }
+
+            if slot.location:
+                params['location'] = slot.location.formatted_address
+            return u'{}?{}'.format(url, urlencode(params))
+        raise NotImplementedError("Can't create calendar link with multiple dates.")
 
     class Meta:
         verbose_name = _("Activity on a date")
@@ -242,6 +251,70 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         max_length=255,
         null=True, blank=True)
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
+
+    @property
+    def uid(self):
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivityslot', self.pk)
+
+    @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
+
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.activity.title,
+            'dates': u'{}/{}'.format(
+                format_date(self.start), format_date(self.start + self.duration)
+            ),
+            'details': self.activity.details,
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
+
+    @property
+    def outlook_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
+
+        url = 'https://outlook.live.com/owa/'
+
+        params = {
+            'rru': 'addevent',
+            'path': '/calendar/action/compose&rru=addevent',
+            'allday': False,
+            'subject': self.activity.title,
+            'startdt': format_date(self.start),
+            'enddt': format_date(self.start + self.duration),
+            'body': self.activity.details
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def accepted_participants(self):
@@ -325,6 +398,17 @@ class DateActivitySlot(ActivitySlot):
     class Meta:
         verbose_name = _('slot')
         verbose_name_plural = _('slots')
+        permissions = (
+            ('api_read_dateactivityslot', 'Can view on date activity slots through the API'),
+            ('api_add_dateactivityslot', 'Can add on a date activity slots through the API'),
+            ('api_change_dateactivityslot', 'Can change on a date activity slots through the API'),
+            ('api_delete_dateactivityslot', 'Can delete on a date activity slots through the API'),
+
+            ('api_read_own_dateactivityslot', 'Can view own on a date activity slots through the API'),
+            ('api_add_own_dateactivityslot', 'Can add own on a date activity slots through the API'),
+            ('api_change_own_dateactivityslot', 'Can change own on a date activity slots through the API'),
+            ('api_delete_own_dateactivityslot', 'Can delete own on a date activity slots through the API'),
+        )
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/date-slots'
@@ -376,6 +460,51 @@ class PeriodActivity(TimeBasedActivity):
     def activity_date(self):
         return self.deadline or self.start
 
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': u'{}/{}'.format(
+                format_date(self.start), format_date(self.start + self.duration)
+            ),
+            'details': self.details,
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
+
+    @property
+    def outlook_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
+
+        url = 'https://outlook.live.com/owa/'
+
+        params = {
+            'rru': 'addevent',
+            'path': '/calendar/action/compose&rru=addevent',
+            'allday': False,
+            'subject': self.title,
+            'startdt': format_date(self.start),
+            'enddt': format_date(self.start + self.duration),
+            'body': self.details
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
+
     class Meta:
         verbose_name = _("Activity during a period")
         verbose_name_plural = _("Activities during a period")
@@ -406,6 +535,21 @@ class PeriodActivitySlot(ActivitySlot):
     activity = models.ForeignKey(PeriodActivity, related_name='slots')
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('slot')
+        verbose_name_plural = _('slots')
+        permissions = (
+            ('api_read_periodactivityslot', 'Can view over a period activity slots through the API'),
+            ('api_add_periodactivityslot', 'Can add over a period activity slots through the API'),
+            ('api_change_periodactivityslot', 'Can change over a period activity slots through the API'),
+            ('api_delete_periodactivityslot', 'Can delete over a period activity slots through the API'),
+
+            ('api_read_own_periodactivityslot', 'Can view own over a period activity slots through the API'),
+            ('api_add_own_periodactivityslot', 'Can add own over a period activity slots through the API'),
+            ('api_change_own_periodactivityslot', 'Can change own over a period activity slots through the API'),
+            ('api_delete_own_periodactivityslot', 'Can delete own over a period activity slots through the API'),
+        )
 
 
 class Participant(Contributor):

@@ -273,21 +273,6 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
             ]
         ),
-
-        ModelChangedTrigger(
-            'duration',
-            effects=[
-                # RescheduleDurationsEffect
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'preparation',
-            effects=[
-                # RescheduleDurationsEffect
-            ]
-        )
-
     ]
 
 

@@ -95,12 +95,24 @@ class ActivitySlotSerializer(ModelSerializer):
 class DateActivitySlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        if instance.start and instance.duration:
+            return {
+                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+                'outlook': instance.outlook_link,
+            }
+        else:
+            return {}
 
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
         fields = ActivitySlotSerializer.Meta.fields + (
             'title',
             'start',
+            'links',
             'duration',
             'capacity',
             'utc_offset',
@@ -129,13 +141,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
-    def get_my_contributor(self, instance):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
-
     def get_links(self, instance):
-        if instance.start and instance.duration:
+        if instance.active_slots.count() == 1:
             return {
                 'ical': reverse_signed('date-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
@@ -144,10 +151,16 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         else:
             return {}
 
+    def get_my_contributor(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
+
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration',
+            'start',
+            'duration',
             'utc_offset',
             'online_meeting_url',
             'links',

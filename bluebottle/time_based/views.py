@@ -257,27 +257,64 @@ class DateActivityIcalView(PrivateFileView):
     def get(self, *args, **kwargs):
         instance = self.get_object()
         calendar = icalendar.Calendar()
+        for slot in instance.slots.filter(status__in=['open', 'full', 'running', 'finished']).all():
+            event = icalendar.Event()
+            event.add('summary', instance.title)
+            event.add('description', instance.details)
+            event.add('url', instance.get_absolute_url())
+            event.add('dtstart', slot.start.astimezone(utc))
+            event.add('dtend', (slot.start + slot.duration).astimezone(utc))
+            event['uid'] = slot.uid
 
-        event = icalendar.Event()
-        event.add('summary', instance.title)
-        event.add('description', instance.details)
-        event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start.astimezone(utc))
-        event.add('dtend', (instance.start + instance.duration).astimezone(utc))
-        event['uid'] = instance.uid
+            organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+            organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
+            event['organizer'] = organizer
+            if instance.location:
+                event['location'] = icalendar.vText(instance.location.formatted_address)
 
-        event['organizer'] = organizer
-        if instance.location:
-            event['location'] = icalendar.vText(instance.location.formatted_address)
-
-        calendar.add_component(event)
+            calendar.add_component(event)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
+        )
+
+        return response
+
+
+class ActivitySlotIcalView(PrivateFileView):
+    queryset = DateActivitySlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
+
+    max_age = 30 * 60  # half an hour
+
+    def get(self, *args, **kwargs):
+        instance = self.get_object()
+        calendar = icalendar.Calendar()
+
+        slot = icalendar.Event()
+        slot.add('summary', instance.activity.title)
+        slot.add('description', instance.activity.details)
+        slot.add('url', instance.activity.get_absolute_url())
+        slot.add('dtstart', instance.start.astimezone(utc))
+        slot.add('dtend', (instance.start + instance.duration).astimezone(utc))
+        slot['uid'] = instance.uid
+
+        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.activity.owner.email))
+        organizer.params['cn'] = icalendar.vText(instance.activity.owner.full_name)
+
+        slot['organizer'] = organizer
+        if instance.location:
+            slot['location'] = icalendar.vText(instance.location.formatted_address)
+
+        calendar.add_component(slot)
+
+        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
+            instance.activity.slug
         )
 
         return response

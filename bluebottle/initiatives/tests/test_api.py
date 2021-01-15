@@ -433,6 +433,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
     def test_get_activities(self):
         event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create())
+        slot = DateActivitySlotFactory.create(activity=event)
         response = self.client.get(
             self.url,
             user=self.owner
@@ -450,6 +451,12 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             activity_data['attributes']['title'],
             event.title
+        )
+
+        slot_data = get_include(response, 'activities/time-based/date-slots')
+        self.assertEqual(
+            slot_data['id'],
+            str(slot.pk)
         )
         self.assertEqual(activity_data['type'], 'activities/time-based/dates')
         activity_location = activity_data['relationships']['location']['data']

@@ -444,7 +444,10 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
 
-        self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
+        self.activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            slots=[],
+            review=False)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
 
         self.initiative.states.submit(save=True)
@@ -478,9 +481,10 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, 'finished')
-        self.assertStatus(self.activity, 'failed')
+        self.assertStatus(self.activity, 'expired')
 
     def test_finish_one_slot_with_participants(self):
+        DateParticipantFactory.create(activity=self.activity)
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, 'finished')
@@ -488,9 +492,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_finish_multiple_slots(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
-        participant = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot, participant=participant)
-        SlotParticipantFactory.create(slot=self.slot2, participant=participant)
+        DateParticipantFactory.create(activity=self.activity)
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, 'finished')

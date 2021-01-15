@@ -63,6 +63,11 @@ def has_participants(effect):
     return len(effect.instance.active_participants) > 0
 
 
+def has_accepted_participants(effect):
+    """ has accepted participants"""
+    return len(effect.instance.accepted_participants) > 0
+
+
 def has_no_participants(effect):
     """
     has no participants
@@ -356,13 +361,6 @@ class ActivitySlotTriggers(TriggerManager):
         ModelChangedTrigger(
             'start',
             effects=[
-                # NotificationEffect(
-                #     DeadlineChanged,
-                #     conditions=[
-                #         slot_is_not_started
-                #     ]
-                # ),
-
                 TransitionEffect(
                     ActivitySlotStateMachine.start,
                     conditions=[slot_is_started, slot_is_not_finished]
@@ -409,10 +407,22 @@ class ActivitySlotTriggers(TriggerManager):
 
 
 def all_slots_finished(effect):
-    return effect.instance.activity.slots.exclude(status__in=['finished', 'cnacelled', 'deleted']).count() == 0
+    return effect.instance.activity.slots.exclude(
+        status__in=['finished', 'cancelled', 'deleted']
+    ).exclude(
+        id=effect.instance.id
+    ).count() == 0
 
 
-@ register(DateActivitySlot)
+def all_slots_cancelled(effect):
+    return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
+
+
+def activity_has_no_accepted_participants(effect):
+    return effect.instance.activity.accepted_participants.count() == 0
+
+
+@register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
         TransitionTrigger(
@@ -429,7 +439,15 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     TimeBasedStateMachine.succeed,
                     conditions=[
                         all_slots_finished,
-                        has_participants
+                        has_accepted_participants
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.expire,
+                    conditions=[
+                        all_slots_finished,
+                        activity_has_no_accepted_participants
                     ]
                 ),
                 ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
@@ -440,10 +458,9 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'activity',
-                    TimeBasedStateMachine.succeed,
+                    TimeBasedStateMachine.cancel,
                     conditions=[
-                        all_slots_finished,
-                        has_participants
+                        all_slots_cancelled
                     ]
                 ),
                 ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)

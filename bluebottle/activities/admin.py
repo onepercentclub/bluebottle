@@ -266,7 +266,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
-        if InitiativePlatformSettings.objects.get().enable_office_regions:
+        if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             if (
                     impact_goal_inline.has_add_permission(request) and

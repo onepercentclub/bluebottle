@@ -432,7 +432,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_get_activities(self):
-        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create())
+        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create(), slots=[])
         slot = DateActivitySlotFactory.create(activity=event)
         response = self.client.get(
             self.url,

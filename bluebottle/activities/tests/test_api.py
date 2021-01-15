@@ -1018,6 +1018,8 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         anonymous = self._get_anonymous(data)
         self.assertEqual(len(members), 1)
         self.assertEqual(len(anonymous), 1)
+        import ipdb
+        ipdb.set_trace()
 
         contributors_response = self.client.get(
             data['data']['relationships']['contributors']['links']['related'], user=self.owner

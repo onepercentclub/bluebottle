@@ -17,7 +17,8 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory
+    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
+    DateActivitySlotFactory
 )
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
@@ -495,11 +496,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         date_activity = DateActivityFactory.create(
             initiative=self.initiative,
-            start=now() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
 
         )
         date_activity.states.submit(save=True)
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            start=now() - datetime.timedelta(weeks=1),
+        )
         DateParticipantFactory.create_batch(3, activity=date_activity)
 
         funding = FundingFactory.create(

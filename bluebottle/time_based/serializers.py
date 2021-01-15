@@ -138,6 +138,15 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True,
         source='get_my_contributor'
     )
+
+    contributors = FilteredRelatedField(
+        many=True,
+        filter_backend=ParticipantListFilter,
+        related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id'
+
+    )
+
     slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
@@ -166,6 +175,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'links',
             'my_contributor',
             'slots',
+            'slot_selection',
             'preparation'
         )
 

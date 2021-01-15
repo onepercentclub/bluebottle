@@ -67,6 +67,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 
 class ActivitySlotSerializer(ModelSerializer):
+    is_online = serializers.NullBooleanField()
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 

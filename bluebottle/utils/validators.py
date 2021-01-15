@@ -108,7 +108,7 @@ class FileMimetypeValidator(object):
 
     def __call__(self, value):
         try:
-            mimetype = mime.from_buffer(value.file.read(2048))
+            mimetype = mime.from_buffer(value.file.read(3084))
         except FileNotFoundError:
             return
         value.file.seek(0)

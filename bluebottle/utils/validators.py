@@ -107,7 +107,10 @@ class FileMimetypeValidator(object):
             self.code = code
 
     def __call__(self, value):
-        mimetype = mime.from_buffer(value.file.read(2048))
+        try:
+            mimetype = mime.from_buffer(value.file.read(2048))
+        except FileNotFoundError:
+            return
         value.file.seek(0)
         _name, extension = os.path.splitext(value.name)
 
@@ -159,7 +162,10 @@ def validate_file_infection(file):
     # with a small change that will prevent failure when clamd is not running
     # If django-clamd is disabled (for debugging) then do not check the file.
     # Ensure file pointer is at begingin of the file
-    file.seek(0)
+    try:
+        file.seek(0)
+    except FileNotFoundError:
+        return
     try:
         scanner = ClamdUnixSocket(settings.CLAMD_SOCKET)
         result = scanner.instream(file)

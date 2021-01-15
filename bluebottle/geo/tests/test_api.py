@@ -1,6 +1,8 @@
 from builtins import range
 import json
 
+from django.contrib.gis.geos import Point
+
 from bluebottle.funding.tests.factories import FundingFactory
 from django.core.urlresolvers import reverse
 from rest_framework import status
@@ -132,7 +134,7 @@ class LocationListTestCase(GeoTestCase):
         for i in range(0, self.count):
             self.locations.append(Location.objects.create(
                 name="Name {}".format(i),
-                position='10.0,20.0',
+                position=Point(20.0, 10.0),
                 description="Description {}".format(i))
             )
 

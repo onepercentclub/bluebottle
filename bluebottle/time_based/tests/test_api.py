@@ -492,7 +492,7 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         details = (
             u"{}\n"
             u"http://testserver/en/initiatives/activities/details/"
-            u"dateactivity/{}/{}"
+            u"time-based/date/{}/{}"
         ).format(
             self.activity.description, self.activity.pk, self.activity.slug
         )
@@ -1202,7 +1202,7 @@ class RelatedParticipantsAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
         self.participants = []
-        for i in range(5):
+        for i in range(10):
             self.participants.append(
                 self.participant_factory.create(
                     activity=self.activity,

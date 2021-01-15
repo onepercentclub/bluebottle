@@ -16,7 +16,7 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateSlotFactory
+    DateActivitySlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -144,13 +144,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         after = now() + dateutil.relativedelta.relativedelta(months=2)
 
         event = DateActivityFactory.create(
-            status='open',
+            status='open', slots=[]
         )
-        DateSlotFactory.create(activity=event, start=next_month)
+        DateActivitySlotFactory.create(activity=event, start=next_month)
         event_after = DateActivityFactory.create(
-            status='open',
+            status='open', slots=[]
         )
-        DateSlotFactory.create(activity=event_after, start=after)
+        DateActivitySlotFactory.create(activity=event_after, start=after)
 
         assignment = PeriodActivityFactory.create(
             status='open',
@@ -322,7 +322,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=location,
             status='open'
         )
-        DateSlotFactory.create(activity=first, location=location)
+        DateActivitySlotFactory.create(activity=first, location=location)
         second = DateActivityFactory.create(
             title='Roggeveenstraat',
             status='open'
@@ -1020,8 +1020,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         anonymous = self._get_anonymous(data)
         self.assertEqual(len(members), 1)
         self.assertEqual(len(anonymous), 1)
-        import ipdb
-        ipdb.set_trace()
 
         contributors_response = self.client.get(
             data['data']['relationships']['contributors']['links']['related'], user=self.owner

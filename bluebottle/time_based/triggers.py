@@ -408,6 +408,10 @@ class ActivitySlotTriggers(TriggerManager):
     ]
 
 
+def all_slots_finished(effect):
+    return effect.instance.activity.slots.exclude(status__in=['finished', 'cnacelled', 'deleted']).count() == 0
+
+
 @ register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
@@ -417,7 +421,34 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                 TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
             ]
         ),
-
+        TransitionTrigger(
+            ActivitySlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                        has_participants
+                    ]
+                ),
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                        has_participants
+                    ]
+                ),
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[

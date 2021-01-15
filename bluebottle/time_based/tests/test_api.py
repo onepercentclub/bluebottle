@@ -1219,19 +1219,19 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(self.response.json()['data']), 5)
+        self.assertEqual(len(self.response.json()['data']), 10)
 
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 5)
+        self.assertEqual(len(included_documents), 10)
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
-        self.assertEqual(len(included_contributions), 5)
+        self.assertEqual(len(included_contributions), 10)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['data']), 4)
+        self.assertEqual(len(response.json()['data']), 9)
 
         included_documents = self.included_by_type(response, 'private-documents')
         self.assertEqual(len(included_documents), 0)

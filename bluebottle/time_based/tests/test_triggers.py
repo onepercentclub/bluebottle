@@ -452,6 +452,10 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.activity.refresh_from_db()
 
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
     def test_incomplete(self):
         self.slot.start = None
         self.slot.save()
@@ -470,25 +474,43 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(self.slot.status, 'running')
 
-    def test_finish(self):
+    def test_finish_one_slot_no_participants(self):
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.activity, 'failed')
 
-        self.assertEqual(self.slot.status, 'finished')
+    def test_finish_one_slot_with_participants(self):
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.activity, 'succeeded')
+
+    def test_finish_multiple_slots(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        participant = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot, participant=participant)
+        SlotParticipantFactory.create(slot=self.slot2, participant=participant)
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.activity, 'open')
+        self.slot2.start = now() - timedelta(days=1)
+        self.slot2.save()
+        self.assertStatus(self.slot2, 'finished')
+        self.assertStatus(self.activity, 'succeeded')
 
     def test_reschedule_open(self):
-        self.test_finish()
+        self.test_finish_one_slot_with_participants()
         self.slot.start = now() + timedelta(days=1)
         self.slot.save()
-
-        self.assertEqual(self.slot.status, 'open')
+        self.assertStatus(self.slot, 'open')
 
     def test_reschedule_running(self):
-        self.test_finish()
+        self.test_finish_one_slot_with_participants()
         self.slot.start = now() - timedelta(hours=1)
         self.slot.save()
-
-        self.assertEqual(self.slot.status, 'running')
+        self.assertStatus(self.slot, 'running')
 
 
 class ParticipantTriggerTestCase():
@@ -876,7 +898,8 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
     def test_fill_slot(self):
         SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.assertStatus(self.slot1, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        participant2 = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
         self.assertStatus(self.slot1, 'full')
         SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')

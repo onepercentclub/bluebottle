@@ -126,11 +126,12 @@ class RescheduleDurationsEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        if self.instance.start:
+        if self.instance.start and self.instance.duration:
+            preparation = getattr(self.instance, 'preparation', timedelta())
             self.instance.durations.update(
                 start=self.instance.start,
                 end=self.instance.start + self.instance.duration,
-                value=self.instance.duration + (self.instance.preparation or timedelta())
+                value=self.instance.duration + preparation
             )
 
 
@@ -185,7 +186,7 @@ def ActiveDurationsTransitionEffect(transition, conditions=None):
 
 class CreateSlotParticipantsForSlotsEffect(Effect):
     title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_slots.html'
+    template = 'admin/create_slot_participants_for_slot.html'
 
     @property
     def display(self):
@@ -201,7 +202,7 @@ class CreateSlotParticipantsForSlotsEffect(Effect):
 
 class CreateSlotParticipantsForParticipantsEffect(Effect):
     title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_participants.html'
+    template = 'admin/create_slot_participants_for_participant.html'
 
     @property
     def display(self):

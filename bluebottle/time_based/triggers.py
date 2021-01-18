@@ -63,6 +63,11 @@ def has_participants(effect):
     return len(effect.instance.active_participants) > 0
 
 
+def has_accepted_participants(effect):
+    """ has accepted participants"""
+    return len(effect.instance.accepted_participants) > 0
+
+
 def has_no_participants(effect):
     """
     has no participants
@@ -178,10 +183,12 @@ class TimeBasedTriggers(ActivityTriggers):
             'capacity',
             effects=[
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    is_not_full
+                    is_not_full,
+                    registration_deadline_is_not_passed
                 ]),
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    is_full
+                    is_full,
+                    registration_deadline_is_not_passed
                 ]),
             ]
         ),
@@ -190,9 +197,13 @@ class TimeBasedTriggers(ActivityTriggers):
             'registration_deadline',
             effects=[
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[
+                    is_not_full,
+                    is_not_started,
                     registration_deadline_is_passed
                 ]),
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
+                    is_full,
+                    is_not_started,
                     registration_deadline_is_not_passed
                 ]),
             ]
@@ -267,21 +278,6 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
             ]
         ),
-
-        ModelChangedTrigger(
-            'duration',
-            effects=[
-                RescheduleDurationsEffect
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'preparation',
-            effects=[
-                RescheduleDurationsEffect
-            ]
-        )
-
     ]
 
 
@@ -294,7 +290,7 @@ def slot_is_incomplete(effect):
 
 
 def slot_is_started(effect):
-    return effect.instance.is_complete and effect.instance.start < now()
+    return effect.instance.is_complete and effect.instance.start and effect.instance.start < now()
 
 
 def slot_is_not_started(effect):
@@ -302,7 +298,7 @@ def slot_is_not_started(effect):
 
 
 def slot_is_finished(effect):
-    return effect.instance.is_complete and effect.instance.end < now()
+    return effect.instance.is_complete and effect.instance.end and effect.instance.end < now()
 
 
 def slot_is_not_finished(effect):
@@ -365,13 +361,6 @@ class ActivitySlotTriggers(TriggerManager):
         ModelChangedTrigger(
             'start',
             effects=[
-                # NotificationEffect(
-                #     DeadlineChanged,
-                #     conditions=[
-                #         slot_is_not_started
-                #     ]
-                # ),
-
                 TransitionEffect(
                     ActivitySlotStateMachine.start,
                     conditions=[slot_is_started, slot_is_not_finished]
@@ -417,7 +406,23 @@ class ActivitySlotTriggers(TriggerManager):
     ]
 
 
-@ register(DateActivitySlot)
+def all_slots_finished(effect):
+    return effect.instance.activity.slots.exclude(
+        status__in=['finished', 'cancelled', 'deleted']
+    ).exclude(
+        id=effect.instance.id
+    ).count() == 0
+
+
+def all_slots_cancelled(effect):
+    return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
+
+
+def activity_has_no_accepted_participants(effect):
+    return effect.instance.activity.accepted_participants.count() == 0
+
+
+@register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
         TransitionTrigger(
@@ -426,7 +431,41 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                 TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
             ]
         ),
-
+        TransitionTrigger(
+            ActivitySlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                        has_accepted_participants
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.expire,
+                    conditions=[
+                        all_slots_finished,
+                        activity_has_no_accepted_participants
+                    ]
+                ),
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.cancel,
+                    conditions=[
+                        all_slots_cancelled
+                    ]
+                ),
+                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[
@@ -455,15 +494,25 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
     ]
 
 
-@ register(PeriodActivity)
-class PeriodTriggers(TimeBasedTriggers):
+@register(PeriodActivity)
+class PeriodActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
             PeriodStateMachine.reschedule,
             effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
                 TransitionEffect(
-                    TimeBasedStateMachine.lock, conditions=[registration_deadline_is_passed]
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        is_full,
+                        is_not_started
+                    ]
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        registration_deadline_is_passed,
+                        is_not_started
+                    ]
                 )
             ]
         ),
@@ -489,14 +538,26 @@ class PeriodTriggers(TimeBasedTriggers):
             effects=[
                 NotificationEffect(
                     DeadlineChanged,
+                    conditions=[start_is_not_passed]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.start,
+                    conditions=[is_started]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.reopen,
                     conditions=[
-                        start_is_not_passed
+                        is_not_full,
+                        is_not_started
                     ]
                 ),
                 TransitionEffect(
-                    ActivitySlotStateMachine.start,
-                    conditions=[is_started]
-                )
+                    PeriodStateMachine.lock,
+                    conditions=[
+                        is_full,
+                        is_not_started
+                    ]
+                ),
             ]
         ),
         ModelChangedTrigger(

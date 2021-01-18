@@ -21,7 +21,7 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_all_included_by_type
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class TimeBasedListAPIViewTestCase():
@@ -63,29 +63,22 @@ class TimeBasedListAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = response.json()['data']
+        self.response_data = response.json()['data']
 
-        self.assertEqual(data['attributes']['status'], 'draft')
-        self.assertEqual(data['attributes']['title'], self.data['data']['attributes']['title'])
+        self.assertEqual(self.response_data['attributes']['status'], 'draft')
+        self.assertEqual(self.response_data['attributes']['title'], self.data['data']['attributes']['title'])
         self.assertEqual(
-            {
-                transition['name'] for transition in
-                data['meta']['transitions']
-            },
-            {'submit', 'delete'}
-        )
-        self.assertEqual(
-            data['meta']['permissions']['GET'],
+            self.response_data['meta']['permissions']['GET'],
             True
         )
 
         self.assertEqual(
-            data['meta']['permissions']['PUT'],
+            self.response_data['meta']['permissions']['PUT'],
             True
         )
 
         self.assertEqual(
-            data['meta']['permissions']['PATCH'],
+            self.response_data['meta']['permissions']['PATCH'],
             True
         )
 
@@ -116,26 +109,6 @@ class TimeBasedListAPIViewTestCase():
             )
         )
 
-    def test_create_no_location(self):
-        self.data['data']['attributes']['is-online'] = False
-
-        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(
-            '/data/attributes/location' not in (
-                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
-            )
-        )
-
-        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertTrue(
-            '/data/attributes/location' in (
-                error['source']['pointer'] for error in response.json()['data']['meta']['required']
-            )
-        )
-
     def test_create_as_activity_manager(self):
         activity_manager = BlueBottleUserFactory.create()
         self.initiative.activity_manager = activity_manager
@@ -157,18 +130,13 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
     def setUp(self):
         super().setUp()
-
+        self.slot_url = reverse('date-slot-list')
         self.data['data']['attributes'].update({
             'start': str(now() + timedelta(days=21)),
             'duration': '4:00:00',
         })
 
-    def add_slots_by_owner(self):
-        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        slot_url = reverse('date-slot-list')
-        activity_id = response.json()['data']['id']
-        slot_data = {
+        self.slot_data = {
             'data': {
                 'type': 'activities/time-based/date-slots',
                 'attributes': {
@@ -182,53 +150,58 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
                     'activity': {
                         'data': {
                             'type': 'activities/time-based/dates',
-                            'id': activity_id
+                            'id': 0
                         },
                     },
                 }
             }
         }
-        response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
+
+    def test_create_complete(self):
+        super().test_create_complete()
+        # Can't yet submit because we don't have a slot yet
+        self.assertEqual(
+            {
+                transition['name'] for transition in
+                self.response_data['meta']['transitions']
+            },
+            {'delete'}
+        )
+
+    def add_slots_by_owner(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        slot_data['data']['attributes']['title'] = 'Second meeting'
-        slot_data['data']['attributes']['start'] = '2020-12-05T10:00:00+01:00'
-        response = self.client.post(slot_url, json.dumps(slot_data), user=self.user)
+        activity_id = response.json()['data']['id']
+        self.slot_data['data']['relationships']['activity']['data']['id'] = activity_id
+        response = self.client.post(self.slot_url, json.dumps(self.slot_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.slot_data['data']['attributes']['title'] = 'Second meeting'
+        self.slot_data['data']['attributes']['start'] = '2020-12-05T10:00:00+01:00'
+        response = self.client.post(self.slot_url, json.dumps(self.slot_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         activity_url = reverse('date-detail', args=(activity_id,))
         response = self.client.get(activity_url, user=self.user)
         relationships = response.json()['data']['relationships']
         self.assertEqual(len(relationships['slots']['data']), 2)
-        slots = get_all_included_by_type(response, 'activities/time-based/date-slots')
+        slots = self.included_by_type(response, 'activities/time-based/date-slots')
         self.assertEqual(len(slots), 2)
+        # Now we can submit the activity
+        self.assertEqual(
+            {
+                transition['name'] for transition in
+                self.response_data['meta']['transitions']
+            },
+            {'submit', 'delete'}
+        )
 
     def add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        slot_url = reverse('date-slot-list')
         activity_id = response.json()['data']['id']
-        slot_data = {
-            'data': {
-                'type': 'activities/time-based/date-slots',
-                'attributes': {
-                    'title': 'Kick-off',
-                    'is-online': True,
-                    'start': '2020-12-01T10:00:00+01:00',
-                    'duration': '2:30:00',
-                    'capacity': 10,
-                },
-                'relationships': {
-                    'activity': {
-                        'data': {
-                            'type': 'activities/time-based/dates',
-                            'id': activity_id
-                        },
-                    },
-                }
-            }
-        }
+        self.slot_data['data']['relationships']['activity']['data']['id'] = activity_id
         other = BlueBottleUserFactory.create()
-        response = self.client.post(slot_url, json.dumps(slot_data), user=other)
+        response = self.client.post(self.slot_url, json.dumps(self.slot_data), user=other)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
@@ -245,6 +218,36 @@ class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase
             'duration': '4:00:00',
             'duration_period': 'overall',
         })
+
+    def test_create_complete(self):
+        super().test_create_complete()
+        self.assertEqual(
+            {
+                transition['name'] for transition in
+                self.response_data['meta']['transitions']
+            },
+            {'submit', 'delete'}
+        )
+
+    def test_create_no_location(self):
+        self.data['data']['attributes']['is-online'] = False
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            '/data/attributes/location' not in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+            )
+        )
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertTrue(
+            '/data/attributes/location' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
+        )
 
 
 class TimeBasedDetailAPIViewTestCase():
@@ -327,30 +330,13 @@ class TimeBasedDetailAPIViewTestCase():
         self.participant_factory.create(activity=self.activity, user=self.activity.owner)
         response = self.client.get(self.url, user=self.activity.owner)
 
-        data = response.json()['data']
+        self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        contributor_ids = [
-            resource['id'] for resource in data['relationships']['contributors']['data']
-        ]
-
         self.assertEqual(
-            len(data['relationships']['contributors']['data']),
+            len(self.response_data['relationships']['contributors']['data']),
             5
         )
-        contributor_response = self.client.get(
-            data['relationships']['contributors']['links']['related'],
-            user=self.activity.owner
-        )
-        contributor_data = contributor_response.json()
-        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            contributor_data['meta']['pagination']['count'], len(contributor_ids)
-        )
-        for contributor in contributor_data['data']:
-            self.assertTrue(
-                contributor['id'] in contributor_ids
-            )
 
     def test_get_non_anonymous(self):
         response = self.client.get(self.url)
@@ -506,7 +492,7 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         details = (
             u"{}\n"
             u"http://testserver/en/initiatives/activities/details/"
-            u"dateactivity/{}/{}"
+            u"time-based/date/{}/{}"
         ).format(
             self.activity.description, self.activity.pk, self.activity.slug
         )
@@ -564,6 +550,26 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
             in self.data['meta']['transitions']
         )
+
+    def test_get_contributors(self):
+        super().test_get_contributors()
+        contributor_ids = [
+            resource['id'] for resource in self.response_data['relationships']['contributors']['data']
+        ]
+
+        contributor_response = self.client.get(
+            self.response_data['relationships']['contributors']['links']['related'],
+            user=self.activity.owner
+        )
+        contributor_data = contributor_response.json()
+        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            contributor_data['meta']['pagination']['count'], len(contributor_ids)
+        )
+        for contributor in contributor_data['data']:
+            self.assertTrue(
+                contributor['id'] in contributor_ids
+            )
 
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
@@ -746,13 +752,16 @@ class ParticipantListViewTestCase():
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
+        self.assertEqual(response.status_code, 201)
+
         data = response.json()['data']
         self.assertEqual(
             data['relationships']['document']['data']['id'],
             document_data['data']['id']
         )
+        private_doc = self.included_by_type(response, 'private-documents')[0]
         self.assertTrue(
-            response.json()['included'][2]['attributes']['link'].startswith(
+            private_doc['attributes']['link'].startswith(
                 '{}?signature='.format(reverse(self.document_url_name, args=(data['id'], )))
             )
         )
@@ -778,7 +787,6 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
-    url_name = 'on-a-date-participant-list'
     document_url_name = 'date-participant-document'
     application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
@@ -1194,7 +1202,7 @@ class RelatedParticipantsAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
         self.participants = []
-        for i in range(5):
+        for i in range(10):
             self.participants.append(
                 self.participant_factory.create(
                     activity=self.activity,
@@ -1211,31 +1219,21 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(self.response.json()['data']), 5)
+        self.assertEqual(len(self.response.json()['data']), 10)
 
-        included_documents = [
-            resource for resource in self.response.json()['included']
-            if resource['type'] == 'private-documents'
-        ]
-        self.assertEqual(len(included_documents), 5)
+        included_documents = self.included_by_type(self.response, 'private-documents')
+        self.assertEqual(len(included_documents), 10)
 
-        included_contributions = [
-            resource for resource in self.response.json()['included']
-            if resource['type'] == 'contributions/time-contributions'
-        ]
-        self.assertEqual(len(included_contributions), 5)
+        included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
+        self.assertEqual(len(included_contributions), 10)
 
     def test_get_anonymous(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 9)
 
-        self.assertEqual(len(response.json()['data']), 4)
-
-        included_documents = [
-            resource for resource in response.json()['included']
-            if resource['type'] == 'private-documents'
-        ]
+        included_documents = self.included_by_type(response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
 
     def test_get_closed_site(self):
@@ -1259,15 +1257,11 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
     def setUp(self):
         super().setUp()
 
-        DateActivitySlotFactory.create(activity=self.activity)
-
     def test_get_owner(self):
         super().test_get_owner()
-
-        included_slot_participants = [
-            resource for resource in self.response.json()['included']
-            if resource['type'] == 'contributors/time-based/slot-participants'
-        ]
+        included_slot_participants = self.included_by_type(
+            self.response,
+            'contributors/time-based/slot-participants')
         self.assertEqual(len(included_slot_participants), 5)
 
 
@@ -1344,7 +1338,8 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_different_slot(self):
-        slot = DateActivitySlotFactory.create()
+        activity = DateActivityFactory.create()
+        slot = DateActivitySlotFactory.create(activity=activity)
         self.data['data']['relationships']['slot']['data']['id'] = slot.pk
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1580,17 +1575,18 @@ class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCas
     participant_factory = PeriodParticipantFactory
 
 
-class DateIcalTestCase(BluebottleTestCase):
+class SlotIcalTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
 
         self.activity = DateActivityFactory.create(title='Pollute Katwijk Beach')
-
-        self.activity_url = reverse('date-detail', args=(self.activity.pk,))
-        response = self.client.get(self.activity_url)
-
+        self.slot = self.activity.slots.first()
+        self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']
-        self.unsigned_url = reverse('date-ical', args=(self.activity.pk,))
+        self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
 
     def test_get(self):
         response = self.client.get(self.signed_url)
@@ -1613,6 +1609,68 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertAlmostEqual(
                 ical_event['dtend'].dt,
                 self.activity.start + self.activity.duration,
+                delta=timedelta(seconds=10)
+            )
+
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
+            self.assertEqual(str(ical_event['summary']), self.activity.title)
+            self.assertEqual(
+                str(ical_event['description']),
+                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+            )
+            self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+
+    def test_get_no_signature(self):
+        response = self.client.get(self.unsigned_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(self.unsigned_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class DateIcalTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.activity = DateActivityFactory.create(
+            title='Pollute Katwijk Beach',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(activity=self.activity)
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        self.activity_url = reverse('date-detail', args=(self.activity.pk,))
+        response = self.client.get(self.activity_url, user=self.user)
+        self.signed_url = response.json()['data']['attributes']['links']['ical']
+        self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
+
+    def test_get(self):
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.get('content-type'), 'text/calendar')
+        self.assertEqual(
+            response.get('content-disposition'),
+            'attachment; filename="{}.ics"'.format(self.activity.slug)
+        )
+
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        slot = self.activity.active_slots.first()
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(
+                ical_event['dtstart'].dt,
+                slot.start,
+                delta=timedelta(seconds=10)
+            )
+            self.assertAlmostEqual(
+                ical_event['dtend'].dt,
+                slot.start + slot.duration,
                 delta=timedelta(seconds=10)
             )
 

@@ -200,6 +200,11 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             ),
             'currency': default_currency
         }
+        if stats['hours'] == 0:
+            del stats['hours']
+        if stats['amount']['amount'] == 0:
+            del stats['amount']
+
         return stats
 
     included_serializers = {

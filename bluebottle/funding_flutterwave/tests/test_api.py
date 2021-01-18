@@ -9,7 +9,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, Pla
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 success_response = {
     'status': 'success',
@@ -189,5 +189,5 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
 
         response = self.client.get(self.payout_account_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        bank_details = get_first_included_by_type(response, 'payout-accounts/flutterwave-external-accounts')
+        bank_details = self.included_by_type(response, 'payout-accounts/flutterwave-external-accounts')[0]
         self.assertEqual(bank_details['attributes']['bank-code'], '044')

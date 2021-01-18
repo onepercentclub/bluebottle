@@ -1,4 +1,4 @@
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -95,12 +95,24 @@ class ActivitySlotSerializer(ModelSerializer):
 class DateActivitySlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        if instance.start and instance.duration:
+            return {
+                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+                'outlook': instance.outlook_link,
+            }
+        else:
+            return {}
 
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
         fields = ActivitySlotSerializer.Meta.fields + (
             'title',
             'start',
+            'links',
             'duration',
             'capacity',
             'utc_offset',
@@ -129,13 +141,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
-    def get_my_contributor(self, instance):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
-
     def get_links(self, instance):
-        if instance.start and instance.duration:
+        if instance.active_slots.count() == 1:
             return {
                 'ical': reverse_signed('date-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
@@ -144,10 +151,16 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         else:
             return {}
 
+    def get_my_contributor(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
+
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration',
+            'start',
+            'duration',
             'utc_offset',
             'online_meeting_url',
             'links',
@@ -351,15 +364,15 @@ class ParticipantListSerializer(BaseContributorSerializer):
 class DateParticipantListSerializer(ParticipantListSerializer):
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantListSerializer.Meta.fields + ('slots', )
+        fields = ParticipantListSerializer.Meta.fields + ('slot_participants', )
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
-        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slots', ]
+        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slot_participants', ]
 
     included_serializers = dict(
         ParticipantListSerializer.included_serializers,
-        **{'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'}
+        **{'slot_participants': 'bluebottle.time_based.serializers.SlotParticipantSerializer'}
     )
 
 
@@ -423,6 +436,11 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 
 class DateParticipantSerializer(ParticipantSerializer):
+    slots = ResourceRelatedField(
+        source='slot_participants',
+        many=True,
+        read_only=True)
+
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
         fields = ParticipantSerializer.Meta.fields + ('slots', )
@@ -475,6 +493,8 @@ def activity_matches_participant_and_slot(value):
 
 
 class SlotParticipantSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+
     class Meta:
         model = SlotParticipant
         fields = ['id', 'status', 'slot', 'participant']

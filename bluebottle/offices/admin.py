@@ -75,7 +75,7 @@ class OfficeRegionAdmin(admin.ModelAdmin):
             obj.id,
             len(OfficeSubRegion.objects.filter(region=obj))
         )
-    subregions_link.short_description = _('office groupss')
+    subregions_link.short_description = _('office groups')
 
     def offices(self, obj):
         return format_html(

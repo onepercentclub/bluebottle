@@ -115,7 +115,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'owner', 'reviewer', 'promoter', 'place', 'location',
         'organization', 'organization_contact',
     ).prefetch_related(
-        'categories', 'activities'
+        'categories', 'activities', 'activities__dateactivity__slots',
     )
 
     serializer_class = InitiativeSerializer

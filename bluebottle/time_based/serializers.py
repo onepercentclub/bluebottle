@@ -67,6 +67,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 
 class ActivitySlotSerializer(ModelSerializer):
+    is_online = serializers.NullBooleanField()
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 
@@ -138,6 +139,15 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True,
         source='get_my_contributor'
     )
+
+    contributors = FilteredRelatedField(
+        many=True,
+        filter_backend=ParticipantListFilter,
+        related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id'
+
+    )
+
     slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
@@ -166,6 +176,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'links',
             'my_contributor',
             'slots',
+            'slot_selection',
             'preparation'
         )
 
@@ -304,15 +315,24 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
 
 class DateActivityListSerializer(TimeBasedActivityListSerializer):
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
+    slots = ResourceRelatedField(many=True, required=False, read_only=True, model=DateActivitySlot)
 
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = DateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'duration',
+            'start', 'duration', 'slots'
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
+        included_resources = TimeBasedActivityListSerializer.JSONAPIMeta.included_resources + ['slots']
+
+    included_serializers = dict(
+        TimeBasedActivityListSerializer.included_serializers,
+        **{
+            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        }
+    )
 
 
 class PeriodActivityListSerializer(TimeBasedActivityListSerializer):

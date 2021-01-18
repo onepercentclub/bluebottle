@@ -15,7 +15,8 @@ from bluebottle.files.tests.factories import ImageFactory
 
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory
+    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
+    DateActivitySlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -143,13 +144,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         after = now() + dateutil.relativedelta.relativedelta(months=2)
 
         event = DateActivityFactory.create(
-            status='open',
-            start=next_month
+            status='open', slots=[]
         )
-        DateActivityFactory.create(
-            status='open',
-            start=after
+        DateActivitySlotFactory.create(activity=event, start=next_month)
+        event_after = DateActivityFactory.create(
+            status='open', slots=[]
         )
+        DateActivitySlotFactory.create(activity=event_after, start=after)
 
         assignment = PeriodActivityFactory.create(
             status='open',
@@ -321,6 +322,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=location,
             status='open'
         )
+        DateActivitySlotFactory.create(activity=first, location=location)
         second = DateActivityFactory.create(
             title='Roggeveenstraat',
             status='open'

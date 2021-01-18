@@ -75,7 +75,7 @@ class PeriodParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PeriodParticipant
 
-    activity = factory.SubFactory(DateActivityFactory)
+    activity = factory.SubFactory(PeriodActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 

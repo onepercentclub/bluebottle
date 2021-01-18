@@ -59,6 +59,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
     class Meta(object):
@@ -81,6 +83,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'initiative.image',
             'initiative.place',
             'initiative.location',
+            'slots',
+            'slots.location',
         ]
 
 

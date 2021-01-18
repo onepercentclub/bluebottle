@@ -306,11 +306,43 @@ def slot_is_not_finished(effect):
 
 
 def slot_is_full(effect):
+    """
+    Slot is full. Capacity is fillend by participants.
+    """
+    participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
+    if effect.instance.slot.capacity \
+            and participant_count >= effect.instance.slot.capacity:
+        return True
     return False
 
 
 def slot_is_not_full(effect):
+    """
+    Slot is not full. Still some spots avaialable
+    """
     return not slot_is_full(effect)
+
+
+def slot_will_be_full(effect):
+    """
+    the slot will be filled
+    """
+    participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
+    if effect.instance.slot.capacity \
+            and participant_count + 1 >= effect.instance.slot.capacity:
+        return True
+    return False
+
+
+def slot_will_be_not_full(effect):
+    """
+    the slot will be unfilled
+    """
+    participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
+    if effect.instance.slot.capacity \
+            and participant_count - 1 < effect.instance.slot.capacity:
+        return True
+    return False
 
 
 class ActivitySlotTriggers(TriggerManager):
@@ -878,6 +910,11 @@ class SlotParticipantTriggers(TriggerManager):
                     TimeContributionStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
                 ),
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.lock,
+                    conditions=[slot_will_be_full]
+                ),
             ]
         ),
 
@@ -887,7 +924,12 @@ class SlotParticipantTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.unlock,
+                    conditions=[slot_will_be_not_full]
+                ),
             ]
         ),
 
@@ -898,7 +940,12 @@ class SlotParticipantTriggers(TriggerManager):
                     'contributions',
                     TimeContributionStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
-                )
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.lock,
+                    conditions=[slot_will_be_full]
+                ),
             ]
         ),
 
@@ -908,7 +955,12 @@ class SlotParticipantTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
-                )
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.unlock,
+                    conditions=[slot_will_be_not_full]
+                ),
             ]
         ),
     ]

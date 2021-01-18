@@ -858,7 +858,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create()
         self.activity = DateActivityFactory.create(
             slots=[],
-            capacity=True,
+            capacity=None,
             slot_selection='free',
             initiative=self.initiative
         )

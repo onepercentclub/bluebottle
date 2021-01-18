@@ -1262,7 +1262,7 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         included_slot_participants = self.included_by_type(
             self.response,
             'contributors/time-based/slot-participants')
-        self.assertEqual(len(included_slot_participants), 5)
+        self.assertEqual(len(included_slot_participants), 10)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):

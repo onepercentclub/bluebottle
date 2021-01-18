@@ -73,7 +73,7 @@ class LocationAdmin(admin.ModelAdmin):
             return "-"
         url = reverse('admin:offices_officesubregion_change', args=(obj.subregion_id,))
         return format_html('<a href="{}">{}</a>', url, obj.subregion)
-    subregion_link.short_description = _('Office subregion')
+    subregion_link.short_description = _('Office group')
 
     def region_link(self, obj):
         if not obj.subregion_id or not obj.subregion.region_id:

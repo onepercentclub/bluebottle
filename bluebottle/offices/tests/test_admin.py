@@ -121,7 +121,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:geo_location_changelist')
         response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, 'Office subregion')
+        self.assertContains(response, 'Office group')
         self.assertContains(response, 'Office region')
 
     def test_activity_admin_region_filters(self):
@@ -151,7 +151,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Recently submitted initiatives for my office:')
         self.assertContains(response, 'Recently submitted initiatives for my office region:')
-        self.assertContains(response, 'Recently submitted initiatives for my office subregion:')
+        self.assertContains(response, 'Recently submitted initiatives for my office group:')
 
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = False
@@ -169,7 +169,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Recently submitted initiatives for my office:')
         self.assertContains(response, 'Recently submitted initiatives for my office region:')
-        self.assertContains(response, 'Recently submitted initiatives for my office subregion:')
+        self.assertContains(response, 'Recently submitted initiatives for my office group:')
 
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = False

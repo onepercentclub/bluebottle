@@ -39,7 +39,7 @@ class MyOfficeInitiatives(DashboardModule):
 
 
 class MyOfficeSubRegionInitiatives(DashboardModule):
-    title = _("Recently submitted initiatives for my office subregion: {location}")
+    title = _("Recently submitted initiatives for my office group: {location}")
     title_url = "{}".format(reverse('admin:initiatives_initiative_changelist'))
     template = 'dashboard/recent_initiatives.html'
     limit = 5

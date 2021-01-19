@@ -101,7 +101,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'ical': reverse_signed('slot-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
                 'outlook': instance.outlook_link,
             }

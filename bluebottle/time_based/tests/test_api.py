@@ -1578,11 +1578,17 @@ class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCas
 class SlotIcalTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
-
-        self.activity = DateActivityFactory.create(title='Pollute Katwijk Beach')
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity = DateActivityFactory.create(
+            title='Pollute Katwijk Beach',
+            owner=self.user,
+            initiative=self.initiative
+        )
         self.slot = self.activity.slots.first()
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-        self.user = BlueBottleUserFactory.create()
+        self.activity.states.submit(save=True)
         self.client = JSONAPITestClient()
         response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']
@@ -1591,7 +1597,6 @@ class SlotIcalTestCase(BluebottleTestCase):
     def test_get(self):
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
             response.get('content-disposition'),
@@ -1603,12 +1608,12 @@ class SlotIcalTestCase(BluebottleTestCase):
         for ical_event in calendar.walk('vevent'):
             self.assertAlmostEqual(
                 ical_event['dtstart'].dt,
-                self.activity.start,
+                self.slot.start,
                 delta=timedelta(seconds=10)
             )
             self.assertAlmostEqual(
                 ical_event['dtend'].dt,
-                self.activity.start + self.activity.duration,
+                self.slot.start + self.slot.duration,
                 delta=timedelta(seconds=10)
             )
 

@@ -153,8 +153,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     def get_links(self, instance):
         if instance.active_slots.count() == 1:
+            slot = instance.slots.first()
             return {
-                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'ical': reverse_signed('slot-ical', args=(slot.pk, )),
                 'google': instance.google_calendar_link,
                 'outlook': instance.outlook_link,
             }

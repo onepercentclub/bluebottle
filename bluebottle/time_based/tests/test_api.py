@@ -481,6 +481,117 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         google_link = urlparse(links['google'])
         google_query = parse_qs(google_link.query)
 
+        slot = self.activity.slots.first()
+
+        self.assertEqual(google_link.netloc, 'calendar.google.com')
+        self.assertEqual(google_link.path, '/calendar/render')
+
+        self.assertEqual(google_query['action'][0], 'TEMPLATE')
+        self.assertEqual(google_query['location'][0], slot.location.formatted_address)
+        self.assertEqual(google_query['text'][0], self.activity.title)
+        self.assertEqual(google_query['uid'][0], 'test-dateactivityslot-{}'.format(slot.pk))
+
+        details = (
+            u"{}\n"
+            u"http://testserver/en/initiatives/activities/details/"
+            u"time-based/date/{}/{}"
+        ).format(
+            self.activity.description, self.activity.pk, self.activity.slug
+        )
+
+        self.assertEqual(google_query['details'][0], details)
+        self.assertEqual(
+            google_query['dates'][0],
+            u'{}/{}'.format(
+                slot.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
+                (slot.start + slot.duration).astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+            )
+        )
+
+        outlook_link = urlparse(links['outlook'])
+        outlook_query = parse_qs(outlook_link.query)
+
+        self.assertEqual(outlook_link.netloc, 'outlook.live.com')
+        self.assertEqual(outlook_link.path, '/owa/')
+
+        self.assertEqual(outlook_query['rru'][0], 'addevent')
+        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
+        self.assertEqual(outlook_query['location'][0], slot.location.formatted_address)
+        self.assertEqual(outlook_query['subject'][0], self.activity.title)
+        self.assertEqual(outlook_query['body'][0], details)
+        self.assertEqual(
+            outlook_query['startdt'][0],
+            slot.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+        )
+        self.assertEqual(
+            outlook_query['enddt'][0],
+            (slot.start + slot.duration).astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+        )
+
+        self.assertTrue(
+            links['ical'].startswith(reverse('slot-ical', args=(slot.pk, )))
+        )
+
+
+class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+
+        self.data['data']['attributes'].update({
+            'deadline': str(date.today() + timedelta(days=21)),
+        })
+
+    def test_get_open(self):
+        super().test_get_open()
+
+        self.assertFalse(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+    def test_get_contributors(self):
+        super().test_get_contributors()
+
+        contributor_ids = [
+            resource['id'] for resource in self.response_data['relationships']['contributors']['data']
+        ]
+
+        contributor_response = self.client.get(
+            self.response_data['relationships']['contributors']['links']['related'],
+            user=self.activity.owner
+        )
+        contributor_data = contributor_response.json()
+        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
+
+        for contributor in contributor_data['data']:
+            self.assertTrue(
+                contributor['id'] in contributor_ids
+            )
+
+    def test_get_open_with_participant(self):
+        self.activity.duration_period = 'weeks'
+        self.activity.save()
+
+        PeriodParticipantFactory.create(activity=self.activity)
+
+        super().test_get_open()
+
+        self.assertTrue(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+    def test_get_calendar_links(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+        google_link = urlparse(links['google'])
+        google_query = parse_qs(google_link.query)
+
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
 
@@ -528,60 +639,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         self.assertTrue(
             links['ical'].startswith(reverse('date-ical', args=(self.activity.pk, )))
-        )
-
-
-class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
-    type = 'period'
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def setUp(self):
-        super().setUp()
-
-        self.data['data']['attributes'].update({
-            'deadline': str(date.today() + timedelta(days=21)),
-        })
-
-    def test_get_open(self):
-        super().test_get_open()
-
-        self.assertFalse(
-            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
-            in self.data['meta']['transitions']
-        )
-
-    def test_get_contributors(self):
-        super().test_get_contributors()
-        contributor_ids = [
-            resource['id'] for resource in self.response_data['relationships']['contributors']['data']
-        ]
-
-        contributor_response = self.client.get(
-            self.response_data['relationships']['contributors']['links']['related'],
-            user=self.activity.owner
-        )
-        contributor_data = contributor_response.json()
-        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            contributor_data['meta']['pagination']['count'], len(contributor_ids)
-        )
-        for contributor in contributor_data['data']:
-            self.assertTrue(
-                contributor['id'] in contributor_ids
-            )
-
-    def test_get_open_with_participant(self):
-        self.activity.duration_period = 'weeks'
-        self.activity.save()
-
-        PeriodParticipantFactory.create(activity=self.activity)
-
-        super().test_get_open()
-
-        self.assertTrue(
-            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
-            in self.data['meta']['transitions']
         )
 
 

@@ -538,15 +538,22 @@ class SlotParticipantSerializer(ModelSerializer):
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
 
+    included_serializers = {
+        'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+    }
+
 
 class SlotParticipantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=SlotParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'resource.participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = ['resource', 'resource.slot', 'resource.participant']
         resource_name = 'contributors/time-based/slot-participant-transitions'
 
 

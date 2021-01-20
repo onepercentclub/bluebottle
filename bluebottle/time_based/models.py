@@ -471,51 +471,6 @@ class PeriodActivity(TimeBasedActivity):
     def activity_date(self):
         return self.deadline or self.start
 
-    @property
-    def google_calendar_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-        url = u'https://calendar.google.com/calendar/render'
-        params = {
-            'action': u'TEMPLATE',
-            'text': self.title,
-            'dates': u'{}/{}'.format(
-                format_date(self.start), format_date(self.start + self.duration)
-            ),
-            'details': self.details,
-            'uid': self.uid,
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
-
-    @property
-    def outlook_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-
-        url = 'https://outlook.live.com/owa/'
-
-        params = {
-            'rru': 'addevent',
-            'path': '/calendar/action/compose&rru=addevent',
-            'allday': False,
-            'subject': self.title,
-            'startdt': format_date(self.start),
-            'enddt': format_date(self.start + self.duration),
-            'body': self.details
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
-
     class Meta:
         verbose_name = _("Activity during a period")
         verbose_name_plural = _("Activities during a period")

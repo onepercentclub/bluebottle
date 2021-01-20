@@ -109,7 +109,7 @@ def registration_deadline_is_passed(effect):
 
 def registration_deadline_is_not_passed(effect):
     """
-    egistration deadline hasn't passed
+    registration deadline hasn't passed
     """
     return (
         effect.instance.registration_deadline and
@@ -282,26 +282,44 @@ class DateActivityTriggers(TimeBasedTriggers):
 
 
 def slot_is_complete(effect):
+    """
+    slot details are complete
+    """
     return effect.instance.is_complete
 
 
 def slot_is_incomplete(effect):
+    """
+    slot details are not complete
+    """
     return not effect.instance.is_complete
 
 
 def slot_is_started(effect):
+    """
+    slot start date/time has passed
+    """
     return effect.instance.is_complete and effect.instance.start and effect.instance.start < now()
 
 
 def slot_is_not_started(effect):
+    """
+    slot start date/time has not passed
+    """
     return not slot_is_started(effect)
 
 
 def slot_is_finished(effect):
+    """
+    slot end date/time has passed
+    """
     return effect.instance.is_complete and effect.instance.end and effect.instance.end < now()
 
 
 def slot_is_not_finished(effect):
+    """
+    slot end date/time has not passed
+    """
     return not slot_is_finished(effect)
 
 
@@ -318,7 +336,7 @@ def slot_is_full(effect):
 
 def slot_is_not_full(effect):
     """
-    Slot is not full. Still some spots avaialable
+    slot is not full. Still some spots avaialable
     """
     return not slot_is_full(effect)
 
@@ -439,6 +457,9 @@ class ActivitySlotTriggers(TriggerManager):
 
 
 def all_slots_finished(effect):
+    """
+    all slots have finished
+    """
     return effect.instance.activity.slots.exclude(
         status__in=['finished', 'cancelled', 'deleted']
     ).exclude(
@@ -447,10 +468,16 @@ def all_slots_finished(effect):
 
 
 def all_slots_cancelled(effect):
+    """
+    all slots are cancelled
+    """
     return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
 
 
 def activity_has_no_accepted_participants(effect):
+    """
+    activity does not have any accepted participants
+    """
     return effect.instance.activity.accepted_participants.count() == 0
 
 
@@ -894,6 +921,9 @@ class DateParticipantTriggers(ParticipantTriggers):
 
 
 def participant_slot_is_finished(effect):
+    """
+    Slot end date/time has passed
+    """
     return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 

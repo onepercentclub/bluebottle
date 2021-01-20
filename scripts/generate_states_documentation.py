@@ -6,7 +6,7 @@ import requests
 from django.core.management import call_command
 from django.conf import settings
 
-models = [
+prod_models = [
 
     # Initiative
     {
@@ -138,10 +138,158 @@ models = [
 
 ]
 
+dev_models = [
+
+    # Initiative
+    {
+        'title': '[DEV] States - Initiative',
+        'model': 'bluebottle.initiatives.models.Initiative',
+        'page_id': '1306591235'
+    },
+    {
+        'title': '[DEV] States - Activity Organizer',
+        'model': 'bluebottle.activities.models.Organizer',
+        'page_id': '1306492945'
+    },
+
+    # Funding
+    {
+        'title': '[DEV] States - Funding - Donor',
+        'model': 'bluebottle.funding.models.Donor',
+        'page_id': '1306624003'
+    },
+    {
+        'title': '[DEV] States - Funding - Money Contribution',
+        'model': 'bluebottle.funding.models.MoneyContribution',
+        'page_id': '1306296339'
+    },
+    {
+        'title': '[DEV] States - Funding - Fundraising Campaign',
+        'model': 'bluebottle.funding.models.Funding',
+        'page_id': '1306492972'
+    },
+
+    {
+        'title': '[DEV] States - Funding - Plain Payout Account',
+        'model': 'bluebottle.funding.models.PlainPayoutAccount',
+        'page_id': '1306558497'
+    },
+    {
+        'title': '[DEV] States - Funding - Stripe Payout Account',
+        'model': 'bluebottle.funding_stripe.models.StripePayoutAccount',
+        'page_id': '1306591249'
+    },
+    {
+        'title': '[DEV] States - Funding - Payout',
+        'model': 'bluebottle.funding.models.Payout',
+        'page_id': '1306591278'
+    },
+    {
+        'title': '[DEV] States - Funding - Stripe Source Payment',
+        'model': 'bluebottle.funding_stripe.models.StripeSourcePayment',
+        'page_id': '1306591295'
+    },
+    {
+        'title': '[DEV] States - Funding - Stripe Intent Payment',
+        'model': 'bluebottle.funding_stripe.models.StripePayment',
+        'page_id': '1306591302'
+    },
+    {
+        'title': '[DEV] States - Funding - Pledge Payment',
+        'model': 'bluebottle.funding_pledge.models.PledgePayment',
+        'page_id': '1306558531'
+    },
+    {
+        'title': '[DEV] States - Funding - Flutterwave Payment',
+        'model': 'bluebottle.funding_flutterwave.models.FlutterwavePayment',
+        'page_id': '1306493009'
+    },
+    {
+        'title': '[DEV] States - Funding - Lipisha Payment',
+        'model': 'bluebottle.funding_lipisha.models.LipishaPayment',
+        'page_id': '1306558548'
+    },
+    {
+        'title': '[DEV] States - Funding - Vitepay Payment',
+        'model': 'bluebottle.funding_vitepay.models.VitepayPayment',
+        'page_id': '1306591309'
+    },
+
+    {
+        'title': '[DEV] States - Funding - Stripe External Account',
+        'model': 'bluebottle.funding_stripe.models.ExternalAccount',
+        'page_id': '1306624066'
+    },
+    {
+        'title': '[DEV] States - Funding - Pledge Bank Account',
+        'model': 'bluebottle.funding_pledge.models.PledgeBankAccount',
+        'page_id': '1306493057'
+    },
+    {
+        'title': '[DEV] States - Funding - Flutterwave Bank Account',
+        'model': 'bluebottle.funding_flutterwave.models.FlutterwaveBankAccount',
+        'page_id': '1306558615'
+    },
+    {
+        'title': '[DEV] States - Funding - Lipisha Bank Account',
+        'model': 'bluebottle.funding_lipisha.models.LipishaBankAccount',
+        'page_id': '1306624093'
+    },
+    {
+        'title': '[DEV] States - Funding - Vitepay Bank Account',
+        'model': 'bluebottle.funding_vitepay.models.VitepayBankAccount',
+        'page_id': '1306558622'
+    },
+
+    # Time-based Activities
+    {
+        'title': '[DEV] States - Time based - Activity on a date',
+        'model': 'bluebottle.time_based.models.DateActivity',
+        'page_id': '1306624115'
+    },
+    {
+        'title': '[DEV] States - Time based - Participant on a date',
+        'model': 'bluebottle.time_based.models.DateParticipant',
+        'page_id': '1306493084'
+    },
+    {
+        'title': '[DEV] States - Time based - Activity slot',
+        'model': 'bluebottle.time_based.models.DateActivitySlot',
+        'page_id': '1306493248'
+    },
+    {
+        'title': '[DEV] States - Time based - Slot participant',
+        'model': 'bluebottle.time_based.models.SlotParticipant',
+        'page_id': '1306624308'
+    },
+    {
+        'title': '[DEV] States - Time based - Activity over a period',
+        'model': 'bluebottle.time_based.models.PeriodActivity',
+        'page_id': '1306493091'
+    },
+    {
+        'title': '[DEV] States - Time based - Participant over a period',
+        'model': 'bluebottle.time_based.models.PeriodParticipant',
+        'page_id': '1306296411'
+    },
+    {
+        'title': '[DEV] States - Time based - Time contribution',
+        'model': 'bluebottle.time_based.models.TimeContribution',
+        'page_id': '1306624149'
+    },
+
+]
+
+
 api = settings.CONFLUENCE['api']
 
 
 def run(*args):
+
+    if 'prod' in args:
+        models = prod_models
+    else:
+        models = dev_models
 
     for model in models:
         url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])

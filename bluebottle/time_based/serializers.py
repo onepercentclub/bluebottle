@@ -101,7 +101,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'ical': reverse_signed('slot-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
                 'outlook': instance.outlook_link,
             }
@@ -153,8 +153,9 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     def get_links(self, instance):
         if instance.active_slots.count() == 1:
+            slot = instance.slots.first()
             return {
-                'ical': reverse_signed('date-ical', args=(instance.pk, )),
+                'ical': reverse_signed('slot-ical', args=(slot.pk, )),
                 'google': instance.google_calendar_link,
                 'outlook': instance.outlook_link,
             }
@@ -222,7 +223,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period', 'my_contributor',
+            'start', 'deadline', 'duration', 'duration_period', 'my_contributor'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

@@ -1,13 +1,16 @@
 import datetime
 
 from builtins import range
+from datetime import timedelta
+
 from django.test.utils import override_settings
 from django.utils import timezone
+from django.utils.timezone import now
 from moneyed.classes import Money
 
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
-    PeriodActivityFactory, PeriodParticipantFactory
+    PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory
 )
 from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
@@ -71,7 +74,12 @@ class DateActivityStatisticsTest(StatisticsTest):
             initiative=self.initiative,
             owner=self.some_user,
             capacity=10,
-            duration=datetime.timedelta(minutes=6)
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=2),
+            duration=timedelta(minutes=6)
         )
         self.activity.states.submit(save=True)
 
@@ -149,7 +157,6 @@ class DateActivityStatisticsTest(StatisticsTest):
     def test_participant_withdrawn(self):
         contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
         contribution.states.withdraw(save=True)
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
 
         self.assertEqual(
@@ -173,7 +180,6 @@ class DateActivityStatisticsTest(StatisticsTest):
 
     def test_participant_noshow(self):
         contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
         contribution.states.remove(save=True)
 

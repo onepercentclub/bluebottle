@@ -481,13 +481,15 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         google_link = urlparse(links['google'])
         google_query = parse_qs(google_link.query)
 
+        slot = self.activity.slots.first()
+
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
 
         self.assertEqual(google_query['action'][0], 'TEMPLATE')
-        self.assertEqual(google_query['location'][0], self.activity.location.formatted_address)
+        self.assertEqual(google_query['location'][0], slot.location.formatted_address)
         self.assertEqual(google_query['text'][0], self.activity.title)
-        self.assertEqual(google_query['uid'][0], 'test-dateactivity-{}'.format(self.activity.pk))
+        self.assertEqual(google_query['uid'][0], 'test-dateactivityslot-{}'.format(slot.pk))
 
         details = (
             u"{}\n"
@@ -501,8 +503,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.assertEqual(
             google_query['dates'][0],
             u'{}/{}'.format(
-                self.activity.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
-                (self.activity.start + self.activity.duration).astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+                slot.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
+                (slot.start + slot.duration).astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
             )
         )
 
@@ -514,20 +516,20 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         self.assertEqual(outlook_query['rru'][0], 'addevent')
         self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
-        self.assertEqual(outlook_query['location'][0], self.activity.location.formatted_address)
+        self.assertEqual(outlook_query['location'][0], slot.location.formatted_address)
         self.assertEqual(outlook_query['subject'][0], self.activity.title)
         self.assertEqual(outlook_query['body'][0], details)
         self.assertEqual(
             outlook_query['startdt'][0],
-            self.activity.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+            slot.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
         )
         self.assertEqual(
             outlook_query['enddt'][0],
-            (self.activity.start + self.activity.duration).astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+            (slot.start + slot.duration).astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
         )
 
         self.assertTrue(
-            links['ical'].startswith(reverse('date-ical', args=(self.activity.pk, )))
+            links['ical'].startswith(reverse('slot-ical', args=(slot.pk, )))
         )
 
 
@@ -553,6 +555,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
     def test_get_contributors(self):
         super().test_get_contributors()
+
         contributor_ids = [
             resource['id'] for resource in self.response_data['relationships']['contributors']['data']
         ]
@@ -563,9 +566,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         )
         contributor_data = contributor_response.json()
         self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            contributor_data['meta']['pagination']['count'], len(contributor_ids)
-        )
+
         for contributor in contributor_data['data']:
             self.assertTrue(
                 contributor['id'] in contributor_ids
@@ -1578,11 +1579,17 @@ class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCas
 class SlotIcalTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
-
-        self.activity = DateActivityFactory.create(title='Pollute Katwijk Beach')
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity = DateActivityFactory.create(
+            title='Pollute Katwijk Beach',
+            owner=self.user,
+            initiative=self.initiative
+        )
         self.slot = self.activity.slots.first()
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-        self.user = BlueBottleUserFactory.create()
+        self.activity.states.submit(save=True)
         self.client = JSONAPITestClient()
         response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']
@@ -1591,7 +1598,6 @@ class SlotIcalTestCase(BluebottleTestCase):
     def test_get(self):
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
             response.get('content-disposition'),
@@ -1603,12 +1609,12 @@ class SlotIcalTestCase(BluebottleTestCase):
         for ical_event in calendar.walk('vevent'):
             self.assertAlmostEqual(
                 ical_event['dtstart'].dt,
-                self.activity.start,
+                self.slot.start,
                 delta=timedelta(seconds=10)
             )
             self.assertAlmostEqual(
                 ical_event['dtend'].dt,
-                self.activity.start + self.activity.duration,
+                self.slot.start + self.slot.duration,
                 delta=timedelta(seconds=10)
             )
 

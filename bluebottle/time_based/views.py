@@ -256,7 +256,7 @@ class DateActivityIcalView(PrivateFileView):
     max_age = 30 * 60  # half an hour
 
     def get(self, *args, **kwargs):
-        instance = self.get_object()
+        instance = super(DateActivityIcalView, self).get_object()
         calendar = icalendar.Calendar()
         for slot in instance.slots.filter(status__in=['open', 'full', 'running', 'finished']).all():
             event = icalendar.Event()
@@ -280,7 +280,6 @@ class DateActivityIcalView(PrivateFileView):
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
-
         return response
 
 

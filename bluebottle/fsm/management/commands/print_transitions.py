@@ -1,20 +1,20 @@
 from __future__ import print_function
+
 from builtins import str
 from datetime import timedelta
 
-from django.utils.timezone import now
-
-from bluebottle.funding_pledge.models import PledgePayment
 from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
+from django.utils.timezone import now
 
 from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
+from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution
+    TimeContribution, DateActivitySlot, SlotParticipant
 
 
 def get_doc(element):
@@ -112,6 +112,14 @@ class Command(BaseCommand):
         if isinstance(instance, DateParticipant):
             instance.activity = DateActivity(title="the activity")
             instance.user = Member(first_name='the', last_name='participant')
+
+        if isinstance(instance, DateActivitySlot):
+            instance.activity = DateActivity(title="the activity")
+
+        if isinstance(instance, SlotParticipant):
+            activity = DateActivity(title="the activity")
+            instance.slot = DateActivitySlot(activity=activity)
+            instance.participant = DateParticipant(activity=activity)
 
         if isinstance(instance, TimeContribution):
             contributor = PeriodParticipant()

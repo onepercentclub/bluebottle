@@ -168,8 +168,9 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
             {'delete'}
         )
 
-    def add_slots_by_owner(self):
+    def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
         self.slot_data['data']['relationships']['activity']['data']['id'] = activity_id
@@ -186,6 +187,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
         self.assertEqual(len(relationships['slots']['data']), 2)
         slots = self.included_by_type(response, 'activities/time-based/date-slots')
         self.assertEqual(len(slots), 2)
+        self.response_data = response.json()['data']
         # Now we can submit the activity
         self.assertEqual(
             {
@@ -195,7 +197,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
             {'submit', 'delete'}
         )
 
-    def add_slots_by_other(self):
+    def test_add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']

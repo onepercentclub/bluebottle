@@ -246,7 +246,12 @@ class SlotParticipantInline(admin.TabularInline):
     model = SlotParticipant
     extra = 0
     raw_id_fields = ['participant', 'slot']
-    readonly_fields = ['status']
+    readonly_fields = ['link', 'status']
+    fields = ['link', 'slot', 'status']
+
+    def link(self, obj):
+        url = reverse('admin:time_based_slotparticipant_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class SlotAdmin(StateMachineAdmin):
@@ -395,7 +400,8 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
+    raw_id_fields = ContributionChildAdmin.raw_id_fields + ('slot_participant',)
+    fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 @admin.register(DateParticipant)
@@ -406,3 +412,45 @@ class DateParticipantAdmin(ContributorChildAdmin):
     ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
     list_display = ['__str__', 'activity_link', 'status']
+
+
+@admin.register(SlotParticipant)
+class SlotParticipantAdmin(StateMachineAdmin):
+    raw_id_fields = ['participant', 'slot']
+    list_display = ['participant', 'slot']
+
+    inlines = [TimeContributionInlineAdmin]
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
+    }
+
+    detail_fields = ['participant', 'slot']
+    status_fields = ['status', 'states']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Detail'), {'fields': self.detail_fields}),
+            (_('Status'), {'fields': self.status_fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets

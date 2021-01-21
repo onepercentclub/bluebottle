@@ -34,8 +34,9 @@ class MyOfficeInitiatives(DashboardModule):
         super(MyOfficeInitiatives, self).load_from_model()
         if hasattr(self.context, 'request'):
             location = self.context.request.user.location
+            location_id = self.context.request.user.location_id
             self.title = self.title.format(location=location)
-            self.title_url += "?location__id__exact={}".format(location.id)
+            self.title_url += "?location__id__exact={}".format(location_id)
 
 
 class MyOfficeSubRegionInitiatives(DashboardModule):

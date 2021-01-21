@@ -34,8 +34,9 @@ class MyOfficeInitiatives(DashboardModule):
         super(MyOfficeInitiatives, self).load_from_model()
         if hasattr(self.context, 'request'):
             location = self.context.request.user.location
+            location_id = self.context.request.user.location_id
             self.title = self.title.format(location=location)
-            self.title_url += "?location__id__exact={}".format(location.id)
+            self.title_url += "?location__id__exact={}".format(location_id)
 
 
 class MyOfficeSubRegionInitiatives(DashboardModule):
@@ -47,16 +48,18 @@ class MyOfficeSubRegionInitiatives(DashboardModule):
 
     def init_with_context(self, context):
         location = context.request.user.location
-        self.children = Initiative.objects.filter(
-            location__subregion=location.subregion
-        ).order_by('-created')[:self.limit]
+        if location:
+            self.children = Initiative.objects.filter(
+                location__subregion=location.subregion
+            ).order_by('-created')[:self.limit]
 
     def load_from_model(self):
         super(MyOfficeSubRegionInitiatives, self).load_from_model()
         if hasattr(self.context, 'request'):
             location = self.context.request.user.location
-            self.title = self.title.format(location=location.subregion)
-            self.title_url += "?location__subregion__id__exact={}".format(location.subregion.id)
+            if location:
+                self.title = self.title.format(location=location.subregion)
+                self.title_url += "?location__subregion__id__exact={}".format(location.subregion.id)
 
 
 class MyOfficeRegionInitiatives(DashboardModule):
@@ -68,16 +71,18 @@ class MyOfficeRegionInitiatives(DashboardModule):
 
     def init_with_context(self, context):
         location = context.request.user.location
-        self.children = Initiative.objects.filter(
-            location__subregion__region=location.subregion.region
-        ).order_by('-created')[:self.limit]
+        if location:
+            self.children = Initiative.objects.filter(
+                location__subregion__region=location.subregion.region
+            ).order_by('-created')[:self.limit]
 
     def load_from_model(self):
         super(MyOfficeRegionInitiatives, self).load_from_model()
         if hasattr(self.context, 'request'):
             location = self.context.request.user.location
-            self.title = self.title.format(location=location.subregion.region)
-            self.title_url += "?location__subregion__region__id__exact={}".format(location.subregion.region.id)
+            if location:
+                self.title = self.title.format(location=location.subregion.region)
+                self.title_url += "?location__subregion__region__id__exact={}".format(location.subregion.region.id)
 
 
 class MyReviewingInitiatives(DashboardModule):

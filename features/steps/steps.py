@@ -36,7 +36,7 @@ def join_activity(context):
             }
         }
     }
-    print(context.client.post(url, json.dumps(data), user=context.user))
+    print(context.test.client.post(url, json.dumps(data), user=context.user))
 
 
 @then('User is part of the activity')

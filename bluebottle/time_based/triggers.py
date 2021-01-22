@@ -348,6 +348,7 @@ def participant_slot_will_be_full(effect):
     """
     participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
     if effect.instance.slot.capacity \
+            and effect.instance.participant.status == 'accepted' \
             and participant_count + 1 >= effect.instance.slot.capacity:
         return True
     return False
@@ -816,6 +817,7 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
+                LockFilledSlotsEffect,
                 NotificationEffect(
                     NewParticipantNotification,
                     conditions=[automatically_accept]

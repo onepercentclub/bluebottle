@@ -1,13 +1,12 @@
 from datetime import datetime, date, timedelta
 
 from dateutil.relativedelta import relativedelta
-
-from django.utils.translation import ugettext as _
+from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone
+from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import TimeContribution, SlotParticipant
-from django.template.loader import render_to_string
 
 
 class CreateTimeContributionEffect(Effect):
@@ -232,9 +231,10 @@ class UnlockUnfilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        slots = self.instance.activity.slots. \
-            filter(slot_participants__participant=self.instance, status='full')
-        return [slot for slot in slots.all() if slot.slot_participants.count() - 1 < slot.capacity]
+        if self.instance.activity.slot_selection == 'all':
+            return []
+        slots = self.instance.activity.slots.filter(status='full')
+        return [slot for slot in slots.all() if slot.accepted_participants.count() < slot.capacity]
 
     def post_save(self, **kwargs):
         for slot in self.slots:
@@ -260,9 +260,10 @@ class LockFilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        slots = self.instance.activity.slots. \
-            filter(slot_participants__participant=self.instance, status='open')
-        return [slot for slot in slots.all() if slot.slot_participants.count() + 1 >= slot.capacity]
+        if self.instance.activity.slot_selection == 'all':
+            return []
+        slots = self.instance.activity.slots.filter(status='open')
+        return [slot for slot in slots.all() if slot.accepted_participants.count() >= slot.capacity]
 
     def post_save(self, **kwargs):
         for slot in self.slots:

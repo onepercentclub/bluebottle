@@ -98,6 +98,8 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.activity.save()
         self.slot1.capacity = 1
         self.slot1.save()
+        self.slot2.capacity = 2
+        self.slot2.save()
         api_user_joins_activity(self, self.activity, self.supporter)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         assert_not_slot_participant(self, self.slot1, self.supporter)
@@ -119,3 +121,51 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
         assert_status(self, self.slot1, 'full')
+
+        api_user_joins_slot(self, self.slot2, self.supporter)
+        assert_slot_participant_status(self, self.slot2, self.supporter, status='registered')
+        assert_status(self, self.slot2, 'open')
+        api_user_joins_slot(self, self.slot2, self.supporter, status_code=400)
+
+    def test_accept_more_users_to_slot_review_activity(self):
+        self.activity.slot_selection = 'free'
+        self.activity.review = True
+        self.activity.save()
+        self.slot1.capacity = 1
+        self.slot1.save()
+        self.slot2.capacity = 2
+        self.slot2.save()
+        supporter2 = BlueBottleUserFactory.create()
+        supporter3 = BlueBottleUserFactory.create()
+        api_user_joins_activity(self, self.activity, self.supporter)
+        api_user_joins_activity(self, self.activity, supporter2)
+        api_user_joins_activity(self, self.activity, supporter3)
+        assert_participant_status(self, self.activity, self.supporter, status='new')
+        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot1, supporter2)
+        api_user_joins_slot(self, self.slot1, supporter3)
+        api_user_joins_slot(self, self.slot2, self.supporter)
+        api_user_joins_slot(self, self.slot2, supporter2)
+        api_user_joins_slot(self, self.slot2, supporter3)
+        assert_status(self, self.slot1, 'open')
+        assert_status(self, self.slot2, 'open')
+        self.assertEqual(self.slot1.accepted_participants.count(), 0)
+
+        api_participant_transition(self, self.activity, self.supporter,
+                                   transition='accept', request_user=self.owner)
+        assert_status(self, self.slot1, 'full')
+        assert_status(self, self.slot2, 'open')
+
+        api_participant_transition(self, self.activity, supporter2,
+                                   transition='accept', request_user=self.owner)
+        assert_status(self, self.slot1, 'full')
+        assert_status(self, self.slot2, 'full')
+
+        api_participant_transition(self, self.activity, supporter3,
+                                   transition='accept', request_user=self.owner)
+
+        assert_slot_participant_status(self, self.slot1, self.supporter, 'registered')
+        assert_participant_status(self, self.activity, self.supporter, 'accepted')
+        assert_participant_status(self, self.activity, supporter2, 'accepted')
+        assert_participant_status(self, self.activity, supporter3, 'accepted')
+        self.assertEqual(self.slot1.accepted_participants.count(), 3)

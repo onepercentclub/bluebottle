@@ -286,7 +286,7 @@ SHARED_APPS = (
     'django_singleton_admin',
     'django_filters',
     'multiselectfield',
-
+    'behave_django',
     'djmoney.contrib.exchange',
 )
 

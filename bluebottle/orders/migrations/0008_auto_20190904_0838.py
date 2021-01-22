@@ -182,5 +182,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_orders, wipe_donations)
+        # migrations.RunPython(migrate_orders, wipe_donations)
     ]

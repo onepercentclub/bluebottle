@@ -45,5 +45,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_payouts)
+        # migrations.RunPython(create_payouts)
     ]

@@ -775,7 +775,6 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
                 ),
-                LockFilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
@@ -817,7 +816,6 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
-                LockFilledSlotsEffect,
                 NotificationEffect(
                     NewParticipantNotification,
                     conditions=[automatically_accept]
@@ -859,7 +857,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -879,7 +876,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -897,7 +893,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -915,6 +910,38 @@ class DateParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 CreateSlotParticipantsForSlotsEffect
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.reapply,
+            effects=[
+                LockFilledSlotsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                LockFilledSlotsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.reject,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.withdraw,
+            effects=[
+                UnlockUnfilledSlotsEffect,
             ]
         ),
     ]

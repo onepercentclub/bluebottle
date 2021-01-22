@@ -201,6 +201,9 @@ class CreateSlotParticipantsForSlotsEffect(Effect):
 
 
 class CreateSlotParticipantsForParticipantsEffect(Effect):
+    """
+    Create register participants for all slots
+    """
     title = _('Add participants to all slots if slot selection is set to "all"')
     template = 'admin/create_slot_participants_for_participant.html'
 
@@ -214,3 +217,59 @@ class CreateSlotParticipantsForParticipantsEffect(Effect):
         if activity.slot_selection == 'all':
             for participant in activity.accepted_participants:
                 SlotParticipant.objects.create(participant=participant, slot=slot)
+
+
+class UnlockUnfilledSlotsEffect(Effect):
+    """
+    Open up slots that are no longer full
+    """
+
+    template = 'admin/unlock_activity_slots.html'
+
+    @property
+    def display(self):
+        return len(self.slots)
+
+    @property
+    def slots(self):
+        slots = self.instance.activity.slots. \
+            filter(slot_participants__participant=self.instance, status='full')
+        return [slot for slot in slots.all() if slot.slot_participants.count() - 1 < slot.capacity]
+
+    def post_save(self, **kwargs):
+        for slot in self.slots:
+            slot.states.unlock(save=True)
+
+    def __repr__(self):
+        return '<Effect: Unlock unfilled slots for by {}>'.format(self.instance.activity)
+
+    def __str__(self):
+        return _('Unlock unfilled slots for {activity}').format(activity=self.instance.activity)
+
+
+class LockFilledSlotsEffect(Effect):
+    """
+    Lock slots that will be full
+    """
+
+    template = 'admin/lock_activity_slots.html'
+
+    @property
+    def display(self):
+        return len(self.slots)
+
+    @property
+    def slots(self):
+        slots = self.instance.activity.slots. \
+            filter(slot_participants__participant=self.instance, status='open')
+        return [slot for slot in slots.all() if slot.slot_participants.count() + 1 >= slot.capacity]
+
+    def post_save(self, **kwargs):
+        for slot in self.slots:
+            slot.states.lock(save=True)
+
+    def __repr__(self):
+        return '<Effect: Lock filled slots for by {}>'.format(self.instance.activity)
+
+    def __str__(self):
+        return _('Lock filled slots for {activity}').format(activity=self.instance.activity)

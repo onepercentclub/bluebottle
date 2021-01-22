@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Lock activity slots" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Lock the slots that will be filled by this participant
+{% endblocktrans %}
+</p>

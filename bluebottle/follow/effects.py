@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.effects import Effect
 from bluebottle.follow.models import follow, unfollow
+from bluebottle.fsm.effects import Effect
 
 
 class FollowActivityEffect(Effect):

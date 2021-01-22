@@ -17,7 +17,8 @@ from bluebottle.time_based.effects import (
     ClearStartEffect, ClearDeadlineEffect,
     RescheduleDurationsEffect,
     ActiveDurationsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
-    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect
+    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
+    LockFilledSlotsEffect
 )
 from bluebottle.time_based.messages import (
     DeadlineChanged,
@@ -773,7 +774,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
                 ),
-
+                LockFilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
@@ -828,18 +829,15 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.lock,
                     conditions=[activity_will_be_full]
                 ),
-
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-
                 RelatedTransitionEffect(
                     'finished_contributions',
                     TimeContributionStateMachine.succeed,
@@ -859,7 +857,7 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
+                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -879,7 +877,7 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
+                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -897,7 +895,7 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
+                UnlockUnfilledSlotsEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -990,6 +988,16 @@ class SlotParticipantTriggers(TriggerManager):
                     'slot',
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            SlotParticipantStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
                 ),
             ]
         ),

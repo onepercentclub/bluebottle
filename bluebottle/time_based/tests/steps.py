@@ -55,3 +55,8 @@ def api_participant_transition(test, activity, supporter, transition, request_us
 
 def assert_participant_status(test, activity, supporter, status):
     return test.assertEqual(activity.contributors.filter(user=supporter).first().status, status)
+
+
+def assert_status(test, model, status):
+    model.refresh_from_db()
+    return test.assertEqual(model.status, status)

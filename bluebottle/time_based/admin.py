@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
-from django.forms import Textarea
+from django.forms import Textarea, BaseInlineFormSet
 from django.template import loader
 from django.urls import reverse, resolve
 from django.utils.html import format_html
@@ -72,7 +72,7 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = ActivityChildAdmin.inlines + (MessageAdminInline, )
+    inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
 
     formfield_overrides = {
         models.DurationField: {
@@ -120,11 +120,11 @@ class TimeBasedAdmin(ActivityChildAdmin):
                 duration=duration,
                 time_unit=obj.duration_period[0:-1])
         return duration
+
     duration_string.short_description = _('Duration')
 
 
 class TimeBasedActivityAdminForm(StateMachineModelForm):
-
     class Meta(object):
         model = PeriodActivity
         fields = '__all__'
@@ -248,22 +248,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         return obj.deadline
 
 
-class SlotParticipantInline(admin.TabularInline):
-    model = SlotParticipant
-    extra = 0
-    raw_id_fields = ['participant', 'slot']
-    readonly_fields = ['link', 'status']
-    fields = ['link', 'slot', 'status']
-
-    def link(self, obj):
-        url = reverse('admin:time_based_slotparticipant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
-
-
 class SlotAdmin(StateMachineAdmin):
-
-    inlines = [SlotParticipantInline]
-
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -285,6 +270,7 @@ class SlotAdmin(StateMachineAdmin):
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
         return duration
+
     duration_string.short_description = _('Duration')
 
     def valid(self, obj):
@@ -320,7 +306,7 @@ class SlotAdmin(StateMachineAdmin):
 
     def get_status_fields(self, request, obj):
         fields = self.status_fields
-        if obj and obj.status in ('draft', ):
+        if obj and obj.status in ('draft',):
             fields = ['valid'] + fields
 
         return fields
@@ -365,7 +351,7 @@ class DateSlotAdmin(SlotAdmin):
 class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
-    readonly_fields = ('edit', 'status', )
+    readonly_fields = ('edit', 'status',)
     fields = readonly_fields + ('start', 'value')
 
     formfield_overrides = {
@@ -401,6 +387,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
         if not obj:
             return '-'
         return obj.contributions.aggregate(total=Sum('timecontribution__value'))['total']
+
     total.short_description = _('Total contributed')
 
 
@@ -410,10 +397,56 @@ class TimeContributionAdmin(ContributionChildAdmin):
     fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
+class ParticipantSlotFormSet(BaseInlineFormSet):
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs['instance']
+        new = []
+        ids = [sp.slot_id for sp in instance.slot_participants.all()]
+        for slot in instance.activity.slots.exclude(id__in=ids).all():
+            new.append({
+                'slot': slot,
+                'checked': False,
+            })
+
+        kwargs.update({'initial': new})
+        super(ParticipantSlotFormSet, self).__init__(*args, **kwargs)
+
+
+class ParticipantSlotInline(admin.TabularInline):
+    parent_object = None
+    model = SlotParticipant
+    formset = ParticipantSlotFormSet
+
+    def get_extra(self, request, obj=None, **kwargs):
+        ids = [sp.slot_id for sp in self.parent_object.slot_participants.all()]
+        return self.parent_object.activity.slots.exclude(id__in=ids).count()
+
+    raw_id_fields = ['slot', ]
+    readonly_fields = ['checked', 'status']
+    fields = ['slot', 'checked', 'status']
+
+    def checked(self, obj):
+        if obj.id:
+            return format_html('<input type="checkbox" checked>')
+        else:
+            return format_html('<input type="checkbox">')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        for inline in inlines:
+            inline.parent_object = obj
+        return inlines
+
     inlines = ContributorChildAdmin.inlines + [
-        SlotParticipantInline,
+        ParticipantSlotInline,
         TimeContributionInlineAdmin
     ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']

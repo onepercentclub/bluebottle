@@ -345,6 +345,8 @@ def participant_slot_will_be_full(effect):
     """
     the slot will be filled
     """
+    if not effect.instance.id:
+        return False
     participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
     if effect.instance.slot.capacity \
             and participant_count + 1 >= effect.instance.slot.capacity:
@@ -924,7 +926,8 @@ def participant_slot_is_finished(effect):
     """
     Slot end date/time has passed
     """
-    return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+    if effect.instance.id:
+        return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 
 def participant_will_not_be_attending(effect):

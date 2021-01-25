@@ -149,23 +149,53 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_user_joins_slot(self, self.slot2, supporter3)
         assert_status(self, self.slot1, 'open')
         assert_status(self, self.slot2, 'open')
-        self.assertEqual(self.slot1.accepted_participants.count(), 0)
+        self.assertEqual(
+            self.slot1.accepted_participants.count(), 0,
+            'Slots should not have any accepted members yet'
+        )
 
         api_participant_transition(self, self.activity, self.supporter,
                                    transition='accept', request_user=self.owner)
-        assert_status(self, self.slot1, 'full')
-        assert_status(self, self.slot2, 'open')
+        assert_status(
+            self, self.slot1, 'full',
+            'Slot1 should be full now.'
+        )
+        assert_status(
+            self, self.slot2, 'open',
+            'Slot2 still has spots left and should be open.'
+        )
 
         api_participant_transition(self, self.activity, supporter2,
                                    transition='accept', request_user=self.owner)
         assert_status(self, self.slot1, 'full')
         assert_status(self, self.slot2, 'full')
 
-        api_participant_transition(self, self.activity, supporter3,
-                                   transition='accept', request_user=self.owner)
+        api_participant_transition(
+            self, self.activity, supporter3,
+            transition='accept', request_user=self.owner)
 
         assert_slot_participant_status(self, self.slot1, self.supporter, 'registered')
         assert_participant_status(self, self.activity, self.supporter, 'accepted')
         assert_participant_status(self, self.activity, supporter2, 'accepted')
         assert_participant_status(self, self.activity, supporter3, 'accepted')
-        self.assertEqual(self.slot1.accepted_participants.count(), 3)
+        self.assertEqual(
+            self.slot1.accepted_participants.count(), 3,
+            'Slot1 should have 3 accepted participants, although capacity was only 1.'
+        )
+        self.assertEqual(
+            self.slot2.accepted_participants.count(), 3,
+            'Slot1 should have 3 accepted participants, although capacity was only 2.'
+        )
+        api_slot_participant_transition(self, self.slot2, supporter3, 'withdraw')
+        assert_slot_participant_status(self, self.slot2, supporter3, 'withdrawn')
+        self.assertEqual(
+            self.slot2.accepted_participants.count(), 2,
+            'Slot1 should now have 2 accepted participants'
+        )
+        assert_status(self, self.slot2, 'full')
+        api_participant_transition(self, self.activity, supporter2, 'withdraw')
+        assert_slot_participant_status(self, self.slot2, supporter2, 'registered')
+        assert_status(
+            self, self.slot2, 'open',
+            'Slot2 should now be '
+        )

@@ -9,9 +9,6 @@ def api_user_joins_activity(test, activity, supporter, request_user=None, status
     test.data = {
         'data': {
             'type': 'contributors/time-based/date-participants',
-            'attributes': {
-                'motiviation': 'I am great',
-            },
             'relationships': {
                 'activity': {
                     'data': {
@@ -105,26 +102,26 @@ def api_slot_participant_transition(test, slot, supporter, transition, request_u
     test.assertEqual(response.status_code, status_code)
 
 
-def assert_participant_status(test, activity, supporter, status):
+def assert_participant_status(test, activity, supporter, status, msg=None):
     participant = activity.contributors.filter(user=supporter).first()
-    return test.assertEqual(participant.status, status)
+    return test.assertEqual(participant.status, status, msg)
 
 
-def assert_slot_participant_status(test, slot, supporter, status):
+def assert_slot_participant_status(test, slot, supporter, status, msg=None):
     slot_participant = slot.slot_participants.filter(participant__user=supporter).first()
-    return test.assertEqual(slot_participant.status, status)
+    return test.assertEqual(slot_participant.status, status, msg)
 
 
-def assert_not_participant(test, activity, supporter):
+def assert_not_participant(test, activity, supporter, msg=None):
     participant = activity.contributors.filter(user=supporter).first()
-    return test.assertIsNone(participant)
+    return test.assertIsNone(participant, msg)
 
 
-def assert_not_slot_participant(test, slot, supporter):
+def assert_not_slot_participant(test, slot, supporter, msg=None):
     slot_participant = slot.slot_participants.filter(participant__user=supporter).first()
-    return test.assertIsNone(slot_participant)
+    return test.assertIsNone(slot_participant, msg)
 
 
-def assert_status(test, model, status):
+def assert_status(test, model, status, msg=None):
     model.refresh_from_db()
-    return test.assertEqual(model.status, status)
+    return test.assertEqual(model.status, status, msg)

@@ -927,6 +927,10 @@ def participant_slot_is_finished(effect):
     return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 
+def participant_will_not_be_attending(effect):
+    return len(effect.instance.participant.slot_participants.filter(status='registered')) <= 1
+
+
 @register(SlotParticipant)
 class SlotParticipantTriggers(TriggerManager):
 
@@ -960,6 +964,11 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
                 ),
+                RelatedTransitionEffect(
+                    'participant',
+                    ParticipantStateMachine.remove,
+                    conditions=[participant_will_not_be_attending]
+                ),
             ]
         ),
 
@@ -976,6 +985,10 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
+                RelatedTransitionEffect(
+                    'participant',
+                    ParticipantStateMachine.accept,
+                ),
             ]
         ),
 
@@ -990,6 +1003,30 @@ class SlotParticipantTriggers(TriggerManager):
                     'slot',
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
+                ),
+                RelatedTransitionEffect(
+                    'participant',
+                    ParticipantStateMachine.withdraw,
+                    conditions=[participant_will_not_be_attending]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            SlotParticipantStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'participant',
+                    ParticipantStateMachine.reapply,
                 ),
             ]
         ),

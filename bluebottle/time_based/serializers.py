@@ -70,6 +70,7 @@ class ActivitySlotSerializer(ModelSerializer):
     is_online = serializers.NullBooleanField()
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
+    status = FSMField(read_only=True)
 
     class Meta:
         fields = (
@@ -79,6 +80,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'transitions',
         )
         meta_fields = (
+            'status',
             'permissions',
             'transitions',
             'required',
@@ -186,6 +188,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'slots',
             'slots.location'
+            'my_contributor',
+            'my_contributor.slots',
         ]
 
     included_serializers = dict(
@@ -193,6 +197,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         **{
             'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+            'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
             'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
@@ -515,10 +520,12 @@ def activity_matches_participant_and_slot(value):
 
 class SlotParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
+    transitions = AvailableTransitionsField(source='states')
 
     class Meta:
         model = SlotParticipant
-        fields = ['id', 'status', 'slot', 'participant']
+        fields = ['id', 'slot', 'participant']
+        meta_fields = ('status', 'transitions', )
 
         validators = [
             UniqueTogetherValidator(
@@ -531,15 +538,22 @@ class SlotParticipantSerializer(ModelSerializer):
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
 
+    included_serializers = {
+        'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+    }
+
 
 class SlotParticipantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=SlotParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'resource.participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = ['resource', 'resource.slot', 'resource.participant']
         resource_name = 'contributors/time-based/slot-participant-transitions'
 
 

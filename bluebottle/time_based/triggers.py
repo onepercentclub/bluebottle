@@ -368,7 +368,7 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForParticipantsEffect
+                CreateSlotParticipantsForSlotsEffect
             ]
         ),
         TransitionTrigger(
@@ -914,7 +914,7 @@ class DateParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForSlotsEffect
+                CreateSlotParticipantsForParticipantsEffect
             ]
         ),
     ]

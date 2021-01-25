@@ -136,8 +136,17 @@ class TimeBasedActivityAdminForm(StateMachineModelForm):
 class DateActivityASlotInline(admin.TabularInline):
     model = DateActivitySlot
 
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+    }
+
     readonly_fields = [
-        'duration',
         'link'
     ]
 

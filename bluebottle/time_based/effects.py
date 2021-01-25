@@ -190,13 +190,14 @@ class CreateSlotParticipantsForSlotsEffect(Effect):
 
     @property
     def display(self):
-        return self.instance.activity.slot_selection == 'all' and self.instance.activity.slots.count() > 1
+        return self.instance.activity.slot_selection == 'all' \
+            and self.instance.activity.active_participants.count()
 
     def post_save(self, **kwargs):
-        participant = self.instance
+        slot = self.instance
         activity = self.instance.activity
         if activity.slot_selection == 'all':
-            for slot in activity.slots.all():
+            for participant in activity.accepted_participants:
                 SlotParticipant.objects.create(participant=participant, slot=slot)
 
 
@@ -206,11 +207,12 @@ class CreateSlotParticipantsForParticipantsEffect(Effect):
 
     @property
     def display(self):
-        return self.instance.activity.slot_selection == 'all'
+        return self.instance.activity.slot_selection == 'all' \
+            and self.instance.activity.slots.count()
 
     def post_save(self, **kwargs):
-        slot = self.instance
+        participant = self.instance
         activity = self.instance.activity
         if activity.slot_selection == 'all':
-            for participant in activity.accepted_participants:
+            for slot in activity.slots.all():
                 SlotParticipant.objects.create(participant=participant, slot=slot)

@@ -39,7 +39,6 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
     def test_location_sets_country(self):
         country = CountryFactory.create()
         location = LocationFactory.create(country=country)
-
         BlueBottleUserFactory.create(email='john_doe@onepercentclub.com', location=location)
 
 

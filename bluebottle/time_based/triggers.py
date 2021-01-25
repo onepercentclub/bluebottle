@@ -928,6 +928,9 @@ def participant_slot_is_finished(effect):
 
 
 def participant_will_not_be_attending(effect):
+    """
+    no more slot participations remaining for this activity (participant unregistered from all slots)
+    """
     return len(effect.instance.participant.slot_participants.filter(status='registered')) <= 1
 
 

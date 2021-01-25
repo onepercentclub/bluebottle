@@ -26,9 +26,9 @@ class PrintTransitionsTestCase(BluebottleTestCase):
             html = self.print_transitions(model['model'])
             self.assertTrue(
                 html.startswith(b'<h2>States</h2>'),
-                "{} documentation should print without errors".format(model['model'])
+                "{} documentation should print without errors.".format(model['model'])
             )
             self.assertTrue(
                 html.endswith(b'</table>\n'),
-                "{} documentation should print without errors".format(model['model'])
+                "{} documentation should print without errors.".format(model['model'])
             )

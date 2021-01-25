@@ -347,7 +347,7 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'deadline', 'duration', 'duration_period',
+            'start', 'deadline', 'duration', 'duration_period',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):

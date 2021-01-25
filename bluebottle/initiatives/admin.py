@@ -1,5 +1,6 @@
 from builtins import object
 from django.contrib import admin
+from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -86,6 +87,34 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
 
+    def get_list_display(self, request):
+        fields = self.list_display
+        if Location.objects.count() and 'location_link' not in fields:
+            fields += ['location_link']
+        return fields
+
+    list_filter = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
+
+    def get_list_filter(self, request):
+        filters = self.list_filter
+        if Location.objects.count():
+            if 'location' not in filters:
+                filters += ['location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions \
+                    and 'location__subregion' not in filters:
+                filters += ['location__subregion', 'location__subregion__region']
+        elif InitiativeCountryFilter not in filters:
+            filters.append(InitiativeCountryFilter)
+
+        return filters
+
+    def location_link(self, obj):
+        if not obj.location:
+            return "-"
+        url = reverse('admin:geo_location_change', args=(obj.location.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.location)
+    location_link.short_description = _('office')
+
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
@@ -115,16 +144,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
-
-    def get_list_filter(self, instance):
-        filters = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
-
-        if Location.objects.count():
-            filters.append('location')
-        else:
-            filters.append(InitiativeCountryFilter)
-
-        return filters
 
     def get_fieldsets(self, request, obj=None):
         detail_fields = [

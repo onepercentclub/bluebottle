@@ -186,3 +186,11 @@ STATIC_MAPS_API_KEY = 'someinvalidapikey'
 STATIC_MAPS_API_SECRET = 'fpqFpdo4RY9GDc-xxawF6Ipmp3Y='
 
 DEFAULT_CURRENCY = 'EUR'
+
+CONFLUENCE = {
+    'api': {
+        'domain': '',
+        'user': '',
+        'key': ''
+    }
+}

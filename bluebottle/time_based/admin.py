@@ -170,9 +170,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     ]
 
     detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'duration',
-
         'slot_selection',
 
         'preparation',

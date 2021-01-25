@@ -603,6 +603,9 @@ class SlotParticipant(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
     auto_approve = True
 
+    def __str__(self):
+        return '{name} / {slot}'.format(name=self.participant.user, slot=self.slot)
+
     @property
     def user(self):
         return self.participant.user

@@ -16,7 +16,7 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory
+    DateActivitySlotFactory, SlotParticipantFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -1225,16 +1225,13 @@ class RelatedParticipantsAPIViewTestCase():
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 10)
 
-        included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
-        self.assertEqual(len(included_contributions), 10)
-
     def test_get_anonymous(self):
-        response = self.client.get(self.url)
+        self.response = self.client.get(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['data']), 9)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 9)
 
-        included_documents = self.included_by_type(response, 'private-documents')
+        included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
 
     def test_get_closed_site(self):
@@ -1258,12 +1255,49 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
     def setUp(self):
         super().setUp()
 
+        self.client = JSONAPITestClient()
+        self.activity = self.factory.create(slot_selection='free')
+        DateActivitySlotFactory.create(activity=self.activity)
+
+        self.participants = []
+        for i in range(10):
+            participant = self.participant_factory.create(
+                activity=self.activity,
+                document=PrivateDocumentFactory.create()
+            )
+            for slot in self.activity.slots.all():
+                SlotParticipantFactory.create(
+                    participant=participant,
+                    slot=slot
+                )
+
+            self.participants.append(
+                participant
+            )
+
+        self.participants[0].states.remove(save=True)
+        self.participants[1].slot_participants.all()[0].states.remove(save=True)
+
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
     def test_get_owner(self):
         super().test_get_owner()
+
+        included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
+        self.assertEqual(len(included_contributions), 20)
+
         included_slot_participants = self.included_by_type(
             self.response,
             'contributors/time-based/slot-participants')
-        self.assertEqual(len(included_slot_participants), 10)
+        self.assertEqual(len(included_slot_participants), 20)
+
+    def test_get_anonymous(self):
+        super().test_get_anonymous()
+        included_slot_participants = self.included_by_type(
+            self.response,
+            'contributors/time-based/slot-participants')
+
+        self.assertEqual(len(included_slot_participants), 17)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
@@ -1272,6 +1306,12 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
     participant_type = 'contributors/time-based/period-participant'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_get_owner(self):
+        super().test_get_owner()
+
+        included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
+        self.assertEqual(len(included_contributions), 10)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

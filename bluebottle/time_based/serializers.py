@@ -23,7 +23,7 @@ from bluebottle.time_based.models import (
 )
 
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
-from bluebottle.time_based.filters import ParticipantListFilter
+from bluebottle.time_based.filters import ParticipantListFilter, SlotParticipantListFilter
 
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.utils import reverse_signed
@@ -395,6 +395,11 @@ class ParticipantListSerializer(BaseContributorSerializer):
 
 
 class DateParticipantListSerializer(ParticipantListSerializer):
+    participants = FilteredRelatedField(
+        many=True,
+        filter_backend=SlotParticipantListFilter,
+    )
+
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
         fields = ParticipantListSerializer.Meta.fields + ('slot_participants', )
@@ -469,8 +474,9 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 
 class DateParticipantSerializer(ParticipantSerializer):
-    slots = ResourceRelatedField(
+    slots = FilteredRelatedField(
         source='slot_participants',
+        filter_backend=SlotParticipantListFilter,
         many=True,
         read_only=True)
 

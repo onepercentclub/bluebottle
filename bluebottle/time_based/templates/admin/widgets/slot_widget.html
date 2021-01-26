@@ -1,0 +1,6 @@
+<input type="hidden"
+       name="{{ widget.name }}"
+       value="{{ widget.value|stringformat:'s' }}"
+       {% include "django/forms/widgets/attrs.html" %} />
+{{ widget.attrs.slot.start|date }}
+{{ widget.attrs.slot.start|time }}

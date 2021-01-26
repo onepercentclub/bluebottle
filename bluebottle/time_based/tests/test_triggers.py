@@ -897,6 +897,48 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         slot_participant.states.withdraw(save=True)
         self.assertStatus(slot_participant, 'withdrawn')
 
+    def test_withdraw_from_all_slots(self):
+        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+
+        slot_participant1.states.withdraw(save=True)
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant1, 'withdrawn')
+
+        slot_participant2.states.withdraw(save=True)
+        self.assertStatus(self.participant, 'withdrawn')
+        self.assertStatus(slot_participant2, 'withdrawn')
+
+        slot_participant1.states.reapply(save=True)
+
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant1, 'registered')
+
+        slot_participant2.states.reapply(save=True)
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant2, 'registered')
+
+    def test_remove_from_all_slots(self):
+        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+
+        slot_participant1.states.remove(save=True)
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant1, 'removed')
+
+        slot_participant2.states.remove(save=True)
+        self.assertStatus(self.participant, 'rejected')
+        self.assertStatus(slot_participant2, 'removed')
+
+        slot_participant1.states.accept(save=True)
+
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant1, 'registered')
+
+        slot_participant2.states.accept(save=True)
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(slot_participant2, 'registered')
+
     def test_fill_slot(self):
         SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.assertStatus(self.slot1, 'open')
@@ -907,7 +949,23 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, 'full')
 
     def test_unfill_slot(self):
-        slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
-        slot_part.states.withdraw(save=True)
+        self.slot_part.states.withdraw(save=True)
         self.assertStatus(self.slot2, 'open')
+
+    def test_refill_slot(self):
+        self.test_unfill_slot()
+        self.slot_part.states.reapply(save=True)
+        self.assertStatus(self.slot2, 'full')
+
+    def test_unfill_slot_remove(self):
+        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.assertStatus(self.slot2, 'full')
+        self.slot_part.states.remove(save=True)
+        self.assertStatus(self.slot2, 'open')
+
+    def test_refill_slot_remove(self):
+        self.test_unfill_slot_remove()
+        self.slot_part.states.accept(save=True)
+        self.assertStatus(self.slot2, 'full')

@@ -1,6 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
 
-
 JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
 JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
 
@@ -31,7 +30,8 @@ JET_SIDE_MENU_ITEMS = [
             },
             {
                 'name': 'impact.impacttype',
-                'permissions': ['impact.change_impacttype']
+                'permissions': ['impact.change_impacttype'],
+                'enabled': 'initiatives.InitiativePlatformSettings.enable_impact',
             },
 
             {
@@ -117,7 +117,27 @@ JET_SIDE_MENU_ITEMS = [
             },
             {
                 'name': 'segments.segmenttype',
-                'permissions': ['segments.change_segment']
+                'permissions': ['segments.change_segment'],
+                'enabled': 'members.MemberPlatformSettings.enable_segments'
+            },
+        ]
+    },
+    {
+        'label': _('Offices'),
+        'permissions': ['offices.change_region'],
+        'enabled': 'initiatives.InitiativePlatformSettings.enable_office_regions',
+        'items': [
+            {
+                'name': 'geo.location',
+                'permissions': ['geo.change_location']
+            },
+            {
+                'name': 'offices.officesubregion',
+                'permissions': ['offices.change_officesubregion']
+            },
+            {
+                'name': 'offices.officeregion',
+                'permissions': ['offices.change_officeregion']
             },
         ]
     },

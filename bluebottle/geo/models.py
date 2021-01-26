@@ -8,7 +8,6 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
-from geoposition.fields import GeopositionField
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
 
@@ -130,15 +129,26 @@ class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
 
-    position = GeopositionField(null=True)
-    group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
-                              null=True, blank=True)
+    position = PointField(null=True)
+
+    group = models.ForeignKey(
+        'geo.LocationGroup',
+        verbose_name=_('location group'),
+        null=True, blank=True)
+    subregion = models.ForeignKey(
+        'offices.OfficeSubRegion',
+        verbose_name=_('office group'),
+        help_text=_('The organisational group this office belongs too.'),
+        null=True, blank=True)
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
+    country = models.ForeignKey(
+        'geo.Country',
+        help_text=_('The (geographic) country this office is located in.'),
+        blank=True, null=True)
     description = models.TextField(_('description'), blank=True)
     image = ImageField(
         _('image'), max_length=255, null=True, blank=True,
-        upload_to='location_images/', help_text=_('Location picture'),
+        upload_to='location_images/', help_text=_('Office picture'),
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
@@ -149,8 +159,8 @@ class Location(models.Model):
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
-        verbose_name = _('office location')
-        verbose_name_plural = _('office locations')
+        verbose_name = _('office')
+        verbose_name_plural = _('offices')
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -172,7 +182,7 @@ class Place(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = GeopositionField()
+    position = PointField(null=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -189,7 +199,7 @@ class InitiativePlace(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = GeopositionField()
+    position = PointField()
 
 
 @python_2_unicode_compatible

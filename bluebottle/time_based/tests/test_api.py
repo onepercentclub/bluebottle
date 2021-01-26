@@ -1400,10 +1400,10 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            data['included'][0]['type'],
+            data['included'][2]['type'],
             'contributors/time-based/slot-participants'
         )
-        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+        self.assertEqual(data['included'][2]['meta']['status'], 'withdrawn')
 
     def test_reapply_by_user(self):
         self.test_withdraw_by_user()
@@ -1419,7 +1419,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+        self.assertEqual(data['included'][2]['meta']['status'], 'registered')
 
     def test_withdraw_by_owner(self):
         self.data['data']['attributes']['transition'] = 'withdraw'
@@ -1457,7 +1457,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'removed')
+        self.assertEqual(data['included'][2]['meta']['status'], 'removed')
 
     def test_accept_by_owner(self):
         self.test_remove_by_owner()
@@ -1473,7 +1473,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'registered')
+        self.assertEqual(data['included'][2]['meta']['status'], 'registered')
 
     def test_remove_by_user(self):
         self.data['data']['attributes']['transition'] = 'remove'

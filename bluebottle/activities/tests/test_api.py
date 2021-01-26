@@ -558,7 +558,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_location(self):
-        PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
+        PlaceFactory.create(
+            content_object=self.owner,
+            position=Point(20.0, 10.0)
+        )
 
         first = PeriodActivityFactory.create(status='full')
         PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
@@ -566,7 +569,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         PeriodParticipantFactory.create_batch(3, activity=second, status='accepted')
 
@@ -634,7 +637,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_sort_matching_office_location(self):
-        self.owner.location = LocationFactory.create(position='10.0, 20.0')
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
         self.owner.save()
 
         first = PeriodActivityFactory.create(status='full')
@@ -703,7 +706,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         skill = SkillFactory.create()
         self.owner.skills.add(skill)
 
-        self.owner.location = LocationFactory.create(position='10.0, 20.0')
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
         self.owner.save()
 
         initiative = InitiativeFactory.create(theme=theme)

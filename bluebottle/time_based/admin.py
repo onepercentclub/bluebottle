@@ -248,7 +248,25 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         return obj.deadline
 
 
+class SlotParticipantInline(admin.TabularInline):
+
+    model = SlotParticipant
+    readonly_fields = ['participant', 'status']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
+
+
 class SlotAdmin(StateMachineAdmin):
+
+    inlines = [SlotParticipantInline]
+
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(

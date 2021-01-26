@@ -55,7 +55,7 @@
 
 
 // duration widget
-.aligned .form-row .duration-widget {
+.form-row .duration-widget {
   input {
     width: 60px;
     margin-right: 4px;
@@ -65,7 +65,18 @@
     margin-right: 20px;
   }
 }
+.tabular .form-row .duration-widget {
+  p.help {
+    display: none;
+  }
+}
 
+
+// Slot widget, hide related Jet links
+.dynamic-slot_participants .add-related.initialized,
+.dynamic-slot_participants .add-another.initialized, .change-related.initialized  {
+    display: none;
+}
 
 span.help + p.help {
   margin-left: 180px;

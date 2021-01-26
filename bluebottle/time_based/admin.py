@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
-from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField
+from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
 from django.template import loader
 from django.urls import reverse, resolve
 from django.utils.html import format_html
@@ -397,12 +397,29 @@ class TimeContributionAdmin(ContributionChildAdmin):
     fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
+class SlotWidget(TextInput):
+
+    template_name = 'admin/widgets/slot_widget.html'
+
+
 class ParticipantSlotForm(ModelForm):
     checked = BooleanField(label=_('Participating'), initial=True, required=False)
 
+    def __init__(self, *args, **kwargs):
+        super(ParticipantSlotForm, self).__init__(*args, **kwargs)
+        initial = kwargs.get('initial', '')
+        slot = ''
+        if initial:
+            slot = initial['slot']
+        instance = kwargs.get('instance', '')
+        if instance:
+            slot = instance.slot
+        self.fields['slot'].label = _('Slot')
+        self.fields['slot'].widget = SlotWidget(attrs={'slot': slot})
+
     class Meta:
         model = SlotParticipant
-        fields = '__all__'
+        fields = ['slot', 'checked']
 
     def save(self, commit=True):
         self.is_valid()
@@ -476,7 +493,6 @@ class ParticipantSlotInline(admin.TabularInline):
         ids = [sp.slot_id for sp in self.parent_object.slot_participants.all()]
         return self.parent_object.activity.slots.exclude(id__in=ids).count()
 
-    raw_id_fields = ['slot']
     fields = ['slot', 'checked']
 
     def has_delete_permission(self, request, obj=None):

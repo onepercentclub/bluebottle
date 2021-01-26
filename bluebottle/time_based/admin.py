@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
-from django.forms import Textarea, BaseInlineFormSet
+from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField
 from django.template import loader
 from django.urls import reverse, resolve
 from django.utils.html import format_html
@@ -397,43 +397,93 @@ class TimeContributionAdmin(ContributionChildAdmin):
     fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
+class ParticipantSlotForm(ModelForm):
+    checked = BooleanField(label=_('Participating'), initial=True, required=False)
+
+    class Meta:
+        model = SlotParticipant
+        fields = '__all__'
+
+    def save(self, commit=True):
+        self.is_valid()
+        if not self.cleaned_data['checked']:
+            self.instance = None
+        else:
+            return super().save(commit)
+
+
 class ParticipantSlotFormSet(BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
-        instance = kwargs['instance']
-        new = []
-        ids = [sp.slot_id for sp in instance.slot_participants.all()]
-        for slot in instance.activity.slots.exclude(id__in=ids).all():
-            new.append({
-                'slot': slot,
-                'checked': False,
-            })
+        if 'data' not in kwargs:
+            instance = kwargs['instance']
+            new = []
+            for slot in instance.activity.slots.exclude(slot_participants__participant=instance).all():
+                new.append({
+                    'slot': slot,
+                    'checked': False
+                })
 
-        kwargs.update({'initial': new})
+            kwargs.update({'initial': new})
         super(ParticipantSlotFormSet, self).__init__(*args, **kwargs)
+
+    def save_new_objects(self, commit=True):
+        self.new_objects = []
+        for form in [form for form in self.extra_forms if form.cleaned_data['checked']]:
+            if not form.has_changed():
+                continue
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            self.new_objects.append(self.save_new(form, commit=commit))
+            if not commit:
+                self.saved_forms.append(form)
+        return self.new_objects
+
+    def save_existing_objects(self, commit=True):
+        self.changed_objects = []
+        self.deleted_objects = []
+        if not self.initial_forms:
+            return []
+
+        saved_instances = []
+        forms_to_delete = self.deleted_forms
+        for form in self.initial_forms:
+            obj = form.instance
+            if obj.pk is None:
+                continue
+            if form in forms_to_delete:
+                self.deleted_objects.append(obj)
+                self.delete_existing(obj, commit=commit)
+            elif form.has_changed():
+                if form.cleaned_data['checked']:
+                    self.changed_objects.append((obj, form.changed_data))
+                    saved_instances.append(self.save_existing(form, obj, commit=commit))
+                    if not commit:
+                        self.saved_forms.append(form)
+                else:
+                    self.deleted_objects.append(obj)
+                    self.delete_existing(obj, commit=commit)
+        return saved_instances
 
 
 class ParticipantSlotInline(admin.TabularInline):
     parent_object = None
     model = SlotParticipant
     formset = ParticipantSlotFormSet
+    form = ParticipantSlotForm
 
     def get_extra(self, request, obj=None, **kwargs):
         ids = [sp.slot_id for sp in self.parent_object.slot_participants.all()]
         return self.parent_object.activity.slots.exclude(id__in=ids).count()
 
-    raw_id_fields = ['slot', ]
-    readonly_fields = ['checked', 'status']
-    fields = ['slot', 'checked', 'status']
-
-    def checked(self, obj):
-        if obj.id:
-            return format_html('<input type="checkbox" checked>')
-        else:
-            return format_html('<input type="checkbox">')
+    raw_id_fields = ['slot']
+    fields = ['slot', 'checked']
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    verbose_name = _('slot')
+    verbose_name_plural = _('slots')
 
 
 @admin.register(DateParticipant)

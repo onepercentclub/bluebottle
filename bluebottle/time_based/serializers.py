@@ -91,11 +91,15 @@ class ActivitySlotSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'activity',
+            'activity', 'location'
         ]
 
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
+    participants = ResourceRelatedField(
+        source='slot_participants',
+        many=True,
+        read_only=True)
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
@@ -123,14 +127,17 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'location',
             'location_hint',
             'online_meeting_url',
+            'participants',
         )
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
+        included_resources = ActivitySlotSerializer.JSONAPIMeta.included_resources + ['participants']
 
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'activity': 'bluebottle.time_based.serializers.DateActivityListSerializer',
+        'participants': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
     }
 
 

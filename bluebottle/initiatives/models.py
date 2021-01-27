@@ -51,7 +51,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'members.Member',
         null=True,
         blank=True,
-        verbose_name=_('activity manager'),
+        verbose_name=_('co-initiator'),
         related_name='activity_manager_%(class)ss',
     )
 

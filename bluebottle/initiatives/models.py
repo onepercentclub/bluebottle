@@ -52,6 +52,8 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         null=True,
         blank=True,
         verbose_name=_('co-initiator'),
+        help_text=_('The co-initiator can create and edit activities for '
+                    'this initiative, but cannot edit the initiative itself.'),
         related_name='activity_manager_%(class)ss',
     )
 

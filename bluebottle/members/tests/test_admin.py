@@ -442,7 +442,7 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
 
         welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         self.client.get(welkcome_email_url)
-        welcome_email = mail.outbox[1]
+        welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('We are borg' in welcome_email.body)

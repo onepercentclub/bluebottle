@@ -3,7 +3,8 @@ from datetime import timedelta
 from django.urls import reverse
 
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
+from bluebottle.time_based.models import DateActivity
+from bluebottle.time_based.tests.factories import PeriodActivityFactory, DateActivityFactory
 
 
 class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
@@ -22,3 +23,33 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('1 hour' in response.text)
         self.assertFalse('1 hours' in response.text)
         self.assertTrue('10 hours' in response.text)
+
+
+class DateActivityAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+
+    def test_admin_can_delete_activity(self):
+        activity = DateActivityFactory.create()
+        self.assertTrue(DateActivity.objects.count(), 1)
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
+        page = self.app.get(url)
+        page = page.click('Delete')
+        self.assertFalse(
+            "your account doesn't have permission to delete the following types of objects" in page.text,
+            "Deleting an activity should not result in an error."
+        )
+        self.assertTrue(
+            "All of the following related items will be deleted" in page.text
+        )
+        page = page.forms[0].submit().follow()
+        self.assertTrue(
+            "0 Activities on a date" in page.text
+        )
+        self.assertTrue(DateActivity.objects.count(), 0)

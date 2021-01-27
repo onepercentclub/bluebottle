@@ -345,8 +345,6 @@ def participant_slot_will_be_full(effect):
     """
     the slot will be filled
     """
-    if not effect.instance.id:
-        return False
     participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
     if effect.instance.slot.capacity \
             and participant_count + 1 >= effect.instance.slot.capacity:

@@ -550,6 +550,7 @@ class SlotParticipantSerializer(ModelSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
+        included_resources = ['participant', 'slot']
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',

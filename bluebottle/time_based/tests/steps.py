@@ -2,6 +2,54 @@ import json
 
 from django.urls import reverse
 
+from bluebottle.time_based.models import DateActivity, DateActivitySlot
+
+
+def api_create_date_activity(test, initiative, attributes, request_user=None, status_code=201):
+    if not request_user:
+        request_user = initiative.owner
+    test.data = {
+        'data': {
+            'type': 'activities/time-based/dates',
+            'attributes': attributes,
+            'relationships': {
+                'initiative': {
+                    'data': {
+                        'type': 'initiatives',
+                        'id': initiative.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-list')
+    response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code)
+    return DateActivity.objects.get(id=response.data['id'])
+
+
+def api_create_date_slot(test, activity, attributes, request_user=None, status_code=201):
+    if not request_user:
+        request_user = activity.owner
+    test.data = {
+        'data': {
+            'type': 'activities/time-based/date-slots',
+            'attributes': attributes,
+            'relationships': {
+                'activity': {
+                    'data': {
+                        'type': 'activities/time-based/dates',
+                        'id': activity.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-slot-list')
+    response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code)
+    return DateActivitySlot.objects.get(id=response.data['id'])
+
 
 def api_user_joins_activity(test, activity, supporter, request_user=None, status_code=201):
     if not request_user:

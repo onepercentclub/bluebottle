@@ -1,9 +1,52 @@
+from datetime import date, timedelta
+
+from django.utils.timezone import now
+
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, BluebottleAdminTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 from bluebottle.time_based.tests.steps import api_user_joins_activity, assert_participant_status, \
     api_participant_transition, assert_status, assert_slot_participant_status, assert_not_slot_participant, \
-    api_user_joins_slot, api_slot_participant_transition
+    api_user_joins_slot, api_slot_participant_transition, api_create_date_activity, api_create_date_slot
+
+
+class DateActivityScenarioTestCase(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.owner = BlueBottleUserFactory.create()
+        self.supporter = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
+        self.client = JSONAPITestClient()
+
+    def test_create_with_multiple_slots(self):
+        data = {
+            'title': 'Beach clean-up Katwijk',
+            'review': False,
+            'is-online': True,
+            'slot_selection': 'all',
+            'registration-deadline': str(date.today() + timedelta(days=1)),
+            'capacity': 10,
+            'description': 'We will clean up the beach south of Katwijk'
+        }
+        activity = api_create_date_activity(self, self.initiative, data)
+        data = {
+            'start': str(now() + timedelta(days=10)),
+            'duration': '2:30:00',
+        }
+        api_create_date_slot(self, activity, data)
+        data = {
+            'start': str(now() + timedelta(days=11)),
+            'duration': '2:30:00',
+        }
+        slot1 = api_create_date_slot(self, activity, data)
+        self.assertEqual(activity.slots.count(), 2)
+        slot2 = api_initiative_transition(self, self.initiative, 'submit')
+        assert_status(self, self.initiative, 'submitted')
+        assert_status(self, slot1, 'submitted')
+        assert_status(self, slot2, 'submitted')
 
 
 class DateParticipantScenarioTestCase(BluebottleTestCase):

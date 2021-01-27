@@ -29,6 +29,9 @@ def add_group_permissions(apps, schema_editor):
         time_based_perms = {
             'Staff': {
                 'perms': (
+                    'add_withadeadlineactivity', 'change_withadeadlineactivity',
+                    'delete_withadeadlineactivity',
+
                     'add_timecontribution', 'change_timecontribution',
                     'delete_timecontribution',
                 )
@@ -42,6 +45,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('activities', '0037_auto_20201202_1124'),
+        ('time_based', '0044_auto_20201224_1120'),
     ]
 
     operations = [

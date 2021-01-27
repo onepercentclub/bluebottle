@@ -329,7 +329,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(status__in=('registered',))
+        return self.slot_participants.filter(status='registered', participant__status='accepted')
 
     @property
     def durations(self):

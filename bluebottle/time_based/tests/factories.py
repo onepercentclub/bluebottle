@@ -45,6 +45,8 @@ class DateActivityFactory(TimeBasedFactory):
     class Meta:
         model = DateActivity
 
+    slot_selection = 'all'
+
     slots = factory.RelatedFactory(
         DateActivitySlotFactory,
         factory_related_name='activity'

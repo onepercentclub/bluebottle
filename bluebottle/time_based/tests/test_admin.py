@@ -37,7 +37,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
     def test_admin_can_delete_activity(self):
         activity = DateActivityFactory.create()
-        self.assertTrue(DateActivity.objects.count(), 1)
+        self.assertEqual(DateActivity.objects.count(), 1)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
         page = self.app.get(url)
         page = page.click('Delete')
@@ -52,4 +52,4 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(
             "0 Activities on a date" in page.text
         )
-        self.assertTrue(DateActivity.objects.count(), 0)
+        self.assertEqual(DateActivity.objects.count(), 0)

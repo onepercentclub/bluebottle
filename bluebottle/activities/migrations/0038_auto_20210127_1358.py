@@ -38,7 +38,7 @@ def add_group_permissions(apps, schema_editor):
             },
         }
     update_group_permissions('activities', activities_perms, apps)
-    update_group_permissions('activities', time_based_perms, apps)
+    update_group_permissions('time_based', time_based_perms, apps)
 
 
 class Migration(migrations.Migration):

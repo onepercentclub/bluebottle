@@ -113,7 +113,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
-        if not obj.duration_period or obj.duration_period != 'overall':
+        if obj.duration_period and obj.duration_period != 'overall':
             return _('{duration} per {time_unit}').format(
                 duration=duration,
                 time_unit=obj.duration_period[0:-1])

@@ -3,6 +3,7 @@ from builtins import str
 from importlib import import_module
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db import connection
 from django.test import TestCase, Client
 from django.test.utils import override_settings
@@ -159,6 +160,9 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     def setUp(self):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        self.staff_member = BlueBottleUserFactory.create(is_staff=True)
+        staff = Group.objects.get(name='Staff')
+        staff.user_set.add(self.staff_member)
 
     def get_csrf_token(self, response):
         csrf = "name='csrfmiddlewaretoken' value='"

@@ -395,11 +395,6 @@ class ParticipantListSerializer(BaseContributorSerializer):
 
 
 class DateParticipantListSerializer(ParticipantListSerializer):
-    participants = FilteredRelatedField(
-        many=True,
-        filter_backend=SlotParticipantListFilter,
-    )
-
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
         fields = ParticipantListSerializer.Meta.fields + ('slot_participants', )

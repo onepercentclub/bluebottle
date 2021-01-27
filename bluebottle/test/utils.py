@@ -4,6 +4,7 @@ from importlib import import_module
 
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.db import connection
 from django.test import TestCase, Client
 from django.test.utils import override_settings
@@ -163,6 +164,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         self.staff_member = BlueBottleUserFactory.create(is_staff=True)
         staff = Group.objects.get(name='Staff')
         staff.user_set.add(self.staff_member)
+        mail.outbox = []
 
     def get_csrf_token(self, response):
         csrf = "name='csrfmiddlewaretoken' value='"

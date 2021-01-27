@@ -16,6 +16,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
     SlotParticipant
 )
+from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -251,7 +252,8 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 class SlotParticipantInline(admin.TabularInline):
 
     model = SlotParticipant
-    readonly_fields = ['participant', 'status']
+    readonly_fields = ['participant_link', 'status']
+    fields = readonly_fields
 
     def has_add_permission(self, request):
         return False
@@ -261,6 +263,10 @@ class SlotParticipantInline(admin.TabularInline):
 
     verbose_name = _('Participant')
     verbose_name_plural = _('Participants')
+
+    def participant_link(self, obj):
+        url = reverse('admin:time_based_dateparticipant_change', args=(obj.participant.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.participant)
 
 
 class SlotAdmin(StateMachineAdmin):
@@ -421,17 +427,19 @@ class SlotWidget(TextInput):
 
 
 class ParticipantSlotForm(ModelForm):
-    checked = BooleanField(label=_('Participating'), initial=True, required=False)
+    checked = BooleanField(label=_('Participating'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(ParticipantSlotForm, self).__init__(*args, **kwargs)
-        initial = kwargs.get('initial', '')
         slot = ''
+        initial = kwargs.get('initial', None)
         if initial:
             slot = initial['slot']
-        instance = kwargs.get('instance', '')
+        instance = kwargs.get('instance', None)
         if instance:
             slot = instance.slot
+            sm = SlotParticipantStateMachine
+            self.fields['checked'].initial = instance.status in [sm.registered.value, sm.succeeded.value]
         self.fields['slot'].label = _('Slot')
         self.fields['slot'].widget = SlotWidget(attrs={'slot': slot})
 
@@ -462,43 +470,24 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
             kwargs.update({'initial': new})
         super(ParticipantSlotFormSet, self).__init__(*args, **kwargs)
 
-    def save_new_objects(self, commit=True):
-        self.new_objects = []
-        for form in [form for form in self.extra_forms if form.cleaned_data['checked']]:
-            if not form.has_changed():
-                continue
-            if self.can_delete and self._should_delete_form(form):
-                continue
-            self.new_objects.append(self.save_new(form, commit=commit))
-            if not commit:
-                self.saved_forms.append(form)
-        return self.new_objects
+    @property
+    def extra_forms(self):
+        """Ignore extra forms that aren't checked"""
+        extra_forms = super().extra_forms
+        if self.data:
+            extra_forms = [form for form in extra_forms if form.cleaned_data['checked']]
+        return extra_forms
 
-    def save_existing_objects(self, commit=True):
-        self.changed_objects = []
-        self.deleted_objects = []
-        if not self.initial_forms:
-            return []
-
-        saved_instances = []
-        forms_to_delete = self.deleted_forms
-        for form in self.initial_forms:
-            obj = form.instance
-            if obj.pk is None:
-                continue
-            if form in forms_to_delete:
-                self.deleted_objects.append(obj)
-                self.delete_existing(obj, commit=commit)
-            elif form.has_changed():
-                if form.cleaned_data['checked']:
-                    self.changed_objects.append((obj, form.changed_data))
-                    saved_instances.append(self.save_existing(form, obj, commit=commit))
-                    if not commit:
-                        self.saved_forms.append(form)
-                else:
-                    self.deleted_objects.append(obj)
-                    self.delete_existing(obj, commit=commit)
-        return saved_instances
+    def save_existing(self, form, instance, commit=True):
+        """Transition the slot participant as needed before saving"""
+        sm = SlotParticipantStateMachine
+        checked = form.cleaned_data['checked']
+        form.instance.execute_triggers(send_messages=False)
+        if form.instance.status in [sm.registered.value, sm.succeeded.value] and not checked:
+            form.instance.states.remove(save=commit)
+        elif checked and form.instance.status in [sm.removed.value, sm.withdrawn.value, sm.cancelled.value]:
+            form.instance.states.accept(save=commit)
+        return form.save(commit=commit)
 
 
 class ParticipantSlotInline(admin.TabularInline):
@@ -511,7 +500,8 @@ class ParticipantSlotInline(admin.TabularInline):
         ids = [sp.slot_id for sp in self.parent_object.slot_participants.all()]
         return self.parent_object.activity.slots.exclude(id__in=ids).count()
 
-    fields = ['slot', 'checked']
+    readonly_fields = ['status']
+    fields = ['slot', 'checked', 'status']
 
     def has_delete_permission(self, request, obj=None):
         return False

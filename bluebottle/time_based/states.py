@@ -504,7 +504,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
     )
 
     accept = Transition(
-        removed,
+        [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
         description=_("Accept the previously person as a participant to the slot."),

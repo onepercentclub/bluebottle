@@ -67,7 +67,7 @@ class StateMachineAdminMixin(object):
                     if isinstance(form.instance, TriggerMixin):
                         instance = self.save_form(request, form, change=True)
                         if instance:
-                            effects += form.instance.execute_triggers(user=request.user, send_messages=send_messages)
+                            effects += instance.execute_triggers(user=request.user, send_messages=send_messages)
 
             rendered_effects = get_effects(effects)
             if rendered_effects:

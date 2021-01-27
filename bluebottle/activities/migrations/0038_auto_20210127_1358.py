@@ -29,9 +29,6 @@ def add_group_permissions(apps, schema_editor):
         time_based_perms = {
             'Staff': {
                 'perms': (
-                    'add_withadeadlineactivity', 'change_withadeadlineactivity',
-                    'delete_withadeadlineactivity',
-
                     'add_timecontribution', 'change_timecontribution',
                     'delete_timecontribution',
                 )

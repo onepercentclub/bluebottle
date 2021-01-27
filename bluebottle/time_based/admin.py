@@ -252,7 +252,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 class SlotParticipantInline(admin.TabularInline):
 
     model = SlotParticipant
-    readonly_fields = ['participant_link', 'status']
+    readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
 
     def has_add_permission(self, request):
@@ -267,6 +267,13 @@ class SlotParticipantInline(admin.TabularInline):
     def participant_link(self, obj):
         url = reverse('admin:time_based_dateparticipant_change', args=(obj.participant.id,))
         return format_html('<a href="{}">{}</a>', url, obj.participant)
+
+    def participant_status(self, obj):
+        return obj.participant.status
+
+    def smart_status(self, obj):
+        return obj.status
+    smart_status.short_description = _('Registered')
 
 
 class SlotAdmin(StateMachineAdmin):

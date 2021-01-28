@@ -28,6 +28,30 @@ def api_create_date_activity(test, initiative, attributes, request_user=None, st
     return DateActivity.objects.get(id=response.data['id'])
 
 
+def api_update_date_activity(test, activity, attributes, request_user=None, status_code=200):
+    if not request_user:
+        request_user = activity.owner
+    test.data = {
+        'data': {
+            'type': 'activities/time-based/dates',
+            'id': activity.id,
+            'attributes': attributes,
+            'relationships': {
+                'initiative': {
+                    'data': {
+                        'type': 'initiatives',
+                        'id': activity.initiative.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-detail', args=(activity.id,))
+    response = test.client.patch(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code)
+    return DateActivity.objects.get(id=response.data['id'])
+
+
 def api_create_date_slot(test, activity, attributes, request_user=None, status_code=201):
     if not request_user:
         request_user = activity.owner
@@ -47,6 +71,30 @@ def api_create_date_slot(test, activity, attributes, request_user=None, status_c
     }
     url = reverse('date-slot-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code)
+    return DateActivitySlot.objects.get(id=response.data['id'])
+
+
+def api_update_date_slot(test, slot, attributes, request_user=None, status_code=200):
+    if not request_user:
+        request_user = slot.activity.owner
+    test.data = {
+        'data': {
+            'type': 'activities/time-based/date-slots',
+            'id': slot.id,
+            'attributes': attributes,
+            'relationships': {
+                'activity': {
+                    'data': {
+                        'type': 'activities/time-based/dates',
+                        'id': slot.activity.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-slot-detail', args=(slot.id,))
+    response = test.client.patch(url, json.dumps(test.data), user=request_user)
     test.assertEqual(response.status_code, status_code)
     return DateActivitySlot.objects.get(id=response.data['id'])
 

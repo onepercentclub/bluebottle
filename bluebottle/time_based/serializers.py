@@ -32,7 +32,7 @@ from bluebottle.utils.utils import reverse_signed
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
-    is_online = serializers.NullBooleanField()
+    is_online = serializers.NullBooleanField(required=False)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (

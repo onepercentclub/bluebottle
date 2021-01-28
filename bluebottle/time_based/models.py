@@ -375,7 +375,6 @@ class DateActivitySlot(ActivitySlot):
     @property
     def required_fields(self):
         fields = [
-            'is_online',
             'start',
             'duration'
         ]

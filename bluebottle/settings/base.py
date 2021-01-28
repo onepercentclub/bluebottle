@@ -723,7 +723,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('status', 'Status'),
             ),
             'resource_class': 'bluebottle.exports.resources.PeriodParticipantResource',
-            'title': _('Particpipants over a period'),
+            'title': _('Participants over a period'),
         }),
         ('time_based.DateActivity', {
             'fields': (
@@ -763,7 +763,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('status', 'Status'),
             ),
             'resource_class': 'bluebottle.exports.resources.DateParticipantResource',
-            'title': _('Particpipants over a period'),
+            'title': _('Participants on a date'),
         }),
         ('time_based.TimeContribution', {
             'fields': (

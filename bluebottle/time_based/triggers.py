@@ -370,7 +370,7 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForParticipantsEffect,
+                CreateSlotParticipantsForSlotsEffect,
                 TransitionEffect(
                     ActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
@@ -913,7 +913,7 @@ class DateParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForSlotsEffect
+                CreateSlotParticipantsForParticipantsEffect
             ]
         ),
         TransitionTrigger(
@@ -955,7 +955,8 @@ def participant_slot_is_finished(effect):
     """
     Slot end date/time has passed
     """
-    return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+    if effect.instance.id:
+        return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 
 def participant_will_not_be_attending(effect):

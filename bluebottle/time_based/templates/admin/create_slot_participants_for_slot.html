@@ -2,7 +2,12 @@
 <h3>{%trans "Add participant to all slots" %}</h3>
 
 <p>
-{% blocktrans with instance=effects.0.instance %}
-    Add all accepted participants to {{instance}}
-{% endblocktrans %}
-
+{% if effects.0.instance.activity.avtivity.active_participants.count > 1 %}
+    {% blocktrans with instance=effects.0.instance participant_count=effects.0.instance.activity.avtivity.active_participants.count  %}
+        Add all {{ participant_count }} accepted participants to {{ instance }}
+    {% endblocktrans %}
+{% else %}
+    {% blocktrans with instance=effects.0.instance participant_count=effects.0.instance.activity.avtivity.active_participants.count  %}
+        Add the accepted participant to {{ instance }}
+    {% endblocktrans %}
+{% endif %}

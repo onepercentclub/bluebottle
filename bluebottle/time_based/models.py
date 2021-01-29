@@ -123,8 +123,6 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
 
     slot_selection = models.CharField(
         _('Slot selection'),
@@ -228,7 +226,9 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def activity_date(self):
-        return self.start
+        first_slot = self.slots.order_by('start').first()
+        if first_slot:
+            return first_slot.start
 
     @property
     def uid(self):

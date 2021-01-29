@@ -291,7 +291,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_list_display(self, request):
         fields = self.list_display
         from bluebottle.geo.models import Location
-        if Location.objects.count() and 'location' not in fields:
+        if Location.objects.count() and 'location_link' not in fields:
             fields += ['location_link']
         return fields
 
@@ -508,7 +508,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     def get_list_display(self, request):
         fields = self.list_display
         from bluebottle.geo.models import Location
-        if Location.objects.count() and 'location' not in fields:
+        if Location.objects.count() and 'location_link' not in fields:
             fields += ['location_link']
         return fields
 

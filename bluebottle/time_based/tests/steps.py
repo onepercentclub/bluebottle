@@ -5,7 +5,8 @@ from django.urls import reverse
 from bluebottle.time_based.models import DateActivity, DateActivitySlot
 
 
-def api_create_date_activity(test, initiative, attributes, request_user=None, status_code=201):
+def api_create_date_activity(test, initiative, attributes,
+                             request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = initiative.owner
     test.data = {
@@ -24,11 +25,12 @@ def api_create_date_activity(test, initiative, attributes, request_user=None, st
     }
     url = reverse('date-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
     return DateActivity.objects.get(id=response.data['id'])
 
 
-def api_update_date_activity(test, activity, attributes, request_user=None, status_code=200):
+def api_update_date_activity(test, activity, attributes,
+                             request_user=None, status_code=20, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
@@ -48,11 +50,37 @@ def api_update_date_activity(test, activity, attributes, request_user=None, stat
     }
     url = reverse('date-detail', args=(activity.id,))
     response = test.client.patch(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
     return DateActivity.objects.get(id=response.data['id'])
 
 
-def api_create_date_slot(test, activity, attributes, request_user=None, status_code=201):
+def api_activity_transition(test, activity, transition,
+                            request_user=None, status_code=201, msg=None):
+    if not request_user:
+        request_user = activity.owner
+    test.data = {
+        'data': {
+            'type': 'activities/time-based/date-transitions',
+            'attributes': {
+                'transition': transition
+            },
+            'relationships': {
+                'resource': {
+                    'data': {
+                        'type': 'activities/time-based/dates',
+                        'id': activity.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-transition-list')
+    response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code, msg)
+
+
+def api_create_date_slot(test, activity, attributes,
+                         request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
@@ -71,11 +99,12 @@ def api_create_date_slot(test, activity, attributes, request_user=None, status_c
     }
     url = reverse('date-slot-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
     return DateActivitySlot.objects.get(id=response.data['id'])
 
 
-def api_update_date_slot(test, slot, attributes, request_user=None, status_code=200):
+def api_update_date_slot(test, slot, attributes,
+                         request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = slot.activity.owner
     test.data = {
@@ -95,11 +124,12 @@ def api_update_date_slot(test, slot, attributes, request_user=None, status_code=
     }
     url = reverse('date-slot-detail', args=(slot.id,))
     response = test.client.patch(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
     return DateActivitySlot.objects.get(id=response.data['id'])
 
 
-def api_user_joins_activity(test, activity, supporter, request_user=None, status_code=201):
+def api_user_joins_activity(test, activity, supporter,
+                            request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter
     test.data = {
@@ -117,10 +147,10 @@ def api_user_joins_activity(test, activity, supporter, request_user=None, status
     }
     url = reverse('date-participant-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=201):
+def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter
     participant = slot.activity.contributors.filter(user=supporter).get()
@@ -145,10 +175,11 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
     }
     url = reverse('slot-participant-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_participant_transition(test, activity, supporter, transition, request_user=None, status_code=201):
+def api_participant_transition(test, activity, supporter, transition,
+                               request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter
     participant = activity.contributors.filter(user=supporter).get()
@@ -170,10 +201,11 @@ def api_participant_transition(test, activity, supporter, transition, request_us
     }
     url = reverse('date-participant-transition-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_slot_participant_transition(test, slot, supporter, transition, request_user=None, status_code=201):
+def api_slot_participant_transition(test, slot, supporter, transition,
+                                    request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter
     slot_participant = slot.slot_participants.filter(participant__user=supporter).get()
@@ -195,7 +227,7 @@ def api_slot_participant_transition(test, slot, supporter, transition, request_u
     }
     url = reverse('slot-participant-transition-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code)
+    test.assertEqual(response.status_code, status_code, msg)
 
 
 def assert_participant_status(test, activity, supporter, status, msg=None):

@@ -10,7 +10,7 @@ from bluebottle.time_based.tests.factories import DateActivityFactory, DateActiv
 from bluebottle.time_based.tests.steps import api_user_joins_activity, assert_participant_status, \
     api_participant_transition, assert_status, assert_slot_participant_status, assert_not_slot_participant, \
     api_user_joins_slot, api_slot_participant_transition, api_create_date_activity, api_create_date_slot, \
-    api_update_date_slot, api_update_date_activity
+    api_update_date_slot, api_activity_transition
 
 
 class DateActivityScenarioTestCase(BluebottleAdminTestCase):
@@ -64,6 +64,8 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         slot2 = api_update_date_slot(self, slot2, data)
         assert_status(self, slot2, 'draft')
         assert_status(self, activity, 'draft')
+        api_activity_transition(self, activity, 'submit', status_code=400,
+                                msg="Submitting the activity should not yet be allowed")
 
         data = {
             'start': str(now() + timedelta(days=11)),
@@ -73,7 +75,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         slot2 = api_update_date_slot(self, slot2, data)
         assert_status(self, slot2, 'open')
         assert_status(self, activity, 'draft')
-        api_update_date_activity(self, activity, activity_data)
+        api_activity_transition(self, activity, 'submit')
         assert_status(self, activity, 'open')
 
 

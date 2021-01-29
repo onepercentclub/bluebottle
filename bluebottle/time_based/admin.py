@@ -94,9 +94,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
     }
 
     search_fields = ['title', 'description']
-    list_filter = [StateMachineFilter, 'is_online']
+    list_filter = [StateMachineFilter]
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields
 
     export_to_csv_fields = (
         ('title', 'Title'),
@@ -108,9 +108,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
-        ('is_online', 'Will be hosted online?'),
-        ('location', 'Location'),
-        ('location_hint', 'Location Hint'),
         ('review', 'Review participants')
     )
 
@@ -170,7 +167,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     form = TimeBasedActivityAdminForm
     inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
     date_hierarchy = 'start'
@@ -184,11 +181,6 @@ class DateActivityAdmin(TimeBasedAdmin):
 
         'preparation',
         'registration_deadline',
-
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url',
 
         'expertise',
         'capacity',
@@ -208,7 +200,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
-
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 

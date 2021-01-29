@@ -32,11 +32,6 @@ class TimeBasedActivity(Activity):
     )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
-    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
-                                 null=True, blank=True, on_delete=models.SET_NULL)
-    location_hint = models.TextField(_('location hint'), null=True, blank=True)
-
     registration_deadline = models.DateField(
         _('registration deadline'),
         null=True,
@@ -119,10 +114,6 @@ class TimeBasedActivity(Activity):
                 strip_tags(self.description), self.get_absolute_url()
             )
         )
-
-        if self.is_online and self.online_meeting_url:
-            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
-
         return details
 
 
@@ -134,11 +125,6 @@ class SlotSelectionChoices(DjangoChoices):
 class DateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
-
-    online_meeting_url = models.TextField(
-        _('online meeting link'),
-        blank=True, default=''
-    )
 
     slot_selection = models.CharField(
         _('Slot selection'),
@@ -433,6 +419,17 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
+    ONLINE_CHOICES = (
+        (None, 'Not set yet'),
+        (True, 'Yes, participants can join from anywhere or online'),
+        (False, 'No, enter a location')
+    )
+
+    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
+                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
     start = models.DateField(
         _('Start date'),
         null=True,

@@ -134,14 +134,15 @@ class DateActivityASlotInline(admin.TabularInline):
         },
     }
 
-    readonly_fields = [
-        'link'
-    ]
+    raw_id_fields = ['location']
+    readonly_fields = ['link']
 
     fields = [
         'link',
         'start',
-        'duration'
+        'duration',
+        'is_online',
+        'location'
     ]
 
     extra = 0

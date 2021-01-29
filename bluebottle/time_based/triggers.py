@@ -80,10 +80,15 @@ def is_finished(effect):
     """
     is finished
     """
+    if isinstance(effect.instance, DateActivitySlot):
+        slot = effect.instance
+    else:
+        slot = effect.instance.slots.order_by('start').last()
     return (
-        effect.instance.start and
-        effect.instance.duration and
-        effect.instance.start + effect.instance.duration < now()
+        slot and
+        slot.start and
+        slot.duration and
+        slot.start + slot.duration < now()
     )
 
 
@@ -91,10 +96,15 @@ def is_not_finished(effect):
     """
     is not finished
     """
+    if isinstance(effect.instance, DateActivitySlot):
+        slot = effect.instance
+    else:
+        slot = effect.instance.slots.order_by('start').last()
     return (
-        effect.instance.start and
-        effect.instance.duration and
-        effect.instance.start + effect.instance.duration > now()
+        slot and
+        slot.start and
+        slot.duration and
+        slot.start + slot.duration > now()
     )
 
 
@@ -719,10 +729,12 @@ def activity_is_finished(effect):
     activity = effect.instance.activity
 
     if isinstance(activity, DateActivity):
+        last_slot = activity.slots.order_by('start').last()
         return (
-            activity.start and
-            activity.duration and
-            activity.start + activity.duration < now()
+            last_slot and
+            last_slot.start and
+            last_slot.duration and
+            last_slot.start + last_slot.duration < now()
         )
     elif isinstance(activity, PeriodActivity):
         return (

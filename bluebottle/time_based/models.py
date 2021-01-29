@@ -27,7 +27,7 @@ tf = TimezoneFinder()
 class TimeBasedActivity(Activity):
     ONLINE_CHOICES = (
         (None, 'Not set yet'),
-        (True, 'Yes, participants can join from anywhere or online'),
+        (True, 'Yes, anywhere/online'),
         (False, 'No, enter a location')
     )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)

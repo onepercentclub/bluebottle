@@ -2,6 +2,8 @@ from datetime import timedelta
 
 from django.urls import reverse
 
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.models import DateActivity
 from bluebottle.time_based.tests.factories import PeriodActivityFactory, DateActivityFactory
@@ -53,3 +55,13 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
             "0 Activities on a date" in page.text
         )
         self.assertEqual(DateActivity.objects.count(), 0)
+
+    def test_list_activities_office(self):
+        office = LocationFactory.create(name='Schin op Geul')
+        initiative = InitiativeFactory.create(location=office)
+        PeriodActivityFactory.create(initiative=initiative)
+        url = reverse('admin:time_based_periodactivity_changelist')
+        response = self.app.get(url)
+        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
+        response = self.app.get(url)
+        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)

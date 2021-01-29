@@ -170,7 +170,6 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         csrf = "name='csrfmiddlewaretoken' value='"
         start = response.content.decode().find(csrf) + len(csrf)
         end = response.content.decode().find("'", start)
-
         return response.content[start:end].decode()
 
 

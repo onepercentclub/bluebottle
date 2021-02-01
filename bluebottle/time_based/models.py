@@ -144,6 +144,11 @@ class DateActivity(TimeBasedActivity):
     ]
 
     @property
+    def start(self):
+        if self.slots.first():
+            return self.slots.first().start
+
+    @property
     def active_slots(self):
         return self.slots.filter(status__in=['open', 'full', 'running'])
 

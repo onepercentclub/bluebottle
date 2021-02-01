@@ -564,7 +564,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
 
     class DateInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'start', 'duration', 'state_name']
+                           'link', 'start', 'state_name']
 
         fields = readonly_fields
         model = DateActivity

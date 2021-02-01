@@ -857,15 +857,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             initiative=second,
             status='open',
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
         DateActivityFactory.create(
             initiative=third,
-            status='open',
+            status='open'
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=6)
         )
         PeriodActivityFactory.create(

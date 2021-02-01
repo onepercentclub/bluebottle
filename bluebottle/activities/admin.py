@@ -281,11 +281,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            if 'initiative__location' not in filters:
-                filters += ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions \
-                    and 'initiative__location__subregion' not in filters:
-                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+            filters = filters + ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                filters = filters + [
+                    'initiative__location__subregion',
+                    'initiative__location__subregion__region']
         return filters
 
     def get_list_display(self, request):
@@ -486,11 +486,11 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            if 'initiative__location' not in filters:
-                filters += ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions\
-                    and 'initiative__location__subregion' not in filters:
-                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+            filters = filters + ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                filters = filters + [
+                    'initiative__location__subregion',
+                    'initiative__location__subregion__region']
         return filters
 
     list_editable = ('highlight',)

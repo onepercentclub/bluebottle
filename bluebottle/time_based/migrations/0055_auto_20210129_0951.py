@@ -29,22 +29,4 @@ class Migration(migrations.Migration):
             name='location_hint',
             field=models.TextField(blank=True, null=True, verbose_name='location hint'),
         ),
-        migrations.AddField(
-            model_name='dateactivity',
-            name='is_online',
-            field=models.NullBooleanField(
-                choices=[(None, 'Not set yet'), (True, 'Yes, participants can join from anywhere or online'),
-                         (False, 'No, enter a location')], default=None, verbose_name='is online'),
-        ),
-        migrations.AddField(
-            model_name='dateactivity',
-            name='location',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
-                                    to='geo.Geolocation', verbose_name='location'),
-        ),
-        migrations.AddField(
-            model_name='dateactivity',
-            name='location_hint',
-            field=models.TextField(blank=True, null=True, verbose_name='location hint'),
-        ),
     ]

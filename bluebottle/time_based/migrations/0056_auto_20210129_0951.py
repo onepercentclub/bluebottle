@@ -8,25 +8,15 @@ from django.db import migrations, connection
 def migrate_location_to_period(apps, schema_editor):
     period_sql = """
     UPDATE {0}.time_based_periodactivity as pa
-        SET location_id=tb.old_location_id,
-            location_hint=tb.old_location_hint,
-            is_online=tb.old_is_online
+        SET location_id=tb.location_id,
+            location_hint=tb.location_hint,
+            is_online=tb.is_online
         FROM {0}.time_based_timebasedactivity tb
         WHERE pa.timebasedactivity_ptr_id = tb.activity_ptr_id
     """.format(connection.tenant.schema_name)
 
-    date_sql = """
-    UPDATE {0}.time_based_dateactivity as da
-        SET location_id=tb.old_location_id,
-            location_hint=tb.old_location_hint,
-            is_online=tb.old_is_online
-        FROM {0}.time_based_timebasedactivity tb
-        WHERE da.timebasedactivity_ptr_id = tb.activity_ptr_id
-    """.format(connection.tenant.schema_name)
-
     if connection.tenant.schema_name != 'public':
         schema_editor.execute(period_sql)
-        schema_editor.execute(date_sql)
 
 class Migration(migrations.Migration):
 

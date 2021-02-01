@@ -32,6 +32,21 @@ class TimeBasedActivity(Activity):
     )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
+    old_is_online = models.NullBooleanField(
+        _('is online'),
+        db_column='is_online',
+        choices=ONLINE_CHOICES,
+        null=True, default=None)
+    old_location = models.ForeignKey(
+        Geolocation,
+        db_column='location',
+        verbose_name=_('location'),
+        null=True, blank=True, on_delete=models.SET_NULL)
+    old_location_hint = models.TextField(
+        _('location hint'),
+        db_column='location_hint',
+        null=True, blank=True)
+
     registration_deadline = models.DateField(
         _('registration deadline'),
         null=True,

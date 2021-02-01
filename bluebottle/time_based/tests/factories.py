@@ -20,11 +20,9 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     capacity = 10
-    is_online = False
     review = False
 
     expertise = factory.SubFactory(SkillFactory)
-    location = factory.SubFactory(GeolocationFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
 
 
@@ -61,6 +59,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     duration = timedelta(hours=20)
     duration_period = 'overall'
     is_online = False
+    location = factory.SubFactory(GeolocationFactory)
 
     start = (now() + timedelta(weeks=2)).date()
 

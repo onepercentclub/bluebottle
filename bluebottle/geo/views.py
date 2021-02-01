@@ -20,17 +20,20 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
 
     @method_decorator(cache_page(3600))
     def get(self, request, *args, **kwargs):
-        return super(CountryList, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = super(CountryList, self).get_queryset().filter(
             alpha2_code__isnull=False
         )
-
         if 'filter[used]' in self.request.GET:
             return qs.filter(
                 Q(geolocation__initiative__status='approved') |
-                Q(geolocation__timebasedactivity__status__in=self.public_statuses)
+                Q(geolocation__periodactivity__status__in=self.public_statuses) |
+                (
+                    Q(geolocation__dateactivityslot__activity__status__in=self.public_statuses) &
+                    Q(geolocation__dateactivityslot__status__in=self.public_statuses)
+                )
             ).distinct()
         else:
             return qs

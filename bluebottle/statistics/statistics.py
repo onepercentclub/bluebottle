@@ -93,7 +93,7 @@ class Statistics(object):
     def time_activities_succeeded(self):
         """ Total number of succeeded tasks """
         date_activities = DateActivity.objects.filter(
-            self.date_filter('start'),
+            self.date_filter('slots__start'),
             status='succeeded'
         )
 

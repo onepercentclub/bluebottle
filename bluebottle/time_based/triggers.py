@@ -177,10 +177,7 @@ def is_not_started(effect):
     """
     hasn't started yet
     """
-    to_compare = now()
-
-    if not isinstance(effect.instance, DateActivity):
-        to_compare = to_compare.date()
+    to_compare = now().date()
 
     return (
         effect.instance.start and

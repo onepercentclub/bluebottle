@@ -146,7 +146,7 @@ class DateActivity(TimeBasedActivity):
     @property
     def start(self):
         if self.slots.first():
-            return self.slots.first().start
+            return self.slots.first().start.date()
 
     @property
     def active_slots(self):

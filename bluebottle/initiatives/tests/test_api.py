@@ -459,14 +459,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             str(slot.pk)
         )
         self.assertEqual(activity_data['type'], 'activities/time-based/dates')
-        activity_location = activity_data['relationships']['location']['data']
-
-        self.assertTrue(
-            activity_location in (
-                {'type': included['type'], 'id': included['id']} for included in response.json()['included']
-            )
-        )
-
         activity_image = activity_data['relationships']['image']['data']
 
         self.assertTrue(

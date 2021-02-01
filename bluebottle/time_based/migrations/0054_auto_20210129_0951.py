@@ -27,8 +27,4 @@ class Migration(migrations.Migration):
             old_name='location_hint',
             new_name='old_location_hint',
         ),
-        migrations.RemoveField(
-            model_name='dateactivity',
-            name='online_meeting_url',
-        ),
     ]

@@ -228,6 +228,15 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline,)
 
+    def lookup_allowed(self, key, value):
+        if key in [
+            'initiative__location__id__exact',
+            'initiative__location__subregion__id__exact',
+            'initiative__location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(ActivityChildAdmin, self).lookup_allowed(key, value)
+
     show_in_index = True
 
     ordering = ('-created',)
@@ -481,6 +490,15 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight']
+
+    def lookup_allowed(self, key, value):
+        if key in [
+            'initiative__location__id__exact',
+            'initiative__location__subregion__id__exact',
+            'initiative__location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
         filters = self.list_filter

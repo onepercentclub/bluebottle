@@ -370,7 +370,11 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForSlotsEffect
+                CreateSlotParticipantsForSlotsEffect,
+                TransitionEffect(
+                    ActivitySlotStateMachine.mark_complete,
+                    conditions=[slot_is_complete]
+                ),
             ]
         ),
         TransitionTrigger(

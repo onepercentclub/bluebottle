@@ -1,9 +1,82 @@
+from datetime import date, timedelta
+
+from django.utils.timezone import now
+
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, BluebottleAdminTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 from bluebottle.time_based.tests.steps import api_user_joins_activity, assert_participant_status, \
     api_participant_transition, assert_status, assert_slot_participant_status, assert_not_slot_participant, \
-    api_user_joins_slot, api_slot_participant_transition
+    api_user_joins_slot, api_slot_participant_transition, api_create_date_activity, api_create_date_slot, \
+    api_update_date_slot, api_activity_transition
+
+
+class DateActivityScenarioTestCase(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.owner = BlueBottleUserFactory.create()
+        self.supporter = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
+        self.client = JSONAPITestClient()
+
+    def test_create_with_multiple_slots(self):
+        activity_data = {
+            'title': 'Beach clean-up Katwijk',
+            'review': False,
+            'slot_selection': 'all',
+            'registration-deadline': str(date.today() + timedelta(days=1)),
+            'capacity': 10,
+            'description': 'We will clean up the beach south of Katwijk'
+        }
+        activity = api_create_date_activity(self, self.initiative, activity_data)
+        data = {
+            'start': str(now() + timedelta(days=10)),
+            'is-online': True,
+            'duration': '2:30:00',
+        }
+        slot1 = api_create_date_slot(self, activity, data)
+        assert_status(self, slot1, 'open')
+        data = {
+            'start': str(now() + timedelta(days=11)),
+            'duration': '2:30:00',
+        }
+        slot2 = api_create_date_slot(self, activity, data)
+        assert_status(self, slot2, 'draft')
+        self.assertEqual(activity.slots.count(), 2)
+        api_initiative_transition(self, self.initiative, 'submit')
+        assert_status(self, self.initiative, 'submitted')
+
+        self.initiative.states.approve(save=True)
+
+        assert_status(self, activity, 'draft')
+        assert_status(self, slot1, 'open')
+        assert_status(self, slot2, 'draft')
+
+        data = {
+            'start': str(now() + timedelta(days=11)),
+            'duration': '2:30:00',
+            'is_online': False
+        }
+
+        slot2 = api_update_date_slot(self, slot2, data)
+        assert_status(self, slot2, 'draft')
+        assert_status(self, activity, 'draft')
+        api_activity_transition(self, activity, 'submit', status_code=400,
+                                msg="Submitting the activity should not yet be allowed")
+
+        data = {
+            'start': str(now() + timedelta(days=11)),
+            'duration': '2:30:00',
+            'is_online': True
+        }
+        slot2 = api_update_date_slot(self, slot2, data)
+        assert_status(self, slot2, 'open')
+        assert_status(self, activity, 'draft')
+        api_activity_transition(self, activity, 'submit')
+        assert_status(self, activity, 'open')
 
 
 class DateParticipantScenarioTestCase(BluebottleTestCase):

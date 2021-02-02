@@ -53,4 +53,9 @@ class Migration(migrations.Migration):
             name='old_location_hint',
             field=models.TextField(blank=True, db_column='location_hint', null=True, verbose_name='location hint'),
         ),
+        migrations.AlterField(
+            model_name='dateactivity',
+            name='old_online_meeting_url',
+            field=models.TextField(blank=True, db_column='online_meeting_url', null=True, verbose_name='online meeting url'),
+        ),
     ]

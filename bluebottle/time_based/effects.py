@@ -6,7 +6,7 @@ from django.utils.timezone import get_current_timezone
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import TimeContribution, SlotParticipant
+from bluebottle.time_based.models import TimeContribution, SlotParticipant, ContributionTypeChoices
 
 
 class CreateTimeContributionEffect(Effect):
@@ -19,6 +19,7 @@ class CreateTimeContributionEffect(Effect):
             end = activity.start + activity.duration
             contribution = TimeContribution(
                 contributor=self.instance,
+                contribution_type=ContributionTypeChoices.date,
                 value=activity.duration + (activity.preparation or timedelta()),
                 start=activity.start,
                 end=end
@@ -36,6 +37,7 @@ class CreateSlotTimeContributionEffect(Effect):
             end = slot.start + slot.duration
             contribution = TimeContribution(
                 contributor=self.instance.participant,
+                contribution_type=ContributionTypeChoices.date,
                 slot_participant=self.instance,
                 value=slot.duration,
                 start=slot.start,
@@ -60,6 +62,7 @@ class CreatePeriodParticipationEffect(Effect):
 
                 TimeContribution.objects.create(
                     contributor=self.instance,
+                    contribution_type=ContributionTypeChoices.period,
                     value=activity.duration,
                     start=tz.localize(datetime.combine(start, datetime.min.time())),
                     end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
@@ -88,6 +91,7 @@ class CreatePeriodParticipationEffect(Effect):
                     # Only when the deadline is not passed, create the new contribution
                     TimeContribution.objects.create(
                         contributor=self.instance,
+                        contribution_type=ContributionTypeChoices.period,
                         value=activity.duration,
                         start=tz.localize(datetime.combine(start, datetime.min.time())),
                         end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,

@@ -753,6 +753,15 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    def test_type(self):
+        self.participants = self.participant_factory.create_batch(
+            self.activity.capacity, activity=self.review_activity
+        )
+        self.assertEqual(
+            self.participants[0].contributions.get().contribution_type,
+            'date'
+        )
+
 
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
@@ -773,6 +782,11 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
         self.assertEqual(
             participant.contributions.get().status,
             'succeeded'
+        )
+
+        self.assertEqual(
+            participant.contributions.get().contribution_type,
+            'period'
         )
 
 

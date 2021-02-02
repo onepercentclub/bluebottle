@@ -554,6 +554,14 @@ class Participant(Contributor):
     def finished_contributions(self):
         return self.contributions.filter(
             timecontribution__end__lte=timezone.now()
+        ).exclude(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        )
+
+    @property
+    def preparation_contributions(self):
+        return self.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
         )
 
     class Meta:

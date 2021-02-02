@@ -13,12 +13,12 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    CreatePeriodParticipationEffect, SetEndDateEffect,
+    CreatePeriodTimeContributionEffect, SetEndDateEffect,
     ClearStartEffect, ClearDeadlineEffect,
     RescheduleDurationsEffect,
-    ActiveDurationsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
+    ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
-    LockFilledSlotsEffect
+    LockFilledSlotsEffect, CreatePreparationTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
     DeadlineChanged,
@@ -221,7 +221,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.succeed,
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
 
@@ -229,7 +229,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.reject,
             effects=[
                 NotificationEffect(ActivityRejectedNotification),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
@@ -237,14 +237,14 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
 
         TransitionTrigger(
             TimeBasedStateMachine.restore,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
 
@@ -265,7 +265,7 @@ class DateActivityTriggers(TimeBasedTriggers):
             DateStateMachine.reopen_manually,
             effects=[
                 ClearStartEffect,
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
 
@@ -387,25 +387,25 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.finish,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.cancel,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reopen,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reschedule,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         ModelChangedTrigger(
@@ -522,7 +522,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         activity_has_no_accepted_participants
                     ]
                 ),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
@@ -535,7 +535,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         all_slots_cancelled
                     ]
                 ),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         ModelChangedTrigger(
@@ -600,7 +600,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
             PeriodStateMachine.succeed_manually,
             effects=[
                 SetEndDateEffect,
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed),
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
                 NotificationEffect(ActivitySucceededManuallyNotification),
             ]
         ),
@@ -777,7 +777,8 @@ class ParticipantTriggers(ContributorTriggers):
                         is_user
                     ]
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
+                CreatePreparationTimeContributionEffect
             ]
         ),
 
@@ -792,7 +793,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
             ]
         ),
 
@@ -821,6 +822,11 @@ class ParticipantTriggers(ContributorTriggers):
 
                 RelatedTransitionEffect(
                     'finished_contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
+
+                RelatedTransitionEffect(
+                    'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
             ]
@@ -853,6 +859,10 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect(
                     'finished_contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect
@@ -894,7 +904,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeContributionStateMachine.fail,
                 ),
                 UnFollowActivityEffect
-
             ]
         ),
 
@@ -1093,7 +1102,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreatePeriodParticipationEffect,
+                CreatePeriodTimeContributionEffect,
             ]
         ),
 
@@ -1114,6 +1123,11 @@ def duration_is_finished(effect):
     """
     contribution (slot) has finished
     """
+    if effect.instance.contribution_type == 'preparation':
+        if effect.instance.contributor.status in ('accepted',):
+            return True
+        else:
+            return False
     return (
         (effect.instance.end is None or effect.instance.end < now()) and
         effect.instance.contributor.status in ('accepted', 'new') and
@@ -1127,14 +1141,22 @@ class TimeContributionTriggers(ContributionTriggers):
         TransitionTrigger(
             TimeContributionStateMachine.reset,
             effects=[
-                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+                TransitionEffect(
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        duration_is_finished
+                    ]),
             ]
         ),
 
         TransitionTrigger(
             TimeContributionStateMachine.initiate,
             effects=[
-                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+                TransitionEffect(
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        duration_is_finished
+                    ]),
             ]
         ),
     ]

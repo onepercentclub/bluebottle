@@ -84,6 +84,15 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'place'
     )
 
+    def lookup_allowed(self, key, value):
+        if key in [
+            'location__id__exact',
+            'location__subregion__id__exact',
+            'location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(InitiativeAdmin, self).lookup_allowed(key, value)
+
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
 

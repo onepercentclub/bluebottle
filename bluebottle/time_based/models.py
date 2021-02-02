@@ -39,7 +39,7 @@ class TimeBasedActivity(Activity):
         null=True, default=None)
     old_location = models.ForeignKey(
         Geolocation,
-        db_column='location',
+        db_column='location_id',
         verbose_name=_('location'),
         null=True, blank=True, on_delete=models.SET_NULL)
     old_location_hint = models.TextField(
@@ -151,6 +151,10 @@ class DateActivity(TimeBasedActivity):
         choices=SlotSelectionChoices.choices,
     )
 
+    online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default=''
+    )
     duration_period = 'overall'
 
     validators = [

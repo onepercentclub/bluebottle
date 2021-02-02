@@ -18,6 +18,7 @@ def migrate_location_to_period(apps, schema_editor):
     if connection.tenant.schema_name != 'public':
         schema_editor.execute(period_sql)
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

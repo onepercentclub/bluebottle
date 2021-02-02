@@ -38,9 +38,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='timebasedactivity',
             name='old_location',
-            field=models.ForeignKey(blank=True, db_column='location_id', null=True,
-                                    on_delete=django.db.models.deletion.SET_NULL, to='geo.Geolocation',
-                                    verbose_name='location'),
+            field=models.ForeignKey(
+                blank=True, db_column='location_id', null=True,
+                on_delete=django.db.models.deletion.SET_NULL, to='geo.Geolocation',
+                verbose_name='location'),
         ),
         migrations.AlterField(
             model_name='timebasedactivity',

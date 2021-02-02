@@ -459,14 +459,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             str(slot.pk)
         )
         self.assertEqual(activity_data['type'], 'activities/time-based/dates')
-        activity_location = activity_data['relationships']['location']['data']
-
-        self.assertTrue(
-            activity_location in (
-                {'type': included['type'], 'id': included['id']} for included in response.json()['included']
-            )
-        )
-
         activity_image = activity_data['relationships']['image']['data']
 
         self.assertTrue(
@@ -865,15 +857,23 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             initiative=second,
             status='open',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             initiative=third,
             status='open',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=6)
         )
         PeriodActivityFactory.create(

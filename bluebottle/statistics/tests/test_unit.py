@@ -619,12 +619,16 @@ class StatisticsDateTest(BluebottleTestCase):
             initiative.states.approve(save=True)
 
             activity = DateActivityFactory(
-                start=past_date,
                 initiative=initiative,
-                duration=datetime.timedelta(minutes=60),
                 transition_date=past_date,
                 status='succeeded',
                 owner=BlueBottleUserFactory.create(),
+                slots=[]
+            )
+            DateActivitySlotFactory.create(
+                activity=activity,
+                start=past_date,
+                duration=datetime.timedelta(minutes=60),
             )
 
             DateParticipantFactory.create(

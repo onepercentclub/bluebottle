@@ -94,9 +94,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
     }
 
     search_fields = ['title', 'description']
-    list_filter = [StateMachineFilter, 'is_online']
+    list_filter = [StateMachineFilter]
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields
 
     export_to_csv_fields = (
         ('title', 'Title'),
@@ -108,21 +108,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
-        ('is_online', 'Will be hosted online?'),
-        ('location', 'Location'),
-        ('location_hint', 'Location Hint'),
         ('review', 'Review participants')
     )
-
-    def duration_string(self, obj):
-        duration = get_human_readable_duration(str(obj.duration)).lower()
-        if not obj.duration_period or obj.duration_period != 'overall':
-            return _('{duration} per {time_unit}').format(
-                duration=duration,
-                time_unit=obj.duration_period[0:-1])
-        return duration
-
-    duration_string.short_description = _('Duration')
 
 
 class TimeBasedActivityAdminForm(StateMachineModelForm):
@@ -147,14 +134,15 @@ class DateActivityASlotInline(admin.TabularInline):
         },
     }
 
-    readonly_fields = [
-        'link'
-    ]
+    raw_id_fields = ['location']
+    readonly_fields = ['link']
 
     fields = [
         'link',
         'start',
-        'duration'
+        'duration',
+        'is_online',
+        'location'
     ]
 
     extra = 0
@@ -170,25 +158,33 @@ class DateActivityAdmin(TimeBasedAdmin):
     form = TimeBasedActivityAdminForm
     inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
-    date_hierarchy = 'start'
+    date_hierarchy = 'created'
+
     list_display = TimeBasedAdmin.list_display + [
         'start',
         'duration_string',
     ]
+
+    def start(self, obj):
+        first_slot = obj.slots.order_by('start').first()
+        if first_slot:
+            return first_slot.start
+
+    def duration_string(self, obj):
+        sum = obj.slots.aggregate(sum=Sum('duration'))['sum']
+        duration = get_human_readable_duration(str(sum)).lower()
+        return duration
+
+    duration_string.short_description = _('Duration')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
         'slot_selection',
 
         'preparation',
         'registration_deadline',
-
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url',
 
         'expertise',
         'capacity',
@@ -208,7 +204,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
-
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
@@ -247,6 +243,16 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         if not obj.deadline:
             return _('indefinitely')
         return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        if not obj.duration_period or obj.duration_period != 'overall':
+            return _('{duration} per {time_unit}').format(
+                duration=duration,
+                time_unit=obj.duration_period[0:-1])
+        return duration
+
+    duration_string.short_description = _('Duration')
 
 
 class SlotParticipantInline(admin.TabularInline):

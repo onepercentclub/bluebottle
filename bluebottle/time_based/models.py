@@ -27,15 +27,25 @@ tf = TimezoneFinder()
 class TimeBasedActivity(Activity):
     ONLINE_CHOICES = (
         (None, 'Not set yet'),
-        (True, 'Yes, participants can join from anywhere or online'),
+        (True, 'Yes, anywhere/online'),
         (False, 'No, enter a location')
     )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
-    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
-                                 null=True, blank=True, on_delete=models.SET_NULL)
-    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+    old_is_online = models.NullBooleanField(
+        _('is online'),
+        db_column='is_online',
+        choices=ONLINE_CHOICES,
+        null=True, default=None)
+    old_location = models.ForeignKey(
+        Geolocation,
+        db_column='location_id',
+        verbose_name=_('location'),
+        null=True, blank=True, on_delete=models.SET_NULL)
+    old_location_hint = models.TextField(
+        _('location hint'),
+        db_column='location_hint',
+        null=True, blank=True)
 
     registration_deadline = models.DateField(
         _('registration deadline'),
@@ -119,10 +129,6 @@ class TimeBasedActivity(Activity):
                 strip_tags(self.description), self.get_absolute_url()
             )
         )
-
-        if self.is_online and self.online_meeting_url:
-            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
-
         return details
 
 
@@ -132,13 +138,6 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-
-    online_meeting_url = models.TextField(
-        _('online meeting link'),
-        blank=True, default=''
-    )
 
     slot_selection = models.CharField(
         _('Slot selection'),
@@ -152,12 +151,21 @@ class DateActivity(TimeBasedActivity):
         choices=SlotSelectionChoices.choices,
     )
 
+    old_online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default=''
+    )
     duration_period = 'overall'
 
     validators = [
         CompletedSlotsValidator,
         HasSlotValidator
     ]
+
+    @property
+    def start(self):
+        if self.slots.first():
+            return self.slots.first().start.date()
 
     @property
     def active_slots(self):
@@ -242,7 +250,9 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def activity_date(self):
-        return self.start
+        first_slot = self.slots.order_by('start').first()
+        if first_slot:
+            return first_slot.start
 
     @property
     def uid(self):
@@ -432,6 +442,17 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
+    ONLINE_CHOICES = (
+        (None, 'Not set yet'),
+        (True, 'Yes, participants can join from anywhere or online'),
+        (False, 'No, enter a location')
+    )
+
+    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
+                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
     start = models.DateField(
         _('Start date'),
         null=True,

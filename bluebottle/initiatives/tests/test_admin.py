@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from builtins import str
-from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
@@ -13,49 +12,9 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
-
-
-class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
-
-    def test_list_shows_duration(self):
-        PeriodActivityFactory.create(duration_period='weeks', duration=timedelta(hours=4))
-        PeriodActivityFactory.create(duration_period='months', duration=timedelta(hours=8))
-        PeriodActivityFactory.create(duration_period=None, duration=timedelta(hours=1))
-        PeriodActivityFactory.create(duration_period='overall', duration=timedelta(hours=10))
-        url = reverse('admin:time_based_periodactivity_changelist')
-        response = self.app.get(url, user=self.staff_member)
-        self.assertEqual(response.status, '200 OK')
-        self.assertTrue('4 hours per week' in response.text)
-        self.assertTrue('8 hours per month' in response.text)
-        self.assertFalse('8 hours per months' in response.text)
-        self.assertTrue('1 hour' in response.text)
-        self.assertFalse('1 hours' in response.text)
-        self.assertTrue('10 hours' in response.text)
-
-
-class DateActivityAdminTestCase(BluebottleAdminTestCase):
-
-    extra_environ = {}
-    csrf_checks = False
-    setup_auth = True
-
-    def setUp(self):
-        super().setUp()
-        self.app.set_user(self.staff_member)
-
-    def test_list_initiative_office(self):
-        office = LocationFactory.create(name='Schin op Geul')
-        InitiativeFactory.create(location=office)
-        url = reverse('admin:initiatives_initiative_changelist')
-        response = self.app.get(url)
-        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
-        response = self.app.get(url)
-        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):

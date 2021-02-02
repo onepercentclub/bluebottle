@@ -151,7 +151,7 @@ class DateActivity(TimeBasedActivity):
         choices=SlotSelectionChoices.choices,
     )
 
-    online_meeting_url = models.TextField(
+    old_online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default=''
     )

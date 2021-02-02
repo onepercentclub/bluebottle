@@ -28,6 +28,11 @@ class Migration(migrations.Migration):
             old_name='location_hint',
             new_name='old_location_hint',
         ),
+        migrations.RenameField(
+            model_name='dateactivity',
+            old_name='online_meeting_url',
+            new_name='old_online_meeting_url',
+        ),
         migrations.AlterField(
             model_name='timebasedactivity',
             name='old_is_online',

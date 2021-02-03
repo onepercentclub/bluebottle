@@ -1,12 +1,9 @@
 import json
-from datetime import timedelta, date, datetime
-
-from urllib.parse import urlparse, parse_qs
+from datetime import timedelta, date
 
 from django.contrib.auth.models import Group, Permission
-from django.contrib.gis.geos import Point
 from django.urls import reverse
-from django.utils.timezone import now, utc, get_current_timezone
+from django.utils.timezone import now, utc
 
 import icalendar
 
@@ -436,48 +433,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.slot = self.activity.slots.first()
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
 
-    def test_get_utc_offset(self):
-        self.slot.location.position = Point(4.8888, 52.399)
-        self.slot.location.save()
-
-        self.slot.start = get_current_timezone().localize(
-            datetime(2025, 2, 23, 10, 00)
-        )
-        self.slot.save()
-
-        response = self.client.get(self.slot_url, user=self.activity.owner)
-        self.assertEqual(
-            response.json()['data']['attributes']['utc-offset'], 60.0
-        )
-
-    def test_get_utc_offset_summertime(self):
-        self.slot.location.position = Point(4.8888, 52.399)
-        self.slot.location.save()
-
-        self.slot.start = get_current_timezone().localize(
-            datetime(2025, 7, 23, 10, 00)
-        )
-        self.slot.save()
-
-        response = self.client.get(self.slot_url, user=self.activity.owner)
-        self.assertEqual(
-            response.json()['data']['attributes']['utc-offset'], 120.0
-        )
-
-    def test_get_utc_offset_new_york(self):
-        self.slot.location.position = Point(-74.259, 40.697)
-        self.slot.location.save()
-
-        self.slot.start = get_current_timezone().localize(
-            datetime(2025, 7, 23, 10, 00)
-        )
-        self.slot.save()
-
-        response = self.client.get(self.slot_url, user=self.activity.owner)
-        self.assertEqual(
-            response.json()['data']['attributes']['utc-offset'], -240.0
-        )
-
     def test_get_included_slot_location(self):
         self.activity.save()
 
@@ -503,55 +458,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         response = self.client.get(self.url, user=self.activity.owner)
 
         links = response.json()['data']['attributes']['links']
-        google_link = urlparse(links['google'])
-        google_query = parse_qs(google_link.query)
 
         slot = self.activity.slots.first()
-
-        self.assertEqual(google_link.netloc, 'calendar.google.com')
-        self.assertEqual(google_link.path, '/calendar/render')
-
-        self.assertEqual(google_query['action'][0], 'TEMPLATE')
-        self.assertEqual(google_query['location'][0], slot.location.formatted_address)
-        self.assertEqual(google_query['text'][0], self.activity.title)
-        self.assertEqual(google_query['uid'][0], 'test-dateactivityslot-{}'.format(slot.pk))
-
-        details = (
-            u"{}\n"
-            u"http://testserver/en/initiatives/activities/details/"
-            u"time-based/date/{}/{}"
-        ).format(
-            self.activity.description, self.activity.pk, self.activity.slug
-        )
-
-        self.assertEqual(google_query['details'][0], details)
-        self.assertEqual(
-            google_query['dates'][0],
-            u'{}/{}'.format(
-                slot.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
-                (slot.start + slot.duration).astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
-            )
-        )
-
-        outlook_link = urlparse(links['outlook'])
-        outlook_query = parse_qs(outlook_link.query)
-
-        self.assertEqual(outlook_link.netloc, 'outlook.live.com')
-        self.assertEqual(outlook_link.path, '/owa/')
-
-        self.assertEqual(outlook_query['rru'][0], 'addevent')
-        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
-        self.assertEqual(outlook_query['location'][0], slot.location.formatted_address)
-        self.assertEqual(outlook_query['subject'][0], self.activity.title)
-        self.assertEqual(outlook_query['body'][0], details)
-        self.assertEqual(
-            outlook_query['startdt'][0],
-            slot.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
-        )
-        self.assertEqual(
-            outlook_query['enddt'][0],
-            (slot.start + slot.duration).astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
-        )
 
         self.assertTrue(
             links['ical'].startswith(reverse('slot-ical', args=(slot.pk, )))

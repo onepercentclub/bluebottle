@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from builtins import str
+
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
-from django.urls.base import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.files.tests.factories import ImageFactory

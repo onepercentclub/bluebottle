@@ -414,7 +414,7 @@ class MemberAdmin(UserAdmin):
 
     def funding(self, obj):
         donations = []
-        donation_url = reverse('admin:funding_donation_changelist')
+        donation_url = reverse('admin:funding_donor_changelist')
         if Donor.objects.filter(status='succeeded', user=obj).count():
             link = donation_url + '?user_id={}'.format(obj.id)
             donations.append(format_html(

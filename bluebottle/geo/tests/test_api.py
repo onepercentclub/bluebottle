@@ -1,16 +1,17 @@
-from builtins import range
 import json
+from builtins import range
 
-from bluebottle.funding.tests.factories import FundingFactory
+from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
+from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory, GeolocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory, DateActivitySlotFactory
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -76,15 +77,30 @@ class UsedCountryListTestCase(GeoTestCase):
         location_de = GeolocationFactory.create(country=germany)
 
         turkey = Country.objects.get(translations__name="Turkey")
-        location_tr = LocationFactory.create(country=turkey)
-        LocationFactory.create(country=Country.objects.get(translations__name='France'))
 
-        DateActivityFactory.create(
+        location_tr = GeolocationFactory.create(country=turkey)
+        initiative = InitiativeFactory.create(
+            status='approved',
+            place=location_tr
+        )
+
+        activity = DateActivityFactory.create(
             status='open',
+            initiative=initiative,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             location=location_be
         )
-        DateActivityFactory.create(
+
+        activity = DateActivityFactory.create(
             status='full',
+            initiative=initiative,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             location=location_bg
         )
 
@@ -93,14 +109,16 @@ class UsedCountryListTestCase(GeoTestCase):
             location=location_de
         )
 
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             status='submitted',
+            initiative=initiative,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             location=location_de
         )
-        initiative = InitiativeFactory.create(
-            status='approved',
-            location=location_tr
-        )
+
         FundingFactory.create(
             initiative=initiative,
             status='open'
@@ -132,7 +150,7 @@ class LocationListTestCase(GeoTestCase):
         for i in range(0, self.count):
             self.locations.append(Location.objects.create(
                 name="Name {}".format(i),
-                position='10.0,20.0',
+                position=Point(20.0, 10.0),
                 description="Description {}".format(i))
             )
 

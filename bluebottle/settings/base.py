@@ -362,6 +362,7 @@ TENANT_APPS = (
     'bluebottle.contentplugins',
     'bluebottle.contact',
     'bluebottle.geo',
+    'bluebottle.offices',
     'bluebottle.pages',
     'bluebottle.mails',
     'bluebottle.notifications',

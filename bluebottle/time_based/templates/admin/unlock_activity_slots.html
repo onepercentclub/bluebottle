@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Unlock activity slots" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Unlock the slots that will have spots available by removing this participant
+{% endblocktrans %}
+</p>

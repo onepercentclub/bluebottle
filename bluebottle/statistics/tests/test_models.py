@@ -9,7 +9,7 @@ from bluebottle.impact.tests.factories import (
 from bluebottle.statistics.tests.factories import (
     ManualStatisticFactory, DatabaseStatisticFactory, ImpactStatisticFactory
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -65,6 +65,10 @@ class StatisticsModelTestCase(BluebottleTestCase):
         activity = DateActivityFactory.create(
             initiative=initiative,
             owner=initiative.owner,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=timezone.now() - datetime.timedelta(hours=1),
             duration=datetime.timedelta(minutes=6)
         )

@@ -14,7 +14,7 @@ from bluebottle.statistics.tests.factories import (
 from bluebottle.impact.tests.factories import (
     ImpactTypeFactory, ImpactGoalFactory
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -40,9 +40,12 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
         activity = DateActivityFactory.create(
             initiative=initiative,
             owner=initiative.owner,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=timezone.now() - datetime.timedelta(hours=1),
             duration=datetime.timedelta(minutes=6)
-
         )
 
         initiative.states.submit(save=True)

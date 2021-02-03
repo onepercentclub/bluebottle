@@ -32,14 +32,11 @@ from bluebottle.utils.utils import reverse_signed
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
-    is_online = serializers.NullBooleanField()
+    is_online = serializers.NullBooleanField(required=False)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
-            'is_online',
-            'location',
-            'location_hint',
             'registration_deadline',
             'expertise',
             'review',
@@ -48,7 +45,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
-            'location',
             'expertise',
             'my_contributor',
             'my_contributor.contributions',
@@ -59,20 +55,20 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         BaseActivitySerializer.included_serializers,
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
-            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
         }
     )
 
 
 class ActivitySlotSerializer(ModelSerializer):
-    is_online = serializers.NullBooleanField()
+    is_online = serializers.NullBooleanField(required=False)
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
 
     class Meta:
         fields = (
+            'id',
             'activity',
             'start',
             'duration',
@@ -228,7 +224,16 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period', 'my_contributor'
+            'start',
+            'deadline',
+            'duration',
+            'duration_period',
+            'my_contributor',
+            'online_meeting_url',
+            'is_online',
+            'location',
+            'location_hint',
+
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -237,6 +242,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer'
         }
     )
@@ -297,23 +303,18 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
     class Meta(BaseActivityListSerializer.Meta):
         fields = BaseActivityListSerializer.Meta.fields + (
             'capacity',
-            'duration',
-            'is_online',
-            'location',
-            'location_hint',
             'expertise',
             'registration_deadline',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         included_resources = [
-            'location', 'expertise',
+            'expertise',
         ]
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
-            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
         }
     )
@@ -326,7 +327,7 @@ class DateActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = DateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'duration', 'slots'
+            'slots',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
@@ -347,7 +348,7 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'deadline', 'duration', 'duration_period',
+            'start', 'deadline', 'duration', 'duration_period',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):

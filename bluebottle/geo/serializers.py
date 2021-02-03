@@ -80,7 +80,28 @@ class OfficeSerializer(ModelSerializer):
         resource_name = 'locations'
 
 
+class SimplePointSerializer(serializers.CharField):
+
+    def to_representation(self, instance):
+        return [
+            instance.coords[1],
+            instance.coords[0]
+        ]
+
+    def to_internal_value(self, data):
+        if not data:
+            return None
+        try:
+            point = Point(float(data[1]), float(data[0]))
+        except ValueError as e:
+            raise serializers.ValidationError("Invalid point. {}".format(e))
+        return point
+
+
 class PlaceSerializer(serializers.ModelSerializer):
+
+    position = SimplePointSerializer()
+
     class Meta(object):
         model = Place
         fields = (

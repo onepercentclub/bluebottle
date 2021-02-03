@@ -1,43 +1,14 @@
 from builtins import str
-from django.contrib.admin.sites import AdminSite
+
 from django.contrib.gis.geos import Point
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from bluebottle.geo.admin import LocationAdmin
-from bluebottle.geo.models import Location, Geolocation
+from bluebottle.geo.models import Geolocation
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.utils import BluebottleTestCase
-
-
-class LocationAdminTest(BluebottleTestCase):
-    """ Tests for models in the geo app. """
-
-    def setUp(self):
-        super(LocationAdminTest, self).setUp()
-        self.location = Location.objects.create(
-            name='Amsterdam',
-            position='52.3702157,52.3702157'
-        )
-        self.site = AdminSite()
-        self.admin = LocationAdmin(Location, self.site)
-        InitiativeFactory(location=self.location)
-
-    def test_initiatives_link(self):
-        """
-        Test the numeric code validation.
-        """
-        initiatives_link = self.admin.initiatives(self.location)
-        self.assertTrue('>1<' in initiatives_link)
-        self.assertTrue(
-            '/en/admin/initiatives/initiative/?location={}'.format(
-                self.location.id
-            ) in initiatives_link
-        )
 
 
 class GeolocationAdminTest(TestCase):

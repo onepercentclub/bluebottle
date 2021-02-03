@@ -1,9 +1,8 @@
 from builtins import object
-import factory
 
+import factory
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from geoposition import Geoposition
 
 from bluebottle.geo.models import (
     Country, SubRegion, Region, Location, LocationGroup, Place,
@@ -45,7 +44,7 @@ class LocationFactory(factory.DjangoModelFactory):
         model = Location
 
     name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
-    position = Geoposition(52.5, 13.4)
+    position = Point(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
     group = factory.SubFactory(LocationGroupFactory)
 
@@ -55,7 +54,7 @@ class PlaceFactory(factory.DjangoModelFactory):
         model = Place
         exclude = ['content_object']
 
-    position = Geoposition(52.5, 13.4)
+    position = Point(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
 
     object_id = factory.SelfAttribute('content_object.id')

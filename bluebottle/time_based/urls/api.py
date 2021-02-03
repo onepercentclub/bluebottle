@@ -7,13 +7,12 @@ from bluebottle.time_based.views import (
     DateTransitionList, PeriodTransitionList,
     DateParticipantList, DateParticipantDetail,
     DateParticipantTransitionList, DateParticipantDocumentDetail,
-    DateActivityIcalView,
-
     PeriodParticipantList, PeriodParticipantDetail,
     PeriodParticipantTransitionList, PeriodParticipantDocumentDetail,
     TimeContributionDetail,
     DateSlotDetailView, DateSlotListView,
-    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList, ActivitySlotIcalView
+    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
+    DateActivityIcalView, ActivitySlotIcalView
 )
 
 urlpatterns = [

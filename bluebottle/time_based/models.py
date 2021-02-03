@@ -27,15 +27,25 @@ tf = TimezoneFinder()
 class TimeBasedActivity(Activity):
     ONLINE_CHOICES = (
         (None, 'Not set yet'),
-        (True, 'Yes, participants can join from anywhere or online'),
+        (True, 'Yes, anywhere/online'),
         (False, 'No, enter a location')
     )
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
-    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
-                                 null=True, blank=True, on_delete=models.SET_NULL)
-    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+    old_is_online = models.NullBooleanField(
+        _('is online'),
+        db_column='is_online',
+        choices=ONLINE_CHOICES,
+        null=True, default=None)
+    old_location = models.ForeignKey(
+        Geolocation,
+        db_column='location_id',
+        verbose_name=_('location'),
+        null=True, blank=True, on_delete=models.SET_NULL)
+    old_location_hint = models.TextField(
+        _('location hint'),
+        db_column='location_hint',
+        null=True, blank=True)
 
     registration_deadline = models.DateField(
         _('registration deadline'),
@@ -119,10 +129,6 @@ class TimeBasedActivity(Activity):
                 strip_tags(self.description), self.get_absolute_url()
             )
         )
-
-        if self.is_online and self.online_meeting_url:
-            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
-
         return details
 
 
@@ -132,13 +138,6 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-
-    online_meeting_url = models.TextField(
-        _('online meeting link'),
-        blank=True, default=''
-    )
 
     slot_selection = models.CharField(
         _('Slot selection'),
@@ -152,12 +151,22 @@ class DateActivity(TimeBasedActivity):
         choices=SlotSelectionChoices.choices,
     )
 
+    old_online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default='',
+        db_column='online_meeting_url'
+    )
     duration_period = 'overall'
 
     validators = [
         CompletedSlotsValidator,
         HasSlotValidator
     ]
+
+    @property
+    def start(self):
+        if self.slots.first():
+            return self.slots.first().start.date()
 
     @property
     def active_slots(self):
@@ -192,7 +201,9 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def activity_date(self):
-        return self.start
+        first_slot = self.slots.order_by('start').first()
+        if first_slot:
+            return first_slot.start
 
     @property
     def uid(self):
@@ -256,7 +267,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(status__in=('registered',))
+        return self.slot_participants.filter(status='registered', participant__status='accepted')
 
     @property
     def durations(self):
@@ -302,7 +313,6 @@ class DateActivitySlot(ActivitySlot):
     @property
     def required_fields(self):
         fields = [
-            'is_online',
             'start',
             'duration'
         ]
@@ -360,6 +370,17 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
+    ONLINE_CHOICES = (
+        (None, 'Not set yet'),
+        (True, 'Yes, participants can join from anywhere or online'),
+        (False, 'No, enter a location')
+    )
+
+    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
+                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
     start = models.DateField(
         _('Start date'),
         null=True,
@@ -397,51 +418,6 @@ class PeriodActivity(TimeBasedActivity):
     @property
     def activity_date(self):
         return self.deadline or self.start
-
-    @property
-    def google_calendar_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-        url = u'https://calendar.google.com/calendar/render'
-        params = {
-            'action': u'TEMPLATE',
-            'text': self.title,
-            'dates': u'{}/{}'.format(
-                format_date(self.start), format_date(self.start + self.duration)
-            ),
-            'details': self.details,
-            'uid': self.uid,
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
-
-    @property
-    def outlook_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-
-        url = 'https://outlook.live.com/owa/'
-
-        params = {
-            'rru': 'addevent',
-            'path': '/calendar/action/compose&rru=addevent',
-            'allday': False,
-            'subject': self.title,
-            'startdt': format_date(self.start),
-            'enddt': format_date(self.start + self.duration),
-            'body': self.details
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
 
     class Meta:
         verbose_name = _("Activity during a period")
@@ -505,6 +481,14 @@ class Participant(Contributor):
     def finished_contributions(self):
         return self.contributions.filter(
             timecontribution__end__lte=timezone.now()
+        ).exclude(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        )
+
+    @property
+    def preparation_contributions(self):
+        return self.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
         )
 
     class Meta:
@@ -575,6 +559,9 @@ class SlotParticipant(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
     auto_approve = True
 
+    def __str__(self):
+        return '{name} / {slot}'.format(name=self.participant.user, slot=self.slot)
+
     @property
     def user(self):
         return self.participant.user
@@ -603,8 +590,23 @@ class SlotParticipant(TriggerMixin, models.Model):
         resource_name = 'contributors/time-based/slot-participants'
 
 
+class ContributionTypeChoices(DjangoChoices):
+    date = ChoiceItem('date', label=_("activity on a date"))
+    period = ChoiceItem('period', label=_("activity over a period"))
+    preparation = ChoiceItem('preparation', label=_("preparation"))
+
+
 class TimeContribution(Contribution):
+
     value = models.DurationField(_('value'))
+
+    contribution_type = models.CharField(
+        _('Contribution type'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=ContributionTypeChoices.choices,
+    )
 
     slot_participant = models.ForeignKey(SlotParticipant, null=True, related_name='contributions')
 

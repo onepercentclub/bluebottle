@@ -13,11 +13,12 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    CreatePeriodParticipationEffect, SetEndDateEffect,
+    CreatePeriodTimeContributionEffect, SetEndDateEffect,
     ClearStartEffect, ClearDeadlineEffect,
     RescheduleDurationsEffect,
-    ActiveDurationsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
-    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect
+    ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
+    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
+    LockFilledSlotsEffect, CreatePreparationTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
     DeadlineChanged,
@@ -79,10 +80,15 @@ def is_finished(effect):
     """
     is finished
     """
+    if isinstance(effect.instance, DateActivitySlot):
+        slot = effect.instance
+    else:
+        slot = effect.instance.slots.order_by('start').last()
     return (
-        effect.instance.start and
-        effect.instance.duration and
-        effect.instance.start + effect.instance.duration < now()
+        slot and
+        slot.start and
+        slot.duration and
+        slot.start + slot.duration < now()
     )
 
 
@@ -90,10 +96,15 @@ def is_not_finished(effect):
     """
     is not finished
     """
+    if isinstance(effect.instance, DateActivitySlot):
+        slot = effect.instance
+    else:
+        slot = effect.instance.slots.order_by('start').last()
     return (
-        effect.instance.start and
-        effect.instance.duration and
-        effect.instance.start + effect.instance.duration > now()
+        slot and
+        slot.start and
+        slot.duration and
+        slot.start + slot.duration > now()
     )
 
 
@@ -109,7 +120,7 @@ def registration_deadline_is_passed(effect):
 
 def registration_deadline_is_not_passed(effect):
     """
-    egistration deadline hasn't passed
+    registration deadline hasn't passed
     """
     return (
         effect.instance.registration_deadline and
@@ -166,10 +177,7 @@ def is_not_started(effect):
     """
     hasn't started yet
     """
-    to_compare = now()
-
-    if not isinstance(effect.instance, DateActivity):
-        to_compare = to_compare.date()
+    to_compare = now().date()
 
     return (
         effect.instance.start and
@@ -213,7 +221,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.succeed,
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
 
@@ -221,7 +229,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.reject,
             effects=[
                 NotificationEffect(ActivityRejectedNotification),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
@@ -229,14 +237,14 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
 
         TransitionTrigger(
             TimeBasedStateMachine.restore,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
 
@@ -257,7 +265,7 @@ class DateActivityTriggers(TimeBasedTriggers):
             DateStateMachine.reopen_manually,
             effects=[
                 ClearStartEffect,
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
 
@@ -282,26 +290,44 @@ class DateActivityTriggers(TimeBasedTriggers):
 
 
 def slot_is_complete(effect):
+    """
+    slot details are complete
+    """
     return effect.instance.is_complete
 
 
 def slot_is_incomplete(effect):
+    """
+    slot details are not complete
+    """
     return not effect.instance.is_complete
 
 
 def slot_is_started(effect):
+    """
+    slot start date/time has passed
+    """
     return effect.instance.is_complete and effect.instance.start and effect.instance.start < now()
 
 
 def slot_is_not_started(effect):
+    """
+    slot start date/time has not passed
+    """
     return not slot_is_started(effect)
 
 
 def slot_is_finished(effect):
+    """
+    slot end date/time has passed
+    """
     return effect.instance.is_complete and effect.instance.end and effect.instance.end < now()
 
 
 def slot_is_not_finished(effect):
+    """
+    slot end date/time has not passed
+    """
     return not slot_is_finished(effect)
 
 
@@ -318,7 +344,7 @@ def slot_is_full(effect):
 
 def slot_is_not_full(effect):
     """
-    Slot is not full. Still some spots avaialable
+    slot is not full. Still some spots avaialable
     """
     return not slot_is_full(effect)
 
@@ -329,6 +355,7 @@ def participant_slot_will_be_full(effect):
     """
     participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
     if effect.instance.slot.capacity \
+            and effect.instance.participant.status == 'accepted' \
             and participant_count + 1 >= effect.instance.slot.capacity:
         return True
     return False
@@ -350,31 +377,35 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForParticipantsEffect
+                CreateSlotParticipantsForSlotsEffect,
+                TransitionEffect(
+                    ActivitySlotStateMachine.mark_complete,
+                    conditions=[slot_is_complete]
+                ),
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.finish,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.cancel,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reopen,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reschedule,
             effects=[
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         ModelChangedTrigger(
@@ -439,6 +470,9 @@ class ActivitySlotTriggers(TriggerManager):
 
 
 def all_slots_finished(effect):
+    """
+    all slots have finished
+    """
     return effect.instance.activity.slots.exclude(
         status__in=['finished', 'cancelled', 'deleted']
     ).exclude(
@@ -447,10 +481,16 @@ def all_slots_finished(effect):
 
 
 def all_slots_cancelled(effect):
+    """
+    all slots are cancelled
+    """
     return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
 
 
 def activity_has_no_accepted_participants(effect):
+    """
+    activity does not have any accepted participants
+    """
     return effect.instance.activity.accepted_participants.count() == 0
 
 
@@ -482,7 +522,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         activity_has_no_accepted_participants
                     ]
                 ),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
@@ -495,7 +535,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         all_slots_cancelled
                     ]
                 ),
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.fail)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         ModelChangedTrigger(
@@ -560,7 +600,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
             PeriodStateMachine.succeed_manually,
             effects=[
                 SetEndDateEffect,
-                ActiveDurationsTransitionEffect(TimeContributionStateMachine.succeed),
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
                 NotificationEffect(ActivitySucceededManuallyNotification),
             ]
         ),
@@ -690,10 +730,12 @@ def activity_is_finished(effect):
     activity = effect.instance.activity
 
     if isinstance(activity, DateActivity):
+        last_slot = activity.slots.order_by('start').last()
         return (
-            activity.start and
-            activity.duration and
-            activity.start + activity.duration < now()
+            last_slot and
+            last_slot.start and
+            last_slot.duration and
+            last_slot.start + last_slot.duration < now()
         )
     elif isinstance(activity, PeriodActivity):
         return (
@@ -735,7 +777,8 @@ class ParticipantTriggers(ContributorTriggers):
                         is_user
                     ]
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
+                CreatePreparationTimeContributionEffect
             ]
         ),
 
@@ -746,12 +789,11 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
             ]
         ),
 
@@ -782,6 +824,11 @@ class ParticipantTriggers(ContributorTriggers):
                     'finished_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
+
+                RelatedTransitionEffect(
+                    'preparation_contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
             ]
         ),
 
@@ -801,20 +848,21 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.lock,
                     conditions=[activity_will_be_full]
                 ),
-
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-
                 RelatedTransitionEffect(
                     'finished_contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect
@@ -832,7 +880,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -852,13 +899,11 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
                 UnFollowActivityEffect
-
             ]
         ),
 
@@ -870,7 +915,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
-
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -887,17 +931,56 @@ class DateParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForSlotsEffect
+                CreateSlotParticipantsForParticipantsEffect
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.reapply,
+            effects=[
+                LockFilledSlotsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                LockFilledSlotsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.reject,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.withdraw,
+            effects=[
+                UnlockUnfilledSlotsEffect,
             ]
         ),
     ]
 
 
 def participant_slot_is_finished(effect):
-    return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+    """
+    Slot end date/time has passed
+    """
+    if effect.instance.id:
+        return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 
 def participant_will_not_be_attending(effect):
+    """
+    no more slot participations remaining for this activity (participant unregistered from all slots)
+    """
     return len(effect.instance.participant.slot_participants.filter(status='registered')) <= 1
 
 
@@ -1000,6 +1083,16 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
             ]
         ),
+        TransitionTrigger(
+            SlotParticipantStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'slot',
+                    ActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+            ]
+        ),
     ]
 
 
@@ -1009,7 +1102,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                CreatePeriodParticipationEffect,
+                CreatePeriodTimeContributionEffect,
             ]
         ),
 
@@ -1030,6 +1123,11 @@ def duration_is_finished(effect):
     """
     contribution (slot) has finished
     """
+    if effect.instance.contribution_type == 'preparation':
+        if effect.instance.contributor.status in ('accepted',):
+            return True
+        else:
+            return False
     return (
         (effect.instance.end is None or effect.instance.end < now()) and
         effect.instance.contributor.status in ('accepted', 'new') and
@@ -1043,14 +1141,22 @@ class TimeContributionTriggers(ContributionTriggers):
         TransitionTrigger(
             TimeContributionStateMachine.reset,
             effects=[
-                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+                TransitionEffect(
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        duration_is_finished
+                    ]),
             ]
         ),
 
         TransitionTrigger(
             TimeContributionStateMachine.initiate,
             effects=[
-                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+                TransitionEffect(
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        duration_is_finished
+                    ]),
             ]
         ),
     ]

@@ -93,7 +93,7 @@ class Statistics(object):
     def time_activities_succeeded(self):
         """ Total number of succeeded tasks """
         date_activities = DateActivity.objects.filter(
-            self.date_filter('start'),
+            self.date_filter('slots__start'),
             status='succeeded'
         )
 
@@ -119,7 +119,7 @@ class Statistics(object):
         """ Total number of online tasks """
 
         date_activities = DateActivity.objects.filter(
-            self.date_filter('start'),
+            self.date_filter('slots__start'),
             status__in=('open', 'full', 'running')
         )
 
@@ -144,7 +144,7 @@ class Statistics(object):
     def activities_succeeded(self):
         """ Total number of succeeded tasks """
         date_activities = DateActivity.objects.filter(
-            self.date_filter('start'),
+            self.date_filter('slots__start'),
             status='succeeded'
         )
 
@@ -164,7 +164,7 @@ class Statistics(object):
     def activities_online(self):
         """ Total number of activities that have been in campaign mode"""
         date_activities = DateActivity.objects.filter(
-            self.date_filter('start'),
+            self.date_filter('slots__start'),
             status__in=('open', 'full', 'running', )
         )
 

@@ -317,18 +317,33 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_formatted_address(self):
+        activity1 = DateActivityFactory.create(
+            title='Location! Location!',
+            status='open'
+        )
         location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
-        first = DateActivityFactory.create(
+        DateActivitySlotFactory.create(
             location=location,
+            activity=activity1
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            location=location)
+
+        activity2 = DateActivityFactory.create(
+            title='Nog een!',
             status='open'
         )
-        DateActivitySlotFactory.create(activity=first, location=location)
-        second = DateActivityFactory.create(
-            title='Roggeveenstraat',
+        DateActivitySlotFactory.create(
+            location=location,
+            activity=activity2
+        )
+        activity3 = DateActivityFactory.create(
+            title='Nog een!',
             status='open'
         )
-        DateActivityFactory.create(
-            status='open'
+        DateActivitySlotFactory.create(
+            activity=activity3
         )
 
         response = self.client.get(
@@ -339,8 +354,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(activity1.pk))
+        self.assertEqual(data['data'][1]['id'], str(activity2.pk))
 
     def test_search_initiative_title(self):
         first = DateActivityFactory.create(
@@ -406,6 +421,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_activity_date(self):
         first = DateActivityFactory.create(
             status='open',
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
             start=now() + timedelta(days=10)
         )
 
@@ -413,6 +431,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open',
             deadline=now() + timedelta(days=9)
         )
+
         third = PeriodActivityFactory.create(
             status='open',
             deadline=now() + timedelta(days=11)
@@ -558,7 +577,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_location(self):
-        PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
+        PlaceFactory.create(
+            content_object=self.owner,
+            position=Point(20.0, 10.0)
+        )
 
         first = PeriodActivityFactory.create(status='full')
         PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
@@ -566,7 +588,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         PeriodParticipantFactory.create_batch(3, activity=second, status='accepted')
 
@@ -634,7 +656,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_sort_matching_office_location(self):
-        self.owner.location = LocationFactory.create(position='10.0, 20.0')
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
         self.owner.save()
 
         first = PeriodActivityFactory.create(status='full')
@@ -703,7 +725,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         skill = SkillFactory.create()
         self.owner.skills.add(skill)
 
-        self.owner.location = LocationFactory.create(position='10.0, 20.0')
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
         self.owner.save()
 
         initiative = InitiativeFactory.create(theme=theme)
@@ -711,8 +733,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = DateActivityFactory.create(
             status='open',
             initiative=initiative,
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
             is_online=False
         )
+
         second = PeriodActivityFactory.create(
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),

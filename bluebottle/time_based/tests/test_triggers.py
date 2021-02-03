@@ -527,8 +527,14 @@ class ParticipantTriggerTestCase():
         self.admin_user = BlueBottleUserFactory(is_staff=True)
         self.initiative = InitiativeFactory(owner=self.user)
 
-        self.activity = self.factory.create(initiative=self.initiative, review=False)
-        self.review_activity = self.factory.create(initiative=self.initiative, review=True)
+        self.activity = self.factory.create(
+            preparation=timedelta(hours=1),
+            initiative=self.initiative,
+            review=False)
+        self.review_activity = self.factory.create(
+            preparation=timedelta(hours=4),
+            initiative=self.initiative,
+            review=True)
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -551,11 +557,19 @@ class ParticipantTriggerTestCase():
             'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
         )
         self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
+        )
 
     def test_accept(self):
         participant = self.participant_factory.create(
-            activity=self.review_activity,
-            status='new'
+            activity=self.review_activity
         )
 
         mail.outbox = []
@@ -568,6 +582,15 @@ class ParticipantTriggerTestCase():
             'You have been selected for the activity "{}" 🎉'.format(
                 self.review_activity.title
             )
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
         )
 
     def test_initial_review(self):
@@ -589,7 +612,17 @@ class ParticipantTriggerTestCase():
         )
         self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
         self.assertEqual(
-            participant.contributions.get().status,
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'new'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
             'new'
         )
 
@@ -610,8 +643,18 @@ class ParticipantTriggerTestCase():
         )
         self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
         self.assertEqual(
-            self.activity.accepted_participants.get().contributions.get().status,
+            self.activity.accepted_participants.get().
+            contributions.exclude(timecontribution__contribution_type='preparation').get().status,
             'new'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
         )
 
     def test_no_review_fill(self):
@@ -659,10 +702,21 @@ class ParticipantTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'full')
         mail.outbox = []
-        self.participants[0].states.remove(save=True)
+        participant = self.participants[0]
+        participant.states.remove(save=True)
 
         self.assertEqual(
-            self.participants[0].contributions.get().status,
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'failed'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
             'failed'
         )
 
@@ -684,10 +738,12 @@ class ParticipantTriggerTestCase():
         )
 
         mail.outbox = []
-        self.participants[0].states.reject(save=True)
+        participant = self.participants[0]
+        participant.states.reject(save=True)
 
         self.assertEqual(
-            self.participants[0].contributions.get().status,
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
             'failed'
         )
 
@@ -698,7 +754,7 @@ class ParticipantTriggerTestCase():
                 self.review_activity.title
             )
         )
-        self.assertFalse(self.review_activity.followers.filter(user=self.participants[0].user).exists())
+        self.assertFalse(self.review_activity.followers.filter(user=participant.user).exists())
 
     def test_reaccept(self):
         self.test_remove()
@@ -709,7 +765,8 @@ class ParticipantTriggerTestCase():
         self.assertEqual(self.activity.status, 'full')
 
         self.assertEqual(
-            self.participants[0].contributions.get().status,
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
             'new'
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
@@ -728,7 +785,8 @@ class ParticipantTriggerTestCase():
         self.assertEqual(self.activity.status, 'open')
 
         self.assertEqual(
-            self.participants[0].contributions.get().status,
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
             'failed'
         )
 
@@ -743,7 +801,8 @@ class ParticipantTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'full')
         self.assertEqual(
-            self.participants[0].contributions.get().status,
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
             'new'
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
@@ -752,6 +811,16 @@ class ParticipantTriggerTestCase():
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
+
+    def test_type(self):
+        self.participants = self.participant_factory.create_batch(
+            self.activity.capacity, activity=self.review_activity
+        )
+        self.assertEqual(
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().contribution_type,
+            'date'
+        )
 
 
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
@@ -771,8 +840,15 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
         self.assertEqual(self.activity.status, 'succeeded')
 
         self.assertEqual(
-            participant.contributions.get().status,
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
             'succeeded'
+        )
+
+        self.assertEqual(
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().contribution_type,
+            'period'
         )
 
 

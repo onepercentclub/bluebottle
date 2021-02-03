@@ -168,8 +168,9 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
             {'delete'}
         )
 
-    def add_slots_by_owner(self):
+    def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
         self.slot_data['data']['relationships']['activity']['data']['id'] = activity_id
@@ -186,6 +187,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
         self.assertEqual(len(relationships['slots']['data']), 2)
         slots = self.included_by_type(response, 'activities/time-based/date-slots')
         self.assertEqual(len(slots), 2)
+        self.response_data = response.json()['data']
         # Now we can submit the activity
         self.assertEqual(
             {
@@ -195,7 +197,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
             {'submit', 'delete'}
         )
 
-    def add_slots_by_other(self):
+    def test_add_slots_by_other(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
@@ -431,45 +433,47 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
             'start': str(now() + timedelta(days=21)),
             'duration': '4:00',
         })
+        self.slot = self.activity.slots.first()
+        self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
 
     def test_get_utc_offset(self):
-        self.activity.location.position = Point(4.8888, 52.399)
-        self.activity.location.save()
+        self.slot.location.position = Point(4.8888, 52.399)
+        self.slot.location.save()
 
-        self.activity.start = get_current_timezone().localize(
+        self.slot.start = get_current_timezone().localize(
             datetime(2025, 2, 23, 10, 00)
         )
-        self.activity.save()
+        self.slot.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.slot_url, user=self.activity.owner)
         self.assertEqual(
             response.json()['data']['attributes']['utc-offset'], 60.0
         )
 
     def test_get_utc_offset_summertime(self):
-        self.activity.location.position = Point(4.8888, 52.399)
-        self.activity.location.save()
+        self.slot.location.position = Point(4.8888, 52.399)
+        self.slot.location.save()
 
-        self.activity.start = get_current_timezone().localize(
+        self.slot.start = get_current_timezone().localize(
             datetime(2025, 7, 23, 10, 00)
         )
-        self.activity.save()
+        self.slot.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.slot_url, user=self.activity.owner)
         self.assertEqual(
             response.json()['data']['attributes']['utc-offset'], 120.0
         )
 
     def test_get_utc_offset_new_york(self):
-        self.activity.location.position = Point(-74.259, 40.697)
-        self.activity.location.save()
+        self.slot.location.position = Point(-74.259, 40.697)
+        self.slot.location.save()
 
-        self.activity.start = get_current_timezone().localize(
+        self.slot.start = get_current_timezone().localize(
             datetime(2025, 7, 23, 10, 00)
         )
-        self.activity.save()
+        self.slot.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.slot_url, user=self.activity.owner)
         self.assertEqual(
             response.json()['data']['attributes']['utc-offset'], -240.0
         )

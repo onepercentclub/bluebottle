@@ -7,6 +7,17 @@ from geoposition.fields import GeopositionField
 from mapwidgets import GooglePointFieldWidget
 
 
+class LatLngPoint(Point):
+
+    @property
+    def latitude(self):
+        return self.coords[1]
+
+    @property
+    def longitude(self):
+        return self.coords[0]
+
+
 class PointWidget(GooglePointFieldWidget):
 
     def serialize(self, value):
@@ -72,4 +83,4 @@ class PointField(GeopositionField):
             longitude = float(longitude)
             latitude = float(latitude)
 
-        return Point(longitude, latitude)
+        return LatLngPoint(longitude, latitude)

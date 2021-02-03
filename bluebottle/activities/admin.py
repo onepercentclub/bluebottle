@@ -229,6 +229,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     inlines = (FollowAdminInline, WallpostInline,)
 
     show_in_index = True
+    date_hierarchy = 'created'
 
     ordering = ('-created',)
 

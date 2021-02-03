@@ -179,11 +179,10 @@ class DateActivityAdmin(TimeBasedAdmin):
     raw_id_fields = ActivityChildAdmin.raw_id_fields
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
-    date_hierarchy = 'created'
-
     list_display = TimeBasedAdmin.list_display + [
         'start',
-        'duration_string',
+        'duration',
+        'participant_count',
     ]
 
     def start(self, obj):
@@ -191,12 +190,13 @@ class DateActivityAdmin(TimeBasedAdmin):
         if first_slot:
             return first_slot.start
 
-    def duration_string(self, obj):
-        sum = obj.slots.aggregate(sum=Sum('duration'))['sum']
-        duration = get_human_readable_duration(str(sum)).lower()
-        return duration
+    def duration(self, obj):
+        return obj.slots.count()
+    duration.short_description = _('Slots')
 
-    duration_string.short_description = _('Duration')
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+    participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
         'slot_selection',
@@ -226,9 +226,8 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + ['expertise']
 
-    date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string'
+        'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
     detail_fields = ActivityChildAdmin.detail_fields + (
@@ -269,8 +268,11 @@ class PeriodActivityAdmin(TimeBasedAdmin):
                 duration=duration,
                 time_unit=obj.duration_period[0:-1])
         return duration
-
     duration_string.short_description = _('Duration')
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+    participant_count.short_description = _('Participants')
 
 
 class SlotParticipantInline(admin.TabularInline):
@@ -385,7 +387,6 @@ class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
 
     raw_id_fields = ['activity', 'location']
-    # list_filter = ['expertise']
 
     date_hierarchy = 'start'
     list_display = [

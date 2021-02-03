@@ -258,7 +258,13 @@ class DateActivityIcalView(PrivateFileView):
     def get(self, *args, **kwargs):
         instance = super(DateActivityIcalView, self).get_object()
         calendar = icalendar.Calendar()
-        for slot in instance.slots.filter(status__in=['open', 'full', 'running', 'finished']).all():
+        slots = instance.slots.filter(
+            status__in=['open', 'full', 'running', 'finished'],
+        )
+        if kwargs.get('user_id'):
+            slots = slots.filter(slot_participants__participant__user__id=kwargs['user_id'])
+
+        for slot in slots:
             event = icalendar.Event()
             event.add('summary', instance.title)
             event.add('description', instance.details)

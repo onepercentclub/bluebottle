@@ -127,6 +127,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
                         included_cache[new_item['type']][new_item['id']] = \
                             utils._format_object(new_item)
+
                         cls.extract_included(
                             serializer_fields,
                             serializer_resource,

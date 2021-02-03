@@ -474,6 +474,27 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
             response.json()['data']['attributes']['utc-offset'], -240.0
         )
 
+    def test_get_included_slot_location(self):
+        self.activity.save()
+
+        response = self.client.get(self.url)
+        included_resources = response.json()['included']
+
+        slots = [
+            resource for resource
+            in included_resources
+            if resource['type'] == 'activities/time-based/date-slots'
+        ]
+
+        location_ids = [
+            resource['id'] for resource
+            in included_resources
+            if resource['type'] == 'geolocations'
+        ]
+
+        for slot in slots:
+            self.assertTrue(slot['relationships']['location']['data']['id'] in location_ids)
+
     def test_get_calendar_links(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -1686,7 +1707,7 @@ class DateIcalTestCase(BluebottleTestCase):
             title='Pollute Katwijk Beach',
             slots=[]
         )
-        DateActivitySlotFactory.create(activity=self.activity)
+        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
         self.activity_url = reverse('date-detail', args=(self.activity.pk,))
@@ -1694,7 +1715,8 @@ class DateIcalTestCase(BluebottleTestCase):
         self.signed_url = response.json()['data']['attributes']['links']['ical']
         self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
 
-    def test_get(self):
+    def test_get_applied_to_all(self):
+        DateParticipantFactory.create(activity=self.activity, user=self.user)
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1705,10 +1727,10 @@ class DateIcalTestCase(BluebottleTestCase):
         )
 
         calendar = icalendar.Calendar.from_ical(response.content)
+        self.assertEqual(len(calendar.walk('vevent')), 3)
 
-        slot = self.activity.active_slots.first()
-
-        for ical_event in calendar.walk('vevent'):
+        for index, ical_event in enumerate(calendar.walk('vevent')):
+            slot = self.slots[index]
             self.assertAlmostEqual(
                 ical_event['dtstart'].dt,
                 slot.start,
@@ -1730,6 +1752,49 @@ class DateIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+
+    def test_get_applied_to_first(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+        participant = DateParticipantFactory.create(activity=self.activity, user=self.user)
+        SlotParticipantFactory.create(slot=self.slots[0], participant=participant)
+
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.get('content-type'), 'text/calendar')
+        self.assertEqual(
+            response.get('content-disposition'),
+            'attachment; filename="{}.ics"'.format(self.activity.slug)
+        )
+
+        calendar = icalendar.Calendar.from_ical(response.content)
+        self.assertEqual(len(calendar.walk('vevent')), 1)
+
+        slot = self.slots[0]
+        ical_event = list(calendar.walk('vevent'))[0]
+
+        self.assertAlmostEqual(
+            ical_event['dtstart'].dt,
+            slot.start,
+            delta=timedelta(seconds=10)
+        )
+        self.assertAlmostEqual(
+            ical_event['dtend'].dt,
+            slot.start + slot.duration,
+            delta=timedelta(seconds=10)
+        )
+
+        self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+        self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
+        self.assertEqual(str(ical_event['summary']), self.activity.title)
+        self.assertEqual(
+            str(ical_event['description']),
+            '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+        )
+        self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+        self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
 
     def test_get_no_signature(self):
         response = self.client.get(self.unsigned_url)

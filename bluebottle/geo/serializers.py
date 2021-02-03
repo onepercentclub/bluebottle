@@ -10,10 +10,14 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
 
 from staticmaps_signature import StaticMapURLSigner
+from timezonefinder import TimezoneFinder
+
 
 staticmap_url_signer = StaticMapURLSigner(
     public_key=settings.STATIC_MAPS_API_KEY, private_key=settings.STATIC_MAPS_API_SECRET
 )
+
+tf = TimezoneFinder()
 
 
 class StaticMapsField(serializers.ReadOnlyField):
@@ -146,6 +150,13 @@ class TinyPointSerializer(serializers.CharField):
 class GeolocationSerializer(ModelSerializer):
     position = PointSerializer()
     static_map_url = StaticMapsField(source='position')
+    timezone = serializers.SerializerMethodField()
+
+    def get_timezone(self, obj):
+        return tf.timezone_at(
+            lng=obj.position.x,
+            lat=obj.position.y
+        )
 
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
@@ -160,6 +171,7 @@ class GeolocationSerializer(ModelSerializer):
             'position',
             'static_map_url',
             'formatted_address',
+            'timezone',
         )
 
     class JSONAPIMeta(object):

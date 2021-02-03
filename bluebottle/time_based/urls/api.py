@@ -42,7 +42,7 @@ urlpatterns = [
         DateSlotDetailView.as_view(),
         name='date-slot-detail'),
 
-    url(r'^/date/ical/(?P<pk>\d+)$',
+    url(r'^/date/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
         DateActivityIcalView.as_view(),
         name='date-ical'),
 

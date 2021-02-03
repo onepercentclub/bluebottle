@@ -163,56 +163,6 @@ class DateActivity(TimeBasedActivity):
     def active_slots(self):
         return self.slots.filter(status__in=['open', 'full', 'running'])
 
-    @property
-    def google_calendar_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-
-        if self.active_slots.count() == 1:
-            slot = self.active_slots.first()
-            url = u'https://calendar.google.com/calendar/render'
-            params = {
-                'action': u'TEMPLATE',
-                'text': self.title,
-                'dates': u'{}/{}'.format(
-                    format_date(slot.start), format_date(slot.start + slot.duration)
-                ),
-                'details': self.details,
-                'uid': slot.uid,
-            }
-
-            if slot.location:
-                params['location'] = slot.location.formatted_address
-
-            return u'{}?{}'.format(url, urlencode(params))
-        raise NotImplementedError("Can't create calendar link with multiple dates.")
-
-    @property
-    def outlook_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-        if self.active_slots.count() == 1:
-            slot = self.active_slots.first()
-
-            url = 'https://outlook.live.com/owa/'
-
-            params = {
-                'rru': 'addevent',
-                'path': '/calendar/action/compose&rru=addevent',
-                'allday': False,
-                'subject': self.title,
-                'startdt': format_date(slot.start),
-                'enddt': format_date(slot.start + slot.duration),
-                'body': self.details
-            }
-
-            if slot.location:
-                params['location'] = slot.location.formatted_address
-            return u'{}?{}'.format(url, urlencode(params))
-        raise NotImplementedError("Can't create calendar link with multiple dates.")
-
     class Meta:
         verbose_name = _("Activity on a date")
         verbose_name_plural = _("Activities on a date")
@@ -297,29 +247,6 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
             ),
             'details': self.activity.details,
             'uid': self.uid,
-        }
-
-        if self.location:
-            params['location'] = self.location.formatted_address
-
-        return u'{}?{}'.format(url, urlencode(params))
-
-    @property
-    def outlook_link(self):
-        def format_date(date):
-            if date:
-                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-
-        url = 'https://outlook.live.com/owa/'
-
-        params = {
-            'rru': 'addevent',
-            'path': '/calendar/action/compose&rru=addevent',
-            'allday': False,
-            'subject': self.activity.title,
-            'startdt': format_date(self.start),
-            'enddt': format_date(self.start + self.duration),
-            'body': self.activity.details
         }
 
         if self.location:

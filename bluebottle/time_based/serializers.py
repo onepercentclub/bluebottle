@@ -53,7 +53,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'my_contributor',
             'my_contributor.contributions',
             'my_contributor.document',
-            'my_contributor.contributions',
         ]
 
     included_serializers = dict(
@@ -109,7 +108,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             return {
                 'ical': reverse_signed('slot-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
-                'outlook': instance.outlook_link,
             }
         else:
             return {}
@@ -122,7 +120,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'links',
             'duration',
             'capacity',
-            'utc_offset',
             'is_online',
             'location',
             'location_hint',
@@ -161,15 +158,12 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
-        if instance.active_slots.count() == 1:
-            slot = instance.slots.first()
-            return {
-                'ical': reverse_signed('slot-ical', args=(slot.pk, )),
-                'google': instance.google_calendar_link,
-                'outlook': instance.outlook_link,
-            }
-        else:
-            return {}
+        user = self.context['request'].user
+
+        user_id = user.pk if user.is_authenticated else 0
+        return {
+            'ical': reverse_signed('date-ical', args=(instance.pk, user_id)),
+        }
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user
@@ -181,7 +175,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start',
             'duration',
-            'utc_offset',
             'online_meeting_url',
             'links',
             'my_contributor',
@@ -194,7 +187,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         resource_name = 'activities/time-based/dates'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'slots',
-            'slots.location'
+            'slots.location',
             'my_contributor',
             'my_contributor.slots',
         ]
@@ -395,6 +388,11 @@ class ParticipantListSerializer(BaseContributorSerializer):
 
 
 class DateParticipantListSerializer(ParticipantListSerializer):
+    participants = FilteredRelatedField(
+        many=True,
+        filter_backend=SlotParticipantListFilter,
+    )
+
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
         fields = ParticipantListSerializer.Meta.fields + ('slot_participants', )

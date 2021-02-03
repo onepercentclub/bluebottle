@@ -277,8 +277,8 @@ class DateActivityIcalView(PrivateFileView):
             organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
             event['organizer'] = organizer
-            if instance.location:
-                event['location'] = icalendar.vText(instance.location.formatted_address)
+            if slot.location:
+                event['location'] = icalendar.vText(slot.location.formatted_address)
 
             calendar.add_component(event)
 

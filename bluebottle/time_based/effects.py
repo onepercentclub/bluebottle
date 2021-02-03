@@ -145,8 +145,6 @@ class BaseActiveDurationsTransitionEffect(Effect):
     def render(cls, effects):
         effect = effects[0]
         users = [duration.contributor.user for duration in effect.instance.active_durations]
-        print(effect.transition)
-
         context = {
             'users': users,
             'transition': cls.transition.name

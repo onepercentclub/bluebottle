@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Delete the preparation time contribution" %}</h3>
+
+<p>
+{% blocktrans with activity=effects.0.instance.activity %}
+    Delete the preparation time contribution for "{{activity}}"
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

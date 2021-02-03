@@ -23,9 +23,33 @@ from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_dura
 
 class BaseParticipantAdminInline(admin.TabularInline):
     model = Participant
-    readonly_fields = ('contributor_date', 'motivation', 'document', 'edit', 'created', 'transition_date', 'status')
+    readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
+                       'created', 'transition_date', 'status', 'disabled')
     raw_id_fields = ('user', 'document')
     extra = 0
+
+    def get_fields(self, request, obj=None):
+        if self.can_edit(obj):
+            return super().get_fields(request, obj)
+        else:
+            return ['disabled']
+
+    def get_template(self):
+        pass
+
+    def disabled(self, obj):
+        return format_html('<i>{}</i>', obj)
+    disabled.short_description = _('First complete and submit the activity before managing participants.')
+
+    def can_edit(self, obj):
+        return obj and obj.id and obj.status in ['open', 'running', 'succeeded', 'full', 'submitted']
+
+    def has_delete_permission(self, request, obj=None):
+        return self.can_edit(obj)
+
+    def has_add_permission(self, request):
+        activity = self.get_parent_object_from_request(request)
+        return self.can_edit(activity)
 
     def get_parent_object_from_request(self, request):
         """
@@ -49,12 +73,6 @@ class BaseParticipantAdminInline(admin.TabularInline):
                 args=(obj.id,)),
             _('Edit participant')
         )
-
-    def has_add_permission(self, request):
-        activity = self.get_parent_object_from_request(request)
-        if not activity or activity.status in ['draft', 'needs_work']:
-            return False
-        return True
 
 
 class DateParticipantAdminInline(BaseParticipantAdminInline):
@@ -388,8 +406,8 @@ class DateSlotAdmin(SlotAdmin):
 class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
-    readonly_fields = ('edit', 'status',)
-    fields = readonly_fields + ('start', 'value')
+    readonly_fields = ('edit', 'contribution_type', 'status', 'start',)
+    fields = readonly_fields + ('value',)
 
     formfield_overrides = {
         models.DurationField: {

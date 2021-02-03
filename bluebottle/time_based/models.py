@@ -153,7 +153,8 @@ class DateActivity(TimeBasedActivity):
 
     old_online_meeting_url = models.TextField(
         _('online meeting link'),
-        blank=True, default=''
+        blank=True, default='',
+        db_column='online_meeting_url'
     )
     duration_period = 'overall'
 
@@ -553,6 +554,14 @@ class Participant(Contributor):
     def finished_contributions(self):
         return self.contributions.filter(
             timecontribution__end__lte=timezone.now()
+        ).exclude(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        )
+
+    @property
+    def preparation_contributions(self):
+        return self.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
         )
 
     class Meta:
@@ -654,8 +663,23 @@ class SlotParticipant(TriggerMixin, models.Model):
         resource_name = 'contributors/time-based/slot-participants'
 
 
+class ContributionTypeChoices(DjangoChoices):
+    date = ChoiceItem('date', label=_("activity on a date"))
+    period = ChoiceItem('period', label=_("activity over a period"))
+    preparation = ChoiceItem('preparation', label=_("preparation"))
+
+
 class TimeContribution(Contribution):
+
     value = models.DurationField(_('value'))
+
+    contribution_type = models.CharField(
+        _('Contribution type'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=ContributionTypeChoices.choices,
+    )
 
     slot_participant = models.ForeignKey(SlotParticipant, null=True, related_name='contributions')
 

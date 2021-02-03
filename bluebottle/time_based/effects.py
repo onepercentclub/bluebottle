@@ -2,33 +2,16 @@ from datetime import datetime, date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.template.loader import render_to_string
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import TimeContribution, SlotParticipant
-
-
-class CreateTimeContributionEffect(Effect):
-    title = _('Create contribution')
-    template = 'admin/create_on_a_date_duration.html'
-
-    def post_save(self, **kwargs):
-        activity = self.instance.activity
-        if activity.start and activity.duration:
-            end = activity.start + activity.duration
-            contribution = TimeContribution(
-                contributor=self.instance,
-                value=activity.duration + (activity.preparation or timedelta()),
-                start=activity.start,
-                end=end
-            )
-            contribution.save()
+from bluebottle.time_based.models import TimeContribution, SlotParticipant, ContributionTypeChoices
 
 
 class CreateSlotTimeContributionEffect(Effect):
     title = _('Create contribution')
-    template = 'admin/create_on_a_date_duration.html'
+    template = 'admin/create_slot_time_contribution.html'
 
     def post_save(self, **kwargs):
         slot = self.instance.slot
@@ -36,6 +19,7 @@ class CreateSlotTimeContributionEffect(Effect):
             end = slot.start + slot.duration
             contribution = TimeContribution(
                 contributor=self.instance.participant,
+                contribution_type=ContributionTypeChoices.date,
                 slot_participant=self.instance,
                 value=slot.duration,
                 start=slot.start,
@@ -44,9 +28,26 @@ class CreateSlotTimeContributionEffect(Effect):
             contribution.save()
 
 
-class CreatePeriodParticipationEffect(Effect):
+class CreatePreparationTimeContributionEffect(Effect):
+    title = _('Create preparation time contribution')
+    template = 'admin/create_preparation_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        if activity.preparation:
+            start = now()
+            contribution = TimeContribution(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.preparation,
+                value=activity.preparation,
+                start=start,
+            )
+            contribution.save()
+
+
+class CreatePeriodTimeContributionEffect(Effect):
     title = _('Create contribution')
-    template = 'admin/create_period_duration.html'
+    template = 'admin/create_period_time_contribution.html'
 
     def post_save(self, **kwargs):
         tz = get_current_timezone()
@@ -60,6 +61,7 @@ class CreatePeriodParticipationEffect(Effect):
 
                 TimeContribution.objects.create(
                     contributor=self.instance,
+                    contribution_type=ContributionTypeChoices.period,
                     value=activity.duration,
                     start=tz.localize(datetime.combine(start, datetime.min.time())),
                     end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
@@ -88,6 +90,7 @@ class CreatePeriodParticipationEffect(Effect):
                     # Only when the deadline is not passed, create the new contribution
                     TimeContribution.objects.create(
                         contributor=self.instance,
+                        contribution_type=ContributionTypeChoices.period,
                         value=activity.duration,
                         start=tz.localize(datetime.combine(start, datetime.min.time())),
                         end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
@@ -142,8 +145,6 @@ class BaseActiveDurationsTransitionEffect(Effect):
     def render(cls, effects):
         effect = effects[0]
         users = [duration.contributor.user for duration in effect.instance.active_durations]
-        print(effect.transition)
-
         context = {
             'users': users,
             'transition': cls.transition.name
@@ -172,7 +173,7 @@ class BaseActiveDurationsTransitionEffect(Effect):
             duration.save()
 
 
-def ActiveDurationsTransitionEffect(transition, conditions=None):
+def ActiveTimeContributionsTransitionEffect(transition, conditions=None):
     _transition = transition
     _conditions = conditions or []
 

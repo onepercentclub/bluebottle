@@ -192,5 +192,20 @@ CONFLUENCE = {
         'domain': '',
         'user': '',
         'key': ''
-    }
+    },
+    'prod_models': [
+        {
+            'title': 'States - Initiative',
+            'model': 'bluebottle.initiatives.models.Initiative',
+            'page_id': ''
+        },
+    ],
+
+    'dev_models': [
+        {
+            'title': '[DEV] States - Initiative',
+            'model': 'bluebottle.initiatives.models.Initiative',
+            'page_id': ''
+        },
+    ]
 }

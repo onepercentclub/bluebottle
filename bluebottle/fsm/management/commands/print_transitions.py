@@ -135,7 +135,6 @@ class Command(BaseCommand):
         machine = instance.states
 
         text = ""
-
         text += u"<h2>States</h2>"
         text += u"<em>All states this instance can be in.</em>"
 

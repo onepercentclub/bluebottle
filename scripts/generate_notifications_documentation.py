@@ -1,4 +1,5 @@
 import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.utils.module_loading import import_string
 
@@ -7,66 +8,28 @@ from bluebottle.fsm.utils import document_notifications
 api = settings.CONFLUENCE['api']
 
 
-def make_list(source):
-    return "<ul>{}</ul>".format("".join(["<li>{}</li>".format(el) for el in source]))
+def clean_text(content):
+    return '\n'.join([
+        line.strip() for line
+        in content.strip().split('\n')
+        if line.strip() and line.strip() not in ['-------------------', '-  -']
+    ])
 
 
-def make_table_head(source):
-    return "<tr>{}</tr>".format("".join(["<th>{}</th>".format(el.capitalize()) for el in source]))
-
-
-def make_row(source):
-    row = "<tr>"
-    for k, el in source.items():
-        if isinstance(el, list):
-            el = make_list(el)
-        row += "<td>{}</td>".format(el)
-    row += "</tr>"
-    return row
-
-
-def make_table(source, layout='default'):
-    table = "<table data-layout=\"{}\">".format(layout)
-    table += make_table_head(source[0].keys())
-    for row in source:
-        table += make_row(row)
-    table += "</table>"
-    return table
-
-
-def generate_html(documentation):
-    html = ""
-    html += u"<h2>States</h2>"
-    html += u"<em>All states this instance can be in.</em>"
-    html += make_table(documentation['states'])
-
-    html += u"<h2>Transitions</h2>"
-    html += u"<em>An instance will always move from one state to the other through a transition. " \
-            u"A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
-            u"either through a trigger or through a side effect of a related object.</em>"
-    html += make_table(documentation['transitions'], layout='full-width')
-
-    if len(documentation['triggers']):
-        html += u"<h2>Triggers</h2>"
-        html += u"<em>These are events that get triggered when the instance changes, " \
-                u"other then through a transition. " \
-                u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
-        html += make_table(documentation['triggers'], layout='full-width')
-
-    if len(documentation['periodic_tasks']):
-        html += u"<h2>Periodic tasks</h2>"
-        html += u"<em>These are events that get triggered when certain dates are passed. " \
-                u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
-        html += make_table(documentation['periodic_tasks'], layout='full-width')
-
-    return html.encode('ascii', 'ignore')
+def clean_html(content):
+    soup = BeautifulSoup(content, "html")
+    for elem in soup.find_all(['html', 'body', 'table', 'tbody', 'tr', 'td', 'th', 'center']):
+        elem.unwrap()
+    soup.head.extract()
+    soup.contents[0].extract()
+    return clean_text(str(soup))
 
 
 def generate_notification_html(documentation):
     html = ""
     for message in documentation:
         html += """
-        <table>"
+        <table>
         <colgroup>
         <col style='width: 150px;' />
         <col style='width: 650x;' />
@@ -84,7 +47,7 @@ def generate_notification_html(documentation):
             message['template'],
             message['recipients'],
             message['subject'],
-            message['content_text']
+            clean_text(message['content_text'])
         )
     return html
 

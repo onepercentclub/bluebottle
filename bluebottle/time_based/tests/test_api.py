@@ -459,10 +459,10 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         links = response.json()['data']['attributes']['links']
 
-        slot = self.activity.slots.first()
-
         self.assertTrue(
-            links['ical'].startswith(reverse('slot-ical', args=(slot.pk, )))
+            links['ical'].startswith(
+                reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
+            )
         )
 
 

@@ -56,6 +56,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         self.initiatives_url = reverse('admin:initiatives_initiative_changelist')
         self.activities_url = reverse('admin:activities_activity_changelist')
+        self.dateactivities_url = reverse('admin:time_based_dateactivity_changelist')
         InitiativeFactory.create(location=self.location1)
         InitiativeFactory.create_batch(3, location=self.location2)
         InitiativeFactory.create_batch(2, location=self.location3)
@@ -126,18 +127,41 @@ class OfficeAdminTest(BluebottleAdminTestCase):
 
     def test_activity_admin_region_filters(self):
         self.client.force_login(self.superuser)
-        url = reverse('admin:activities_activity_changelist')
-        response = self.client.get(url)
+        response = self.client.get(self.activities_url)
         self.assertEquals(response.status_code, 200)
         self.assertNotContains(response, 'By office group')
         self.assertNotContains(response, 'by office region')
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
-        response = self.client.get(url)
+        response = self.client.get(self.activities_url)
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'By office group')
         self.assertContains(response, 'By office region')
+        response = self.client.get(self.activities_url, {
+            'initiative__location__subregion__region__id__exact': self.location1.subregion.region.id,
+            'initiative__location__subregion__id__exact': self.location1.subregion.id,
+            'initiative__location__id__exact': self.location1.id,
+        })
+        self.assertEquals(response.status_code, 200)
+
+    def test_initiative_admin_region_filters(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.initiatives_url, {
+            'location__subregion__region__id__exact': self.location1.subregion.region.id,
+            'location__subregion__id__exact': self.location1.subregion.id,
+            'location__id__exact': self.location1.id,
+        })
+        self.assertEquals(response.status_code, 200)
+
+    def test_dateactivity_admin_region_filters(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.dateactivities_url, {
+            'initiative__location__subregion__region__id__exact': self.location1.subregion.region.id,
+            'initiative__location__subregion__id__exact': self.location1.subregion.id,
+            'initiative__location__id__exact': self.location1.id,
+        })
+        self.assertEquals(response.status_code, 200)
 
     def test_dashboards_office_admin(self):
         initiative_settings = InitiativePlatformSettings.objects.get()

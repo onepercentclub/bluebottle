@@ -228,6 +228,15 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline,)
 
+    def lookup_allowed(self, key, value):
+        if key in [
+            'initiative__location__id__exact',
+            'initiative__location__subregion__id__exact',
+            'initiative__location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(ActivityChildAdmin, self).lookup_allowed(key, value)
+
     show_in_index = True
 
     ordering = ('-created',)
@@ -281,18 +290,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            if 'initiative__location' not in filters:
-                filters += ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions \
-                    and 'initiative__location__subregion' not in filters:
-                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+            filters = filters + ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                filters = filters + [
+                    'initiative__location__subregion',
+                    'initiative__location__subregion__region']
         return filters
 
     def get_list_display(self, request):
         fields = self.list_display
         from bluebottle.geo.models import Location
-        if Location.objects.count() and 'location' not in fields:
-            fields += ['location_link']
+        if Location.objects.count():
+            fields = fields + ['location_link']
         return fields
 
     def get_status_fields(self, request, obj):
@@ -482,15 +491,24 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     readonly_fields = ['link', 'review_status', 'location_link']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight']
 
+    def lookup_allowed(self, key, value):
+        if key in [
+            'initiative__location__id__exact',
+            'initiative__location__subregion__id__exact',
+            'initiative__location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(ActivityAdmin, self).lookup_allowed(key, value)
+
     def get_list_filter(self, request):
         filters = self.list_filter
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            if 'initiative__location' not in filters:
-                filters += ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions\
-                    and 'initiative__location__subregion' not in filters:
-                filters += ['initiative__location__subregion', 'initiative__location__subregion__region']
+            filters = filters + ['initiative__location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                filters = filters + [
+                    'initiative__location__subregion',
+                    'initiative__location__subregion__region']
         return filters
 
     list_editable = ('highlight',)
@@ -508,8 +526,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     def get_list_display(self, request):
         fields = self.list_display
         from bluebottle.geo.models import Location
-        if Location.objects.count() and 'location' not in fields:
-            fields += ['location_link']
+        if Location.objects.count():
+            fields = fields + ['location_link']
         return fields
 
     search_fields = ('title', 'description',

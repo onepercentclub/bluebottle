@@ -442,7 +442,7 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
 
         welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         self.client.get(welkcome_email_url)
-        welcome_email = mail.outbox[1]
+        welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('We are borg' in welcome_email.body)
@@ -496,3 +496,18 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         self.assertEqual(welcome_email.subject, u'Асимилирани сте към Test')
         self.assertTrue(u'Ти вече не си Бубка.' in welcome_email.body)
         self.assertTrue(u'Ние сме Борг' in welcome_email.body)
+
+
+class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
+
+    def test_engagement_shows_donations(self):
+        user = BlueBottleUserFactory.create()
+        DonorFactory.create_batch(10, user=user, status='succeeded', amount=Money(35, 'EUR'))
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEquals(response.status, '200 OK')
+        self.assertTrue('Funding donations:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
+            in response.text
+        )

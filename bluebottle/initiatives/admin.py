@@ -84,13 +84,22 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'place'
     )
 
+    def lookup_allowed(self, key, value):
+        if key in [
+            'location__id__exact',
+            'location__subregion__id__exact',
+            'location__subregion__region__id__exact',
+        ]:
+            return True
+        return super(InitiativeAdmin, self).lookup_allowed(key, value)
+
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
 
     def get_list_display(self, request):
         fields = self.list_display
-        if Location.objects.count() and 'location_link' not in fields:
-            fields += ['location_link']
+        if Location.objects.count():
+            fields = fields + ['location_link']
         return fields
 
     list_filter = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
@@ -98,11 +107,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     def get_list_filter(self, request):
         filters = self.list_filter
         if Location.objects.count():
-            if 'location' not in filters:
-                filters += ['location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions \
-                    and 'location__subregion' not in filters:
-                filters += ['location__subregion', 'location__subregion__region']
+            filters = filters + ['location']
+            if InitiativePlatformSettings.objects.get().enable_office_regions:
+                filters = filters + [
+                    'location__subregion',
+                    'location__subregion__region']
         elif InitiativeCountryFilter not in filters:
             filters.append(InitiativeCountryFilter)
 

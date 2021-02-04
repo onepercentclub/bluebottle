@@ -22,7 +22,7 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
-        verbose_name=_('owner'),
+        verbose_name=_('activity manager'),
         related_name='activities',
     )
 

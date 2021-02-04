@@ -34,6 +34,7 @@ class TransitionMessage(object):
         from bluebottle.clients.utils import tenant_url, tenant_name
         language = get_current_language()
         context = {
+            'obj': self.obj,
             'site': tenant_url(),
             'site_name': tenant_name(),
             'language': language,
@@ -56,6 +57,18 @@ class TransitionMessage(object):
     def generic_content(self):
         context = self.get_generic_context()
         template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    @property
+    def generic_content_html(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    @property
+    def generic_content_text(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.txt".format(self.template))
         return template.render(context)
 
     def get_context(self, recipient):

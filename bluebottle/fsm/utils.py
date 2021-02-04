@@ -31,14 +31,7 @@ def clean(string):
     return re.sub(' +', ' ', string.replace("\n", " "))
 
 
-def document_model(model):
-    documentation = {
-        'states': [],
-        'transitions': [],
-        'triggers': [],
-        'periodic_tasks': []
-    }
-
+def setup_instance(model):
     model_args = {}
 
     if has_field(model, "owner"):
@@ -107,6 +100,19 @@ def document_model(model):
     if isinstance(instance, PayoutAccount):
         instance.owner = Member(first_name='the', last_name='owner')
 
+    return instance
+
+
+def document_model(model):
+    documentation = {
+        'states': [],
+        'transitions': [],
+        'triggers': [],
+        'periodic_tasks': []
+    }
+
+    instance = setup_instance(model)
+
     machine = instance.states
     for state in list(machine.states.values()):
         documentation['states'].append({
@@ -149,3 +155,46 @@ def document_model(model):
         })
 
     return documentation
+
+
+def document_notifications(model):
+    instance = setup_instance(model)
+    app = instance._meta.app_label
+    messages = []
+    triggers = [
+        trigger for trigger in model.triggers.triggers
+        if not isinstance(trigger, TransitionTrigger)
+    ]
+    effects = []
+    for trigger in triggers:
+        for effect in trigger.effects:
+            if effect.__name__ == '_NotificationEffect':
+                effects.append({
+                    'effect': effect,
+                    'trigger': '{} on {}'.format(trigger, instance._meta.verbose_name),
+                })
+
+    for task in model.periodic_tasks:
+        for effect in task(instance).effects:
+            if effect.__name__ == '_NotificationEffect':
+                effects.append({
+                    'effect': effect,
+                    'trigger': '{} on {}'.format(task(instance), instance._meta.verbose_name)
+                })
+
+    for eff in effects:
+        effect = eff['effect']
+        trigger = eff['trigger']
+        message = effect.message(instance)
+        messages.append({
+            'class': "{}.{}".format(app, effect.message.__name__),
+            'trigger': trigger,
+            'template': effect.message.template,
+            'description': get_doc(effect.message),
+            'recipients': get_doc(message.get_recipients),
+            'subject': message.generic_subject,
+            'content_text': message.generic_content_text,
+            'content_html': message.generic_content_html
+        })
+
+    return messages

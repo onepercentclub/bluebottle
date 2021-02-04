@@ -202,10 +202,143 @@ CONFLUENCE = {
     ],
 
     'dev_models': [
+
+        # Initiative
         {
             'title': '[DEV] States - Initiative',
             'model': 'bluebottle.initiatives.models.Initiative',
             'page_id': ''
         },
-    ]
-}
+        {
+            'title': '[DEV] States - Activity Organizer',
+            'model': 'bluebottle.activities.models.Organizer',
+            'page_id': ''
+        },
+
+        # Funding
+        {
+            'title': '[DEV] States - Funding - Donor',
+            'model': 'bluebottle.funding.models.Donor',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Money Contribution',
+            'model': 'bluebottle.funding.models.MoneyContribution',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Fundraising Campaign',
+            'model': 'bluebottle.funding.models.Funding',
+            'page_id': ''
+        },
+
+        {
+            'title': '[DEV] States - Funding - Plain Payout Account',
+            'model': 'bluebottle.funding.models.PlainPayoutAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Stripe Payout Account',
+            'model': 'bluebottle.funding_stripe.models.StripePayoutAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Payout',
+            'model': 'bluebottle.funding.models.Payout',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Stripe Source Payment',
+            'model': 'bluebottle.funding_stripe.models.StripeSourcePayment',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Stripe Intent Payment',
+            'model': 'bluebottle.funding_stripe.models.StripePayment',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Pledge Payment',
+            'model': 'bluebottle.funding_pledge.models.PledgePayment',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Flutterwave Payment',
+            'model': 'bluebottle.funding_flutterwave.models.FlutterwavePayment',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Lipisha Payment',
+            'model': 'bluebottle.funding_lipisha.models.LipishaPayment',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Vitepay Payment',
+            'model': 'bluebottle.funding_vitepay.models.VitepayPayment',
+            'page_id': ''
+        },
+
+        {
+            'title': '[DEV] States - Funding - Stripe External Account',
+            'model': 'bluebottle.funding_stripe.models.ExternalAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Pledge Bank Account',
+            'model': 'bluebottle.funding_pledge.models.PledgeBankAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Flutterwave Bank Account',
+            'model': 'bluebottle.funding_flutterwave.models.FlutterwaveBankAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Lipisha Bank Account',
+            'model': 'bluebottle.funding_lipisha.models.LipishaBankAccount',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Funding - Vitepay Bank Account',
+            'model': 'bluebottle.funding_vitepay.models.VitepayBankAccount',
+            'page_id': ''
+        },
+
+        # Time-based Activities
+        {
+            'title': '[DEV] States - Time based - Activity on a date',
+            'model': 'bluebottle.time_based.models.DateActivity',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Participant on a date',
+            'model': 'bluebottle.time_based.models.DateParticipant',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Activity slot',
+            'model': 'bluebottle.time_based.models.DateActivitySlot',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Slot participant',
+            'model': 'bluebottle.time_based.models.SlotParticipant',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Activity over a period',
+            'model': 'bluebottle.time_based.models.PeriodActivity',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Participant over a period',
+            'model': 'bluebottle.time_based.models.PeriodParticipant',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Time contribution',
+            'model': 'bluebottle.time_based.models.TimeContribution',
+            'page_id': ''
+        },
+
+    ]}

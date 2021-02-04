@@ -238,6 +238,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).lookup_allowed(key, value)
 
     show_in_index = True
+    date_hierarchy = 'created'
 
     ordering = ('-created',)
 

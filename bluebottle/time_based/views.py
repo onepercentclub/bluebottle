@@ -248,6 +248,47 @@ class PeriodParticipantDocumentDetail(ParticipantDocumentDetail):
     queryset = PeriodParticipant.objects
 
 
+class DateActivityIcalView(PrivateFileView):
+    queryset = DateActivity.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected']
+    )
+
+    max_age = 30 * 60  # half an hour
+
+    def get(self, *args, **kwargs):
+        instance = super(DateActivityIcalView, self).get_object()
+        calendar = icalendar.Calendar()
+        slots = instance.slots.filter(
+            status__in=['open', 'full', 'running', 'finished'],
+        )
+        if kwargs.get('user_id'):
+            slots = slots.filter(slot_participants__participant__user__id=kwargs['user_id'])
+
+        for slot in slots:
+            event = icalendar.Event()
+            event.add('summary', instance.title)
+            event.add('description', instance.details)
+            event.add('url', instance.get_absolute_url())
+            event.add('dtstart', slot.start.astimezone(utc))
+            event.add('dtend', (slot.start + slot.duration).astimezone(utc))
+            event['uid'] = slot.uid
+
+            organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+            organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
+
+            event['organizer'] = organizer
+            if slot.location:
+                event['location'] = icalendar.vText(slot.location.formatted_address)
+
+            calendar.add_component(event)
+
+        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
+            instance.slug
+        )
+        return response
+
+
 class ActivitySlotIcalView(PrivateFileView):
     queryset = DateActivitySlot.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],

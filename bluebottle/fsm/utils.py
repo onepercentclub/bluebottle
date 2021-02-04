@@ -161,17 +161,18 @@ def document_notifications(model):
     instance = setup_instance(model)
     app = instance._meta.app_label
     messages = []
-    triggers = [
-        trigger for trigger in model.triggers.triggers
-        if not isinstance(trigger, TransitionTrigger)
-    ]
+    triggers = model.triggers.triggers
     effects = []
     for trigger in triggers:
+        if isinstance(trigger, TransitionTrigger):
+            trigger_name = 'Transition {} on {}'.format(trigger.transition.name, instance._meta.verbose_name)
+        else:
+            trigger_name = '{} on {}'.format(trigger, instance._meta.verbose_name)
         for effect in trigger.effects:
             if effect.__name__ == '_NotificationEffect':
                 effects.append({
                     'effect': effect,
-                    'trigger': '{} on {}'.format(trigger, instance._meta.verbose_name),
+                    'trigger': trigger_name,
                 })
 
     for task in model.periodic_tasks:

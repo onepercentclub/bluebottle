@@ -18,7 +18,7 @@ class DateChanged(TransitionMessage):
         ]
 
 
-class SlotDateChanged(TransitionMessage):
+class SlotDateChangedNotification(TransitionMessage):
     subject = _('The date and time for a slot of your activity "{title}" has changed')
     template = 'messages/slot_date_changed'
     context = {
@@ -32,7 +32,7 @@ class SlotDateChanged(TransitionMessage):
         ]
 
 
-class DeadlineChanged(TransitionMessage):
+class DeadlineChangedNotification(TransitionMessage):
     subject = _('The deadline for your activity "{title}" changed')
     template = 'messages/deadline_changed'
     context = {

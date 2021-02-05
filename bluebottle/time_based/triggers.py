@@ -21,13 +21,13 @@ from bluebottle.time_based.effects import (
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect
 )
 from bluebottle.time_based.messages import (
-    DeadlineChanged,
+    DeadlineChangedNotification,
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    ParticipantRemovedNotification, NewParticipantNotification, SlotDateChanged
+    ParticipantRemovedNotification, NewParticipantNotification, SlotDateChangedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -542,7 +542,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             'start',
             effects=[
                 NotificationEffect(
-                    SlotDateChanged,
+                    SlotDateChangedNotification,
                     conditions=[
                         is_not_finished
                     ]
@@ -609,7 +609,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
             'start',
             effects=[
                 NotificationEffect(
-                    DeadlineChanged,
+                    DeadlineChangedNotification,
                     conditions=[start_is_not_passed]
                 ),
                 TransitionEffect(
@@ -636,7 +636,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
             'deadline',
             effects=[
                 NotificationEffect(
-                    DeadlineChanged,
+                    DeadlineChangedNotification,
                     conditions=[
                         deadline_is_not_passed
                     ]

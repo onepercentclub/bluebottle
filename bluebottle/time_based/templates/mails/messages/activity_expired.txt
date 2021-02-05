@@ -1,7 +1,7 @@
 {% extends "mails/messages/activity_base.txt" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans with title=obj.title  context 'email' %}
+{% block message%}{% blocktrans context 'email' %}
 Unfortunately, nobody applied to your activity "{{ title }}" before the deadline to apply. That’s why we have cancelled your activity.
 
 Don’t worry, you can always create a new activity and try again. 

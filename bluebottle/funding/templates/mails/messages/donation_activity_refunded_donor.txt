@@ -3,7 +3,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=obj.user.first_name title=obj.activity.title context 'email' %}
+    {% blocktrans context 'email' %}
         Hi {{ recipient_name }},
 
         Unfortunately, the campaign "{{ title }}" did not reach its goal. Therefore, all donations will be fully refunded within 10 days.

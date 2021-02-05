@@ -16,6 +16,10 @@ class DonationSuccessDonorMessage(TransitionMessage):
     subject = _("Thanks for your donation!")
     template = 'messages/donation_success_donor'
 
+    context = {
+        'title': 'activity.title'
+    }
+
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
         if self.obj.user:

@@ -35,6 +35,7 @@ def generate_notification_html(documentation):
         <col style='width: 650x;' />
         </colgroup>
         <tr><th>Trigger</th><td>{}</td></tr>
+        <tr><th>Description</th><td>{}</td></tr>
         <tr><th>Class</th><td>{}</td></tr>
         <tr><th>Template</th><td>{}</td></tr>
         <tr><th>To</th><td>{}</td></tr>
@@ -43,6 +44,7 @@ def generate_notification_html(documentation):
         <blockquote>{}</blockquote>
         """.format(
             message['trigger'],
+            message['description'],
             message['class'],
             message['template'],
             message['recipients'],

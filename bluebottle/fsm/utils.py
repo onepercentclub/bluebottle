@@ -15,7 +15,7 @@ from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParti
 
 def get_doc(element):
     if element.__doc__:
-        return element.__doc__
+        return re.sub(' +', ' ', element.__doc__.replace("\n", " "))
     return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
 
 
@@ -192,7 +192,7 @@ def document_notifications(model):
             'trigger': trigger,
             'template': effect.message.template,
             'description': get_doc(effect.message),
-            'recipients': get_doc(message.get_recipients),
+            'recipients': get_doc(message.get_recipients).capitalize(),
             'subject': message.generic_subject,
             'content_text': message.generic_content_text,
             'content_html': message.generic_content_html

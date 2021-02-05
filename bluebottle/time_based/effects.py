@@ -266,7 +266,10 @@ class LockFilledSlotsEffect(Effect):
         if self.instance.activity.slot_selection == 'all':
             return []
         slots = self.instance.activity.slots.filter(status='open')
-        return [slot for slot in slots.all() if slot.accepted_participants.count() >= slot.capacity]
+        return [
+            slot for slot in slots.all()
+            if slot.capacity and slot.accepted_participants.count() >= slot.capacity
+        ]
 
     def post_save(self, **kwargs):
         for slot in self.slots:

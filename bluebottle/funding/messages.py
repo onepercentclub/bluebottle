@@ -95,6 +95,10 @@ class FundingExpiredMessage(TransitionMessage):
     subject = _(u"Your crowdfunding campaign has expired")
     template = 'messages/funding_expired'
 
+    context = {
+        'title': 'title'
+    }
+
     def get_recipients(self):
         """the activity organizer"""
         return [self.obj.owner]

@@ -1,4 +1,4 @@
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
+from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register, ModelChangedTrigger
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.initiatives.models import Initiative
@@ -7,10 +7,14 @@ from bluebottle.time_based.states import TimeBasedStateMachine
 
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
-    InitiativeCancelledOwnerMessage
+    InitiativeCancelledOwnerMessage, AssignedReviewerMessage
 )
 
 from bluebottle.notifications.effects import NotificationEffect
+
+
+def reviewer_is_set(effect):
+    return effect.instance.reviewer is not None
 
 
 @register(Initiative)
@@ -64,4 +68,15 @@ class InitiativeTriggers(TriggerManager):
                 RelatedTransitionEffect('activities', ActivityStateMachine.restore),
             ]
         ),
+        ModelChangedTrigger(
+            'reviewer_id',
+            effects=[
+                NotificationEffect(
+                    AssignedReviewerMessage,
+                    conditions=[
+                        reviewer_is_set
+                    ]
+                ),
+            ]
+        )
     ]

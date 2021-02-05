@@ -84,7 +84,6 @@ class TransitionMessage(object):
 
         if 'context' in self.options:
             context.update(self.options['context'])
-
         return context
 
     def __init__(self, obj, **options):
@@ -109,12 +108,12 @@ class TransitionMessage(object):
             with translation.override(recipient.primary_language):
                 if self.send_once:
                     try:
-                        Message.objects.get(
+                        Message.objects.filter(
                             template=self.get_template(),
                             recipient=recipient,
                             content_type=get_content_type_for_model(self.obj),
                             object_id=self.obj.pk
-                        )
+                        ).count()
                         continue
                     except Message.DoesNotExist:
                         pass
@@ -132,7 +131,7 @@ class TransitionMessage(object):
                         body_html = format_html(custom_template.body_html.format(**context))
                         body_txt = custom_template.body_txt.format(**context)
                     except custom_template.DoesNotExist:
-                        # Translation for current lagnuage not set, use default.
+                        # Translation for current language not set, use default.
                         pass
 
                 yield Message(

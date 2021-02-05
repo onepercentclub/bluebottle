@@ -14,7 +14,6 @@ from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
-from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
@@ -25,13 +24,6 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
-
-    @classmethod
-    def get_messages(cls, old, new):
-        messages = []
-        if old.reviewer != new.reviewer and new.reviewer is not None:
-            messages.append(AssignedReviewerMessage)
-        return messages
 
     owner = models.ForeignKey(
         'members.Member',
@@ -51,7 +43,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'members.Member',
         null=True,
         blank=True,
-        verbose_name=_('activity manager'),
+        verbose_name=_('co-initiator'),
+        help_text=_('The co-initiator can create and edit activities for '
+                    'this initiative, but cannot edit the initiative itself.'),
         related_name='activity_manager_%(class)ss',
     )
 

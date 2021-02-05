@@ -48,7 +48,7 @@
         </ul>
     {% endif %}
 
-    <form method="post">{% csrf_token %}
+    <form method="post" id="confirm">{% csrf_token %}
         <div>
             {% for name, value in post.items %}
                 <input type="hidden" name="{{ name }}" value="{{ value }}">

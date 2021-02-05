@@ -5,10 +5,8 @@
 {% blocktrans context 'email' %}
 Hi {{ recipient_name }},
 You are assigned as reviewer for "{{ title }}".
-If you have any questions please contact {{ admin_email }}
-
+If you have any questions please contact {{ contact_email }}
 {% endblocktrans %}
-
 {% endblock %}
 
 {% block action %}

@@ -95,7 +95,7 @@ class ExportView(ExportPermissionMixin, FormView):
         else:
             result = plain_export(self.get_exporter_class(), tenant=tenant, **form.cleaned_data)
             filename = result.split('/')[-1]
-            output = open(result, 'r')
+            output = open(result, 'rb')
             response = HttpResponse(
                 output.read(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

@@ -275,7 +275,13 @@ def update_group_permissions(label, group_perms, apps):
             try:
                 permissions = Permission.objects.filter(codename=perm_codename)
                 permissions = permissions.filter(content_type__app_label=label)
-                group.permissions.add(permissions.get())
+                permission = permissions.last()
+                if not permission:
+                    raise Exception(
+                        'Could not add permission: {}: Not found'.format(perm_codename)
+                    )
+                else:
+                    group.permissions.add(permission)
             except Permission.DoesNotExist as err:
                 logging.debug(err)
                 raise Exception(

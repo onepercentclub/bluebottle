@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from builtins import str
+
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
-from django.urls.base import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.files.tests.factories import ImageFactory
@@ -18,11 +19,18 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
 
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
     def setUp(self):
         super(TestInitiativeAdmin, self).setUp()
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
-        self.initiative = InitiativeFactory.create()
+        self.initiative = InitiativeFactory.create(
+            title='The Dharma Initiative',
+            reviewer=None
+        )
         self.initiative.states.submit(save=True)
 
         self.approve_url = reverse(
@@ -154,54 +162,36 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         )
 
     def test_add_reviewer(self):
-        self.client.force_login(self.superuser)
-        user = BlueBottleUserFactory.create()
+        self.app.set_user(self.staff_member)
+        reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
-        data = {
-            'title': self.initiative.title,
-            'slug': self.initiative.slug,
-            'owner': self.initiative.owner_id,
-            'image': '',
-            'video_url': '',
-            'pitch': self.initiative.pitch,
-            'story': self.initiative.story,
-            'theme': self.initiative.theme_id,
-            'place': self.initiative.place_id,
-            'has_organization': 2,
-            'organization': '',
-            'organization_contact': '',
-            'reviewer': self.initiative.reviewer_id,
-            'activity_manager': self.initiative.activity_manager_id,
-            'promoter': '',
-            '_continue': 'Save and continue editing',
-            'activities-TOTAL_FORMS': '0',
-            'activities-INITIAL_FORMS': '0',
-            'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
-            'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
-            'wallposts-wallpost-content_type-object_id-TOTAL_FORMS': '0',
-            'wallposts-wallpost-content_type-object_id-INITIAL_FORMS': '0'
-        }
-        response = self.client.post(admin_url, data)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, admin_url)
-
-        data['reviewer'] = user.id
-
-        # Should show confirmation page
-        response = self.client.post(admin_url, data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, 'Are you sure?')
-
-        data['confirm'] = 'True'
-        data['send_messages'] = 'on'
-        response = self.client.post(admin_url, data)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, admin_url)
-        self.initiative.refresh_from_db()
-        self.assertEqual(self.initiative.reviewer, user)
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form.set('reviewer', reviewer.id)
+        page = form.submit()
+        self.assertTrue('<h3>Send email</h3>' in page.text)
+        form = page.forms[0]
+        form.submit()
 
         # Should send out one mail that contains admin url and contact email
         self.assertEqual(len(mail.outbox), 1)
         admin_url = '/admin/initiatives/initiative/{}/change'.format(self.initiative.id)
         self.assertTrue(admin_url in mail.outbox[0].body)
         self.assertTrue('contact@my-bluebottle-project.com' in mail.outbox[0].body)
+        self.initiative.refresh_from_db()
+        self.assertEqual(self.initiative.reviewer, reviewer)
+
+    def test_add_reviewer_cancel(self):
+        self.app.set_user(self.staff_member)
+        reviewer = BlueBottleUserFactory.create()
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form.set('reviewer', reviewer.id)
+        page = form.submit()
+        self.assertTrue('<h3>Send email</h3>' in page.text)
+        page.click('No, take me back')
+
+        self.assertEqual(len(mail.outbox), 0)
+        self.initiative.refresh_from_db()
+        self.assertNotEqual(self.initiative.reviewer, reviewer)

@@ -52,7 +52,6 @@ class ModelChangedTrigger(Trigger):
         super(ModelChangedTrigger, self).__init__(*args, **kwargs)
         if not isinstance(fields, (tuple, list)):
             fields = (fields, )
-
         self.fields = fields
 
     @property

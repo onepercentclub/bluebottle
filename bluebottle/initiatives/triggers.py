@@ -71,12 +71,8 @@ class InitiativeTriggers(TriggerManager):
         ModelChangedTrigger(
             'reviewer_id',
             effects=[
-                NotificationEffect(
-                    AssignedReviewerMessage,
-                    conditions=[
-                        reviewer_is_set
-                    ]
-                ),
+                NotificationEffect(AssignedReviewerMessage)
             ]
         )
+
     ]

@@ -7,6 +7,7 @@ from django.template import defaultfilters
 from django.utils import timezone
 from django.utils.timezone import now
 from pytz import UTC
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
@@ -123,13 +124,40 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             mail.outbox[0].subject,
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
         )
-        expected = 'The activity "{}" takes place on {} {} - {}'.format(
-            self.activity.title,
-            defaultfilters.date(self.slot.start),
-            defaultfilters.time(self.slot.start),
-            defaultfilters.time(self.slot.end),
-        )
+        with TenantLanguage('en'):
+            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
         self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(
+            "11:30 a.m. - 2:30 p.m." in mail.outbox[0].body,
+            "Time strings should really be English format"
+        )
+
+    def test_reminder_single_date_dutch(self):
+        nld = BlueBottleUserFactory.create(primary_language='nl')
+        DateParticipantFactory.create(activity=self.activity, user=nld)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+        with TenantLanguage('nl'):
+            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(
+            "11:30 - 14:30" in mail.outbox[0].body,
+            "Time strings should really be Dutch format"
+        )
 
     def test_reminder_multiple_dates(self):
         self.slot2 = DateActivitySlotFactory.create(
@@ -142,7 +170,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             start=datetime.combine((now() + timedelta(days=11)).date(), time(10, 0, tzinfo=UTC)),
             duration=timedelta(hours=3)
         )
-        eng = BlueBottleUserFactory.create(primary_language='en')
+        eng = BlueBottleUserFactory.create(primary_language='nl')
         DateParticipantFactory.create(activity=self.activity, user=eng)
         self.slot3.slot_participants.first().states.withdraw(save=True)
         mail.outbox = []

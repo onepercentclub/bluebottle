@@ -65,8 +65,9 @@ class MessageTestCase(BluebottleTestCase):
     def test_send_translated_messages(self):
         english = BlueBottleUserFactory.create(primary_language='en')
         dutch = BlueBottleUserFactory.create(primary_language='nl')
-        message = AnotherTestMessage(InitiativeFactory(
-            owner=dutch, reviewer=english, title='Some title'))
+        initiative = InitiativeFactory(owner=dutch, reviewer=english, title='Some title')
+        mail.outbox = []
+        message = AnotherTestMessage(initiative)
 
         message.compose_and_send()
         self.assertEquals(len(mail.outbox), 2)

@@ -15,10 +15,10 @@ logger = logging.getLogger('bluebottle')
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="on_a_date_tasks",
+    name="date_activity_tasks",
     ignore_result=True
 )
-def on_a_date_tasks():
+def date_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in DateActivity.get_periodic_tasks():

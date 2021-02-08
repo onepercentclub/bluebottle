@@ -1,26 +1,9 @@
 # -*- coding: utf-8 -*-
-from bluebottle.notifications.messages import TransitionMessage
+from django.template import defaultfilters
 from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.initiatives.models import InitiativePlatformSettings
-
-
-class DateChanged(TransitionMessage):
-    """
-    The date of the activity changed
-    """
-    subject = _('The date and time for your activity "{title}" has changed')
-    template = 'messages/date_changed'
-    context = {
-        'title': 'title',
-        'start': 'start',
-
-    }
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
-        ]
+from bluebottle.notifications.messages import TransitionMessage
 
 
 class SlotDateChangedNotification(TransitionMessage):
@@ -49,6 +32,66 @@ class DeadlineChangedNotification(TransitionMessage):
     context = {
         'title': 'title'
     }
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
+class ReminderSingleDateNotification(TransitionMessage):
+    """
+    Reminder notification for a single date activity
+    """
+    subject = _('The activity "{title}" will take place in a few days!')
+    template = 'messages/reminder_single_date'
+    send_once = True
+    context = {
+        'title': 'title',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
+        context['start_date'] = defaultfilters.date(slot.start)
+        context['start_time'] = defaultfilters.time(slot.start)
+        context['end_time'] = defaultfilters.time(slot.end)
+        return context
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
+class ReminderMultipleDatesNotification(TransitionMessage):
+    """
+    Reminder notification for an activity over multiple dates
+    """
+    subject = _('The activity "{title}" will take place in a few days!')
+    template = 'messages/reminder_multiple_dates'
+    # send_once = True
+    context = {
+        'title': 'title',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slots'] = []
+        slots = self.obj.slots.filter(
+            slot_participants__participant__user=recipient,
+            slot_participants__status='registered'
+        )
+        for slot in slots:
+            context['slots'].append({
+                'title': slot.title,
+                'start_date': defaultfilters.date(slot.start),
+                'start_time': defaultfilters.time(slot.start),
+                'end_time': defaultfilters.time(slot.end)
+            })
+        return context
 
     def get_recipients(self):
         """participants that signed up"""

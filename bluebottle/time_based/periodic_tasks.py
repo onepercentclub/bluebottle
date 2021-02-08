@@ -1,10 +1,15 @@
-from datetime import date
-from django.db.models import DateTimeField, ExpressionWrapper, F
+from datetime import date, timedelta
 
+from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
+from bluebottle.time_based.messages import ReminderSingleDateNotification, ReminderMultipleDatesNotification
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
@@ -12,9 +17,6 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine, PeriodStateMachine
 )
 from bluebottle.time_based.triggers import has_participants, has_no_participants
-from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
-from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 
 
 class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
@@ -90,7 +92,7 @@ class NewPeriodForParticipantTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             current_period__lte=date.today(),
-            status__in=('accepted', 'new', )
+            status__in=('accepted', 'new',)
         ).filter(
             Q(activity__status='running') |
             Q(
@@ -156,12 +158,46 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
         return str(_("Finish an activity when end time has passed."))
 
 
+class DateActivityReminderTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return DateActivity.objects.filter(slots__start__lte=timezone.now() + timedelta(days=5),
+                                           status__in=['open', 'full']
+                                           )
+
+    def has_one_slot(effect):
+        return effect.instance.slots.count() == 1
+
+    def has_multiple_slots(effect):
+        return effect.instance.slots.count() > 1
+
+    effects = [
+        NotificationEffect(
+            ReminderSingleDateNotification,
+            conditions=[
+                has_one_slot
+            ]
+        ),
+        NotificationEffect(
+            ReminderMultipleDatesNotification,
+            conditions=[
+                has_multiple_slots
+            ]
+        )
+    ]
+
+    def __str__(self):
+        return str(_("Send a reminder five days before the activity."))
+
+
 DateActivity.periodic_tasks = [
-    TimeBasedActivityRegistrationDeadlinePassedTask
+    TimeBasedActivityRegistrationDeadlinePassedTask,
+    DateActivityReminderTask
 ]
 
 DateActivitySlot.periodic_tasks = [
-    SlotStartedTask, SlotFinishedTask,
+    SlotStartedTask,
+    SlotFinishedTask,
 ]
 
 PeriodActivity.periodic_tasks = [

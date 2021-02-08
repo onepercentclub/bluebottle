@@ -170,35 +170,37 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             start=datetime.combine((now() + timedelta(days=11)).date(), time(10, 0, tzinfo=UTC)),
             duration=timedelta(hours=3)
         )
-        eng = BlueBottleUserFactory.create(primary_language='nl')
+        eng = BlueBottleUserFactory.create(primary_language='eng')
         DateParticipantFactory.create(activity=self.activity, user=eng)
         self.slot3.slot_participants.first().states.withdraw(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
-        expected = '{} {} - {}'.format(
-            defaultfilters.date(self.slot.start),
-            defaultfilters.time(self.slot.start),
-            defaultfilters.time(self.slot.end),
-        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
         self.assertTrue(
             expected in mail.outbox[0].body,
             "First slot should be shown in mail"
         )
-        expected = '{} {} - {}'.format(
-            defaultfilters.date(self.slot2.start),
-            defaultfilters.time(self.slot2.start),
-            defaultfilters.time(self.slot2.end),
-        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot2.start),
+                defaultfilters.time(self.slot2.start),
+                defaultfilters.time(self.slot2.end),
+            )
         self.assertTrue(
             expected in mail.outbox[0].body,
             "Second slot should be shown in email"
         )
-
-        unexpected = '{} {} - {}'.format(
-            defaultfilters.date(self.slot3.start),
-            defaultfilters.time(self.slot3.start),
-            defaultfilters.time(self.slot3.end),
-        )
+        with TenantLanguage('en'):
+            unexpected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot3.start),
+                defaultfilters.time(self.slot3.start),
+                defaultfilters.time(self.slot3.end),
+            )
         self.assertFalse(
             unexpected in mail.outbox[0].body,
             "Third slot should not show because the user withdrew")

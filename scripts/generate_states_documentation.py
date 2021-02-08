@@ -2,7 +2,8 @@ import requests
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-from bluebottle.fsm.utils import document_model
+from bluebottle.fsm.utils import document_model, document_notifications
+from scripts.generate_notifications_documentation import generate_notification_html
 
 api = settings.CONFLUENCE['api']
 
@@ -36,30 +37,30 @@ def make_table(source, layout='default'):
 
 def generate_html(documentation):
     html = ""
-    html += u"<h2>States</h2>"
-    html += u"<em>All states this instance can be in.</em>"
+    html += "<h2>States</h2>"
+    html += "<em>All states this instance can be in.</em>"
     html += make_table(documentation['states'])
 
-    html += u"<h2>Transitions</h2>"
-    html += u"<em>An instance will always move from one state to the other through a transition. " \
-            u"A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
-            u"either through a trigger or through a side effect of a related object.</em>"
+    html += "<h2>Transitions</h2>"
+    html += "<em>An instance will always move from one state to the other through a transition. " \
+            "A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
+            "either through a trigger or through a side effect of a related object.</em>"
     html += make_table(documentation['transitions'], layout='full-width')
 
     if len(documentation['triggers']):
-        html += u"<h2>Triggers</h2>"
-        html += u"<em>These are events that get triggered when the instance changes, " \
-                u"other then through a transition. " \
-                u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
+        html += "<h2>Triggers</h2>"
+        html += "<em>These are events that get triggered when the instance changes, " \
+                "other then through a transition. " \
+                "Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
         html += make_table(documentation['triggers'], layout='full-width')
 
     if len(documentation['periodic_tasks']):
-        html += u"<h2>Periodic tasks</h2>"
-        html += u"<em>These are events that get triggered when certain dates are passed. " \
-                u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+        html += "<h2>Periodic tasks</h2>"
+        html += "<em>These are events that get triggered when certain dates are passed. " \
+                "Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
         html += make_table(documentation['periodic_tasks'], layout='full-width')
 
-    return html.encode('ascii', 'ignore')
+    return html
 
 
 def run(*args):
@@ -76,6 +77,11 @@ def run(*args):
         version = data['version']['number'] + 1
         documentation = document_model(import_string(model['model']))
         html = generate_html(documentation)
+        messages = document_notifications(import_string(model['model']))
+        if len(messages):
+            html += "<h2>Automated messages</h2>"
+            html += "<em>On some triggers automated e-mails are send.</em>"
+            html += generate_notification_html(messages)
         data = {
             "id": model['page_id'],
             "type": "page",
@@ -86,7 +92,7 @@ def run(*args):
             },
             "body": {
                 "storage": {
-                    "value": html,
+                    "value": html.encode('ascii', 'ignore'),
                     "representation": "storage"
                 }
             }

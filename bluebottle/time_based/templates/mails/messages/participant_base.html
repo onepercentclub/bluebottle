@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=to.first_name context 'email' %}
+    {% blocktrans context 'email' %}
         <p>Hi {{ recipient_name }},</p>
     {% endblocktrans %}
     {% if custom_message %}

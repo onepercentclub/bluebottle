@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name context 'email' %}
+{% blocktrans context 'email' %}
 Hi {{ recipient_name }},
 Thanks for your donation! Be sure to follow the campaign page for the latest updates on the campaign.
 Give some extra support and share this campaign with your network.
@@ -11,7 +11,7 @@ Give some extra support and share this campaign with your network.
 {% include 'mails/messages/partials/donation_receipt.txt' %}
 
 {% if pledged %}
-{% blocktrans with amount=obj.amount title=obj.activity.title %}
+{% blocktrans with amount=obj.amount %}
     Please transfer the amount of {{ amount }} to "{{ title }}".
 {% endblocktrans %}
 {% endif %}

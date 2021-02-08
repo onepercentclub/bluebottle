@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name context 'email' %}
+{% blocktrans  context 'email' %}
 Hi {{ recipient_name }},
 {% endblocktrans %}
 {% block message %}{% endblock %}

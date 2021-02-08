@@ -3,13 +3,13 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name platform_name=tenant_name context 'email' %}
+{% blocktrans context 'email' %}
 Hi {{ recipient_name }},
 
-Good news! Your identity is verified and you’re all good to go. 
+Good news! Your identity is verified and you're all good to go.
 
 If you filled out the entire creation flow, your crowdfunding campaign will be submitted for review. 
-Didn’t complete your campaign yet? Go to {{ platform_name }} and enter the last details.
+Didn't complete your campaign yet? Go to {{ site_name }} and enter the last details.
 
 {% endblocktrans %}
 {% endblock content %} 

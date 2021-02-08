@@ -15,7 +15,7 @@ from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParti
 
 def get_doc(element):
     if element.__doc__:
-        return element.__doc__
+        return re.sub(' +', ' ', element.__doc__.replace("\n", " "))
     return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
 
 
@@ -45,20 +45,20 @@ def setup_instance(model):
     )
 
     if isinstance(instance, Initiative):
-        instance.title = "the initiative"
+        instance.title = "[initiative title]"
 
     if isinstance(instance, Funding):
-        instance.title = "the campaign"
+        instance.title = "[activity title]"
 
     if isinstance(instance, Donor):
         PledgePayment(donation=instance)
-        instance.activity = Funding(title="the campaign")
-        instance.user = Member(first_name='the', last_name='donor')
+        instance.activity = Funding(title="[activity title]")
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, MoneyContribution):
         donor = Donor()
-        donor.activity = Funding(title="the campaign")
-        donor.user = Member(first_name='the', last_name='donor')
+        donor.activity = Funding(title="[activity title]")
+        donor.user = Member(first_name='[first name]', last_name='[last name]')
         PledgePayment(donation=donor)
         instance.contributor = donor
 
@@ -66,39 +66,39 @@ def setup_instance(model):
         instance.donation = Donor()
 
     if isinstance(instance, PeriodActivity):
-        instance.title = "the activity"
-        instance.owner = Member(first_name='activity', last_name='owner')
+        instance.title = "[activity title]"
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, PeriodParticipant):
-        instance.activity = PeriodActivity(title="the activity")
-        instance.user = Member(first_name='the', last_name='participant')
+        instance.activity = PeriodActivity(title="[activity title]")
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivity):
-        instance.title = "the activity"
-        instance.owner = Member(first_name='activity', last_name='owner')
+        instance.title = "[activity title]"
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateParticipant):
-        instance.activity = DateActivity(title="the activity")
-        instance.user = Member(first_name='the', last_name='participant')
+        instance.activity = DateActivity(title="[activity title]")
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivitySlot):
-        instance.activity = DateActivity(title="the activity")
+        instance.activity = DateActivity(title="[activity title]")
 
     if isinstance(instance, SlotParticipant):
-        activity = DateActivity(title="the activity")
+        activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
         instance.participant = DateParticipant(activity=activity)
 
     if isinstance(instance, TimeContribution):
         contributor = PeriodParticipant()
-        contributor.activity = PeriodActivity(title="the activity")
-        contributor.user = Member(first_name='the', last_name='participant')
+        contributor.activity = PeriodActivity(title="[activity title]")
+        contributor.user = Member(first_name='[first name]', last_name='[last name]')
         instance.contributor = contributor
         instance.start = now() + timedelta(days=4)
         instance.value = timedelta(hours=4)
 
     if isinstance(instance, PayoutAccount):
-        instance.owner = Member(first_name='the', last_name='owner')
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
     return instance
 
@@ -192,7 +192,7 @@ def document_notifications(model):
             'trigger': trigger,
             'template': effect.message.template,
             'description': get_doc(effect.message),
-            'recipients': get_doc(message.get_recipients),
+            'recipients': get_doc(message.get_recipients).capitalize(),
             'subject': message.generic_subject,
             'content_text': message.generic_content_text,
             'content_html': message.generic_content_html

@@ -1,7 +1,7 @@
 {% extends "mails/messages/activity_base.txt" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans with title=obj.title  context 'email' %}
+{% block message%}{% blocktrans context 'email' %}
 Unfortunately your activity "{{ title }}" has been cancelled.
 
 If you have any questions, you can contact the platform manager by replying to this email.

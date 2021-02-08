@@ -1,7 +1,7 @@
 {% extends "mails/messages/participant_base.txt" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans with title=obj.activity.title  context 'email' %}
+{% block message%}{% blocktrans context 'email' %}
 You have been added to the activity "{{ title }}" as a participant.
 
 Head over to the activity page for more information.

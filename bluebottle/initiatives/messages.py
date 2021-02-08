@@ -53,6 +53,9 @@ class InitiativeCancelledOwnerMessage(TransitionMessage):
 class AssignedReviewerMessage(TransitionMessage):
     subject = _('You are assigned to review "{title}".')
     template = 'messages/assigned_reviewer'
+
+    send_once = True
+
     context = {
         'title': 'title'
     }

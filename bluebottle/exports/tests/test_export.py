@@ -52,7 +52,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
-            41
+            37
         )
         self.assertEqual(
             book.sheet_by_name('Initiatives').nrows,

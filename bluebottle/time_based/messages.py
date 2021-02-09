@@ -81,6 +81,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
         context = super().get_context(recipient)
         context['slots'] = []
         slots = self.obj.slots.filter(
+            status__in=['full', 'open', 'running'],
             slot_participants__participant__user=recipient,
             slot_participants__status='registered'
         )

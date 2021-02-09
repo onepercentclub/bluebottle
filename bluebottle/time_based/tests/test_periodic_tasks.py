@@ -170,9 +170,15 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             start=datetime.combine((now() + timedelta(days=11)).date(), time(10, 0, tzinfo=UTC)),
             duration=timedelta(hours=3)
         )
+        self.slot4 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.combine((now() + timedelta(days=12)).date(), time(10, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
         eng = BlueBottleUserFactory.create(primary_language='eng')
         DateParticipantFactory.create(activity=self.activity, user=eng)
         self.slot3.slot_participants.first().states.withdraw(save=True)
+        self.slot4.states.cancel(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
         with TenantLanguage('en'):
@@ -204,6 +210,16 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertFalse(
             unexpected in mail.outbox[0].body,
             "Third slot should not show because the user withdrew")
+
+        with TenantLanguage('en'):
+            unexpected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot4.start),
+                defaultfilters.time(self.slot4.start),
+                defaultfilters.time(self.slot4.end),
+            )
+        self.assertFalse(
+            unexpected in mail.outbox[0].body,
+            "Fourth slot should not show because it was cancelled")
 
         self.assertEqual(
             mail.outbox[0].subject,

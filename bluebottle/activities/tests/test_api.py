@@ -63,6 +63,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivityFactory.create(status='submitted')
         DateActivityFactory.create(status='closed')
         DateActivityFactory.create(status='cancelled')
+        DateActivityFactory.create(status='rejected')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)

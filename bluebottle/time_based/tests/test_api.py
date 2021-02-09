@@ -610,6 +610,206 @@ class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Bluebo
     participant_factory = PeriodParticipantFactory
 
 
+class DateActivitySlotListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.url = reverse('date-slot-list')
+        self.activity = DateActivityFactory.create()
+
+        self.data = {
+            'data': {
+                'type': 'activities/time-based/date-slots',
+                'attributes': {
+                    'title': 'Kick-off',
+                    'is-online': True,
+                    'start': '2020-12-01T10:00:00+01:00',
+                    'duration': '2:30:00',
+                    'capacity': 10,
+                },
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/time-based/dates',
+                            'id': str(self.activity.pk)
+                        },
+                    },
+                }
+            }
+        }
+
+    def test_create_owner(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        included = [{'id': resource['id'], 'type': resource['type']} for resource in data['included']]
+
+        for attr in ['start', 'duration', 'capacity']:
+            self.assertTrue(attr in data['data']['attributes'])
+
+        self.assertEqual(data['data']['meta']['status'], 'open')
+
+        self.assertTrue(
+            {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included
+        )
+
+    def test_create_other(self):
+        response = self.client.post(
+            self.url, json.dumps(self.data), user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_anonymous(self):
+        response = self.client.post(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_open_activity(self):
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.activity = DateActivityFactory.create()
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+
+        self.url = reverse('date-slot-detail', args=(self.slot.pk, ))
+        self.data = {
+            'data': {
+                'type': 'activities/time-based/date-slots',
+                'id': str(self.slot.pk),
+                'attributes': {
+                    'title': 'New title',
+                },
+            }
+        }
+
+    def test_update_owner(self):
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        included = [{'id': resource['id'], 'type': resource['type']} for resource in data['included']]
+
+        for attr in ['start', 'duration', 'capacity']:
+            self.assertTrue(attr in data['data']['attributes'])
+
+        self.assertEqual(data['data']['meta']['status'], 'open')
+
+        self.assertTrue(
+            {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included
+        )
+
+    def test_update_other(self):
+        response = self.client.patch(
+            self.url, json.dumps(self.data), user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_anonymous(self):
+        response = self.client.patch(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_open_activity(self):
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_owner(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        included = [{'id': resource['id'], 'type': resource['type']} for resource in data['included']]
+
+        for attr in ['start', 'duration', 'capacity']:
+            self.assertTrue(attr in data['data']['attributes'])
+
+        self.assertEqual(data['data']['meta']['status'], 'open')
+
+        self.assertTrue(
+            {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included
+        )
+
+    def test_get_other(self):
+        response = self.client.get(
+            self.url, user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_closed_site(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_open_activity(self):
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_owner(self):
+        response = self.client.delete(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_other(self):
+        response = self.client.delete(
+            self.url, user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_anonymous(self):
+        response = self.client.delete(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_open_activity(self):
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+
+        response = self.client.delete(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class ParticipantListViewTestCase():
     def setUp(self):
         super().setUp()

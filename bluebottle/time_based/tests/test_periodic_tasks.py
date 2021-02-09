@@ -1,16 +1,22 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date, datetime, time
 
 import mock
+from django.core import mail
 from django.db import connection
+from django.template import defaultfilters
 from django.utils import timezone
+from django.utils.timezone import now
+from pytz import UTC
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
 )
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tasks import (
-    on_a_date_tasks, with_a_deadline_tasks,
+    date_activity_tasks, with_a_deadline_tasks,
     period_participant_tasks, time_contribution_tasks
 )
 from bluebottle.time_based.tests.factories import (
@@ -63,12 +69,31 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    def setUp(self):
+        super().setUp()
+        self.activity.slots.all().delete()
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.combine((now() + timedelta(days=10)).date(), time(11, 30, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):
             with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                on_a_date_tasks()
+                date_activity_tasks()
+
+    @property
+    def nigh(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.slot.start.year,
+                self.slot.start.month,
+                self.slot.start.day
+            ) - timedelta(days=4)
+        )
 
     @property
     def before(self):
@@ -90,6 +115,117 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             ) + timedelta(days=1)
         )
 
+    def test_reminder_single_date(self):
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+        with TenantLanguage('en'):
+            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(
+            "11:30 a.m. - 2:30 p.m." in mail.outbox[0].body,
+            "Time strings should really be English format"
+        )
+
+    def test_reminder_single_date_dutch(self):
+        nld = BlueBottleUserFactory.create(primary_language='nl')
+        DateParticipantFactory.create(activity=self.activity, user=nld)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+        with TenantLanguage('nl'):
+            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(
+            "11:30 - 14:30" in mail.outbox[0].body,
+            "Time strings should really be Dutch format"
+        )
+
+    def test_reminder_multiple_dates(self):
+        self.slot2 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.combine((now() + timedelta(days=11)).date(), time(14, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        self.slot3 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.combine((now() + timedelta(days=11)).date(), time(10, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        self.slot4 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.combine((now() + timedelta(days=12)).date(), time(10, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        eng = BlueBottleUserFactory.create(primary_language='eng')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        self.slot3.slot_participants.first().states.withdraw(save=True)
+        self.slot4.states.cancel(save=True)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(
+            expected in mail.outbox[0].body,
+            "First slot should be shown in mail"
+        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot2.start),
+                defaultfilters.time(self.slot2.start),
+                defaultfilters.time(self.slot2.end),
+            )
+        self.assertTrue(
+            expected in mail.outbox[0].body,
+            "Second slot should be shown in email"
+        )
+        with TenantLanguage('en'):
+            unexpected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot3.start),
+                defaultfilters.time(self.slot3.start),
+                defaultfilters.time(self.slot3.end),
+            )
+        self.assertFalse(
+            unexpected in mail.outbox[0].body,
+            "Third slot should not show because the user withdrew")
+
+        with TenantLanguage('en'):
+            unexpected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot4.start),
+                defaultfilters.time(self.slot4.start),
+                defaultfilters.time(self.slot4.end),
+            )
+        self.assertFalse(
+            unexpected in mail.outbox[0].body,
+            "Fourth slot should not show because it was cancelled")
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
@@ -99,7 +235,6 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
         with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
             mock_date.today.return_value = when
             mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
             with_a_deadline_tasks()
 
     @property
@@ -202,10 +337,10 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
                     mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
                     with mock.patch.object(
-                        timezone, 'now',
-                        return_value=timezone.get_current_timezone().localize(
-                            datetime(when.year, when.month, when.day)
-                        )
+                            timezone, 'now',
+                            return_value=timezone.get_current_timezone().localize(
+                                datetime(when.year, when.month, when.day)
+                            )
                     ):
                         with_a_deadline_tasks()
                         period_participant_tasks()
@@ -398,7 +533,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
             with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                on_a_date_tasks()
+                date_activity_tasks()
 
     def test_finish(self):
         self.assertEqual(self.slot.status, 'open')
@@ -482,10 +617,10 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
                     mock_date.today.return_value = when
                     mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
                     with mock.patch.object(
-                        timezone, 'now',
-                        return_value=timezone.get_current_timezone().localize(
-                            datetime(when.year, when.month, when.day)
-                        )
+                            timezone, 'now',
+                            return_value=timezone.get_current_timezone().localize(
+                                datetime(when.year, when.month, when.day)
+                            )
                     ):
                         with_a_deadline_tasks()
                         period_participant_tasks()
@@ -501,7 +636,6 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
         )
 
     def test_contribution_value_is_succeeded(self):
-
         today = date.today()
         while today <= self.activity.deadline - timedelta(days=2):
             self.run_tasks(today)
@@ -514,10 +648,10 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
         )
 
         with mock.patch.object(
-            timezone, 'now',
-            return_value=timezone.get_current_timezone().localize(
-                datetime(today.year, today.month, today.day)
-            )
+                timezone, 'now',
+                return_value=timezone.get_current_timezone().localize(
+                    datetime(today.year, today.month, today.day)
+                )
         ):
             self.participant.states.accept(save=True)
 

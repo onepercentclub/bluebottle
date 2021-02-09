@@ -1,0 +1,34 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+{% block message %}
+<p>
+{% blocktrans context 'email' %}
+The activity "{{ title }}" takes place on "{{ date }}". That is just a few days away!
+{% endblocktrans %}
+</p>
+
+<p>
+{% blocktrans context 'email' %}
+These are all the time slots that you participate in:
+{% endblocktrans %}
+<br/>
+{% for slot in slots %}
+    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }}
+    <br/>
+{% endfor %}
+</p>
+
+<p>
+{% blocktrans context 'email' %}
+Read the latest updates on the activity page.
+{% endblocktrans %}
+</p>
+<p>
+<i>
+{% blocktrans context 'email' %}
+If you are unable to participate, please withdraw via the activity page so that others can take your place.
+{% endblocktrans %}
+</i>
+</p>
+
+{% endblock %}

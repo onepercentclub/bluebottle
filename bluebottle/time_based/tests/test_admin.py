@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.models import DateActivity
 from bluebottle.time_based.tests.factories import PeriodActivityFactory, DateActivityFactory
@@ -65,3 +66,55 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
         response = self.app.get(url)
         self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
+
+
+class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
+
+    def test_staff_create_date_activity(self):
+        self.activity_list_url = reverse('admin:time_based_dateactivity_changelist')
+        page = self.app.get(self.activity_list_url)
+        self.assertEqual(page.status, '200 OK')
+        page = page.click('Add Activity on a date')
+        self.assertEqual(page.status, '200 OK')
+        form = page.forms['dateactivity_form']
+        form['initiative'] = self.initiative.id
+        form['title'] = 'Activity with multiple slots'
+        form['description'] = 'Lorem etc'
+        form['owner'] = self.owner.id
+        form['review'] = 3
+        page = form.submit().follow()
+        self.assertEqual(page.status, '200 OK', 'Activity is added, now we can add a slot.')
+
+        page = page.click('Activity with multiple slots', index=0)
+        form = page.forms['dateactivity_form']
+
+        self.admin_add_inline_form_entry(form, 'slots')
+
+        form['slots-0-start_0'] = '2030-02-14'
+        form['slots-0-start_1'] = '11:00'
+        form['slots-0-duration_0'] = 1
+        form['slots-0-duration_1'] = 30
+        form['slots-0-is_online'] = True
+
+        self.admin_add_inline_form_entry(form, 'slots')
+
+        form['slots-1-start_0'] = '2030-02-14'
+        form['slots-1-start_1'] = '14:00'
+        form['slots-1-duration_0'] = 2
+        form['slots-1-duration_1'] = 0
+        form['slots-1-is_online'] = True
+
+        page = form.submit().follow()
+        self.assertEqual(page.status, '200 OK', 'Slots added to the activity')
+        activity = DateActivity.objects.get(title='Activity with multiple slots')
+        self.assertEqual(activity.slots.count(), 2)

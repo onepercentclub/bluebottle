@@ -247,6 +247,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
     enable_impact = models.BooleanField(default=False)
     enable_office_regions = models.BooleanField(default=False)
+    enable_multiple_dates = models.BooleanField(default=False)
 
     class Meta(object):
         verbose_name_plural = _('initiative settings')

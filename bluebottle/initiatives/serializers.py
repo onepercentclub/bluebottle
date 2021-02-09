@@ -449,6 +449,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'require_organization',
             'contact_method',
             'enable_impact',
+            'enable_office_regions',
+            'enable_multiple_dates',
             'has_locations'
         )
 

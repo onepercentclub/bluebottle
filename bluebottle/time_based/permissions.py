@@ -15,13 +15,19 @@ class SlotParticipantPermission(IsOwner):
 
 class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
-        return action != 'DELETE' or obj.activity.status in ['draft', 'needs_work', 'submitted']
+        return (
+            action not in ('POST', 'DELETE') or
+            obj.activity.status in ['draft', 'needs_work', 'submitted']
+        )
 
     def has_action_permission(self, action, user, model_cls):
         return True
 
     def has_object_permission(self, request, view, obj):
-        return request.method != 'DELETE' or obj.activity.status in ['draft', 'needs_work', 'submitted']
+        return (
+            request.method not in ('POST', 'DELETE') or
+            obj.activity.status in ['draft', 'needs_work', 'submitted']
+        )
 
 
 class ParticipantDocumentPermission(permissions.DjangoModelPermissions):

@@ -10,7 +10,9 @@ from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger, TriggerManager
+from bluebottle.fsm.triggers import (
+    register, ModelChangedTrigger, ModelDeletedTrigger, TransitionTrigger, TriggerManager
+)
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     CreatePeriodTimeContributionEffect, SetEndDateEffect,
@@ -18,7 +20,8 @@ from bluebottle.time_based.effects import (
     RescheduleDurationsEffect,
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
-    LockFilledSlotsEffect, CreatePreparationTimeContributionEffect
+    LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
+    ResetSlotSelectionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -260,7 +263,6 @@ class TimeBasedTriggers(ActivityTriggers):
 @register(DateActivity)
 class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
-
         TransitionTrigger(
             DateStateMachine.reopen_manually,
             effects=[
@@ -497,6 +499,9 @@ def activity_has_no_accepted_participants(effect):
 @register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
+        ModelDeletedTrigger(
+            effects=[ResetSlotSelectionEffect]
+        ),
         TransitionTrigger(
             ActivitySlotStateMachine.reschedule,
             effects=[

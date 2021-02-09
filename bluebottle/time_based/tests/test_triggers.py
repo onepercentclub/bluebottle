@@ -514,6 +514,30 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.save()
         self.assertStatus(self.slot, 'running')
 
+    def test_reset_slot_selection(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        second_slot = DateActivitySlotFactory.create(activity=self.activity)
+        third_slot = DateActivitySlotFactory.create(activity=self.activity)
+
+        second_slot.delete()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.slot_selection, 'free')
+
+        third_slot.delete()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.slot_selection, 'all')
+
+    def test_reset_slot_selection_all(self):
+        self.activity.save()
+
+        second_slot = DateActivitySlotFactory.create(activity=self.activity)
+
+        second_slot.delete()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.slot_selection, 'all')
+
 
 class ParticipantTriggerTestCase():
 

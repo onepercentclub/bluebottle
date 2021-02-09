@@ -14,7 +14,9 @@ from bluebottle.time_based.models import (
     TimeContribution,
     DateActivitySlot, SlotParticipant
 )
-from bluebottle.time_based.permissions import SlotParticipantPermission
+from bluebottle.time_based.permissions import (
+    SlotParticipantPermission, DateSlotActivityStatusPermission
+)
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     PeriodActivitySerializer,
@@ -91,18 +93,26 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 class DateSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
-        'activity': [ActivityOwnerPermission]
+        'activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
     }
-    permission_classes = []
+    permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
-        'activity': [ActivityOwnerPermission]
+        'activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
     }
-    permission_classes = []
+    permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 

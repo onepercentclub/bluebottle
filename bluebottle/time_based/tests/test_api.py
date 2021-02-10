@@ -733,7 +733,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
 
         response = self.client.patch(self.url, json.dumps(self.data), user=self.activity.owner)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)

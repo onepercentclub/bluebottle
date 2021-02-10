@@ -531,6 +531,11 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ActivitySlotStateMachine.reschedule,
             effects=[
                 TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
+
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.reschedule,
+                ),
             ]
         ),
         TransitionTrigger(

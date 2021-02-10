@@ -12,7 +12,11 @@ from rest_framework.serializers import (
 )
 from rest_framework.settings import api_settings
 
-from rest_framework_json_api.compat import collections_abc
+try:
+    import collections.abc as collections_abc
+except ImportError:
+    import collections as collections_abc
+
 from rest_framework_json_api.relations import HyperlinkedMixin, ResourceRelatedField, SkipDataMixin
 from rest_framework_json_api.renderers import JSONRenderer
 from rest_framework_json_api import utils

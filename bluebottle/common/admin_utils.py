@@ -58,9 +58,8 @@ class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
 
 
 class ImprovedModelForm(admin.ModelAdmin):
-    def formfield_for_dbfield(self, db_field, **kwargs):
+    def formfield_for_dbfield(self, db_field, request=None, **kwargs):
         if db_field.name in self.raw_id_fields:
-            kwargs.pop("request", None)
             type = db_field.rel.__class__.__name__
             if type == "ManyToOneRel":
                 kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel,
@@ -69,5 +68,7 @@ class ImprovedModelForm(admin.ModelAdmin):
                 kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel,
                                                                 site)
             return db_field.formfield(**kwargs)
+        if request:
+            kwargs["request"] = request
         return super(ImprovedModelForm, self).formfield_for_dbfield(db_field,
                                                                     **kwargs)

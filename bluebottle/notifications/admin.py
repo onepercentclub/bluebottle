@@ -23,7 +23,7 @@ class MessageAdminInline(GenericTabularInline):
     readonly_fields = ['sent', 'subject', 'recipient']
     fields = readonly_fields
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     extra = 0

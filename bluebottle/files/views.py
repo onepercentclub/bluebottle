@@ -15,7 +15,10 @@ from bluebottle.files.models import Document, Image, PrivateDocument
 from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
 
-mime = magic.Magic(mime=True)
+try:
+    mime = magic.Magic(mime=True)
+except TypeError:
+    mime = magic.Magic()
 
 
 class FileList(AutoPrefetchMixin, CreateAPIView):

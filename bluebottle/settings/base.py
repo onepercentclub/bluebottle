@@ -118,7 +118,7 @@ TEMPLATES = [
                 'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'django.template.loaders.eggs.Loader',
+                # 'django.template.loaders.eggs.Loader',
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
@@ -149,7 +149,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-    'bluebottle.auth.middleware.UserJwtTokenMiddleware',
+    'bluebottle.auth.middleware.UserJwtTokenMiddleware',  # 'Member' object has no attribute 'has_header'
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',

@@ -1,5 +1,10 @@
 from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+
+try:
+    from django_elasticsearch_dsl.documents import DocType
+except ImportError:
+    from django_elasticsearch_dsl import DocType
+from django_elasticsearch_dsl import fields
 
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
@@ -94,6 +99,8 @@ class InitiativeDocument(DocType):
             PeriodActivity,
             DateActivity
         )
+
+    Django = Meta
 
     def get_queryset(self):
         return super(InitiativeDocument, self).get_queryset().select_related(

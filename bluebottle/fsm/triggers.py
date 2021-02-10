@@ -37,7 +37,8 @@ class Trigger(object):
             if effect.is_valid and effect not in previous_effects:
                 previous_effects.append(effect)
                 effect.pre_save(effects=previous_effects)
-                if effect.post_save:
+                if effect.post_save and effect not in instance._postponed_effects:
+
                     instance._postponed_effects.insert(0, effect)
 
         return previous_effects

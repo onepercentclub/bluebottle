@@ -566,8 +566,10 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         DateParticipantFactory.create(activity=self.activity, user=eng)
         mail.outbox = []
         self.slot.start = now() + timedelta(days=10)
+
         self.slot.execute_triggers(user=self.user, send_messages=True)
         self.slot.save()
+
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,

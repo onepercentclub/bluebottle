@@ -41,7 +41,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     reopen = Transition(
         [running, full],
         ActivityStateMachine.open,
-        name=_("Reopen"),
+        name=_("Unlock"),
         description=_(
             "The number of participants has fallen below the required number. "
             "People can sign up again for the task."

@@ -2,9 +2,17 @@
 {% load i18n %}
 {% block content %}
 <p>
-{% blocktrans context 'email' %}
-The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }}. That is just a few days away!
-{% endblocktrans %}
+    {% blocktrans context 'email' %}
+    Some details of activity "{{ title }}" have changed.
+    {% endblocktrans %}
+</p>
+<p>
+
+    {% blocktrans context 'email' %}
+    These are all the time slots that you participate in:
+    {% endblocktrans %}
+    <br/>
+    {% include 'mails/messages/partial/slots.html' %}
 </p>
 
 <p>

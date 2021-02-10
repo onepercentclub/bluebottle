@@ -1,7 +1,9 @@
 from datetime import timedelta, date
 
 from django.core import mail
+from django.template import defaultfilters
 from django.utils.timezone import now
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -537,6 +539,54 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         second_slot.delete()
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.slot_selection, 'all')
+
+    def test_changed_single_date(self):
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        mail.outbox = []
+        self.slot.start = now() + timedelta(days=10)
+        self.slot.save()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The details of activity "{}" have changed'.format(self.activity.title)
+        )
+        with TenantLanguage('en'):
+            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+
+    def test_changed_multiple_dates(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        mail.outbox = []
+        self.slot.start = now() + timedelta(days=10)
+        self.slot.execute_triggers(user=self.user, send_messages=True)
+        self.slot.save()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The details of activity "{}" have changed'.format(self.activity.title)
+        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start),
+                defaultfilters.time(self.slot.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        with TenantLanguage('en'):
+            expected = '{} {} - {}'.format(
+                defaultfilters.date(self.slot2.start),
+                defaultfilters.time(self.slot2.start),
+                defaultfilters.time(self.slot2.end),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
 
 
 class ParticipantTriggerTestCase():

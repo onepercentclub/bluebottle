@@ -1,9 +1,9 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
-{% block message %}
+{% block content %}
 <p>
 {% blocktrans context 'email' %}
-The activity "{{ title }}" takes place on "{{ date }}". That is just a few days away!
+The activity "{{ title }}" takes place in just a few days!
 {% endblocktrans %}
 </p>
 
@@ -12,11 +12,7 @@ The activity "{{ title }}" takes place on "{{ date }}". That is just a few days 
 These are all the time slots that you participate in:
 {% endblocktrans %}
 <br/>
-{% for slot in slots %}
-    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }}
-    <br/>
-{% endfor %}
-</p>
+{% include 'mails/messages/partial/slots.html' %}
 
 <p>
 {% blocktrans context 'email' %}

@@ -9,5 +9,5 @@ Hi {{ recipient_name }},
 {% endblock %}
 
 {% block action %}
-   {% trans 'Go to your activity' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to your activity' context 'email' %}: {{ activity_url }}
 {% endblock %}`

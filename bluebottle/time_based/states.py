@@ -312,7 +312,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def is_user(self, user):
         """is participant"""
-        return self.instance.user == user
+        return self.instance.user == user or user.is_staff
 
     def can_accept_participant(self, user):
         """can accept participant"""
@@ -406,7 +406,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
         conditions=[activity_is_open],
-        permission=ContributorStateMachine.is_user,
+        permission=is_user,
     )
 
 

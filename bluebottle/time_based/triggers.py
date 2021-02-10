@@ -16,7 +16,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     CreatePeriodTimeContributionEffect, SetEndDateEffect,
-    ClearStartEffect, ClearDeadlineEffect,
+    ClearDeadlineEffect,
     RescheduleDurationsEffect,
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
@@ -266,7 +266,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             DateStateMachine.reopen_manually,
             effects=[
-                ClearStartEffect,
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),

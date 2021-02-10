@@ -30,7 +30,8 @@ from bluebottle.time_based.messages import (
     ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    ParticipantRemovedNotification, NewParticipantNotification, SlotDateChangedNotification
+    ParticipantRemovedNotification, NewParticipantNotification,
+    ChangedSingleDateNotification, ChangedMultipleDatesNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -374,6 +375,13 @@ def participant_slot_will_be_not_full(effect):
 
 
 class ActivitySlotTriggers(TriggerManager):
+
+    def has_one_slot(effect):
+        return effect.instance.activity.active_slots.count() == 1
+
+    def has_multiple_slots(effect):
+        return effect.instance.activity.active_slots.count() > 1
+
     triggers = [
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
@@ -410,7 +418,7 @@ class ActivitySlotTriggers(TriggerManager):
             ]
         ),
         ModelChangedTrigger(
-            ['start', 'duration', 'is_online', 'location'],
+            ['start', 'duration', 'is_online', 'location_id', 'location_hint'],
             effects=[
                 TransitionEffect(
                     ActivitySlotStateMachine.mark_complete,
@@ -420,6 +428,23 @@ class ActivitySlotTriggers(TriggerManager):
                     ActivitySlotStateMachine.mark_incomplete,
                     conditions=[slot_is_incomplete]
                 ),
+                NotificationEffect(
+                    ChangedSingleDateNotification,
+                    conditions=[
+                        has_accepted_participants,
+                        is_not_finished,
+                        has_one_slot
+                    ]
+                ),
+                NotificationEffect(
+                    ChangedMultipleDatesNotification,
+                    conditions=[
+                        has_accepted_participants,
+                        is_not_finished,
+                        has_multiple_slots
+                    ]
+                )
+
             ]
         ),
         ModelChangedTrigger(
@@ -505,6 +530,11 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ActivitySlotStateMachine.reschedule,
             effects=[
                 TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
+
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.reschedule,
+                ),
             ]
         ),
         TransitionTrigger(
@@ -545,12 +575,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
         ModelChangedTrigger(
             'start',
             effects=[
-                NotificationEffect(
-                    SlotDateChangedNotification,
-                    conditions=[
-                        is_not_finished
-                    ]
-                ),
                 TransitionEffect(
                     ActivitySlotStateMachine.finish,
                     conditions=[

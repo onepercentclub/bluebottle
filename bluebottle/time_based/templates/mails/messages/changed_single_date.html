@@ -3,10 +3,25 @@
 {% block content %}
 <p>
 {% blocktrans context 'email' %}
-The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }}. That is just a few days away!
+The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }}.
 {% endblocktrans %}
 </p>
-
+<p>
+{% if is_online %}
+{% if online_meeting_url %}
+{% blocktrans context 'email' %}
+Online meeting link: {{online_meeting_url}}
+{% endblocktrans %}
+{% endif %}
+{% else %}
+{% blocktrans context 'email' %}
+Location: {{location}}
+{% endblocktrans %}
+{% if location_hint %}
+{{location_hint}}
+{% endif %}
+{% endif %}
+</p>
 <p>
 {% blocktrans context 'email' %}
 Read the latest updates on the activity page.

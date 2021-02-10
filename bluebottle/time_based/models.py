@@ -170,7 +170,7 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_slots(self):
-        return self.slots.filter(status__in=['open', 'full', 'running'])
+        return self.slots.filter(status__in=['open', 'full', 'running', 'finished'])
 
     class Meta:
         verbose_name = _("Activity on a date")

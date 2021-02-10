@@ -6,23 +6,6 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 
 
-class SlotDateChangedNotification(TransitionMessage):
-    """
-    The date of the slot changed
-    """
-    subject = _('The date and time for a slot of your activity "{title}" has changed')
-    template = 'messages/slot_date_changed'
-    context = {
-        'title': 'activity.title'
-    }
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
-        ]
-
-
 class DeadlineChangedNotification(TransitionMessage):
     """
     The deadline of the activity changed
@@ -30,7 +13,8 @@ class DeadlineChangedNotification(TransitionMessage):
     subject = _('The deadline for your activity "{title}" changed')
     template = 'messages/deadline_changed'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_recipients(self):
@@ -49,6 +33,7 @@ class ReminderSingleDateNotification(TransitionMessage):
     send_once = True
     context = {
         'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -75,6 +60,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     # send_once = True
     context = {
         'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -90,7 +76,77 @@ class ReminderMultipleDatesNotification(TransitionMessage):
                 'title': slot.title,
                 'start_date': defaultfilters.date(slot.start),
                 'start_time': defaultfilters.time(slot.start),
-                'end_time': defaultfilters.time(slot.end)
+                'end_time': defaultfilters.time(slot.end),
+            })
+        return context
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
+class ChangedSingleDateNotification(TransitionMessage):
+    """
+    Notification when slot details (date, time or location) changed for a single date activity
+    """
+    subject = _('The details of activity "{title}" have changed')
+    template = 'messages/changed_single_date'
+    context = {
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        slot = self.obj
+        context['is_online'] = slot.is_online
+        context['online_meeting_url'] = slot.online_meeting_url
+        context['location'] = slot.location.formatted_address
+        context['location_hint'] = slot.location_hint
+        context['start_date'] = defaultfilters.date(slot.start)
+        context['start_time'] = defaultfilters.time(slot.start)
+        context['end_time'] = defaultfilters.time(slot.end)
+        return context
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.activity.accepted_participants
+        ]
+
+
+class ChangedMultipleDatesNotification(TransitionMessage):
+    """
+    Notification when slot details (date, time or location) changed for an activity with multiple slots
+    """
+    subject = _('The details of activity "{title}" have changed')
+    template = 'messages/changed_multiple_dates'
+    context = {
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slots'] = []
+        slots = self.obj.activity.slots.filter(
+            status__in=['full', 'open', 'running'],
+            slot_participants__participant__user=recipient,
+            slot_participants__status='registered'
+        ).order_by('start')
+        for slot in slots:
+            context['slots'].append({
+                'changed': slot.id == self.obj.id,
+                'title': slot.title,
+                'is_online': slot.is_online,
+                'online_meeting_url': slot.online_meeting_url,
+                'location': slot.location.formatted_address if slot.location else '',
+                'location_hint': slot.location_hint,
+                'start_date': defaultfilters.date(slot.start),
+                'start_time': defaultfilters.time(slot.start),
+                'end_time': defaultfilters.time(slot.end),
             })
         return context
 
@@ -108,7 +164,8 @@ class ActivitySucceededNotification(TransitionMessage):
     subject = _('Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -129,7 +186,8 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     subject = _('The activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded_manually'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_recipients(self):
@@ -146,7 +204,8 @@ class ActivityRejectedNotification(TransitionMessage):
     subject = _('Your activity "{title}" has been rejected')
     template = 'messages/activity_rejected'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_recipients(self):
@@ -161,7 +220,8 @@ class ActivityCancelledNotification(TransitionMessage):
     subject = _('Your activity "{title}" has been cancelled')
     template = 'messages/activity_cancelled'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_recipients(self):
@@ -176,7 +236,8 @@ class ActivityExpiredNotification(TransitionMessage):
     subject = _('The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_expired'
     context = {
-        'title': 'title'
+        'title': 'title',
+        'activity_url': 'get_absolute_url'
     }
 
     def get_recipients(self):
@@ -191,7 +252,8 @@ class ParticipantAddedNotification(TransitionMessage):
     subject = _('You have been added to the activity "{title}" 🎉')
     template = 'messages/participant_added'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):
@@ -206,7 +268,8 @@ class ParticipantCreatedNotification(TransitionMessage):
     subject = _('You have a new participant for your activity "{title}" 🎉')
     template = 'messages/participant_created'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):
@@ -221,7 +284,8 @@ class NewParticipantNotification(TransitionMessage):
     subject = _('A new participant has joined your activity "{title}" 🎉')
     template = 'messages/new_participant'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):
@@ -236,7 +300,8 @@ class ParticipantAcceptedNotification(TransitionMessage):
     subject = _('You have been selected for the activity "{title}" 🎉')
     template = 'messages/participant_accepted'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):
@@ -251,7 +316,8 @@ class ParticipantRejectedNotification(TransitionMessage):
     subject = _('You have not been selected for the activity "{title}"')
     template = 'messages/participant_rejected'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):
@@ -266,7 +332,8 @@ class ParticipantRemovedNotification(TransitionMessage):
     subject = _('You have been removed as participant for the activity "{title}"')
     template = 'messages/participant_removed'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_recipients(self):

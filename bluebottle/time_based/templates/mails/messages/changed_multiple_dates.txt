@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 {% blocktrans context 'email' %}
-The activity "{{ title }}" takes place in just a few days!
+Some details of activity "{{ title }}" have changed.
 {% endblocktrans %}
 
 {% blocktrans context 'email' %}

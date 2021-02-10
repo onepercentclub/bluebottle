@@ -1,0 +1,10 @@
+table.columns table.padded tr.highlighted td {
+    font-weight: bold;
+}
+
+table.columns table.padded td {
+    padding: 4px 8px;
+}
+table.columns table.padded td.nobreak {
+    white-space: nowrap;
+}

@@ -108,14 +108,6 @@ class SetEndDateEffect(Effect):
         self.instance.deadline = date.today()
 
 
-class ClearStartEffect(Effect):
-    title = _('Clear the start date of the activity')
-    template = 'admin/clear_start.html'
-
-    def pre_save(self, **kwargs):
-        self.instance.start = None
-
-
 class ClearDeadlineEffect(Effect):
     title = _('Clear the deadline of the activity')
     template = 'admin/clear_deadline.html'

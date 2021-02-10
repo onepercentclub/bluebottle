@@ -99,7 +99,16 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
-    pass
+    reschedule = Transition(
+        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        ActivityStateMachine.open,
+        name=_("Reschedule"),
+        permission=ActivityStateMachine.is_owner,
+        automatic=True,
+        description=_(
+            "The activity is reopened because the start date changed."
+        )
+    )
 
 
 @register(PeriodActivity)

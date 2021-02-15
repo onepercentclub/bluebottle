@@ -132,9 +132,11 @@ class RelatedActivityImageContent(ImageContentView):
     def get_queryset(self):
         return RelatedImage.objects.filter(
             content_type__in=[
-                ContentType.objects.get_by_natural_key('events', 'event'),
+                ContentType.objects.get_by_natural_key('time_based', 'dateactivity'),
+                ContentType.objects.get_by_natural_key('time_based', 'periodactivity'),
                 ContentType.objects.get_by_natural_key('funding', 'funding'),
                 ContentType.objects.get_by_natural_key('assignments', 'assignment'),
+                ContentType.objects.get_by_natural_key('events', 'event'),
             ]
         )
 

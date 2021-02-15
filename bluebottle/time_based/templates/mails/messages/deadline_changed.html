@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load local_time %}
 
-{% block message%}{% blocktrans with date=obj.start|local_date:obj.local_timezone start=obj.start|local_time:obj.local_timezone end=obj.end|local_time:obj.local_timezone tz=obj.start|local_timezone:obj.local_timezone context 'email' %}
+{% block message %}{% blocktrans with date=obj.start|local_date:obj.local_timezone start=obj.start|local_time:obj.local_timezone end=obj.end|local_time:obj.local_timezone tz=obj.start|local_timezone:obj.local_timezone context 'email' %}
 <p>The date and/or time of the activity "{{ title }}" has changed.</p>
 
 <p>The new date is {{ date }} from {{ start }} to {{ end }} ({{tz}}).</p>

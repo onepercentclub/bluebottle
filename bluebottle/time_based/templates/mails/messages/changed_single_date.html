@@ -1,6 +1,6 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
-{% block content %}
+{% block message %}
 <p>
 {% blocktrans context 'email' %}
 The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }}.

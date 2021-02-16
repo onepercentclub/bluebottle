@@ -218,6 +218,14 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     )
 
+    participants_export_url = PrivateFileSerializer(
+        'period-participant-export',
+        url_args=('pk', ),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -235,7 +243,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
-
+            'participants_export_url'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

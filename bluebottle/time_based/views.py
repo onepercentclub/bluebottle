@@ -375,3 +375,32 @@ class DateParticipantExportView(PrivateFileView):
             writer.writerow(row)
 
         return response
+
+
+class PeriodParticipantExportView(PrivateFileView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+    )
+
+    model = PeriodActivity
+
+    def get(self, request, *args, **kwargs):
+        activity = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+        row = [field[1] for field in self.fields]
+        writer.writerow(row)
+        for participant in activity.contributors.instance_of(
+            PeriodParticipant
+        ):
+            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            writer.writerow(row)
+
+        return response

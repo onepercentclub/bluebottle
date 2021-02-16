@@ -20,6 +20,11 @@
                     {% endif %}
                 {% endif %}
             </td>
+            <td class="nobreak">
+                {% if slot.changed %}
+                    <i>{% trans "Changed" %}</i>
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
 </table>

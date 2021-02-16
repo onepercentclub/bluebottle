@@ -39,3 +39,11 @@ class DateActivityModelTestCase(BluebottleTestCase):
         self.assertEqual(str(self.slotB), 'Slot 1')
         self.assertEqual(str(self.slotC), 'Slot 2')
         self.assertEqual(str(self.slotD), 'Slot 4')
+
+    def test_slot_sequence_change_dates(self):
+        self.slotD.start = now() + timedelta(days=8)
+        self.slotD.save()
+        self.assertEqual(self.slotA.sequence, 4)
+        self.assertEqual(self.slotB.sequence, 1)
+        self.assertEqual(self.slotC.sequence, 2)
+        self.assertEqual(self.slotD.sequence, 3)

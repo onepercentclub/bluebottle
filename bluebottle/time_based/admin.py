@@ -161,15 +161,14 @@ class DateActivityASlotInline(admin.TabularInline):
         },
     }
 
-    raw_id_fields = ['location']
     readonly_fields = ['link']
 
     fields = [
         'link',
+        'title',
         'start',
         'duration',
         'is_online',
-        'location'
     ]
 
     extra = 0
@@ -404,6 +403,7 @@ class DateSlotAdmin(SlotAdmin):
 
     detail_fields = SlotAdmin.detail_fields + [
         'activity',
+        'title',
         'start',
         'duration',
         'is_online',

@@ -341,7 +341,7 @@ class DateActivitySlot(ActivitySlot):
             return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     def __str__(self):
-        return self.title or "Slot ID {}".format(self.id)
+        return self.title or str(_("Slot"))
 
     class Meta:
         verbose_name = _('slot')

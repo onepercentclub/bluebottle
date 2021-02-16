@@ -73,7 +73,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
         )
         for slot in slots:
             context['slots'].append({
-                'title': slot.title,
+                'title': str(slot),
                 'start_date': defaultfilters.date(slot.start),
                 'start_time': defaultfilters.time(slot.start),
                 'end_time': defaultfilters.time(slot.end),

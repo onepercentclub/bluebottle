@@ -170,7 +170,7 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_slots(self):
-        return self.slots.filter(status__in=['open', 'full', 'running', 'finished'])
+        return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
 
     class Meta:
         verbose_name = _("Activity on a date")
@@ -283,6 +283,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     class Meta:
         abstract = True
+        ordering = ['start', 'id']
 
 
 class DateActivitySlot(ActivitySlot):
@@ -326,6 +327,13 @@ class DateActivitySlot(ActivitySlot):
             return self.start + self.duration
 
     @property
+    def sequence(self):
+        ids = list(self.activity.slots.values_list('id', flat=True))
+        if len(ids) and self.id and self.id in ids:
+            return ids.index(self.id) + 1
+        return '-'
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -341,7 +349,7 @@ class DateActivitySlot(ActivitySlot):
             return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     def __str__(self):
-        return self.title or str(_("Slot"))
+        return "{} {}".format(_("Slot"), self.sequence)
 
     class Meta:
         verbose_name = _('slot')
@@ -357,6 +365,7 @@ class DateActivitySlot(ActivitySlot):
             ('api_change_own_dateactivityslot', 'Can change own on a date activity slots through the API'),
             ('api_delete_own_dateactivityslot', 'Can delete own on a date activity slots through the API'),
         )
+        ordering = ['start', 'id']
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/date-slots'

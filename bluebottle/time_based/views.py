@@ -1,3 +1,6 @@
+import csv
+
+from bluebottle.utils.admin import prep_field
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
@@ -332,5 +335,43 @@ class ActivitySlotIcalView(PrivateFileView):
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.activity.slug
         )
+
+        return response
+
+
+class DateParticipantExportView(PrivateFileView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+    )
+
+    model = DateActivity
+
+    def get(self, request, *args, **kwargs):
+        activity = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+        slots = activity.active_slots.order_by('start')
+        row = [field[1] for field in self.fields]
+        for slot in slots:
+            row.append(str(slot))
+        writer.writerow(row)
+        for participant in activity.contributors.instance_of(
+            DateParticipant
+        ):
+            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            for slot in slots:
+                slot_participant = slot.slot_participants.filter(participant=participant).first()
+                if slot_participant:
+                    row.append(slot_participant.status)
+                else:
+                    row.append('-')
+            writer.writerow(row)
 
         return response

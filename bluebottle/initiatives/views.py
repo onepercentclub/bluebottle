@@ -180,6 +180,9 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = ThemePagination
 
+    def get_queryset(self):
+        return super().get_queryset().order_by('translations__name')
+
 
 class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = ThemeSerializer

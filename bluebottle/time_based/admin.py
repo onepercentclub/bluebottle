@@ -186,7 +186,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     form = TimeBasedActivityAdminForm
     inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter),
     ]

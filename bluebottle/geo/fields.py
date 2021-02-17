@@ -9,6 +9,11 @@ from mapwidgets import GooglePointFieldWidget
 
 class LatLngPoint(Point):
 
+    def __init__(self, x=None, y=None, z=None, srid=None):
+        if not srid:
+            srid = 4326
+        super().__init__(x, y, z, srid)
+
     @property
     def latitude(self):
         return self.coords[1]

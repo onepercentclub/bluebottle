@@ -2,6 +2,6 @@
 {% for slot in slots %}
 {{ slot.title }}
 {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }}
-{% if slot.is_online %}{% if slot.online_meeting_url %}{{ slot.online_meeting_url }}{% endif %}{% else %}{{ slot.location }}{% if slot.location_hint %} - {{ slot.location_hint }}{% endif %}{% endif %}
+{% if slot.is_online %}{% if slot.online_meeting_url %}{{ slot.online_meeting_url }}{% else %}{% trans "Anywhere/Online" %}{% endif %}{% else %}{{ slot.location }}{% if slot.location_hint %} - {{ slot.location_hint }}{% endif %}{% endif %}
 {% if slot.changed %}{% trans "(Changed)" %}
 {% endif %}{% endfor %}

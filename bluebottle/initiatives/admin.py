@@ -5,6 +5,7 @@ from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
+from parler.admin import SortedRelatedFieldListFilter
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
@@ -102,7 +103,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             fields = fields + ['location_link']
         return fields
 
-    list_filter = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
+    list_filter = [
+        InitiativeReviewerFilter,
+        'categories',
+        ('theme', SortedRelatedFieldListFilter),
+        StateMachineFilter,
+    ]
 
     def get_list_filter(self, request):
         filters = self.list_filter

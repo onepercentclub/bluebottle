@@ -9,9 +9,8 @@ from mapwidgets import GooglePointFieldWidget
 
 class LatLngPoint(Point):
 
-    def __init__(self, x=None, y=None, z=None, srid=None):
-        if not srid:
-            srid = 4326
+    def __init__(self, x=None, y=None, z=None, srid=4326):
+        # Set a default SRID so we don't get conversion errors
         super().__init__(x, y, z, srid)
 
     @property

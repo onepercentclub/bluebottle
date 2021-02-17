@@ -138,6 +138,9 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SkillPagination
 
+    def get_queryset(self):
+        return super().get_queryset().order_by('translations__name')
+
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = SkillSerializer

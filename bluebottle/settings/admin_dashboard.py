@@ -124,7 +124,7 @@ JET_SIDE_MENU_ITEMS = [
     },
     {
         'label': _('Offices'),
-        'permissions': ['offices.change_region'],
+        'permissions': ['offices.change_officeregion'],
         'enabled': 'initiatives.InitiativePlatformSettings.enable_office_regions',
         'items': [
             {

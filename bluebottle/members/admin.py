@@ -1,9 +1,9 @@
 import functools
+from builtins import object
 
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from builtins import object
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -29,7 +29,6 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.funding.models import Donor
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
@@ -46,6 +45,7 @@ from bluebottle.members.models import (
     UserActivity,
 )
 from bluebottle.segments.models import SegmentType
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -207,6 +207,13 @@ class UserActivityInline(admin.TabularInline):
         return False
 
 
+class SortedUnionFieldListFilter(UnionFieldListFilter):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lookup_choices = sorted(self.lookup_choices, key=lambda a: a[1].lower())
+
+
 class MemberAdmin(UserAdmin):
     raw_id_fields = ('partner_organization', )
 
@@ -349,8 +356,8 @@ class MemberAdmin(UserAdmin):
     list_filter = (
         'is_active',
         'newsletter',
-        ('favourite_themes', UnionFieldListFilter),
-        ('skills', UnionFieldListFilter),
+        ('favourite_themes', SortedUnionFieldListFilter),
+        ('skills', SortedUnionFieldListFilter),
         ('groups', UnionFieldListFilter)
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff',

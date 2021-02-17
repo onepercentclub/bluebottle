@@ -6,6 +6,19 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 
 
+def get_slot_info(slot):
+    return {
+        'title': slot.title or str(slot),
+        'is_online': slot.is_online,
+        'online_meeting_url': slot.online_meeting_url,
+        'location': slot.location.formatted_address if slot.location else '',
+        'location_hint': slot.location_hint,
+        'start_date': defaultfilters.date(slot.start),
+        'start_time': defaultfilters.time(slot.start),
+        'end_time': defaultfilters.time(slot.end),
+    }
+
+
 class DeadlineChangedNotification(TransitionMessage):
     """
     The deadline of the activity changed
@@ -39,9 +52,7 @@ class ReminderSingleDateNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
-        context['start_date'] = defaultfilters.date(slot.start)
-        context['start_time'] = defaultfilters.time(slot.start)
-        context['end_time'] = defaultfilters.time(slot.end)
+        context.update(get_slot_info(slot))
         return context
 
     def get_recipients(self):
@@ -72,12 +83,8 @@ class ReminderMultipleDatesNotification(TransitionMessage):
             slot_participants__status='registered'
         )
         for slot in slots:
-            context['slots'].append({
-                'title': str(slot),
-                'start_date': defaultfilters.date(slot.start),
-                'start_time': defaultfilters.time(slot.start),
-                'end_time': defaultfilters.time(slot.end),
-            })
+            info = get_slot_info(slot)
+            context['slots'].append(info)
         return context
 
     def get_recipients(self):
@@ -100,14 +107,7 @@ class ChangedSingleDateNotification(TransitionMessage):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        slot = self.obj
-        context['is_online'] = slot.is_online
-        context['online_meeting_url'] = slot.online_meeting_url
-        context['location'] = slot.location.formatted_address
-        context['location_hint'] = slot.location_hint
-        context['start_date'] = defaultfilters.date(slot.start)
-        context['start_time'] = defaultfilters.time(slot.start)
-        context['end_time'] = defaultfilters.time(slot.end)
+        context.update(get_slot_info(self.slot))
         return context
 
     def get_recipients(self):
@@ -137,17 +137,9 @@ class ChangedMultipleDatesNotification(TransitionMessage):
             slot_participants__status='registered'
         ).order_by('start')
         for slot in slots:
-            context['slots'].append({
-                'changed': slot.id == self.obj.id,
-                'title': slot.title,
-                'is_online': slot.is_online,
-                'online_meeting_url': slot.online_meeting_url,
-                'location': slot.location.formatted_address if slot.location else '',
-                'location_hint': slot.location_hint,
-                'start_date': defaultfilters.date(slot.start),
-                'start_time': defaultfilters.time(slot.start),
-                'end_time': defaultfilters.time(slot.end),
-            })
+            info = get_slot_info(slot)
+            info['changed'] = slot.id == self.obj.id
+            context['slots'].append(info)
         return context
 
     def get_recipients(self):

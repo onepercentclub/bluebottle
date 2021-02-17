@@ -7,6 +7,7 @@ from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
+from parler.admin import SortedRelatedFieldListFilter
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
@@ -185,8 +186,10 @@ class DateActivityAdmin(TimeBasedAdmin):
     form = TimeBasedActivityAdminForm
     inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields
-    list_filter = TimeBasedAdmin.list_filter + ['expertise']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    list_filter = TimeBasedAdmin.list_filter + [
+        ('expertise', SortedRelatedFieldListFilter),
+    ]
 
     list_display = TimeBasedAdmin.list_display + [
         'start',
@@ -233,7 +236,9 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
-    list_filter = TimeBasedAdmin.list_filter + ['expertise']
+    list_filter = TimeBasedAdmin.list_filter + [
+        ('expertise', SortedRelatedFieldListFilter)
+    ]
 
     list_display = TimeBasedAdmin.list_display + [
         'start', 'end_date', 'duration_string', 'participant_count'

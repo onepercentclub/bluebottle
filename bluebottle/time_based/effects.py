@@ -316,4 +316,4 @@ class UnsetCapacityEffect(Effect):
         return '<Effect: Unset the capacity>'
 
     def __str__(self):
-        return _('Reset slot selection to "all" for {activity}').format(activity=self.instance.activity)
+        return _('Reset slot selection to "all" for {activity}').format(activity=self.activity)

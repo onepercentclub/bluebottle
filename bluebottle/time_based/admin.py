@@ -395,6 +395,7 @@ class SlotAdmin(StateMachineAdmin):
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
 
+    readonly_fields = SlotAdmin.readonly_fields + ['time_on_location']
     raw_id_fields = ['activity', 'location']
 
     date_hierarchy = 'start'
@@ -405,12 +406,23 @@ class DateSlotAdmin(SlotAdmin):
     detail_fields = SlotAdmin.detail_fields + [
         'activity',
         'start',
+        'time_on_location',
         'duration',
         'is_online',
         'location',
         'location_hint',
         'online_meeting_url',
     ]
+
+    def time_on_location(self, obj):
+        if obj.location:
+            return str(
+                _('Local start time in {location} is {start}.').format(
+                    location=obj.location,
+                    start=obj.local_time.strftime('%x %X')
+                )
+            )
+        return '-'
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

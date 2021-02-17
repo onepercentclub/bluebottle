@@ -1,3 +1,4 @@
+from datetime import timedelta
 from html.parser import HTMLParser
 from urllib.parse import urlencode
 
@@ -19,7 +20,6 @@ from bluebottle.time_based.validators import (
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
-
 
 tf = TimezoneFinder()
 
@@ -333,6 +333,12 @@ class DateActivitySlot(ActivitySlot):
                 lat=self.location.position.y
             )
             return pytz.timezone(tz_name)
+
+    @property
+    def local_time(self):
+        if self.location:
+            return self.start + timedelta(minutes=self.utc_offset)
+        return self.start
 
     @property
     def utc_offset(self):

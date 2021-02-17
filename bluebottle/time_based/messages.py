@@ -53,6 +53,7 @@ class ReminderSingleDateNotification(TransitionMessage):
         context = super().get_context(recipient)
         slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
         context.update(get_slot_info(slot))
+        context['title'] = self.obj.title
         return context
 
     def get_recipients(self):
@@ -107,7 +108,8 @@ class ChangedSingleDateNotification(TransitionMessage):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        context.update(get_slot_info(self.slot))
+        context.update(get_slot_info(self.obj))
+        context['title'] = self.obj.activity.title
         return context
 
     def get_recipients(self):

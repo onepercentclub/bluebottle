@@ -67,12 +67,12 @@ class TestExportAdmin(BluebottleTestCase):
             13
         )
         self.assertEqual(
-            book.sheet_by_name('Activities on a date').cell(0, 13).value,
-            'Start'
+            book.sheet_by_name('Activities on a date').cell(0, 8).value,
+            'Status'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities on a date').cell(0, 14).value,
-            'Time needed'
+            book.sheet_by_name('Activities on a date').cell(0, 9).value,
+            'Expertise'
         )
 
         self.assertEqual(
@@ -80,15 +80,15 @@ class TestExportAdmin(BluebottleTestCase):
             9
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 16).value,
+            book.sheet_by_name('Activities during a period').cell(0, 15).value,
             'Preparation time'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 17).value,
+            book.sheet_by_name('Activities during a period').cell(0, 16).value,
             'Start'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 19).value,
+            book.sheet_by_name('Activities during a period').cell(0, 17).value,
             'Deadline'
         )
 
@@ -137,11 +137,11 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Time contributions').cell(0, 15).value,
+            book.sheet_by_name('Time contributions').cell(0, 16).value,
             'Favourite colour'
         )
         self.assertEqual(
-            book.sheet_by_name('Time contributions').cell(1, 15).value,
+            book.sheet_by_name('Time contributions').cell(1, 16).value,
             'Parblue Yellow'
         )
 
@@ -190,7 +190,7 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 22).value,
+            book.sheet_by_name('Activities during a period').cell(0, 20).value,
             'Department'
         )
 
@@ -198,7 +198,7 @@ class TestExportAdmin(BluebottleTestCase):
         while t < book.sheet_by_name('Users').nrows:
             if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
                 self.assertTrue(
-                    book.sheet_by_name('Activities during a period').cell(t, 22).value in
+                    book.sheet_by_name('Activities during a period').cell(t, 20).value in
                     ['Engineering, Rubbish', 'Rubbish, Engineering']
                 )
             t += 1
@@ -234,18 +234,18 @@ class TestExportAdmin(BluebottleTestCase):
         book = xlrd.open_workbook(result)
 
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 22).value,
+            book.sheet_by_name('Activities during a period').cell(0, 20).value,
             u'Reduce CO\u2082 emissions'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(1, 22).value,
+            book.sheet_by_name('Activities during a period').cell(1, 20).value,
             300
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 23).value,
+            book.sheet_by_name('Activities during a period').cell(0, 21).value,
             u'Save water'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(1, 23).value,
+            book.sheet_by_name('Activities during a period').cell(1, 21).value,
             750
         )

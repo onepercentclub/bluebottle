@@ -1,0 +1,10 @@
+<input type="hidden"
+       name="{{ widget.name }}"
+       value="{{ widget.value|stringformat:'s' }}"
+       {% include "django/forms/widgets/attrs.html" %} />
+{% if widget.attrs.slot.id  %}
+    <a href="{% url 'admin:time_based_dateactivityslot_change' widget.attrs.slot.id %}">
+        {{ widget.attrs.slot.start|date }}
+        {{ widget.attrs.slot.start|time }}
+    </a>
+{% endif %}

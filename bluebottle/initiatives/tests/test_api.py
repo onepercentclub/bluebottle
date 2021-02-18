@@ -17,7 +17,8 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory
+    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
+    DateActivitySlotFactory
 )
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
@@ -431,7 +432,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_get_activities(self):
-        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create())
+        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create(), slots=[])
+        slot = DateActivitySlotFactory.create(activity=event)
         response = self.client.get(
             self.url,
             user=self.owner
@@ -450,15 +452,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             activity_data['attributes']['title'],
             event.title
         )
-        self.assertEqual(activity_data['type'], 'activities/time-based/dates')
-        activity_location = activity_data['relationships']['location']['data']
 
-        self.assertTrue(
-            activity_location in (
-                {'type': included['type'], 'id': included['id']} for included in response.json()['included']
-            )
+        slot_data = get_include(response, 'activities/time-based/date-slots')
+        self.assertEqual(
+            slot_data['id'],
+            str(slot.pk)
         )
-
+        self.assertEqual(activity_data['type'], 'activities/time-based/dates')
         activity_image = activity_data['relationships']['image']['data']
 
         self.assertTrue(
@@ -495,11 +495,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         date_activity = DateActivityFactory.create(
             initiative=self.initiative,
-            start=now() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
 
         )
         date_activity.states.submit(save=True)
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            start=now() - datetime.timedelta(weeks=1),
+        )
         DateParticipantFactory.create_batch(3, activity=date_activity)
 
         funding = FundingFactory.create(
@@ -854,15 +857,23 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             initiative=second,
             status='open',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             initiative=third,
             status='open',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
             start=now() + datetime.timedelta(days=6)
         )
         PeriodActivityFactory.create(

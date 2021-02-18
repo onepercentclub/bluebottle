@@ -174,6 +174,10 @@ class ValidatedModelMixin(object):
             except ObjectDoesNotExist:
                 yield field
 
+    @property
+    def is_complete(self):
+        return len([req for req in self.required]) == 0 and len([er for er in self.errors]) == 0
+
 
 class AnonymizationMixin(object):
 

@@ -4,7 +4,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans with recipient_name=to.first_name %}
+        {% blocktrans context 'email' %}
             Hi {{ recipient_name }},<br/>
            
 

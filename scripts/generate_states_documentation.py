@@ -1,161 +1,87 @@
-import sys
-
-from io import StringIO
-
 import requests
-from django.core.management import call_command
 from django.conf import settings
+from django.utils.module_loading import import_string
 
-models = [
-
-    # Initiative
-    {
-        'title': 'States - Initiative',
-        'model': 'bluebottle.initiatives.models.Initiative',
-        'page_id': '742588583'
-    },
-    {
-        'title': 'States - Activity Organizer',
-        'model': 'bluebottle.activities.models.Organizer',
-        'page_id': '742588590'
-    },
-
-    # Funding
-    {
-        'title': 'States - Funding - Donor',
-        'model': 'bluebottle.funding.models.Donor',
-        'page_id': '739999825'
-    },
-    {
-        'title': 'States - Funding - Money Contribution',
-        'model': 'bluebottle.funding.models.MoneyContribution',
-        'page_id': '1179975917'
-    },
-    {
-        'title': 'States - Funding - Fundraising Campaign',
-        'model': 'bluebottle.funding.models.Funding',
-        'page_id': '742359054'
-    },
-
-    {
-        'title': 'States - Funding - Plain Payout Account',
-        'model': 'bluebottle.funding.models.PlainPayoutAccount',
-        'page_id': '742654079'
-    },
-    {
-        'title': 'States - Funding - Stripe Payout Account',
-        'model': 'bluebottle.funding_stripe.models.StripePayoutAccount',
-        'page_id': '742654093'
-    },
-    {
-        'title': 'States - Funding - Payout',
-        'model': 'bluebottle.funding.models.Payout',
-        'page_id': '742326440'
-    },
-    {
-        'title': 'States - Funding - Stripe Source Payment',
-        'model': 'bluebottle.funding_stripe.models.StripeSourcePayment',
-        'page_id': '742326474'
-    },
-    {
-        'title': 'States - Funding - Stripe Intent Payment',
-        'model': 'bluebottle.funding_stripe.models.StripePayment',
-        'page_id': '742326447'
-    },
-    {
-        'title': 'States - Funding - Pledge Payment',
-        'model': 'bluebottle.funding_pledge.models.PledgePayment',
-        'page_id': '750977260'
-    },
-    {
-        'title': 'States - Funding - Flutterwave Payment',
-        'model': 'bluebottle.funding_flutterwave.models.FlutterwavePayment',
-        'page_id': '750977317'
-    },
-    {
-        'title': 'States - Funding - Lipisha Payment',
-        'model': 'bluebottle.funding_lipisha.models.LipishaPayment',
-        'page_id': '750944494'
-    },
-    {
-        'title': 'States - Funding - Vitepay Payment',
-        'model': 'bluebottle.funding_vitepay.models.VitepayPayment',
-        'page_id': '750911678'
-    },
-
-    {
-        'title': 'States - Funding - Stripe External Account',
-        'model': 'bluebottle.funding_stripe.models.ExternalAccount',
-        'page_id': '1051688967'
-    },
-    {
-        'title': 'States - Funding - Pledge Bank Account',
-        'model': 'bluebottle.funding_pledge.models.PledgeBankAccount',
-        'page_id': '1050116137'
-    },
-    {
-        'title': 'States - Funding - Flutterwave Bank Account',
-        'model': 'bluebottle.funding_flutterwave.models.FlutterwaveBankAccount',
-        'page_id': '1050116130'
-    },
-    {
-        'title': 'States - Funding - Lipisha Bank Account',
-        'model': 'bluebottle.funding_lipisha.models.LipishaBankAccount',
-        'page_id': '1050279943'
-    },
-    {
-        'title': 'States - Funding - Vitepay Bank Account',
-        'model': 'bluebottle.funding_vitepay.models.VitepayBankAccount',
-        'page_id': '1050148912'
-    },
-
-    # Time-based Activities
-    {
-        'title': 'States - Time based - Activity on a date',
-        'model': 'bluebottle.time_based.models.DateActivity',
-        'page_id': '1120731198'
-    },
-    {
-        'title': 'States - Time based - Participant on a date',
-        'model': 'bluebottle.time_based.models.DateParticipant',
-        'page_id': '1180041279'
-    },
-    {
-        'title': 'States - Time based - Activity over a period',
-        'model': 'bluebottle.time_based.models.PeriodActivity',
-        'page_id': '1120731205'
-    },
-    {
-        'title': 'States - Time based - Participant over a period',
-        'model': 'bluebottle.time_based.models.PeriodParticipant',
-        'page_id': '1179975839'
-    },
-    {
-        'title': 'States - Time based - Time contribution',
-        'model': 'bluebottle.time_based.models.TimeContribution',
-        'page_id': '1180008621'
-    },
-
-]
+from bluebottle.fsm.utils import document_model, document_notifications
+from scripts.generate_notifications_documentation import generate_notification_html
 
 api = settings.CONFLUENCE['api']
 
 
+def make_list(source):
+    return "<ul>{}</ul>".format("".join(["<li>{}</li>".format(el) for el in source]))
+
+
+def make_table_head(source):
+    return "<tr>{}</tr>".format("".join(["<th>{}</th>".format(el.capitalize()) for el in source]))
+
+
+def make_row(source):
+    row = "<tr>"
+    for k, el in source.items():
+        if isinstance(el, list):
+            el = make_list(el)
+        row += "<td>{}</td>".format(el)
+    row += "</tr>"
+    return row
+
+
+def make_table(source, layout='default'):
+    table = "<table data-layout=\"{}\">".format(layout)
+    table += make_table_head(source[0].keys())
+    for row in source:
+        table += make_row(row)
+    table += "</table>"
+    return table
+
+
+def generate_html(documentation):
+    html = ""
+    html += "<h2>States</h2>"
+    html += "<em>All states this instance can be in.</em>"
+    html += make_table(documentation['states'])
+
+    html += "<h2>Transitions</h2>"
+    html += "<em>An instance will always move from one state to the other through a transition. " \
+            "A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
+            "either through a trigger or through a side effect of a related object.</em>"
+    html += make_table(documentation['transitions'], layout='full-width')
+
+    if len(documentation['triggers']):
+        html += "<h2>Triggers</h2>"
+        html += "<em>These are events that get triggered when the instance changes, " \
+                "other then through a transition. " \
+                "Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
+        html += make_table(documentation['triggers'], layout='full-width')
+
+    if len(documentation['periodic_tasks']):
+        html += "<h2>Periodic tasks</h2>"
+        html += "<em>These are events that get triggered when certain dates are passed. " \
+                "Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+        html += make_table(documentation['periodic_tasks'], layout='full-width')
+
+    return html
+
+
 def run(*args):
+
+    if 'prod' in args:
+        models = settings.CONFLUENCE['prod_models']
+    else:
+        models = settings.CONFLUENCE['dev_models']
 
     for model in models:
         url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
         response = requests.get(url, auth=(api['user'], api['key']))
         data = response.json()
         version = data['version']['number'] + 1
-        old_stdout = sys.stdout
-        result = StringIO()
-        sys.stdout = result
-        call_command('print_transitions', model['model'])
-        sys.stdout = old_stdout
-        html = result.getvalue()
-        html = html.encode('ascii', 'ignore')
-
+        documentation = document_model(import_string(model['model']))
+        html = generate_html(documentation)
+        messages = document_notifications(import_string(model['model']))
+        if len(messages):
+            html += "<h2>Automated messages</h2>"
+            html += "<em>On some triggers automated e-mails are send.</em>"
+            html += generate_notification_html(messages)
         data = {
             "id": model['page_id'],
             "type": "page",
@@ -166,7 +92,7 @@ def run(*args):
             },
             "body": {
                 "storage": {
-                    "value": html,
+                    "value": html.encode('ascii', 'ignore'),
                     "representation": "storage"
                 }
             }

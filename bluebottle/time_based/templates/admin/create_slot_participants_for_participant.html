@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Add participant to all slots" %}</h3>
+
+<p>
+{% blocktrans with slot_count=effects.0.instance.activity.slots.count %}
+    Add the new participant to all {{ slot_count }} the slots of the activity.
+{% endblocktrans %}
+

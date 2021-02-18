@@ -40,7 +40,7 @@ from bluebottle.funding_vitepay.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -464,7 +464,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
-        geolocation = get_included(response, 'geolocations')
+        geolocation = self.included_by_type(response, 'geolocations')[0]
         self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
 
         export_url = data['data']['attributes']['supporters-export-url']['url']
@@ -654,7 +654,7 @@ class FundingTestCase(BluebottleTestCase):
             data['data']['meta']['permissions']['PATCH']
         )
         self.assertTrue(
-            get_included(response, 'geolocations')
+            self.included_by_type(response, 'geolocations')[0]
         )
 
     def test_create_other_user(self):
@@ -717,7 +717,7 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributors/donations')
+        donation = self.included_by_type(response, 'contributors/donations')[0]
         self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
@@ -740,7 +740,7 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributors/donations')
+        donation = self.included_by_type(response, 'contributors/donations')[0]
         self.assertFalse('user' in donation['relationships'])
 
     def test_update(self):

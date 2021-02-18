@@ -15,7 +15,8 @@ from bluebottle.files.tests.factories import ImageFactory
 
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory
+    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
+    DateActivitySlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -144,13 +145,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         after = now() + dateutil.relativedelta.relativedelta(months=2)
 
         event = DateActivityFactory.create(
-            status='open',
-            start=next_month
+            status='open', slots=[]
         )
-        DateActivityFactory.create(
-            status='open',
-            start=after
+        DateActivitySlotFactory.create(activity=event, start=next_month)
+        event_after = DateActivityFactory.create(
+            status='open', slots=[]
         )
+        DateActivitySlotFactory.create(activity=event_after, start=after)
 
         assignment = PeriodActivityFactory.create(
             status='open',
@@ -317,17 +318,33 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_formatted_address(self):
+        activity1 = DateActivityFactory.create(
+            title='Location! Location!',
+            status='open'
+        )
         location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
-        first = DateActivityFactory.create(
+        DateActivitySlotFactory.create(
             location=location,
+            activity=activity1
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            location=location)
+
+        activity2 = DateActivityFactory.create(
+            title='Nog een!',
             status='open'
         )
-        second = DateActivityFactory.create(
-            title='Roggeveenstraat',
+        DateActivitySlotFactory.create(
+            location=location,
+            activity=activity2
+        )
+        activity3 = DateActivityFactory.create(
+            title='Nog een!',
             status='open'
         )
-        DateActivityFactory.create(
-            status='open'
+        DateActivitySlotFactory.create(
+            activity=activity3
         )
 
         response = self.client.get(
@@ -338,8 +355,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(activity1.pk))
+        self.assertEqual(data['data'][1]['id'], str(activity2.pk))
 
     def test_search_initiative_title(self):
         first = DateActivityFactory.create(
@@ -405,6 +422,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_activity_date(self):
         first = DateActivityFactory.create(
             status='open',
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
             start=now() + timedelta(days=10)
         )
 
@@ -412,6 +432,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open',
             deadline=now() + timedelta(days=9)
         )
+
         third = PeriodActivityFactory.create(
             status='open',
             deadline=now() + timedelta(days=11)
@@ -713,8 +734,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = DateActivityFactory.create(
             status='open',
             initiative=initiative,
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
             is_online=False
         )
+
         second = PeriodActivityFactory.create(
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),

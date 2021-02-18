@@ -1,0 +1,10 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}
+{% load local_time %}
+
+{% block message%}{% blocktrans with date=obj.start|local_date:obj.local_timezone start=obj.start|local_time:obj.local_timezone end=obj.end|local_time:obj.local_timezone tz=obj.start|local_timezone:obj.local_timezone context 'email' %}
+The date and/or time of one of the slots of the activity "{{ title }}" has changed.
+
+The new date is {{ date }} from {{ start }} to {{ end }} ({{tz}}).
+
+{% endblocktrans %}{% endblock %}

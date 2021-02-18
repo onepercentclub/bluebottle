@@ -4,7 +4,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
+        {% blocktrans context 'email' %}
             Hi {{ recipient_name }},
             <br><br>
             All donations received for your campaign "{{ title }}" will be refunded to the donors.

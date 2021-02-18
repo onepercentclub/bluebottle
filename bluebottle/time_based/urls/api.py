@@ -7,11 +7,12 @@ from bluebottle.time_based.views import (
     DateTransitionList, PeriodTransitionList,
     DateParticipantList, DateParticipantDetail,
     DateParticipantTransitionList, DateParticipantDocumentDetail,
-    DateActivityIcalView,
-
     PeriodParticipantList, PeriodParticipantDetail,
     PeriodParticipantTransitionList, PeriodParticipantDocumentDetail,
-    TimeContributionDetail
+    TimeContributionDetail,
+    DateSlotDetailView, DateSlotListView,
+    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
+    DateActivityIcalView, ActivitySlotIcalView
 )
 
 urlpatterns = [
@@ -32,9 +33,21 @@ urlpatterns = [
         DateActivityRelatedParticipantList.as_view(),
         name='date-participants'),
 
-    url(r'^/date/ical/(?P<pk>\d+)$',
+    url(r'^/date/slots$',
+        DateSlotListView.as_view(),
+        name='date-slot-list'),
+
+    url(r'^/date/slots/(?P<pk>\d+)$',
+        DateSlotDetailView.as_view(),
+        name='date-slot-detail'),
+
+    url(r'^/date/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
         DateActivityIcalView.as_view(),
         name='date-ical'),
+
+    url(r'^/slot/ical/(?P<pk>\d+)$',
+        ActivitySlotIcalView.as_view(),
+        name='slot-ical'),
 
     url(r'^/period/(?P<pk>\d+)$',
         PeriodActivityDetailView.as_view(),
@@ -43,14 +56,6 @@ urlpatterns = [
     url(r'^/period/(?P<activity_id>\d+)/participants$',
         PeriodActivityRelatedParticipantList.as_view(),
         name='period-participants'),
-
-    url(r'^/date/ical/(?P<pk>\d+)$',
-        DateActivityIcalView.as_view(),
-        name='date-ical'),
-
-    url(r'^/period/(?P<pk>\d+)$',
-        PeriodActivityDetailView.as_view(),
-        name='period-detail'),
 
     url(r'^/date/transitions$',
         DateTransitionList.as_view(),
@@ -72,6 +77,16 @@ urlpatterns = [
     url(r'^/participants/date/(?P<pk>\d+)/document$',
         DateParticipantDocumentDetail.as_view(),
         name='date-participant-document'),
+
+    url(r'^/slot-participants$',
+        SlotParticipantListView.as_view(),
+        name='slot-participant-list'),
+    url(r'^/slot-participants/(?P<pk>\d+)$',
+        SlotParticipantDetailView.as_view(),
+        name='slot-participant-detail'),
+    url(r'^/slot-participants/transitions$',
+        SlotParticipantTransitionList.as_view(),
+        name='slot-participant-transition-list'),
 
     url(r'^/participants/period$',
         PeriodParticipantList.as_view(),

@@ -4,15 +4,15 @@ from bluebottle.deeds.views import DeedListView, DeedDetailView, DeedTransitionL
 
 
 urlpatterns = [
-    url(r'^/deed$',
+    url(r'^/$',
         DeedListView.as_view(),
         name='deed-list'),
 
-    url(r'^/deed/(?P<pk>\d+)$',
+    url(r'^/(?P<pk>\d+)$',
         DeedDetailView.as_view(),
         name='deed-detail'),
 
-    url(r'^/deed/transitions$',
+    url(r'^/transitions$',
         DeedTransitionList.as_view(),
         name='deed-transition-list'),
 ]

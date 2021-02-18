@@ -6,8 +6,8 @@ from bluebottle.activities.models import Activity
 
 class Deed(Activity):
 
-    start = models.DateField(blank=True, null=True)
-    end = models.DateField(blank=True, null=True)
+    start = models.DateTimeField(blank=True, null=True)
+    end = models.DateTimeField(blank=True, null=True)
 
     auto_approve = True
 

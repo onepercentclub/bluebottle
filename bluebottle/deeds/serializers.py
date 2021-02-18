@@ -1,7 +1,7 @@
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer
+    BaseActivitySerializer, BaseActivityListSerializer
 )
 from bluebottle.deeds.models import Deed
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -54,6 +54,20 @@ class DeedSerializer(BaseActivitySerializer):
         #     'my_contributor.contributions': 'bluebottle.deeds.serializers.DeedContributionSerializer',
         # }
     )
+
+
+class DeedListSerializer(BaseActivityListSerializer):
+    permissions = ResourcePermissionField('date-detail', view_args=('pk',))
+
+    class Meta(BaseActivityListSerializer.Meta):
+        model = Deed
+        fields = BaseActivityListSerializer.Meta.fields + (
+            'start',
+            'end',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/deeds'
 
 
 class DeedTransitionSerializer(TransitionSerializer):

@@ -37,7 +37,8 @@ class Trigger(object):
             if effect.is_valid and effect not in previous_effects:
                 previous_effects.append(effect)
                 effect.pre_save(effects=previous_effects)
-                if effect.post_save:
+                if effect.post_save and effect not in instance._postponed_effects:
+
                     instance._postponed_effects.insert(0, effect)
 
         return previous_effects
@@ -48,20 +49,29 @@ class Trigger(object):
 
 @python_2_unicode_compatible
 class ModelChangedTrigger(Trigger):
-    def __init__(self, field, *args, **kwargs):
+    def __init__(self, fields, *args, **kwargs):
         super(ModelChangedTrigger, self).__init__(*args, **kwargs)
-        self.field = field
+        if not isinstance(fields, (tuple, list)):
+            fields = (fields, )
+        self.fields = fields
 
     @property
     def title(self):
-        return 'change the {}'.format(self.field)
+        return 'change the {}'.format(
+            ', '.join(field.capitalize() for field in self.fields)
+        )
 
     def changed(self, instance):
-        return instance._initial_values.get(self.field) != getattr(instance, self.field)
+        return any(
+            instance._initial_values.get(field) != getattr(instance, field)
+            for field in self.fields
+        )
 
     def __str__(self):
-        if self.field:
-            return str(_("{} has been changed").format(self.field.capitalize()))
+        if self.fields:
+            return _("{} has been changed").format(
+                ', '.join(field.capitalize() for field in self.fields)
+            )
         return str(_("Object has been changed"))
 
 

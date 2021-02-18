@@ -287,7 +287,7 @@ class ContributionStateMachine(ModelStateMachine):
     )
 
     fail = Transition(
-        (new, succeeded, ),
+        [new, succeeded],
         failed,
         name=_('fail'),
         description=_("The contribution failed. It will not be visible in reports."),

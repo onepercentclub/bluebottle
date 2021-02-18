@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -20,20 +20,35 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     capacity = 10
-    is_online = False
     review = False
 
     expertise = factory.SubFactory(SkillFactory)
-    location = factory.SubFactory(GeolocationFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
+
+
+class DateActivitySlotFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = DateActivitySlot
+
+    title = factory.Faker('sentence')
+    capacity = 10
+    is_online = False
+
+    location = factory.SubFactory(GeolocationFactory)
+    start = now() + timedelta(weeks=4)
+    duration = timedelta(hours=2)
 
 
 class DateActivityFactory(TimeBasedFactory):
     class Meta:
         model = DateActivity
 
-    start = (now() + timedelta(weeks=4))
-    duration = timedelta(hours=2)
+    slot_selection = 'all'
+
+    slots = factory.RelatedFactory(
+        DateActivitySlotFactory,
+        factory_related_name='activity'
+    )
 
 
 class PeriodActivityFactory(TimeBasedFactory):
@@ -44,6 +59,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     duration = timedelta(hours=20)
     duration_period = 'overall'
     is_online = False
+    location = factory.SubFactory(GeolocationFactory)
 
     start = (now() + timedelta(weeks=2)).date()
 
@@ -60,7 +76,7 @@ class PeriodParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PeriodParticipant
 
-    activity = factory.SubFactory(DateActivityFactory)
+    activity = factory.SubFactory(PeriodActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
@@ -74,3 +90,11 @@ class ParticipationFactory(factory.DjangoModelFactory):
 
     start = now() + timedelta(weeks=2)
     end = now() + timedelta(weeks=3)
+
+
+class SlotParticipantFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SlotParticipant
+
+    slot = factory.SubFactory(DateActivitySlotFactory)
+    participant = factory.SubFactory(DateParticipantFactory)

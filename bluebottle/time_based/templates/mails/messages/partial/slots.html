@@ -1,0 +1,30 @@
+{% load i18n %}
+<table class="padded">
+    {% for slot in slots %}
+        <tr class="{% if slot.changed %}highlighted{% endif %}">
+            <td class="nobreak">{{ slot.start_date }}</td>
+            <td class="nobreak">{{ slot.start_time }}</td>
+            <td class="nobreak">{{ slot.end_time }}</td>
+            <td>
+                {% if slot.is_online %}
+                    {% if slot.online_meeting_url %}
+                        <a href="{{ slot.online_meeting_url }}">
+                            {% trans "Meeting link" %}
+                        </a>
+                    {% endif %}
+                {% else %}
+                    {{ slot.location }}
+                    {% if slot.location_hint %}
+                        <br/>
+                        {{ slot.location_hint }}
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td class="nobreak">
+                {% if slot.changed %}
+                    <i>{% trans "Changed" %}</i>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>

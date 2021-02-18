@@ -237,7 +237,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             return True
         return super(ActivityChildAdmin, self).lookup_allowed(key, value)
 
+    def save_model(self, request, obj, form, change):
+        if obj.states.transitions['auto_submit'] in obj.states.possible_transitions():
+            obj.states.auto_submit()
+
+        super().save_model(request, obj, form, change)
+
     show_in_index = True
+    date_hierarchy = 'created'
 
     ordering = ('-created',)
 
@@ -582,7 +589,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
 
     class DateInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'start', 'duration', 'state_name']
+                           'link', 'start', 'state_name']
 
         fields = readonly_fields
         model = DateActivity

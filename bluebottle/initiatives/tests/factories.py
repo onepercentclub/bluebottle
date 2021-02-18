@@ -17,7 +17,6 @@ class InitiativeFactory(factory.DjangoModelFactory):
     story = factory.Faker('text')
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
-    reviewer = factory.SubFactory(BlueBottleUserFactory)
     activity_manager = factory.SubFactory(BlueBottleUserFactory)
     has_organization = False
 
@@ -27,5 +26,6 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):
+
     class Meta(object):
         model = InitiativePlatformSettings

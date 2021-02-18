@@ -127,6 +127,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
                         included_cache[new_item['type']][new_item['id']] = \
                             utils._format_object(new_item)
+
                         cls.extract_included(
                             serializer_fields,
                             serializer_resource,
@@ -193,7 +194,10 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                 continue
 
             source = field.source
-            relation_type = utils.get_related_resource_type(field)
+            try:
+                relation_type = utils.get_related_resource_type(field)
+            except AttributeError:
+                relation_type = utils.get_related_resource_type(field.child_relation)
 
             if isinstance(field, relations.HyperlinkedIdentityField):
                 resolved, relation_instance = utils.get_relation_instance(

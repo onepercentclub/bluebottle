@@ -11,7 +11,11 @@ from bluebottle.activities.permissions import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
-    TimeContribution
+    TimeContribution,
+    DateActivitySlot, SlotParticipant
+)
+from bluebottle.time_based.permissions import (
+    SlotParticipantPermission, DateSlotActivityStatusPermission
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -22,7 +26,10 @@ from bluebottle.time_based.serializers import (
     DateParticipantSerializer,
     DateParticipantTransitionSerializer,
     PeriodParticipantTransitionSerializer,
-    TimeContributionSerializer
+    TimeContributionSerializer,
+    DateActivitySlotSerializer,
+    SlotParticipantSerializer,
+    SlotParticipantTransitionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -32,7 +39,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
-    ListAPIView, JsonApiViewMixin,
+    CreateAPIView, ListAPIView, JsonApiViewMixin,
     PrivateFileView
 )
 
@@ -53,7 +60,6 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
         serializer.save(owner=self.request.user)
 
 
@@ -83,6 +89,32 @@ class DateActivityDetailView(TimeBasedActivityDetailView):
 class PeriodActivityDetailView(TimeBasedActivityDetailView):
     queryset = PeriodActivity.objects.all()
     serializer_class = PeriodActivitySerializer
+
+
+class DateSlotListView(JsonApiViewMixin, CreateAPIView):
+    related_permission_classes = {
+        'activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
+    }
+    permission_classes = [DateSlotActivityStatusPermission, ]
+    queryset = DateActivitySlot.objects.all()
+    serializer_class = DateActivitySlotSerializer
+
+
+class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    related_permission_classes = {
+        'activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
+    }
+    permission_classes = [DateSlotActivityStatusPermission, ]
+    queryset = DateActivitySlot.objects.all()
+    serializer_class = DateActivitySlotSerializer
 
 
 class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
@@ -158,16 +190,16 @@ class PeriodParticipantList(ParticipantList):
     serializer_class = PeriodParticipantSerializer
 
 
-class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
-
-
 class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
     serializer_class = TimeContributionSerializer
     permission_classes = [ContributionPermission]
+
+
+class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
+    )
 
 
 class DateParticipantDetail(ParticipantDetail):
@@ -194,6 +226,23 @@ class PeriodParticipantTransitionList(ParticipantTransitionList):
     queryset = PeriodParticipant.objects.all()
 
 
+class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [SlotParticipantPermission]
+    queryset = SlotParticipant.objects.all()
+    serializer_class = SlotParticipantSerializer
+
+
+class SlotParticipantTransitionList(TransitionList):
+    serializer_class = SlotParticipantTransitionSerializer
+    queryset = SlotParticipant.objects.all()
+
+
 class ParticipantDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
     queryset = DateParticipant.objects
@@ -217,29 +266,71 @@ class DateActivityIcalView(PrivateFileView):
     max_age = 30 * 60  # half an hour
 
     def get(self, *args, **kwargs):
-        instance = self.get_object()
+        instance = super(DateActivityIcalView, self).get_object()
         calendar = icalendar.Calendar()
+        slots = instance.slots.filter(
+            status__in=['open', 'full', 'running', 'finished'],
+        )
+        if kwargs.get('user_id'):
+            slots = slots.filter(slot_participants__participant__user__id=kwargs['user_id'])
 
-        event = icalendar.Event()
-        event.add('summary', instance.title)
-        event.add('description', instance.details)
-        event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start.astimezone(utc))
-        event.add('dtend', (instance.start + instance.duration).astimezone(utc))
-        event['uid'] = instance.uid
+        for slot in slots:
+            event = icalendar.Event()
+            event.add('summary', instance.title)
+            event.add('description', instance.details)
+            event.add('url', instance.get_absolute_url())
+            event.add('dtstart', slot.start.astimezone(utc))
+            event.add('dtend', (slot.start + slot.duration).astimezone(utc))
+            event['uid'] = slot.uid
 
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
+            organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+            organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
-        event['organizer'] = organizer
-        if instance.location:
-            event['location'] = icalendar.vText(instance.location.formatted_address)
+            event['organizer'] = organizer
+            if slot.location:
+                event['location'] = icalendar.vText(slot.location.formatted_address)
 
-        calendar.add_component(event)
+            calendar.add_component(event)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
+        )
+        return response
+
+
+class ActivitySlotIcalView(PrivateFileView):
+    queryset = DateActivitySlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
+
+    max_age = 30 * 60  # half an hour
+
+    def get(self, *args, **kwargs):
+        instance = self.get_object()
+        calendar = icalendar.Calendar()
+
+        slot = icalendar.Event()
+        slot.add('summary', instance.activity.title)
+        slot.add('description', instance.activity.details)
+        slot.add('url', instance.activity.get_absolute_url())
+        slot.add('dtstart', instance.start.astimezone(utc))
+        slot.add('dtend', (instance.start + instance.duration).astimezone(utc))
+        slot['uid'] = instance.uid
+
+        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.activity.owner.email))
+        organizer.params['cn'] = icalendar.vText(instance.activity.owner.full_name)
+
+        slot['organizer'] = organizer
+        if instance.location:
+            slot['location'] = icalendar.vText(instance.location.formatted_address)
+
+        calendar.add_component(slot)
+
+        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
+            instance.activity.slug
         )
 
         return response

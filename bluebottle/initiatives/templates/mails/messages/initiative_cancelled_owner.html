@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=obj.owner.first_name context 'email' %}
+    {% blocktrans with recipient_name=to.first_name context 'email' %}
         Hi {{ recipient_name }},<br>
         Unfortunately, the initiative "{{ title }}" has been cancelled.
     {% endblocktrans %}

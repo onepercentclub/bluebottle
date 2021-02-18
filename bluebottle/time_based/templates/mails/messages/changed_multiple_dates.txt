@@ -1,0 +1,20 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}
+{% block message %}
+{% blocktrans context 'email' %}
+Some details of activity "{{ title }}" have changed.
+{% endblocktrans %}
+
+{% blocktrans context 'email' %}
+These are all the time slots that you participate in:
+{% endblocktrans %}
+{% include 'mails/messages/partial/slots.txt' %}
+
+{% blocktrans context 'email' %}
+Read the latest updates on the activity page.
+{% endblocktrans %}
+
+{% blocktrans context 'email' %}
+If you are unable to participate, please withdraw via the activity page so that others can take your place.
+{% endblocktrans %}
+{% endblock %}

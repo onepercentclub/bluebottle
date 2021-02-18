@@ -14,6 +14,7 @@ from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
+from webtest import Text
 
 from bluebottle.clients import properties
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -143,6 +144,10 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
     def setUp(self):
         self.client = ApiClient(self.__class__.tenant)
 
+    def included_by_type(self, response, type):
+        included = response.json()['included']
+        return [include for include in included if include['type'] == type]
+
     @classmethod
     def setUpClass(cls):
         super(BluebottleTestCase, cls).setUpClass()
@@ -171,6 +176,16 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         start = response.content.decode().find(csrf) + len(csrf)
         end = response.content.decode().find("'", start)
         return response.content[start:end].decode()
+
+    def admin_add_inline_form_entry(self, form, inlines):
+        fields = [field for field in form.fields.items()]
+        number = form['{}-TOTAL_FORMS'.format(inlines)].value
+        form['{}-TOTAL_FORMS'.format(inlines)] = int(number) + 1
+        for field in fields:
+            if field[0].startswith('{}-__prefix__-'.format(inlines)):
+                name = field[0].replace('__prefix__', str(number))
+                new = Text(form, 'input', name, None)
+                form.fields[name] = [new]
 
 
 class SessionTestMixin(object):
@@ -268,6 +283,6 @@ class JSONAPITestClient(Client):
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
 
 
-def get_included(response, type):
+def get_first_included_by_type(response, type):
     included = response.json()['included']
     return [include for include in included if include['type'] == type][0]

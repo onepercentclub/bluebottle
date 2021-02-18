@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from builtins import str
 from builtins import object
+from builtins import str
 from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
@@ -12,7 +12,6 @@ from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language
-from django.utils.translation import ugettext_lazy as _
 
 
 @python_2_unicode_compatible
@@ -31,14 +30,14 @@ class TransitionMessage(object):
     send_once = False
 
     def get_generic_context(self):
-        from bluebottle.clients.utils import tenant_url, tenant_name
         language = get_current_language()
         context = {
-            'site': tenant_url(),
-            'site_name': tenant_name(),
+            'obj': self.obj,
+            'site': 'https://[site domain]',
+            'site_name': '[site name]',
             'language': language,
-            'contact_email': properties.CONTACT_EMAIL,
-            'first_name': _('Name')
+            'contact_email': '<platform manager email>',
+            'recipient_name': '[first name]'
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)
@@ -58,6 +57,18 @@ class TransitionMessage(object):
         template = loader.get_template("mails/{}.html".format(self.template))
         return template.render(context)
 
+    @property
+    def generic_content_html(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    @property
+    def generic_content_text(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.txt".format(self.template))
+        return template.render(context)
+
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
@@ -65,6 +76,7 @@ class TransitionMessage(object):
             'site_name': tenant_name(),
             'language': recipient.primary_language,
             'contact_email': properties.CONTACT_EMAIL,
+            'recipient_name': recipient.first_name,
             'first_name': recipient.first_name
         }
         for key, item in list(self.context.items()):
@@ -72,7 +84,6 @@ class TransitionMessage(object):
 
         if 'context' in self.options:
             context.update(self.options['context'])
-
         return context
 
     def __init__(self, obj, **options):
@@ -120,7 +131,7 @@ class TransitionMessage(object):
                         body_html = format_html(custom_template.body_html.format(**context))
                         body_txt = custom_template.body_txt.format(**context)
                     except custom_template.DoesNotExist:
-                        # Translation for current lagnuage not set, use default.
+                        # Translation for current language not set, use default.
                         pass
 
                 yield Message(

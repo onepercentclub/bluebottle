@@ -134,7 +134,6 @@ class FundingAdmin(ActivityChildAdmin):
 
     base_model = Funding
     form = FundingAdminForm
-    date_hierarchy = 'transition_date'
     list_filter = [StateMachineFilter, CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']

@@ -2,12 +2,12 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name context 'email' %}
+{% blocktrans  context 'email' %}
 Hi {{ recipient_name }},
 {% endblocktrans %}
 {% block message %}{% endblock %}
 {% endblock %}
 
 {% block action %}
-   {% trans 'Go to your activity' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to your activity' context 'email' %}: {{ activity_url }}
 {% endblock %}`

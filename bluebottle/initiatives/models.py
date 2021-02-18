@@ -213,9 +213,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
-
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),
+        ('deed', _('Deed')),
     )
 
     ACTIVITY_SEARCH_FILTERS = (
@@ -248,6 +248,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_impact = models.BooleanField(default=False)
     enable_office_regions = models.BooleanField(default=False)
     enable_multiple_dates = models.BooleanField(default=False)
+
+    @property
+    def deeds_enabled(self):
+        return 'deed' in self.activity_types
 
     class Meta(object):
         verbose_name_plural = _('initiative settings')

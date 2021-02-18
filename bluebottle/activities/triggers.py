@@ -33,6 +33,16 @@ class ActivityTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            ActivityStateMachine.auto_submit,
+            effects=[
+                TransitionEffect(
+                    ActivityStateMachine.auto_approve,
+                    conditions=[initiative_is_approved]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
             ActivityStateMachine.reject,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)

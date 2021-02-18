@@ -399,7 +399,9 @@ def donation_not_refunded(effect):
     """
     donation doesn't have status refunded or activity refunded
     """
-    return effect.instance.donation.status not in [
+    donation = effect.instance.donation
+    donation.refresh_from_db()  # Make sure we have the latest!
+    return donation.status not in [
         DonorStateMachine.refunded.value,
         DonorStateMachine.activity_refunded.value,
     ]

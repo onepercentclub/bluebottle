@@ -13,7 +13,6 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.deeds.models import Deed
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -494,7 +493,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Funding,
         PeriodActivity,
         DateActivity,
-        Deed
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
@@ -583,12 +581,6 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
-    class DeedInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'end', 'state_name']
-        fields = readonly_fields
-        model = Deed
-
     class FundingInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
                            'link', 'target', 'deadline', 'state_name']
@@ -612,5 +604,4 @@ class ActivityAdminInline(StackedPolymorphicInline):
         FundingInline,
         PeriodInline,
         DateInline,
-        DeedInline
     )

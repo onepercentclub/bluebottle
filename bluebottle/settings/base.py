@@ -339,7 +339,6 @@ TENANT_APPS = (
     'bluebottle.activities',
     'bluebottle.initiatives',
     'bluebottle.time_based',
-    'bluebottle.deeds',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.funding',
@@ -350,6 +349,7 @@ TENANT_APPS = (
     'bluebottle.funding_lipisha',
     'bluebottle.funding_telesom',
     'bluebottle.segments',
+
     'bluebottle.tasks',
     'bluebottle.homepage',
     'bluebottle.payouts',

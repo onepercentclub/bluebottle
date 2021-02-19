@@ -360,7 +360,7 @@ class DateParticipantExportView(PrivateFileView):
         slots = activity.active_slots.order_by('start')
         row = [field[1] for field in self.fields]
         for slot in slots:
-            row.append(str(slot))
+            row.append(slot.title or str(slot))
         writer.writerow(row)
         for participant in activity.contributors.instance_of(
             DateParticipant

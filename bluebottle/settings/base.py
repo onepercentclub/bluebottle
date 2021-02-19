@@ -696,13 +696,11 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__country__name', 'Country'),
                 ('location__country__alpha2_code', 'Country Code'),
 
-                ('location', 'Task location'),
-                ('skill', 'Expertise'),
+                ('expertise', 'Expertise'),
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
                 ('preparation', 'Preparation time'),
                 ('start', 'Start'),
-                ('people_applied', 'People applied'),
                 ('deadline', 'Deadline'),
 
                 ('created', 'Date created'),
@@ -738,18 +736,36 @@ EXPORTDB_EXPORT_CONF = {
                 ('description', 'Description'),
                 ('status', 'Status'),
 
-                ('location__locality', 'Location'),
-                ('location__country__name', 'Country'),
-                ('location__country__alpha2_code', 'Country Code'),
+                ('expertise', 'Expertise'),
 
                 ('capacity', 'People needed'),
-                ('start', 'Start'),
-                ('duration', 'Time needed'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DateActivityResource',
             'title': _('Activities on a date'),
+        }),
+
+        ('time_based.DateActivitySlot', {
+            'fields': (
+                ('id', 'Slot ID'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__initiative__id', 'Initiative ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__id', 'Activity ID'),
+
+                ('status', 'Status'),
+
+                ('location__locality', 'Location'),
+                ('location__country__name', 'Country'),
+                ('location__country__alpha2_code', 'Country Code'),
+
+                ('start', 'Start'),
+                ('duration', 'Duration'),
+                ('capacity', 'People needed'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.DateActivitySlotResource',
+            'title': _('Activity slots'),
         }),
         ('time_based.DateParticipant', {
             'fields': (
@@ -766,6 +782,25 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.DateParticipantResource',
             'title': _('Participants on a date'),
         }),
+
+        ('time_based.SlotParticipant', {
+            'fields': (
+                ('id', 'Slot Participant ID'),
+                ('slot__id', 'Slot ID'),
+                ('participant__activity__title', 'Activity Title'),
+                ('participant__activity__initiative__title', 'Initiative Title'),
+                ('participant__activity__id', 'Activity ID'),
+                ('participant__activity__status', 'Activity status'),
+                ('participant__id', 'Participant ID'),
+                ('participant__status', 'Participant status'),
+                ('participant__user__id', 'User ID'),
+                ('participant__user__remote_id', 'Remote ID'),
+                ('participant__user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.SlotParticipantResource',
+            'title': _('Slot participants'),
+        }),
         ('time_based.TimeContribution', {
             'fields': (
                 ('id', 'Contribution ID'),
@@ -777,6 +812,9 @@ EXPORTDB_EXPORT_CONF = {
                 ('contributor__user__id', 'User ID'),
                 ('contributor__user__remote_id', 'Remote ID'),
                 ('contributor__user__email', 'Email'),
+
+                ('slot_participant__slot__id', 'Slot ID'),
+
                 ('status', 'Status'),
 
                 ('value', 'Time spent'),

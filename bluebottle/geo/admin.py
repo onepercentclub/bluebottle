@@ -91,6 +91,7 @@ class LocationAdmin(admin.ModelAdmin):
 class PlaceInline(GenericStackedInline):
     model = Place
     max_num = 1
+    extra = 0
 
 
 admin.site.register(Location, LocationAdmin)

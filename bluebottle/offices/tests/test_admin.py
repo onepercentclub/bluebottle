@@ -20,9 +20,13 @@ class OfficeAdminTest(BluebottleAdminTestCase):
     """
     Test Offices in admin
     """
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
 
     def setUp(self):
-        super(OfficeAdminTest, self).setUp()
+        super().setUp()
+        self.app.set_user(self.staff_member)
         self.africa = OfficeRegionFactory.create(name='Africa')
         self.europe = OfficeRegionFactory.create(name='Europe')
         self.bulgaria = OfficeSubRegionFactory.create(name='Bulgaria', region=self.europe)
@@ -198,3 +202,14 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = False
         initiative_settings.save()
+
+    def test_office_menu_for_staff(self):
+        url = reverse('admin:index')
+        page = self.app.get(url)
+        self.assertFalse('Office group' in page.text)
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        url = reverse('admin:index')
+        page = self.app.get(url)
+        self.assertTrue('Office group' in page.text)

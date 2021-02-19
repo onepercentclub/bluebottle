@@ -145,10 +145,53 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    def test_unset_capacity(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertIsNone(self.activity.capacity)
+
+    def test_unset_registration_deadline(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.refresh_from_db()
+        self.activity.registration_deadline = None
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+
 
 class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_unset_registration_deadline(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.refresh_from_db()
+        self.activity.registration_deadline = None
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
 
     def test_reopen(self):
         self.initiative.states.submit(save=True)
@@ -325,6 +368,25 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
         self.activity.start = date.today() + timedelta(days=2)
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_unset_start(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.start = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'running')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+
+        self.activity.start = None
         self.activity.save()
         self.activity.refresh_from_db()
 

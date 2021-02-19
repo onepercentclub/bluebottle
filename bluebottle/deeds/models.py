@@ -11,6 +11,10 @@ class Deed(Activity):
 
     auto_approve = True
 
+    @property
+    def activity_date(self):
+        return self.start
+
     class Meta(object):
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")

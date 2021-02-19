@@ -7,7 +7,7 @@ from bluebottle.assignments.serializers import (
     AssignmentListSerializer, AssignmentSerializer,
     ApplicantListSerializer, TinyAssignmentSerializer
 )
-from bluebottle.deeds.serializers import DeedListSerializer
+from bluebottle.deeds.serializers import DeedListSerializer, DeedSerializer
 from bluebottle.events.serializers import (
     EventListSerializer, EventSerializer,
     ParticipantListSerializer, TinyEventSerializer
@@ -96,7 +96,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         EventSerializer,
         FundingSerializer,
         AssignmentSerializer,
-
+        DeedSerializer,
         DateActivitySerializer,
         PeriodActivitySerializer,
     ]

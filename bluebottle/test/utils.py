@@ -26,6 +26,7 @@ from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
 from bluebottle.clients import properties
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
@@ -326,6 +327,63 @@ class APITestCase(BluebottleTestCase):
                 data['attributes'][field] = value
 
         return {'data': data}
+
+
+class StateMachineTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+    def create(self):
+        return self.factory.create(**self.defaults)
+
+    def assertTransition(self, name, user):
+        error = None
+        transition = None
+
+        model = self.create()
+
+        try:
+            transition = getattr(model.states, name)
+        except AttributeError:
+            error = '{} has no transition "{}'.format(
+                model.states, name
+            )
+
+        if transition:
+            try:
+                transition(user=user)
+            except TransitionNotPossible as e:
+                error = 'Transition "{}" not available for user {}: {}'.format(
+                    name, user, e
+                )
+
+        if error:
+            self.fail(error)
+
+    def assertNoTransition(self, name, user):
+        error = None
+        transition = None
+
+        model = self.create()
+
+        try:
+            transition = getattr(model.states, name)
+        except AttributeError:
+            error = '{} has no transition "{}'.format(
+                model.states, name
+            )
+        if transition:
+            try:
+                transition(user=user)
+
+                error = 'Transition "{}" is available for user {}, but should not be'.format(
+                    name, user
+                )
+            except TransitionNotPossible:
+                pass
+
+        if error:
+            self.fail(error)
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):

@@ -1,63 +1,111 @@
-from bluebottle.activities.states import OrganizerStateMachine
+from datetime import date
 from bluebottle.activities.triggers import (
-    ActivityTriggers
+    ActivityTriggers, ContributorTriggers
 )
-from bluebottle.deeds.models import Deed
-from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
-    register, TransitionTrigger
+    register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects import (
-    ActiveTimeContributionsTransitionEffect
+from bluebottle.deeds.states import (
+    DeedStateMachine, ParticipantStateMachine
 )
-from bluebottle.time_based.messages import (
-    ActivitySucceededNotification, ActivityExpiredNotification, ActivityRejectedNotification,
-    ActivityCancelledNotification
-)
-from bluebottle.time_based.states import (
-    TimeBasedStateMachine, TimeContributionStateMachine
-)
+
+
+def is_started(effect):
+    """
+    has started
+    """
+    return (
+        effect.instance.start and
+        effect.instance.start < date.today()
+    )
+
+
+def is_not_started(effect):
+    """
+    hasn't started yet
+    """
+    return not is_started(effect)
+
+
+def is_finished(effect):
+    """
+    has started
+    """
+    return (
+        effect.instance.finished and
+        effect.instance.start < date.today()
+    )
+
+
+def is_not_finished(effect):
+    """
+    hasn't started yet
+    """
+    return not is_finished(effect)
+
+
+def has_participants(effect):
+    """ has participants"""
+    return len(effect.instance.participants) > 0
+
+
+def has_no_participants(effect):
+    """ has accepted participants"""
+    return not has_participants(effect)
+
+
+def has_no_start_date(effect):
+    """ has accepted participants"""
+    return effect.instace.start
 
 
 @register(Deed)
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
-        TransitionTrigger(
-            TimeBasedStateMachine.succeed,
+        ModelChangedTrigger('start', effects=[TransitionEffect(DeedStateMachine.start)]),
+        ModelChangedTrigger(
+            'end',
             effects=[
-                NotificationEffect(ActivitySucceededNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
+                TransitionEffect(DeedStateMachine.restart, conditions=[is_started]),
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
             ]
         ),
 
         TransitionTrigger(
-            TimeBasedStateMachine.reject,
+            DeedStateMachine.start,
             effects=[
-                NotificationEffect(ActivityRejectedNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
-            ]
-        ),
-        TransitionTrigger(
-            TimeBasedStateMachine.cancel,
-            effects=[
-                NotificationEffect(ActivityCancelledNotification),
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.succeed,
+                    conditions=[has_no_start_date]
+                )
             ]
         ),
 
         TransitionTrigger(
-            TimeBasedStateMachine.restore,
+            DeedStateMachine.succeed,
             effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.succeed,
+                )
             ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.expire,
-            effects=[
-                NotificationEffect(ActivityExpiredNotification),
-            ]
-        ),
+        )
     ]
+
+
+@register(DeedParticipant)
+class ParticipantDeedTriggers(ContributorTriggers):
+    triggers = ContributorTriggers.triggers + []

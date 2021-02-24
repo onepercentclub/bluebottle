@@ -6,7 +6,7 @@ from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.deeds.models import (
     Deed
 )
-from bluebottle.time_based.states import (
+from bluebottle.deeds.states import (
     DeedStateMachine
 )
 from bluebottle.deeds.triggers import has_participants, has_no_participants

@@ -31,15 +31,18 @@ from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
+    ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDatesNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
+    PeriodActivitySlot, SlotParticipant
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
-    ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine
+    ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine,
+    PeriodParticipantStateMachine
 )
 
 
@@ -1148,6 +1151,13 @@ class PeriodParticipantTriggers(ParticipantTriggers):
                     'finished_contributions',
                     TimeContributionStateMachine.succeed
                 )
+            ]
+        ),
+
+        TransitionTrigger(
+            PeriodParticipantStateMachine.stop,
+            effects=[
+                NotificationEffect(ParticipantFinishedNotification),
             ]
         ),
 

@@ -1,0 +1,16 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message%}{% blocktrans context 'email' %}
+<p>Congratulations! Your contribution to the activity "{{title}}" is finished. Thank you for your participation. Together we have made the world a bit more beautiful.
+</p>
+
+<p>
+Craving for more? Then be sure to check out the activity overview page.
+</p>
+{% endblocktrans %}{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}/initiatives/activities/list"
+       class="action-email">{% trans 'View all activities' context 'email' %}</a>
+{% endblock %}`

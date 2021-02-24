@@ -2,6 +2,8 @@ from datetime import date
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
+
+from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
@@ -31,17 +33,17 @@ def is_not_started(effect):
 
 def is_finished(effect):
     """
-    has started
+    has finished
     """
     return (
-        effect.instance.finished and
-        effect.instance.start < date.today()
+        effect.instance.end and
+        effect.instance.end < date.today()
     )
 
 
 def is_not_finished(effect):
     """
-    hasn't started yet
+    hasn't finished yet
     """
     return not is_finished(effect)
 
@@ -58,7 +60,7 @@ def has_no_participants(effect):
 
 def has_no_start_date(effect):
     """ has accepted participants"""
-    return effect.instace.start
+    return not effect.instance.start
 
 
 @register(Deed)
@@ -84,28 +86,50 @@ class DeedTriggers(ActivityTriggers):
         ),
 
         TransitionTrigger(
-            DeedStateMachine.start,
+            DeedStateMachine.expire,
             effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    ParticipantStateMachine.succeed,
-                    conditions=[has_no_start_date]
-                )
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
             ]
         ),
 
-        TransitionTrigger(
-            DeedStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    ParticipantStateMachine.succeed,
-                )
-            ]
-        )
     ]
+
+
+def activity_is_finished(effect):
+    """activity is finished"""
+    return (
+        effect.instance.activity.end and
+        effect.instance.activity.end < date.today()
+    )
+
+
+def activity_will_be_empty(effect):
+    """activity will be empty"""
+    return len(effect.instance.activity.participants) == 1
 
 
 @register(DeedParticipant)
 class ParticipantDeedTriggers(ContributorTriggers):
-    triggers = ContributorTriggers.triggers + []
+    triggers = ContributorTriggers.triggers + [
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DeedStateMachine.expire,
+                    conditions=[activity_is_finished, activity_will_be_empty]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DeedStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                ),
+            ]
+        ),
+
+    ]

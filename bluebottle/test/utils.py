@@ -27,6 +27,8 @@ from webtest import Text
 
 from bluebottle.clients import properties
 from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.fsm.effects import TransitionEffect
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
@@ -384,6 +386,47 @@ class StateMachineTestCase(BluebottleTestCase):
 
         if error:
             self.fail(error)
+
+
+class TriggerTestCase(BluebottleTestCase):
+    def create(self):
+        self.model = self.factory.create(**self.defaults)
+
+    @contextmanager
+    def execute(self):
+        try:
+            self.effects = self.model.execute_triggers()
+            yield self.effects
+        finally:
+            self.effects = None
+
+    def _hasTransitionEffect(self, transition, model=None):
+        if not model:
+            model = self.model
+
+        return TransitionEffect(transition)(model) in self.effects
+
+    def _hasEffect(self, effect_cls, model=None):
+        if not model:
+            model = self.model
+
+        return effect_cls(model) in self.effects
+
+    def assertTransitionEffect(self, transition, model=None):
+        if not self._hasTransitionEffect(transition, model):
+            self.fail('Transition effect, "{}" not triggered'.format(transition))
+
+    def assertNoTransitionEffect(self, transition, model=None):
+        if self._hasTransitionEffect(transition, model):
+            self.fail('Transition effect, "{}" triggered'.format(transition))
+
+    def assertEffect(self, effect_cls, model=None):
+        if not self._hasEffect(effect_cls, model):
+            self.fail('Transition effect, "{}" not triggered'.format(effect_cls))
+
+    def assertNoEffect(self, effect_cls, model=None):
+        if self._hasEffect(effect_cls, model):
+            self.fail('Transition effect, "{}" triggered on'.format(effect_cls))
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):

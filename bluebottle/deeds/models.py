@@ -41,6 +41,10 @@ class Deed(Activity):
         fields = ['title', 'description']
         return fields
 
+    @property
+    def participants(self):
+        return self.contributors.instance_of(DeedParticipant).filter(status='new')
+
 
 class DeedParticipant(Contributor):
     class Meta(object):

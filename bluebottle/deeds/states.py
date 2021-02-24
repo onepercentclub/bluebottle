@@ -10,7 +10,7 @@ class DeedStateMachine(ActivityStateMachine):
     running = State(
         _('running'),
         'running',
-        _('The activity is taking place and people can\'t participate any more.')
+        _('The activity is currently taking place.')
     )
 
     def has_no_end_date(self):
@@ -24,6 +24,26 @@ class DeedStateMachine(ActivityStateMachine):
         running,
         name=_("Start"),
         description=_("Start the activity.")
+    )
+
+    succeed = Transition(
+        [ActivityStateMachine.open, running],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=True,
+    )
+
+    expire = Transition(
+        [
+            ActivityStateMachine.open, ActivityStateMachine.submitted,
+            ActivityStateMachine.succeeded, running
+        ],
+        ActivityStateMachine.expired,
+        name=_('Expire'),
+        description=_(
+            "The activity will be cancelled because no one has signed up for the registration deadline."
+        ),
+        automatic=True,
     )
 
     succeed_manually = Transition(
@@ -69,7 +89,7 @@ class DeedStateMachine(ActivityStateMachine):
         automatic=False,
         description=_(
             "Manually reopen the activity. "
-            "This will unset the end date if the date is in the passed. "
+            "This will unset the end date if the date is in the past. "
             "People can sign up again for the task."
         )
     )
@@ -105,7 +125,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     rejected = State(
         _('Removed'),
         'rejected',
-        _('This person has been removed from thr activity.')
+        _('This person has been removed from the activity.')
     )
 
     def is_user(self, user):

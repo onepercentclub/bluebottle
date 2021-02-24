@@ -62,3 +62,6 @@ class DeedParticipant(Contributor):
             ('api_change_own_deedparticipant', 'Can change own deed through the API'),
             ('api_delete_own_deedparticipant', 'Can delete own deed through the API'),
         )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/deeds/participant'

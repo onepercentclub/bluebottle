@@ -1003,6 +1003,18 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             'period'
         )
 
+    def test_stop(self):
+        participant = self.participant_factory.create(activity=self.activity)
+        self.activity.start = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        participant.states.stop(save=True)
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your contribution to the activity "{}" is successfull 🎉'.format(self.activity.title)
+        )
+
 
 class AllSlotParticipantTriggerTestCase(BluebottleTestCase):
 

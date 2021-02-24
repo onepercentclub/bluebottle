@@ -7,7 +7,10 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.models import DateActivity
-from bluebottle.time_based.tests.factories import PeriodActivityFactory, DateActivityFactory
+from bluebottle.time_based.tests.factories import (
+    PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
+    DateParticipantFactory
+)
 
 
 class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
@@ -118,3 +121,23 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK', 'Slots added to the activity')
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)
+
+    def test_add_slot_participants(self):
+        activity = DateActivityFactory.create(initiative=self.initiative, slot_selection='free')
+        DateActivitySlotFactory.create_batch(2, activity=activity)
+        participant = DateParticipantFactory.create(activity=activity)
+        self.assertEqual(len(participant.slot_participants.all()), 0)
+
+        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk, ))
+
+        page = self.app.get(url)
+        form = page.forms['dateparticipant_form']
+
+        form.fields['slot_participants-0-checked'][0].checked = True
+        form.fields['slot_participants-1-checked'][0].checked = True
+        form.fields['slot_participants-2-checked'][0].checked = True
+
+        page = form.submit()
+        page.forms['confirm'].submit().follow()
+
+        self.assertEqual(len(participant.slot_participants.all()), 3)

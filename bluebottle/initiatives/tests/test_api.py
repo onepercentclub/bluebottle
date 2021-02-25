@@ -653,9 +653,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_filter_owner_activity(self):
-        InitiativeFactory.create_batch(4, status='submitted')
+        InitiativeFactory.create_batch(4, status='submitted', owner=self.owner)
 
-        with_activity = InitiativeFactory.create(status='submitted')
+        with_activity = InitiativeFactory.create(status='submitted', owner=self.owner)
         activity = DateActivityFactory.create(owner=self.owner, initiative=with_activity)
 
         response = self.client.get(

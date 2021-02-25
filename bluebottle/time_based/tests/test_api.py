@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta, date
 
+from bluebottle.time_based.models import SlotParticipant
 from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
 from django.utils.timezone import now, utc
@@ -1416,13 +1417,16 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
     def test_get_owner(self):
         super().test_get_owner()
 
-        included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
+        self.assertEqual(len(self.response.data), 10)
+        included_contributions = self.included_by_type(
+            self.response,
+            'contributions/time-contributions')
         self.assertEqual(len(included_contributions), 20)
 
         included_slot_participants = self.included_by_type(
             self.response,
             'contributors/time-based/slot-participants')
-        self.assertEqual(len(included_slot_participants), 20)
+        self.assertEqual(len(included_slot_participants), 18)
 
     def test_get_anonymous(self):
         super().test_get_anonymous()
@@ -1529,6 +1533,49 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.random_user = BlueBottleUserFactory.create()
+        self.supporter1 = BlueBottleUserFactory.create()
+        self.supporter2 = BlueBottleUserFactory.create()
+        self.activity = DateActivityFactory.create(
+            review=False,
+            owner=self.owner
+        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.participant1 = DateParticipantFactory.create(
+            user=self.supporter1,
+            activity=self.activity
+        )
+        self.participant2 = DateParticipantFactory.create(
+            user=self.supporter2,
+            activity=self.activity
+        )
+        self.participant2.states.withdraw(save=True)
+
+        p1_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
+        p2_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant2)
+        self.url_part1_slot1 = reverse('slot-participant-detail', args=(p1_sl1.id,))
+        self.url_part2_slot1 = reverse('slot-participant-detail', args=(p2_sl1.id,))
+
+    def test_get_slot_participant(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        response = self.client.get(self.url_part1_slot1, user=self.supporter1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.url_part2_slot1, user=self.supporter1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.url_part1_slot1, user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(self.url_part2_slot1, user=self.random_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):

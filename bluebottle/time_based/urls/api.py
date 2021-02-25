@@ -12,7 +12,7 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     DateSlotDetailView, DateSlotListView,
     SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
-    DateActivityIcalView, ActivitySlotIcalView
+    DateActivityIcalView, ActivitySlotIcalView, SlotRelatedParticipantList
 )
 
 urlpatterns = [
@@ -32,6 +32,10 @@ urlpatterns = [
     url(r'^/date/(?P<activity_id>\d+)/participants$',
         DateActivityRelatedParticipantList.as_view(),
         name='date-participants'),
+
+    url(r'^/date/slots/(?P<slot_id>\d+)/participants$',
+        SlotRelatedParticipantList.as_view(),
+        name='slot-participants'),
 
     url(r'^/date/slots$',
         DateSlotListView.as_view(),

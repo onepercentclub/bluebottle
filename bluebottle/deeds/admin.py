@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin
-from bluebottle.deeds.models import Deed
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -18,19 +18,28 @@ class DeedAdminForm(StateMachineModelForm):
         }
 
 
+class DeedParticipantInline(admin.TabularInline):
+    model = DeedParticipant
+    raw_id_fields = ['user']
+    readonly_fields = ['created', 'status']
+    fields = ['user'] + readonly_fields
+    extra = 0
+
+
 @admin.register(Deed)
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
+    inlines = (DeedParticipantInline,) + ActivityChildAdmin.inlines
 
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
-        # 'participant_count',
+        'participant_count',
     ]
 
     def participant_count(self, obj):
-        return obj.accepted_participants.count()
+        return obj.participants.count()
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (

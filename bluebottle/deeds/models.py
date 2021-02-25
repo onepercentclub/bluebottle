@@ -43,7 +43,7 @@ class Deed(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(DeedParticipant).filter(status='new')
+        return self.contributors.instance_of(DeedParticipant).filter(status='accepted')
 
 
 class DeedParticipant(Contributor):

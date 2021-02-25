@@ -2,7 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.fsm.state import register, State, Transition
+from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 
 @register(Deed)
@@ -127,6 +127,11 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         'rejected',
         _('This person has been removed from the activity.')
     )
+    accepted = State(
+        _('Participating'),
+        'accepted',
+        _('This person has been signed up for the activity and was accepted automatically.')
+    )
 
     def is_user(self, user):
         """is participant"""
@@ -142,6 +147,13 @@ class DeedParticipantStateMachine(ContributorStateMachine):
             DeedStateMachine.open.value,
             DeedStateMachine.running.value,
         )
+
+    initiate = Transition(
+        EmptyState(),
+        accepted,
+        name=_('initiate'),
+        description=_('The contribution was created.')
+    )
 
     succeed = Transition(
         ContributorStateMachine.new,

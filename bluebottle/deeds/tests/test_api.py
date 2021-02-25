@@ -23,7 +23,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.factory = DeedFactory
 
         self.defaults = {
-            'initiative': InitiativeFactory.create(status='approved'),
+            'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
         }
@@ -36,7 +36,6 @@ class DeedsListViewAPITestCase(APITestCase):
 
     def test_create_complete(self):
         self.perform_create(user=self.user)
-
         self.assertStatus(status.HTTP_201_CREATED)
 
         self.assertIncluded('initiative')

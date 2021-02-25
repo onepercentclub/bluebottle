@@ -1,13 +1,14 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contributor
+from bluebottle.deeds.validators import EndDateValidator
 
 
 class Deed(Activity):
 
-    start = models.DateTimeField(blank=True, null=True)
-    end = models.DateTimeField(blank=True, null=True)
+    start = models.DateField(blank=True, null=True)
+    end = models.DateField(blank=True, null=True)
 
     auto_approve = True
 
@@ -33,7 +34,34 @@ class Deed(Activity):
     class JSONAPIMeta(object):
         resource_name = 'activities/deeds'
 
+    validators = [EndDateValidator]
+
     @property
     def required_fields(self):
         fields = ['title', 'description']
         return fields
+
+    @property
+    def participants(self):
+        return self.contributors.instance_of(DeedParticipant).filter(status='new')
+
+
+class DeedParticipant(Contributor):
+    class Meta(object):
+        verbose_name = _("Participant")
+        verbose_name_plural = _("Participants")
+
+        permissions = (
+            ('api_read_deedparticipant', 'Can view deed through the API'),
+            ('api_add_deedparticipant', 'Can add deed through the API'),
+            ('api_change_deedparticipant', 'Can change deed through the API'),
+            ('api_delete_deedparticipant', 'Can delete deed through the API'),
+
+            ('api_read_own_deedparticipant', 'Can view own deed through the API'),
+            ('api_add_own_deedparticipant', 'Can add own deed through the API'),
+            ('api_change_own_deedparticipant', 'Can change own deed through the API'),
+            ('api_delete_own_deedparticipant', 'Can delete own deed through the API'),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/deeds/participant'

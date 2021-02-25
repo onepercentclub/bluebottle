@@ -39,6 +39,7 @@ def dashboard_get_menu(context):
             prop = get_feature_flag(properties['enabled'])
             if not prop:
                 del groups[i]
+                i += 1
                 continue
         for item in group['items']:
             name = item.get('name', None) or item.get('url', None)

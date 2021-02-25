@@ -1,16 +1,16 @@
 from datetime import date
+
+from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
-
-from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.deeds.states import (
+    DeedStateMachine, ParticipantStateMachine
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
-)
-from bluebottle.deeds.states import (
-    DeedStateMachine, ParticipantStateMachine
 )
 
 
@@ -109,7 +109,7 @@ def activity_will_be_empty(effect):
 
 
 @register(DeedParticipant)
-class ParticipantDeedTriggers(ContributorTriggers):
+class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.remove,

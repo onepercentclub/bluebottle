@@ -116,7 +116,7 @@ class DeedStateMachine(ActivityStateMachine):
 
 
 @register(DeedParticipant)
-class ParticipantStateMachine(ContributorStateMachine):
+class DeedParticipantStateMachine(ContributorStateMachine):
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',

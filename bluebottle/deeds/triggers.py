@@ -6,7 +6,7 @@ from bluebottle.activities.triggers import (
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
-    DeedStateMachine, ParticipantStateMachine
+    DeedStateMachine, DeedParticipantStateMachine
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
@@ -112,7 +112,7 @@ def activity_will_be_empty(effect):
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            ParticipantStateMachine.remove,
+            DeedParticipantStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -122,7 +122,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.accept,
+            DeedParticipantStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
                     'activity',

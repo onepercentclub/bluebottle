@@ -163,10 +163,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     withdraw = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.new
-        ],
+        accepted,
         withdrawn,
         name=_('Withdraw'),
         description=_("Stop your participation in the activity."),
@@ -177,7 +174,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
 
     reapply = Transition(
         withdrawn,
-        ContributorStateMachine.new,
+        accepted,
         name=_('Reapply'),
         description=_("User re-applies after previously withdrawing."),
         automatic=False,
@@ -186,7 +183,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     remove = Transition(
-        ContributorStateMachine.new,
+        accepted,
         rejected,
         name=_('Remove'),
         description=_("Rmove participant from the activity."),

@@ -352,11 +352,11 @@ class DeedParticipantTranistionListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'new')
+        self.assertEqual(self.participant.status, 'accepted')
 
     def test_create_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'new')
+        self.assertEqual(self.participant.status, 'accepted')

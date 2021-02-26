@@ -19,7 +19,6 @@ class ParticipantListFilter(DjangoFilterBackend):
                 Q(activity__initiative__activity_manager=request.user) |
                 Q(status__in=[
                     DeedParticipantStateMachine.new.value,
-                    DeedParticipantStateMachine.accepted.value,
                     DeedParticipantStateMachine.succeeded.value
                 ])
             )
@@ -29,7 +28,6 @@ class ParticipantListFilter(DjangoFilterBackend):
             ).filter(
                 status__in=[
                     DeedParticipantStateMachine.new.value,
-                    DeedParticipantStateMachine.accepted.value,
                     DeedParticipantStateMachine.succeeded.value
                 ])
         return super().filter_queryset(request, queryset, view)

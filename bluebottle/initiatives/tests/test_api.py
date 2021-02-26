@@ -653,7 +653,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_filter_owner_activity(self):
-        InitiativeFactory.create_batch(4, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='submitted')
 
         with_activity = InitiativeFactory.create(status='submitted', owner=self.owner)
         activity = DateActivityFactory.create(owner=self.owner, initiative=with_activity)
@@ -664,7 +664,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         data = json.loads(response.content)
-
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
 

@@ -1569,13 +1569,13 @@ class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.client.get(self.url_part2_slot1, user=self.supporter1)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.get(self.url_part1_slot1, user=self.owner)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.get(self.url_part2_slot1, user=self.random_user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):

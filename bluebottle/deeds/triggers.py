@@ -1,17 +1,19 @@
 from datetime import date
+
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
 
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import CreateEffortContribution
+
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.deeds.states import (
+    DeedStateMachine, DeedParticipantStateMachine
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
-)
-from bluebottle.deeds.states import (
-    DeedStateMachine, ParticipantStateMachine
 )
 
 
@@ -96,7 +98,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[has_no_end_date]
                 ),
             ]
@@ -107,7 +109,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.succeed
+                    DeedParticipantStateMachine.succeed
                 ),
             ]
         ),
@@ -157,17 +159,17 @@ def activity_has_no_end(effect):
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            ParticipantStateMachine.initiate,
+            DeedParticipantStateMachine.initiate,
             effects=[
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
                 CreateEffortContribution
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.remove,
+            DeedParticipantStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -179,51 +181,51 @@ class DeedParticipantTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
-            ParticipantStateMachine.accept,
+            DeedParticipantStateMachine.accept,
             effects=[
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_is_started, activity_has_no_end]
                 ),
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.withdraw,
+            DeedParticipantStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)
             ]
         ),
 
         TransitionTrigger(
-            ParticipantStateMachine.reapply,
+            DeedParticipantStateMachine.reapply,
             effects=[
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
                 TransitionEffect(
-                    ParticipantStateMachine.succeed,
+                    DeedParticipantStateMachine.succeed,
                     conditions=[activity_is_started, activity_has_no_end]
                 ),
             ]
         ),
 
         TransitionTrigger(
-            ParticipantStateMachine.succeed,
+            DeedParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.accept,
+            DeedParticipantStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
                     'activity',

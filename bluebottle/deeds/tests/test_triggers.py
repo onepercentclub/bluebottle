@@ -7,7 +7,7 @@ from bluebottle.activities.states import OrganizerStateMachine, EffortContributi
 from bluebottle.activities.effects import SetContributionDateEffect, CreateEffortContribution
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.deeds.states import DeedStateMachine, ParticipantStateMachine
+from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -46,7 +46,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.start)
             self.assertNoTransitionEffect(
-                ParticipantStateMachine.succeed,
+                DeedParticipantStateMachine.succeed,
                 participant
             )
             self.assertNoTransitionEffect(
@@ -67,7 +67,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(DeedStateMachine.start)
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed,
+                DeedParticipantStateMachine.succeed,
                 participant
             )
             self.assertTransitionEffect(
@@ -154,7 +154,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed)
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed,
+                DeedParticipantStateMachine.succeed,
                 participant
             )
             self.assertTransitionEffect(
@@ -174,7 +174,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed)
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed,
+                DeedParticipantStateMachine.succeed,
                 participant
             )
             self.assertTransitionEffect(
@@ -216,7 +216,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
         with self.execute():
             self.assertEffect(CreateEffortContribution)
-            self.assertTransitionEffect(ParticipantStateMachine.succeed)
+            self.assertTransitionEffect(DeedParticipantStateMachine.succeed)
             self.model.save()
             self.assertTransitionEffect(
                 EffortContributionStateMachine.succeed, self.model.contributions.first()
@@ -248,7 +248,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed
+                DeedParticipantStateMachine.succeed
             )
 
     def test_reapply_running_no_end(self):
@@ -267,7 +267,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed
+                DeedParticipantStateMachine.succeed
             )
 
     def test_reapply_to_new(self):
@@ -334,7 +334,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed
+                DeedParticipantStateMachine.succeed
             )
 
     def test_accept_running_no_end(self):
@@ -353,7 +353,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed
+                DeedParticipantStateMachine.succeed
             )
 
     def test_accept_expired(self):
@@ -372,7 +372,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
             self.assertTransitionEffect(
-                ParticipantStateMachine.succeed
+                DeedParticipantStateMachine.succeed
             )
 
     def test_succeed_accept(self):

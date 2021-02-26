@@ -226,7 +226,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        DeedParticipantFactory.create_batch(5, activity=self.activity, status='new')
+        DeedParticipantFactory.create_batch(5, activity=self.activity, status='accepted')
         DeedParticipantFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
         self.url = reverse('related-deed-participants', args=(self.activity.pk, ))
@@ -239,7 +239,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] in ('new', 'withdrawn')
+                participant['attributes']['status'] in ('accepted', 'withdrawn')
                 for participant in self.response.json()['data']
             )
         )
@@ -252,7 +252,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] == 'new'
+                participant['attributes']['status'] == 'accepted'
                 for participant in self.response.json()['data']
             )
         )
@@ -265,7 +265,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] == 'new'
+                participant['attributes']['status'] == 'accepted'
                 for participant in self.response.json()['data']
             )
         )
@@ -352,11 +352,11 @@ class DeedParticipantTranistionListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'new')
+        self.assertEqual(self.participant.status, 'accepted')
 
     def test_create_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'new')
+        self.assertEqual(self.participant.status, 'accepted')

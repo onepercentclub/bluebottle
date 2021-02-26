@@ -108,7 +108,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.admin_add_inline_form_entry(form, 'slots')
 
-        form['slots-1-start_0'] = '2030-02-14'
+        form['slots-1-start_0'] = '2030-02-13'
         form['slots-1-start_1'] = '14:00'
         form['slots-1-duration_0'] = 2
         form['slots-1-duration_1'] = 0

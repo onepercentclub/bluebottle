@@ -1,30 +1,31 @@
 {% load i18n %}
-<table class="padded">
-    {% for slot in slots %}
-        <tr class="{% if slot.changed %}highlighted{% endif %}">
-            <td class="nobreak">{{ slot.start_date }}</td>
-            <td class="nobreak">{{ slot.start_time }}</td>
-            <td class="nobreak">{{ slot.end_time }}</td>
-            <td>
-                {% if slot.is_online %}
-                    {% if slot.online_meeting_url %}
-                        <a href="{{ slot.online_meeting_url }}">
-                            {% trans "Meeting link" %}
-                        </a>
-                    {% endif %}
-                {% else %}
-                    {{ slot.location }}
-                    {% if slot.location_hint %}
-                        <br/>
-                        {{ slot.location_hint }}
-                    {% endif %}
-                {% endif %}
-            </td>
-            <td class="nobreak">
-                {% if slot.changed %}
-                    <i>{% trans "Changed" %}</i>
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+{% for slot in slots %}
+
+<p class="{% if slot.changed %}italic{% endif %}">
+
+    <b>{{ slot.title }}</b>
+    {% if slot.changed %}
+        {% trans "Changed" %}
+    {% endif %}
+    <br/>
+    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }}
+    <br/>
+    {% if slot.is_online %}
+        {% if slot.online_meeting_url %}
+            <a href="{{ slot.online_meeting_url }}">
+                {% trans "Meeting link" %}<br/>
+            </a>
+        {% else %}
+            {% trans "Anywhere/Online" %}
+        {% endif %}
+    {% else %}
+        {{ slot.location }}
+        {% if slot.location_hint %}
+            <br/>
+            {{ slot.location_hint }}
+        {% endif %}
+    {% endif %}
+    <br/>
+</p>
+{% endfor %}
+

@@ -8,3 +8,11 @@ table.columns table.padded td {
 table.columns table.padded td.nobreak {
     white-space: nowrap;
 }
+
+p.bold {
+    font-weight: bold;
+}
+
+p.italic {
+    font-style: italic;
+}

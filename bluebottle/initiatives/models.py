@@ -248,6 +248,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_impact = models.BooleanField(default=False)
     enable_office_regions = models.BooleanField(default=False)
     enable_multiple_dates = models.BooleanField(default=False)
+    enable_participant_exports = models.BooleanField(default=False)
 
     @property
     def deeds_enabled(self):

@@ -47,10 +47,22 @@ class SlotParticipantListFilter(DjangoFilterBackend):
                 Q(participant__user=request.user) |
                 Q(participant__activity__owner=request.user) |
                 Q(participant__activity__initiative__activity_manager=request.user) |
-                Q(status=SlotParticipantStateMachine.registered.value),
-
+                Q(status=SlotParticipantStateMachine.registered.value)
+            ).filter(
+                participant__status__in=[
+                    ParticipantStateMachine.new.value,
+                    ParticipantStateMachine.accepted.value,
+                    ParticipantStateMachine.succeeded.value
+                ]
             )
         else:
-            queryset = queryset.filter(status=SlotParticipantStateMachine.registered.value)
-
-        return super().filter_queryset(request, queryset, view)
+            queryset = queryset.filter(
+                status=SlotParticipantStateMachine.registered.value
+            ).filter(
+                participant__status__in=[
+                    ParticipantStateMachine.new.value,
+                    ParticipantStateMachine.accepted.value,
+                    ParticipantStateMachine.succeeded.value
+                ]
+            )
+        return queryset

@@ -11,7 +11,7 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
+from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, EffortContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.deeds.models import Deed
 from bluebottle.follow.admin import FollowAdminInline
@@ -70,10 +70,10 @@ class ContributionAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
-    class OrganizerContributionInline(ContributionInlineChild):
+    class EffortContributionInline(ContributionInlineChild):
         readonly_fields = ['contributor_link']
         fields = readonly_fields
-        model = OrganizerContribution
+        model = EffortContribution
 
     class TimeContributionInline(ContributionInlineChild):
         readonly_fields = ['contributor_link', 'start', 'end', 'value']
@@ -86,7 +86,7 @@ class ContributionAdminInline(StackedPolymorphicInline):
         model = MoneyContribution
 
     child_inlines = (
-        OrganizerContributionInline,
+        EffortContributionInline,
         TimeContributionInline,
         MoneyContributionInline
     )
@@ -159,7 +159,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     child_models = (
         MoneyContribution,
         TimeContribution,
-        OrganizerContribution
+        EffortContribution
     )
     list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
     list_filter = (
@@ -219,9 +219,9 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fieldsets
 
 
-@admin.register(OrganizerContribution)
-class OrganizerContributionAdmin(ContributionChildAdmin):
-    model = OrganizerContribution
+@admin.register(EffortContribution)
+class EffortContributionAdmin(ContributionChildAdmin):
+    model = EffortContribution
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

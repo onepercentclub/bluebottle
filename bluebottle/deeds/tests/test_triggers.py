@@ -3,11 +3,11 @@ from datetime import timedelta, date
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.activities.states import OrganizerStateMachine, OrganizerContributionStateMachine
-from bluebottle.activities.effects import SetContributionDateEffect
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.effects import SetContributionDateEffect, CreateEffortContribution
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.deeds.states import DeedStateMachine
+from bluebottle.deeds.states import DeedStateMachine, ParticipantStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -39,12 +39,41 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.defaults['status'] = 'open'
         self.create()
 
-        DeedParticipantFactory.create(activity=self.model)
+        participant = DeedParticipantFactory.create(activity=self.model)
 
         self.model.start = date.today() - timedelta(days=1)
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.start)
+            self.assertNoTransitionEffect(
+                ParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertNoTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
+
+    def test_start_no_end(self):
+        self.defaults['status'] = 'open'
+        self.defaults['end'] = None
+        self.create()
+
+        participant = DeedParticipantFactory.create(activity=self.model)
+
+        self.model.start = date.today() - timedelta(days=1)
+
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.start)
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
 
     def test_reopen_running(self):
         self.defaults['status'] = 'running'
@@ -80,7 +109,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(DeedStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
             self.assertTransitionEffect(
-                OrganizerContributionStateMachine.fail,
+                EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
 
@@ -98,7 +127,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(DeedStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
             self.assertTransitionEffect(
-                OrganizerContributionStateMachine.fail,
+                EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
 
@@ -118,24 +147,40 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.create()
 
         self.model.states.submit(save=True)
-        DeedParticipantFactory.create(activity=self.model)
+        participant = DeedParticipantFactory.create(activity=self.model)
 
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed)
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
 
     def test_succeed_running(self):
         self.defaults['status'] = 'running'
         self.defaults['start'] = date.today() - timedelta(days=2)
 
         self.create()
-        DeedParticipantFactory.create(activity=self.model)
+        participant = DeedParticipantFactory.create(activity=self.model)
 
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed)
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
 
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):
@@ -157,6 +202,92 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         }
         super().setUp()
+
+    def test_initiate(self):
+        self.model = self.factory.build(**self.defaults)
+        with self.execute():
+            self.assertEffect(CreateEffortContribution)
+
+    def test_initiate_no_start_no_end(self):
+        self.defaults['activity'].start = None
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+
+        self.model = self.factory.build(**self.defaults)
+        with self.execute():
+            self.assertEffect(CreateEffortContribution)
+            self.assertTransitionEffect(ParticipantStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+    def test_withdraw(self):
+        self.create()
+
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail, self.model.contributions.first()
+            )
+
+    def test_reapply_no_start_no_end(self):
+        self.defaults['activity'].start = None
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+
+        self.create()
+        self.model.activity.states.submit(save=True)
+
+        self.model.states.withdraw(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed
+            )
+
+    def test_reapply_running_no_end(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].states.submit(save=True)
+
+        self.create()
+
+        self.model.states.withdraw(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed
+            )
+
+    def test_reapply_to_new(self):
+        self.create()
+        self.model.activity.states.submit(save=True)
+
+        self.model.states.withdraw(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertEqual(self.effects, [])
+
+    def test_remove(self):
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail, self.model.contributions.first()
+            )
 
     def test_expire_remove(self):
         self.create()
@@ -185,6 +316,64 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNoTransitionEffect(DeedStateMachine.expire, self.model.activity)
+
+    def test_accept_no_start_no_end(self):
+        self.defaults['activity'].start = None
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+
+        self.create()
+        self.model.activity.states.submit(save=True)
+
+        self.model.states.remove(save=True)
+        self.model.states.accept()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed
+            )
+
+    def test_accept_running_no_end(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].states.submit(save=True)
+
+        self.create()
+
+        self.model.states.remove(save=True)
+        self.model.states.accept()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed
+            )
+
+    def test_accept_expired(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = date.today() - timedelta(days=1)
+        self.defaults['activity'].states.submit(save=True)
+
+        self.create()
+
+        self.model.states.remove(save=True)
+        self.model.states.accept()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertTransitionEffect(
+                ParticipantStateMachine.succeed
+            )
 
     def test_succeed_accept(self):
         self.defaults['status'] = 'rejected'

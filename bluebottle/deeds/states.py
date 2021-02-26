@@ -153,7 +153,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     withdraw = Transition(
         [
             ContributorStateMachine.new,
-            ContributorStateMachine.new
+            ContributorStateMachine.succeeded
         ],
         withdrawn,
         name=_('Withdraw'),
@@ -174,7 +174,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
     remove = Transition(
-        ContributorStateMachine.new,
+        [ContributorStateMachine.new, ContributorStateMachine.succeeded],
         rejected,
         name=_('Remove'),
         description=_("Rmove participant from the activity."),

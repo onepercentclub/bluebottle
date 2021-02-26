@@ -1,9 +1,9 @@
-from bluebottle.activities.models import Organizer, OrganizerContribution
+from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
-from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, OrganizerContributionStateMachine
-from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
+from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.effects import CreateOrganizer, CreateEffortContribution, SetContributionDateEffect
 
 
 def initiative_is_approved(effect):
@@ -100,14 +100,14 @@ class OrganizerTriggers(TriggerManager):
         TransitionTrigger(
             OrganizerStateMachine.initiate,
             effects=[
-                CreateOrganizerContribution
+                CreateEffortContribution
             ]
         ),
         TransitionTrigger(
             OrganizerStateMachine.fail,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions', OrganizerContributionStateMachine.fail, display=False
+                    'contributions', EffortContributionStateMachine.fail, display=False
                 )
             ]
         ),
@@ -115,7 +115,7 @@ class OrganizerTriggers(TriggerManager):
             OrganizerStateMachine.reset,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions', OrganizerContributionStateMachine.reset, display=False
+                    'contributions', EffortContributionStateMachine.reset, display=False
                 )
             ]
         ),
@@ -123,18 +123,31 @@ class OrganizerTriggers(TriggerManager):
             OrganizerStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions', OrganizerContributionStateMachine.succeed, display=False
+                    'contributions', EffortContributionStateMachine.succeed, display=False
                 )
             ]
         ),
     ]
 
 
-@register(OrganizerContribution)
-class OrganizerContributionTriggers(TriggerManager):
+def contributor_is_succeeded(effect):
+    return effect.instance.contributor.status == 'succeeded'
+
+
+@register(EffortContribution)
+class EffortContributionTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            OrganizerContributionStateMachine.succeed,
+            EffortContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    EffortContributionStateMachine.succeed,
+                    conditions=[contributor_is_succeeded]
+                )
+            ]
+        ),
+        TransitionTrigger(
+            EffortContributionStateMachine.succeed,
             effects=[
                 SetContributionDateEffect
             ]

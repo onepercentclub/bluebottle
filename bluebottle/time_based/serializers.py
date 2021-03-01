@@ -1,30 +1,26 @@
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework_json_api.relations import ResourceRelatedField
-
-from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
 )
+from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
     BaseContributorSerializer, BaseContributionSerializer
 )
-
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField
-
+from bluebottle.time_based.filters import ParticipantListFilter, SlotParticipantListFilter
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
     SlotParticipant
 )
-
-from bluebottle.time_based.permissions import ParticipantDocumentPermission
-from bluebottle.time_based.filters import ParticipantListFilter, SlotParticipantListFilter
-
+from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.utils import reverse_signed
 
@@ -152,6 +148,14 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg='activity_id'
     )
 
+    participants_export_url = PrivateFileSerializer(
+        'date-participant-export',
+        url_args=('pk', ),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
     slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
@@ -175,7 +179,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'my_contributor',
             'slots',
             'slot_selection',
-            'preparation'
+            'preparation',
+            'participants_export_url'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -215,6 +220,14 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     )
 
+    participants_export_url = PrivateFileSerializer(
+        'period-participant-export',
+        url_args=('pk', ),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -232,7 +245,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
-
+            'participants_export_url'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

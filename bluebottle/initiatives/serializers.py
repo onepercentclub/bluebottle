@@ -450,6 +450,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_impact',
             'enable_office_regions',
             'enable_multiple_dates',
+            'enable_participant_exports',
             'has_locations'
         )
 

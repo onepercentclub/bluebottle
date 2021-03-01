@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta, date
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import SlotParticipant
 from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
@@ -310,6 +311,39 @@ class TimeBasedDetailAPIViewTestCase():
             {'name': 'delete', 'target': 'deleted', 'available': True}
             in data['meta']['transitions']
         )
+
+    def test_get_owner_export_disabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = False
+        initiative_settings.save()
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']
+        self.assertIsNone(export_url)
+
+    def test_get_owner_export_enabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']['url']
+        export_response = self.client.get(export_url)
+        self.assertTrue(b'Email,Name,Registration Date' in export_response.content)
+
+        wrong_signature_response = self.client.get(export_url + '111')
+        self.assertEqual(
+            wrong_signature_response.status_code, 404
+        )
+
+    def test_get_other_user_export(self):
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']
+        self.assertIsNone(export_url)
 
     def test_get_open(self):
         self.activity.initiative.states.submit(save=True)

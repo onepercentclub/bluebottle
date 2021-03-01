@@ -1,3 +1,4 @@
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from rest_framework import permissions
 from bluebottle.utils.permissions import IsOwner, BasePermission
 
@@ -42,3 +43,14 @@ class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
         ]:
             return True
         return False
+
+
+class CanExportParticipantsPermission(IsOwner):
+    """ Allows access only to obj owner. """
+
+    def has_object_action_permission(self, action, user, obj):
+        return (obj.owner == user or obj.initiative.activity_manager == user) \
+            and InitiativePlatformSettings.load().enable_participant_exports
+
+    def has_action_permission(self, action, user, model_cls):
+        return True

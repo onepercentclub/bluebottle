@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.activities.models import Organizer, OrganizerContribution
+from bluebottle.activities.models import Organizer, EffortContribution
 
 
 class CreateOrganizer(Effect):
@@ -21,18 +21,21 @@ class CreateOrganizer(Effect):
         return str(_('Create organizer'))
 
 
-class CreateOrganizerContribution(Effect):
-    "Create an contribution for the organizer of the activity"
+class CreateEffortContribution(Effect):
+    "Create an effort contribution for the organizer or participant of the activity"
 
     display = False
 
+    def pre_save(self, effects):
+        self.contribution = EffortContribution(contributor=self.instance)
+        effects.extend(self.contribution.execute_triggers())
+
     def post_save(self, **kwargs):
-        OrganizerContribution.objects.get_or_create(
-            contributor=self.instance
-        )
+        self.contribution.contributor_id = self.contribution.contributor.pk
+        self.contribution.save()
 
     def __str__(self):
-        return str(_('Create organizer contribution'))
+        return str(_('Create effort contribution'))
 
 
 class SetContributionDateEffect(Effect):

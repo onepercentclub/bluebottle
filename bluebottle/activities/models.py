@@ -201,9 +201,9 @@ class Contribution(TriggerMixin, PolymorphicModel):
         return str(_('Contribution amount'))
 
 
-class OrganizerContribution(Contribution):
+class EffortContribution(Contribution):
     class Meta(object):
-        verbose_name = _("Organising")
+        verbose_name = _("Effort")
         verbose_name_plural = _("Contributions")
 
 

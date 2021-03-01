@@ -156,14 +156,14 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     succeed = Transition(
-        ContributorStateMachine.new,
+        accepted,
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
     )
 
     withdraw = Transition(
-        accepted,
+        [ContributorStateMachine.succeeded, accepted],
         withdrawn,
         name=_('Withdraw'),
         description=_("Stop your participation in the activity."),
@@ -183,7 +183,10 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     remove = Transition(
-        accepted,
+        [
+            accepted,
+            ContributorStateMachine.succeeded
+        ],
         rejected,
         name=_('Remove'),
         description=_("Rmove participant from the activity."),
@@ -194,7 +197,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
 
     accept = Transition(
         rejected,
-        ContributorStateMachine.new,
+        accepted,
         name=_('Re-Accept'),
         description=_("User is re-accepted after previously withdrawing."),
         automatic=False,

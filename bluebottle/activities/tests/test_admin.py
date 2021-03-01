@@ -28,6 +28,24 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(activity.status, 'submitted')
 
+    def test_admin_approve_when_complete(self):
+        activity = DateActivityFactory.create(title='')
+
+        activity.initiative.states.submit()
+        activity.initiative.states.approve(save=True)
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
+
+        page = self.app.get(url)
+
+        form = page.forms['dateactivity_form']
+        form['title'] = 'Complete activity'
+        page = form.submit().follow()
+
+        activity.refresh_from_db()
+
+        self.assertEqual(activity.status, 'open')
+
     def test_admin_not_submit_when_incomplete(self):
         activity = DateActivityFactory.create(title='', description='')
         url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))

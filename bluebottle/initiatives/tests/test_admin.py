@@ -195,3 +195,19 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 0)
         self.initiative.refresh_from_db()
         self.assertNotEqual(self.initiative.reviewer, reviewer)
+
+    def test_add_reviewer_without_titlte(self):
+        initiative = InitiativeFactory.create(title='')
+        self.app.set_user(self.staff_member)
+        reviewer = BlueBottleUserFactory.create()
+        admin_url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+        page = self.app.get(admin_url)
+        form = page.forms['initiative_form']
+        form.set('reviewer', reviewer.id)
+        page = form.submit()
+        self.assertTrue('<h3>Send email</h3>' in page.text)
+        page.click('No, take me back')
+
+        self.assertEqual(len(mail.outbox), 0)
+        self.initiative.refresh_from_db()
+        self.assertNotEqual(initiative.reviewer, reviewer)

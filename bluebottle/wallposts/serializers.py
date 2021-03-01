@@ -3,10 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
-from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding, Donor
 from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
@@ -41,10 +39,6 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     def to_internal_value(self, data):
         if data == 'initiative':
             data = ContentType.objects.get_for_model(Initiative)
-        elif data == 'event':
-            data = ContentType.objects.get_for_model(Event)
-        elif data == 'assignment':
-            data = ContentType.objects.get_for_model(Assignment)
         elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
         elif data == 'date':

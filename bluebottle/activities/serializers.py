@@ -1,15 +1,15 @@
 from builtins import object
+
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.models import Contributor, Activity
-from bluebottle.assignments.serializers import (
-    AssignmentListSerializer, AssignmentSerializer,
-    ApplicantListSerializer, TinyAssignmentSerializer
-)
-from bluebottle.events.serializers import (
-    EventListSerializer, EventSerializer,
-    ParticipantListSerializer, TinyEventSerializer
+from bluebottle.files.models import RelatedImage
+from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.funding.serializers import (
+    FundingListSerializer, FundingSerializer,
+    DonorListSerializer, TinyFundingSerializer
 )
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
@@ -18,13 +18,6 @@ from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
     DateParticipantListSerializer, PeriodParticipantListSerializer,
-)
-from bluebottle.files.models import RelatedImage
-from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.funding.serializers import (
-    FundingListSerializer, FundingSerializer,
-    DonorListSerializer, TinyFundingSerializer
 )
 
 
@@ -42,10 +35,7 @@ class ActivityImageSerializer(ImageSerializer):
 class ActivityListSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
-        EventListSerializer,
         FundingListSerializer,
-        AssignmentListSerializer,
-
         DateActivityListSerializer,
         PeriodActivityListSerializer,
     ]
@@ -91,10 +81,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
 class ActivitySerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
-        EventSerializer,
         FundingSerializer,
-        AssignmentSerializer,
-
         DateActivitySerializer,
         PeriodActivitySerializer,
     ]
@@ -146,10 +133,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
 class TinyActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
-        TinyEventSerializer,
-        TinyAssignmentSerializer,
         TinyFundingSerializer,
-
         DateActivityListSerializer,
         PeriodActivityListSerializer,
     ]
@@ -164,10 +148,7 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
 
 class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
-        ParticipantListSerializer,
-        ApplicantListSerializer,
         DonorListSerializer,
-
         DateParticipantSerializer,
         PeriodParticipantSerializer
     ]

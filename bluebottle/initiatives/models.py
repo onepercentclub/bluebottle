@@ -23,7 +23,10 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
-    title = models.CharField(_('title'), max_length=255)
+    title = models.CharField(
+        _('title'),
+        blank=True,
+        max_length=255)
 
     owner = models.ForeignKey(
         'members.Member',

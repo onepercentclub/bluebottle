@@ -371,10 +371,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     email = serializers.EmailField(max_length=254)
+    url = serializers.CharField(required=False, allow_blank=True)
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email')
+        fields = ('id', 'email', 'url',)
 
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
@@ -397,7 +398,10 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             email=validated_data['email'], defaults={'is_active': False}
         )
         token = TimestampSigner().sign(instance.pk)
-        SignUptokenMessage(instance, custom_message=token).compose_and_send()
+        SignUptokenMessage(
+            instance,
+            custom_message={'token': token, 'url': validated_data.get('url', '')}
+        ).compose_and_send()
 
         return instance
 

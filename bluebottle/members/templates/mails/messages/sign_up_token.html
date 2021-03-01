@@ -10,6 +10,6 @@ The link will expire in 2 hours.
 {% endblock %}
 
 {% block action %}
-    <a href="{{site}}/signup/?token={{custom_message}}&email={{to.email}}"
+<a href="{{site}}/signup/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}"
        class="action-email">{% trans 'Create your password' context 'email' %}</a>
 {% endblock %}`

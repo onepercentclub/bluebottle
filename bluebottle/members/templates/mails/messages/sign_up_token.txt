@@ -10,5 +10,5 @@ The link will expire in 2 hours.
 {% endblock %}`
 
 {% block action %}
-    {% trans 'Create your password' context 'email' %}: {{site}}/signup/?token={{custom_message}}&email={{to.email}}
+    {% trans 'Create your password' context 'email' %}: {{site}}/signup/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}
 {% endblock %}

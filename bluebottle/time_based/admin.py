@@ -408,6 +408,7 @@ class DateSlotAdmin(SlotAdmin):
     detail_fields = SlotAdmin.detail_fields + [
         'activity',
         'title',
+        'capacity',
         'start',
         'duration',
         'is_online',

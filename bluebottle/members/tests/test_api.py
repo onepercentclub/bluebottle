@@ -111,6 +111,21 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertFalse(member.is_active)
 
+    def test_create_custom_url(self):
+        email = 'test@example.com'
+        connection.tenant.name = 'Test'
+        connection.tenant.save()
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email, 'url': '/example'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+
+        member = Member.objects.get(email=email)
+        self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
+        self.assertTrue('url=/example' in mail.outbox[0].body)
+        self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
+        self.assertFalse(member.is_active)
+
     def test_create_twice(self):
         email = 'test@example.com'
 

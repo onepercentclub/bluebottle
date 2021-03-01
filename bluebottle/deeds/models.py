@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Activity, Contributor, EffortContribution
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.deeds.validators import EndDateValidator
 
 
@@ -44,12 +44,8 @@ class Deed(Activity):
     @property
     def participants(self):
         return self.contributors.instance_of(DeedParticipant).filter(
-            status__in=('new', 'succeeded', )
+            status__in=('accepted', 'succeeded', )
         )
-
-    @property
-    def contributions(self):
-        return EffortContribution.objects.filter(contributor__activity=self, contributor__status='new')
 
 
 class DeedParticipant(Contributor):

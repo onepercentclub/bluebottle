@@ -333,3 +333,19 @@ class ParticipantRemovedNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+
+class ParticipantFinishedNotification(TransitionMessage):
+    """
+    The participant was finished
+    """
+    subject = _('Your contribution to the activity "{title}" is successfull 🎉')
+    template = 'messages/participant_finished'
+    context = {
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
+    }
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]

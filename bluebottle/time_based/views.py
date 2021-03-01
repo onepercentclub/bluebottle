@@ -149,6 +149,22 @@ class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList
     serializer_class = DateParticipantSerializer
 
 
+class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+    pagination_class = None
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(
+            slot_id=self.kwargs['slot_id'],
+            participant__status__in=['accepted', 'new']
+        )
+
+    queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
+    serializer_class = SlotParticipantSerializer
+
+
 class PeriodActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
@@ -234,9 +250,15 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
     queryset = SlotParticipant.objects.all()
     serializer_class = SlotParticipantSerializer
 
+    def get_queryset(self, *args, **kwargs):
+        return super().queryset(*args, **kwargs).filter(
+            participant__status__in=['new', 'accepted']
+        )
+
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [SlotParticipantPermission]
+
     queryset = SlotParticipant.objects.all()
     serializer_class = SlotParticipantSerializer
 

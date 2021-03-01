@@ -69,7 +69,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     """
     subject = _('The activity "{title}" will take place in a few days!')
     template = 'messages/reminder_multiple_dates'
-    # send_once = True
+    send_once = True
     context = {
         'title': 'title',
         'activity_url': 'get_absolute_url'

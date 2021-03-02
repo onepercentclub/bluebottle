@@ -7,10 +7,11 @@ from django.contrib.messages import get_messages
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.status import HTTP_200_OK
 
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.initiatives.admin import InitiativeAdmin
-from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.admin import InitiativeAdmin, ThemeAdmin
+from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
@@ -211,3 +212,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 0)
         self.initiative.refresh_from_db()
         self.assertNotEqual(initiative.reviewer, reviewer)
+
+
+class TestThemeAdmin(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super(TestThemeAdmin, self).setUp()
+        self.site = AdminSite()
+        self.skill_admin = ThemeAdmin(Theme, self.site)
+        self.client.force_login(self.superuser)
+        InitiativeFactory.create()
+
+    def test_theme_admin_list(self):
+        url = reverse('admin:initiatives_theme_changelist')
+        response = self.client.get(url)
+        self.assertTrue(response, HTTP_200_OK)

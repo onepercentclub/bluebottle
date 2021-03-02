@@ -1203,7 +1203,7 @@ class ThemeApiTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         MemberPlatformSettings.objects.update(closed=True)
-        self.url = reverse('theme-list')
+        self.url = reverse('initiative-theme-list')
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):

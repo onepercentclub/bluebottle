@@ -227,3 +227,8 @@ class TestThemeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_theme_changelist')
         response = self.client.get(url)
         self.assertTrue(response, HTTP_200_OK)
+
+    def test_theme_admin_staf(self):
+        url = reverse('admin:initiatives_theme_changelist')
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')

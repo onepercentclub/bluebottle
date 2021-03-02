@@ -1996,3 +1996,27 @@ class DateIcalTestCase(BluebottleTestCase):
     def test_get_wrong_signature(self):
         response = self.client.get('{}?signature=ewiorjewoijical_url'.format(self.unsigned_url))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class SKillApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        MemberPlatformSettings.objects.update(closed=True)
+        self.url = reverse('skill-list')
+        self.client = JSONAPITestClient()
+
+    def test_get_skills_authenticated(self):
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_skills_unauthenticated(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_get_skills_old_url(self):
+        old_url = reverse('assignment-skill-list')
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(old_url, user=user)
+        self.assertEqual(response.status_code, 200)

@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from bluebottle.assignments.views import (
+from bluebottle.time_based.views import (
     SkillList, SkillDetail
 )
 

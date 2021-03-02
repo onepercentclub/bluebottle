@@ -2,11 +2,11 @@ from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 import pytz
-from django.db import models, connection
+from django.db import connection
 from django.utils import timezone
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
+from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
 
 from bluebottle.activities.models import Activity, Contributor, Contribution
@@ -20,8 +20,11 @@ from bluebottle.time_based.validators import (
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
-
 tf = TimezoneFinder()
+
+from builtins import object
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 
 class TimeBasedActivity(Activity):
@@ -54,7 +57,7 @@ class TimeBasedActivity(Activity):
     )
 
     expertise = models.ForeignKey(
-        'tasks.Skill',
+        'time_based.Skill',
         verbose_name=_('skill'),
         blank=True,
         null=True
@@ -628,6 +631,28 @@ class TimeContribution(Contribution):
             name=self.contributor.user,
             date=self.start.date() if self.start else ''
         )
+
+
+class Skill(TranslatableModel):
+    expertise = models.BooleanField(_('expertise based'),
+                                    help_text=_('Is this skill expertise based, or could anyone do it?'),
+                                    default=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100, ),
+        description=models.TextField(_('description'), blank=True)
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta(object):
+        permissions = (
+            ('api_read_skill', 'Can view skills through the API'),
+        )
+        verbose_name = _(u'Skill')
+        verbose_name_plural = _(u'Skills')
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

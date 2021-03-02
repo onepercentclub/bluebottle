@@ -329,7 +329,6 @@ TENANT_APPS = (
     'bluebottle.exports',
 
     'bluebottle.members',
-    'bluebottle.projects',
     'bluebottle.organizations',
     'bluebottle.impact',
 
@@ -339,8 +338,6 @@ TENANT_APPS = (
     'bluebottle.activities',
     'bluebottle.initiatives',
     'bluebottle.time_based',
-    'bluebottle.events',
-    'bluebottle.assignments',
     'bluebottle.funding',
     'bluebottle.funding_pledge',
     'bluebottle.funding_stripe',
@@ -350,11 +347,9 @@ TENANT_APPS = (
     'bluebottle.funding_telesom',
     'bluebottle.segments',
 
-    'bluebottle.tasks',
     'bluebottle.homepage',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
-    'bluebottle.surveys',
     'bluebottle.wallposts',
     'bluebottle.utils',
     'bluebottle.analytics',
@@ -369,6 +364,19 @@ TENANT_APPS = (
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',
+    'bluebottle.redirects',
+    'bluebottle.statistics',
+    'bluebottle.suggestions',
+    'bluebottle.terms',
+    'bluebottle.social',
+    'bluebottle.rewards',
+    'bluebottle.scim',
+
+    # Op for removal
+    'bluebottle.projects',
+
+    # Obsolete, already removed from db
+    'bluebottle.votes',
     'bluebottle.payments',
     'bluebottle.payments_beyonic',
     'bluebottle.payments_docdata',
@@ -382,14 +390,10 @@ TENANT_APPS = (
     'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_voucher',
-    'bluebottle.redirects',
-    'bluebottle.statistics',
-    'bluebottle.suggestions',
-    'bluebottle.terms',
-    'bluebottle.votes',
-    'bluebottle.social',
-    'bluebottle.rewards',
-    'bluebottle.scim',
+    'bluebottle.surveys',
+    'bluebottle.events',
+    'bluebottle.assignments',
+    'bluebottle.tasks',
 
     # Custom dashboard
     # 'fluent_dashboard',

@@ -66,8 +66,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['time_based.change_periodactivity']
             },
             {
-                'name': 'tasks.skill',
-                'permissions': ['tasks.change_skill']
+                'name': 'time_based.skill',
+                'permissions': ['time_based.change_skill']
             },
         ]
     },

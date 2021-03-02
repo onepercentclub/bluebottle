@@ -5,7 +5,7 @@ from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.admin import ProjectThemeAdmin
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.tasks.models import Skill
+from bluebottle.time_based.models import Skill
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 

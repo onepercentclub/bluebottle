@@ -143,7 +143,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
-    skills = models.ManyToManyField('tasks.Skill', blank=True)
+    skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)

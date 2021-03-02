@@ -1,5 +1,7 @@
 import csv
 
+from rest_framework.pagination import PageNumberPagination
+
 from bluebottle.utils.admin import prep_field
 from django.db.models import Q
 from django.http import HttpResponse
@@ -15,7 +17,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant
+    DateActivitySlot, SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -32,18 +34,18 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
 
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
-    PrivateFileView
+    PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView
 )
 
 
@@ -426,3 +428,23 @@ class PeriodParticipantExportView(PrivateFileView):
             writer.writerow(row)
 
         return response
+
+
+class SkillPagination(PageNumberPagination):
+    page_size = 1000
+
+
+class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
+    serializer_class = SkillSerializer
+    queryset = Skill.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
+    pagination_class = SkillPagination
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('translations__name')
+
+
+class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = SkillSerializer
+    queryset = Skill.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]

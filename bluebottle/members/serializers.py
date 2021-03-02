@@ -20,7 +20,7 @@ from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
-from bluebottle.tasks.models import Skill
+from bluebottle.time_based.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
 BB_USER_MODEL = get_user_model()

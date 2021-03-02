@@ -366,16 +366,14 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.redirects',
     'bluebottle.statistics',
-    'bluebottle.suggestions',
     'bluebottle.terms',
     'bluebottle.social',
     'bluebottle.rewards',
     'bluebottle.scim',
 
-    # Op for removal
-    'bluebottle.projects',
-
     # Obsolete, already removed from db
+    'bluebottle.projects',
+    'bluebottle.suggestions',
     'bluebottle.votes',
     'bluebottle.payments',
     'bluebottle.payments_beyonic',

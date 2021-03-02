@@ -1998,7 +1998,7 @@ class DateIcalTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class SKillApiTestCase(BluebottleTestCase):
+class SkillApiTestCase(BluebottleTestCase):
 
     def setUp(self):
         super().setUp()

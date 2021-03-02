@@ -1196,3 +1196,21 @@ class ThemeAPITestCase(BluebottleTestCase):
         url = reverse('initiative-theme', args=(theme.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ThemeApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        MemberPlatformSettings.objects.update(closed=True)
+        self.url = reverse('theme-list')
+        self.client = JSONAPITestClient()
+
+    def test_get_skills_authenticated(self):
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_skills_unauthenticated(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)

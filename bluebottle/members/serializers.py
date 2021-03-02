@@ -1,4 +1,5 @@
 from builtins import object
+
 from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
@@ -10,11 +11,11 @@ from rest_framework import serializers, exceptions
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
+from bluebottle.initiatives.models import Theme
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
@@ -247,7 +248,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
                                                    required=False,
                                                    queryset=Skill.objects)
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
-        many=True, source='favourite_themes', queryset=ProjectTheme.objects)
+        many=True, source='favourite_themes', queryset=Theme.objects)
 
     is_active = serializers.BooleanField(read_only=True)
 

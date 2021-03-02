@@ -4,8 +4,7 @@ from django_elasticsearch_dsl import DocType, fields
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
 
-from bluebottle.initiatives.models import Initiative
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
@@ -89,7 +88,7 @@ class InitiativeDocument(DocType):
         related_models = (
             Geolocation,
             Member,
-            ProjectTheme,
+            Theme,
             Funding,
             PeriodActivity,
             DateActivity
@@ -101,7 +100,7 @@ class InitiativeDocument(DocType):
         )
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, (ProjectTheme, Geolocation, Category)):
+        if isinstance(related_instance, (Theme, Geolocation, Category)):
             return related_instance.initiative_set.all()
         if isinstance(related_instance, Member):
             return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())

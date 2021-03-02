@@ -5,12 +5,12 @@ from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
-from parler.admin import SortedRelatedFieldListFilter
+from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
@@ -229,3 +229,17 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
     pass
+
+
+@admin.register(Theme)
+class ThemeAdmin(TranslatableAdmin):
+    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
+    readonly_fields = ('initiative_link',)
+    fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
+    ordering = ('translations__name',)
+
+    def initiative_link(self, obj):
+        url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)
+        return format_html("<a href='{}'>{} initiatives</a>".format(url, obj.initiative_set.count()))
+
+    initiative_link.short_description = _('Initiatives')

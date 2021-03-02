@@ -3,7 +3,7 @@ from django.contrib.admin.sites import AdminSite
 from django.urls.base import reverse
 from rest_framework.status import HTTP_200_OK
 
-from bluebottle.bb_projects.admin import ProjectThemeAdmin
+from bluebottle.initiatives.admin import ThemeAdmin
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.models import Skill
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -14,7 +14,7 @@ class TestThemeAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestThemeAdmin, self).setUp()
         self.site = AdminSite()
-        self.skill_admin = ProjectThemeAdmin(Skill, self.site)
+        self.skill_admin = ThemeAdmin(Skill, self.site)
         self.client.force_login(self.superuser)
         InitiativeFactory.create()
 

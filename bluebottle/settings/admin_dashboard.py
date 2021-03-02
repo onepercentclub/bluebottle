@@ -39,8 +39,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['categories.change_category']
             },
             {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
+                'name': 'initiatives.theme',
+                'permissions': ['initiatives.change_theme']
             },
             {
                 'name': 'organizations.organization',

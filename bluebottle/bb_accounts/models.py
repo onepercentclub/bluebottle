@@ -23,7 +23,7 @@ from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.initiatives.models import Theme
 from bluebottle.clients import properties
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
@@ -142,7 +142,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         'geo.Location', blank=True,
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
-    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
+    favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)

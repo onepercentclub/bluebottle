@@ -1,17 +1,17 @@
 from builtins import object
+
 from django.db.models import Sum, Count, Q
 from django.utils.translation import ugettext_lazy as _
+from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from moneyed import Money
-
 from bluebottle.activities.filters import ActivityFilter
+from bluebottle.activities.models import Contribution
 from bluebottle.activities.serializers import ActivityListSerializer
-from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
@@ -20,16 +20,15 @@ from bluebottle.clients import properties
 from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.funding.models import MoneyContribution
-from bluebottle.geo.models import Geolocation, Location
-from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.activities.models import Contribution
-from bluebottle.members.models import Member
-from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.funding.models import MoneyContribution
+from bluebottle.geo.models import Geolocation, Location
+from bluebottle.geo.serializers import TinyPointSerializer
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
+from bluebottle.members.models import Member
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.time_based.models import TimeContribution
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import (
@@ -46,7 +45,7 @@ from bluebottle.utils.serializers import (
 class ThemeSerializer(ModelSerializer):
 
     class Meta(object):
-        model = ProjectTheme
+        model = Theme
         fields = ('id', 'slug', 'name', 'description')
 
     class JSONAPIMeta(object):
@@ -371,7 +370,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
     theme = serializers.PrimaryKeyRelatedField(
         required=True,
-        queryset=ProjectTheme.objects.all(),
+        queryset=Theme.objects.all(),
         error_messages={'null': _('Theme is required')}
     )
     image = serializers.PrimaryKeyRelatedField(

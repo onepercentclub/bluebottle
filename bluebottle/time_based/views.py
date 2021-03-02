@@ -294,7 +294,7 @@ class DateActivityIcalView(PrivateFileView):
         instance = super(DateActivityIcalView, self).get_object()
         calendar = icalendar.Calendar()
         slots = instance.slots.filter(
-            status__in=['open', 'full', 'running', 'finished'],
+            status__in=['open', 'full', 'finished'],
         )
         if kwargs.get('user_id'):
             slots = slots.filter(slot_participants__participant__user__id=kwargs['user_id'])

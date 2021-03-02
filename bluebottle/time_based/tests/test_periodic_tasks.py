@@ -273,17 +273,6 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
 
         self.assertEqual(self.activity.status, 'expired')
 
-    def test_start(self):
-        self.assertEqual(self.activity.status, 'open')
-        self.participant_factory.create(activity=self.activity)
-
-        self.run_task(self.during)
-
-        with LocalTenant(self.tenant, clear_tenant=True):
-            self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'running')
-
     def test_succeed(self):
         self.assertEqual(self.activity.status, 'open')
         self.participant_factory.create(activity=self.activity)

@@ -413,7 +413,7 @@ class DateSlotAdmin(SlotAdmin):
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()
 
-            if offset != 0:
+            if offset.total_seconds() != 0:
                 timezone_text = _(
                     'Local time in "{location}" is {local_time}. '
                     'This is {offset} hours {relation} then in the '

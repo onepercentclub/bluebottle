@@ -18,17 +18,10 @@ class TimeBasedStateMachine(ActivityStateMachine):
         'full',
         _('The number of people needed is reached and people can no longer register.')
     )
-    running = State(
-        _('running'),
-        'running',
-        _('The activity is taking place and people can\'t participate any more.')
-    )
-
     lock = Transition(
         [
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
-            running
         ],
         full,
         name=_("Lock"),
@@ -39,7 +32,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        [running, full],
+        full,
         ActivityStateMachine.open,
         name=_("Unlock"),
         description=_(
@@ -65,7 +58,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.expired,
             full,
-            running
         ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
@@ -81,7 +73,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
-            running
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
@@ -116,18 +107,8 @@ class PeriodStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
 
-    start = Transition(
-        [
-            ActivityStateMachine.open,
-            TimeBasedStateMachine.full
-        ],
-        TimeBasedStateMachine.running,
-        name=_("Start"),
-        description=_("Start the activity.")
-    )
-
     succeed_manually = Transition(
-        [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
+        [ActivityStateMachine.open, TimeBasedStateMachine.full],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,
@@ -339,7 +320,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         """task is open"""
         return self.instance.activity.status in (
             TimeBasedStateMachine.open.value,
-            TimeBasedStateMachine.running.value,
             TimeBasedStateMachine.full.value
         )
 

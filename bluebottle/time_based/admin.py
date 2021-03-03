@@ -44,7 +44,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
     disabled.short_description = _('First complete and submit the activity before managing participants.')
 
     def can_edit(self, obj):
-        return obj and obj.id and obj.status in ['open', 'running', 'succeeded', 'full', 'submitted']
+        return obj and obj.id and obj.status in ['open', 'succeeded', 'full', 'submitted']
 
     def has_delete_permission(self, request, obj=None):
         return self.can_edit(obj)

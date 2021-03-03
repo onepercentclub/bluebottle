@@ -318,7 +318,8 @@ class DateActivitySlot(ActivitySlot):
     def required_fields(self):
         fields = [
             'start',
-            'duration'
+            'duration',
+            'is_online',
         ]
         if not self.is_online:
             fields.append('location')

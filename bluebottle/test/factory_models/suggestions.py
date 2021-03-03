@@ -4,7 +4,7 @@ import factory.fuzzy
 from datetime import timedelta
 from django.utils.timezone import now
 from bluebottle.suggestions.models import Suggestion
-from .projects import ProjectFactory, ProjectThemeFactory
+from .projects import ProjectFactory, ThemeFactory
 
 
 class SuggestionFactory(factory.DjangoModelFactory):
@@ -13,4 +13,4 @@ class SuggestionFactory(factory.DjangoModelFactory):
 
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
     project = factory.SubFactory(ProjectFactory)
-    theme = factory.SubFactory(ProjectThemeFactory)
+    theme = factory.SubFactory(ThemeFactory)

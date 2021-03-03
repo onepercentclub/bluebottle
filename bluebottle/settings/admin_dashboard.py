@@ -39,8 +39,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['categories.change_category']
             },
             {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
+                'name': 'initiatives.theme',
+                'permissions': ['initiatives.change_theme']
             },
             {
                 'name': 'organizations.organization',
@@ -66,8 +66,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['time_based.change_periodactivity']
             },
             {
-                'name': 'tasks.skill',
-                'permissions': ['tasks.change_skill']
+                'name': 'time_based.skill',
+                'permissions': ['time_based.change_skill']
             },
         ]
     },

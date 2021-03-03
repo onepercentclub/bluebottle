@@ -1,12 +1,14 @@
 from datetime import timedelta
 
+from django.contrib.admin import AdminSite
 from django.urls import reverse
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.models import DateActivity
+from bluebottle.time_based.admin import SkillAdmin
+from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory
@@ -141,3 +143,18 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         page.forms['confirm'].submit().follow()
 
         self.assertEqual(len(participant.slot_participants.all()), 3)
+
+
+class TestSkillAdmin(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super(TestSkillAdmin, self).setUp()
+        self.site = AdminSite()
+        self.skill_admin = SkillAdmin(Skill, self.site)
+        self.client.force_login(self.superuser)
+        InitiativeFactory.create()
+
+    def test_theme_admin_staf(self):
+        url = reverse('admin:time_based_skill_changelist')
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')

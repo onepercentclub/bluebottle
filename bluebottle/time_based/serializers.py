@@ -17,7 +17,7 @@ from bluebottle.time_based.filters import ParticipantListFilter, SlotParticipant
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    SlotParticipant
+    SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
@@ -50,7 +50,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
+            'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
         }
     )
@@ -327,7 +327,7 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
+            'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
         }
     )
 
@@ -604,3 +604,15 @@ class PeriodParticipantTransitionSerializer(ParticipantTransitionSerializer):
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/period-participant-transitions'
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta(object):
+        model = Skill
+        fields = ('id', 'name', 'expertise')
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'skills'

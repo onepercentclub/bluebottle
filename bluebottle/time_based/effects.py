@@ -1,6 +1,7 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 
 from dateutil.relativedelta import relativedelta
+from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import ugettext as _
@@ -116,16 +117,39 @@ class ClearDeadlineEffect(Effect):
         self.instance.deadline = None
 
 
-class RescheduleDurationsEffect(Effect):
+class RescheduleOverallPeriodActivityDurationsEffect(Effect):
+    display = False
+
+    def post_save(self, **kwargs):
+        if self.instance.duration_period == 'overall':
+            tz = get_current_timezone()
+
+            if self.instance.start:
+                start = tz.localize(datetime.combine(self.instance.start, datetime.min.time()))
+            else:
+                start = F('start')
+
+            if self.instance.deadline:
+                end = tz.localize(datetime.combine(self.instance.deadline, datetime.min.time()))
+            else:
+                end = None
+
+            self.instance.durations.update(
+                start=start,
+                end=end,
+                value=self.instance.duration
+            )
+
+
+class RescheduleSlotDurationsEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
         if self.instance.start and self.instance.duration:
-            preparation = getattr(self.instance, 'preparation', timedelta())
             self.instance.durations.update(
                 start=self.instance.start,
                 end=self.instance.start + self.instance.duration,
-                value=self.instance.duration + preparation
+                value=self.instance.duration
             )
 
 

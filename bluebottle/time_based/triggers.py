@@ -17,11 +17,12 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     CreatePeriodTimeContributionEffect, SetEndDateEffect,
     ClearDeadlineEffect,
-    RescheduleDurationsEffect,
+    RescheduleSlotDurationsEffect,
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-    ResetSlotSelectionEffect, UnsetCapacityEffect
+    ResetSlotSelectionEffect, UnsetCapacityEffect,
+    RescheduleOverallPeriodActivityDurationsEffect
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -583,7 +584,14 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         is_not_finished
                     ]
                 ),
-                RescheduleDurationsEffect
+                RescheduleSlotDurationsEffect
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'duration',
+            effects=[
+                RescheduleSlotDurationsEffect
             ]
         ),
 
@@ -604,6 +612,13 @@ class PeriodActivityTriggers(TimeBasedTriggers):
                     is_not_started,
                     registration_deadline_is_not_passed
                 ]),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            ['start', 'deadline'],
+            effects=[
+                RescheduleOverallPeriodActivityDurationsEffect
             ]
         ),
 

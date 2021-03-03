@@ -50,8 +50,6 @@ urlpatterns = [
         include('bluebottle.initiatives.urls.api')),
     url(r'^api/activities',
         include('bluebottle.activities.urls.api')),
-    url(r'^api/events',
-        include('bluebottle.events.urls.api')),
 
     url(r'^api/time-based',
         include('bluebottle.time_based.urls.api')),
@@ -92,10 +90,6 @@ urlpatterns = [
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('bluebottle.token_auth.urls')),
-
-    # urls for payout service
-    url(r'^api/projects/',
-        include('bluebottle.projects.urls.api')),
 
     url(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
 

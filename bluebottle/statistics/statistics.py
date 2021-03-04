@@ -2,6 +2,8 @@ from builtins import object
 from django.db.models import Q, Count
 from django.db.models.aggregates import Sum
 
+from django.contrib.contenttypes.models import ContentType
+
 from memoize import memoize
 
 from moneyed.classes import Money
@@ -9,7 +11,7 @@ from moneyed.classes import Money
 from bluebottle.clients import properties
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.models import Contributor, Activity
+from bluebottle.activities.models import Contributor, Activity, EffortContribution
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import (
     DateActivity,
@@ -17,6 +19,7 @@ from bluebottle.time_based.models import (
     TimeContribution
 )
 from bluebottle.funding.models import Donor, Funding
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
@@ -115,6 +118,15 @@ class Statistics(object):
 
     @property
     @memoize(timeout=timeout)
+    def deeds_succeeded(self):
+        """ Total number of succeeded tasks """
+        return len(Deed.objects.filter(
+            self.date_filter('slots__start'),
+            status='succeeded'
+        ))
+
+    @property
+    @memoize(timeout=timeout)
     def time_activities_online(self):
         """ Total number of online tasks """
 
@@ -128,6 +140,16 @@ class Statistics(object):
             status__in=('open', 'full', 'running')
         )
         return len(date_activities) + len(period_activities)
+
+    @property
+    @memoize(timeout=timeout)
+    def deeds_online(self):
+        """ Total number of online tasks """
+
+        return len(Deed.objects.filter(
+            self.date_filter('start'),
+            status__in=('open', 'full', 'running')
+        ))
 
     @property
     @memoize(timeout=timeout)
@@ -157,7 +179,12 @@ class Statistics(object):
             self.date_filter('deadline'),
             status='succeeded'
         )
-        return len(date_activities) + len(funding_activities) + len(period_activities)
+
+        deed_activities = Deed.objects.filter(
+            self.date_filter('end'),
+            status='succeeded'
+        )
+        return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
 
     @property
     @memoize(timeout=timeout)
@@ -177,7 +204,12 @@ class Statistics(object):
             self.date_filter('deadline'),
             status__in=('open', 'full', 'running', )
         )
-        return len(date_activities) + len(funding_activities) + len(period_activities)
+
+        deed_activities = Deed.objects.filter(
+            self.date_filter('end'),
+            status__in=('open', 'running', )
+        )
+        return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
 
     @property
     @memoize(timeout=timeout)
@@ -206,6 +238,16 @@ class Statistics(object):
         ).aggregate(time_spent=Sum('value'))
 
         return contributions['time_spent'] or 0
+
+    @property
+    @memoize(timeout=timeout)
+    def deeds_done(self):
+        """ Total amount of time spent on realized tasks """
+        return len(EffortContribution.objects.filter(
+            self.date_filter('start'),
+            contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant),
+            status='succeeded'
+        ))
 
     @property
     @memoize(timeout=timeout)

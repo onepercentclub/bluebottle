@@ -1,6 +1,9 @@
 from builtins import object
 from django.db.models import Sum, Count, Q
 from django.utils.translation import ugettext_lazy as _
+
+from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField
@@ -21,10 +24,11 @@ from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.funding.models import MoneyContribution
+from bluebottle.deeds.models import DeedParticipant
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Contribution, EffortContribution
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
@@ -170,13 +174,26 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         contributions = Contribution.objects.filter(
             contributor__activity__initiative=obj, status='succeeded'
-        ).instance_of(TimeContribution, MoneyContribution)
+        ).instance_of(TimeContribution, MoneyContribution, EffortContribution)
 
         stats = contributions.aggregate(
-            hours=Sum('timecontribution__value'),
+            hours=Sum(
+                'timecontribution__value',
+                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
+            ),
+            effort=Count(
+                'effortcontribution',
+                filter=(
+                    Q(contributor__activity__status='succeeded') &
+                    Q(status='succeeded') &
+                    Q(contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant)),
+
+                ),
+                distinct=True
+            ),
             activities=Count(
                 'contributor__activity',
-                filter=Q(contributor__activity__status='succeeded'),
+                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
                 distinct=True
             ),
             contributors=Count('contributor', distinct=True)

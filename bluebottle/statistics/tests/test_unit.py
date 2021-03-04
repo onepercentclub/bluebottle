@@ -16,6 +16,7 @@ from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
@@ -40,8 +41,10 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.activities_succeeded, 0)
         self.assertEqual(self.stats.time_activities_succeeded, 0)
         self.assertEqual(self.stats.fundings_succeeded, 0)
+        self.assertEqual(self.stats.deeds_succeeded, 0)
         self.assertEqual(self.stats.people_involved, 0)
         self.assertEqual(self.stats.donated_total, Money(0, 'EUR'))
+        self.assertEqual(self.stats.deeds_done, 0)
 
 
 @override_settings(
@@ -593,6 +596,136 @@ class FundingStatisticsTest(StatisticsTest):
         )
         self.assertEqual(
             self.stats.people_involved, 1
+        )
+
+
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
+class DeedStatisticsTest(StatisticsTest):
+    def setUp(self):
+        super(DeedStatisticsTest, self).setUp()
+        self.activity = DeedFactory.create(
+            initiative=self.initiative,
+            owner=self.some_user,
+            start=datetime.date.today() - datetime.timedelta(days=10),
+            end=datetime.date.today() - datetime.timedelta(days=5)
+        )
+        self.activity.states.submit(save=True)
+
+    def test_open(self):
+        self.assertEqual(
+            self.stats.activities_online, 1
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_succeeded(self):
+        self.activity.states.succeed(save=True)
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_closed(self):
+        self.activity.states.cancel(save=True)
+
+        self.initiative.save()
+        self.activity.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant(self):
+        DeedParticipantFactory.create(activity=self.activity, user=self.other_user)
+        self.activity.states.succeed(save=True)
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_done, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_participant_withdrawn(self):
+        contribution = DeedParticipantFactory.create(activity=self.activity, user=self.other_user)
+        contribution.states.withdraw(save=True)
+        self.activity.states.succeed(save=True)
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_done, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant_noshow(self):
+        DeedParticipantFactory.create(activity=self.activity, user=self.other_user)
+        contribution = DeedParticipantFactory.create(activity=self.activity, user=self.other_user)
+        contribution.states.remove(save=True)
+        self.activity.states.succeed(save=True)
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.deeds_done, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
         )
 
 

@@ -8,6 +8,7 @@ from bluebottle.activities.effects import SetContributionDateEffect, CreateEffor
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
+from bluebottle.deeds.effects import RescheduleEffortsEffect
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -53,6 +54,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_start_no_end(self):
         self.defaults['status'] = 'open'
@@ -74,6 +76,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_reopen_running(self):
         self.defaults['status'] = 'running'
@@ -84,6 +87,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_reopen_expired(self):
         self.defaults['status'] = 'expired'
@@ -112,6 +116,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_expire_running(self):
         self.create()

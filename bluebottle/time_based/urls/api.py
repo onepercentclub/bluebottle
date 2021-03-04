@@ -13,11 +13,10 @@ from bluebottle.time_based.views import (
     DateSlotDetailView, DateSlotListView,
     SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
     DateActivityIcalView, ActivitySlotIcalView, DateParticipantExportView, PeriodParticipantExportView,
-    SlotRelatedParticipantList
+    SlotRelatedParticipantList, SkillList, SkillDetail
 )
 
 urlpatterns = [
-    # Events
     url(r'^/date$',
         DateActivityListView.as_view(),
         name='date-list'),
@@ -116,5 +115,16 @@ urlpatterns = [
     url(r'^/period/export/(?P<pk>[\d]+)$',
         PeriodParticipantExportView.as_view(),
         name='period-participant-export'),
+
+    url(
+        r'^/skills$',
+        SkillList.as_view(),
+        name='skill-list'
+    ),
+    url(
+        r'^/skills/(?P<pk>\d+)$',
+        SkillDetail.as_view(),
+        name='skill'
+    ),
 
 ]

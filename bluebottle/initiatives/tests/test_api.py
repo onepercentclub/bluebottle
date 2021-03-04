@@ -21,12 +21,12 @@ from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
     DateActivitySlotFactory
 )
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.initiatives.models import Theme
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
-from bluebottle.test.factory_models.projects import ProjectThemeFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
@@ -51,7 +51,7 @@ class InitiativeAPITestCase(TestCase):
 class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeListAPITestCase, self).setUp()
-        self.theme = ProjectThemeFactory.create()
+        self.theme = ThemeFactory.create()
         self.url = reverse('initiative-list')
 
     def test_create(self):
@@ -1150,11 +1150,11 @@ class ThemeAPITestCase(BluebottleTestCase):
         super(ThemeAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
-        ProjectTheme.objects.all().delete()
+        Theme.objects.all().delete()
 
         self.list_url = reverse('initiative-theme-list')
         self.user = BlueBottleUserFactory()
-        themes = ProjectThemeFactory.create_batch(5, disabled=False)
+        themes = ThemeFactory.create_batch(5, disabled=False)
         self.theme = themes[0]
         self.detail_url = reverse('initiative-theme', args=(self.theme.id,))
 
@@ -1182,7 +1182,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_disabled(self):
-        ProjectThemeFactory.create(disabled=True)
+        ThemeFactory.create(disabled=True)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -1207,7 +1207,25 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_detail_disabled(self):
-        theme = ProjectThemeFactory.create(disabled=True)
+        theme = ThemeFactory.create(disabled=True)
         url = reverse('initiative-theme', args=(theme.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ThemeApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        MemberPlatformSettings.objects.update(closed=True)
+        self.url = reverse('initiative-theme-list')
+        self.client = JSONAPITestClient()
+
+    def test_get_skills_authenticated(self):
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_skills_unauthenticated(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)

@@ -160,28 +160,6 @@ def start_is_not_passed(effect):
     )
 
 
-def is_started(effect):
-    """
-    has started
-    """
-    to_compare = now()
-
-    if not isinstance(effect.instance, DateActivity):
-        to_compare = to_compare.date()
-
-    return (
-        effect.instance.start and
-        effect.instance.start < to_compare
-    )
-
-
-def is_not_started(effect):
-    """
-    hasn't started yet
-    """
-    return not is_started(effect)
-
-
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
@@ -605,11 +583,9 @@ class PeriodActivityTriggers(TimeBasedTriggers):
             'registration_deadline',
             effects=[
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    is_not_started,
                     registration_deadline_is_passed
                 ]),
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    is_not_started,
                     registration_deadline_is_not_passed
                 ]),
             ]
@@ -629,14 +605,12 @@ class PeriodActivityTriggers(TimeBasedTriggers):
                     TimeBasedStateMachine.lock,
                     conditions=[
                         is_full,
-                        is_not_started
                     ]
                 ),
                 TransitionEffect(
                     TimeBasedStateMachine.lock,
                     conditions=[
                         registration_deadline_is_passed,
-                        is_not_started
                     ]
                 )
             ]
@@ -666,21 +640,15 @@ class PeriodActivityTriggers(TimeBasedTriggers):
                     conditions=[start_is_not_passed]
                 ),
                 TransitionEffect(
-                    PeriodStateMachine.start,
-                    conditions=[is_started]
-                ),
-                TransitionEffect(
                     PeriodStateMachine.reopen,
                     conditions=[
                         is_not_full,
-                        is_not_started
                     ]
                 ),
                 TransitionEffect(
                     PeriodStateMachine.lock,
                     conditions=[
                         is_full,
-                        is_not_started
                     ]
                 ),
             ]

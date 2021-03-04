@@ -23,7 +23,7 @@ from bluebottle.initiatives.serializers import (
     InitiativeMapSerializer, InitiativeRedirectSerializer,
     RelatedInitiativeImageSerializer, ThemeSerializer
 )
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.initiatives.models import Theme
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -175,7 +175,7 @@ class ThemePagination(PageNumberPagination):
 
 class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = ThemeSerializer
-    queryset = ProjectTheme.objects.filter(disabled=False)
+    queryset = Theme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = ThemePagination
 
@@ -185,7 +185,7 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
 
 class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
     serializer_class = ThemeSerializer
-    queryset = ProjectTheme.objects.filter(disabled=False)
+    queryset = Theme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
 
 

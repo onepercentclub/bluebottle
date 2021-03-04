@@ -230,7 +230,6 @@ class PeriodActivityStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
 
         self.assertEqual(
@@ -247,7 +246,6 @@ class PeriodActivityStatisticsTest(StatisticsTest):
         )
 
     def test_cancelled(self):
-        self.activity.states.start(save=True)
         self.activity.states.cancel(save=True)
 
         self.assertEqual(
@@ -265,7 +263,6 @@ class PeriodActivityStatisticsTest(StatisticsTest):
 
     def test_applicant(self):
         contributor = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
         contributor.refresh_from_db()
         contribution = contributor.contributions.get()
@@ -294,7 +291,6 @@ class PeriodActivityStatisticsTest(StatisticsTest):
     def test_applicant_withdrawn(self):
         contribution = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
         contribution.states.withdraw(save=True)
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
 
         self.assertEqual(
@@ -319,7 +315,6 @@ class PeriodActivityStatisticsTest(StatisticsTest):
     def test_participant_rejected(self):
         contribution = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
         contribution.states.remove(save=True)
-        self.activity.states.start(save=True)
         self.activity.states.succeed(save=True)
 
         self.assertEqual(

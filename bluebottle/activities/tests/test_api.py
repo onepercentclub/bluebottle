@@ -23,7 +23,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.factory_models.projects import ProjectThemeFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
@@ -545,7 +545,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_theme(self):
-        theme = ProjectThemeFactory.create()
+        theme = ThemeFactory.create()
         self.owner.favourite_themes.add(theme)
         self.owner.save()
 
@@ -720,7 +720,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_sort_matching_combined(self):
-        theme = ProjectThemeFactory.create()
+        theme = ThemeFactory.create()
         self.owner.favourite_themes.add(theme)
 
         skill = SkillFactory.create()

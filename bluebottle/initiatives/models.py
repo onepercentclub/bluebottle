@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
+from parler.models import TranslatedFields
 
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
@@ -16,7 +17,8 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
+    SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
@@ -71,7 +73,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     )
     story = models.TextField(_('story'), blank=True)
 
-    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
+    theme = models.ForeignKey('initiatives.Theme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
     image = ImageField(blank=True, null=True)
@@ -260,6 +262,33 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
+
+
+class Theme(SortableTranslatableModel):
+    """ Themes for initiatives. """
+    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
+
+    def __str__(self):
+        return self.name
+
+    def save(self, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+        super(Theme, self).save(**kwargs)
+
+    class Meta(object):
+        verbose_name = _('theme')
+        verbose_name_plural = _('themes')
+        permissions = (
+            ('api_read_theme', 'Can view theme through API'),
+        )
 
 
 from bluebottle.initiatives.wallposts import *  # noqa

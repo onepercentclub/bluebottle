@@ -1,6 +1,9 @@
 from builtins import object
 from django.db.models import Sum, Count, Q
 from django.utils.translation import ugettext_lazy as _
+
+from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField
@@ -21,6 +24,7 @@ from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.funding.models import MoneyContribution
+from bluebottle.deeds.models import DeedParticipant
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
@@ -179,7 +183,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             ),
             effort=Count(
                 'effortcontribution',
-                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
+                filter=(
+                    Q(contributor__activity__status='succeeded') &
+                    Q(status='succeeded') &
+                    Q(contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant)),
+
+                ),
                 distinct=True
             ),
             activities=Count(

@@ -4,6 +4,7 @@ from builtins import str
 from contextlib import contextmanager
 from importlib import import_module
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
@@ -428,6 +429,47 @@ class TriggerTestCase(BluebottleTestCase):
             if hasattr(effect, 'message') and effect.message == message_cls:
                 return
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
+
+
+class NotificationTestCase(BluebottleTestCase):
+
+    def create(self):
+        self.message = self.message_class(self.obj)
+
+    @property
+    def _html(self):
+        return BeautifulSoup(self.message.generic_content_html, 'html.parser')
+
+    def assertRecipients(self, recipients):
+        if recipients != self.message.get_recipients():
+            self.fail("Recipients did not match: {} != {} ".format(
+                recipients, self.message.get_recipients())
+            )
+
+    def assertSubject(self, subject):
+        if subject != self.message.generic_subject:
+            self.fail("Subject did not match: {} != {}".format(
+                subject, self.message.generic_subject)
+            )
+
+    def assertBodyContains(self, text):
+        self.assertHtmlBodyContains(text)
+        self.assertTextBodyContains(text)
+
+    def assertTextBodyContains(self, text):
+        if text not in self.message.generic_content_text:
+            self.fail("Text body does not contain {}".format(text))
+
+    def assertHtmlBodyContains(self, text):
+        if text not in self.message.generic_content_html:
+            self.fail("HTML body does not contain {}".format(text))
+
+    def assertActionLink(self, url):
+        link = self._html.find_all('a', {'class': 'action-email'})[0]
+        if url != link['href']:
+            self.fail("Action link did not match: {} != {}".format(
+                url, link['href'])
+            )
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):

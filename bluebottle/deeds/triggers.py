@@ -19,7 +19,8 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.time_based.messages import ParticipantRemovedNotification
+from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
+    ParticipantWithdrewNotification, NewParticipantNotification
 
 
 def is_started(effect):
@@ -196,7 +197,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
-                CreateEffortContribution
+                CreateEffortContribution,
+                NotificationEffect(NewParticipantNotification),
             ]
         ),
         TransitionTrigger(
@@ -209,7 +211,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantRemovedNotification),
-
             ]
         ),
 
@@ -233,7 +234,8 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.withdraw,
             effects=[
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
+                NotificationEffect(ParticipantWithdrewNotification),
             ]
         ),
 
@@ -254,7 +256,8 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed),
+                NotificationEffect(ParticipantFinishedNotification),
             ]
         ),
         TransitionTrigger(

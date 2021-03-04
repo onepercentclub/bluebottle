@@ -11,6 +11,8 @@ from bluebottle.activities.effects import SetContributionDateEffect, CreateEffor
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
+    NewParticipantNotification
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -240,6 +242,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
         with self.execute():
             self.assertEffect(CreateEffortContribution)
+            self.assertNotificationEffect(NewParticipantNotification)
 
     def test_initiate_no_start_no_end(self):
         self.defaults['activity'].start = None
@@ -321,6 +324,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
+            self.assertNotificationEffect(ParticipantRemovedNotification)
 
     def test_expire_remove(self):
         self.create()
@@ -421,3 +425,4 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNoTransitionEffect(DeedStateMachine.succeed, self.model.activity)
+            self.assertNotificationEffect(ParticipantFinishedNotification)

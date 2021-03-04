@@ -208,7 +208,8 @@ class NewParticipantNotification(TransitionMessage):
     template = 'messages/new_participant'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
+        'activity_url': 'activity.get_absolute_url',
+        'applicant_name': 'user.full_name'
     }
 
     def get_recipients(self):
@@ -277,3 +278,20 @@ class ParticipantFinishedNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+
+class ParticipantWithdrewNotification(TransitionMessage):
+    """
+    A participant withdrew from your activity
+    """
+    subject = _('A participant has withdrawn from your activity "{title}"')
+    template = 'messages/participant_withdrew'
+    context = {
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url',
+        'applicant_name': 'user.full_name'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]

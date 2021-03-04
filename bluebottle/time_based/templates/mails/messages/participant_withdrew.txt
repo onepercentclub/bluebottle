@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}{% blocktrans context 'email' %}
-{{ applicant_name }} applied to your activity "{{ title }}".!
+{{ applicant_name }} has withdrawn from you activity "{{ title }}".!
 
 Give the new participant a warm welcome.
 {% endblocktrans %}{% endblock %}

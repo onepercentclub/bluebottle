@@ -35,7 +35,8 @@ from bluebottle.time_based.messages import (
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
-    ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification
+    ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification,
+    ParticipantWithdrewNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -944,7 +945,9 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                UnFollowActivityEffect
+                UnFollowActivityEffect,
+                NotificationEffect(ParticipantWithdrewNotification),
+
             ]
         ),
     ]

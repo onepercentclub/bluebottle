@@ -1076,7 +1076,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your contribution to the activity "{}" is successfull 🎉'.format(self.activity.title)
+            'Your contribution to the activity "{}" is successful 🎉'.format(self.activity.title)
         )
 
 

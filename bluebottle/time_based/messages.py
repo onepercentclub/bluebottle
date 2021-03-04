@@ -69,7 +69,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     """
     subject = _('The activity "{title}" will take place in a few days!')
     template = 'messages/reminder_multiple_dates'
-    # send_once = True
+    send_once = True
     context = {
         'title': 'title',
         'activity_url': 'get_absolute_url'
@@ -325,6 +325,22 @@ class ParticipantRemovedNotification(TransitionMessage):
     """
     subject = _('You have been removed as participant for the activity "{title}"')
     template = 'messages/participant_removed'
+    context = {
+        'title': 'activity.title',
+        'activity_url': 'activity.get_absolute_url'
+    }
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantFinishedNotification(TransitionMessage):
+    """
+    The participant was finished
+    """
+    subject = _('Your contribution to the activity "{title}" is successfull 🎉')
+    template = 'messages/participant_finished'
     context = {
         'title': 'activity.title',
         'activity_url': 'activity.get_absolute_url'

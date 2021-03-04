@@ -225,7 +225,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'activities.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activities.slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
-        'activities.slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'activities.slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 

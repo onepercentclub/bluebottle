@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -6,6 +7,8 @@ from django.db import models
 from django.template.defaultfilters import slugify
 
 from django.utils.translation import ugettext_lazy as _
+
+from timezonefinder import TimezoneFinder
 
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
@@ -17,6 +20,9 @@ from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
 
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+
+
+tf = TimezoneFinder()
 
 
 @python_2_unicode_compatible
@@ -225,3 +231,10 @@ class Geolocation(models.Model):
             return u"{}, {}".format(self.locality, self.country.name)
         else:
             return self.country.name
+
+    @property
+    def timezone(self):
+        return tf.timezone_at(
+            lng=self.position.x,
+            lat=self.position.y
+        )

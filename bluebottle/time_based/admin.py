@@ -1,11 +1,13 @@
+from pytz import timezone
 from django.contrib import admin
 from django.db import models
 from django.db.models import Sum
 from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
-from django.template import loader
+from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import get_current_timezone
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter
 
@@ -405,9 +407,34 @@ class DateSlotAdmin(SlotAdmin):
         '__str__', 'start', 'duration_string',
     ]
 
+    def get_form(self, request, obj=None, **kwargs):
+        if not obj.is_online and obj.location:
+            local_start = obj.start.astimezone(timezone(obj.location.timezone))
+            platform_start = obj.start.astimezone(get_current_timezone())
+            offset = local_start.utcoffset() - platform_start.utcoffset()
+
+            if offset.total_seconds() != 0:
+                timezone_text = _(
+                    'Local time in "{location}" is {local_time}. '
+                    'This is {offset} hours {relation} then in the '
+                    'standard platform timezone ({current_timezone}).'
+                ).format(
+                    location=obj.location,
+                    local_time=defaultfilters.time(local_start),
+                    offset=abs(offset.total_seconds() / 3600.0),
+                    relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
+                    current_timezone=get_current_timezone()
+                )
+
+                help_texts = {'start': timezone_text}
+                kwargs.update({'help_texts': help_texts})
+
+        return super(DateSlotAdmin, self).get_form(request, obj, **kwargs)
+
     detail_fields = SlotAdmin.detail_fields + [
         'activity',
         'title',
+        'capacity',
         'start',
         'duration',
         'is_online',

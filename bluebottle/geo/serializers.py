@@ -171,13 +171,7 @@ class TinyPointSerializer(serializers.CharField):
 class GeolocationSerializer(ModelSerializer):
     position = PointSerializer()
     static_map_url = StaticMapsField(source='position')
-    timezone = serializers.SerializerMethodField()
-
-    def get_timezone(self, obj):
-        return tf.timezone_at(
-            lng=obj.position.x,
-            lat=obj.position.y
-        )
+    timezone = serializers.ReadOnlyField()
 
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'

@@ -2,7 +2,7 @@ from datetime import timedelta, date
 
 from django.core import mail
 from django.template import defaultfilters
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
@@ -501,6 +501,46 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 'The activity "{}" has succeeded 🎉'.format(self.activity.title)
             )
 
+    def test_reschedule_contributions(self):
+        self.participant_factory.create_batch(5, activity=self.activity)
+
+        self.assertEqual(len(self.activity.durations), 5)
+
+        tz = get_current_timezone()
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.start.astimezone(tz).date(), self.activity.start)
+            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
+
+        self.activity.start = self.activity.start + timedelta(days=1)
+        self.activity.save()
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.start.astimezone(tz).date(), self.activity.start)
+            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
+
+        self.activity.deadline = self.activity.deadline + timedelta(days=1)
+        self.activity.save()
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.start.astimezone(tz).date(), self.activity.start)
+            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
+
+        current_start = self.activity.start
+        self.activity.start = None
+        self.activity.save()
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.start.astimezone(tz).date(), current_start)
+            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
+
+        self.activity.deadline = None
+        self.activity.save()
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.start.astimezone(tz).date(), current_start)
+            self.assertEqual(duration.end, None)
+
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):
     def setUp(self):
@@ -665,6 +705,30 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
                 defaultfilters.time(self.slot2.end),
             )
         self.assertTrue(expected in mail.outbox[0].body)
+
+    def test_reschedule_contributions(self):
+        DateParticipantFactory.create_batch(5, activity=self.activity)
+
+        for duration in self.slot.durations:
+            self.assertEqual(duration.start, self.slot.start)
+            self.assertEqual(duration.end, self.slot.start + self.slot.duration)
+            self.assertEqual(duration.value, self.slot.duration)
+
+        self.slot.start = self.slot.start + timedelta(days=1)
+        self.slot.save()
+
+        for duration in self.slot.durations:
+            self.assertEqual(duration.start, self.slot.start)
+            self.assertEqual(duration.end, self.slot.start + self.slot.duration)
+            self.assertEqual(duration.value, self.slot.duration)
+
+        self.slot.duration = self.slot.duration + timedelta(hours=1)
+        self.slot.save()
+
+        for duration in self.slot.durations:
+            self.assertEqual(duration.start, self.slot.start)
+            self.assertEqual(duration.end, self.slot.start + self.slot.duration)
+            self.assertEqual(duration.value, self.slot.duration)
 
 
 class ParticipantTriggerTestCase():
@@ -1001,6 +1065,18 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             participant.contributions.
             exclude(timecontribution__contribution_type='preparation').get().contribution_type,
             'period'
+        )
+
+    def test_stop(self):
+        participant = self.participant_factory.create(activity=self.activity)
+        self.activity.start = date.today() - timedelta(days=1)
+        self.activity.save()
+
+        participant.states.stop(save=True)
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your contribution to the activity "{}" is successfull 🎉'.format(self.activity.title)
         )
 
 

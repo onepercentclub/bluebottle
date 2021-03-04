@@ -5,8 +5,8 @@
 {% blocktrans context 'email' %}
 Hi {{ recipient_name }},
 {% endblocktrans %}
-{% if custom_message|linebreaks %}
-{{custom_message}}
+{% if custom_message %}
+{{custom_message|linebreaks}}
 {% else %}
 {% block message %}{% endblock %}
 {% endif %}

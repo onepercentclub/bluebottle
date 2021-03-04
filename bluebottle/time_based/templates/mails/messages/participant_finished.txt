@@ -9,5 +9,5 @@ Craving for more? Then be sure to check out the activity overview page.
 {% endblocktrans %}{% endblock %}
 
 {% block action %}
-{% trans 'View all activities' context 'email' %}: {{site}}/initiatives/activities/list
+{% trans 'View activity' context 'email' %}: {{ activity_url }}
 {% endblock %}`

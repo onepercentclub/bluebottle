@@ -19,6 +19,7 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
+from bluebottle.time_based.messages import ParticipantRemovedNotification
 
 
 def is_started(effect):
@@ -206,7 +207,9 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.expire,
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
+                NotificationEffect(ParticipantRemovedNotification),
+
             ]
         ),
 

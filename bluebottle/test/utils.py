@@ -438,7 +438,9 @@ class NotificationTestCase(BluebottleTestCase):
 
     @property
     def _html(self):
-        return BeautifulSoup(self.message.generic_content_html, 'html.parser')
+        return BeautifulSoup(self.message.get_content_html(
+            self.message.get_recipients()[0]), 'html.parser'
+        )
 
     def assertRecipients(self, recipients):
         if recipients != self.message.get_recipients():
@@ -457,11 +459,11 @@ class NotificationTestCase(BluebottleTestCase):
         self.assertTextBodyContains(text)
 
     def assertTextBodyContains(self, text):
-        if text not in self.message.generic_content_text:
+        if text not in self.message.get_content_text(self.message.get_recipients()[0]):
             self.fail("Text body does not contain {}".format(text))
 
     def assertHtmlBodyContains(self, text):
-        if text not in self.message.generic_content_html:
+        if text not in self.message.get_content_html(self.message.get_recipients()[0]):
             self.fail("HTML body does not contain {}".format(text))
 
     def assertActionLink(self, url):
@@ -469,6 +471,13 @@ class NotificationTestCase(BluebottleTestCase):
         if url != link['href']:
             self.fail("Action link did not match: {} != {}".format(
                 url, link['href'])
+            )
+
+    def assertActionTitle(self, title):
+        link = self._html.find_all('a', {'class': 'action-email'})[0]
+        if title != link.string:
+            self.fail("Action link did not match: {} != {}".format(
+                title, link.string)
             )
 
 

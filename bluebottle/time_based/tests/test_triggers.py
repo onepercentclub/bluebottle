@@ -363,7 +363,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.start = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, 'running')
+        self.assertEqual(self.activity.status, 'open')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
@@ -382,7 +382,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.start = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, 'running')
+        self.assertEqual(self.activity.status, 'open')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
@@ -407,7 +407,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.start = date.today() - timedelta(days=2)
         self.activity.save()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'running')
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity.start = date.today() + timedelta(days=2)
         self.activity.save()
@@ -433,7 +433,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.save()
         self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, 'running')
+        self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 

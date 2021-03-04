@@ -9,7 +9,8 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import get_current_timezone
 from django_summernote.widgets import SummernoteWidget
-from parler.admin import SortedRelatedFieldListFilter
+from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
+from parler.utils.views import get_language_parameter
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
@@ -17,7 +18,7 @@ from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant
+    SlotParticipant, Skill
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.utils.admin import export_as_csv_action
@@ -45,7 +46,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
     disabled.short_description = _('First complete and submit the activity before managing participants.')
 
     def can_edit(self, obj):
-        return obj and obj.id and obj.status in ['open', 'running', 'succeeded', 'full', 'submitted']
+        return obj and obj.id and obj.status in ['open', 'succeeded', 'full', 'submitted']
 
     def has_delete_permission(self, request, obj=None):
         return self.can_edit(obj)
@@ -639,3 +640,28 @@ class SlotParticipantAdmin(StateMachineAdmin):
                 )}),
             )
         return fieldsets
+
+
+@admin.register(Skill)
+class SkillAdmin(TranslatableAdmin):
+    list_display = ('name', 'member_link')
+    readonly_fields = ('member_link',)
+    fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
+
+    def get_queryset(self, request):
+        lang = get_language_parameter(request, self.query_language_key)
+        return super().get_queryset(request).translated(lang).order_by('translations__name')
+
+    def get_actions(self, request):
+        actions = super(SkillAdmin, self).get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
+    def member_link(self, obj):
+        url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html(
+            "<a href='{}'>{} {}</a>",
+            url, obj.member_set.count(), _('users')
+        )
+    member_link.short_description = _('Users with this skill')

@@ -92,7 +92,7 @@ class ImpactGoalListAPITestCase(BluebottleTestCase):
                 'relationships': {
                     'activity': {
                         'data': {
-                            'type': 'activities/events',
+                            'type': 'activities/time-based/dates',
                             'id': self.activity.pk
                         },
                     },

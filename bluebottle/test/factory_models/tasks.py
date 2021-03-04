@@ -1,7 +1,7 @@
 from builtins import object
 import factory.fuzzy
 
-from bluebottle.tasks.models import Skill
+from bluebottle.time_based.models import Skill
 
 
 class SkillFactory(factory.DjangoModelFactory):

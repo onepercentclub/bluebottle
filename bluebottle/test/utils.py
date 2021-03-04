@@ -53,7 +53,7 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        management.call_command('loaddata', 'project_data.json', verbosity=0)
+        management.call_command('loaddata', 'themes.json', verbosity=0)
         management.call_command('loaddata', 'skills.json', verbosity=0)
 
         Language.objects.all().delete()

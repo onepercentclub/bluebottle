@@ -24,7 +24,7 @@ from bluebottle.funding.models import MoneyContribution
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Contribution, EffortContribution
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
@@ -170,13 +170,21 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         contributions = Contribution.objects.filter(
             contributor__activity__initiative=obj, status='succeeded'
-        ).instance_of(TimeContribution, MoneyContribution)
+        ).instance_of(TimeContribution, MoneyContribution, EffortContribution)
 
         stats = contributions.aggregate(
-            hours=Sum('timecontribution__value'),
+            hours=Sum(
+                'timecontribution__value',
+                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
+            ),
+            effort=Count(
+                'effortcontribution',
+                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
+                distinct=True
+            ),
             activities=Count(
                 'contributor__activity',
-                filter=Q(contributor__activity__status='succeeded'),
+                filter=Q(contributor__activity__status='succeeded') & Q(status='succeeded'),
                 distinct=True
             ),
             contributors=Count('contributor', distinct=True)

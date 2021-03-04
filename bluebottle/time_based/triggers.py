@@ -2,6 +2,11 @@ from datetime import date
 
 from django.utils.timezone import now
 
+from bluebottle.activities.messages import (
+    ActivitySucceededNotification,
+    ActivityExpiredNotification, ActivityRejectedNotification,
+    ActivityCancelledNotification, ActivityRestoredNotification,
+)
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
@@ -26,14 +31,11 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
-    ActivitySucceededNotification, ActivitySucceededManuallyNotification,
-    ActivityExpiredNotification, ActivityRejectedNotification,
-    ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
-    ChangedSingleDateNotification, ChangedMultipleDatesNotification
+    ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -191,6 +193,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
+
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
@@ -203,7 +206,8 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.restore,
             effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
+                NotificationEffect(ActivityRestoredNotification)
             ]
         ),
 

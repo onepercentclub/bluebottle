@@ -1,10 +1,14 @@
 from datetime import date
 
+from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.notifications.effects import NotificationEffect
+
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
 
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.states import EffortContributionStateMachine, OrganizerStateMachine
 from bluebottle.activities.effects import CreateEffortContribution
 
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -111,6 +115,7 @@ class DeedTriggers(ActivityTriggers):
                     'participants',
                     DeedParticipantStateMachine.succeed
                 ),
+                NotificationEffect(ActivitySucceededNotification)
             ]
         ),
 
@@ -118,6 +123,31 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityExpiredNotification)
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityRejectedNotification),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityCancelledNotification),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
+                NotificationEffect(ActivityRestoredNotification),
             ]
         ),
 

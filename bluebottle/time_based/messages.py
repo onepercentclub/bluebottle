@@ -2,7 +2,6 @@
 from django.template import defaultfilters
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -151,28 +150,6 @@ class ChangedMultipleDatesNotification(TransitionMessage):
         ]
 
 
-class ActivitySucceededNotification(TransitionMessage):
-    """
-    The activity succeeded
-    """
-    subject = _('Your activity "{title}" has succeeded 🎉')
-    template = 'messages/activity_succeeded'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context['impact'] = InitiativePlatformSettings.load().enable_impact
-
-        return context
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
-
-
 class ActivitySucceededManuallyNotification(TransitionMessage):
     """
     The activity was set to succeeded manually
@@ -189,54 +166,6 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
         return [
             participant.user for participant in self.obj.accepted_participants
         ]
-
-
-class ActivityRejectedNotification(TransitionMessage):
-    """
-    The activity was rejected
-    """
-    subject = _('Your activity "{title}" has been rejected')
-    template = 'messages/activity_rejected'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
-
-
-class ActivityCancelledNotification(TransitionMessage):
-    """
-    The activity got cancelled
-    """
-    subject = _('Your activity "{title}" has been cancelled')
-    template = 'messages/activity_cancelled'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
-
-
-class ActivityExpiredNotification(TransitionMessage):
-    """
-    The activity expired (no sign-ups before registration deadline or start date)
-    """
-    subject = _('The registration deadline for your activity "{title}" has expired')
-    template = 'messages/activity_expired'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
 
 
 class ParticipantAddedNotification(TransitionMessage):

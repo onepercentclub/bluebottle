@@ -1,9 +1,7 @@
 import json
 from builtins import object
 from builtins import str
-
 from contextlib import contextmanager
-
 from importlib import import_module
 
 from django.conf import settings
@@ -15,10 +13,8 @@ from django.test import TestCase, Client
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
-
 from rest_framework import status
 from rest_framework.relations import RelatedField
-
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
@@ -26,13 +22,12 @@ from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
 from bluebottle.clients import properties
-from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.effects import TransitionEffect
-
+from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
-from bluebottle.members.models import MemberPlatformSettings
 
 
 def css_dict(style):
@@ -414,19 +409,25 @@ class TriggerTestCase(BluebottleTestCase):
 
     def assertTransitionEffect(self, transition, model=None):
         if not self._hasTransitionEffect(transition, model):
-            self.fail('Transition effect, "{}" not triggered'.format(transition))
+            self.fail('Transition effect "{}" not triggered'.format(transition))
 
     def assertNoTransitionEffect(self, transition, model=None):
         if self._hasTransitionEffect(transition, model):
-            self.fail('Transition effect, "{}" triggered'.format(transition))
+            self.fail('Transition effect "{}" triggered'.format(transition))
 
     def assertEffect(self, effect_cls, model=None):
         if not self._hasEffect(effect_cls, model):
-            self.fail('Transition effect, "{}" not triggered'.format(effect_cls))
+            self.fail('Transition effect "{}" not triggered'.format(effect_cls))
 
     def assertNoEffect(self, effect_cls, model=None):
         if self._hasEffect(effect_cls, model):
-            self.fail('Transition effect, "{}" triggered on'.format(effect_cls))
+            self.fail('Transition effect "{}" triggered'.format(effect_cls))
+
+    def assertNotificationEffect(self, message_cls, model=None):
+        for effect in self.effects:
+            if hasattr(effect, 'message') and effect.message == message_cls:
+                return
+        self.fail('Notification effect "{}" not triggered'.format(message_cls))
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):

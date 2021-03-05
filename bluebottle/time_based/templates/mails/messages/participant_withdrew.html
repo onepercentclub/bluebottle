@@ -4,8 +4,3 @@
 {% block message %}{% blocktrans context 'email' %}
 <p>{{ applicant_name }} has withdrawn from you activity "{{ title }}"!</p>
 {% endblocktrans %}{% endblock %}
-
-{% block action %}
-    <a href="{{ activity_url }}"
-       class="action-email">{% trans 'Go to your activity' context 'email' %}</a>
-{% endblock %}`

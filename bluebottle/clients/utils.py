@@ -55,7 +55,7 @@ class LocalTenant(object):
             ContentType.objects.clear_cache()
 
 
-def tenant_url():
+def tenant_url(path=None):
     # workaround for development setups. Assume port 8000
     try:
         domain = connection.tenant.domain_url
@@ -63,8 +63,8 @@ def tenant_url():
         domain = 'example.com'
 
     if domain.endswith("localhost"):
-        return "http://{0}:8000".format(domain)
-    return "https://{0}".format(domain)
+        return "http://{0}:8000{1}".format(domain, path)
+    return "https://{0}{1}".format(domain, path)
 
 
 def tenant_name():

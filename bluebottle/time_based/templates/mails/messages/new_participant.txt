@@ -6,7 +6,3 @@
 
 Give the new participant a warm welcome.
 {% endblocktrans %}{% endblock %}
-
-{% block action %}
-{% trans 'Go to your activity' context 'email' %}: {{ activity_url }}
-{% endblock %}`

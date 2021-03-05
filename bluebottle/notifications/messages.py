@@ -37,7 +37,7 @@ class TransitionMessage(object):
             'site_name': '[site name]',
             'language': language,
             'contact_email': '<platform manager email>',
-            'recipient_name': '[first name]'
+            'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)
@@ -87,7 +87,9 @@ class TransitionMessage(object):
             'language': recipient.primary_language,
             'contact_email': properties.CONTACT_EMAIL,
             'recipient_name': recipient.first_name,
-            'first_name': recipient.first_name
+            'first_name': recipient.first_name,
+            'action_link': self.action_link,
+            'action_title': self.action_title
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)

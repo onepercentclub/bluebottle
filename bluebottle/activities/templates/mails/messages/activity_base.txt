@@ -9,5 +9,5 @@ Hi {{ recipient_name }},
 {% endblock %}
 
 {% block action %}
-   {% trans 'Go to your activity' context 'email' %}: {{ activity_url }}
+   {{ action_title }}: {{ action_link }}
 {% endblock %}`

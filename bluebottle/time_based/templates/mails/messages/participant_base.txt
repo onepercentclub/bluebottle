@@ -13,5 +13,5 @@ Hi {{ recipient_name }},
 {% endblock %}
 
 {% block action %}
-{% trans 'View activity' context 'email' %}: {{ activity_url }}
+{{ action_title }}: {{ action_link }}
 {% endblock %}`

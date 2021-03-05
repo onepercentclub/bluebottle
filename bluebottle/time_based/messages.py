@@ -2,6 +2,7 @@
 from django.template import defaultfilters
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -26,8 +27,13 @@ class DeadlineChangedNotification(TransitionMessage):
     template = 'messages/deadline_changed'
     context = {
         'title': 'title',
-        'activity_url': 'get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -45,7 +51,6 @@ class ReminderSingleDateNotification(TransitionMessage):
     send_once = True
     context = {
         'title': 'title',
-        'activity_url': 'get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -54,6 +59,12 @@ class ReminderSingleDateNotification(TransitionMessage):
         context.update(get_slot_info(slot))
         context['title'] = self.obj.title
         return context
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -71,7 +82,6 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     send_once = True
     context = {
         'title': 'title',
-        'activity_url': 'get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -86,6 +96,12 @@ class ReminderMultipleDatesNotification(TransitionMessage):
             info = get_slot_info(slot)
             context['slots'].append(info)
         return context
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -102,7 +118,6 @@ class ChangedSingleDateNotification(TransitionMessage):
     template = 'messages/changed_single_date'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -110,6 +125,12 @@ class ChangedSingleDateNotification(TransitionMessage):
         context.update(get_slot_info(self.obj))
         context['title'] = self.obj.activity.title
         return context
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -126,7 +147,6 @@ class ChangedMultipleDatesNotification(TransitionMessage):
     template = 'messages/changed_multiple_dates'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
 
     def get_context(self, recipient):
@@ -143,6 +163,12 @@ class ChangedMultipleDatesNotification(TransitionMessage):
             context['slots'].append(info)
         return context
 
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('View activity')
+
     def get_recipients(self):
         """participants that signed up"""
         return [
@@ -158,8 +184,13 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     template = 'messages/activity_succeeded_manually'
     context = {
         'title': 'title',
-        'activity_url': 'get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -176,8 +207,13 @@ class ParticipantAddedNotification(TransitionMessage):
     template = 'messages/participant_added'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('Go to your activity')
 
     def get_recipients(self):
         """participant"""
@@ -192,8 +228,13 @@ class ParticipantCreatedNotification(TransitionMessage):
     template = 'messages/participant_created'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('Go to your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -208,13 +249,37 @@ class NewParticipantNotification(TransitionMessage):
     template = 'messages/new_participant'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url',
         'applicant_name': 'user.full_name'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('Go to your activity')
 
     def get_recipients(self):
         """activity owner"""
         return [self.obj.activity.owner]
+
+
+class ParticipantNotification(TransitionMessage):
+    """
+    A participant was added manually (through back-office)
+    """
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
 
 
 class ParticipantAcceptedNotification(TransitionMessage):
@@ -225,8 +290,13 @@ class ParticipantAcceptedNotification(TransitionMessage):
     template = 'messages/participant_accepted'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participant"""
@@ -241,8 +311,13 @@ class ParticipantRejectedNotification(TransitionMessage):
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return tenant_url('/initiatives/activities/list')
+
+    action_title = _('View all activities')
 
     def get_recipients(self):
         """participant"""
@@ -259,6 +334,12 @@ class ParticipantRemovedNotification(TransitionMessage):
         'title': 'activity.title',
     }
 
+    @property
+    def action_link(self):
+        return tenant_url('/initiatives/activities/list')
+
+    action_title = _('View all activities')
+
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
@@ -272,8 +353,13 @@ class ParticipantFinishedNotification(TransitionMessage):
     template = 'messages/participant_finished'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('View activity')
 
     def get_recipients(self):
         """participant"""
@@ -288,9 +374,14 @@ class ParticipantWithdrewNotification(TransitionMessage):
     template = 'messages/participant_withdrew'
     context = {
         'title': 'activity.title',
-        'activity_url': 'activity.get_absolute_url',
         'applicant_name': 'user.full_name'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = _('Go to your activity')
 
     def get_recipients(self):
         """activity owner"""

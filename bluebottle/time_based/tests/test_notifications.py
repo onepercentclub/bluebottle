@@ -4,7 +4,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
     ParticipantWithdrewNotification, NewParticipantNotification
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
 
 
 class DateActivityNotificationTestCase(NotificationTestCase):
@@ -70,7 +70,12 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.owner = BlueBottleUserFactory.create()
         self.activity = DateActivityFactory.create(
             title="Save the world!",
-            owner=self.owner
+            owner=self.owner,
+            slots=[]
+        )
+        self.slots = DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.activity
         )
         self.obj = DateParticipantFactory.create(
             activity=self.activity,

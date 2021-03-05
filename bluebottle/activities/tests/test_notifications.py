@@ -19,6 +19,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been rejected')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been rejected.')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_activity_cancelled_notification(self):
         self.message_class = ActivityCancelledNotification
@@ -27,6 +28,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been cancelled')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been cancelled.')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_activity_restored_notification(self):
         self.message_class = ActivityRestoredNotification
@@ -35,6 +37,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('The activity "Save the world!" has been restored')
         self.assertBodyContains('Your activity "Save the world!" has been restored.')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_activity_expired_notification(self):
         self.message_class = ActivityExpiredNotification
@@ -46,6 +49,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
             '"Save the world!" before the deadline to apply. '
             'That’s why we have cancelled your activity.')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_activity_succeeded_notification(self):
         self.message_class = ActivitySucceededNotification
@@ -56,3 +60,4 @@ class ActivityNotificationTestCase(NotificationTestCase):
             'You did it! Your activity "Save the world!" has succeeded, '
             'that calls for a celebration!')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')

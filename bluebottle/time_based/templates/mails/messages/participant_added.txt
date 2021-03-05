@@ -8,7 +8,3 @@ Head over to the activity page for more information.
 
 If you are unable to participate, please withdraw via the activity page so that others can take your place.
 {% endblocktrans %}{% endblock %}
-
-{% block action %}
-{% trans 'View activity' context 'email' %}: {{ activity_url }}
-{% endblock %}`

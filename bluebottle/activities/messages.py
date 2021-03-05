@@ -28,9 +28,9 @@ class ActivityWallpostReactionMessage(TransitionMessage):
         'title': 'wallpost.content_object.title'
     }
 
-    def get_recipients(self):
-        """wallpost author"""
-        return [self.obj.wallpost.author]
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
 
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
@@ -79,16 +79,16 @@ class ImpactReminderMessage(TransitionMessage):
         return [self.obj.owner]
 
 
-class ActivitySucceededNotification(TransitionMessage):
-    """
-    The activity succeeded
-    """
-    subject = _('Your activity "{title}" has succeeded 🎉')
-    template = 'messages/activity_succeeded'
+class ActivityNotification(TransitionMessage):
     context = {
         'title': 'title',
-        'activity_url': 'get_absolute_url'
     }
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = _('Open your activity')
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -101,65 +101,41 @@ class ActivitySucceededNotification(TransitionMessage):
         return [self.obj.owner]
 
 
-class ActivityRestoredNotification(TransitionMessage):
+class ActivitySucceededNotification(ActivityNotification):
+    """
+    The activity succeeded
+    """
+    subject = _('Your activity "{title}" has succeeded 🎉')
+    template = 'messages/activity_succeeded'
+
+
+class ActivityRestoredNotification(ActivityNotification):
     """
     The activity was restored
     """
     subject = _('The activity "{title}" has been restored')
     template = 'messages/activity_restored'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
 
 
-class ActivityRejectedNotification(TransitionMessage):
+class ActivityRejectedNotification(ActivityNotification):
     """
     The activity was rejected
     """
     subject = _('Your activity "{title}" has been rejected')
     template = 'messages/activity_rejected'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
 
 
-class ActivityCancelledNotification(TransitionMessage):
+class ActivityCancelledNotification(ActivityNotification):
     """
     The activity got cancelled
     """
     subject = _('Your activity "{title}" has been cancelled')
     template = 'messages/activity_cancelled'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
 
 
-class ActivityExpiredNotification(TransitionMessage):
+class ActivityExpiredNotification(ActivityNotification):
     """
     The activity expired (no sign-ups before registration deadline or start date)
     """
     subject = _('The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_expired'
-    context = {
-        'title': 'title',
-        'activity_url': 'get_absolute_url'
-    }
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]

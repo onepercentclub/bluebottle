@@ -88,8 +88,8 @@ class TransitionMessage(object):
             'contact_email': properties.CONTACT_EMAIL,
             'recipient_name': recipient.first_name,
             'first_name': recipient.first_name,
-            'action_link': self.action_link,
-            'action_title': self.action_title
+            'action_link': getattr(self, 'action_link', None),
+            'action_title': getattr(self, 'action_title', None)
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)

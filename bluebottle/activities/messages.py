@@ -27,10 +27,11 @@ class ActivityWallpostReactionMessage(TransitionMessage):
     context = {
         'title': 'wallpost.content_object.title'
     }
+    action_title = pgettext('email', 'View response')
 
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
+    def get_recipients(self):
+        """wallpost author"""
+        return [self.obj.wallpost.author]
 
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):

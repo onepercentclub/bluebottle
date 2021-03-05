@@ -62,9 +62,12 @@ def tenant_url(path=None):
     except AttributeError:
         domain = 'example.com'
 
+    url = "https://{0}".format(domain)
     if domain.endswith("localhost"):
-        return "http://{0}:8000{1}".format(domain, path)
-    return "https://{0}{1}".format(domain, path)
+        url += ":8000"
+    if path:
+        return url + path
+    return url
 
 
 def tenant_name():

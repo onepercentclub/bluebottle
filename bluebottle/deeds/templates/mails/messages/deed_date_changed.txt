@@ -1,0 +1,12 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}
+{% block message %}
+{% trans 'The start and/or end date of the activity "{{ title }}", in which you are participating, has changed.' context 'email' %}
+
+{% trans 'Start {{ start }}' context 'email' %}
+{% trans 'End {{ end }}' context 'email' %}
+
+{% trans 'Head over to the activity page for more information.' context 'email' %}
+
+{% trans 'If you are unable to participate, please withdraw via the activity page so that others can take your place.' context 'email' %}
+{% endblock %}

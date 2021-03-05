@@ -2,10 +2,9 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans  context 'email' %}
-Hi {{ recipient_name }},
-{% endblocktrans %}
-{% block message %}{% endblock %}
+    {% trans 'Hi {{ recipient_name }},' context 'email' %}
+
+    {% block message %}{% endblock %}
 {% endblock %}
 
 {% block action %}

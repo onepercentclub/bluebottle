@@ -2,6 +2,7 @@ from datetime import date
 
 from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.triggers import (
@@ -92,10 +93,16 @@ class DeedTriggers(ActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            'start',
+            ['start', 'end'],
             effects=[
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                NotificationEffect(
+                    DeedDateChangedNotification,
+                    conditions=[
+                        is_not_finished
+                    ]
+                )
             ]
         ),
 

@@ -2,6 +2,7 @@ from datetime import timedelta, date
 
 from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -115,6 +116,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
+            self.assertNotificationEffect(DeedDateChangedNotification)
 
     def test_reopen_expired(self):
         self.defaults['status'] = 'expired'

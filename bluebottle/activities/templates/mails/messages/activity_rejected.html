@@ -1,8 +1,12 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans context 'email' %}
-<p>Unfortunately your activity "{{ title }}" has been rejected.</p>
+{% block message %}
+    <p>
+        {% trans 'Unfortunately your activity "{{ title }}" has been rejected.' context 'email' %}
+    </p>
 
-<p>If you have any questions, you can contact the platform manager by replying to this email.</p>
-{% endblocktrans %}{% endblock %}
+    <p>
+        {% trans 'If you have any questions, you can contact the platform manager by replying to this email.' context 'email' %}
+    </p>
+{% endblock %}

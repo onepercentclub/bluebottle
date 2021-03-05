@@ -1,8 +1,8 @@
 {% extends "mails/messages/activity_base.txt" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans context 'email' %}
-Unfortunately your activity "{{ title }}" has been cancelled.
+{% block message%}
+    {% trans 'Unfortunately your activity "{{ title }}" has been cancelled.' context 'email' %}
 
-If you have any questions, you can contact the platform manager by replying to this email.
-{% endblocktrans %}{% endblock %}
+    {% trans 'If you have any questions, you can contact the platform manager by replying to this email.' context 'email' %}
+{% endblock %}

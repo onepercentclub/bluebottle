@@ -1,10 +1,10 @@
 {% extends "mails/messages/activity_base.txt" %}
 {% load i18n %}
 
-{% block message %}{% blocktrans context 'email' %}
-Your activity "{{ title }}" has been restored.
+{% block message %}
+    {% trans 'Your activity "{{ title }}" has been restored.' context 'email' %}
 
-Head over to your activity page to see what you need to do to open up your activity for registrations again.
+    {% trans 'Head over to your activity page to see what you need to do to open up your activity for registrations again.' context 'email' %}
 
-If you have any questions, you can contact the platform manager by replying to this email.
-{% endblocktrans %}{% endblock %}
+    {% trans 'If you have any questions, you can contact the platform manager by replying to this email.' context 'email' %}
+{% endblock %}

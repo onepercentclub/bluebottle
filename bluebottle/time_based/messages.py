@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.template import defaultfilters
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
@@ -23,7 +23,7 @@ class DeadlineChangedNotification(TransitionMessage):
     """
     The deadline of the activity changed
     """
-    subject = _('The deadline for your activity "{title}" changed')
+    subject = pgettext('email', 'The deadline for your activity "{title}" changed')
     template = 'messages/deadline_changed'
     context = {
         'title': 'title',
@@ -33,7 +33,7 @@ class DeadlineChangedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -46,16 +46,16 @@ class ReminderSingleDateNotification(TransitionMessage):
     """
     Reminder notification for a single date activity
     """
-    subject = _('The activity "{title}" will take place in a few days!')
+    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
     template = 'messages/reminder_single_date'
     send_once = True
     context = {
         'title': 'title',
     }
 
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
+    def get_contexpgettext(self, recipient):
+        context = super().get_contexpgettext(recipient)
+        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).firspgettext()
         context.update(get_slot_info(slot))
         context['title'] = self.obj.title
         return context
@@ -64,7 +64,7 @@ class ReminderSingleDateNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -77,15 +77,15 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     """
     Reminder notification for an activity over multiple dates
     """
-    subject = _('The activity "{title}" will take place in a few days!')
+    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
     template = 'messages/reminder_multiple_dates'
     send_once = True
     context = {
         'title': 'title',
     }
 
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
+    def get_contexpgettext(self, recipient):
+        context = super().get_contexpgettext(recipient)
         context['slots'] = []
         slots = self.obj.slots.filter(
             status__in=['full', 'open', 'running'],
@@ -101,7 +101,7 @@ class ReminderMultipleDatesNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -114,14 +114,14 @@ class ChangedSingleDateNotification(TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
     """
-    subject = _('The details of activity "{title}" have changed')
+    subject = pgettext('email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_single_date'
     context = {
         'title': 'activity.title',
     }
 
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
+    def get_contexpgettext(self, recipient):
+        context = super().get_contexpgettext(recipient)
         context.update(get_slot_info(self.obj))
         context['title'] = self.obj.activity.title
         return context
@@ -130,7 +130,7 @@ class ChangedSingleDateNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -143,14 +143,14 @@ class ChangedMultipleDatesNotification(TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for an activity with multiple slots
     """
-    subject = _('The details of activity "{title}" have changed')
+    subject = pgettext('email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_multiple_dates'
     context = {
         'title': 'activity.title',
     }
 
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
+    def get_contexpgettext(self, recipient):
+        context = super().get_contexpgettext(recipient)
         context['slots'] = []
         slots = self.obj.activity.slots.filter(
             status__in=['full', 'open', 'running'],
@@ -167,7 +167,7 @@ class ChangedMultipleDatesNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -180,7 +180,7 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     """
     The activity was set to succeeded manually
     """
-    subject = _('The activity "{title}" has succeeded 🎉')
+    subject = pgettext('email', 'The activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded_manually'
     context = {
         'title': 'title',
@@ -190,7 +190,7 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -203,7 +203,7 @@ class ParticipantAddedNotification(TransitionMessage):
     """
     A participant was added manually (through back-office)
     """
-    subject = _('You have been added to the activity "{title}" 🎉')
+    subject = pgettext('email', 'You have been added to the activity "{title}" 🎉')
     template = 'messages/participant_added'
     context = {
         'title': 'activity.title',
@@ -213,7 +213,7 @@ class ParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('Go to your activity')
+    action_title = pgettext('email', 'Open your activity')
 
     def get_recipients(self):
         """participant"""
@@ -224,7 +224,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     """
     A participant applied  for the activity and should be reviewed
     """
-    subject = _('You have a new participant for your activity "{title}" 🎉')
+    subject = pgettext('email', 'You have a new participant for your activity "{title}" 🎉')
     template = 'messages/participant_created'
     context = {
         'title': 'activity.title',
@@ -234,7 +234,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('Go to your activity')
+    action_title = pgettext('email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -245,7 +245,7 @@ class NewParticipantNotification(TransitionMessage):
     """
     A participant joined the activity (no review required)
     """
-    subject = _('A new participant has joined your activity "{title}" 🎉')
+    subject = pgettext('email', 'A new participant has joined your activity "{title}" 🎉')
     template = 'messages/new_participant'
     context = {
         'title': 'activity.title',
@@ -256,7 +256,7 @@ class NewParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('Go to your activity')
+    action_title = pgettext('email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -275,7 +275,7 @@ class ParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -286,7 +286,7 @@ class ParticipantAcceptedNotification(TransitionMessage):
     """
     The participant got accepted after review
     """
-    subject = _('You have been selected for the activity "{title}" 🎉')
+    subject = pgettext('email', 'You have been selected for the activity "{title}" 🎉')
     template = 'messages/participant_accepted'
     context = {
         'title': 'activity.title',
@@ -296,7 +296,7 @@ class ParticipantAcceptedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -307,7 +307,7 @@ class ParticipantRejectedNotification(TransitionMessage):
     """
     The participant got rejected after revie
     """
-    subject = _('You have not been selected for the activity "{title}"')
+    subject = pgettext('email', 'You have not been selected for the activity "{title}"')
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title',
@@ -317,7 +317,7 @@ class ParticipantRejectedNotification(TransitionMessage):
     def action_link(self):
         return tenant_url('/initiatives/activities/list')
 
-    action_title = _('View all activities')
+    action_title = pgettext('email', 'View all activities')
 
     def get_recipients(self):
         """participant"""
@@ -328,7 +328,7 @@ class ParticipantRemovedNotification(TransitionMessage):
     """
     The participant was removed from the activity
     """
-    subject = _('You have been removed as participant for the activity "{title}"')
+    subject = pgettext('email', 'You have been removed as participant for the activity "{title}"')
     template = 'messages/participant_removed'
     context = {
         'title': 'activity.title',
@@ -338,7 +338,7 @@ class ParticipantRemovedNotification(TransitionMessage):
     def action_link(self):
         return tenant_url('/initiatives/activities/list')
 
-    action_title = _('View all activities')
+    action_title = pgettext('email', 'View all activities')
 
     def get_recipients(self):
         """participant"""
@@ -349,7 +349,7 @@ class ParticipantFinishedNotification(TransitionMessage):
     """
     The participant was finished
     """
-    subject = _('Your contribution to the activity "{title}" is successful 🎉')
+    subject = pgettext('email', 'Your contribution to the activity "{title}" is successful 🎉')
     template = 'messages/participant_finished'
     context = {
         'title': 'activity.title',
@@ -359,7 +359,7 @@ class ParticipantFinishedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('View activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -370,7 +370,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
     """
     A participant withdrew from your activity
     """
-    subject = _('A participant has withdrawn from your activity "{title}"')
+    subject = pgettext('email', 'A participant has withdrawn from your activity "{title}"')
     template = 'messages/participant_withdrew'
     context = {
         'title': 'activity.title',
@@ -381,7 +381,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = _('Go to your activity')
+    action_title = pgettext('email', 'Go to your activity')
 
     def get_recipients(self):
         """activity owner"""

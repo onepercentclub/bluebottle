@@ -1,8 +1,8 @@
 {% extends "mails/messages/activity_base.txt" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans context 'email' %}
-You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!
+{% block message %}
+    {% trans 'You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!' context 'email' %}
 
-Share your experience on the activity page.
-{% endblocktrans %}{% endblock %}
+    {% trans 'Share your experience on the activity page.' context 'email' %}
+{% endblock %}

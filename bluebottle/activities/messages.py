@@ -1,11 +1,11 @@
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext_lazy as pgettext
 
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
-    subject = _("You have a new post on '{title}'")
+    subject = pgettext('email', "You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner'
 
     context = {
@@ -21,7 +21,7 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
 
 
 class ActivityWallpostReactionMessage(TransitionMessage):
-    subject = _("You have a new post on '{title}'")
+    subject = pgettext('email', "You have a new post on '{title}'")
     template = 'messages/activity_wallpost_reaction'
 
     context = {
@@ -34,7 +34,7 @@ class ActivityWallpostReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
-    subject = _("You have a new post on '{title}'")
+    subject = pgettext('email', "You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner_reaction'
 
     context = {
@@ -50,7 +50,7 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostFollowerMessage(TransitionMessage):
-    subject = _("Update from '{title}'")
+    subject = pgettext('email', "Update from '{title}'")
     template = 'messages/activity_wallpost_follower'
     context = {
         'title': 'content_object.title'
@@ -68,17 +68,6 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
         return [follow.user for follow in follows]
 
 
-class ImpactReminderMessage(TransitionMessage):
-    subject = (u'Please share the impact results for your activity "{title}".')
-    template = 'messages/activity_impact_reminder'
-    context = {
-        'title': 'title'
-    }
-
-    def get_recipients(self):
-        return [self.obj.owner]
-
-
 class ActivityNotification(TransitionMessage):
     context = {
         'title': 'title',
@@ -88,7 +77,7 @@ class ActivityNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = _('Open your activity')
+    action_title = pgettext('email', 'Open your activity')
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -101,11 +90,22 @@ class ActivityNotification(TransitionMessage):
         return [self.obj.owner]
 
 
+class ImpactReminderMessage(ActivityNotification):
+    subject = pgettext('email', 'Please share the impact results for your activity "{title}".')
+    template = 'messages/activity_impact_reminder'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.owner]
+
+
 class ActivitySucceededNotification(ActivityNotification):
     """
     The activity succeeded
     """
-    subject = _('Your activity "{title}" has succeeded 🎉')
+    subject = pgettext('email', 'Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded'
 
 
@@ -113,7 +113,7 @@ class ActivityRestoredNotification(ActivityNotification):
     """
     The activity was restored
     """
-    subject = _('The activity "{title}" has been restored')
+    subject = pgettext('email', 'The activity "{title}" has been restored')
     template = 'messages/activity_restored'
 
 
@@ -121,7 +121,7 @@ class ActivityRejectedNotification(ActivityNotification):
     """
     The activity was rejected
     """
-    subject = _('Your activity "{title}" has been rejected')
+    subject = pgettext('email', 'Your activity "{title}" has been rejected')
     template = 'messages/activity_rejected'
 
 
@@ -129,7 +129,7 @@ class ActivityCancelledNotification(ActivityNotification):
     """
     The activity got cancelled
     """
-    subject = _('Your activity "{title}" has been cancelled')
+    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
     template = 'messages/activity_cancelled'
 
 
@@ -137,5 +137,5 @@ class ActivityExpiredNotification(ActivityNotification):
     """
     The activity expired (no sign-ups before registration deadline or start date)
     """
-    subject = _('The registration deadline for your activity "{title}" has expired')
+    subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_expired'

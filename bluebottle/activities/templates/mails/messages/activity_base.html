@@ -2,13 +2,12 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans context 'email' %}
-    <p>Hi {{ recipient_name }},</p>
-{% endblocktrans %}
+    <p>
+        {% trans 'Hi {{ recipient_name }},' context 'email' %}
+    </p>
 {% block message %}{% endblock %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}"
-       class="action-email">{{ action_title }}</a>
+    <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
 {% endblock %}`

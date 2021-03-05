@@ -1,17 +1,19 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block message%}{% blocktrans context 'email' %}
-<p>You did it! Your activity "{{ title }}" has succeeded, that calls for a celebration!</p>
-{% endblocktrans %}
+{% block message %}
+    <p>
+        {% trans 'You did it! Your activity "{{ title }}" has succeeded, that calls for a celebration!' context 'email' %}
+    </p>
 
-{% if impact %}
-    {% blocktrans context 'email' %}
-        <p>Head over to your activity page and enter the impact your activity made, so that everybody can see how effective your activity was.</p>
-    {% endblocktrans %}
-{% endif %}
+    {% if impact %}
+        <p>
+            {% trans 'Head over to your activity page and enter the impact your activity made, so that everybody can see how effective your activity was.' context 'email' %}
+        </p>
+    {% endif %}
 
-{% blocktrans %}
-    <p>And don’t forget to thank your awesome participants for their support.</p>
-{% endblocktrans %}
+
+    <p>
+        {% trans 'And don’t forget to thank your awesome participants for their support.' context 'email' %}
+    </p>
 {% endblock %}

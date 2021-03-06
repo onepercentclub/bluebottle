@@ -3,8 +3,8 @@
 {% block message %}
 {% blocktrans context 'email' %}The start and/or end date of the activity "{{ title }}", in which you are participating, has changed.{% endblocktrans %}
 
-{% blocktrans context 'email' %}Start {{ start }}{% endblocktrans %}
-{% blocktrans context 'email' %}End {{ end }}{% endblocktrans %}
+{% blocktrans context 'email' %}Start: {{ start }}{% endblocktrans %}
+{% blocktrans context 'email' %}End: {{ end }}{% endblocktrans %}
 
 {% blocktrans context 'email' %}Head over to the activity page for more information.{% endblocktrans %}
 

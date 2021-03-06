@@ -16,12 +16,12 @@ class DeedDateChangedNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         if self.obj.start:
-            context['start'] = self.obj.start.date()
+            context['start'] = self.obj.start.strftime('%x')
         else:
             context['start'] = pgettext('email', 'Today')
 
         if self.obj.end:
-            context['end'] = self.obj.end.date()
+            context['end'] = self.obj.end.strftime('%x')
         else:
             context['end'] = pgettext('email', 'Runs indefinitely')
         return context

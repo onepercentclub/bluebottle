@@ -444,13 +444,13 @@ class NotificationTestCase(BluebottleTestCase):
 
     def assertRecipients(self, recipients):
         if recipients != self.message.get_recipients():
-            self.fail("Recipients did not match: {} != {} ".format(
+            self.fail("Recipients did not match: '{}' != '{}'".format(
                 recipients, self.message.get_recipients())
             )
 
     def assertSubject(self, subject):
         if subject != self.message.generic_subject:
-            self.fail("Subject did not match: {} != {}".format(
+            self.fail("Subject did not match: '{}' != '{}'".format(
                 subject, self.message.generic_subject)
             )
 
@@ -460,23 +460,23 @@ class NotificationTestCase(BluebottleTestCase):
 
     def assertTextBodyContains(self, text):
         if text not in self.message.get_content_text(self.message.get_recipients()[0]):
-            self.fail("Text body does not contain {}".format(text))
+            self.fail("Text body does not contain '{}'".format(text))
 
     def assertHtmlBodyContains(self, text):
         if text not in self.message.get_content_html(self.message.get_recipients()[0]):
-            self.fail("HTML body does not contain {}".format(text))
+            self.fail("HTML body does not contain '{}'".format(text))
 
     def assertActionLink(self, url):
         link = self._html.find_all('a', {'class': 'action-email'})[0]
         if url != link['href']:
-            self.fail("Action link did not match: {} != {}".format(
+            self.fail("Action link did not match: '{}' != '{}'".format(
                 url, link['href'])
             )
 
     def assertActionTitle(self, title):
         link = self._html.find_all('a', {'class': 'action-email'})[0]
         if title != link.string:
-            self.fail("Action link did not match: {} != {}".format(
+            self.fail("Action title did not match: '{}' != '{}'".format(
                 title, link.string)
             )
 

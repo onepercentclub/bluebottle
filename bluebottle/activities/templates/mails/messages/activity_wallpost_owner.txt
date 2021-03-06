@@ -10,5 +10,5 @@ Hi {{ recipient_name }},
 {% endblocktrans %}
 {% endblock %}
 {% block action %}
-{% trans 'View comment' context 'email' %}: {{ obj.content_object.get_absolute_url }}
+{% blocktrans context 'email' %}View comment{% endblocktrans %}: {{ obj.content_object.get_absolute_url }}
 {% endblock %}`

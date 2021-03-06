@@ -3,14 +3,14 @@
 
 {% block message%}
     <p>
-        {% trans 'Unfortunately, nobody applied to your activity "{{ title }}" before the deadline to apply. That’s why we have cancelled your activity.' context 'email' %}
+        {% blocktrans context 'email' %}Unfortunately, nobody applied to your activity "{{ title }}" before the deadline to apply. That’s why we have cancelled your activity.{% endblocktrans %}
     </p>
 
     <p>
-        {% trans 'Don’t worry, you can always create a new activity and try again.' context 'email' %}
+        {% blocktrans context 'email' %}Don’t worry, you can always create a new activity and try again.{% endblocktrans %}
     </p>
 
     <p>
-        {% trans 'Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email.' context 'email' %}
+        {% blocktrans context 'email' %}Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email.{% endblocktrans %}
     </p>
 {% endblock %}

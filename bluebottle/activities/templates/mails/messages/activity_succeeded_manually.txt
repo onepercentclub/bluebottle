@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% trans 'You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!' context 'email' %}
+    {% blocktrans context 'email' %}You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!{% endblocktrans %}
 
-    {% trans 'Share your experience on the activity page.' context 'email' %}
+    {% blocktrans context 'email' %}Share your experience on the activity page.{% endblocktrans %}
 {% endblock %}

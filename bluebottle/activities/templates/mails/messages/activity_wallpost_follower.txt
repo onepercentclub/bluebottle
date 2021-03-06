@@ -11,7 +11,7 @@ Hi {{ recipient_name }},
 {% endblocktrans %}
 {% endblock %}
 {% block action %}
-{% trans 'View update' context 'email' %}: {{ obj.content_object.get_absolute_url }}
+{% blocktrans context 'email' %}View update{% endblocktrans %}: {{ obj.content_object.get_absolute_url }}
 {% endblock %}`
 
 {% block unsubscribe %}

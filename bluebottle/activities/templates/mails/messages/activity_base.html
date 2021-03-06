@@ -3,7 +3,7 @@
 
 {% block content %}
     <p>
-        {% trans 'Hi {{ recipient_name }},' context 'email' %}
+        {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
     </p>
 {% block message %}{% endblock %}
 {% endblock %}

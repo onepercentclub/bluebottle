@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% trans 'Unfortunately your activity "{{ title }}" has been rejected.' context 'email' %}
+    {% blocktrans context 'email' %}Unfortunately your activity "{{ title }}" has been rejected.{% endblocktrans %}
 
-    {% trans 'If you have any questions, you can contact the platform manager by replying to this email.' context 'email' %}
+    {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
 {% endblock %}

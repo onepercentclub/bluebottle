@@ -3,10 +3,10 @@
 
 {% block message %}
     <p>
-        {% trans 'Unfortunately your activity "{{ title }}" has been rejected.' context 'email' %}
+        {% blocktrans context 'email' %}Unfortunately your activity "{{ title }}" has been rejected.{% endblocktrans %}
     </p>
 
     <p>
-        {% trans 'If you have any questions, you can contact the platform manager by replying to this email.' context 'email' %}
+        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
     </p>
 {% endblock %}

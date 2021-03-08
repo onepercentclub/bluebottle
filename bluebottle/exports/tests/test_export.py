@@ -11,6 +11,7 @@ from bluebottle.time_based.tests.factories import (
 )
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -43,6 +44,7 @@ class TestExportAdmin(BluebottleTestCase):
             DateActivityFactory.create_batch(3, initiative=initiative)
             PeriodActivityFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
+            DeedFactory.create_batch(1, initiative=initiative)
 
         result = plain_export(Exporter, tenant=tenant, **data)
         book = xlrd.open_workbook(result)
@@ -52,7 +54,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
-            37
+            41
         )
         self.assertEqual(
             book.sheet_by_name('Initiatives').nrows,
@@ -92,6 +94,23 @@ class TestExportAdmin(BluebottleTestCase):
             'Deadline'
         )
 
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').nrows,
+            5
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 8).value,
+            'Status'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 9).value,
+            'Start'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 10).value,
+            'End'
+        )
+
     def test_export_custom_user_fields(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
@@ -113,6 +132,9 @@ class TestExportAdmin(BluebottleTestCase):
         initiative = InitiativeFactory.create(owner=user)
         activity = PeriodActivityFactory.create(owner=user, initiative=initiative)
         PeriodParticipantFactory.create(activity=activity, user=user)
+
+        activity = DeedFactory.create(owner=user, initiative=initiative)
+        DeedParticipantFactory.create(activity=activity, user=user)
 
         data = {
             'from_date': from_date,
@@ -142,6 +164,23 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Time contributions').cell(1, 16).value,
+            'Parblue Yellow'
+        )
+
+        self.assertEqual(
+            book.sheet_by_name('Deed participants').cell(0, 9).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed participants').cell(1, 9).value,
+            'Parblue Yellow'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Effort contributions').cell(0, 15).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Effort contributions').cell(1, 15).value,
             'Parblue Yellow'
         )
 

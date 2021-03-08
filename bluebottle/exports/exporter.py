@@ -1,3 +1,4 @@
+import operator
 from builtins import object
 import logging
 
@@ -44,8 +45,13 @@ class ExportModelResource(resources.ModelResource):
                 return None
         if field_name.startswith('segment:'):
             slug = field_name.replace('segment:', '')
-            if obj.segments.filter(type__slug=slug).first():
-                return ', '.join([segment.name for segment in obj.segments.filter(type__slug=slug).all()])
+            if self.segment_field:
+                segment_obj = operator.attrgetter(self.segment_field)(obj)
+            else:
+                segment_obj = obj
+
+            if segment_obj.segments.filter(type__slug=slug).first():
+                return ', '.join([segment.name for segment in segment_obj.segments.filter(type__slug=slug).all()])
             else:
                 return None
         method = getattr(self, 'dehydrate_%s' % field_name, None)

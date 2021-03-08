@@ -2,16 +2,12 @@ from datetime import date
 
 from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
-from bluebottle.deeds.messages import DeedDateChangedNotification
-from bluebottle.notifications.effects import NotificationEffect
-
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
-
-from bluebottle.activities.states import EffortContributionStateMachine, OrganizerStateMachine
-from bluebottle.activities.effects import CreateEffortContribution
-
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
+from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
@@ -20,6 +16,7 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
+from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
     ParticipantWithdrewNotification, NewParticipantNotification
 
@@ -88,6 +85,7 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                RescheduleEffortsEffect,
                 NotificationEffect(
                     DeedDateChangedNotification,
                     conditions=[
@@ -102,6 +100,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                RescheduleEffortsEffect,
                 NotificationEffect(
                     DeedDateChangedNotification,
                     conditions=[

@@ -11,7 +11,7 @@ from bluebottle.time_based.tests.factories import (
 )
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
-from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -133,6 +133,9 @@ class TestExportAdmin(BluebottleTestCase):
         activity = PeriodActivityFactory.create(owner=user, initiative=initiative)
         PeriodParticipantFactory.create(activity=activity, user=user)
 
+        activity = DeedFactory.create(owner=user, initiative=initiative)
+        DeedParticipantFactory.create(activity=activity, user=user)
+
         data = {
             'from_date': from_date,
             'to_date': to_date,
@@ -161,6 +164,23 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Time contributions').cell(1, 16).value,
+            'Parblue Yellow'
+        )
+
+        self.assertEqual(
+            book.sheet_by_name('Deed participants').cell(0, 9).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed participants').cell(1, 9).value,
+            'Parblue Yellow'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Effort contributions').cell(0, 15).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Effort contributions').cell(1, 15).value,
             'Parblue Yellow'
         )
 

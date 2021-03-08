@@ -24,6 +24,7 @@ class ElasticSearchFilter(filters.SearchFilter):
         search = self.document.search()
 
         filters = self.get_filters(request)
+
         if filters:
             search = search.filter(Bool(must=filters))
 
@@ -50,7 +51,7 @@ class ElasticSearchFilter(filters.SearchFilter):
         filter_fields = self.get_filter_fields(request)
         return [
             self.get_filter(request, field)
-            for field in filter_fields
+            for field in filter_fields if self.get_filter(request, field)
         ] + self.get_default_filters(request)
 
     def get_search_query(self, request):

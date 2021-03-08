@@ -148,7 +148,7 @@ class Member(BlueBottleBaseUser):
     @property
     def place(self):
         try:
-            return self.places.get()
+            return self.places.last()
         except Place.DoesNotExist:
             return None
 

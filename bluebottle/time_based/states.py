@@ -30,6 +30,17 @@ class TimeBasedStateMachine(ActivityStateMachine):
             "Triggered when the attendee limit is reached."
         )
     )
+    unlock = Transition(
+        full,
+        [
+            ActivityStateMachine.open,
+        ],
+        name=_("Unlock"),
+        description=_(
+            "People can no join again. "
+            "Triggered when the attendee number drops between the limit."
+        )
+    )
 
     reopen = Transition(
         full,

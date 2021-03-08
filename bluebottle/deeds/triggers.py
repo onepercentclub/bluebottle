@@ -81,7 +81,6 @@ def has_no_end_date(effect):
 @register(Deed)
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
-        ModelChangedTrigger('start', effects=[TransitionEffect(DeedStateMachine.start)]),
         ModelChangedTrigger(
             'end',
             effects=[
@@ -89,18 +88,24 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                NotificationEffect(
+                    DeedDateChangedNotification,
+                    conditions=[
+                        is_not_finished
+                    ]
+                )
             ]
         ),
 
         ModelChangedTrigger(
-            ['start', 'end'],
+            'start',
             effects=[
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 NotificationEffect(
                     DeedDateChangedNotification,
                     conditions=[
-                        is_not_finished
+                        is_not_started
                     ]
                 )
             ]

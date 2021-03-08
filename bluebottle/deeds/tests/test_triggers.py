@@ -116,7 +116,6 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
-            self.assertNotificationEffect(DeedDateChangedNotification)
 
     def test_reopen_expired(self):
         self.defaults['status'] = 'expired'
@@ -129,6 +128,18 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
+            self.assertNotificationEffect(DeedDateChangedNotification)
+
+    def test_reschedule_open(self):
+        self.defaults['status'] = 'open'
+        self.defaults['start'] = date.today() + timedelta(days=1)
+        self.defaults['end'] = date.today() + timedelta(days=3)
+        self.create()
+
+        self.model.start = date.today() + timedelta(days=2)
+
+        with self.execute():
+            self.assertNotificationEffect(DeedDateChangedNotification)
 
     def test_expire(self):
         self.create()

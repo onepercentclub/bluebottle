@@ -89,7 +89,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer applied to your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Go to your activity')
+        self.assertActionTitle('Open your activity')
 
     def test_participant_removed_notification(self):
         self.message_class = ParticipantRemovedNotification
@@ -116,4 +116,4 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has withdrawn from your activity "Save the world!"')
         self.assertBodyContains('Frans Beckenbauer has withdrawn from you activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Go to your activity')
+        self.assertActionTitle('Open your activity')

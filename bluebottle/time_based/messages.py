@@ -53,9 +53,9 @@ class ReminderSingleDateNotification(TransitionMessage):
         'title': 'title',
     }
 
-    def get_contexpgettext(self, recipient):
-        context = super().get_contexpgettext(recipient)
-        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).firspgettext()
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
         context.update(get_slot_info(slot))
         context['title'] = self.obj.title
         return context
@@ -84,8 +84,8 @@ class ReminderMultipleDatesNotification(TransitionMessage):
         'title': 'title',
     }
 
-    def get_contexpgettext(self, recipient):
-        context = super().get_contexpgettext(recipient)
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
         context['slots'] = []
         slots = self.obj.slots.filter(
             status__in=['full', 'open', 'running'],
@@ -120,8 +120,8 @@ class ChangedSingleDateNotification(TransitionMessage):
         'title': 'activity.title',
     }
 
-    def get_contexpgettext(self, recipient):
-        context = super().get_contexpgettext(recipient)
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
         context.update(get_slot_info(self.obj))
         context['title'] = self.obj.activity.title
         return context
@@ -149,8 +149,8 @@ class ChangedMultipleDatesNotification(TransitionMessage):
         'title': 'activity.title',
     }
 
-    def get_contexpgettext(self, recipient):
-        context = super().get_contexpgettext(recipient)
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
         context['slots'] = []
         slots = self.obj.activity.slots.filter(
             status__in=['full', 'open', 'running'],

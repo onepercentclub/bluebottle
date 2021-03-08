@@ -931,7 +931,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.EffortContributionResource',
-            'title': _('Effort Contributions'),
+            'title': _('Effort contributions'),
         }),
     ])
 }

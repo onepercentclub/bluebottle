@@ -768,9 +768,16 @@ class ParticipantTriggerTestCase():
         participant.save()
 
         self.assertEqual(participant.status, 'accepted')
+
+        self.assertEqual(len(mail.outbox), 2)
+
         self.assertEqual(
             mail.outbox[0].subject,
             'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has been added to your activity "{}" 🎉'.format(self.review_activity.title)
         )
         self.assertTrue(self.review_activity.followers.filter(user=participant.user).exists())
         prep = participant.preparation_contributions.first()
@@ -781,6 +788,32 @@ class ParticipantTriggerTestCase():
         self.assertEqual(
             prep.status,
             'succeeded'
+        )
+
+    def test_initial_removed_through_admin(self):
+        mail.outbox = []
+        participant = self.participant_factory.build(
+            activity=self.review_activity
+        )
+        participant.user.save()
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+        mail.outbox = []
+        participant.states.remove()
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+
+        self.assertEqual(participant.status, 'rejected')
+
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been removed as participant for the activity "{}"'.format(self.review_activity.title)
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has been removed from your activity "{}"'.format(self.review_activity.title)
         )
 
     def test_accept(self):

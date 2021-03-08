@@ -386,3 +386,47 @@ class ParticipantWithdrewNotification(TransitionMessage):
     def get_recipients(self):
         """activity owner"""
         return [self.obj.activity.owner]
+
+
+class ParticipantAddedOwnerNotification(TransitionMessage):
+    """
+    A participant added notify owner
+    """
+    subject = pgettext('email', 'A participant has been added to your activity "{title}" 🎉')
+    template = 'messages/participant_added_owner'
+    context = {
+        'title': 'activity.title',
+        'applicant_name': 'user.full_name'
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]
+
+
+class ParticipantRemovedOwnerNotification(TransitionMessage):
+    """
+    A participant removed notify owner
+    """
+    subject = pgettext('email', 'A participant has been removed from your activity "{title}"')
+    template = 'messages/participant_removed_owner'
+    context = {
+        'title': 'activity.title',
+        'applicant_name': 'user.full_name'
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]

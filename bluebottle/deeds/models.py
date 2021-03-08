@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -53,7 +52,7 @@ class Deed(Activity):
     def efforts(self):
         return EffortContribution.objects.filter(
             contributor__activity=self,
-            contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant)
+            contribution_type='deed'
         )
 
 

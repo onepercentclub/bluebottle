@@ -123,7 +123,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.message_class = ParticipantAddedOwnerNotification
         self.create()
         self.assertRecipients([self.owner])
-        self.assertSubject('A new participant was added to your activity "Save the world!" 🎉')
+        self.assertSubject('A participant was added to your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer was added to your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
@@ -132,7 +132,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.message_class = ParticipantRemovedOwnerNotification
         self.create()
         self.assertRecipients([self.owner])
-        self.assertSubject('A new participant was removed from your activity "Save the world!" 🎉')
+        self.assertSubject('A participant was removed from your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer was removed from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

@@ -1249,6 +1249,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         participant2 = DateParticipantFactory.create(activity=self.activity)
         SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
         self.assertStatus(self.slot1, 'full')
+        self.assertStatus(self.activity, 'open')
         SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'full')
@@ -1256,6 +1257,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
     def test_unfill_slot(self):
         self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'open')
         self.slot_part.states.withdraw(save=True)
         self.assertStatus(self.slot2, 'open')
         self.assertStatus(self.activity, 'open')

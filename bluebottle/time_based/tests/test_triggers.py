@@ -972,10 +972,16 @@ class ParticipantTriggerTestCase():
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
             'You have been removed as participant for the activity "{}"'.format(
+                self.activity.title
+            )
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has been removed from your activity "{}"'.format(
                 self.activity.title
             )
         )

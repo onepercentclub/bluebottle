@@ -17,12 +17,28 @@ class ImpactMixin(object):
 
 
 class SegmentMixin(object):
+    segment_field = None
 
     def get_extra_fields(self):
         return super(SegmentMixin, self).get_extra_fields() + tuple([
             ("segment:{}".format(segment.slug), segment.name)
             for segment in SegmentType.objects.filter(is_active=True).all()
         ])
+
+
+class UserFieldsMixin(object):
+    user_field = ''
+
+    def get_extra_fields(self):
+        if self.user_field:
+            user_path = self.user_field.replace('.', '__') + '__'
+        else:
+            user_path = ''
+
+        return tuple([
+            ("{}extra_{}".format(user_path, extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ]) + super().get_extra_fields()
 
 
 class DateRangeResource(ExportModelResource):
@@ -38,18 +54,12 @@ class DateRangeResource(ExportModelResource):
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 
-class UserResource(SegmentMixin, DateRangeResource):
+class UserResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
     range_field = 'date_joined'
     select_related = ('location', 'location__group')
 
     def get_queryset(self):
         return super(UserResource, self).get_queryset().exclude(email='devteam+accounting@onepercentclub.com')
-
-    def get_extra_fields(self):
-        return super(UserResource, self).get_extra_fields() + tuple([
-            ("extra_{}".format(extra.name), extra.description)
-            for extra in CustomMemberFieldSettings.objects.all()
-        ])
 
 
 class InitiativeResource(DateRangeResource):
@@ -64,7 +74,9 @@ class PeriodActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class PeriodParticipantResource(DateRangeResource):
+class PeriodParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
     select_related = (
         'activity', 'activity__initiative',
     )
@@ -82,7 +94,10 @@ class DateActivitySlotResource(DateRangeResource):
     )
 
 
-class DateParticipantResource(DateRangeResource):
+class DateParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
+
     select_related = (
         'activity', 'activity__initiative',
     )
@@ -96,19 +111,16 @@ class SlotParticipantResource(DateRangeResource):
     )
 
 
-class TimeContributionResource(DateRangeResource):
+class TimeContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'contributor.user'
+    user_field = 'contributor.user'
+
     select_related = (
         'contributor',
         'contributor__activity',
         'contributor__user',
         'contributor__activity__initiative',
     )
-
-    def get_extra_fields(self):
-        return tuple([
-            ("contributor__user__extra_{}".format(extra.name), extra.description)
-            for extra in CustomMemberFieldSettings.objects.all()
-        ])
 
 
 class FundingResource(ImpactMixin, SegmentMixin, DateRangeResource):
@@ -117,13 +129,36 @@ class FundingResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class DonationResource(DateRangeResource):
+class DonationResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
+
     select_related = (
         'activity', 'user'
     )
 
-    def get_extra_fields(self):
-        return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
-            for extra in CustomMemberFieldSettings.objects.all()
-        ])
+
+class DeedResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'initiative', 'owner'
+    )
+
+
+class DeedParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
+    select_related = (
+        'activity', 'user', 'activity__initiative',
+    )
+
+
+class EffortContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'contributor.user'
+    user_field = 'contributor.user'
+
+    select_related = (
+        'contributor',
+        'contributor__activity',
+        'contributor__user',
+        'contributor__activity__initiative',
+    )

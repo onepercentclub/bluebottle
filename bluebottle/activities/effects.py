@@ -21,13 +21,16 @@ class CreateOrganizer(Effect):
         return str(_('Create organizer'))
 
 
-class CreateEffortContribution(Effect):
+class CreateOrganizerContribution(Effect):
     "Create an effort contribution for the organizer or participant of the activity"
 
     display = False
 
     def pre_save(self, effects):
-        self.contribution = EffortContribution(contributor=self.instance)
+        self.contribution = EffortContribution(
+            contributor=self.instance,
+            contribution_type=EffortContribution.ContributionTypeChoices.organizer
+        )
         effects.extend(self.contribution.execute_triggers())
 
     def post_save(self, **kwargs):

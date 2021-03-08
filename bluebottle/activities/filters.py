@@ -1,15 +1,14 @@
-import dateutil
 import re
 
-from django_filters.rest_framework import DjangoFilterBackend
-
-from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
+import dateutil
 from django.db.models import Q as DQ
+from django_filters.rest_framework import DjangoFilterBackend
+from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
 
+from bluebottle.activities.documents import activity
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
-from bluebottle.activities.documents import activity
 
 
 class ActivitySearchFilter(ElasticSearchFilter):
@@ -166,7 +165,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
         return score
 
     def get_start_filter(self, value, request):
-        date = dateutil.parser.parse(value).date()
+        try:
+            date = dateutil.parser.parse(value).date()
+        except ValueError:
+            return None
         return Range(end={'gte': date}) | ~Q('exists', field='end')
 
     def get_end_filter(self, value, request):

@@ -5,7 +5,7 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
-from bluebottle.activities.effects import CreateEffortContribution
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
 
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
@@ -74,7 +74,6 @@ def has_no_end_date(effect):
 @register(Deed)
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
-        ModelChangedTrigger('start', effects=[TransitionEffect(DeedStateMachine.start)]),
         ModelChangedTrigger(
             'end',
             effects=[
@@ -82,6 +81,7 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                RescheduleEffortsEffect
             ]
         ),
 
@@ -90,6 +90,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                RescheduleEffortsEffect
             ]
         ),
 

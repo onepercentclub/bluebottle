@@ -410,7 +410,9 @@ class TriggerTestCase(BluebottleTestCase):
         if not model:
             model = self.model
 
-        return effect_cls(model) in self.effects
+        for effect in self.effects:
+            if effect == effect_cls(model):
+                return effect
 
     def assertTransitionEffect(self, transition, model=None):
         if not self._hasTransitionEffect(transition, model):
@@ -421,8 +423,11 @@ class TriggerTestCase(BluebottleTestCase):
             self.fail('Transition effect, "{}" triggered'.format(transition))
 
     def assertEffect(self, effect_cls, model=None):
-        if not self._hasEffect(effect_cls, model):
+        effect = self._hasEffect(effect_cls, model)
+        if not effect:
             self.fail('Transition effect, "{}" not triggered'.format(effect_cls))
+
+        return effect
 
     def assertNoEffect(self, effect_cls, model=None):
         if self._hasEffect(effect_cls, model):

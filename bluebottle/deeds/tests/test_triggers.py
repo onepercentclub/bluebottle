@@ -4,10 +4,11 @@ from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
-from bluebottle.activities.effects import SetContributionDateEffect, CreateEffortContribution
+from bluebottle.activities.effects import SetContributionDateEffect
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
+from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -53,6 +54,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_start_no_end(self):
         self.defaults['status'] = 'open'
@@ -74,6 +76,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_reopen_running(self):
         self.defaults['status'] = 'running'
@@ -84,6 +87,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_reopen_expired(self):
         self.defaults['status'] = 'expired'
@@ -112,6 +116,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
+            self.assertEffect(RescheduleEffortsEffect)
 
     def test_expire_running(self):
         self.create()
@@ -215,7 +220,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         self.model = self.factory.build(**self.defaults)
         with self.execute():
-            self.assertEffect(CreateEffortContribution)
+            effect = self.assertEffect(CreateEffortContribution)
+            self.assertEqual(effect.contribution.contribution_type, 'deed')
+
             self.assertTransitionEffect(DeedParticipantStateMachine.succeed)
             self.model.save()
             self.assertTransitionEffect(

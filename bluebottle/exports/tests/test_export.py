@@ -11,6 +11,7 @@ from bluebottle.time_based.tests.factories import (
 )
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -43,6 +44,7 @@ class TestExportAdmin(BluebottleTestCase):
             DateActivityFactory.create_batch(3, initiative=initiative)
             PeriodActivityFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
+            DeedFactory.create_batch(1, initiative=initiative)
 
         result = plain_export(Exporter, tenant=tenant, **data)
         book = xlrd.open_workbook(result)
@@ -52,7 +54,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
-            37
+            41
         )
         self.assertEqual(
             book.sheet_by_name('Initiatives').nrows,
@@ -90,6 +92,23 @@ class TestExportAdmin(BluebottleTestCase):
         self.assertEqual(
             book.sheet_by_name('Activities during a period').cell(0, 17).value,
             'Deadline'
+        )
+
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').nrows,
+            5
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 8).value,
+            'Status'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 9).value,
+            'Start'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Deed activities').cell(0, 10).value,
+            'End'
         )
 
     def test_export_custom_user_fields(self):

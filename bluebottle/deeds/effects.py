@@ -18,6 +18,7 @@ class CreateEffortContribution(Effect):
 
         self.contribution = EffortContribution(
             contributor=self.instance,
+            contribution_type=EffortContribution.ContributionTypeChoices.deed,
             start=tz.localize(
                 datetime.combine(
                     self.instance.activity.start, datetime.min.time()

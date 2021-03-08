@@ -113,6 +113,7 @@ class TimeBasedActivityStatesTestCase():
             organizer.status,
             'succeeded'
         )
+        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
         organizer_contribution = organizer.contributions.get()
         self.assertEqual(
             organizer_contribution.status,

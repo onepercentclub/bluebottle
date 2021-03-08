@@ -127,3 +127,36 @@ class DonationResource(DateRangeResource):
             ("user__extra_{}".format(extra.name), extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
+
+
+class DeedResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'initiative', 'owner'
+    )
+
+
+class DeedParticipantResource(DateRangeResource):
+    select_related = (
+        'activity', 'user', 'activity__initiative',
+    )
+
+    def get_extra_fields(self):
+        return tuple([
+            ("user__extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ])
+
+
+class EffortContributionResource(DateRangeResource):
+    select_related = (
+        'contributor',
+        'contributor__activity',
+        'contributor__user',
+        'contributor__activity__initiative',
+    )
+
+    def get_extra_fields(self):
+        return tuple([
+            ("contributor__user__extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ])

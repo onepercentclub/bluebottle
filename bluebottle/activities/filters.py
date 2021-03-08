@@ -172,7 +172,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
         return Range(end={'gte': date}) | ~Q('exists', field='end')
 
     def get_end_filter(self, value, request):
-        date = dateutil.parser.parse(value).date()
+        try:
+            date = dateutil.parser.parse(value).date()
+        except ValueError:
+            return None
         return Range(start={'lt': date}) | ~Q('exists', field='start')
 
     def get_filters(self, request):

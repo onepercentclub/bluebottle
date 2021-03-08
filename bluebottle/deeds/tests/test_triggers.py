@@ -122,6 +122,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
+        DeedParticipantFactory.create(activity=self.model)
 
         self.model.start = date.today() + timedelta(days=2)
         self.model.end = date.today() + timedelta(days=1)
@@ -135,6 +136,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.defaults['start'] = date.today() + timedelta(days=1)
         self.defaults['end'] = date.today() + timedelta(days=3)
         self.create()
+        DeedParticipantFactory.create(activity=self.model)
 
         self.model.start = date.today() + timedelta(days=2)
 
@@ -145,7 +147,6 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.create()
 
         self.model.states.submit(save=True)
-
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():

@@ -37,3 +37,23 @@ class DeedDateChangedNotification(TransitionMessage):
         return [
             participant.user for participant in self.obj.participants
         ]
+
+
+class DeedReminderNotification(TransitionMessage):
+
+    subject = pgettext('email', 'Your activity "{title}" will start tomorrow!')
+    template = 'messages/deed_reminder'
+
+    context = {
+        'title': 'title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.owner]

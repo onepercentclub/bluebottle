@@ -43,6 +43,7 @@ class DeedReminderNotification(TransitionMessage):
 
     subject = pgettext('email', 'Your activity "{title}" will start tomorrow!')
     template = 'messages/deed_reminder'
+    send_once = True
 
     context = {
         'title': 'title',

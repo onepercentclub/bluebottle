@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
+
 from bluebottle.files.tests.factories import ImageFactory
 
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
@@ -206,6 +207,32 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(event.pk) not in found)
         self.assertTrue(str(assignment.pk) not in found)
         self.assertTrue(str(funding.pk) not in found)
+
+    def test_activity_invalid_date_filter(self):
+        next_month = now() + dateutil.relativedelta.relativedelta(months=1)
+        after = now() + dateutil.relativedelta.relativedelta(months=2)
+
+        event = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        DateActivitySlotFactory.create(activity=event, start=next_month)
+        event_after = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        DateActivitySlotFactory.create(activity=event_after, start=after)
+
+        PeriodActivityFactory.create(
+            status='open',
+            deadline=next_month
+        )
+        response = self.client.get(
+            self.url + '?filter[start]=0'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(
+            self.url + '?filter[end]=2021-02-31'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_filter_segment(self):
         segment = SegmentFactory.create()

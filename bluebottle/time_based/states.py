@@ -35,7 +35,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_("Unlock"),
         description=_(
-            "People can no join again. "
+            "People can now join again. "
             "Triggered when the attendee number drops between the limit."
         )
     )

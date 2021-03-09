@@ -396,7 +396,7 @@ class ParticipantAddedOwnerNotification(TransitionMessage):
     template = 'messages/participant_added_owner'
     context = {
         'title': 'activity.title',
-        'applicant_name': 'user.full_name'
+        'participant_name': 'user.full_name'
     }
 
     @property
@@ -418,7 +418,7 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     template = 'messages/participant_removed_owner'
     context = {
         'title': 'activity.title',
-        'applicant_name': 'user.full_name'
+        'participant_name': 'user.full_name'
     }
 
     @property

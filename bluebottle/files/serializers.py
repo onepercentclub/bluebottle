@@ -98,7 +98,7 @@ class DocumentSerializer(ModelSerializer):
 
     def get_link(self, obj):
         if self.relationship and self.content_view_name:
-            parent_id = getattr(obj, self.relationship).get().pk
+            parent_id = getattr(obj, self.relationship).first().pk
             return reverse(self.content_view_name, args=(parent_id, 'main'))
 
     def get_filename(self, instance):
@@ -116,7 +116,7 @@ class DocumentSerializer(ModelSerializer):
 class PrivateDocumentSerializer(DocumentSerializer):
 
     def get_link(self, obj):
-        parent_id = getattr(obj, self.relationship).get().pk
+        parent_id = getattr(obj, self.relationship).first().pk
         return reverse_signed(self.content_view_name, args=(parent_id, ))
 
     class Meta(object):

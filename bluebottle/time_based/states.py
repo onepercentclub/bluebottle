@@ -32,9 +32,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
     unlock = Transition(
         full,
-        [
-            ActivityStateMachine.open,
-        ],
+        ActivityStateMachine.open,
         name=_("Unlock"),
         description=_(
             "People can no join again. "

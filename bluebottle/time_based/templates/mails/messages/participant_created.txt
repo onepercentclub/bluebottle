@@ -6,6 +6,3 @@
 
 Review the application and decide if this person is the right fit.
 {% endblocktrans %}{% endblock %}
-{% block action %}
-{% trans 'Review the application' context 'email' %}: {{ obj.activity.get_absolute_url }}
-{% endblock %}`

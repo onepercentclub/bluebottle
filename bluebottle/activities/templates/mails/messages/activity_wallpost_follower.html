@@ -14,7 +14,7 @@
 
 {% block action %}
     <a href="{{ obj.content_object.get_absolute_url }}"
-       class="action-email">{% trans 'View update' context 'email' %}</a>
+       class="action-email">{% blocktrans context 'email' %}View update{% endblocktrans %}</a>
 {% endblock %}`
 
 {% block unsubscribe %}

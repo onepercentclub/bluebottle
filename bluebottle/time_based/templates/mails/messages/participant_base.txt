@@ -5,13 +5,13 @@
 {% blocktrans context 'email' %}
 Hi {{ recipient_name }},
 {% endblocktrans %}
-{% if custom_message|linebreaks %}
-{{custom_message}}
+{% if custom_message %}
+{{custom_message|linebreaks}}
 {% else %}
 {% block message %}{% endblock %}
 {% endif %}
 {% endblock %}
 
 {% block action %}
-{% trans 'Go to your activity' context 'email' %}: {{ obj.activity.get_absolute_url }}
+{{ action_title }}: {{ action_link }}
 {% endblock %}`

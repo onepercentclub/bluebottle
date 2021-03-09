@@ -1,0 +1,16 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}Your activity "{{ title }}" has been restored.{% endblocktrans %}
+    </p>
+
+    <p>
+        {% blocktrans context 'email' %}Head over to your activity page to see what you need to do to open up your activity for registrations again.{% endblocktrans %}
+    </p>
+
+    <p>
+        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
+    </p>
+{% endblock %}

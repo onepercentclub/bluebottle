@@ -1,5 +1,8 @@
 from datetime import timedelta, date
 
+from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -10,6 +13,8 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
+    NewParticipantNotification
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -35,6 +40,33 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(DeedStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+
+    def test_reject(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.reject()
+
+        with self.execute():
+            self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertNotificationEffect(ActivityRejectedNotification)
+
+    def test_cancel(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.cancel()
+
+        with self.execute():
+            self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertNotificationEffect(ActivityCancelledNotification)
+
+    def test_restored(self):
+        self.create()
+        self.model.states.reject(save=True)
+        self.model.states.restore()
+
+        with self.execute():
+            self.assertTransitionEffect(OrganizerStateMachine.reset, self.model.organizer)
+            self.assertNotificationEffect(ActivityRestoredNotification)
 
     def test_start(self):
         self.defaults['status'] = 'open'
@@ -94,18 +126,31 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
+        DeedParticipantFactory.create(activity=self.model)
 
         self.model.start = date.today() + timedelta(days=2)
         self.model.end = date.today() + timedelta(days=1)
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.reopen)
+            self.assertNotificationEffect(DeedDateChangedNotification)
+
+    def test_reschedule_open(self):
+        self.defaults['status'] = 'open'
+        self.defaults['start'] = date.today() + timedelta(days=1)
+        self.defaults['end'] = date.today() + timedelta(days=3)
+        self.create()
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.start = date.today() + timedelta(days=2)
+
+        with self.execute():
+            self.assertNotificationEffect(DeedDateChangedNotification)
 
     def test_expire(self):
         self.create()
 
         self.model.states.submit(save=True)
-
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
@@ -116,6 +161,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
+            self.assertNotificationEffect(ActivityExpiredNotification),
             self.assertEffect(RescheduleEffortsEffect)
 
     def test_expire_running(self):
@@ -135,6 +181,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
+            self.assertNotificationEffect(ActivityExpiredNotification)
 
     def test_restart_expired(self):
         self.defaults['start'] = date.today() - timedelta(days=2)
@@ -166,6 +213,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertNotificationEffect(ActivitySucceededNotification)
 
     def test_succeed_running(self):
         self.defaults['status'] = 'running'
@@ -186,6 +234,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+            self.assertNotificationEffect(ActivitySucceededNotification)
 
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):
@@ -212,6 +261,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
         with self.execute():
             self.assertEffect(CreateEffortContribution)
+            self.assertNotificationEffect(NewParticipantNotification)
 
     def test_initiate_no_start_no_end(self):
         self.defaults['activity'].start = None
@@ -295,6 +345,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
+            self.assertNotificationEffect(ParticipantRemovedNotification)
 
     def test_expire_remove(self):
         self.create()
@@ -395,3 +446,4 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNoTransitionEffect(DeedStateMachine.succeed, self.model.activity)
+            self.assertNotificationEffect(ParticipantFinishedNotification)

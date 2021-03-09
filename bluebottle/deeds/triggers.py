@@ -1,12 +1,13 @@
 from datetime import date
 
+from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
-
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
-
+from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
@@ -15,6 +16,9 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
+    ParticipantWithdrewNotification, NewParticipantNotification
 
 
 def is_started(effect):
@@ -81,7 +85,13 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
-                RescheduleEffortsEffect
+                RescheduleEffortsEffect,
+                NotificationEffect(
+                    DeedDateChangedNotification,
+                    conditions=[
+                        is_not_finished
+                    ]
+                )
             ]
         ),
 
@@ -90,7 +100,13 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
-                RescheduleEffortsEffect
+                RescheduleEffortsEffect,
+                NotificationEffect(
+                    DeedDateChangedNotification,
+                    conditions=[
+                        is_not_started
+                    ]
+                )
             ]
         ),
 
@@ -112,6 +128,7 @@ class DeedTriggers(ActivityTriggers):
                     'participants',
                     DeedParticipantStateMachine.succeed
                 ),
+                NotificationEffect(ActivitySucceededNotification)
             ]
         ),
 
@@ -119,6 +136,31 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityExpiredNotification)
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityRejectedNotification),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(ActivityCancelledNotification),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
+                NotificationEffect(ActivityRestoredNotification),
             ]
         ),
 
@@ -166,7 +208,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
-                CreateEffortContribution
+                CreateEffortContribution,
+                NotificationEffect(NewParticipantNotification),
             ]
         ),
         TransitionTrigger(
@@ -177,7 +220,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.expire,
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
+                NotificationEffect(ParticipantRemovedNotification),
             ]
         ),
 
@@ -201,7 +245,8 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.withdraw,
             effects=[
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
+                NotificationEffect(ParticipantWithdrewNotification),
             ]
         ),
 
@@ -222,7 +267,8 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed)
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed),
+                NotificationEffect(ParticipantFinishedNotification),
             ]
         ),
         TransitionTrigger(

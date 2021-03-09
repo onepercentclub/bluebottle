@@ -1,0 +1,12 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
+
+    {% block message %}{% endblock %}
+{% endblock %}
+
+{% block action %}
+   {{ action_title }}: {{ action_link }}
+{% endblock %}`

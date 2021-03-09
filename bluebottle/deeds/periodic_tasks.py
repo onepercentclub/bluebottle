@@ -33,7 +33,7 @@ class DeedFinishedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             end__lte=date.today(),
-            status__in=['open', 'running']
+            status__in=['running', 'open']
         )
 
     effects = [

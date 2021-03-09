@@ -360,11 +360,18 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period',
+            'start', 'deadline', 'duration', 'duration_period', 'location',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/period'
+
+    included_serializers = dict(
+        TimeBasedActivityListSerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
 
 
 class DateParticipantDocumentSerializer(PrivateDocumentSerializer):

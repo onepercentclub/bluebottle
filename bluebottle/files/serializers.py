@@ -136,7 +136,7 @@ class ImageSerializer(DocumentSerializer):
         if hasattr(self, 'sizes'):
             try:
                 relationship = getattr(obj, self.relationship)
-                parent_id = getattr(obj, self.relationship).get().pk
+                parent_id = getattr(obj, self.relationship).first().pk
                 hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (

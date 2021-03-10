@@ -1,10 +1,12 @@
+from django.urls import reverse
+from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.forms import StateMachineModelForm
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.admin import ActivityChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -18,12 +20,25 @@ class DeedAdminForm(StateMachineModelForm):
         }
 
 
+@admin.register(DeedParticipant)
+class DeedParticipantAdmin(ContributorChildAdmin):
+    readonly_fields = ['created']
+    raw_id_fields = ['user', 'activity']
+    fields = ['activity', 'user', 'states'] + readonly_fields
+    list_display = ['__str__', 'activity_link', 'status']
+
+
 class DeedParticipantInline(admin.TabularInline):
     model = DeedParticipant
     raw_id_fields = ['user']
-    readonly_fields = ['created', 'status']
-    fields = ['user'] + readonly_fields
+    readonly_fields = ['edit', 'created', 'status']
+    fields = ['edit', 'user', 'created', 'status']
     extra = 0
+
+    def edit(self, obj):
+        url = reverse('admin:deeds_deedparticipant_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, _('Edit participant'))
+    edit.short_description = _('Edit participant')
 
 
 @admin.register(Deed)

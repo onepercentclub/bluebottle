@@ -189,7 +189,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         ],
         rejected,
         name=_('Remove'),
-        description=_("Rmove participant from the activity."),
+        description=_("Remove participant from the activity."),
         automatic=False,
         permission=is_owner,
         hide_from_admin=True,

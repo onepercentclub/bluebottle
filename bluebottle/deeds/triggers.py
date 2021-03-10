@@ -226,6 +226,18 @@ class DeedParticipantTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
+            DeedParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DeedStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                ),
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed),
+            ]
+        ),
+
+        TransitionTrigger(
             DeedParticipantStateMachine.accept,
             effects=[
                 TransitionEffect(

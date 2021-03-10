@@ -27,7 +27,7 @@ class DeedStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, running],
+        [ActivityStateMachine.open, running, ActivityStateMachine.expired],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -192,7 +192,6 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         description=_("Remove participant from the activity."),
         automatic=False,
         permission=is_owner,
-        hide_from_admin=True,
     )
 
     accept = Transition(

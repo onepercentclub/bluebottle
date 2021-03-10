@@ -24,7 +24,7 @@ class DeedAdminForm(StateMachineModelForm):
 class DeedParticipantAdmin(ContributorChildAdmin):
     readonly_fields = ['created']
     raw_id_fields = ['user', 'activity']
-    fields = ['activity', 'user', 'states'] + readonly_fields
+    fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
 
 

@@ -8,7 +8,7 @@ from bluebottle.deeds.views import (
 
 
 urlpatterns = [
-    url(r'^/$',
+    url(r'^$',
         DeedListView.as_view(),
         name='deed-list'),
 

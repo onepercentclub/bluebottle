@@ -196,7 +196,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ).order_by()
 
         stats = {
-            'hours': time['value'].total_seconds() / 3600,
+            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
             'effort': effort['count'],
             'activities': sum(stat['activities'] for stat in [effort, time, money]),
             'contributors': sum(stat['count'] for stat in [effort, time, money]),

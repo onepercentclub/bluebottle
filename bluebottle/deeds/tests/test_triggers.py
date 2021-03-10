@@ -41,6 +41,29 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
+    def test_submit_started(self):
+        self.defaults['start'] = date.today() - timedelta(days=1)
+        self.create()
+        self.model.states.submit()
+
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.auto_approve)
+            self.assertTransitionEffect(DeedStateMachine.start)
+            self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
+            self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+
+    def test_submit_finished(self):
+        self.defaults['start'] = date.today() - timedelta(days=2)
+        self.defaults['end'] = date.today() - timedelta(days=1)
+        self.create()
+        self.model.states.submit()
+
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.auto_approve)
+            self.assertTransitionEffect(DeedStateMachine.expire)
+            self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
+            self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+
     def test_reject(self):
         self.create()
         self.model.states.submit(save=True)
@@ -135,6 +158,19 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(DeedStateMachine.reopen)
             self.assertNotificationEffect(DeedDateChangedNotification)
 
+    def test_restart_expired(self):
+        self.defaults['status'] = 'expired'
+        self.defaults['start'] = date.today() - timedelta(days=1)
+        self.defaults['end'] = date.today() - timedelta(days=1)
+        self.create()
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.end = date.today() + timedelta(days=1)
+
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.restart)
+            self.assertNotificationEffect(DeedDateChangedNotification)
+
     def test_reschedule_open(self):
         self.defaults['status'] = 'open'
         self.defaults['start'] = date.today() + timedelta(days=1)
@@ -183,18 +219,6 @@ class DeedTriggersTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ActivityExpiredNotification)
 
-    def test_restart_expired(self):
-        self.defaults['start'] = date.today() - timedelta(days=2)
-        self.defaults['end'] = date.today() - timedelta(days=1)
-        self.defaults['status'] = 'expired'
-
-        self.create()
-
-        self.model.end = date.today() + timedelta(days=1)
-
-        with self.execute():
-            self.assertTransitionEffect(DeedStateMachine.restart)
-
     def test_succeed(self):
         self.create()
 
@@ -236,6 +260,27 @@ class DeedTriggersTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
 
+    def test_restart_succeeded(self):
+        self.defaults['status'] = 'succeeded'
+        self.defaults['start'] = date.today() - timedelta(days=2)
+        self.defaults['end'] = date.today() - timedelta(days=1)
+
+        self.create()
+        participant = DeedParticipantFactory.create(activity=self.model)
+
+        self.model.end = date.today() + timedelta(days=1)
+
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.restart)
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.re_accept,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset,
+                participant.contributions.first()
+            )
+
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):
     factory = DeedParticipantFactory
@@ -276,6 +321,23 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.defaults['activity'].save()
 
         self.model = self.factory.build(**self.defaults)
+        with self.execute():
+            effect = self.assertEffect(CreateEffortContribution)
+            self.assertEqual(effect.contribution.contribution_type, 'deed')
+
+            self.assertTransitionEffect(DeedParticipantStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+    def test_initiate_succeeded(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+
+        self.model = self.factory.build(**self.defaults)
+
         with self.execute():
             effect = self.assertEffect(CreateEffortContribution)
             self.assertEqual(effect.contribution.contribution_type, 'deed')
@@ -422,8 +484,8 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
     def test_accept_expired(self):
-        self.defaults['activity'].start = date.today() - timedelta(days=2)
-        self.defaults['activity'].end = date.today() - timedelta(days=1)
+        self.defaults['activity'].start = date.today() - timedelta(days=20)
+        self.defaults['activity'].end = date.today() - timedelta(days=10)
         self.defaults['activity'].states.submit(save=True)
 
         self.create()
@@ -446,11 +508,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_succeed_accept(self):
         self.defaults['status'] = 'rejected'
+        self.defaults['activity'] = DeedFactory.create(
+            status='expired',
+            initiative=InitiativeFactory.create(status='approved'),
+            owner=self.owner,
+            start=date.today() - timedelta(days=10),
+            end=date.today() - timedelta(days=20),
+        )
         self.create()
-        self.model.activity.states.submit(save=True)
 
-        self.model.activity.start = date.today() - timedelta(days=10)
-        self.model.activity.end = date.today() - timedelta(days=5)
         self.model.activity.save()
 
         self.model.states.accept()

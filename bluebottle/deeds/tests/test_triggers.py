@@ -440,6 +440,10 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 DeedParticipantStateMachine.succeed
             )
 
+            self.assertTransitionEffect(
+                DeedStateMachine.succeed, self.model.activity
+            )
+
     def test_succeed_accept(self):
         self.defaults['status'] = 'rejected'
         self.create()
@@ -452,5 +456,5 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.states.accept()
 
         with self.execute():
-            self.assertNoTransitionEffect(DeedStateMachine.succeed, self.model.activity)
+            self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)
             self.assertNotificationEffect(ParticipantFinishedNotification)

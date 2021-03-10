@@ -528,7 +528,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         deed_activity.states.succeed(save=True)
 
         DeedParticipantFactory.create_batch(3, activity=deed_activity)
-        DeedParticipantFactory.create_batch(3, activity=deed_activity, status='withdrawn')
+        participants = DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        for participant in participants:
+            participant.states.withdraw(save=True)
 
         response = self.client.get(
             self.url,
@@ -540,6 +542,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['hours'], 66.0)
         self.assertEqual(stats['activities'], 4)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
+
         self.assertEqual(stats['contributors'], 15)
         self.assertEqual(stats['effort'], 3)
 

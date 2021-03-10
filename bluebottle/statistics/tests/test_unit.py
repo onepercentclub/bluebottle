@@ -607,8 +607,8 @@ class DeedStatisticsTest(StatisticsTest):
         self.activity = DeedFactory.create(
             initiative=self.initiative,
             owner=self.some_user,
-            start=datetime.date.today() - datetime.timedelta(days=10),
-            end=datetime.date.today() - datetime.timedelta(days=5)
+            start=datetime.date.today() + datetime.timedelta(days=5),
+            end=datetime.date.today() + datetime.timedelta(days=10)
         )
         self.activity.states.submit(save=True)
 

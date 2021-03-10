@@ -1,6 +1,7 @@
 from datetime import timedelta, date
 
 import mock
+from django.core import mail
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant
@@ -99,3 +100,14 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
+
+    def test_reminder(self):
+        DeedParticipantFactory.create(activity=self.activity)
+
+        self.run_tasks(self.activity.start - timedelta(days=1))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
+        mail.outbox = []
+        self.assertEqual(len(mail.outbox), 0)
+        self.run_tasks(self.activity.start - timedelta(days=1))
+        self.assertEqual(len(mail.outbox), 0, 'Should not send reminder mail again.')

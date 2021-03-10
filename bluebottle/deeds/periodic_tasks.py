@@ -1,4 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
+
+from django.utils.timezone import now
+
+from bluebottle.deeds.messages import DeedReminderNotification
+from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect
@@ -45,6 +50,24 @@ class DeedFinishedTask(ModelPeriodicTask):
         return str(_("Finish the activity when the start date has passed"))
 
 
+class DeedReminderTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return Deed.objects.filter(
+            start__lte=now() + timedelta(hours=24),
+            status__in=['open', 'full']
+        )
+
+    effects = [
+        NotificationEffect(
+            DeedReminderNotification
+        ),
+    ]
+
+    def __str__(self):
+        return str(_("Send a reminder a day before the activity."))
+
+
 Deed.periodic_tasks = [
-    DeedStartedTask, DeedFinishedTask
+    DeedStartedTask, DeedFinishedTask, DeedReminderTask
 ]

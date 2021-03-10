@@ -36,7 +36,7 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification,
-    ParticipantWithdrewNotification
+    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -727,6 +727,24 @@ def is_user(effect):
     return True
 
 
+def is_owner(effect):
+    """
+    User is the owner
+    """
+    if 'user' in effect.options:
+        return effect.instance.activity.owner == effect.options['user']
+    return False
+
+
+def is_not_owner(effect):
+    """
+    User is not the owner
+    """
+    if 'user' in effect.options:
+        return effect.instance.activity.owner != effect.options['user']
+    return True
+
+
 def activity_will_be_full(effect):
     """
     the activity is full
@@ -829,6 +847,9 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantAddedNotification
                 ),
+                NotificationEffect(
+                    ParticipantAddedOwnerNotification
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
@@ -919,6 +940,10 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantRemovedNotification
+                ),
+                NotificationEffect(
+                    ParticipantRemovedOwnerNotification,
+                    conditions=[is_not_owner]
                 ),
                 RelatedTransitionEffect(
                     'activity',

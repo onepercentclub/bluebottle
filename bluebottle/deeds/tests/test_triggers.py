@@ -14,7 +14,7 @@ from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachin
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    NewParticipantNotification
+    NewParticipantNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -259,9 +259,16 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_initiate(self):
         self.model = self.factory.build(**self.defaults)
-        with self.execute():
+        with self.execute(user=self.user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(NewParticipantNotification)
+
+    def test_added_by_admin(self):
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.staff_user):
+            self.assertEffect(CreateEffortContribution)
+            self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(ParticipantAddedOwnerNotification)
 
     def test_initiate_no_start_no_end(self):
         self.defaults['activity'].start = None

@@ -18,7 +18,9 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    ParticipantWithdrewNotification, NewParticipantNotification
+    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
+    ParticipantRemovedOwnerNotification, ParticipantAddedNotification
+from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
 
 
 def is_started(effect):
@@ -209,7 +211,19 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
                 CreateEffortContribution,
-                NotificationEffect(NewParticipantNotification),
+                NotificationEffect(
+                    NewParticipantNotification,
+                    conditions=[is_user]
+                ),
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                    conditions=[is_not_user]
+                ),
+                NotificationEffect(
+                    ParticipantAddedOwnerNotification,
+                    conditions=[is_not_user, is_not_owner]
+                )
+
             ]
         ),
         TransitionTrigger(
@@ -222,6 +236,10 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantRemovedNotification),
+                NotificationEffect(
+                    ParticipantRemovedOwnerNotification,
+                    conditions=[is_not_owner]
+                )
             ]
         ),
 

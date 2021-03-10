@@ -3,7 +3,8 @@ from bluebottle.activities.messages import ActivityRejectedNotification, Activit
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    ParticipantWithdrewNotification, NewParticipantNotification
+    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
+    ParticipantRemovedOwnerNotification
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
 
 
@@ -115,5 +116,23 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.owner])
         self.assertSubject('A participant has withdrawn from your activity "Save the world!"')
         self.assertBodyContains('Frans Beckenbauer has withdrawn from you activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_participant_added_owner_notification(self):
+        self.message_class = ParticipantAddedOwnerNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('A participant has been added to your activity "Save the world!" 🎉')
+        self.assertBodyContains('Frans Beckenbauer has been added to your activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_participant_removed_owner_notification(self):
+        self.message_class = ParticipantRemovedOwnerNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('A participant has been removed from your activity "Save the world!"')
+        self.assertBodyContains('Frans Beckenbauer has been removed from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

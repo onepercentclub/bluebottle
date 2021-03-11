@@ -107,16 +107,14 @@ class TransitionMessage(object):
         for recipient in filter(None, recipients):
             with translation.override(recipient.primary_language):
                 if self.send_once:
-                    try:
-                        Message.objects.get(
-                            template=self.get_template(),
-                            recipient=recipient,
-                            content_type=get_content_type_for_model(self.obj),
-                            object_id=self.obj.pk
-                        )
+                    count = Message.objects.filter(
+                        template=self.get_template(),
+                        recipient=recipient,
+                        content_type=get_content_type_for_model(self.obj),
+                        object_id=self.obj.pk
+                    ).count()
+                    if count:
                         continue
-                    except Message.DoesNotExist:
-                        pass
 
                 context = self.get_context(recipient)
                 subject = str(self.subject.format(**context))

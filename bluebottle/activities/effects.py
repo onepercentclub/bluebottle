@@ -48,7 +48,8 @@ class SetContributionDateEffect(Effect):
     display = False
 
     def pre_save(self, **kwargs):
-        self.instance.start = now()
+        if self.instance.contribution_type == 'organizer':
+            self.instance.start = now()
 
     def __str__(self):
         return _('Set the contribution date.')

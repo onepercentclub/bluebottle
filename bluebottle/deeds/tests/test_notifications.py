@@ -1,6 +1,4 @@
-from datetime import timedelta
-
-from django.utils.timezone import now
+from datetime import timedelta, date
 
 from bluebottle.deeds.messages import DeedDateChangedNotification
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
@@ -21,7 +19,7 @@ class ParticipantNotificationTestCase(NotificationTestCase):
     def setUp(self):
         self.supporter = BlueBottleUserFactory.create()
         self.owner = BlueBottleUserFactory.create()
-        self.next_week = now() + timedelta(days=7)
+        self.next_week = date.today() + timedelta(days=7)
         self.activity = DeedFactory.create(
             title="Save the world!",
             owner=self.owner,

@@ -100,6 +100,7 @@ class DeedTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'start',
             effects=[
+                TransitionEffect(DeedStateMachine.restart, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
                 RescheduleEffortsEffect,
@@ -113,12 +114,43 @@ class DeedTriggers(ActivityTriggers):
         ),
 
         TransitionTrigger(
+            DeedStateMachine.auto_approve,
+            effects=[
+                TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+            ]
+        ),
+
+        TransitionTrigger(
             DeedStateMachine.start,
             effects=[
                 RelatedTransitionEffect(
                     'participants',
                     DeedParticipantStateMachine.succeed,
                     conditions=[has_no_end_date]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.reopen,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DeedParticipantStateMachine.re_accept,
+                    conditions=[is_not_finished]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedStateMachine.restart,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DeedParticipantStateMachine.re_accept,
                 ),
             ]
         ),
@@ -210,6 +242,16 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_has_no_start, activity_has_no_end]
                 ),
+
+                TransitionEffect(
+                    DeedParticipantStateMachine.succeed,
+                    conditions=[activity_is_started, activity_has_no_end]
+                ),
+
+                TransitionEffect(
+                    DeedParticipantStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                ),
                 CreateEffortContribution,
                 NotificationEffect(
                     NewParticipantNotification,
@@ -270,6 +312,13 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DeedParticipantStateMachine.re_accept,
+            effects=[
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
             ]
         ),
         TransitionTrigger(

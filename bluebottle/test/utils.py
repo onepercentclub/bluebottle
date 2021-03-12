@@ -258,6 +258,17 @@ class APITestCase(BluebottleTestCase):
             in included_resources
         )
 
+    def assertRelationship(self, relation, models=None):
+        self.assertTrue(relation in self.response.json()['data']['relationships'])
+        data = self.response.json()['data']['relationships'][relation]['data']
+
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
+
     def assertAttribute(self, attr, value=None):
         self.assertTrue(attr in self.response.json()['data']['attributes'])
 

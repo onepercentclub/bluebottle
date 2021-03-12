@@ -33,7 +33,9 @@ class ManagementCommandTests(TestCase):
         from ..management.commands.new_tenant import Command as NewTenantCommand
         cmd = NewTenantCommand()
 
-        with mock.patch('bluebottle.clients.management.commands.new_tenant.Command.handle') as handle_mock:
+        with mock.patch(
+            'bluebottle.clients.management.commands.new_tenant.Command.handle', return_value=None
+        ) as handle_mock:
             call_command(cmd, full_name='Test Client',
                          schema_name='test_schema',
                          domain_url='test.localhost',

@@ -72,11 +72,11 @@ class DeedRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status='accepted')
+                Q(status__in=('accepted', 'succeeded', ))
             )
         else:
             queryset = self.queryset.filter(
-                status='accepted'
+                status__in=('accepted', 'succeeded', )
             )
 
         return queryset.filter(

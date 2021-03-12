@@ -488,7 +488,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
-
         )
 
         period_activity.states.submit(save=True)
@@ -531,6 +530,20 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         participants = DeedParticipantFactory.create_batch(3, activity=deed_activity)
         for participant in participants:
             participant.states.withdraw(save=True)
+
+        # make an activity
+        unrelated_initiative = InitiativeFactory.create()
+        unrelated_initiative.states.submit()
+        unrelated_initiative.states.approve(save=True)
+        unrelated_activity = PeriodActivityFactory.create(
+            initiative=unrelated_initiative,
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+
+        unrelated_activity.states.submit(save=True)
+        PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
 
         response = self.client.get(
             self.url,

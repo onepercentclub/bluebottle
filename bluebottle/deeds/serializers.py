@@ -109,6 +109,10 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     }
 
 
+class DeedParticipantListSerializer(DeedParticipantSerializer):
+    pass
+
+
 class DeedParticipantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=DeedParticipant.objects.all())
     field = 'states'

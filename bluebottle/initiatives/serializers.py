@@ -168,14 +168,17 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         default_currency = properties.DEFAULT_CURRENCY
 
         effort = EffortContribution.objects.filter(
-            contribution_type='deed', status='succeeded'
+            contribution_type='deed',
+            status='succeeded',
+            contributor__activity__initiative=obj
         ).aggregate(
             count=Count('id', distinct=True),
             activities=Count('contributor__activity', distinct=True)
         )
 
         time = TimeContribution.objects.filter(
-            status='succeeded'
+            status='succeeded',
+            contributor__activity__initiative=obj
         ).aggregate(
             count=Count('id', distinct=True),
             activities=Count('contributor__activity', distinct=True),
@@ -183,13 +186,17 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         )
 
         money = MoneyContribution.objects.filter(
-            status='succeeded'
+            status='succeeded',
+            contributor__activity__initiative=obj
         ).aggregate(
             count=Count('id', distinct=True),
             activities=Count('contributor__activity', distinct=True)
         )
 
-        amounts = MoneyContribution.objects.filter(status='succeeded').values(
+        amounts = MoneyContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).values(
             'value_currency'
         ).annotate(
             amount=Sum('value')

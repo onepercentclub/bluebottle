@@ -3,7 +3,7 @@ from django.conf.urls import url
 from bluebottle.deeds.views import (
     DeedListView, DeedDetailView, DeedTransitionList,
     DeedRelatedParticipantList, ParticipantList, ParticipantDetail,
-    ParticipantTransitionList
+    ParticipantTransitionList, ParticipantExportView
 )
 
 
@@ -33,4 +33,8 @@ urlpatterns = [
     url(r'^/participants/transitions$',
         ParticipantTransitionList.as_view(),
         name='deed-participant-transition-list'),
+
+    url(r'^/export/(?P<pk>[\d]+)$',
+        ParticipantExportView.as_view(),
+        name='deed-participant-export'),
 ]

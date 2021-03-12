@@ -1,4 +1,7 @@
+import csv
+
 from django.db.models import Q
+from django.http import HttpResponse
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -13,9 +16,10 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin
+    JsonApiViewMixin, PrivateFileView
 )
 
 
@@ -116,3 +120,34 @@ class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 class ParticipantTransitionList(TransitionList):
     serializer_class = DeedParticipantTransitionSerializer
     queryset = DeedParticipant.objects.all()
+
+
+class ParticipantExportView(PrivateFileView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+    )
+
+    model = Deed
+
+    def get(self, request, *args, **kwargs):
+        activity = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+
+        row = [field[1] for field in self.fields]
+        writer.writerow(row)
+
+        for participant in activity.contributors.instance_of(
+            DeedParticipant
+        ):
+            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            writer.writerow(row)
+
+        return response

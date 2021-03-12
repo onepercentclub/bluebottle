@@ -274,6 +274,23 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             )
         )
 
+    def test_get_user_succeeded(self):
+        self.activity.start = date.today() - timedelta(days=10)
+        self.activity.end = date.today() - timedelta(days=5)
+        self.activity.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+
+        self.assertTrue(
+            all(
+                participant['attributes']['status'] == 'succeeded'
+                for participant in self.response.json()['data']
+            )
+        )
+
     def test_get_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)

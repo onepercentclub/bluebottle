@@ -14,6 +14,7 @@ from rest_framework import status
 
 from bluebottle.files.tests.factories import ImageFactory
 
+from bluebottle.deeds.tests.factories import DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
@@ -910,10 +911,12 @@ class ContributorListAPITestCase(BluebottleTestCase):
         PeriodParticipantFactory.create_batch(2, user=self.user)
         DonorFactory.create_batch(2, user=self.user, status='succeeded')
         DonorFactory.create_batch(2, user=self.user, status='new')
+        DeedParticipantFactory.create_batch(2, user=self.user)
 
         DateParticipantFactory.create()
         PeriodParticipantFactory.create()
         DonorFactory.create()
+        DeedParticipantFactory.create()
 
         self.url = reverse('contributor-list')
 
@@ -926,19 +929,21 @@ class ContributorListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
-        self.assertEqual(len(data['data']), 6)
+        self.assertEqual(len(data['data']), 8)
 
         for contributor in data['data']:
             self.assertTrue(
                 contributor['type'] in (
                     'contributors/time-based/date-participants',
                     'contributors/time-based/period-participants',
+                    'contributors/deeds/participant',
                     'contributors/donations',
                 )
             )
             self.assertTrue(
                 contributor['relationships']['activity']['data']['type'] in (
                     'activities/fundings',
+                    'activities/deeds',
                     'activities/time-based/dates',
                     'activities/time-based/periods'
                 )
@@ -965,6 +970,10 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 self.assertTrue('title' in i['attributes'])
 
             if i['type'] == 'activities/funding':
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
+            if i['type'] == 'activities/deeds':
                 self.assertTrue('slug' in i['attributes'])
                 self.assertTrue('title' in i['attributes'])
 

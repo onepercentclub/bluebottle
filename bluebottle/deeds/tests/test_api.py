@@ -94,6 +94,13 @@ class DeedsDetailViewAPITestCase(APITestCase):
         }
         self.model = self.factory.create(**self.defaults)
 
+        self.accepted_participants = DeedParticipantFactory.create_batch(
+            5, activity=self.model, status='accepted'
+        )
+        self.withdrawn_participants = DeedParticipantFactory.create_batch(
+            5, activity=self.model, status='withdrawn'
+        )
+
         self.url = reverse('deed-detail', args=(self.model.pk, ))
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
@@ -115,6 +122,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertTransition('submit')
         self.assertTransition('delete')
+        self.assertRelationship(
+            'contributors',
+            self.accepted_participants + self.withdrawn_participants
+        )
 
     def test_get_with_participant(self):
         participant = DeedParticipantFactory.create(activity=self.model, user=self.user)
@@ -129,6 +140,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
+        self.assertRelationship(
+            'contributors',
+            self.accepted_participants + [participant]
+        )
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -141,6 +156,8 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
+
+        self.assertRelationship('contributors', self.accepted_participants)
 
     def test_get_closed_site(self):
         with self.closed_site():

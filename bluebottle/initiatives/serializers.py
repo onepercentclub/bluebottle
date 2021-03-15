@@ -164,6 +164,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     stats = serializers.SerializerMethodField()
     transitions = AvailableTransitionsField(source='states')
 
+    is_open = serializers.ReadOnlyField()
+
     def get_stats(self, obj):
         default_currency = properties.DEFAULT_CURRENCY
 
@@ -252,7 +254,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required', 'stats',
+            'errors', 'required', 'stats', 'is_open',
         )
 
         meta_fields = (

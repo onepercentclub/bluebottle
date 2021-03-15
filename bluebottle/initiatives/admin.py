@@ -171,6 +171,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         else:
             detail_fields.append('place')
 
+        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+            detail_fields.append('is_open')
+
         fieldsets = (
             (_('Details'), {'fields': detail_fields}),
             (_('Description'), {

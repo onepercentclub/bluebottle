@@ -12,11 +12,16 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         except Activity.owner.RelatedObjectDoesNotExist:
             owner = None
 
-        return user in [
+        is_owner = user in [
             owner,
             obj.initiative.owner,
             obj.initiative.activity_manager
         ]
+
+        if action == 'POST':
+            return is_owner or obj.initiative.is_open
+        else:
+            return is_owner
 
 
 class ActivityTypePermission(ResourcePermission):

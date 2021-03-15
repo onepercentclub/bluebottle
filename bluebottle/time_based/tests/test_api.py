@@ -123,11 +123,19 @@ class TimeBasedListAPIViewTestCase():
 
     def test_create_not_initiator_open(self):
         self.initiative.is_open = True
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
 
         another_user = BlueBottleUserFactory.create()
         response = self.client.post(self.url, json.dumps(self.data), user=another_user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_not_initiator_not_approved(self):
+        self.initiative.is_open = True
+        self.initiative.save()
+
+        another_user = BlueBottleUserFactory.create()
+        response = self.client.post(self.url, json.dumps(self.data), user=another_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):

@@ -19,7 +19,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         ]
 
         if action == 'POST':
-            return is_owner or obj.initiative.is_open
+            return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
         else:
             return is_owner
 

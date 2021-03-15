@@ -443,6 +443,19 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data['attributes']['title'], self.initiative.title)
 
+    def test_get_no_image(self):
+        self.initiative.image = None
+        self.initiative.save()
+
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['attributes']['title'], self.initiative.title)
+
     def test_get_activities(self):
         event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create(), slots=[])
         slot = DateActivitySlotFactory.create(activity=event)

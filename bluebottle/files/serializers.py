@@ -98,8 +98,10 @@ class DocumentSerializer(ModelSerializer):
 
     def get_link(self, obj):
         if self.relationship and self.content_view_name:
-            parent_id = getattr(obj, self.relationship).first().pk
-            return reverse(self.content_view_name, args=(parent_id, 'main'))
+            parent = getattr(obj, self.relationship).first()
+
+            if parent:
+                return reverse(self.content_view_name, args=(parent.pk, 'main'))
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
@@ -116,8 +118,9 @@ class DocumentSerializer(ModelSerializer):
 class PrivateDocumentSerializer(DocumentSerializer):
 
     def get_link(self, obj):
-        parent_id = getattr(obj, self.relationship).first().pk
-        return reverse_signed(self.content_view_name, args=(parent_id, ))
+        parent = getattr(obj, self.relationship).first()
+        if parent:
+            return reverse_signed(self.content_view_name, args=(parent.pk, ))
 
     class Meta(object):
         model = PrivateDocument
@@ -134,18 +137,15 @@ class ImageSerializer(DocumentSerializer):
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):
-            try:
-                relationship = getattr(obj, self.relationship)
-                parent_id = getattr(obj, self.relationship).first().pk
+            parent = getattr(obj, self.relationship).first()
+            if parent:
                 hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(parent_id, size, )) + '?_={}'.format(hash)
+                        reverse(self.content_view_name, args=(parent.pk, size, )) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
-            except relationship.model.DoesNotExist:
-                return {}
 
     class Meta(object):
         model = Image

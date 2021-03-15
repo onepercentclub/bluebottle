@@ -13,6 +13,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
 
@@ -67,6 +68,24 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertHasError('end', 'The end date should be after the start date')
+
+    def test_create_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_create_other_user_is_open(self):
+        self.defaults['initiative'].is_open = True
+        self.defaults['initiative'].save()
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_other_user_is_open_not_approved(self):
+        self.defaults['initiative'].is_open = True
+        self.defaults['initiative'].states.cancel(save=True)
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_create_anonymous(self):
         self.perform_create()

@@ -661,6 +661,30 @@ class FundingTestCase(BluebottleTestCase):
         response = self.client.post(self.create_url, json.dumps(self.data), user=BlueBottleUserFactory.create())
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_other_user_open(self):
+        self.initiative.is_open = True
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
+        response = self.client.post(
+            self.create_url,
+            data=json.dumps(self.data),
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_other_user_open_not_approved(self):
+        self.initiative.is_open = True
+        self.initiative.save()
+        response = self.client.post(
+            self.create_url,
+            data=json.dumps(self.data),
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class DonationTestCase(BluebottleTestCase):
     def setUp(self):

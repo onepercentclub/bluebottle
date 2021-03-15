@@ -132,7 +132,7 @@ class DeedParticipantStateMachineTestCase(StateMachineTestCase):
 
     def test_new(self):
         self.assertTransition('withdraw', self.user)
-        self.assertTransition('withdraw', self.staff_user)
+        self.assertNoTransition('withdraw', self.staff_user)
         self.assertNoTransition('withdraw', self.owner)
 
         self.assertNoTransition('remove', self.user)
@@ -142,7 +142,7 @@ class DeedParticipantStateMachineTestCase(StateMachineTestCase):
     def test_withdrawn(self):
         self.defaults['status'] = 'withdrawn'
         self.assertTransition('reapply', self.user)
-        self.assertTransition('reapply', self.staff_user)
+        self.assertNoTransition('reapply', self.staff_user)
         self.assertNoTransition('reapply', self.owner)
 
     def test_removed(self):

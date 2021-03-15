@@ -5,12 +5,15 @@ from rest_framework_json_api.relations import (
     SerializerMethodResourceRelatedField
 )
 
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
+
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.filters import ParticipantListFilter
 from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 
@@ -29,6 +32,14 @@ class DeedSerializer(BaseActivitySerializer):
         related_link_url_kwarg='activity_id'
     )
 
+    participants_export_url = PrivateFileSerializer(
+        'deed-participant-export',
+        url_args=('pk', ),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -40,7 +51,8 @@ class DeedSerializer(BaseActivitySerializer):
             'my_contributor',
             'contributors',
             'start',
-            'end'
+            'end',
+            'participants_export_url',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

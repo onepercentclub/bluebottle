@@ -1,4 +1,7 @@
+import csv
 from datetime import timedelta, date
+import io
+
 from rest_framework import status
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -394,3 +397,57 @@ class DeedParticipantTranistionListViewAPITestCase(APITestCase):
 
         self.participant.refresh_from_db()
         self.assertEqual(self.participant.status, 'accepted')
+
+
+class ParticipantExportViewAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+
+        self.activity = DeedFactory.create(
+            start=date.today() + timedelta(days=10),
+            end=date.today() + timedelta(days=20),
+        )
+
+        self.participants = DeedParticipantFactory.create_batch(
+            5, activity=self.activity
+        )
+        self.url = reverse('deed-detail', args=(self.activity.pk, ))
+
+    @property
+    def export_url(self):
+        if self.response and self.response.json()['data']['attributes']['participants-export-url']:
+            return self.response.json()['data']['attributes']['participants-export-url']['url']
+
+    def test_get_owner(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url)
+        reader = csv.DictReader(io.StringIO(response.content.decode()))
+
+        for row in reader:
+            self.assertTrue('Email' in row)
+            self.assertTrue('Name' in row)
+            self.assertTrue('Registration Date' in row)
+            self.assertTrue('Status' in row)
+
+    def test_get_owner_incorrect_hash(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url + 'test')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_participant(self):
+        self.perform_get(user=self.participants[0].user)
+        self.assertIsNone(self.export_url)
+
+    def test_get_other_user(self):
+        self.perform_get(user=self.user)
+        self.assertIsNone(self.export_url)
+
+    def test_get_no_user(self):
+        self.perform_get()
+        self.assertIsNone(self.export_url)

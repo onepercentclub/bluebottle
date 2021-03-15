@@ -37,6 +37,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.assertTransition('delete', self.owner)
 
         self.assertNoTransition('submit', self.owner)
+        self.assertNoTransition('submit', self.defaults['initiative'].owner)
+        self.assertNoTransition('submit', self.defaults['initiative'].activity_manager)
         self.assertNoTransition('submit', self.staff_user)
         self.assertNoTransition('submit', BlueBottleUserFactory.create())
 
@@ -53,6 +55,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['status'] = 'open'
 
         self.assertTransition('cancel', self.owner)
+        self.assertTransition('cancel', self.defaults['initiative'].owner)
+        self.assertTransition('cancel', self.defaults['initiative'].activity_manager)
         self.assertTransition('cancel', self.staff_user)
         self.assertNoTransition('cancel', BlueBottleUserFactory.create())
 
@@ -65,6 +69,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['end'] = None
 
         self.assertTransition('succeed_manually', self.owner)
+        self.assertTransition('succeed_manually', self.defaults['initiative'].owner)
+        self.assertTransition('succeed_manually', self.defaults['initiative'].activity_manager)
         self.assertTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
@@ -72,10 +78,14 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['status'] = 'running'
 
         self.assertTransition('cancel', self.owner)
+        self.assertTransition('cancel', self.defaults['initiative'].owner)
+        self.assertTransition('cancel', self.defaults['initiative'].activity_manager)
         self.assertTransition('cancel', self.staff_user)
         self.assertNoTransition('cancel', BlueBottleUserFactory.create())
 
         self.assertNoTransition('succeed_manually', self.owner)
+        self.assertNoTransition('succeed_manually', self.defaults['initiative'].owner)
+        self.assertNoTransition('succeed_manually', self.defaults['initiative'].activity_manager)
         self.assertNoTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
@@ -84,6 +94,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['end'] = None
 
         self.assertTransition('succeed_manually', self.owner)
+        self.assertTransition('succeed_manually', self.defaults['initiative'].owner)
+        self.assertTransition('succeed_manually', self.defaults['initiative'].activity_manager)
         self.assertTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
@@ -91,6 +103,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['status'] = 'succeeded'
 
         self.assertTransition('reopen_manually', self.owner)
+        self.assertTransition('reopen_manually', self.defaults['initiative'].owner)
+        self.assertTransition('reopen_manually', self.defaults['initiative'].activity_manager)
         self.assertTransition('reopen_manually', self.staff_user)
         self.assertNoTransition('reopen_manually', BlueBottleUserFactory.create())
 
@@ -98,6 +112,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['status'] = 'cancelled'
 
         self.assertTransition('restore', self.owner)
+        self.assertTransition('restore', self.defaults['initiative'].owner)
+        self.assertTransition('restore', self.defaults['initiative'].activity_manager)
         self.assertTransition('restore', self.staff_user)
         self.assertNoTransition('restore', BlueBottleUserFactory.create())
 
@@ -105,6 +121,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.defaults['status'] = 'expired'
 
         self.assertTransition('reopen_manually', self.owner)
+        self.assertTransition('reopen_manually', self.defaults['initiative'].owner)
+        self.assertTransition('reopen_manually', self.defaults['initiative'].activity_manager)
         self.assertTransition('reopen_manually', self.staff_user)
         self.assertNoTransition('reopen_manually', BlueBottleUserFactory.create())
 
@@ -151,3 +169,5 @@ class DeedParticipantStateMachineTestCase(StateMachineTestCase):
         self.assertNoTransition('accept', self.user)
         self.assertTransition('accept', self.staff_user)
         self.assertTransition('accept', self.owner)
+        self.assertTransition('accept', self.defaults['activity'].initiative.owner)
+        self.assertTransition('accept', self.defaults['activity'].initiative.activity_manager)

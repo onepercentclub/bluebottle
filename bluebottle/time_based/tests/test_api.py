@@ -419,6 +419,28 @@ class TimeBasedDetailAPIViewTestCase():
             self.data['data']['attributes']['title']
         )
 
+    def test_update_manager(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.activity_manager
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
+    def test_update_initiative_owner(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
     def test_update_unauthenticated(self):
         response = self.client.put(self.url, json.dumps(self.data))
 

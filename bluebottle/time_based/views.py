@@ -367,6 +367,7 @@ class DateParticipantExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
+        ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
     )
@@ -405,6 +406,7 @@ class PeriodParticipantExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
+        ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
     )

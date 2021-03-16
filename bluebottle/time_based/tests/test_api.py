@@ -331,7 +331,7 @@ class TimeBasedDetailAPIViewTestCase():
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Registration Date' in export_response.content)
+        self.assertTrue(b'Email,Name,Motivation,Registration Date' in export_response.content)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(

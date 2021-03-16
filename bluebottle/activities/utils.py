@@ -70,7 +70,6 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                 if dist.km < 20:
                     matching['location'] = True
 
-        print('!!!!', matching)
         return matching
 
 

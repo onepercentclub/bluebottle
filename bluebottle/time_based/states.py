@@ -18,6 +18,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         'full',
         _('The number of people needed is reached and people can no longer register.')
     )
+
     lock = Transition(
         [
             ActivityStateMachine.open,

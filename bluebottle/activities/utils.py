@@ -70,6 +70,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                 if dist.km < 20:
                     matching['location'] = True
 
+        print('!!!!', matching)
         return matching
 
 
@@ -106,57 +107,6 @@ class BaseActivitySerializer(ModelSerializer):
     def get_is_follower(self, instance):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
-
-    def get_matching_properties(self, obj):
-        user = self.context['request'].user
-        matching = {'skill': False, 'theme': False, 'location': False}
-
-        if user.is_authenticated:
-            if 'skills' not in self.context:
-                self.context['skills'] = user.skills.all()
-
-            if 'themes' not in self.context:
-                self.context['themes'] = user.favourite_themes.all()
-
-            if 'location' not in self.context:
-                self.context['location'] = user.location or user.place
-
-            try:
-                if obj.expertise in self.context['skills']:
-                    matching['skill'] = True
-            except AttributeError:
-                pass
-
-            try:
-                if obj.initiative.theme in self.context['themes']:
-                    matching['theme'] = True
-            except AttributeError:
-                pass
-
-            positions = []
-            try:
-                if obj.location:
-                    positions = [obj.location.position.tuple]
-            except AttributeError:
-                try:
-                    positions = [
-                        slot.location.position.tuple for slot in obj.slots.all() if slot.location
-                    ]
-                except AttributeError:
-                    pass
-
-            if self.context['location'] and positions:
-                dist = min(
-                    distance(
-                        lonlat(*pos),
-                        lonlat(*self.context['location'].position.tuple)
-                    ) for pos in positions
-                )
-
-                if dist.km < 20:
-                    matching['location'] = True
-
-        return matching
 
     class Meta(object):
         model = Activity

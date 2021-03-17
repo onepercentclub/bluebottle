@@ -457,25 +457,46 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['attributes']['title'], self.initiative.title)
 
     def test_get_activities(self):
-        event = DateActivityFactory.create(initiative=self.initiative, image=ImageFactory.create(), slots=[])
-        slot = DateActivitySlotFactory.create(activity=event)
-        response = self.client.get(
-            self.url,
-            user=self.owner
+        event = DateActivityFactory.create(
+            status='full',
+            initiative=self.initiative,
+            image=ImageFactory.create(),
+            slots=[]
         )
 
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 1)
-        self.assertEqual(data['relationships']['activities']['data'][0]['id'], str(event.pk))
-        self.assertEqual(
-            data['relationships']['activities']['data'][0]['type'],
-            'activities/time-based/dates'
+        DateActivityFactory.create(
+            status='deleted',
+            initiative=self.initiative,
         )
-        activity_data = get_include(response, 'activities/time-based/dates')
+        DateActivityFactory.create(
+            status='cancelled',
+            initiative=self.initiative,
+        )
+
+        funding = FundingFactory.create(
+            status='partially_funded',
+            initiative=self.initiative
+        )
+        slot = DateActivitySlotFactory.create(activity=event)
+        response = self.client.get(self.url)
+
+        data = response.json()['data']
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 2)
+
+        event_data = get_include(response, 'activities/time-based/dates')
+        self.assertEqual(event_data['id'], str(event.pk))
         self.assertEqual(
-            activity_data['attributes']['title'],
+            event_data['attributes']['title'],
             event.title
+        )
+
+        funding_data = get_include(response, 'activities/fundings')
+        self.assertEqual(funding_data['id'], str(funding.pk))
+        self.assertEqual(
+            funding_data['attributes']['title'],
+            funding.title
         )
 
         slot_data = get_include(response, 'activities/time-based/date-slots')
@@ -483,8 +504,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             slot_data['id'],
             str(slot.pk)
         )
-        self.assertEqual(activity_data['type'], 'activities/time-based/dates')
-        activity_image = activity_data['relationships']['image']['data']
+
+        activity_image = event_data['relationships']['image']['data']
 
         self.assertTrue(
             activity_image in (
@@ -492,6 +513,33 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 response.json()['included']
             )
         )
+
+    def test_get_activities_owner(self):
+        DateActivityFactory.create(
+            status='full',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='cancelled',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='deleted',
+            initiative=self.initiative,
+        )
+
+        FundingFactory.create(
+            status='partially_funded',
+            initiative=self.initiative
+        )
+        response = self.client.get(self.url, user=self.initiative.owner)
+
+        data = response.json()['data']
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')

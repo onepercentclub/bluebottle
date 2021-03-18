@@ -20,7 +20,7 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 
 
 class TimeBasedListAPIViewTestCase():
@@ -331,7 +331,7 @@ class TimeBasedDetailAPIViewTestCase():
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Registration Date' in export_response.content)
+        self.assertTrue(b'Email,Name,Motivation,Registration Date' in export_response.content)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -738,16 +738,15 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
 
         data = response.json()
 
-        included = [{'id': resource['id'], 'type': resource['type']} for resource in data['included']]
-
         for attr in ['start', 'duration', 'capacity']:
             self.assertTrue(attr in data['data']['attributes'])
 
         self.assertEqual(data['data']['meta']['status'], 'open')
 
-        self.assertTrue(
-            {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included
-        )
+        activity = get_first_included_by_type(response, 'activities/time-based/dates')
+
+        self.assertTrue('errors' in activity['meta'])
+        self.assertTrue('required' in activity['meta'])
 
     def test_update_other(self):
         response = self.client.patch(

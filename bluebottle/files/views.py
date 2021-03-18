@@ -1,8 +1,9 @@
 import mimetypes
+from random import random
 
 import magic
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
@@ -84,7 +85,11 @@ class ImageContentView(FileContentView):
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:
-            response = HttpResponse(content=thumbnail.read())
+            try:
+                response = HttpResponse(content=thumbnail.read())
+            except FileNotFoundError:
+                size = self.kwargs['size'].replace('x', '/')
+                response = HttpResponseRedirect('https://picsum.photos/seed/{}/{}'.format(random(), size))
         else:
             response = HttpResponse()
             response['X-Accel-Redirect'] = thumbnail.url

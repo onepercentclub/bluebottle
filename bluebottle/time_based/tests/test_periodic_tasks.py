@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime, time
 
 import mock
+from bluebottle.notifications.models import Message
 from django.core import mail
 from django.db import connection
 from django.template import defaultfilters
@@ -136,6 +137,14 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             "11:30 a.m. - 2:30 p.m." in mail.outbox[0].body,
             "Time strings should really be English format"
         )
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
+        #  Duplicate this message to make sure the tasks doesn't hang on accidentally duplicated mails.
+        message = Message.objects.last()
+        message.id = None
+        message.save()
+        self.run_task(self.nigh)
 
     def test_reminder_single_date_dutch(self):
         nld = BlueBottleUserFactory.create(primary_language='nl')

@@ -7,6 +7,7 @@ from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, R
 
 from bluebottle.activities.documents import activity
 from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.time_based.states import TimeBasedStateMachine
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
 
@@ -226,6 +227,7 @@ class ActivityFilter(DjangoFilterBackend):
     public_statuses = [
         ActivityStateMachine.succeeded.value,
         ActivityStateMachine.open.value,
+        TimeBasedStateMachine.full.value,
         FundingStateMachine.partially_funded.value,
     ]
 

@@ -1,0 +1,23 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}{%load nobreaks %}
+{% block message %}
+{% blocktrans context 'email' %}
+Here’s your monthly digest with activities on {{ site }} that need your support to make the world a little bit better. These activities are selected based on your profile.
+{% endblocktrans %}
+{% for activity in activities %}
+{{activity.title}} 
+{% nobreaks %}
+{% if activity.is_online %}
+{% trans "Online / Remote" %}
+{% elif activity.location %}
+{{activity.location}}
+{% endif %}, 
+{% if activity.start %}{{activity.start|date}}{% else %}{% trans "now" %}{% endif %}
+ - 
+{% if activity.deadline %}{{activity.deadline|date}}{% else %}{% trans "indefinetely" %}{% endif %}, 
+{% if activity.expertise %}{{activity.expertise.name}}{% endif %}, 
+{% if activity.initiative.theme %}{{activity.initiative.theme.name}}{% endif %}
+{% endnobreaks %}
+{{activity.get_absolute_url}}
+{% endfor %}
+{% endblock %}

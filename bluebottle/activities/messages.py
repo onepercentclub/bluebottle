@@ -2,6 +2,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import pgettext_lazy as pgettext
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
@@ -140,3 +141,26 @@ class ActivityExpiredNotification(ActivityNotification):
     """
     subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_expired'
+
+
+class MatchingActivitiesNotification(TransitionMessage):
+    """
+    Send a list of matching initiaives to user
+    """
+    subject = pgettext('email', 'We found matching initiatives for you')
+    template = 'messages/matching_activities'
+
+    @property
+    def action_link(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/list".format(
+            domain, language
+        )
+
+    action_title = pgettext('email', 'View more activities')
+
+    def get_recipients(self):
+
+        """user"""
+        return [self.obj]

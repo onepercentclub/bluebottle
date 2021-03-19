@@ -1,0 +1,40 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+    {% blocktrans context 'email' %}
+        Here’s your monthly digest with activities on {{ site }} that need your support to make the world a little bit better. These activities are selected based on your profile.
+    {{% endblocktrans %}
+    </p>
+    <ul>
+        {% for activity in activities %}
+        <li>
+            <h2>
+                <a href="{{activity.get_absolute_url}}">{{activity.title}}</a>
+            </h2>
+
+            {% if activity.expertise %}
+                <p>{{activity.expertise.name}}</p>
+            {% endif %}
+
+            <p>
+            {% if activity.start %}{{activity.start|date}}{% else %}{% trans "now" %}{% endif %}
+            {% if activity.deadline %}{{activity.deadline|date}}{% else %}{% trans "indefinetely" %}{% endif %}
+            </p>
+
+            {% if activity.initiative.theme %}
+                <p>{{activity.initiative.theme.name}}</p>
+            {% endif %}
+
+            {% if activity.is_online %}
+                <p>{% trans "Online / Remote" %}</p>
+            {% elif activity.location %}
+                <p>{{activity.location}}</p>
+            {% endif %}
+
+            <img src="{% url 'activity-image' activity.pk '200x200'%}"/>
+        </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

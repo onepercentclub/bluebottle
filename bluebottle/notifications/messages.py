@@ -158,8 +158,8 @@ class TransitionMessage(object):
         """the owner"""
         return [self.obj.owner]
 
-    def compose_and_send(self):
+    def compose_and_send(self, **base_context):
         for message in self.get_messages():
-            context = self.get_context(message.recipient)
+            context = {**base_context, **self.get_context(message.recipient)}
             message.save()
             message.send(**context)

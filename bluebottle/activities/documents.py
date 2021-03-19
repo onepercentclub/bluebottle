@@ -69,6 +69,8 @@ class ActivityDocument(DocType):
         }
     )
 
+    is_online = fields.BooleanField('is_online')
+
     location = fields.NestedField(
         attr='location',
         properties={
@@ -141,6 +143,10 @@ class ActivityDocument(DocType):
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
             return {'id': instance.expertise_id}
+
+    def prepare_is_online(self, instance):
+        if hasattr(instance, 'is_online'):
+            return instance.is_online
 
     def prepare_position(self, instance):
         return None

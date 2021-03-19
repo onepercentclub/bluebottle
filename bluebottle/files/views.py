@@ -100,7 +100,7 @@ class ImageContentView(FileContentView):
                     response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            if exists(file):
+            if exists(file.path):
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:

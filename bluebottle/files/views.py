@@ -93,12 +93,11 @@ class ImageContentView(FileContentView):
             try:
                 response = HttpResponse(content=thumbnail.read())
                 response['Content-Type'] = content_type
-                return response
             except FileNotFoundError:
                 if settings.RANDOM_IMAGE_PROVIDER:
-                    HttpResponseRedirect(self.get_random_image_url())
+                    response = HttpResponseRedirect(self.get_random_image_url())
                 else:
-                    return HttpResponseNotFound()
+                    response = HttpResponseNotFound()
         else:
             response = HttpResponse()
             if exists(file):
@@ -108,7 +107,8 @@ class ImageContentView(FileContentView):
                 response['Content-Type'] = 'image/jpeg'
                 response['X-Accel-Redirect'] = self.get_random_image_url()
             else:
-                return HttpResponseNotFound()
+                response = HttpResponseNotFound()
+        return response
 
 
 class ImageList(FileList):

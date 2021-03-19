@@ -102,8 +102,7 @@ class ImageContentView(FileContentView):
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:
-                response['Content-Type'] = 'image/jpeg'
-                response['X-Accel-Redirect'] = self.get_random_image_url()
+                response = HttpResponseRedirect(self.get_random_image_url())
             else:
                 response = HttpResponseNotFound()
         return response

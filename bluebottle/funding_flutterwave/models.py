@@ -33,8 +33,21 @@ class FlutterwavePaymentProvider(PaymentProvider):
                 provider='flutterwave',
                 name='Credit card',
                 code='credit_card',
-                currencies=['NGN'],
+                currencies=['NGN', 'XOF', 'USD'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
+                name='OrangeMoney',
+                code='orange_money',
+                currencies=['XOF'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
+                name='PayPal',
+                code='paypal',
+                currencies=['NGN', 'USD'],
             )
+
         ]
 
     @property

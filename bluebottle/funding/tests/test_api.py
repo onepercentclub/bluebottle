@@ -546,6 +546,22 @@ class FundingDetailTestCase(BluebottleTestCase):
             'New title'
         )
 
+    def test_recalculate_refund(self):
+        self.funding.status = 'succeeded'
+        self.funding.save()
+        response = self.client.get(self.funding_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            len(response.json()['data']['meta']['transitions']),
+            0
+        )
+        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            len(response.json()['data']['meta']['transitions']),
+            0
+        )
+
     def test_update_bank_account(self):
         external_account = ExternalAccountFactory.create(
             account_id='some-external-account-id',

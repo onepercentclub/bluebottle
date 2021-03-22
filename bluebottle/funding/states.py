@@ -189,6 +189,7 @@ class FundingStateMachine(ActivityStateMachine):
         description=_(
             "The amount of donations received has changed and the payouts will be recalculated."),
         automatic=False,
+        permission=ActivityStateMachine.is_staff,
         conditions=[
             target_reached
         ],
@@ -215,6 +216,7 @@ class FundingStateMachine(ActivityStateMachine):
         description=_(
             "The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
+        permission=ActivityStateMachine.is_staff,
         conditions=[
             psp_allows_refunding,
             without_approved_payouts

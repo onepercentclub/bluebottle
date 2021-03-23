@@ -20,7 +20,8 @@ def run(*args):
 
             translation.activate('en')
 
-            user = Member.objects.get(pk=112)
+            user = Member.objects.get(pk=65)
+
             activities = get_matching_activities(user)
 
             notification = MatchingActivitiesNotification(user)

@@ -199,7 +199,7 @@ class MatchingActivitiesNotification(TransitionMessage):
                 slot = slots[0]
                 start = '{} {}'.format(
                     date(slot.start), time(slot.start)
-                ) if slot.start else pgettext('email', 'starts immediately')
+                ) if slot.start else pgettext('email', 'Starts immediately')
                 end = '{} {}'.format(
                     date(slot.end), time(slot.end)
                 ) if slot.end else pgettext('email', 'runs indefinitely')
@@ -211,10 +211,10 @@ class MatchingActivitiesNotification(TransitionMessage):
             else:
                 context['location'] = activity.location
 
-            start = activity.start if activity.start else pgettext('email', 'starts immediately')
-            end = activity.deadline if activity.deadline else pgettext('email', 'runs indefinitely')
+            start = date(activity.start) if activity.start else pgettext('email', 'starts immediately')
+            end = date(activity.deadline) if activity.deadline else pgettext('email', 'runs indefinitely')
 
-            context['when'] = '{} - {}'.format(date(start), date(end))
+            context['when'] = '{} - {}'.format(start, end)
 
         return context
 

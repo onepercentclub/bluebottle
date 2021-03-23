@@ -214,7 +214,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             start = activity.start if activity.start else pgettext('email', 'starts immediately')
             end = activity.deadline if activity.deadline else pgettext('email', 'runs indefinitely')
 
-            context['when'] = '{} - {}'.format(start, end)
+            context['when'] = '{} - {}'.format(date(start), date(end))
 
         return context
 

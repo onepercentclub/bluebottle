@@ -160,6 +160,6 @@ class TransitionMessage(object):
 
     def compose_and_send(self, **base_context):
         for message in self.get_messages():
-            context = {**base_context, **self.get_context(message.recipient)}
+            context = self.get_context(message.recipient, **base_context)
             message.save()
             message.send(**context)

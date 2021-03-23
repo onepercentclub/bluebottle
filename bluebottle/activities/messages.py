@@ -1,3 +1,5 @@
+from django.urls import reverse
+
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.notifications.messages import TransitionMessage
@@ -161,6 +163,65 @@ class MatchingActivitiesNotification(TransitionMessage):
     action_title = pgettext('email', 'View more activities')
 
     def get_recipients(self):
-
         """user"""
         return [self.obj]
+
+    def get_activity_context(self, activity):
+        from bluebottle.time_based.models import DateActivity
+
+        context = {
+            'title': activity.title,
+            'url': activity.get_absolute_url(),
+            'image': (
+                reverse('activity-image', args=(activity.pk, '200x200'))
+                if activity.image else
+                reverse('initiative-image', args=(activity.initiative.pk, '200x200'))
+            ),
+            'expertise': activity.expertise.name if activity.expertise else None,
+            'theme': activity.initiative.theme.name,
+        }
+        if isinstance(activity, DateActivity):
+            slots = activity.slots.filter(status='open')
+            context['is_online'] = all(
+                slot.is_online for slot in slots
+            )
+            if not context['is_online']:
+                locations = set(str(slot.location) for slot in slots)
+                if len(locations) == 1:
+                    context['location'] = locations[0]
+                else:
+                    context['location'] = pgettext('email', 'Multiple locations')
+
+            if len(slots) > 1:
+                context['when'] = pgettext('email', 'Mutliple time slots')
+            else:
+                slot = slots[0]
+                start = '{} {}'.format(
+                    slot.start, slot.start
+                ) if slot.start else pgettext('email', 'starts immediately')
+                end = '{} {}'.format(
+                    slot.end, slot.end
+                ) if slot.end else pgettext('email', 'runs indefinitely')
+
+                context['when'] = '{} - {}'.format(start, end)
+        else:
+            if activity.is_online:
+                context['is_online'] = True
+            else:
+                context['location'] = activity.location
+
+            start = activity.start if activity.start else pgettext('email', 'starts immediately')
+            end = activity.deadline if activity.deadline else pgettext('email', 'runs indefinitely')
+
+            context['when'] = '{} - {}'.format(start, end)
+
+        return context
+
+    def get_context(self, recipient, activities=None):
+        context = super().get_context(recipient)
+        if activities:
+            context['activities'] = [
+                self.get_activity_context(activity) for activity in activities
+            ]
+
+        return context

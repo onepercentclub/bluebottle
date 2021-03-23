@@ -11,20 +11,19 @@
         {% for activity in activities %}
         <li>
             <h2>
-                <a href="{{activity.get_absolute_url}}">{{activity.title}}</a>
+                <a href="{{activity.url}}">{{activity.title}}</a>
             </h2>
 
             {% if activity.expertise %}
-                <p>{{activity.expertise.name}}</p>
+                <p>{{activity.expertise}}</p>
             {% endif %}
 
             <p>
-            {% if activity.start %}{{activity.start|date}}{% else %}{% trans "now" %}{% endif %}
-            {% if activity.deadline %}{{activity.deadline|date}}{% else %}{% trans "indefinetely" %}{% endif %}
+            {{activity.when}}
             </p>
 
-            {% if activity.initiative.theme %}
-                <p>{{activity.initiative.theme.name}}</p>
+            {% if activity.theme %}
+                <p>{{activity.theme}}</p>
             {% endif %}
 
             {% if activity.is_online %}
@@ -33,7 +32,7 @@
                 <p>{{activity.location}}</p>
             {% endif %}
 
-            <img src="{% url 'activity-image' activity.pk '200x200'%}"/>
+            <img src="{{activity.image}}"/>
         </li>
         {% endfor %}
     </ul>

@@ -54,7 +54,6 @@ class DeedStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         automatic=False,
         name=_("succeed"),
-        hide_from_admin=True,
         conditions=[has_no_end_date],
         permission=ActivityStateMachine.is_owner,
         description=_("Succeed the activity.")

@@ -61,7 +61,7 @@ def get_matching_activities(user, match_theme=True):
             )
         )
     else:
-        query = query | ConstantScore(boost=1, filter=MatchAll())
+        query = query | ConstantScore(boost=0.5, filter=MatchAll())
 
     location = user.location or user.place
     if location and location.position:

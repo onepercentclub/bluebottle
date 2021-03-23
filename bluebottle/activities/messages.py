@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.template.defaultfilters import time, date
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
@@ -197,10 +198,10 @@ class MatchingActivitiesNotification(TransitionMessage):
             else:
                 slot = slots[0]
                 start = '{} {}'.format(
-                    slot.start, slot.start
+                    date(slot.start), time(slot.start)
                 ) if slot.start else pgettext('email', 'starts immediately')
                 end = '{} {}'.format(
-                    slot.end, slot.end
+                    date(slot.end), time(slot.end)
                 ) if slot.end else pgettext('email', 'runs indefinitely')
 
                 context['when'] = '{} - {}'.format(start, end)

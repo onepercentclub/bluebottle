@@ -8,6 +8,7 @@ from bluebottle.clients.utils import LocalTenant
 
 from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.activities.documents import activity
 from bluebottle.activities.models import Activity
 from bluebottle.activities.messages import MatchingActivitiesNotification
@@ -109,11 +110,13 @@ def get_matching_activities(user, match_theme=True):
 def recommend():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for user in Member.objects.filter(subscribed=True):
-                activities = get_matching_activities(user)
+            settings = InitiativePlatformSettings.objects.get()
+            if settings.enable_matching_emails:
+                for user in Member.objects.filter(subscribed=True):
+                    activities = get_matching_activities(user)
 
-                if activities:
-                    notification = MatchingActivitiesNotification(user)
-                    notification.compose_and_send(
-                        activities=activities
-                    )
+                    if activities:
+                        notification = MatchingActivitiesNotification(user)
+                        notification.compose_and_send(
+                            activities=activities
+                        )

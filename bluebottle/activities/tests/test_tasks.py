@@ -10,7 +10,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.activities.tasks import recommend
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, PeriodParticipantFactory
 )
@@ -28,6 +28,8 @@ from bluebottle.test.factory_models.tasks import SkillFactory
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(enable_matching_emails=True)
+
         self.amsterdam = Point(x=4.8981734, y=52.3790565)
         self.close_to_amsterdam = Point(x=4.9848386, y=52.3929661)
         self.rotterdam = Point(x=4.4207882, y=51.9280712)
@@ -245,6 +247,14 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_not_subscribed(self):
         self.user.subscribed = False
         self.user.save()
+
+        recommend()
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_not_enabled(self):
+        self.settings.enable_matching_emails = False
+        self.settings.save()
 
         recommend()
 

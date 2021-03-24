@@ -72,6 +72,11 @@ def has_no_start_date(effect):
     return not effect.instance.start
 
 
+def has_start_date(effect):
+    """ has accepted participants"""
+    return effect.instance.start
+
+
 def has_no_end_date(effect):
     """ has accepted participants"""
     return not effect.instance.end
@@ -83,8 +88,7 @@ class DeedTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'end',
             effects=[
-                TransitionEffect(DeedStateMachine.restart, conditions=[is_started]),
-                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
                 RescheduleEffortsEffect,
@@ -100,9 +104,16 @@ class DeedTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'start',
             effects=[
-                TransitionEffect(DeedStateMachine.restart, conditions=[is_started]),
-                TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
-                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                RelatedTransitionEffect(
+                    'participants',
+                    DeedParticipantStateMachine.re_accept,
+                    conditions=[has_start_date, is_not_started]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    DeedParticipantStateMachine.succeed,
+                    conditions=[has_no_end_date, is_started]
+                ),
                 RescheduleEffortsEffect,
                 NotificationEffect(
                     DeedDateChangedNotification,
@@ -116,21 +127,9 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             DeedStateMachine.auto_approve,
             effects=[
-                TransitionEffect(DeedStateMachine.start, conditions=[is_started]),
-                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_started]),
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
-            ]
-        ),
-
-        TransitionTrigger(
-            DeedStateMachine.start,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    DeedParticipantStateMachine.succeed,
-                    conditions=[has_no_end_date]
-                ),
             ]
         ),
 
@@ -141,16 +140,6 @@ class DeedTriggers(ActivityTriggers):
                     'participants',
                     DeedParticipantStateMachine.re_accept,
                     conditions=[is_not_finished]
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            DeedStateMachine.restart,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    DeedParticipantStateMachine.re_accept,
                 ),
             ]
         ),

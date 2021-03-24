@@ -103,7 +103,9 @@ def get_matching_activities(user, match_theme=True):
 
 
 @periodic_task(
-    run_every=(crontab(0, 0, day_of_month='1')),
+    # run_every=(crontab(0, 0, day_of_month='1')),
+    # for now run every day. FIXME: set to above comment once checked on goodup-demo
+    run_every=(crontab(0, 0, day_of_month='*')),
     name="recommend",
     ignore_result=True
 )

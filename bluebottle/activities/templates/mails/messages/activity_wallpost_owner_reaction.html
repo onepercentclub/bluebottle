@@ -11,5 +11,5 @@
 
 {% block action %}
     <a href="{{ obj.wallpost.content_object.get_absolute_url }}"
-       class="action-email">{% trans 'View response' context 'email' %}</a>
+       class="action-email">{% blocktrans context 'email' %}View response{% endblocktrans %}</a>
 {% endblock %}`

@@ -11,8 +11,9 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
+from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, EffortContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.deeds.models import Deed
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -69,10 +70,10 @@ class ContributionAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
-    class OrganizerContributionInline(ContributionInlineChild):
+    class EffortContributionInline(ContributionInlineChild):
         readonly_fields = ['contributor_link']
         fields = readonly_fields
-        model = OrganizerContribution
+        model = EffortContribution
 
     class TimeContributionInline(ContributionInlineChild):
         readonly_fields = ['contributor_link', 'start', 'end', 'value']
@@ -85,7 +86,7 @@ class ContributionAdminInline(StackedPolymorphicInline):
         model = MoneyContribution
 
     child_inlines = (
-        OrganizerContributionInline,
+        EffortContributionInline,
         TimeContributionInline,
         MoneyContributionInline
     )
@@ -158,7 +159,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     child_models = (
         MoneyContribution,
         TimeContribution,
-        OrganizerContribution
+        EffortContribution
     )
     list_display = ['start', 'contribution_type', 'contributor_link', 'state_name', 'value']
     list_filter = (
@@ -218,9 +219,9 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fieldsets
 
 
-@admin.register(OrganizerContribution)
-class OrganizerContributionAdmin(ContributionChildAdmin):
-    model = OrganizerContribution
+@admin.register(EffortContribution)
+class EffortContributionAdmin(ContributionChildAdmin):
+    model = EffortContribution
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -294,7 +295,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return inlines
 
     def get_list_filter(self, request):
-        filters = self.list_filter
+        filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
@@ -305,7 +306,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return filters
 
     def get_list_display(self, request):
-        fields = self.list_display
+        fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             fields = fields + ['location_link']
@@ -493,6 +494,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Funding,
         PeriodActivity,
         DateActivity,
+        Deed
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
@@ -508,7 +510,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
-        filters = self.list_filter
+        filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
@@ -531,7 +533,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     location_link.short_description = _('office')
 
     def get_list_display(self, request):
-        fields = self.list_display
+        fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             fields = fields + ['location_link']
@@ -581,6 +583,12 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
+    class DeedInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'end', 'state_name']
+        fields = readonly_fields
+        model = Deed
+
     class FundingInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
                            'link', 'target', 'deadline', 'state_name']
@@ -604,4 +612,5 @@ class ActivityAdminInline(StackedPolymorphicInline):
         FundingInline,
         PeriodInline,
         DateInline,
+        DeedInline
     )

@@ -13,6 +13,6 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.activity.get_absolute_url }}"
-       class="action-email">{% trans 'Go to your activity' context 'email' %}</a>
+    <a href="{{ action_link }}"
+       class="action-email">{{ action_title }}</a>
 {% endblock %}`

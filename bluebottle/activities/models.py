@@ -5,6 +5,8 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
+from djchoices.choices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.triggers import TriggerMixin
@@ -201,9 +203,20 @@ class Contribution(TriggerMixin, PolymorphicModel):
         return str(_('Contribution amount'))
 
 
-class OrganizerContribution(Contribution):
+class EffortContribution(Contribution):
+
+    class ContributionTypeChoices(DjangoChoices):
+        organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
+        deed = ChoiceItem('deed', label=_("Deed particpant"))
+
+    contribution_type = models.CharField(
+        _('Contribution type'),
+        max_length=20,
+        choices=ContributionTypeChoices.choices,
+    )
+
     class Meta(object):
-        verbose_name = _("Organising")
+        verbose_name = _("Effort")
         verbose_name_plural = _("Contributions")
 
 

@@ -37,7 +37,7 @@ class TransitionMessage(object):
             'site_name': '[site name]',
             'language': language,
             'contact_email': '<platform manager email>',
-            'recipient_name': '[first name]'
+            'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)
@@ -69,6 +69,16 @@ class TransitionMessage(object):
         template = loader.get_template("mails/{}.txt".format(self.template))
         return template.render(context)
 
+    def get_content_html(self, recipient):
+        context = self.get_context(recipient)
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    def get_content_text(self, recipient):
+        context = self.get_context(recipient)
+        template = loader.get_template("mails/{}.txt".format(self.template))
+        return template.render(context)
+
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
@@ -77,7 +87,9 @@ class TransitionMessage(object):
             'language': recipient.primary_language,
             'contact_email': properties.CONTACT_EMAIL,
             'recipient_name': recipient.first_name,
-            'first_name': recipient.first_name
+            'first_name': recipient.first_name,
+            'action_link': getattr(self, 'action_link', None),
+            'action_title': getattr(self, 'action_title', None)
         }
         for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)

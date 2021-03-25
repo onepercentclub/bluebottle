@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Organizer, OrganizerContribution
+from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -142,6 +142,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_('Submit the activity for approval.'),
         automatic=False,
         name=_('Submit'),
+        permission=is_owner,
         conditions=[is_complete, is_valid, initiative_is_submitted],
     )
 
@@ -174,6 +175,7 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
+        permission=is_owner,
         automatic=False,
     )
 
@@ -191,6 +193,7 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will then be reopened to participants."
         ),
         automatic=False,
+        permission=is_owner
     )
 
     expire = Transition(
@@ -336,6 +339,6 @@ class OrganizerStateMachine(ContributorStateMachine):
     )
 
 
-@register(OrganizerContribution)
-class OrganizerContributionStateMachine(ContributionStateMachine):
+@register(EffortContribution)
+class EffortContributionStateMachine(ContributionStateMachine):
     pass

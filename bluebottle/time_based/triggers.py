@@ -2,6 +2,11 @@ from datetime import date
 
 from django.utils.timezone import now
 
+from bluebottle.activities.messages import (
+    ActivitySucceededNotification,
+    ActivityExpiredNotification, ActivityRejectedNotification,
+    ActivityCancelledNotification, ActivityRestoredNotification,
+)
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
@@ -26,14 +31,12 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
-    ActivitySucceededNotification, ActivitySucceededManuallyNotification,
-    ActivityExpiredNotification, ActivityRejectedNotification,
-    ActivityCancelledNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
-    ChangedSingleDateNotification, ChangedMultipleDatesNotification
+    ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification,
+    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -198,6 +201,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
+
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
@@ -210,7 +214,8 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.restore,
             effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
+                NotificationEffect(ActivityRestoredNotification)
             ]
         ),
 
@@ -778,6 +783,24 @@ def is_user(effect):
     return True
 
 
+def is_owner(effect):
+    """
+    User is the owner
+    """
+    if 'user' in effect.options:
+        return effect.instance.activity.owner == effect.options['user']
+    return False
+
+
+def is_not_owner(effect):
+    """
+    User is not the owner
+    """
+    if 'user' in effect.options:
+        return effect.instance.activity.owner != effect.options['user']
+    return True
+
+
 def activity_will_be_full(effect):
     """
     the activity is full
@@ -872,6 +895,9 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantAddedNotification
                 ),
+                NotificationEffect(
+                    ParticipantAddedOwnerNotification
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
@@ -963,6 +989,10 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantRemovedNotification
                 ),
+                NotificationEffect(
+                    ParticipantRemovedOwnerNotification,
+                    conditions=[is_not_owner]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.reopen,
@@ -988,7 +1018,9 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                UnFollowActivityEffect
+                UnFollowActivityEffect,
+                NotificationEffect(ParticipantWithdrewNotification),
+
             ]
         ),
     ]

@@ -1,0 +1,12 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message%}
+    <p>
+        {% blocktrans context 'email' %}You did it! The activity "{{ title }}" has succeeded, that calls for a celebration!{% endblocktrans %}
+    </p>
+
+    <p>
+        {% blocktrans context 'email' %}Share your experience on the activity page.{% endblocktrans %}
+    </p>
+{% endblock %}

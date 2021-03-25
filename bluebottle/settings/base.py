@@ -339,6 +339,7 @@ TENANT_APPS = (
     'bluebottle.activities',
     'bluebottle.initiatives',
     'bluebottle.time_based',
+    'bluebottle.deeds',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.funding',
@@ -349,7 +350,6 @@ TENANT_APPS = (
     'bluebottle.funding_lipisha',
     'bluebottle.funding_telesom',
     'bluebottle.segments',
-
     'bluebottle.tasks',
     'bluebottle.homepage',
     'bluebottle.payouts',
@@ -873,6 +873,65 @@ EXPORTDB_EXPORT_CONF = {
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
             'title': _('Funding contributors'),
+        }),
+        ('deeds.Deed', {
+            'fields': (
+                ('id', 'Task ID'),
+                ('initiative__title', 'Initiative Title'),
+                ('initiative__id', 'Initiative ID'),
+                ('owner__id', 'User ID'),
+                ('owner__remote_id', 'Remote ID'),
+                ('owner__email', 'Email'),
+                ('title', 'Title'),
+                ('description', 'Description'),
+                ('status', 'Status'),
+                ('start', 'Start'),
+                ('end', 'End'),
+
+                ('created', 'Date created'),
+                ('updated', 'Last update'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.DeedResource',
+            'title': _('Deed activities'),
+        }),
+        ('deeds.DeedParticipant', {
+            'fields': (
+                ('id', 'Participant ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
+                ('user__id', 'User ID'),
+                ('user__remote_id', 'Remote ID'),
+                ('user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.DeedParticipantResource',
+            'title': _('Deed participants'),
+        }),
+        ('activities.EffortContribution', {
+            'fields': (
+                ('id', 'Contribution ID'),
+                ('contributor__id', 'Participant ID'),
+                ('contributor__activity__title', 'Activity Title'),
+                ('contributor__activity__initiative__title', 'Initiative Title'),
+                ('contributor__activity__id', 'Activity ID'),
+                ('contributor__activity__status', 'Activity status'),
+
+                ('contributor__user__id', 'User ID'),
+                ('contributor__user__remote_id', 'Remote ID'),
+                ('contributor__user__email', 'Email'),
+
+                ('status', 'Status'),
+                ('contribution_type', 'Contribution type'),
+
+                ('start', 'Start of contribution'),
+                ('end', 'End of contribution'),
+                ('created', 'Date registered'),
+                ('updated', 'Last update'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.EffortContributionResource',
+            'title': _('Effort contributions'),
         }),
     ])
 }

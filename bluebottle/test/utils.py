@@ -1,15 +1,21 @@
+import json
 from builtins import object
 from builtins import str
+from contextlib import contextmanager
 from importlib import import_module
 
+from bs4 import BeautifulSoup
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core import mail
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
 from django.test import TestCase, Client
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
+from rest_framework import status
+from rest_framework.relations import RelatedField
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
@@ -17,6 +23,9 @@ from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
 from bluebottle.clients import properties
+from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
@@ -153,6 +162,338 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
         super(BluebottleTestCase, cls).setUpClass()
         cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
+
+
+class APITestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.client = JSONAPITestClient()
+
+    def perform_get(self, user=None):
+        self.response = self.client.get(
+            self.url,
+            user=user
+        )
+
+    def perform_update(self, to_change=None, user=None):
+        data = {
+            'type': self.serializer.JSONAPIMeta.resource_name,
+            'id': str(self.model.pk),
+            'attributes': {},
+            'relationships': {}
+        }
+
+        for (field, value) in to_change.items():
+            if isinstance(self.serializer().get_fields()[field], RelatedField):
+                data['relationships'][field] = {
+                    'data': {
+                        'id': value.pk,
+                        'type': value.JSONAPIMeta.resource_name
+                    }
+                }
+            else:
+                data['attributes'][field] = value
+
+        self.response = self.client.patch(
+            self.url,
+            json.dumps({'data': data}, cls=DjangoJSONEncoder),
+            user=user
+        )
+
+        if self.response.status_code == status.HTTP_200_OK:
+            self.model.refresh_from_db()
+
+    def perform_create(self, user=None, data=None):
+        if data is None:
+            data = self.data
+
+        self.response = self.client.post(
+            self.url,
+            json.dumps(data, cls=DjangoJSONEncoder),
+            user=user
+        )
+
+        if (
+            self.response.status_code == status.HTTP_201_CREATED and
+            hasattr(self.serializer.Meta, 'model')
+        ):
+            self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
+
+    @contextmanager
+    def closed_site(self):
+        group = Group.objects.get(name='Anonymous')
+        model_name = self.serializer.Meta.model._meta.model_name
+        try:
+            MemberPlatformSettings.objects.update(closed=True)
+            group = Group.objects.get(name='Anonymous')
+            group.permissions.remove(
+                Permission.objects.get(codename='api_read_{}'.format(model_name))
+            )
+            yield
+        finally:
+            MemberPlatformSettings.objects.update(closed=False)
+            group.permissions.remove(
+                Permission.objects.get(codename='api_read_{}'.format(model_name))
+            )
+
+    def assertStatus(self, status):
+        self.assertEqual(self.response.status_code, status)
+
+    def assertTotal(self, count):
+        if 'meta' in self.response.json():
+            self.assertEqual(self.response.json()['meta']['count'], count)
+        else:
+            self.assertEqual(len(self.response.json()['data']), count)
+
+    def assertIncluded(self, included, model=None):
+        included_resources = [
+            {'type': inc['type'], 'id': inc['id']}
+            for inc in self.response.json()['included']
+        ]
+        relationship = self.response.json()['data']['relationships'][included]['data']
+
+        self.assertTrue(
+            {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
+            in included_resources
+        )
+
+    def assertRelationship(self, relation, models=None):
+        self.assertTrue(relation in self.response.json()['data']['relationships'])
+        data = self.response.json()['data']['relationships'][relation]['data']
+
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
+
+    def assertAttribute(self, attr, value=None):
+        self.assertTrue(attr in self.response.json()['data']['attributes'])
+
+        if value:
+            self.assertEqual(getattr(self.model, attr), value)
+
+    def assertPermission(self, permission, value):
+        self.assertEqual(self.response.json()['data']['meta']['permissions'][permission], value)
+
+    def assertTransition(self, transition):
+        self.assertIn(
+            transition,
+            [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
+    def assertHasError(self, field, message):
+        for error in self.response.json()['data']['meta']['errors']:
+            if error['source']['pointer'] == '/data/attributes/{}'.format(field):
+                if error['title'] == message:
+                    return
+                else:
+                    self.fail(
+                        '"{}" does not match the error message "{}"'.format(
+                            error['title'], message
+                        )
+                    )
+        self.fail(
+            '{} does not contain an error for "{}"'.format(
+                self.response.json()['data']['meta']['errors'], field
+            )
+        )
+
+    def assertRequired(self, field):
+        error_fields = [
+            error['source']['pointer'].split('/')[-1]
+            for error in self.response.json()['data']['meta']['required']
+        ]
+        self.assertIn(field, error_fields)
+
+    @property
+    def data(self):
+        data = {
+            'type': self.serializer.JSONAPIMeta.resource_name,
+            'attributes': {},
+            'relationships': {}
+        }
+
+        for field in self.fields:
+            if field in self.defaults:
+                value = self.defaults[field]
+            else:
+                value = getattr(self.factory, field).generate()
+
+            if isinstance(self.serializer().get_fields()[field], RelatedField):
+                serializer_name = self.serializer.included_serializers[field]
+                (module, cls_name) = serializer_name.rsplit('.', 1)
+                resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                data['relationships'][field] = {
+                    'data': {
+                        'id': value.pk,
+                        'type': resource_name
+                    }
+                }
+            else:
+                data['attributes'][field] = value
+
+        return {'data': data}
+
+
+class StateMachineTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+    def create(self):
+        return self.factory.create(**self.defaults)
+
+    def assertTransition(self, name, user):
+        error = None
+        transition = None
+
+        model = self.create()
+
+        try:
+            transition = getattr(model.states, name)
+        except AttributeError:
+            error = '{} has no transition "{}'.format(
+                model.states, name
+            )
+
+        if transition:
+            try:
+                transition(user=user)
+            except TransitionNotPossible as e:
+                error = 'Transition "{}" not available for user {}: {}'.format(
+                    name, user, e
+                )
+
+        if error:
+            self.fail(error)
+
+    def assertNoTransition(self, name, user):
+        error = None
+        transition = None
+
+        model = self.create()
+
+        try:
+            transition = getattr(model.states, name)
+        except AttributeError:
+            error = '{} has no transition "{}'.format(
+                model.states, name
+            )
+        if transition:
+            try:
+                transition(user=user)
+
+                error = 'Transition "{}" is available for user {}, but should not be'.format(
+                    name, user
+                )
+            except TransitionNotPossible:
+                pass
+
+        if error:
+            self.fail(error)
+
+
+class TriggerTestCase(BluebottleTestCase):
+    def create(self):
+        self.model = self.factory.create(**self.defaults)
+
+    @contextmanager
+    def execute(self, user=None):
+        try:
+            self.effects = self.model.execute_triggers(effects=None, user=user)
+            yield self.effects
+        finally:
+            self.effects = None
+
+    def _hasTransitionEffect(self, transition, model=None):
+        if not model:
+            model = self.model
+
+        return TransitionEffect(transition)(model) in self.effects
+
+    def _hasEffect(self, effect_cls, model=None):
+        if not model:
+            model = self.model
+
+        for effect in self.effects:
+            if effect == effect_cls(model):
+                return effect
+
+    def assertTransitionEffect(self, transition, model=None):
+        if not self._hasTransitionEffect(transition, model):
+            self.fail('Transition effect "{}" not triggered'.format(transition))
+
+    def assertNoTransitionEffect(self, transition, model=None):
+        if self._hasTransitionEffect(transition, model):
+            self.fail('Transition effect "{}" triggered'.format(transition))
+
+    def assertEffect(self, effect_cls, model=None):
+        effect = self._hasEffect(effect_cls, model)
+        if not effect:
+            self.fail('Transition effect "{}" not triggered'.format(effect_cls))
+        return effect
+
+    def assertNoEffect(self, effect_cls, model=None):
+        if self._hasEffect(effect_cls, model):
+            self.fail('Transition effect "{}" triggered'.format(effect_cls))
+
+    def assertNotificationEffect(self, message_cls, model=None):
+        for effect in self.effects:
+            if hasattr(effect, 'message') and effect.message == message_cls:
+                return effect.message
+        self.fail('Notification effect "{}" not triggered'.format(message_cls))
+
+
+class NotificationTestCase(BluebottleTestCase):
+
+    def create(self):
+        self.message = self.message_class(self.obj)
+
+    @property
+    def _html(self):
+        return BeautifulSoup(self.message.get_content_html(
+            self.message.get_recipients()[0]), 'html.parser'
+        )
+
+    def assertRecipients(self, recipients):
+        if recipients != self.message.get_recipients():
+            self.fail("Recipients did not match: '{}' != '{}'".format(
+                recipients, self.message.get_recipients())
+            )
+
+    def assertSubject(self, subject):
+        if subject != self.message.generic_subject:
+            self.fail("Subject did not match: '{}' != '{}'".format(
+                subject, self.message.generic_subject)
+            )
+
+    def assertBodyContains(self, text):
+        self.assertHtmlBodyContains(text)
+        self.assertTextBodyContains(text)
+
+    def assertTextBodyContains(self, text):
+        if text not in self.message.get_content_text(self.message.get_recipients()[0]):
+            self.fail("Text body does not contain '{}'".format(text))
+
+    def assertHtmlBodyContains(self, text):
+        if text not in self.message.get_content_html(self.message.get_recipients()[0]):
+            self.fail("HTML body does not contain '{}'".format(text))
+
+    def assertActionLink(self, url):
+        link = self._html.find_all('a', {'class': 'action-email'})[0]
+        if url != link['href']:
+            self.fail("Action link did not match: '{}' != '{}'".format(
+                url, link['href'])
+            )
+
+    def assertActionTitle(self, title):
+        link = self._html.find_all('a', {'class': 'action-email'})[0]
+        if title != link.string:
+            self.fail("Action title did not match: '{}' != '{}'".format(
+                title, link.string)
+            )
 
 
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):

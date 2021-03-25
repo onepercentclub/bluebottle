@@ -15,6 +15,7 @@ from rest_framework import status
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
@@ -560,11 +561,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
-
         )
 
         period_activity.states.submit(save=True)
         PeriodParticipantFactory.create_batch(3, activity=period_activity)
+        PeriodParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
 
         date_activity = DateActivityFactory.create(
             initiative=self.initiative,
@@ -577,6 +578,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=now() - datetime.timedelta(weeks=1),
         )
         DateParticipantFactory.create_batch(3, activity=date_activity)
+        DateParticipantFactory.create_batch(3, activity=date_activity, status='withdrawn')
 
         funding = FundingFactory.create(
             initiative=self.initiative,
@@ -589,6 +591,33 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
             donor.contributions.get().states.succeed(save=True)
 
+        deed_activity = DeedFactory.create(
+            initiative=self.initiative,
+            start=datetime.date.today() - datetime.timedelta(days=10),
+            end=datetime.date.today() - datetime.timedelta(days=5)
+        )
+        deed_activity.states.submit(save=True)
+        deed_activity.states.succeed(save=True)
+
+        DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        participants = DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        for participant in participants:
+            participant.states.withdraw(save=True)
+
+        # make an activity
+        unrelated_initiative = InitiativeFactory.create()
+        unrelated_initiative.states.submit()
+        unrelated_initiative.states.approve(save=True)
+        unrelated_activity = PeriodActivityFactory.create(
+            initiative=unrelated_initiative,
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+
+        unrelated_activity.states.submit(save=True)
+        PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
+
         response = self.client.get(
             self.url,
             user=self.owner
@@ -597,9 +626,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 66.0)
-        self.assertEqual(stats['activities'], 3)
+        self.assertEqual(stats['activities'], 4)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
-        self.assertEqual(stats['contributors'], 12)
+
+        self.assertEqual(stats['contributors'], 15)
+        self.assertEqual(stats['effort'], 3)
 
     def test_get_other(self):
         response = self.client.get(

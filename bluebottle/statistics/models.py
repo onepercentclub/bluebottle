@@ -83,10 +83,12 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         ('activities_succeeded', _('Activities succeeded')),
         ('time_activities_succeeded', _('Time based activities succeeded')),
         ('fundings_succeeded', _('Crowdfunding campaigns succeeded')),
+        ('deeds_succeeded', _('Deeds succeeded')),
 
         ('activity_participants', _('Activity Participants')),
 
         ('time_activities_online', _('Time based activities online')),
+        ('deeds_online', _('Deeds online')),
         ('fundings_online', _('Funding activities online')),
 
         ('donations', _('Donations')),
@@ -95,6 +97,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         ('amount_matched', _('Amount matched')),
         ('activities_online', _('Activities Online')),
         ('time_spent', _('Time spent')),
+        ('deeds_done', _('Deeds done')),
         ('members', _("Number of members"))
     ]
     translations = TranslatedFields(
@@ -118,12 +121,14 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 
             'activities_succeeded': 'default',
             'time_activities_succeeded': 'event-completed',
+            'deed_succeeded': 'deed-completed',
             'fundings_succeeded': 'funding-completed',
 
             'participants': 'people',
 
             'fundings_online': 'funding',
             'time_activities_online': 'event',
+            'deeds_activities_online': 'deed',
 
             'donations': 'money',
             'donated_total': 'money',
@@ -133,6 +138,9 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
             'activities_online': 'default',
 
             'time_spent': 'time',
+
+            'deeds_done': 'deeds',
+
             'members': 'people',
         }
         return mapping.get(self.query)

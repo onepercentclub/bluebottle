@@ -1,6 +1,6 @@
 from builtins import object
 
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
@@ -10,7 +10,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.filters import ActivityFilter
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import EffortContribution
 from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
@@ -167,42 +167,58 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     def get_stats(self, obj):
         default_currency = properties.DEFAULT_CURRENCY
 
-        contributions = Contribution.objects.filter(
-            contributor__activity__initiative=obj, status='succeeded'
-        ).instance_of(TimeContribution, MoneyContribution)
-
-        stats = contributions.aggregate(
-            hours=Sum('timecontribution__value'),
-            activities=Count(
-                'contributor__activity',
-                filter=Q(contributor__activity__status='succeeded'),
-                distinct=True
-            ),
-            contributors=Count('contributor', distinct=True)
-
+        effort = EffortContribution.objects.filter(
+            contribution_type='deed',
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True)
         )
 
-        amounts = contributions.values(
-            'moneycontribution__value_currency'
+        time = TimeContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True),
+            value=Sum('value')
+        )
+
+        money = MoneyContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True)
+        )
+
+        amounts = MoneyContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).values(
+            'value_currency'
         ).annotate(
-            amount=Sum('moneycontribution__value')
+            amount=Sum('value')
         ).order_by()
 
-        stats['hours'] = stats['hours'].total_seconds() / 3600 if stats['hours'] else 0
+        stats = {
+            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
+            'effort': effort['count'],
+            'activities': sum(stat['activities'] for stat in [effort, time, money]),
+            'contributors': sum(stat['count'] for stat in [effort, time, money]),
+        }
+
         stats['amount'] = {
             'amount': sum(
                 convert(
-                    Money(c['amount'], c['moneycontribution__value_currency']),
+                    Money(c['amount'], c['value_currency']),
                     default_currency
                 ).amount
                 for c in amounts if c['amount']
             ),
             'currency': default_currency
         }
-        if stats['hours'] == 0:
-            del stats['hours']
-        if stats['amount']['amount'] == 0:
-            del stats['amount']
 
         return stats
 

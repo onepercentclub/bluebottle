@@ -26,11 +26,12 @@ def api_create_date_activity(test, initiative, attributes,
     url = reverse('date-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
     test.assertEqual(response.status_code, status_code, msg)
-    return DateActivity.objects.get(id=response.data['id'])
+    if status_code == 201:
+        return DateActivity.objects.get(id=response.data['id'])
 
 
 def api_update_date_activity(test, activity, attributes,
-                             request_user=None, status_code=20, msg=None):
+                             request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {
@@ -51,7 +52,8 @@ def api_update_date_activity(test, activity, attributes,
     url = reverse('date-detail', args=(activity.id,))
     response = test.client.patch(url, json.dumps(test.data), user=request_user)
     test.assertEqual(response.status_code, status_code, msg)
-    return DateActivity.objects.get(id=response.data['id'])
+    if status_code == 200:
+        return DateActivity.objects.get(id=response.data['id'])
 
 
 def api_activity_transition(test, activity, transition,

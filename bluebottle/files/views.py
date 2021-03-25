@@ -1,9 +1,10 @@
 import mimetypes
+from os.path import exists
 from random import random
 
 import magic
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
@@ -76,26 +77,34 @@ class FileContentView(RetrieveAPIView):
 
 class ImageContentView(FileContentView):
 
+    def get_random_image_url(self):
+        width, height = self.kwargs['size'].split('x')
+        return settings.RANDOM_IMAGE_PROVIDER.format(seed=random(), width=width, height=height)
+
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
-
         file = getattr(instance, self.field).file
-
         thumbnail = get_thumbnail(file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:
             try:
                 response = HttpResponse(content=thumbnail.read())
+                response['Content-Type'] = content_type
             except FileNotFoundError:
-                size = self.kwargs['size'].replace('x', '/')
-                response = HttpResponseRedirect('https://picsum.photos/seed/{}/{}'.format(random(), size))
+                if settings.RANDOM_IMAGE_PROVIDER:
+                    response = HttpResponseRedirect(self.get_random_image_url())
+                else:
+                    response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            response['X-Accel-Redirect'] = thumbnail.url
-
-        response['Content-Type'] = content_type
-
+            if exists(file.path):
+                response['Content-Type'] = content_type
+                response['X-Accel-Redirect'] = thumbnail.url
+            elif settings.RANDOM_IMAGE_PROVIDER:
+                response = HttpResponseRedirect(self.get_random_image_url())
+            else:
+                response = HttpResponseNotFound()
         return response
 
 

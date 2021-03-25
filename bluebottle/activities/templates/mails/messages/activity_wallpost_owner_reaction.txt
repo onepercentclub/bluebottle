@@ -10,5 +10,5 @@ Hi {{ recipient_name }},
 {% endblocktrans %}
 {% endblock %}
 {% block action %}
-{% trans 'View response' context 'email' %}: {{ obj.wallpost.content_object.get_absolute_url }}
+{% blocktrans context 'email' %}View response{% endblocktrans %}: {{ obj.wallpost.content_object.get_absolute_url }}
 {% endblock %}`

@@ -1,15 +1,8 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name event_title=obj.title context 'email' %}
-    Hi {{ recipient_name }},
-    <br><br>
-    We are very curious to know what impact you managed to make with your activity. Please share your results via your activity page.<br>
-{% endblocktrans %}
+    <p>
+        {% blocktrans context 'email' %}We are very curious to know what impact you managed to make with your activity. Please share your results via your activity page.{% endblocktrans %}
+    </p>
 {% endblock %}
-
-{% block action %}
-    <a href="{{ obj.get_absolute_url }}"
-       class="action-email">{% trans 'Go to activity' context 'email' %}</a>
-{% endblock %}`

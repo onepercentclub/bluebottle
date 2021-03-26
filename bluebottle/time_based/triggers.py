@@ -60,6 +60,13 @@ def is_full(effect):
     )
 
 
+def activity_has_status_full(effect):
+    """
+    the activity has status full
+    """
+    return effect.instance.activity.status == 'full'
+
+
 def is_not_full(effect):
     """
     the activity is not full
@@ -492,11 +499,34 @@ def all_slots_cancelled(effect):
     return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
 
 
+def all_slots_will_be_full(effect):
+    """
+    no open slots left
+    """
+    return effect.instance.activity.slots.exclude(id=effect.instance.id).filter(status__in=['open']).count() == 0
+
+
 def activity_has_no_accepted_participants(effect):
     """
     activity does not have any accepted participants
     """
     return effect.instance.activity.accepted_participants.count() == 0
+
+
+def slot_selection_is_all(effect):
+    """
+    all slots ar selected when participant applies
+    """
+    activity = effect.instance.activity
+    return activity.slot_selection == 'all'
+
+
+def slot_selection_is_free(effect):
+    """
+    all slots ar selected when participant applies
+    """
+    activity = effect.instance.activity
+    return activity.slot_selection == 'free'
 
 
 @register(DateActivitySlot)
@@ -550,6 +580,32 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     ]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.lock,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        all_slots_will_be_full,
+                        slot_selection_is_free
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.unlock,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.unlock,
+                    conditions=[
+                        slot_selection_is_free,
+                        activity_has_status_full
+                    ]
+                ),
             ]
         ),
         ModelChangedTrigger(
@@ -788,14 +844,6 @@ def activity_is_finished(effect):
         )
     else:
         return False
-
-
-def slot_selection_is_all(effect):
-    """
-    all slots ar selected when participant applies
-    """
-    activity = effect.instance.activity
-    return activity.slot_selection == 'all'
 
 
 class ParticipantTriggers(ContributorTriggers):

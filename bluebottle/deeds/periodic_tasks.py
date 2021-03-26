@@ -6,15 +6,15 @@ from bluebottle.deeds.messages import DeedReminderNotification
 from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.deeds.models import (
     Deed
 )
 from bluebottle.deeds.states import (
-    DeedStateMachine
+    DeedStateMachine, DeedParticipantStateMachine
 )
-from bluebottle.deeds.triggers import has_participants, has_no_participants
+from bluebottle.deeds.triggers import has_participants, has_no_participants, has_no_end_date
 
 
 class DeedStartedTask(ModelPeriodicTask):
@@ -26,7 +26,11 @@ class DeedStartedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(DeedStateMachine.start)
+        RelatedTransitionEffect(
+            'participants',
+            DeedParticipantStateMachine.succeed,
+            conditions=[has_no_end_date]
+        ),
     ]
 
     def __str__(self):

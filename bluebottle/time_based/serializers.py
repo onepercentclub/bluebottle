@@ -129,7 +129,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'activity': 'bluebottle.time_based.serializers.DateActivityListSerializer',
+        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
 
@@ -360,11 +360,18 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period',
+            'start', 'deadline', 'duration', 'duration_period', 'location', 'is_online',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/period'
+
+    included_serializers = dict(
+        TimeBasedActivityListSerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
 
 
 class DateParticipantDocumentSerializer(PrivateDocumentSerializer):

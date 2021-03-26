@@ -295,7 +295,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return inlines
 
     def get_list_filter(self, request):
-        filters = self.list_filter
+        filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
@@ -306,7 +306,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return filters
 
     def get_list_display(self, request):
-        fields = self.list_display
+        fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             fields = fields + ['location_link']
@@ -510,7 +510,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
-        filters = self.list_filter
+        filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
@@ -533,7 +533,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     location_link.short_description = _('office')
 
     def get_list_display(self, request):
-        fields = self.list_display
+        fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
             fields = fields + ['location_link']

@@ -14,7 +14,7 @@ from rest_framework import status
 
 from bluebottle.files.tests.factories import ImageFactory
 
-from bluebottle.deeds.tests.factories import DeedParticipantFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
@@ -104,6 +104,43 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
+
+    def test_filter_type(self):
+        DateActivityFactory.create(status='open')
+        PeriodActivityFactory.create(status='open')
+        FundingFactory.create(status='open')
+        DeedFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[type]=funding',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['type'], 'activities/fundings')
+
+        response = self.client.get(
+            self.url + '?filter[type]=deed',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['type'], 'activities/deeds')
+
+        response = self.client.get(
+            self.url + '?filter[type]=time_based',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        types = set(resource['type'] for resource in data['data'])
+        self.assertEqual(
+            types,
+            {'activities/time-based/dates', 'activities/time-based/periods'}
+        )
 
     def test_only_owner_permission(self):
         DateActivityFactory.create(owner=self.owner, status='open')

@@ -109,7 +109,11 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         related_name='initiatives'
     )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
-    is_open = models.BooleanField(default=False)
+    is_open = models.BooleanField(
+        verbose_name=_("Is open"),
+        help_text=_("Any authenticated users can start an activity under this initiative."),
+        default=False,
+    )
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
@@ -251,11 +255,26 @@ class InitiativePlatformSettings(BasePlatformSettings):
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
-    enable_impact = models.BooleanField(default=False)
-    enable_office_regions = models.BooleanField(default=False)
-    enable_multiple_dates = models.BooleanField(default=False)
-    enable_participant_exports = models.BooleanField(default=False)
-    enable_open_initiatives = models.BooleanField(default=False)
+    enable_impact = models.BooleanField(
+        default=False,
+        help_text=_("Allow activity managers to indicate the impact they make.")
+    )
+    enable_office_regions = models.BooleanField(
+        default=False,
+        help_text=_("Allow admins to add (sub)regions to their offices.")
+    )
+    enable_multiple_dates = models.BooleanField(
+        default=False,
+        help_text=_("Enable date activities to have multiple slots.")
+    )
+    enable_open_initiatives = models.BooleanField(
+        default=False,
+        help_text=_("Allow admins to open up initiatives for any user to add activities.")
+    )
+    enable_participant_exports = models.BooleanField(
+        default=False,
+        help_text=_("Add a link to activities so managers van download a contributor list.")
+    )
 
     @property
     def deeds_enabled(self):

@@ -64,7 +64,7 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.assertNoTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
-    def test_open_no_end(self):
+    def test_open_started_no_end(self):
         self.defaults['status'] = 'open'
         self.defaults['end'] = None
 
@@ -74,8 +74,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.assertTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
-    def test_running(self):
-        self.defaults['status'] = 'running'
+    def test_open_started(self):
+        self.defaults['status'] = 'open'
 
         self.assertTransition('cancel', self.owner)
         self.assertTransition('cancel', self.defaults['initiative'].owner)
@@ -89,8 +89,8 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.assertNoTransition('succeed_manually', self.staff_user)
         self.assertNoTransition('succeed_manually', BlueBottleUserFactory.create())
 
-    def test_running_no_end(self):
-        self.defaults['status'] = 'running'
+    def test_open_no_end(self):
+        self.defaults['status'] = 'open'
         self.defaults['end'] = None
 
         self.assertTransition('succeed_manually', self.owner)

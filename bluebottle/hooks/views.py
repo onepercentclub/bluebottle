@@ -12,7 +12,7 @@ class LatestSignal(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = ActivityWebHookSerializer
 
     def get_serializer(self, instance, *args, **kwargs):
-        if isinstance(instance, Activity):
+        if isinstance(instance.instance, Activity):
             serializer_class = ActivityWebHookSerializer
         else:
             serializer_class = ContributorWebHookSerializer

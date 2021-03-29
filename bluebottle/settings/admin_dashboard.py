@@ -239,6 +239,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['hooks.change_webhook']
             },
             {
+                'name': 'hooks.slacksettings',
+                'permissions': ['hooks.change_slacksettings']
+            },
+            {
                 'name': 'initiatives.initiativeplatformsettings',
                 'permissions': ['initiatives.change_initiativeplatformsettings']
             },

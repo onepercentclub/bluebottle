@@ -14,7 +14,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.hooks.serializers import (
     ContributorWebHookSerializer, ActivityWebHookSerializer
 )
-from bluebottle.hooks.models import WebHook, SignalLog
+from bluebottle.hooks.models import WebHook, SignalLog, SlackSettings
 
 from slack_sdk import WebClient
 
@@ -55,14 +55,16 @@ def save_hook(sender, event=None, instance=None, **kwargs):
 
 @receiver(hook)
 def send_slack_message(sender, event=None, instance=None, **kwargs):
-    client = WebClient(token='xoxb-2342645840-1892587484151-sEcyjkxzsNXruluctekE7MQT')
+    settings = SlackSettings.objects.first()
+    if settings:
+        client = WebClient(token=settings.token)
 
-    if event == 'accepted':
-        message = _('{} joined "{}"'.format(instance.user.first_name, instance.activity.title))
-    elif event == 'approved':
-        message = _('A new activity "{}" was added'.format(instance.title))
+        if event == 'accepted':
+            message = _('{} joined "{}"'.format(instance.user.first_name, instance.activity.title))
+        elif event == 'approved':
+            message = _('A new activity "{}" was added'.format(instance.title))
 
-    if message:
-        client.chat_postMessage(
-            channel='#dev-devops-bots', text=message
-        )
+        if message:
+            client.chat_postMessage(
+                channel='#dev-devops-bots', text=message
+            )

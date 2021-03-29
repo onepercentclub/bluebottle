@@ -37,7 +37,7 @@ class SlackSettingsAdmin(SingletonAdmin):
                         None
                     )
                     if channel_id:
-                        client.conversations.join(channel_id)
+                        client.conversations_join(channel=channel_id)
                     else:
                         messages.add_message(
                             request,

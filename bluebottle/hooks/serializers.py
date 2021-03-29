@@ -62,7 +62,7 @@ class ContributorWebHookSerializer(serializers.Serializer):
         fields = ['event', 'instance']
 
     class JSONAPIMeta():
-        resource_name = 'webhook'
+        resource_name = 'notification'
         included_resources = [
             'instance', 'instance.activity'
         ]
@@ -80,7 +80,7 @@ class ActivityWebHookSerializer(serializers.Serializer):
         fields = ['event', 'instance']
 
     class JSONAPIMeta():
-        resource_name = 'webhook'
+        resource_name = 'notification'
         included_resources = [
             'instance',
         ]

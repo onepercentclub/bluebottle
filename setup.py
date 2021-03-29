@@ -135,6 +135,7 @@ tests_requires = [
     'pylint==1.7.2',
     'pyquery==1.2.17',
     'pylint-django==0.7.2',
+    'slack-sdk==3.4.2',
     'tblib==1.3.2',
     'tdaemon==0.1.1',
     'WebTest==2.0.27',

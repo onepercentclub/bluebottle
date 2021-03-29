@@ -3,7 +3,9 @@ import uuid
 from collections import namedtuple
 
 import requests
+
 from django.dispatch import receiver, Signal
+from django.utils.translation import ugettext as _
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 
@@ -13,6 +15,8 @@ from bluebottle.hooks.serializers import (
     ContributorWebHookSerializer, ActivityWebHookSerializer
 )
 from bluebottle.hooks.models import WebHook, SignalLog
+
+from slack_sdk import WebClient
 
 
 hook = Signal()
@@ -47,3 +51,18 @@ def save_hook(sender, event=None, instance=None, **kwargs):
         event=event,
         instance=instance
     )
+
+
+@receiver(hook)
+def send_slack_message(sender, event=None, instance=None, **kwargs):
+    client = WebClient(token='xoxb-2342645840-1892587484151-sEcyjkxzsNXruluctekE7MQT')
+
+    if event == 'accepted':
+        message = _('{} joined "{}"'.format(instance.user.first_name, instance.activity.title))
+    elif event == 'approved':
+        message = _('A new activity "{}" was added'.format(instance.title))
+
+    if message:
+        client.chat_postMessage(
+            channel='#dev-devops-bots', text=message
+        )

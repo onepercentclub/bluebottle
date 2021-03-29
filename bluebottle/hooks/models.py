@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
 from django.core.management.utils import get_random_secret_key
@@ -27,6 +28,12 @@ class SignalLog(models.Model):
     instance = fields.GenericForeignKey('content_type', 'instance_id')
 
     created = models.DateTimeField(default=timezone.now)
+
+
+class SlackSettings(models.Model):
+    token = models.CharField(max_length=55)
+    channels = ArrayField(models.CharField(max_length=64))
+
 
 
 from bluebottle.hooks.signals import *  # noqa

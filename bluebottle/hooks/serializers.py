@@ -4,6 +4,7 @@ from rest_framework_json_api.serializers import PolymorphicModelSerializer, Mode
 from bluebottle.utils.fields import FSMField
 
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.time_based.models import PeriodActivity
 from bluebottle.activities.models import Activity, Contributor
 
 
@@ -15,11 +16,22 @@ class DeedSerializer(ModelSerializer):
         fields = ('status', 'title')
 
     class JSONAPIMeta:
+        resource_name = 'activities/time-based/periods'
+
+
+class PeriodActivitySerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+
+    class Meta():
+        model = PeriodActivity
+        fields = ('status', 'title')
+
+    class JSONAPIMeta:
         resource_name = 'activities/deeds'
 
 
 class IncludedActivitySerializer(PolymorphicModelSerializer):
-    polymorphic_serializers = [DeedSerializer]
+    polymorphic_serializers = [DeedSerializer, PeriodActivitySerializer]
 
     class Meta():
         model = Activity

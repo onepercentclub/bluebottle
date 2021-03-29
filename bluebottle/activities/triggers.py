@@ -2,6 +2,8 @@ from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
+from bluebottle.hooks.effects import SignalEffect
+
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
 
@@ -53,6 +55,7 @@ class ActivityTriggers(TriggerManager):
             ActivityStateMachine.auto_approve,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
+                SignalEffect('approved')
             ]
         ),
 

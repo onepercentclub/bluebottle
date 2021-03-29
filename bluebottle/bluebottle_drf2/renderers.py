@@ -149,7 +149,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                     getattr(field, '_poly_force_type_resolution', False)
                 )
                 # NEW: Add meta to included resource
-                meta = cls.extract_meta(serializer_class, serializer_data)
+                meta = cls.extract_meta(field, serializer_data)
                 if meta:
                     new_item.update({'meta': utils._format_object(meta)})
 
@@ -242,7 +242,8 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
                 # overriden: Also add meta to ResourceRelated many fields
                 try:
-                    relation_data['meta'] = {'count': len(relation_data['data'])}
+                    if isinstance(relation_data['data'], (list, tuple)):
+                        relation_data['meta'] = {'count': len(relation_data['data'])}
                 except TypeError:
                     pass
 

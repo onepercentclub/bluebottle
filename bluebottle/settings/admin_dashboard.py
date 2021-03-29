@@ -50,6 +50,10 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'geo.location',
                 'permissions': ['geo.location']
             },
+            {
+                'name': 'hooks.webhook',
+                'permissions': ['hooks.change_webhook']
+            },
         ]
     },
     {
@@ -229,6 +233,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'terms.terms',
                 'permissions': ['terms.change_terms']
+            },
+            {
+                'name': 'hooks.webhook',
+                'permissions': ['hooks.change_webhook']
             },
             {
                 'name': 'initiatives.initiativeplatformsettings',

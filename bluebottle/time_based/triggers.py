@@ -49,6 +49,8 @@ from bluebottle.time_based.states import (
     PeriodParticipantStateMachine
 )
 
+from bluebottle.hooks.effects import SignalEffect
+
 
 def is_full(effect):
     """
@@ -960,7 +962,8 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
+                SignalEffect('accept')
             ]
         ),
 

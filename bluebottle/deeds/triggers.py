@@ -12,6 +12,7 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
 )
+from bluebottle.hooks.effects import SignalEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
@@ -253,8 +254,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
-                )
-
+                ),
+                SignalEffect('accepted')
             ]
         ),
         TransitionTrigger(
@@ -347,6 +348,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
+                SignalEffect('accepted')
             ]
         ),
     ]

@@ -12,7 +12,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.hooks.serializers import (
     ContributorWebHookSerializer, ActivityWebHookSerializer
 )
-from bluebottle.hooks.models import WebHook, WebHookLog
+from bluebottle.hooks.models import WebHook, SignalLog
 
 
 hook = Signal()
@@ -35,12 +35,15 @@ def send_webhook(sender, event=None, instance=None, **kwargs):
     )
 
     for hook in WebHook.objects.all():
-        requests.post(hook.url, data=data)
+        try:
+            requests.post(hook.url, data=data)
+        except requests.RequestException:
+            pass
 
 
 @receiver(hook)
 def save_hook(sender, event=None, instance=None, **kwargs):
-    WebHookLog.objects.create(
+    SignalLog.objects.create(
         event=event,
         instance=instance
     )

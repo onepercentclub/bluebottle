@@ -79,6 +79,9 @@ urlpatterns = [
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 
+    url(r'^api/hooks',
+        include('bluebottle.hooks.urls.api')),
+
     url(r'^api/organizations',
         include('bluebottle.organizations.urls.api')),
 

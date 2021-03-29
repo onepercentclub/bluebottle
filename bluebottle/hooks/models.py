@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+
 from django.core.management.utils import get_random_secret_key
 
 from django.contrib.contenttypes.models import ContentType
@@ -17,12 +19,14 @@ class WebHook(models.Model):
         super().save(*args, **kwargs)
 
 
-class WebHookLog(models.Model):
+class SignalLog(models.Model):
     event = models.CharField(max_length=50)
 
     content_type = models.ForeignKey(ContentType, related_name='webhook_logs')
     instance_id = models.PositiveIntegerField()
     instance = fields.GenericForeignKey('content_type', 'instance_id')
+
+    created = models.DateTimeField(default=timezone.now)
 
 
 from bluebottle.hooks.signals import *  # noqa

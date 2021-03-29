@@ -7,7 +7,7 @@ from bluebottle.hooks.signals import hook
 
 class BaseSignalEffect(Effect):
     title = _('Activate hook')
-    template = 'admin/hook_effect.html'
+    display = False
 
     def post_save(self, **kwargs):
         hook.send(sender=self.instance.__class__, event=self.event, instance=self.instance)

@@ -37,6 +37,9 @@ class IncludedActivitySerializer(PolymorphicModelSerializer):
         model = Activity
         fields = ('status', 'title')
 
+    class JSONAPIMeta:
+        resource_name = 'activities'
+
 
 class DeedParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
@@ -67,8 +70,10 @@ class IncludedContributorSerializer(PolymorphicModelSerializer):
         fields = ('status', 'activity', 'user')
 
     class JSONAPIMeta:
+        resource_name = 'contributors/deeds/participants'
         included_resources = [
             'activity',
+            'user'
         ]
 
     included_serializers = {

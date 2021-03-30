@@ -53,4 +53,14 @@ class SignalList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self, *args, **kwargs):
         last = self.request.query_params.get('last', 0)
-        return super(SignalList, self).get_queryset(*args, **kwargs).filter(id__gt=last)
+        return super(SignalList, self).get_queryset(*args, **kwargs).filter(id__gt=last)[:1]
+
+    def get_serializer(self, instance, *args, **kwargs):
+        serializer_class = self.serializer_class
+        if len(instance):
+            if isinstance(instance[0].instance, Activity):
+                serializer_class = ActivityWebHookSerializer
+
+        kwargs['context'] = self.get_serializer_context()
+
+        return serializer_class(instance=instance, *args, **kwargs)

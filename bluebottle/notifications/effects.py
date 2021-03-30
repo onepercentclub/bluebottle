@@ -1,7 +1,6 @@
-from future.utils import python_2_unicode_compatible
-
-from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.effects import Effect
 

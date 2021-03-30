@@ -22,6 +22,7 @@ class WebHook(models.Model):
 
 class SignalLog(models.Model):
     event = models.CharField(max_length=50)
+    message = models.TextField(null=True, blank=True)
 
     content_type = models.ForeignKey(ContentType, related_name='webhook_logs')
     instance_id = models.PositiveIntegerField()

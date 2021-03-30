@@ -49,4 +49,11 @@ class SignalDetail(JsonApiViewMixin, RetrieveAPIView):
 class SignalList(JsonApiViewMixin, ListAPIView):
     queryset = SignalLog.objects.order_by('-created')
     permission_classes = []
-    serializer_class = ActivityWebHookSerializer
+    serializer_class = ContributorWebHookSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        if self.request.query_params['last']:
+            last = self.request.query_params['last']
+            return super(SignalList, self).get_queryset(*args, **kwargs).filter(id__gt=last)
+        else:
+            return super(SignalList, self).get_queryset(*args, **kwargs)

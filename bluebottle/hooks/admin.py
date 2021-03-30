@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 
 from django_singleton_admin.admin import SingletonAdmin
 
-from bluebottle.hooks.models import WebHook, SlackSettings
+from bluebottle.hooks.models import WebHook, SlackSettings, SignalLog
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -13,6 +13,11 @@ from slack_sdk.errors import SlackApiError
 @admin.register(WebHook)
 class WebHookAdmin(admin.ModelAdmin):
     readonly_fields = ['secret_key']
+
+
+@admin.register(SignalLog)
+class SignalLogAdmin(admin.ModelAdmin):
+    list_display = ('id', 'created', 'instance', 'event')
 
 
 @admin.register(SlackSettings)

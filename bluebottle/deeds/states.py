@@ -107,7 +107,12 @@ class DeedParticipantStateMachine(ContributorStateMachine):
 
     def is_owner(self, user):
         """is participant"""
-        return self.instance.activity.owner == user or user.is_staff
+        return (
+            self.instance.activity.owner == user or
+            self.instance.activity.initiative.owner == user or
+            self.instance.activity.initiative.activity_manager == user or
+            user.is_staff
+        )
 
     def activity_is_open(self):
         """task is open"""

@@ -13,6 +13,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
 
@@ -67,6 +68,24 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertHasError('end', 'The end date should be after the start date')
+
+    def test_create_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_create_other_user_is_open(self):
+        self.defaults['initiative'].is_open = True
+        self.defaults['initiative'].save()
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_other_user_is_open_not_approved(self):
+        self.defaults['initiative'].is_open = True
+        self.defaults['initiative'].states.cancel(save=True)
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_create_anonymous(self):
         self.perform_create()
@@ -176,6 +195,25 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertAttribute('description', new_description)
 
+    def test_put_initiative_owner(self):
+        new_description = 'Test description'
+        self.perform_update({'description': new_description}, user=self.model.initiative.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertAttribute('description', new_description)
+
+    def test_put_initiative_activity_manager(self):
+        new_description = 'Test description'
+        self.perform_update(
+            {'description': new_description},
+            user=self.model.initiative.activity_manager
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertAttribute('description', new_description)
+
     def test_other_user(self):
         new_description = 'Test description'
         self.perform_update({'description': new_description}, user=self.user)
@@ -209,7 +247,7 @@ class DeedTranistionListViewAPITestCase(APITestCase):
 
         self.fields = ['resource', 'transition', ]
 
-    def test_create(self):
+    def test_submit(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('resource', self.activity)
@@ -217,14 +255,14 @@ class DeedTranistionListViewAPITestCase(APITestCase):
         self.activity.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'open')
 
-    def test_create_other_user(self):
+    def test_submit_other_user(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'draft')
 
-    def test_create_no_user(self):
+    def test_submit_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 

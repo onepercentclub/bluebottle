@@ -165,6 +165,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return score
 
+    def get_type_filter(self, value, request):
+        if value == 'time_based':
+            return Term(type='dateactivity') | Term(type='periodactivity')
+
+        return Term(type=value)
+
     def get_start_filter(self, value, request):
         try:
             date = dateutil.parser.parse(value).date()

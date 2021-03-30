@@ -109,6 +109,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         related_name='initiatives'
     )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
+    is_open = models.BooleanField(default=False)
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
@@ -254,6 +255,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_office_regions = models.BooleanField(default=False)
     enable_multiple_dates = models.BooleanField(default=False)
     enable_participant_exports = models.BooleanField(default=False)
+    enable_open_initiatives = models.BooleanField(default=False)
 
     @property
     def deeds_enabled(self):

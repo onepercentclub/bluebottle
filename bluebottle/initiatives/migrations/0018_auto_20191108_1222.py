@@ -8,6 +8,7 @@ from django.db.models import Q
 
 
 def fix_missing_geopositions(apps, schema_editor):
+    return 
     Initiative = apps.get_model('initiatives', 'Initiative')
     Project = apps.get_model('projects', 'Project')
     for initiative in Initiative.objects.filter(Q(place__position__isnull=True) | Q(place__position=Point(0, 0))):

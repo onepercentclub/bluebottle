@@ -121,6 +121,22 @@ class TimeBasedListAPIViewTestCase():
         response = self.client.post(self.url, json.dumps(self.data), user=another_user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_not_initiator_open(self):
+        self.initiative.is_open = True
+        self.initiative.states.approve(save=True)
+
+        another_user = BlueBottleUserFactory.create()
+        response = self.client.post(self.url, json.dumps(self.data), user=another_user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_not_initiator_not_approved(self):
+        self.initiative.is_open = True
+        self.initiative.save()
+
+        another_user = BlueBottleUserFactory.create()
+        response = self.client.post(self.url, json.dumps(self.data), user=another_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'date'
@@ -396,6 +412,28 @@ class TimeBasedDetailAPIViewTestCase():
 
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
+    def test_update_manager(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.activity_manager
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
+    def test_update_initiative_owner(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.owner
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(

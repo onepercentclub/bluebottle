@@ -8,7 +8,10 @@ from django.db import migrations
 def update_settings(apps, schema_editor):
     InitiativePlatformSettings = apps.get_model('initiatives', 'InitiativePlatformSettings')
 
-    settings = InitiativePlatformSettings.objects.get()
+    (settings, created) = InitiativePlatformSettings.objects.get_or_create()
+
+    if isinstance(settings.activity_types, str):
+        settings.activity_types = settings.activity_types.split(',')
 
     if 'event' in settings.activity_types or 'assignment' in settings.activity_types:
         settings.activity_types.append('dateactivity')

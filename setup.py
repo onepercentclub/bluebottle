@@ -100,6 +100,7 @@ install_requires = [
     'regex==2017.05.26',
     'requests==2.24.0',
     'schwifty==2.1.0',
+    'slack-sdk==3.4.2',
     'sorl-thumbnail==12.6.3',
     'South==1.0.2',
     'Sphinx==1.6.3',

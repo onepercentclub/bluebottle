@@ -52,8 +52,5 @@ class SignalList(JsonApiViewMixin, ListAPIView):
     serializer_class = ContributorWebHookSerializer
 
     def get_queryset(self, *args, **kwargs):
-        if self.request.query_params['last']:
-            last = self.request.query_params['last']
-            return super(SignalList, self).get_queryset(*args, **kwargs).filter(id__gt=last)
-        else:
-            return super(SignalList, self).get_queryset(*args, **kwargs)
+        last = self.request.query_params.get('last', 0)
+        return super(SignalList, self).get_queryset(*args, **kwargs).filter(id__gt=last)

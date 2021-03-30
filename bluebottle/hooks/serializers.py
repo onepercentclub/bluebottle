@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Activity, Contributor
+from bluebottle.utils.fields import FSMField
+
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.time_based.models import PeriodActivity
-from bluebottle.utils.fields import FSMField
+from bluebottle.activities.models import Activity, Contributor
 
 
 class DeedSerializer(ModelSerializer):
@@ -15,7 +16,7 @@ class DeedSerializer(ModelSerializer):
         fields = ('status', 'title')
 
     class JSONAPIMeta:
-        resource_name = 'activities/deeds'
+        resource_name = 'activities/time-based/periods'
 
 
 class PeriodActivitySerializer(ModelSerializer):
@@ -26,18 +27,15 @@ class PeriodActivitySerializer(ModelSerializer):
         fields = ('status', 'title')
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/periods'
+        resource_name = 'activities/deeds'
 
 
-class DateActivitySerializer(ModelSerializer):
-    status = FSMField(read_only=True)
+class IncludedActivitySerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [DeedSerializer, PeriodActivitySerializer]
 
     class Meta():
-        model = PeriodActivity
+        model = Activity
         fields = ('status', 'title')
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/dates'
 
 
 class DeedParticipantSerializer(ModelSerializer):
@@ -45,71 +43,59 @@ class DeedParticipantSerializer(ModelSerializer):
 
     class Meta():
         model = DeedParticipant
-        fields = ('id', 'status',)
+        fields = ('status', 'activity', 'user')
 
     class JSONAPIMeta:
         resource_name = 'contributors/deeds/participants'
         included_resources = [
-            'activity'
-            'user'
+            'user', 'activity',
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.deeds.serializers.DeedSerializer',
     }
 
 
-class IncludedActivitySerializer(PolymorphicModelSerializer):
-    polymorphic_serializers = [
-        DeedSerializer,
-        PeriodActivitySerializer,
-    ]
-
-    class Meta():
-        model = Activity
-        fields = ('id', 'status', 'title')
-
-
 class IncludedContributorSerializer(PolymorphicModelSerializer):
-    polymorphic_serializers = [DeedParticipantSerializer]
+    polymorphic_serializers = [
+        DeedParticipantSerializer
+    ]
 
     class Meta:
         model = Contributor
-        fields = ('id', 'status', 'activity', 'user')
+        fields = ('status', 'activity', 'user')
 
     class JSONAPIMeta:
         included_resources = [
             'activity',
-            'user'
         ]
-        resource_name = 'contributors/deeds/participant'
 
     included_serializers = {
-        'activity': 'bluebottle.hooks.serializers.IncludedActivitySerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.deeds.serializers.DeedSerializer',
     }
 
 
 class ContributorWebHookSerializer(serializers.Serializer):
     event = serializers.CharField()
-    created = serializers.DateTimeField()
     instance = IncludedContributorSerializer()
 
     class Meta:
-        fields = ['event', 'created', 'instance']
+        fields = ['event', 'instance']
 
     class JSONAPIMeta():
         resource_name = 'notification'
         included_resources = [
-            'instance.activity'
-            'instance.user'
+            'instance',
+            'instance.activity',
+            'instance.user',
         ]
 
     included_serializers = {
+        'instance.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'instance': IncludedContributorSerializer,
         'instance.activity': IncludedActivitySerializer,
-        'instance.user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
 

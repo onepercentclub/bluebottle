@@ -41,9 +41,10 @@ class DeedSerializer(BaseActivitySerializer):
     )
 
     def get_my_contributor(self, instance):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.contributors.filter(user=user).instance_of(DeedParticipant).first()
+        if 'request' in self.context:
+            user = self.context['request'].user
+            if user.is_authenticated:
+                return instance.contributors.filter(user=user).instance_of(DeedParticipant).first()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Deed

@@ -6,6 +6,7 @@ from bluebottle.utils.fields import FSMField
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.time_based.models import PeriodActivity
 from bluebottle.activities.models import Activity, Contributor
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 
 
 class DeedSerializer(ModelSerializer):
@@ -56,7 +57,7 @@ class DeedParticipantSerializer(ModelSerializer):
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity': 'bluebottle.deeds.serializers.DeedSerializer',
+        'activity': DeedSerializer
     }
 
 
@@ -78,13 +79,17 @@ class IncludedContributorSerializer(PolymorphicModelSerializer):
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity': 'bluebottle.deeds.serializers.DeedSerializer',
+        'activity': IncludedActivitySerializer
     }
 
 
 class ContributorWebHookSerializer(serializers.Serializer):
     event = serializers.CharField()
-    instance = IncludedContributorSerializer()
+    instance = PolymorphicResourceRelatedField(
+        polymorphic_serializer=IncludedContributorSerializer,
+        read_only=True,
+        model=Contributor
+    )
 
     class Meta:
         fields = ['event', 'instance']
@@ -106,7 +111,11 @@ class ContributorWebHookSerializer(serializers.Serializer):
 
 class ActivityWebHookSerializer(serializers.Serializer):
     event = serializers.CharField()
-    instance = IncludedActivitySerializer()
+    instance = PolymorphicResourceRelatedField(
+        polymorphic_serializer=IncludedActivitySerializer,
+        model=Activity,
+        read_only=True
+    )
 
     class Meta:
         fields = ['event', 'instance']

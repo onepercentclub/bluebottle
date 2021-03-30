@@ -189,11 +189,12 @@ class FilteredRelatedField(SerializerMethodResourceRelatedField):
     def get_attribute(self, instance):
         queryset = super(FilteredRelatedField, self).get_attribute(instance)
         filter_backend = self.child_relation.filter_backend
-        queryset = filter_backend().filter_queryset(
-            request=self.context['request'],
-            queryset=queryset,
-            view=self.context['view']
-        )
+        if 'request' in self.context:
+            queryset = filter_backend().filter_queryset(
+                request=self.context['request'],
+                queryset=queryset,
+                view=self.context['view']
+            )
         return queryset
 
 

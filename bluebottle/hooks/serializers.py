@@ -46,7 +46,7 @@ class DeedParticipantSerializer(ModelSerializer):
         fields = ('status', 'activity')
 
     class JSONAPIMeta:
-        resource_name = 'contributors'
+        resource_name = 'contributors/deeds/participants'
 
 
 class IncludedContributorSerializer(PolymorphicModelSerializer):
@@ -60,6 +60,7 @@ class IncludedContributorSerializer(PolymorphicModelSerializer):
         included_resources = [
             'activity',
         ]
+        resource_name = 'contributors/deeds/participant'
 
     @property
     def included_serializers(self):
@@ -68,10 +69,11 @@ class IncludedContributorSerializer(PolymorphicModelSerializer):
 
 class ContributorWebHookSerializer(serializers.Serializer):
     event = serializers.CharField()
+    created = serializers.DateTimeField()
     instance = IncludedContributorSerializer()
 
     class Meta:
-        fields = ['event', 'instance']
+        fields = ['event', 'created', 'instance']
 
     class JSONAPIMeta():
         resource_name = 'notification'

@@ -6,6 +6,7 @@ import requests
 
 from django.dispatch import receiver, Signal
 from django.utils.translation import ugettext as _
+from django.utils.timezone import now
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 
@@ -21,12 +22,12 @@ from slack_sdk import WebClient
 
 hook = Signal()
 
-Hook = namedtuple('Hook', ['pk', 'event', 'instance'])
+Hook = namedtuple('Hook', ['pk', 'event', 'created', 'instance'])
 
 
 @receiver(hook)
 def send_webhook(sender, event=None, instance=None, **kwargs):
-    model = Hook(event=event, instance=instance, pk=str(uuid.uuid4()))
+    model = Hook(event=event, instance=instance, pk=str(uuid.uuid4()), created=now())
 
     if isinstance(instance, Activity):
         serializer_class = ActivityWebHookSerializer

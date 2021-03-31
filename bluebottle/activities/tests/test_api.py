@@ -142,6 +142,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             {'activities/time-based/dates', 'activities/time-based/periods'}
         )
 
+    def test_filter_expertise(self):
+        skill = SkillFactory.create()
+
+        first = DateActivityFactory.create(status='open', expertise=skill)
+        second = PeriodActivityFactory.create(status='open', expertise=skill)
+        PeriodActivityFactory.create(status='open')
+        PeriodActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[expertise.id]={}'.format(skill.id),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(first.pk) in ids)
+        self.assertTrue(str(second.pk) in ids)
+
+    def test_filter_expertise_empty(self):
+        first = DateActivityFactory.create(status='open', expertise=None)
+        second = PeriodActivityFactory.create(status='open', expertise=None)
+        PeriodActivityFactory.create(status='open')
+        PeriodActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[expertise.id]=__empty__',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(first.pk) in ids)
+        self.assertTrue(str(second.pk) in ids)
+
     def test_only_owner_permission(self):
         DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')

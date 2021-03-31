@@ -60,7 +60,8 @@ class TimeBasedActivity(Activity):
         'time_based.Skill',
         verbose_name=_('skill'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     review = models.NullBooleanField(_('review participants'), null=True, default=None)

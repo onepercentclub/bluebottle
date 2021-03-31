@@ -594,6 +594,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         third = PeriodActivityFactory.create(status='open')
         fourth = PeriodActivityFactory.create(status='open', expertise=skill)
+        fifth = PeriodActivityFactory.create(status='open', expertise=None)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -602,12 +603,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertEqual(data['meta']['pagination']['count'], 5)
 
         self.assertEqual(data['data'][0]['id'], str(fourth.pk))
-        self.assertEqual(data['data'][1]['id'], str(third.pk))
-        self.assertEqual(data['data'][2]['id'], str(second.pk))
-        self.assertEqual(data['data'][3]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][4]['id'], str(first.pk))
 
     def test_sort_matching_theme(self):
         theme = ThemeFactory.create()
@@ -672,6 +674,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
+        sixth = PeriodActivityFactory.create(
+            is_online=True,
+            status='open',
+            location=None
+        )
+
         response = self.client.get(
             self.url + '?sort=popularity',
             user=self.owner
@@ -679,13 +687,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 5)
+        self.assertEqual(data['meta']['pagination']['count'], 6)
 
         self.assertEqual(data['data'][0]['id'], str(fifth.pk))
-        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
-        self.assertEqual(data['data'][2]['id'], str(third.pk))
-        self.assertEqual(data['data'][3]['id'], str(second.pk))
-        self.assertEqual(data['data'][4]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(sixth.pk))
+        self.assertEqual(data['data'][2]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][3]['id'], str(third.pk))
+        self.assertEqual(data['data'][4]['id'], str(second.pk))
+        self.assertEqual(data['data'][5]['id'], str(first.pk))
 
     def test_filter_country(self):
         country1 = CountryFactory.create()

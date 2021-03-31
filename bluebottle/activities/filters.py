@@ -110,6 +110,16 @@ class ActivitySearchFilter(ElasticSearchFilter):
                             ),
                             'weight': 1,
                         }),
+                        SF({
+                            'filter': ~Nested(
+                                path='expertise',
+                                query=Q(
+                                    'exists',
+                                    field='expertise.id'
+                                )
+                            ),
+                            'weight': 0.5,
+                        }),
                         SF({'weight': 0}),
                     ]
                 )
@@ -159,6 +169,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
                                 'multi_value_mode': 'max',
                             },
                         }),
+                        SF({
+                            'filter': ~Q(
+                                'exists',
+                                field='expertise.id'
+                            ),
+                            'weight': 0.5,
+                        }),
+
                         SF({'weight': 0}),
                     ]
                 )

@@ -250,6 +250,9 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/periods'
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'location',
+        ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,

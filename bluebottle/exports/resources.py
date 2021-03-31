@@ -103,12 +103,8 @@ class DateParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class SlotParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class SlotParticipantResource(DateRangeResource):
     range_field = 'participant__created'
-
-    segment_field = 'contributor.user'
-    user_field = 'contributor.user'
-
     select_related = (
         'slot', 'participant', 'participant__activity', 'participant__activity__initiative',
         'participant__user',

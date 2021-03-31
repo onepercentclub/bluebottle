@@ -34,10 +34,13 @@ def send_webhook(sender, event=None, instance=None, **kwargs):
     else:
         serializer_class = ContributorWebHookSerializer
 
-    data = BluebottleJSONAPIRenderer().render(
-        serializer_class(model).data,
-        renderer_context={'view': serializer_class.JSONAPIMeta}
-    )
+    try:
+        data = BluebottleJSONAPIRenderer().render(
+            serializer_class(model).data,
+            renderer_context={'view': serializer_class.JSONAPIMeta}
+        )
+    except KeyError:
+        pass
 
     for hook in WebHook.objects.all():
         try:

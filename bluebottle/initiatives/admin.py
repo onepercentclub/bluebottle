@@ -3,12 +3,13 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language, ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
+from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
@@ -19,6 +20,12 @@ from bluebottle.wallposts.admin import WallpostInline
 
 
 class InitiativeAdminForm(StateMachineModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['categories'].queryset = Category.objects.translated(
+            get_language()
+        ).order_by('translations__title')
 
     class Meta(object):
         model = Initiative

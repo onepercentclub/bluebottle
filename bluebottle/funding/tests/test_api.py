@@ -1200,7 +1200,28 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                     'provider': 'flutterwave',
                     'providerName': 'Flutterwave'
-                }
+                },
+                {
+                    'code': 'KES',
+                    'name': 'Kenyan Shilling',
+                    'maxAmount': None,
+                    'symbol': 'KES',
+                    'minAmount': 5.00,
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave'
+                },
+                {
+                    'code': 'USD',
+                    'name': 'US Dollar',
+                    'maxAmount': None,
+                    'symbol': '$',
+                    'minAmount': 5.00,
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave'
+                },
+
             ]
         )
 
@@ -1308,7 +1329,7 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 {
                     u'code': u'credit-card',
                     u'name': u'Credit card',
-                    u'currencies': [u'EUR', u'USD', u'GBP', u'AUD'],
+                    u'currencies': [u'USD', u'EUR', u'GBP', u'AUD'],
                     u'provider': u'stripe',
                     u'countries': []
                 }

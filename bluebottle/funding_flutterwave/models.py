@@ -37,6 +37,12 @@ class FlutterwavePaymentProvider(PaymentProvider):
             ),
             PaymentMethod(
                 provider='flutterwave',
+                name='M-PESA/Airtel',
+                code='mpesa',
+                currencies=['KES'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
                 name='PayPal',
                 code='paypal',
                 currencies=['NGN', 'USD'],

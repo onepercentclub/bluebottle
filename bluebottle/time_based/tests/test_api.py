@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta, date
+import urllib
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import SlotParticipant
@@ -831,6 +832,30 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_calendar_links(self):
+        self.slot.is_online = True
+        self.slot.online_meeting_url = 'http://example.com'
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        links = response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            urllib.parse.quote_plus(self.slot.online_meeting_url) in links['google']
+        )
+        self.assertTrue(
+            'https://calendar.google.com/calendar/render?action=TEMPLATE' in links['google']
+        )
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('slot-ical', args=(self.slot.pk, ))
+            )
+        )
 
     def test_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)

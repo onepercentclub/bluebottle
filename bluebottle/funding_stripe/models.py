@@ -403,8 +403,7 @@ class StripePayoutAccount(PayoutAccount):
                         yield field
                 except AttributeError:
                     yield field
-
-        if not self.account.external_accounts.total_count > 0:
+        if 'external_accounts' not in self.account or not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
     @property

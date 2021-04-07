@@ -1,3 +1,5 @@
+import json
+
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from mock import patch
@@ -220,6 +222,16 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
             view = FlutterwaveWebhookView()
             req = type('obj', (object,), {'body': '{{"tx_ref": "{}"}}'.format(donation.id).encode('utf-8')})
+            response = view.post(request=req)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        payment.refresh_from_db()
+        donation.refresh_from_db()
+        self.assertEqual(payment.status, 'succeeded')
+        self.assertEqual(donation.status, 'succeeded')
+
+        with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
+            view = FlutterwaveWebhookView()
+            req = type('obj', (object,), {'body': '{}'.format(json.dumps(payload)).encode('utf-8')})
             response = view.post(request=req)
         self.assertEqual(response.status_code, HTTP_200_OK)
         payment.refresh_from_db()

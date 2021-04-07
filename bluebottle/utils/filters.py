@@ -1,4 +1,4 @@
-from elasticsearch_dsl.query import MatchPhrasePrefix, Term, Nested, Bool
+from elasticsearch_dsl.query import MatchPhrasePrefix, Term, Nested, Bool, Exists
 from rest_framework import filters
 
 
@@ -78,15 +78,22 @@ class ElasticSearchFilter(filters.SearchFilter):
 
     def get_filter(self, request, field):
         value = request.GET['filter[{}]'.format(field)]
+
         if '.' in field:
             path = field.split('.')[0]
-            return Nested(path=path, query=Term(**{field: value}))
 
+            if value == '__empty__':
+                return ~Nested(path=path, query=Exists(field=field))
+            else:
+                return Nested(path=path, query=Term(**{field: value}))
         else:
             try:
                 return getattr(self, 'get_{}_filter'.format(field))(value, request)
             except AttributeError:
-                return Term(**{field: value})
+                if value == '__empty__':
+                    return ~Exists(field=field)
+                else:
+                    return Term(**{field: value})
 
     def get_sort(self, request):
         sort = request.GET.get('sort', self.default_sort_field)

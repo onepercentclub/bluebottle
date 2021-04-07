@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta, date
+import urllib
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import SlotParticipant
@@ -831,6 +832,30 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_calendar_links(self):
+        self.slot.is_online = True
+        self.slot.online_meeting_url = 'http://example.com'
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        links = response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            urllib.parse.quote_plus(self.slot.online_meeting_url) in links['google']
+        )
+        self.assertTrue(
+            'https://calendar.google.com/calendar/render?action=TEMPLATE' in links['google']
+        )
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('slot-ical', args=(self.slot.pk, ))
+            )
+        )
 
     def test_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -1879,6 +1904,10 @@ class SlotIcalTestCase(BluebottleTestCase):
             initiative=self.initiative
         )
         self.slot = self.activity.slots.first()
+        self.slot.is_online = True
+        self.slot.online_meeting_url = 'http://example.com'
+        self.slot.save()
+
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
         self.activity.states.submit(save=True)
         self.client = JSONAPITestClient()
@@ -1915,7 +1944,11 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    self.activity.description,
+                    self.activity.get_absolute_url(),
+                    self.slot.online_meeting_url
+                )
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
@@ -1937,7 +1970,12 @@ class DateIcalTestCase(BluebottleTestCase):
             title='Pollute Katwijk Beach',
             slots=[]
         )
-        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        self.slots = DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.activity,
+            is_online=True,
+            online_meeting_url='http://example.com'
+        )
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
         self.activity_url = reverse('date-detail', args=(self.activity.pk,))
@@ -1978,7 +2016,11 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    self.activity.description,
+                    self.activity.get_absolute_url(),
+                    slot.online_meeting_url
+                )
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
@@ -2021,7 +2063,11 @@ class DateIcalTestCase(BluebottleTestCase):
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(
             str(ical_event['description']),
-            '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+            '{}\n{}\nJoin: {}'.format(
+                self.activity.description,
+                self.activity.get_absolute_url(),
+                slot.online_meeting_url
+            )
         )
         self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
         self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))

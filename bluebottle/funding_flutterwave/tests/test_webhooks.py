@@ -128,7 +128,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         donation.refresh_from_db()
         self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(donation.amount.amount, 19500)
-        self.assertEqual(donation.payout_amount.amount, 17500)
+        self.assertEqual(donation.payout_amount.amount, 19500)
 
     def test_webhook_without_payment_another(self):
         donation = DonorFactory.create()

@@ -474,7 +474,7 @@ class StripePayoutAccount(PayoutAccount):
                 self._account = stripe.Account.retrieve(self.account_id)
             except AuthenticationError:
                 self._account = {}
-            if 'external_accounts' not in self._account:
+            if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in self._account:
                 self._account = {}
         return self._account
 

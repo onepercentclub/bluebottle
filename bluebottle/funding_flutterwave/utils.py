@@ -34,14 +34,14 @@ def check_payment_status(payment):
         payment.save()
         return payment
 
-    payment.update_response = data
+    amount = data['data']['amount']
     try:
-        amount = data['data']['amountsettledforthistransaction']
+        payout_amount = data['data']['amountsettledforthistransaction']
     except KeyError:
-        amount = data['data']['amount']
+        payout_amount = amount
 
     payment.donation.amount = amount
-    payment.donation.payout_amount = amount
+    payment.donation.payout_amount = payout_amount
     payment.donation.save()
 
     if data['data']['status'] == 'successful':

@@ -43,8 +43,10 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-        image = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        self.page = ResultPageFactory(title='Results last year', image=image)
+        with open('./bluebottle/projects/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            self.page = ResultPageFactory(title='Results last year', image=image)
+
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
         cache.clear()

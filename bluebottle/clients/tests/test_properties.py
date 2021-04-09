@@ -33,7 +33,7 @@ class TestProperties(TestCase):
             p = TenantProperties()
             with self.assertRaises(AttributeError):
                 p.foo == 1
-            self.failIf(hasattr(p, 'foo'))
+            self.assertFalse(hasattr(p, 'foo'))
 
     def test_verify_settings(self):
         tenant_dir = os.path.join(os.path.dirname(__file__), 'files/')

@@ -299,16 +299,17 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides_png(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.png', 'rb'))
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
 
-        for i in range(0, 4):
-            SlideFactory(
-                image=image,
-                sequence=i,
-                publication_date=now(),
-                status='published',
-                language='en'
-            )
+            for i in range(0, 4):
+                SlideFactory(
+                    image=image,
+                    sequence=i,
+                    publication_date=now(),
+                    status='published',
+                    language='en'
+                )
 
         response = self.client.get(self.url)
 
@@ -323,16 +324,18 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides_svg(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        for i in range(0, 4):
-            SlideFactory(
-                image=image,
-                sequence=i,
-                publication_date=now(),
-                status='published',
-                language='en'
-            )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                SlideFactory(
+                    image=image,
+                    sequence=i,
+                    publication_date=now(),
+                    status='published',
+                    language='en'
+                )
 
         response = self.client.get(self.url)
 
@@ -352,10 +355,11 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_links(self):
         block = LinksContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
 
-        for i in range(0, 4):
-            ContentLinkFactory.create(block=block, image=image)
+            for i in range(0, 4):
+                ContentLinkFactory.create(block=block, image=image)
 
         response = self.client.get(self.url)
 
@@ -386,15 +390,17 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_steps(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        for i in range(0, 4):
-            StepFactory.create(
-                block=block,
-                header='test header',
-                text='<a href="http://example.com">link</a>',
-                image=image
-            )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                StepFactory.create(
+                    block=block,
+                    header='test header',
+                    text='<a href="http://example.com">link</a>',
+                    image=image
+                )
 
         response = self.client.get(self.url)
 
@@ -408,14 +414,16 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_steps_unsafe(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        StepFactory.create(
-            block=block,
-            header='test header',
-            text='<script src="http://example.com"></script>Some text',
-            image=image
-        )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            StepFactory.create(
+                block=block,
+                header='test header',
+                text='<script src="http://example.com"></script>Some text',
+                image=image
+            )
 
         response = self.client.get(self.url)
 
@@ -495,22 +503,31 @@ class PageTestCase(BluebottleTestCase):
     def test_page(self):
         html = RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
         text = TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
-        document = DocumentItem.objects.create_for_placeholder(
-            self.placeholder,
-            document=File(open('./bluebottle/projects/test_images/upload.png', 'rb'),),
-            text='Some file upload'
-        )
-        picture = PictureItem.objects.create_for_placeholder(
-            self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
-            align='center'
-        )
-        image_text = ImageTextItem.objects.create_for_placeholder(
-            self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
-            text='some text',
-            align='center'
-        )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            document = DocumentItem.objects.create_for_placeholder(
+                self.placeholder,
+                document=image,
+                text='Some file upload'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            picture = PictureItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                align='center'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            image_text = ImageTextItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                text='some text',
+                align='center'
+            )
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
 
@@ -605,8 +622,9 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        SitePlatformSettings.objects.create(favicon=favicon)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            favicon = File(f)
+            SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
 
@@ -622,8 +640,9 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         )
 
     def test_site_platform_settings_logo(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        SitePlatformSettings.objects.create(favicon=favicon)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            favicon = File(f)
+            SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
 

@@ -35,14 +35,14 @@ class TestPageAdmin(BluebottleAdminTestCase):
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, self.superuser)
+        self.assertEqual(page.author, self.superuser)
 
         page.author = user
         self.page_admin.save_model(request=self.request,
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, user)
+        self.assertEqual(page.author, user)
 
     def test_upload_link_to_png(self):
         page = PageFactory.create()
@@ -107,9 +107,9 @@ class TestPageAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_link_to_capital_png(self):
         page = PageFactory.create()
@@ -174,9 +174,9 @@ class TestPageAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_link_to_pptx(self):
         page = PageFactory.create()
@@ -241,9 +241,9 @@ class TestPageAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_malicious_html(self):
         page = PageFactory.create()
@@ -307,10 +307,10 @@ class TestPageAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
             "Mime type &#39;application/pdf&#39; doesn&#39;t match the filename extension &#39;.html&#39;."
         )
-        self.assertEquals(page.content.contentitems.count(), 0)
-        self.assertEquals(DocumentItem.objects.count(), 0)
+        self.assertEqual(page.content.contentitems.count(), 0)
+        self.assertEqual(DocumentItem.objects.count(), 0)

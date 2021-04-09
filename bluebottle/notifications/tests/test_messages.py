@@ -70,7 +70,7 @@ class MessageTestCase(BluebottleTestCase):
         message = AnotherTestMessage(initiative)
 
         message.compose_and_send()
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 2)
         for message in mail.outbox:
             if message.to[0] == english.email:
                 self.assertEqual(message.subject, 'Test message')

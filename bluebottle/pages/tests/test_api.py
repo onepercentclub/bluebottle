@@ -109,4 +109,4 @@ class PageDetailTestCase(PageTestCase):
                                            kwargs={'language': 'nl',
                                                    'slug': 'does-not-exist'}))
 
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)

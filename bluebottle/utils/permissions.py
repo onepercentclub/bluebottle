@@ -207,7 +207,7 @@ class TenantConditionalOpenClose(BasePermission):
         try:
             settings = MemberPlatformSettings.objects.get()
             if settings.closed:
-                return user and user.is_authenticated()
+                return user and user.is_authenticated
         except AttributeError:
             pass
         return True
@@ -216,7 +216,7 @@ class TenantConditionalOpenClose(BasePermission):
         try:
             settings = MemberPlatformSettings.objects.get()
             if settings.closed:
-                return user and user.is_authenticated()
+                return user and user.is_authenticated
         except AttributeError:
             pass
         return True

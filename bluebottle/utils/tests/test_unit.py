@@ -287,7 +287,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
         be.send_messages([msg])
 
         self.assertTrue(smtp.called)
-        self.assertEquals(smtp.call_args[0], ('somehost', 1337))
+        self.assertEqual(smtp.call_args[0], ('somehost', 1337))
         self.assertTrue(connection.sendmail.called)
 
     @override_settings(
@@ -356,7 +356,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
             be.send_messages([msg])
 
             self.assertTrue(smtp.called)
-            self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
+            self.assertEqual(smtp.call_args[0], ('tenanthost', 4242))
             self.assertTrue(connection.sendmail.called)
 
     def test_reply_to(self):
@@ -373,8 +373,8 @@ class TestTenantAwareMailServer(unittest.TestCase):
                 subject="test", body="test",
                 to=["test@example.com"]
             )
-            self.assertEquals(msg.extra_headers['Reply-To'], reply_to)
-            self.assertEquals(msg.from_email, 'Info Tester <info@example.com>')
+            self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
+            self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
 
 
 class MoneySerializerTestCase(BluebottleTestCase):

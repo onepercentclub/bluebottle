@@ -94,7 +94,7 @@ class UserActivityDetail(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
 
 

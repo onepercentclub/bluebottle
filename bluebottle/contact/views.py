@@ -11,7 +11,7 @@ class ContactRequestCreate(generics.CreateAPIView):
     permission_classes = (AllowAny,)
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             serializer.save(author=self.request.user)
         else:
             serializer.save()

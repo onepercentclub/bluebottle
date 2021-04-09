@@ -125,8 +125,8 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/external_http')
         # self.assertRedirects() attempts to fetch the external url, which
         # is not good in this case
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "http://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "http://example.com")
 
     def test_redirect_external_https(self):
         Redirect.objects.create(
@@ -134,8 +134,8 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/external_https')
         # self.assertRedirects() attempts to fetch the external url, which
         # is not good in this case
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "https://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "https://example.com")
 
     @override_settings(LANGUAGE_CODE='nl',
                        MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware',))
@@ -154,8 +154,8 @@ class RedirectTests(BluebottleTestCase):
         Redirect.objects.create(
             old_path='/faq', new_path='https://example.com')
         response = self.client.get('/faq')
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "https://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "https://example.com")
 
     @override_settings(LANGUAGE_CODE='nl',
                        MIDDLEWARE_CLASSES=(

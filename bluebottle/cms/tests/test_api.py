@@ -51,7 +51,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_header(self):
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Image should come in 4 sizes
         self.assertEqual(len(response.data['image']), 6)
         self.assertEqual(response.data['title'], self.page.title)
@@ -82,7 +82,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
@@ -122,7 +122,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
@@ -137,7 +137,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.quote = QuoteFactory(block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -153,7 +153,7 @@ class ResultPageTestCase(BluebottleTestCase):
         block.activities.add(activity)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -169,7 +169,7 @@ class ResultPageTestCase(BluebottleTestCase):
         )
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -186,7 +186,7 @@ class ResultPageTestCase(BluebottleTestCase):
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -202,10 +202,10 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat = StatFactory(block=stat_block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data['blocks']), 2)
-        self.assertEquals(response.data['blocks'][0]['type'], 'quotes')
-        self.assertEquals(response.data['blocks'][1]['type'], 'statistics')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['blocks']), 2)
+        self.assertEqual(response.data['blocks'][0]['type'], 'quotes')
+        self.assertEqual(response.data['blocks'][1]['type'], 'statistics')
 
     def test_results_supporters(self):
         yesterday = now() - timedelta(days=1)
@@ -238,7 +238,7 @@ class ResultPageTestCase(BluebottleTestCase):
         SupporterTotalContent.objects.create_for_placeholder(self.placeholder)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         block = response.data['blocks'][0]
         self.assertEqual(block['type'], 'supporter_total')

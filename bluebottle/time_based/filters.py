@@ -12,7 +12,7 @@ class ParticipantListFilter(DjangoFilterBackend):
     """
 
     def filter_queryset(self, request, queryset, view):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             queryset = queryset.instance_of(DateParticipant, PeriodParticipant).filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
@@ -42,7 +42,7 @@ class SlotParticipantListFilter(DjangoFilterBackend):
     """
 
     def filter_queryset(self, request, queryset, view):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             queryset = queryset.filter(
                 Q(participant__user=request.user) |
                 Q(participant__activity__owner=request.user) |

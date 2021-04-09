@@ -71,6 +71,7 @@ install_requires = [
     'elasticsearch==6.3.0',
     'elasticsearch-dsl==6.1.0',
     'geocoder==1.37.0',
+    'geopy==2.1.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',
     'icalendar==4.0.4',

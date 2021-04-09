@@ -325,7 +325,7 @@ class HomePageTestCase(BluebottleTestCase):
     def test_slides_svg(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
 
-        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+        with open('./bluebottle/cms/tests/test_images/upload.svg', 'rb') as f:
             image = File(f)
 
             for i in range(0, 4):

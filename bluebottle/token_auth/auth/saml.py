@@ -117,7 +117,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
 
-        if self.auth.is_authenticated:
+        if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']
             user_data = self.auth.get_attributes()
             user_data['nameId'] = [self.auth.get_nameid()]

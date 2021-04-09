@@ -12,7 +12,7 @@ from bluebottle.utils.utils import get_class
 
 
 class Message(models.Model):
-    recipient = models.ForeignKey('members.Member')
+    recipient = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     sent = models.DateTimeField(null=True, blank=True)
     adapter = models.CharField(max_length=30, default='email')
     template = models.CharField(max_length=100)

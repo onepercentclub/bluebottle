@@ -97,13 +97,15 @@ class ImpactGoal(models.Model):
     type = models.ForeignKey(
         ImpactType,
         verbose_name=_('type'),
-        related_name='goals'
+        related_name='goals',
+        on_delete=models.CASCADE
     )
 
     activity = models.ForeignKey(
         'activities.activity',
         verbose_name=_('activity'),
-        related_name='goals'
+        related_name='goals',
+        on_delete=models.CASCADE
     )
 
     target = models.FloatField(

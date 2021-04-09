@@ -160,7 +160,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 
 
 class ImpactStatistic(BaseStatistic):
-    impact_type = models.ForeignKey('impact.ImpactType')
+    impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
     def get_value(self, start=None, end=None):
         return self.impact_type.goals.filter(

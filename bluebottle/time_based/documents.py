@@ -60,7 +60,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_position(self, instance):
         return [
-            {'lat': slot.location.position.get_y(), 'lon': slot.location.position.get_x()}
+            {'lat': slot.location.position.y, 'lon': slot.location.position.x}
             for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]

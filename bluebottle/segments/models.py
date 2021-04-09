@@ -43,7 +43,8 @@ class Segment(models.Model):
     type = models.ForeignKey(
         SegmentType,
         verbose_name=_('type'),
-        related_name='segments'
+        related_name='segments',
+        on_delete=models.CASCADE
     )
 
     def save(self, *args, **kwargs):

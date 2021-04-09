@@ -34,6 +34,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)ss',
+        on_delete=models.CASCADE
     )
 
     reviewer = models.ForeignKey(
@@ -42,6 +43,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         blank=True,
         verbose_name=_('reviewer'),
         related_name='review_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
     activity_manager = models.ForeignKey(
@@ -52,6 +54,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         help_text=_('The co-initiator can create and edit activities for '
                     'this initiative, but cannot edit the initiative itself.'),
         related_name='activity_manager_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
     promoter = models.ForeignKey(
@@ -60,6 +63,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         blank=True,
         null=True,
         related_name='promoter_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
     created = models.DateTimeField(auto_now_add=True)

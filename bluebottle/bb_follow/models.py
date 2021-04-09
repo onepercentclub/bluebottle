@@ -12,8 +12,8 @@ class Follow(models.Model):
     user and another Django model.
     """
 
-    user = models.ForeignKey('members.Member')
-    content_type = models.ForeignKey(ContentType)
+    user = models.ForeignKey('members.Member', on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     followed_object = fields.GenericForeignKey('content_type', 'object_id')
 

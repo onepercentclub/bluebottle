@@ -40,7 +40,9 @@ class PledgeBankAccount(BankAccount):
         'geo.Country',
         verbose_name=_('Account holder country'),
         blank=True, null=True,
-        related_name="pledge_account_holder_country")
+        related_name="pledge_account_holder_country",
+        on_delete=models.CASCADE
+    )
 
     account_number = models.CharField(
         _("Account number"),
@@ -52,7 +54,9 @@ class PledgeBankAccount(BankAccount):
         'geo.Country',
         verbose_name=_('Account bank country'),
         blank=True, null=True,
-        related_name="pledge_account_bank_country")
+        related_name="pledge_account_bank_country",
+        on_delete=models.CASCADE
+    )
 
     def save(self, *args, **kwargs):
         super(PledgeBankAccount, self).save(*args, **kwargs)

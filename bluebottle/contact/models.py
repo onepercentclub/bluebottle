@@ -28,7 +28,8 @@ class ContactMessage(models.Model):
                               default=ContactStatus.new)
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), blank=True, null=True)
+                               verbose_name=_('author'), blank=True, null=True,
+                               on_delete=models.CASCADE)
     name = models.CharField(_("Name"), max_length=200)
     email = models.EmailField(_("Email"), max_length=200)
     message = models.TextField(_("Message"))

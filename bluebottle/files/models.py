@@ -36,6 +36,7 @@ class File(AnonymizationMixin, models.Model):
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)s',
+        on_delete=models.CASCADE
     )
     used = models.BooleanField(_('used'), default=False)
 

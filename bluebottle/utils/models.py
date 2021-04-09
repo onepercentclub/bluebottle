@@ -51,7 +51,7 @@ class Address(models.Model):
     line2 = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
+    country = models.ForeignKey('geo.Country', blank=True, null=True, on_delete=models.CASCADE)
     postal_code = models.CharField(max_length=20, blank=True)
 
     class Meta(object):
@@ -63,7 +63,7 @@ class Address(models.Model):
 
 class MailLog(models.Model):
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     type = models.CharField(max_length=200)
@@ -122,8 +122,12 @@ class PublishableModel(models.Model):
                                                 null=True, blank=True,
                                                 db_index=True)
     # Metadata
-    author = models.ForeignKey('members.Member',
-                               verbose_name=_('author'), blank=True, null=True)
+    author = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('author'),
+        blank=True, null=True,
+        on_delete=models.CASCADE
+    )
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

@@ -10,7 +10,7 @@ from future.utils import python_2_unicode_compatible
 
 @python_2_unicode_compatible
 class Terms(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     created = CreationDateTimeField(_('creation date'))
     updated = ModificationDateTimeField(_('last modification'))
@@ -40,8 +40,8 @@ class Terms(models.Model):
 
 
 class TermsAgreement(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    terms = models.ForeignKey(Terms)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    terms = models.ForeignKey(Terms, on_delete=models.CASCADE)
     created = CreationDateTimeField(_('Date'))
 
     @classmethod

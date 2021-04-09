@@ -29,7 +29,8 @@ class Quote(PublishableModel):
     quote = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              verbose_name=_('Quoted member'),
-                             related_name="quote_user")
+                             related_name="quote_user",
+                             on_delete=models.CASCADE)
 
     def __str__(self):
         return self.quote

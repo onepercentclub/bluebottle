@@ -29,7 +29,9 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
+    )
 
     website = models.URLField(_('website'), blank=True)
     logo = ImageField(
@@ -71,7 +73,9 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
     name = models.TextField(_('name'), null=True, blank=True, max_length=100)
     email = models.EmailField(_('email'), null=True, blank=True, max_length=254)
     phone = models.TextField(_('phone'), null=True, blank=True, max_length=40)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
+    )
 
     created = CreationDateTimeField(
         _('created'),

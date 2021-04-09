@@ -189,7 +189,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         help_text=_('Users that are connected to a partner organisation '
                     'will skip the organisation step in initiative create.'),
         related_name='partner_organization_members',
-        verbose_name=_('Partner organisation'))
+        verbose_name=_('Partner organisation'),
+        on_delete=models.CASCADE
+    )
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
     welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)

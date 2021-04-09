@@ -25,7 +25,7 @@ def get_feature_flag(flag_path):
     return getattr(app_settings, prop, False)
 
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def dashboard_get_menu(context):
     """
     Iterate over menu items and remove some based on feature flags

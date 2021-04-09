@@ -86,7 +86,7 @@ class Category(TranslatableModel):
 
 @python_2_unicode_compatible
 class CategoryContent(SortableMixin, TranslatableModel):
-    category = models.ForeignKey(Category, related_name='contents')
+    category = models.ForeignKey(Category, related_name='contents', on_delete=models.CASCADE)
 
     translations = TranslatedFields(
         title=models.CharField(

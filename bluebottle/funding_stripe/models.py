@@ -33,7 +33,7 @@ from bluebottle.utils.models import ValidatorError
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
-    donation = models.ForeignKey(Donor)
+    donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -85,7 +85,7 @@ class PaymentIntent(models.Model):
 
 
 class StripePayment(Payment):
-    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
+    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)
 
     provider = 'stripe'
 

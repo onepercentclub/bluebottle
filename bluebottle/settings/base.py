@@ -118,7 +118,6 @@ TEMPLATES = [
                 'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'django.template.loaders.eggs.Loader',
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
@@ -142,7 +141,7 @@ TEMPLATES = [
 
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',

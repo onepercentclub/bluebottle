@@ -34,7 +34,7 @@ from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, Va
 
 class PaymentCurrency(models.Model):
 
-    provider = models.ForeignKey('funding.PaymentProvider')
+    provider = models.ForeignKey('funding.PaymentProvider', on_delete=models.CASCADE)
     code = models.CharField(max_length=3, default='EUR')
     min_amount = models.DecimalField(default=5.0, decimal_places=2, max_digits=10)
     max_amount = models.DecimalField(null=True, blank=True, decimal_places=2, max_digits=10)
@@ -135,7 +135,7 @@ class Funding(Activity):
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
-    country = models.ForeignKey('geo.Country', null=True, blank=True)
+    country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     started = models.DateTimeField(
         _('started'),
@@ -308,7 +308,9 @@ class Reward(models.Model):
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
     description = models.CharField(_('Description'), max_length=500)
-    activity = models.ForeignKey('funding.Funding', verbose_name=_('Activity'), related_name='rewards')
+    activity = models.ForeignKey(
+        'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
+    )
     limit = models.IntegerField(
         _('Limit'),
         null=True,
@@ -349,7 +351,9 @@ class BudgetLine(models.Model):
     """
     BudgetLine: Entries to the Activity Budget sheet.
     """
-    activity = models.ForeignKey('funding.Funding', related_name='budget_lines')
+    activity = models.ForeignKey(
+        'funding.Funding', related_name='budget_lines', on_delete=models.CASCADE
+    )
     description = models.CharField(_('description'), max_length=255, default='')
 
     amount = MoneyField()
@@ -370,11 +374,14 @@ class BudgetLine(models.Model):
 
 @python_2_unicode_compatible
 class Fundraiser(AnonymizationMixin, models.Model):
-    owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
+    owner = models.ForeignKey(
+        'members.Member', related_name="funding_fundraisers", on_delete=models.CASCADE
+    )
     activity = models.ForeignKey(
         'funding.Funding',
         verbose_name=_("activity"),
-        related_name="fundraisers"
+        related_name="fundraisers",
+        on_delete=models.CASCADE
     )
 
     title = models.CharField(_("title"), max_length=255)
@@ -420,7 +427,8 @@ class Payout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
         'funding.Funding',
         verbose_name=_("activity"),
-        related_name="payouts"
+        related_name="payouts",
+        on_delete=models.CASCADE
     )
     provider = models.CharField(max_length=100)
     currency = models.CharField(max_length=5)
@@ -481,13 +489,19 @@ class Donor(Contributor):
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
-    reward = models.ForeignKey(Reward, null=True, blank=True, related_name="donations")
-    fundraiser = models.ForeignKey(Fundraiser, null=True, blank=True, related_name="donations")
+    reward = models.ForeignKey(
+        Reward, null=True, blank=True, related_name="donations", on_delete=models.CASCADE
+    )
+    fundraiser = models.ForeignKey(
+        Fundraiser, null=True, blank=True, related_name="donations", on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Fake name'),
                             help_text=_('Override donor name / Name for guest donation'))
     anonymous = models.BooleanField(_('anonymous'), default=False)
-    payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
+    payout = models.ForeignKey(
+        'funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations'
+    )
 
     def save(self, *args, **kwargs):
         if not self.user and not self.client_secret:
@@ -533,7 +547,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField()
 
-    donation = models.OneToOneField(Donor, related_name='payment')
+    donation = models.OneToOneField(Donor, related_name='payment', on_delete=models.CASCADE)
 
     @property
     def can_update(self):
@@ -601,7 +615,8 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
     owner = models.ForeignKey(
         'members.Member',
-        related_name='funding_payout_account'
+        related_name='funding_payout_account',
+        on_delete=models.CASCADE
     )
 
     created = models.DateTimeField(default=timezone.now)
@@ -654,7 +669,9 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     connect_account = models.ForeignKey(
         'funding.PayoutAccount',
         null=True, blank=True,
-        related_name='external_accounts')
+        related_name='external_accounts',
+        on_delete=models.CASCADE
+    )
 
     status = models.CharField(max_length=40)
 

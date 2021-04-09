@@ -34,14 +34,16 @@ urlpatterns = [
         password_reset_confirm,
         {'post_reset_redirect': '/admin'}, name='password_reset_confirm'),
     url(r'^admin/exportdb/', include('bluebottle.exports.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
 
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),
     url(r'^admin/utils/admintools/', include('admin_tools.urls')),
 
     # account login/logout, password reset, and password change
-    url(r'^accounts/',
-        include('django.contrib.auth.urls', namespace='accounts')),
+    url(
+        r'^accounts/',
+        include('django.contrib.auth.urls'),
+    ),
 
     url(r'^admin/summernote/', include('django_summernote.urls')),
     url(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),

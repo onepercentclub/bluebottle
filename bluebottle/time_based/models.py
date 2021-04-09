@@ -1,4 +1,4 @@
-from html.parser import HTMLParser
+from html import unescape
 from urllib.parse import urlencode
 
 import pytz
@@ -128,7 +128,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def details(self):
-        details = HTMLParser().unescape(
+        details = unescape(
             u'{}\n{}'.format(
                 strip_tags(self.description), self.get_absolute_url()
             )

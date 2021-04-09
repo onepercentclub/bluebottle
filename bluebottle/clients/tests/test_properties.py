@@ -16,16 +16,16 @@ class TestProperties(TestCase):
             p = TenantProperties()
             p.tenant_properties = {'foo': 2}
 
-            self.failUnless(p.foo == 2)
-            self.failUnless(hasattr(p, 'foo'))
+            self.assertEqual(p.foo, 2)
+            self.assertTrue(hasattr(p, 'foo'))
 
     def test_settings_match(self):
         """ No match in properties but match in settings """
         with mock.patch("bluebottle.clients.settings", foo=1):
             p = TenantProperties()
 
-            self.failUnless(p.foo == 1)
-            self.failUnless(hasattr(p, 'foo'))
+            self.assertEqual(p.foo, 1)
+            self.assertTrue(hasattr(p, 'foo'))
 
     def test_nomatch(self):
         """ No match in either properties or settings """

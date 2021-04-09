@@ -11,6 +11,7 @@ from rest_framework import status
 import icalendar
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.models import SlotParticipant
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
@@ -22,6 +23,7 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 
 
@@ -313,9 +315,9 @@ class TimeBasedDetailAPIViewTestCase():
             {'name': 'delete', 'target': 'deleted', 'available': True}
             in data['meta']['transitions']
         )
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
+        self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_matching_theme(self):
         user = BlueBottleUserFactory.create()
@@ -326,9 +328,22 @@ class TimeBasedDetailAPIViewTestCase():
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
         self.assertEqual(data['meta']['matching-properties']['theme'], True)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
+        self.assertEqual(data['meta']['matching-properties']['location'], None)
+
+    def test_mismatching_theme(self):
+        user = BlueBottleUserFactory.create()
+        user.favourite_themes.add(ThemeFactory.create())
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_matching_skill(self):
         user = BlueBottleUserFactory.create()
@@ -340,8 +355,21 @@ class TimeBasedDetailAPIViewTestCase():
         data = response.json()['data']
 
         self.assertEqual(data['meta']['matching-properties']['skill'], True)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
+        self.assertEqual(data['meta']['matching-properties']['location'], None)
+
+    def test_mismatching_skill(self):
+        user = BlueBottleUserFactory.create()
+        user.skills.add(SkillFactory)
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], False)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
+        self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_get_owner_export_disabled(self):
         initiative_settings = InitiativePlatformSettings.load()
@@ -549,8 +577,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_location(self):
@@ -571,8 +599,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_place_too_far(self):
@@ -591,8 +619,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_location_too_far(self):
@@ -611,8 +639,8 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
 

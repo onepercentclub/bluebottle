@@ -23,7 +23,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 
     def to_representation(self, obj):
         user = self.context['request'].user
-        matching = {'skill': False, 'theme': False, 'location': False}
+        matching = {'skill': None, 'theme': None, 'location': None}
 
         if user.is_authenticated:
             if 'skills' not in self.context:
@@ -35,40 +35,50 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
             if 'location' not in self.context:
                 self.context['location'] = user.location or user.place
 
-            try:
-                if obj.expertise in self.context['skills']:
-                    matching['skill'] = True
-            except AttributeError:
-                pass
-
-            try:
-                if obj.initiative.theme in self.context['themes']:
-                    matching['theme'] = True
-            except AttributeError:
-                pass
-
-            positions = []
-            try:
-                if obj.location:
-                    positions = [obj.location.position.tuple]
-            except AttributeError:
+            if self.context['skills']:
+                matching['skill'] = False
                 try:
-                    positions = [
-                        slot.location.position.tuple for slot in obj.slots.all() if slot.location
-                    ]
+                    if obj.expertise in self.context['skills']:
+                        matching['skill'] = True
                 except AttributeError:
                     pass
 
-            if self.context['location'] and positions:
-                dist = min(
-                    distance(
-                        lonlat(*pos),
-                        lonlat(*self.context['location'].position.tuple)
-                    ) for pos in positions
-                )
+            if self.context['themes']:
+                matching['theme'] = False
+                try:
+                    if obj.initiative.theme in self.context['themes']:
+                        matching['theme'] = True
+                except AttributeError:
+                    pass
 
-                if dist.km < 20:
+            if self.context['location']:
+                matching['location'] = False
+
+                if obj.is_online:
                     matching['location'] = True
+                else:
+                    positions = []
+                    try:
+                        if obj.location:
+                            positions = [obj.location.position.tuple]
+                    except AttributeError:
+                        try:
+                            positions = [
+                                slot.location.position.tuple for slot in obj.slots.all() if slot.location
+                            ]
+                        except AttributeError:
+                            pass
+
+                        if positions:
+                            dist = min(
+                                distance(
+                                    lonlat(*pos),
+                                    lonlat(*self.context['location'].position.tuple)
+                                ) for pos in positions
+                            )
+
+                            if dist.km < 20:
+                                matching['location'] = True
 
         return matching
 

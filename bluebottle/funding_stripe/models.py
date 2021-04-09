@@ -11,7 +11,7 @@ from operator import attrgetter
 from django.utils.functional import cached_property
 from djmoney.money import Money
 
-from django_extensions.db.fields.json import JSONField
+from django.contrib.postgres.fields import JSONField
 
 from bluebottle.funding.exception import PaymentException
 from django.conf import settings

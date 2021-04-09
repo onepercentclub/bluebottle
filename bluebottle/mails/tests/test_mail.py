@@ -22,10 +22,11 @@ class TestMailLogo(BluebottleTestCase):
 
     def test_complete(self):
         # Upload an email logo
-        image_file = open("./bluebottle/mails/tests/images/logo-email.gif", "rb")
-        mail_settings = MailPlatformSettings.load()
-        mail_settings.email_logo.save("email-logo.gif", File(image_file), save=True)
-        mail_settings.save()
+        with open("./bluebottle/mails/tests/images/logo-email.gif", "rb") as image_file:
+            mail_settings = MailPlatformSettings.load()
+            mail_settings.email_logo.save("email-logo.gif", File(image_file), save=True)
+            mail_settings.save()
+
         BlueBottleUserFactory.create()
         email = mail.outbox[0]
         self.assertTrue('<img alt="logo"' in email.alternatives[0][0])

@@ -24,10 +24,13 @@ class SlideTestCase(BluebottleTestCase):
             author=self.user,
             title='Our platform',
             language='en')
-        self.slide2.video.save(
-            'sparks.mp4',
-            File(open('bluebottle/slides/tests/files/sparks.mp4', 'rb'))
-        )
+
+        with open('bluebottle/slides/tests/files/sparks.mp4', 'rb') as video:
+            self.slide2.video.save(
+                'sparks.mp4',
+                File(video)
+            )
+
         self.slide3 = SlideFactory.create(
             author=self.user,
             title='Things to do',

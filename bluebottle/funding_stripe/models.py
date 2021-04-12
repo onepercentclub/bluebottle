@@ -510,9 +510,7 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id = self._account.id
 
         if self.account_id:
-            for field in self.account.requirements.eventually_due:
-                if field not in self.eventually_due:
-                    self.eventually_due.append(field)
+            self.eventually_due = self.account.requirements.eventually_due
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 

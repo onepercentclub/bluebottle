@@ -29,7 +29,7 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         current_user_response = self.client.get(
             reverse('user-current'), token='JWT {}'.format(response.json()['token'])
         )
@@ -76,7 +76,7 @@ class LoginTestCase(BluebottleTestCase):
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_login_inactive(self):
         self.user.is_active = False

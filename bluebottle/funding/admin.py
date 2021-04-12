@@ -247,7 +247,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         'amount_value', 'payout_amount_value',
         'payment_link', 'sync_payment_link'
     ]
-    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link',
+    list_display = ['created', 'payment_link', 'activity_link', 'user_link',
                     'state_name', 'amount', 'payout_amount']
     list_filter = [
         DonorAdminStatusFilter,

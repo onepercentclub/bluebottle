@@ -148,7 +148,9 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
 
 class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
-    queryset = DateParticipant.objects.prefetch_related('user')
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'slot_participants', 'slot_participants__slot'
+    )
     serializer_class = DateParticipantSerializer
 
 

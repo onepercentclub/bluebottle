@@ -290,11 +290,6 @@ class MemberAdmin(UserAdmin):
             if SegmentType.objects.filter(is_active=True).count():
                 fieldsets[1][1]['fields'].append('segments')
 
-            if 'Pledge' not in (
-                item['name'] for item in properties.PAYMENT_METHODS
-            ):
-                fieldsets[0][1]['fields'].remove('can_pledge')
-
             if CustomMemberFieldSettings.objects.count():
                 extra = (
                     _('Extra fields'), {

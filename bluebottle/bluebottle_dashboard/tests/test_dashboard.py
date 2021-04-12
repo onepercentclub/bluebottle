@@ -1,7 +1,7 @@
 # coding=utf-8
 from django.test.client import RequestFactory
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory

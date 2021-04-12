@@ -1,5 +1,5 @@
 from django.core.files import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from fluent_contents.models import Placeholder
 
 from rest_framework import status

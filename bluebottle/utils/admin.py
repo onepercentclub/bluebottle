@@ -11,7 +11,7 @@ from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
-from django_singleton_admin.admin import SingletonAdmin
+from django_singleton_admin.admin import DjangoSingletonModelAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
@@ -148,7 +148,7 @@ class TotalAmountAdminChangeList(ChangeList):
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 
-class BasePlatformSettingsAdmin(SingletonAdmin):
+class BasePlatformSettingsAdmin(DjangoSingletonModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 

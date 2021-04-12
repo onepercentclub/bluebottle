@@ -5,7 +5,7 @@ import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
 from rest_framework import status

@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 from django.utils.timezone import now
 from fluent_contents.models import Placeholder

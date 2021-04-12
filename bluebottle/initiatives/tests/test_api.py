@@ -4,7 +4,7 @@ import json
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone, now

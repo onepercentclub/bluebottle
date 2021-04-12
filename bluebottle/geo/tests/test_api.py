@@ -2,7 +2,7 @@ import json
 from builtins import range
 
 from django.contrib.gis.geos import Point
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory

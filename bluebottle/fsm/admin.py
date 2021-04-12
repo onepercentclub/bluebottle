@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect

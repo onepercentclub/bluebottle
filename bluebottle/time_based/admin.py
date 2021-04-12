@@ -51,7 +51,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return self.can_edit(obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         activity = self.get_parent_object_from_request(request)
         return self.can_edit(activity)
 
@@ -296,7 +296,7 @@ class SlotParticipantInline(admin.TabularInline):
     readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):

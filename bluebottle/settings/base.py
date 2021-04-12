@@ -275,7 +275,6 @@ SHARED_APPS = (
 
     # 3rd party apps
     'lockdown',
-    'raven.contrib.django',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',
     'geoposition',

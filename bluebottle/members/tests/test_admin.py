@@ -19,7 +19,7 @@ from django.test.utils import override_settings
 from django.conf import settings
 from django.utils import timezone
 
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField

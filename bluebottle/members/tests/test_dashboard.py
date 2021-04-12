@@ -1,5 +1,5 @@
 # coding=utf-8
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase

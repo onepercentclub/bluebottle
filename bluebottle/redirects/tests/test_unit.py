@@ -8,7 +8,7 @@ from bluebottle.redirects.models import Redirect
 
 @override_settings(
     APPEND_SLASH=False,
-    MIDDLEWARE_CLASSES=list(settings.MIDDLEWARE_CLASSES) + [
+    MIDDLEWARE=list(settings.MIDDLEWARE) + [
         'bluebottle.redirects.middleware.RedirectFallbackMiddleware'
     ],
     SITE_ID=1,

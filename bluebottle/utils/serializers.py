@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 from urllib.error import HTTPError
 from django.conf import settings
 from django.db import models
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.core.validators import BaseValidator
 from django.http.request import validate_host
 from django.utils.translation import ugettext_lazy as _

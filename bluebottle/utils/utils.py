@@ -19,7 +19,7 @@ from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal

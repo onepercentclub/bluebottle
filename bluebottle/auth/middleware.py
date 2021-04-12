@@ -7,9 +7,9 @@ from django.conf import settings
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import ImproperlyConfigured, RequestDataTooBig
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http.request import RawPostDataException
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from lockdown import settings as lockdown_settings
@@ -272,7 +272,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         if not hasattr(form, 'show_form') or form.show_form():
             page_data['form'] = form
 
-        response = render_to_response('lockdown/form.html', page_data)
+        response = render(request, 'lockdown/form.html', page_data)
         response.status_code = 401
         return response
 

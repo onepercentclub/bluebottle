@@ -17,7 +17,7 @@ from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
-from rest_framework_jwt.views import ObtainJSONWebToken
+from rest_framework_jwt.views import ObtainJSONWebTokenView
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -51,7 +51,7 @@ from bluebottle.utils.utils import get_client_ip
 USER_MODEL = get_user_model()
 
 
-class AxesObtainJSONWebToken(ObtainJSONWebToken):
+class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
     """
     API View that receives a POST with a user's username and password.
 

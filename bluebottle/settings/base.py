@@ -190,6 +190,7 @@ JWT_AUTH = {
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_ALLOW_TOKEN_RENEWAL': True,
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
     'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
@@ -274,7 +275,6 @@ SHARED_APPS = (
 
     # 3rd party apps
     'lockdown',
-    'django_extensions',
     'raven.contrib.django',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',

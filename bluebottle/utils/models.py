@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
 
@@ -128,8 +127,8 @@ class PublishableModel(models.Model):
         blank=True, null=True,
         on_delete=models.CASCADE
     )
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+    creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
+    modification_date = models.DateTimeField(_('last modification'), auto_now=True)
 
     objects = PublishedManager()
 

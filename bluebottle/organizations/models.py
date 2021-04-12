@@ -26,8 +26,8 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     slug = models.SlugField(_('slug'), max_length=100)
     description = models.TextField(_('description'), default='', blank=True)
 
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE

@@ -16,7 +16,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from future.utils import python_2_unicode_compatible
@@ -129,7 +128,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     disable_token = models.CharField(blank=True, max_length=32, null=True)
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    updated = ModificationDateTimeField()
+
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
     last_seen = models.DateTimeField(_('Last Seen'), blank=True, null=True)
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 

@@ -5,8 +5,6 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel
@@ -221,8 +219,10 @@ class Statistic(models.Model):
     )
     active = models.BooleanField(
         help_text=_('Should this be shown or hidden.'))
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+
+    creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
+    modification_date = models.DateTimeField(_('last modification'), auto_now=True)
+
     language = models.CharField(
         _('language'),
         max_length=5,

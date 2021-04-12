@@ -5,8 +5,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
@@ -54,8 +52,9 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     )
 
     # The metadata for the wall post.
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)
@@ -300,8 +299,8 @@ class Reaction(AnonymizationMixin, models.Model):
     wallpost = models.ForeignKey(Wallpost, related_name='reactions', on_delete=models.CASCADE)
 
     # Metadata for the reaction.
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)

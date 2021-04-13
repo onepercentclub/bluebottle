@@ -1,3 +1,6 @@
+from django.urls import reverse
+
+from bluebottle.looker.models import LookerEmbed
 from django import template
 from django.apps import apps
 from django.conf import settings
@@ -48,5 +51,15 @@ def get_menu_items(context):
                 if not prop:
                     del groups[i]['items'][j]
             j += 1
+        if group['app_label'] == 'looker':
+            group['items'] = [{
+                'url': reverse('jet-dashboard:looker-embed', args=(look.id,)),
+                'url_blank': False,
+                'name': 'lookerembed',
+                'object_name': 'LookerEmbed',
+                'label': look.title,
+                'has_perms': True,
+                'current': False} for look in LookerEmbed.objects.all()
+            ]
         i += 1
     return groups

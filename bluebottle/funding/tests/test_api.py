@@ -1673,7 +1673,7 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
 
     def assertPostNotAllowed(self, url, user=None):
         data = self.client.get(url, user=user)
-        response = self.client.patch(url, data.data, user=user)
+        response = self.client.patch(url, data.json(), user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_funding_detail(self):

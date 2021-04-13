@@ -223,7 +223,7 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
         ),
     )
     pagination_class = BluebottlePagination
-    filter_fields = ('wallpost',)
+    filterset_fields = ('wallpost',)
 
     owner_filter_field = 'author'
 

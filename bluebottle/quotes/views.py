@@ -12,7 +12,7 @@ class QuoteList(generics.ListAPIView):
     queryset = Quote.objects.all()
     serializer_class = QuoteSerializer
     pagination_class = BluebottlePagination
-    filter_fields = ('language',)
+    filterset_fields = ('language',)
 
     def get_queryset(self):
         qs = super(QuoteList, self).get_queryset()

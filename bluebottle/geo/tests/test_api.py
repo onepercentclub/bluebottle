@@ -52,6 +52,7 @@ class CountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('country-list'))
 
         country = response.data[0]
+
         self.assertEqual(country['id'], self.country_1.id)
         self.assertEqual(country['name'], self.country_1.name)
         self.assertEqual(country['code'], 'GE')

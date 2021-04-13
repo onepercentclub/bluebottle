@@ -26,7 +26,7 @@ def get_feature_flag(flag_path):
 
 
 @register.simple_tag(takes_context=True)
-def dashboard_get_menu(context):
+def jet_get_menu(context):
     """
     Iterate over menu items and remove some based on feature flags
     """

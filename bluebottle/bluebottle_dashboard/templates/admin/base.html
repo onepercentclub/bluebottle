@@ -1,0 +1,63 @@
+{% extends "jet:admin/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load i18n static jet_tags  %}
+{% load i18n static dashboard_tags %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="{% static "/admin/css/dashboard.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "jet/css/icons/style.css" as url %}{{ url|jet_append_version }}" />
+    <link rel="stylesheet" type="text/css" href="{% static "jet/css/icons/extra-style.css" as url %}{{ url|jet_append_version }}" />
+{% endblock %}
+{% block extrahead %}{% endblock %}
+
+{% block welcome-msg %}
+    {% trans 'Welcome,' %}
+    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+{% endblock %}
+
+{% block pretitle %}
+    {% if user.is_authenticated %}
+        <div class="site-title">
+            {{ tenant.name }}
+        </div>
+    {% else %}
+        <div class="site-title site-title-login">
+            <img class="site-title-logo" alt="GoodUp Logo" src="{% static "/admin/images/logo_goodup.png" %}" />
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block nav-global %}
+    {% if user.is_active and user.is_staff %}
+        <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
+            <span class="sidebar-link-label">
+                <span class="sidebar-link-icon bb-icon-user"></span>
+                {% trans 'Users' %}
+            </span>
+        </a>
+        <a href="{% url 'admin:initiatives_initiative_changelist' %}" class="sidebar-link icon">
+            <span class="sidebar-link-label">
+                <span class="sidebar-link-icon bb-icon-project"></span>
+                {% trans 'Initiatives' %}
+            </span>
+        </a>
+        <a href="{% url 'admin:activities_activity_changelist' %}" class="sidebar-link icon">
+            <span class="sidebar-link-label">
+                <span class="sidebar-link-icon bb-icon-task"></span>
+                {% trans 'Activities' %}
+            </span>
+        </a>
+        <a href="https://support.goodup.com" target="_blank" class="sidebar-link icon">
+            <span class="sidebar-link-label">
+                <span class="sidebar-link-icon bb-icon-customer-support"></span>
+                {% trans 'Support Centre' %}
+            </span>
+        </a>
+    {% endif %}
+{% endblock %}

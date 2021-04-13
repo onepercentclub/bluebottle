@@ -96,7 +96,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['title'] = 'Activity with multiple slots'
         form['description'] = 'Lorem etc'
         form['owner'] = self.owner.id
-        form['review'] = 3
+        form['review'] = 'true'
         page = form.submit().follow()
         self.assertEqual(page.status, '200 OK', 'Activity is added, now we can add a slot.')
 

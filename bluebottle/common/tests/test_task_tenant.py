@@ -18,6 +18,7 @@ class TestCeleryMailTenant(unittest.TestCase):
 
         msg = interceptor()
         tenant = mock.Mock()
+        tenant.client_name = 'mock-tenant'
 
         _send_celery_mail(msg, tenant, send=True)
 
@@ -28,6 +29,7 @@ class TestCeleryMailTenant(unittest.TestCase):
             again """
         msg = mock.Mock()
         tenant = mock.Mock()
+        tenant.client_name = 'mock-tenant'
 
         _send_celery_mail(msg, tenant, send=False)
 

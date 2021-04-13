@@ -21,7 +21,7 @@ class Command(BaseCommand):
             'id', '_state', 'parent_type_id', 'parent_id',
             'polymorphic_ctype_id', 'contentitem_ptr_id',
             'placeholder_id', 'block_id', 'order_field',
-            'order_field_name', '_block_cache']
+            'order_field_name', '_block_cache', '_django_version']
         for field in skip_fields:
             if field in fields:
                 del fields[field]

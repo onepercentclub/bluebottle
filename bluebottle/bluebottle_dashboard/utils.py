@@ -1,7 +1,7 @@
 from django import template
 from django.apps import apps
 from django.conf import settings
-from jet.utils import get_menu_items
+from jet.utils import get_menu_items as jet_get_menu_items
 
 register = template.Library()
 
@@ -25,12 +25,11 @@ def get_feature_flag(flag_path):
     return getattr(app_settings, prop, False)
 
 
-@register.simple_tag(takes_context=True)
-def jet_get_menu(context):
+def get_menu_items(context):
     """
     Iterate over menu items and remove some based on feature flags
     """
-    groups = get_menu_items(context)
+    groups = jet_get_menu_items(context)
     i = 0
     for group in groups:
         j = 0

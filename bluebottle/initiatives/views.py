@@ -53,7 +53,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         InitiativeSearchFilter,
     )
 
-    filterset_fields = {
+    filter_fields = {
         'owner__id': ('exact', 'in',),
     }
 

@@ -13,7 +13,7 @@ class NewsItemPreviewList(generics.ListAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemPreviewSerializer
     pagination_class = NewsItemPagination
-    filterset_fields = ('language',)
+    filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemPreviewList, self).get_queryset()
@@ -26,7 +26,7 @@ class NewsItemList(generics.ListAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
     pagination_class = NewsItemPagination
-    filterset_fields = ('language',)
+    filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemList, self).get_queryset()

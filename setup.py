@@ -125,7 +125,7 @@ tests_requires = [
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',
-    'django-webtest==1.9.2',
+    'django-webtest==1.9.7',
     'factory-boy==2.12.0',
     'httmock==1.2.6',
     'mock==4.0.2' if sys.version_info.major == 3 else 'mock==3.0.5',

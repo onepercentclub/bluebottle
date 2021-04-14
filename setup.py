@@ -40,7 +40,7 @@ install_requires = [
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
     'django-hashers-passlib==0.3',
-    'django-ipware==2.1.0',
+    'django-ipware==3.0.2',
     'django-jet2==1.0.12',
     'django-localflavor==3.0.1',
     'django-lockdown==1.4.2',

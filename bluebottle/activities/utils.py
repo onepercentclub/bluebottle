@@ -14,11 +14,21 @@ from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErr
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
+class AnonymizedResourceRelatedField(ResourceRelatedField):
+    def to_representation(self, value):
+        result = super().to_representation(value)
+
+        if self.get_parent_serializer().instance.anonymized:
+            result['id'] = 'anonymous'
+
+        return result
+
+
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     is_follower = serializers.SerializerMethodField()

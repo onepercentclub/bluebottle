@@ -1,4 +1,5 @@
 from django_elasticsearch_dsl import Document, fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
@@ -20,7 +21,8 @@ initiative.settings(
 )
 
 
-@initiative.doc_type
+@registry.register_document
+@initiative.document
 class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)

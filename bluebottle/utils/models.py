@@ -13,7 +13,6 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa

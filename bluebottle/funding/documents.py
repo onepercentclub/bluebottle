@@ -1,4 +1,5 @@
-from builtins import object
+from django_elasticsearch_dsl.registries import registry
+
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
 from bluebottle.initiatives.models import Initiative
@@ -12,9 +13,10 @@ SCORE_MAP = {
 }
 
 
+@registry.register_document
 @activity.doc_type
 class FundingDocument(ActivityDocument):
-    class Meta(object):
+    class Django:
         model = Funding
         related_models = (Initiative, Member, Donor)
 

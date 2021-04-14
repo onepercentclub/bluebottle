@@ -59,7 +59,7 @@ install_requires = [
     'django-recaptcha==2.0.6',
     'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',
-    'django-singleton-admin-2==1.1.0',
+    'django-solo==1.1.5',
     'django-subquery==1.0.4',
     'django-summernote==0.8.11.6',
     'django-taggit==0.22.1',

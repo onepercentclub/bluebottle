@@ -1,6 +1,19 @@
 @import "elegant-tooltip.css";
 @import "icon-style.css";
 
+.sidebar-title:first-child {
+    display: none
+}
+
+.apps-hide,
+.sidebar-center-link:hover {
+    padding: 0
+}
+.apps-hide-label {
+    padding: 0 8px;
+}
+
+
 .video-container {
     position: relative;
 }

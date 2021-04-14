@@ -7,6 +7,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from adminsortable.fields import SortableForeignKey
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
+from solo.models import SingletonModel
 
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
@@ -54,7 +55,7 @@ class ResultPage(TranslatableModel):
         )
 
 
-class HomePage(TranslatableModel):
+class HomePage(SingletonModel, TranslatableModel):
     content = PlaceholderField('content')
     translations = TranslatedFields()
 

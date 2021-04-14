@@ -285,7 +285,7 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'django_singleton_admin',
+    'solo',
     'django_filters',
     'multiselectfield',
 
@@ -421,7 +421,7 @@ TENANT_APPS = (
     'bluebottle.cms',
 
     'djmoney',
-    'django_singleton_admin',
+    'solo',
     'nested_inline',
     'permissions_widget',
     'django.forms',

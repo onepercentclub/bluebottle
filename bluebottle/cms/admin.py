@@ -10,6 +10,7 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from nested_inline.admin import NestedStackedInline
+from solo.admin import SingletonModelAdmin
 
 from bluebottle.statistics.statistics import Statistics
 
@@ -145,7 +146,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
 
 
 @admin.register(HomePage)
-class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
+class HomePageAdmin(SingletonModelAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

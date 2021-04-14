@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 
 from urllib.error import HTTPError
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.db import models
 from django.urls import resolve, reverse
 from django.core.validators import BaseValidator
@@ -15,6 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.utils import model_meta
+
+from rest_framework_json_api.relations import ResourceRelatedField
 
 from captcha import client
 
@@ -249,3 +252,18 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):
         return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)
+
+
+class AnonymizedResourceRelatedField(ResourceRelatedField):
+    def get_attribute(self, parent):
+        if parent.anonymized:
+            return AnonymousUser
+
+        return super().get_attribute(parent)
+
+    def to_representation(self, value):
+        result = super().to_representation(value)
+        if not value.pk:
+            result['id'] = 'anonymous'
+
+        return result

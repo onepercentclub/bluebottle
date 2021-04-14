@@ -47,7 +47,7 @@ from bluebottle.utils.fields import (
     FSMField
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin,
+    ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
 )
 
 
@@ -154,10 +154,11 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    reviewer = ResourceRelatedField(read_only=True)
-    activity_manager = ResourceRelatedField(read_only=True)
+    reviewer = AnonymizedResourceRelatedField(read_only=True)
+    promoter = AnonymizedResourceRelatedField(read_only=True)
+    activity_manager = AnonymizedResourceRelatedField(read_only=True)
     activities = SerializerMethodResourceRelatedField(
         model=Activity,
         many=True,

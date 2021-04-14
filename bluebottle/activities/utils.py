@@ -11,17 +11,7 @@ from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
-from bluebottle.utils.serializers import ResourcePermissionField
-
-
-class AnonymizedResourceRelatedField(ResourceRelatedField):
-    def to_representation(self, value):
-        result = super().to_representation(value)
-
-        if self.get_parent_serializer().instance.anonymized:
-            result['id'] = 'anonymous'
-
-        return result
+from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
 # This can't be in serializers because of circular imports
@@ -207,7 +197,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
@@ -230,7 +220,7 @@ class BaseContributorListSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')

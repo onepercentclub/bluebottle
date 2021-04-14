@@ -38,8 +38,8 @@ class LinkInline(SortableStackedInline):
     fields = (
         ('title', 'highlight'),
         'link_permissions',
-        ('component', 'component_id'),
-        'external_link',
+        ('component', 'component_id',),
+        'external_link'
     )
 
 
@@ -52,16 +52,16 @@ class LinkGroupAdmin(NonSortableParentAdmin):
         return {}
 
     def response_add(self, request, obj, post_url_continue=None):
-        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id,)))
 
     def response_change(self, request, obj):
-        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id,)))
 
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
     readonly_fields = ('title', 'edit_url',)
-    fields = ('name', 'title', 'edit_url', )
+    fields = ('name', 'title', 'edit_url',)
     extra = 0
 
     def edit_url(self, obj):
@@ -75,6 +75,7 @@ class LinkGroupInline(SortableTabularInline):
                 str(reverse(url, args=(obj.id,))), _('Edit this group')
             )
         return _('First save to edit this group')
+
     edit_url.short_name = 'Edit group'
 
 
@@ -151,10 +152,9 @@ class HomePageAdmin(SingletonModelAdmin, PlaceholderFieldAdmin, TranslatableAdmi
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
 
-    fields = ('content', )
+    fields = ('content',)
 
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
-
     exclude = ('logo', 'favicon')

@@ -13,6 +13,10 @@
     padding: 0 8px;
 }
 
+.form-row {
+    clear: both;
+}
+
 #toolbar form #searchbar {
     width: 280px;
 }

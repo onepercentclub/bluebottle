@@ -1,21 +1,21 @@
 @font-face {
   font-family: 'jet-icons';
-  src:  url('fonts/jet-icons.eot?415d6s');
-  src:  url('fonts/jet-icons.eot?415d6s#iefix') format('embedded-opentype'),
-    url('fonts/jet-icons.ttf?415d6s') format('truetype'),
-    url('fonts/jet-icons.woff?415d6s') format('woff'),
-    url('fonts/jet-icons.svg?415d6s#jet-icons') format('svg');
+  src:  url('../../jet/css/icons/fonts/jet-icons.eot?415d6s');
+  src:  url('../../jet/css/icons/fonts/jet-icons.eot?415d6s#iefix') format('embedded-opentype'),
+    url('../../jet/css/icons/fonts/jet-icons.ttf?415d6s') format('truetype'),
+    url('../../jet/css/icons/fonts/jet-icons.woff?415d6s') format('woff'),
+    url('../../jet/css/icons/fonts/jet-icons.svg?415d6s#jet-icons') format('svg');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'dashboard';
-  src:  url('fonts/dashboard.eot?1zbyj0');
-  src:  url('fonts/dashboard.eot?1zbyj0#iefix') format('embedded-opentype'),
-    url('fonts/dashboard.ttf?1zbyj0') format('truetype'),
-    url('fonts/dashboard.woff?1zbyj0') format('woff'),
-    url('fonts/dashboard.svg?1zbyj0#icomoon') format('svg');
+  src:  url('../../jet/css/icons/fonts/dashboard.eot?1zbyj0');
+  src:  url('../../jet/css/icons/fonts/dashboard.eot?1zbyj0#iefix') format('embedded-opentype'),
+    url('../../jet/css/icons/fonts/dashboard.ttf?1zbyj0') format('truetype'),
+    url('../../jet/css/icons/fonts/dashboard.woff?1zbyj0') format('woff'),
+    url('../../jet/css/icons/fonts/dashboard.svg?1zbyj0#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
 }

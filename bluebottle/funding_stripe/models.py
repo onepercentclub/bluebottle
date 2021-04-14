@@ -305,7 +305,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-    eventually_due = JSONField(null=True, default=[])
+    eventually_due = JSONField(null=True, default=list)
 
     @property
     def country_spec(self):

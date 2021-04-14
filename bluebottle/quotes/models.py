@@ -24,7 +24,7 @@ class Quote(PublishableModel):
         draft = ChoiceItem('draft', label=_("Draft"))
 
     # Contents
-    language = models.CharField(_("language"), max_length=5,
+    language = models.CharField(_("language"), max_length=7,
                                 choices=lazy(get_languages, tuple)())
     quote = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL,

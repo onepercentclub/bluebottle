@@ -3,7 +3,7 @@ from django.db import connection
 import elasticsearch_dsl.document
 
 
-class TenantAwareDocTypeOptions(elasticsearch_dsl.document.DocTypeOptions):
+class TenantAwareDocumentOptions(elasticsearch_dsl.document.DocumentOptions):
     @property
     def index(self):
         if self._index:
@@ -19,4 +19,4 @@ class TenantAwareDocTypeOptions(elasticsearch_dsl.document.DocTypeOptions):
         self._index = value
 
 
-elasticsearch_dsl.document.DocTypeOptions = TenantAwareDocTypeOptions
+elasticsearch_dsl.document.DocumentOptions = TenantAwareDocumentOptions

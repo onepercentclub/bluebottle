@@ -225,7 +225,7 @@ class Statistic(models.Model):
 
     language = models.CharField(
         _('language'),
-        max_length=5,
+        max_length=7,
         blank=True,
         null=True,
         choices=lazy(get_languages, tuple)())

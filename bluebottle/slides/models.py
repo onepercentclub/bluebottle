@@ -31,7 +31,7 @@ class Slide(PublishableModel):
 
     slug = models.SlugField(_("Slug"))
     language = models.CharField(
-        _("language"), max_length=5,
+        _("language"), max_length=7,
         choices=lazy(get_languages, tuple)())
     tab_text = models.CharField(
         _("Tab text"), max_length=100,

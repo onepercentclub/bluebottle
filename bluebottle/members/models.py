@@ -136,7 +136,6 @@ class Member(BlueBottleBaseUser):
         verbose_name=_('Segment'),
         related_name='users',
         blank=True,
-        null=True
     )
 
     def __init__(self, *args, **kwargs):

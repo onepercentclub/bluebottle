@@ -215,7 +215,7 @@ class Page(PublishableModel):
     # Contents
     language = models.CharField(
         _('language'),
-        max_length=5,
+        max_length=7,
         choices=lazy(get_languages, tuple)())
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',

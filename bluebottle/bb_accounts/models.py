@@ -173,7 +173,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                         choices=lazy(get_language_choices, tuple)(),
                                         default=lazy(get_default_language, str)(),
                                         help_text=_('Language used for website and emails.'),
-                                        max_length=5)
+                                        max_length=7)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))

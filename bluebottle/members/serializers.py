@@ -1,6 +1,5 @@
 from builtins import object
 
-from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
@@ -41,7 +40,7 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
         if all(credentials.values()):
             request = self.context['request']
 
-            if is_already_locked(request):
+            if getattr(request, 'axes_locked_out', False):
                 raise exceptions.Throttled(
                     600, 'Too many failed password attempts.'
                 )

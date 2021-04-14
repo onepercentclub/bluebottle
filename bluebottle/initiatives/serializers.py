@@ -8,10 +8,12 @@ from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.relations import (
+    SerializerMethodResourceRelatedField
+)
 
-from bluebottle.activities.filters import ActivityFilter
-from bluebottle.activities.models import EffortContribution
-from bluebottle.activities.serializers import ActivityListSerializer
+from bluebottle.activities.models import EffortContribution, Activity
+from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
@@ -20,16 +22,23 @@ from bluebottle.clients import properties
 from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
+
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+
 from bluebottle.funding.models import MoneyContribution
+from bluebottle.funding.states import FundingStateMachine
+
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
+
 from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.states import TimeBasedStateMachine
+
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import (
     SafeField,
@@ -39,7 +48,7 @@ from bluebottle.utils.fields import (
 )
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin,
-    FilteredPolymorphicResourceRelatedField)
+)
 
 
 class ThemeSerializer(ModelSerializer):
@@ -148,9 +157,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
     activity_manager = ResourceRelatedField(read_only=True)
-    activities = FilteredPolymorphicResourceRelatedField(
-        filter_backend=ActivityFilter,
-        polymorphic_serializer=ActivityListSerializer,
+    activities = SerializerMethodResourceRelatedField(
+        model=Activity,
         many=True,
         read_only=True
     )
@@ -165,6 +173,32 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
 
     is_open = serializers.ReadOnlyField()
+
+    def get_activities(self, instance):
+        user = self.context['request'].user
+        activities = [
+            activity for activity in instance.activities.all() if
+            activity.status != ActivityStateMachine.deleted.value
+        ]
+
+        public_statuses = [
+            ActivityStateMachine.succeeded.value,
+            ActivityStateMachine.open.value,
+            TimeBasedStateMachine.full.value,
+            FundingStateMachine.partially_funded.value,
+        ]
+
+        if user not in (
+            instance.owner, instance.activity_manager
+        ):
+            return [
+                activity for activity in activities if (
+                    activity.status in public_statuses or
+                    user == activity.owner
+                )
+            ]
+        else:
+            return activities
 
     def get_stats(self, obj):
         default_currency = properties.DEFAULT_CURRENCY

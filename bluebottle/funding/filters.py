@@ -1,26 +1,10 @@
 from django.contrib.admin import SimpleListFilter
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
-from rest_framework_json_api.django_filters import DjangoFilterBackend
 
-from bluebottle.funding.models import PaymentProvider, Donor
+from bluebottle.funding.models import PaymentProvider
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_pledge.models import PledgePayment
-
-
-class DonorListFilter(DjangoFilterBackend):
-    """
-    Filter that shows only successful contributors
-    """
-    def filter_queryset(self, request, queryset, view):
-        queryset = queryset.prefetch_related(
-            'activity', 'user'
-        ).instance_of(Donor).filter(status__in=[
-            DonorStateMachine.succeeded.value,
-            DonorStateMachine.activity_refunded.value
-        ])
-
-        return super(DonorListFilter, self).filter_queryset(request, queryset, view)
 
 
 class DonorAdminStatusFilter(SimpleListFilter):

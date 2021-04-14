@@ -162,7 +162,8 @@ MIDDLEWARE = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare'
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'axes.middleware.AxesMiddleware',
 )
 
 REST_FRAMEWORK = {
@@ -223,7 +224,7 @@ PASSWORD_HASHERS = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesModelBackend',
+    'axes.backends.AxesBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -276,7 +277,6 @@ SHARED_APPS = (
     # 3rd party apps
     'lockdown',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'loginas',
     'geoposition',
     'tenant_extras',
     'localflavor',
@@ -294,8 +294,6 @@ SHARED_APPS = (
 
 TENANT_APPS = (
     'polymorphic',
-    'modeltranslation',
-
     'social_django',
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding

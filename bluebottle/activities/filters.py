@@ -1,14 +1,9 @@
 import re
 
 import dateutil
-from django.db.models import Q as DQ
-from django_filters.rest_framework import DjangoFilterBackend
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
 
 from bluebottle.activities.documents import activity
-from bluebottle.activities.states import ActivityStateMachine
-from bluebottle.time_based.states import TimeBasedStateMachine
-from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
 
 
@@ -242,28 +237,3 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     'rejected',
                 ])
             ]
-
-
-class ActivityFilter(DjangoFilterBackend):
-    """
-    Filter that shows only successful contributors
-    """
-    public_statuses = [
-        ActivityStateMachine.succeeded.value,
-        ActivityStateMachine.open.value,
-        TimeBasedStateMachine.full.value,
-        FundingStateMachine.partially_funded.value,
-    ]
-
-    def filter_queryset(self, request, queryset, view):
-        if request.user.id:
-            queryset = queryset.filter(
-                DQ(owner=request.user) |
-                DQ(initiative__activity_manager=request.user) |
-                DQ(initiative__owner=request.user) |
-                DQ(status__in=self.public_statuses)
-            ).exclude(status=ActivityStateMachine.deleted.value)
-        else:
-            queryset = queryset.filter(status__in=self.public_statuses)
-
-        return super(ActivityFilter, self).filter_queryset(request, queryset, view)

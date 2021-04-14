@@ -1,7 +1,7 @@
 from django.conf import settings
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
-from django.utils import six, translation
+from django.utils import translation
 
 from bluebottle.redirects.models import Redirect
 
@@ -22,7 +22,7 @@ class RedirectTests(BluebottleTestCase):
     def test_model(self):
         r1 = Redirect.objects.create(
             old_path='/initial', new_path='/new_target')
-        self.assertEqual(six.text_type(r1), "/initial ---> /new_target")
+        self.assertEqual(str(r1), "/initial ---> /new_target")
 
     def test_redirect(self):
         Redirect.objects.create(

@@ -584,5 +584,4 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('user', 'key')
 
 
-admin.site.unregister(Token)
 admin.site.register(Token, TokenAdmin)

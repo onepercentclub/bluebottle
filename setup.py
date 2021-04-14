@@ -58,7 +58,7 @@ install_requires = [
     'django-subquery==1.0.4',
     'django-summernote==0.8.11.6',
     'django-taggit==1.3.0',
-    'django-tenant-schemas==1.9.0',
+    'django-tenant-schemas==1.10.0',
     'django-tinymce==2.7.0',
     'django-tools==0.48.3',
     'django-uuidfield==0.5.0',

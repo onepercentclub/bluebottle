@@ -263,8 +263,8 @@ SOCIAL_AUTH_PIPELINE = (
 AFOM_ENABLED = False
 
 SHARED_APPS = (
-    'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
+    'tenant_schemas',
 
     # Django apps
     'django.contrib.sessions',

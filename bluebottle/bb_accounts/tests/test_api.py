@@ -446,9 +446,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             str(response.data['non_field_errors'][0]['id']), str(user_1.pk)
         )
-        self.assertEqual(
-            str(response.data['email'][0]), 'member with this email address already exists.'
-        )
 
     def test_generate_username(self):
         new_user_email = 'nijntje74@hetkonijntje.nl'

@@ -3,6 +3,7 @@ from builtins import object
 import os
 from datetime import timedelta
 
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from djmoney.money import Money
 
 from bluebottle.funding.tests.factories import DonorFactory
@@ -152,8 +153,8 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        response = self.client.post(welkcome_email_url, {'confirm': True})
+        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
+        response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEqual(response.status_code, 403)
 
 
@@ -288,6 +289,14 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         ))
 
         self.assertEqual(expected_fields, set(fields))
+        self.member_admin = MemberAdmin(Member, AdminSite())
+
+    def test_can_pledge_field(self):
+        fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
+        self.assertFalse('can_pledge' in fieldsets[0][1]['fields'])
+        PledgePaymentProvider.objects.create()
+        fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
+        self.assertTrue('can_pledge' in fieldsets[0][1]['fields'])
 
     def test_email_equal_more_groups(self):
         group = Group.objects.create(name='test')

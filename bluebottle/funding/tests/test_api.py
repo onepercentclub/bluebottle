@@ -1,12 +1,11 @@
-from builtins import str
-from builtins import range
 import json
+from builtins import range
+from builtins import str
 from datetime import timedelta
+
 import mock
 import munch
-
 import stripe
-
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
@@ -14,20 +13,20 @@ from moneyed import Money
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
+from bluebottle.funding.models import Donor
 from bluebottle.funding.tests.factories import (
     FundingFactory, RewardFactory, DonorFactory,
     BudgetLineFactory
 )
-from bluebottle.funding.models import Donor
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider
-from bluebottle.funding_pledge.tests.factories import (
-    PledgeBankAccountFactory, PledgePaymentProviderFactory
+from bluebottle.funding_flutterwave.tests.factories import (
+    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 )
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import (
     LipishaBankAccountFactory, LipishaPaymentFactory, LipishaPaymentProviderFactory
 )
-from bluebottle.funding_flutterwave.tests.factories import (
-    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
+from bluebottle.funding_pledge.tests.factories import (
+    PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
@@ -58,7 +57,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
         )
 
         self.create_url = reverse('funding-budget-line-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -142,7 +141,7 @@ class BudgetLineDetailTestCase(BluebottleTestCase):
         )
         self.budget_line = BudgetLineFactory.create(activity=self.funding)
 
-        self.update_url = reverse('funding-budget-line-detail', args=(self.budget_line.pk, ))
+        self.update_url = reverse('funding-budget-line-detail', args=(self.budget_line.pk,))
 
         self.data = {
             'data': {
@@ -212,7 +211,7 @@ class RewardListTestCase(BluebottleTestCase):
         )
 
         self.create_url = reverse('funding-reward-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -301,7 +300,7 @@ class RewardDetailTestCase(BluebottleTestCase):
         )
         self.reward = RewardFactory.create(activity=self.funding)
 
-        self.update_url = reverse('funding-reward-detail', args=(self.reward.pk, ))
+        self.update_url = reverse('funding-reward-detail', args=(self.reward.pk,))
 
         self.data = {
             'data': {
@@ -388,7 +387,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
         self.data = {
             'data': {
                 'id': self.funding.pk,
@@ -493,10 +492,10 @@ class FundingDetailTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_account
             ):
                 response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -523,10 +522,10 @@ class FundingDetailTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_account
             ):
                 response = self.client.get(self.funding_url, user=BlueBottleUserFactory.create())
 
@@ -576,10 +575,10 @@ class FundingDetailTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_account
             ):
                 response = self.client.patch(
                     self.funding_url,
@@ -714,7 +713,7 @@ class DonationTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative)
 
         self.create_url = reverse('funding-donation-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -790,7 +789,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -816,7 +815,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -843,7 +842,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -877,7 +876,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -900,7 +899,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -935,7 +934,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
         patch_data = {
             'data': {
                 'type': 'contributors/donations',
@@ -987,7 +986,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
         patch_data = {
             'data': {
                 'type': 'contributors/donations',
@@ -1018,7 +1017,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -1046,7 +1045,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -1083,7 +1082,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -1169,60 +1168,61 @@ class CurrencySettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
-            response.data['platform']['currencies'],
-            [
-                {
-                    'code': 'EUR',
-                    'name': 'Euro',
-                    'maxAmount': None,
-                    'symbol': u'\u20ac',
-                    'minAmount': 5.00,
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'stripe',
-                    'providerName': 'Stripe'
-                },
-                {
-                    'code': 'USD',
-                    'name': 'US Dollar',
-                    'maxAmount': None,
-                    'symbol': '$',
-                    'minAmount': 5.00,
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'stripe',
-                    'providerName': 'Stripe'
-                },
-                {
-                    'code': 'NGN',
-                    'name': 'Nigerian Naira',
-                    'maxAmount': None,
-                    'symbol': u'\u20a6',
-                    'minAmount': 1000.00,
-                    'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave'
-                },
-                {
-                    'code': 'KES',
-                    'name': 'Kenyan Shilling',
-                    'maxAmount': None,
-                    'symbol': 'KES',
-                    'minAmount': 5.00,
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave'
-                },
-                {
-                    'code': 'USD',
-                    'name': 'US Dollar',
-                    'maxAmount': None,
-                    'symbol': '$',
-                    'minAmount': 5.00,
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave'
-                },
-
-            ]
+            response.data['platform']['currencies'], [{
+                'code': 'EUR',
+                'name': 'Euro',
+                'maxAmount': None,
+                'symbol': u'\u20ac',
+                'minAmount': 5.00,
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'provider': 'stripe',
+                'providerName': 'Stripe'
+            }, {
+                'code': 'USD',
+                'name': 'US Dollar',
+                'maxAmount': None,
+                'symbol': '$',
+                'minAmount': 5.00,
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'provider': 'stripe',
+                'providerName': 'Stripe'
+            }, {
+                'code': 'NGN',
+                'name': 'Nigerian Naira',
+                'maxAmount': None,
+                'symbol': u'\u20a6',
+                'minAmount': 1000.00,
+                'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
+                'provider': 'flutterwave',
+                'providerName': 'Flutterwave'
+            }, {
+                'code': 'KES',
+                'name': 'Kenyan Shilling',
+                'maxAmount': None,
+                'symbol': 'KES',
+                'minAmount': 5.00,
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'provider': 'flutterwave',
+                'providerName': 'Flutterwave'
+            }, {
+                'code': 'USD',
+                'name': 'US Dollar',
+                'maxAmount': None,
+                'symbol': '$',
+                'minAmount': 5.00,
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'provider': 'flutterwave',
+                'providerName': 'Flutterwave'
+            }, {
+                'code': 'XOF',
+                'name': 'West African CFA Franc',
+                'maxAmount': None,
+                'symbol': 'CFA',
+                'minAmount': 5.00,
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'provider': 'flutterwave',
+                'providerName': 'Flutterwave'
+            }]
         )
 
 
@@ -1260,10 +1260,10 @@ class PayoutAccountTestCase(BluebottleTestCase):
     def test_stripe_methods(self):
         self.stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_account
             ):
                 response = self.client.get(self.funding_url)
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1312,10 +1312,10 @@ class PayoutAccountTestCase(BluebottleTestCase):
         self.stripe.save()
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_account
             ):
                 response = self.client.get(self.funding_url)
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1362,7 +1362,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
     def get_payout_url(self, payout):
-        return reverse('payout-details', args=(payout.pk, ))
+        return reverse('payout-details', args=(payout.pk,))
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
@@ -1372,7 +1372,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+                'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
         ) as verified:
             verified.return_value = True
             self.funding.states.submit()
@@ -1410,7 +1410,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
+                'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
         ) as account:
             external_account = stripe.BankAccount('some-bank-token')
             external_account.update(munch.munchify({

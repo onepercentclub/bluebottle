@@ -743,7 +743,13 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['id'], str(approved.pk))
 
     def test_filter_owner(self):
-        InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
+        owned_initiatives = InitiativeFactory.create_batch(
+            2, status='submitted', owner=self.owner
+        )
+
+        managed_initiatives = InitiativeFactory.create_batch(
+            2, status='submitted', activity_manager=self.owner
+        )
         InitiativeFactory.create_batch(4, status='submitted')
 
         response = self.client.get(
@@ -753,8 +759,13 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+        expected_ids = [str(initiative.pk) for initiative in owned_initiatives + managed_initiatives]
+
+        for resource in data['data']:
+            self.assertTrue(
+                resource['id'] in expected_ids
+            )
 
     def test_filter_owner_activity(self):
         InitiativeFactory.create_batch(4, status='submitted')

@@ -1,11 +1,11 @@
-from builtins import str
-from builtins import range
-from builtins import object
+import datetime
 import os
 import random
 import string
 import uuid
-import datetime
+from builtins import object
+from builtins import range
+from builtins import str
 
 from django.conf import settings
 from django.contrib.auth.models import (
@@ -17,13 +17,12 @@ from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-
 from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.initiatives.models import Theme
 from bluebottle.clients import properties
+from bluebottle.initiatives.models import Theme
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -161,11 +160,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         ]
     )
 
-    is_co_financer = models.BooleanField(_('Co-financer'),
-                                         default=False,
-                                         help_text=_('Donations by co-financers are shown in a separate list on the '
-                                                     'project page. These donation will always be visible.'))
-    can_pledge = models.BooleanField(_('Can pledge'), default=False, help_text=_('User can create a pledge donation.'))
+    is_co_financer = models.BooleanField(
+        _('Co-financer'),
+        default=False,
+        help_text=_('Donations by co-financers are shown in a separate list on the '
+                    'project page. These donation will always be visible.'))
+    can_pledge = models.BooleanField(
+        _('Can pledge'),
+        default=False,
+        help_text=_('User can create a pledge donation.'))
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded

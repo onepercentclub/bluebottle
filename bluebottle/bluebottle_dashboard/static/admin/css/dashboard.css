@@ -17,6 +17,11 @@
     clear: both;
 }
 
+form .aligned strong+p.help {
+    margin-left: 12.85714rem;
+    padding-top: 4px;
+}
+
 #toolbar form #searchbar {
     width: 280px;
 }

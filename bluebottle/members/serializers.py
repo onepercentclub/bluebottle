@@ -40,12 +40,12 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
         if all(credentials.values()):
             request = self.context['request']
 
+            user = authenticate(request, **credentials)
+
             if getattr(request, 'axes_locked_out', False):
                 raise exceptions.Throttled(
                     600, 'Too many failed password attempts.'
                 )
-
-            user = authenticate(request, **credentials)
 
             if user:
                 if not user.is_active:

@@ -11,6 +11,7 @@ addons:
       - swig
       - openjdk-8-jdk-headless
       - postgresql-client-10
+      - postgresql-10-postgis-3
 cache: pip
   - "$HOME/.cache/pip/"
   - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"

@@ -1,4 +1,3 @@
-import six
 from django.contrib.gis.forms import PointField as GisPointField
 from django.contrib.gis.geos import Point
 from django.utils.encoding import smart_text
@@ -34,7 +33,7 @@ class PointWidget(GooglePointFieldWidget):
         return super(PointWidget, self).deserialize(value)
 
     def render(self, name, value, attrs=None, renderer=None):
-        if value and isinstance(value, six.string_types):
+        if value and isinstance(value, str):
             value = self.deserialize(value)
         if isinstance(value, Geoposition):
             value = Point(float(value.longitude), float(value.latitude))

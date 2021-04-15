@@ -1,12 +1,9 @@
-from past.builtins import execfile
 import logging
 from threading import local
 
 from django.conf import settings
 from django.utils._os import safe_join
-
-from tenant_schemas.postgresql_backend.base import FakeTenant
-
+from past.builtins import execfile
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +32,7 @@ class TenantProperties(local):
                      self.tenant_properties)
 
         except (ImportError, AttributeError, IOError):
+            from tenant_schemas.postgresql_backend.base import FakeTenant
             if not isinstance(tenant, FakeTenant):
                 logger.debug('No tenant properties found for: {0}'.format(tenant.client_name))
 

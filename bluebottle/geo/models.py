@@ -3,24 +3,19 @@ from builtins import object
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.template.defaultfilters import slugify
-
 from django.utils.translation import ugettext_lazy as _
-
-from timezonefinder import TimezoneFinder
-
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
+from timezonefinder import TimezoneFinder
 
-from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
-
-from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
 
 tf = TimezoneFinder()
 
@@ -195,19 +190,6 @@ class Place(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
 
-class InitiativePlace(models.Model):
-    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
-    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
-    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
-    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
-    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country')
-
-    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
-
-    position = PointField()
-
-
 @python_2_unicode_compatible
 class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
@@ -219,7 +201,7 @@ class Geolocation(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = PointField()
+    position = PointField(null=True)
 
     anonymized = False
 

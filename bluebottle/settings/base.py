@@ -193,7 +193,7 @@ JWT_AUTH = {
     'JWT_ALLOW_TOKEN_RENEWAL': True,
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
-    'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
+    # 'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
     'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
 
 }
@@ -279,7 +279,6 @@ SHARED_APPS = (
     'raven.contrib.django',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',
-    'geoposition',
     'tenant_extras',
     'localflavor',
     'corsheaders',
@@ -422,6 +421,7 @@ TENANT_APPS = (
 
     'bluebottle.cms',
 
+    'django.contrib.gis',
     'djmoney',
     'django_singleton_admin',
     'nested_inline',

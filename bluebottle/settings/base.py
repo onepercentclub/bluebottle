@@ -1104,6 +1104,7 @@ RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
 RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
 USE_X_FORWARDED_HOST = True
 
+ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 
 # Socket is not configured. Lets guess.
 if os.path.exists('/var/run/clamd.scan/'):

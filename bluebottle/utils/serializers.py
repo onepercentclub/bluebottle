@@ -257,7 +257,7 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
 class AnonymizedResourceRelatedField(ResourceRelatedField):
     def get_attribute(self, parent):
         if parent.anonymized:
-            return AnonymousUser
+            return AnonymousUser()
 
         return super().get_attribute(parent)
 

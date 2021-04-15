@@ -1,5 +1,4 @@
 from rest_framework_json_api.renderers import JSONRenderer
-from bluebottle.members.models import Member
 from django.contrib.auth.models import AnonymousUser
 
 
@@ -8,10 +7,24 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
         return 4
 
     @classmethod
-    def extract_relation_instance(cls, field, resource_instance):
-        result = super().extract_relation_instance(field, resource_instance)
+    def build_json_resource_obj(
+        cls,
+        fields,
+        resource,
+        resource_instance,
+        resource_name,
+        *args,
+        **kwargs
+    ):
+        if isinstance(resource_instance, AnonymousUser):
+            return {
+                'id': resource['id'],
+                'type': resource_name,
+                'attributes': {
+                    'is-anonymous': True
+                }
+            }
 
-        if isinstance(result, Member) and getattr(resource_instance, 'anonymized', False):
-            return AnonymousUser()
-
-        return result
+        return super().build_json_resource_obj(
+            fields, resource, resource_instance, resource_name, *args, **kwargs
+        )

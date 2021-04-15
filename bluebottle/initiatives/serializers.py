@@ -19,7 +19,6 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.categories.models import Category
 from bluebottle.clients import properties
-from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 
@@ -30,7 +29,7 @@ from bluebottle.fsm.serializers import (
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.funding.states import FundingStateMachine
 
-from bluebottle.geo.models import Geolocation, Location
+from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
@@ -313,9 +312,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 class InitiativeListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    activity_manager = ResourceRelatedField(read_only=True)
+    activity_manager = AnonymizedResourceRelatedField(read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -412,65 +411,6 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = OrganizationContact
         fields = ('name', 'email', 'phone', )
-
-
-class InitiativeSubmitSerializer(ModelSerializer):
-    title = serializers.CharField(
-        required=True,
-        error_messages={'blank': _('Title is required')}
-    )
-    pitch = serializers.CharField(required=True, error_messages={'blank': _('Pitch is required')})
-    story = serializers.CharField(required=True, error_messages={'blank': _('Story is required')})
-
-    theme = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Theme.objects.all(),
-        error_messages={'null': _('Theme is required')}
-    )
-    image = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Image.objects.all(),
-        error_messages={'null': _('Image is required')}
-    )
-    owner = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Member.objects.all(),
-        error_messages={'null': _('Owner is required')}
-    )
-    place = serializers.PrimaryKeyRelatedField(
-        allow_null=True,
-        allow_empty=True,
-        queryset=Geolocation.objects.all()
-    )
-    organization = OrganizationSubmitSerializer(
-        error_messages={'null': _('Organization is required')}
-    )
-    organization_contact = OrganizationContactSubmitSerializer(
-        error_messages={'null': _('Organization contact is required')}
-    )
-
-    # TODO add dependent fields: has_organization/organization/organization_contact and
-    # place / location
-
-    def validate(self, data):
-        """
-        Check that location or place is set
-        """
-        if Location.objects.count():
-            if not self.initial_data['location']:
-                raise serializers.ValidationError("Location is required")
-        elif not self.initial_data['place']:
-            raise serializers.ValidationError("Place is required")
-        return data
-
-    class Meta(object):
-        model = Initiative
-        fields = (
-            'title', 'pitch', 'owner',
-            'has_organization', 'organization',
-            'organization_contact', 'story', 'video_url', 'image',
-            'theme', 'place',
-        )
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):

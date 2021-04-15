@@ -145,13 +145,13 @@ class ActivitySearchFilter(ElasticSearchFilter):
             position = None
             if request.user.location and request.user.location.position:
                 position = {
-                    'lat': request.user.location.position.latitude,
-                    'lon': request.user.location.position.longitude
+                    'lat': request.user.location.position.y,
+                    'lon': request.user.location.position.x
                 }
             elif request.user.place and request.user.place.position:
                 position = {
-                    'lat': request.user.place.position.latitude,
-                    'lon': request.user.place.position.longitude
+                    'lat': request.user.place.position.y,
+                    'lon': request.user.place.position.x
                 }
 
             if position:

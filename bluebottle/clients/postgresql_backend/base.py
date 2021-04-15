@@ -1,9 +1,9 @@
-from tenant_schemas.postgresql_backend.base import DatabaseWrapper as TenantDatabaseWrapper
+from tenant_schemas.postgresql_backend import base
 
 from bluebottle.clients import properties
 
 
-class DatabaseWrapper(TenantDatabaseWrapper):
+class DatabaseWrapper(base.DatabaseWrapper):
     def set_tenant(self, tenant, *args, **kwargs):
         """
         Main API method to current database schema,

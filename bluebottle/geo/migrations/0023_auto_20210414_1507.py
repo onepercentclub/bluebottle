@@ -33,11 +33,6 @@ class Migration(migrations.Migration):
             name='old_position',
             field=bluebottle.geo.fields.PointField(max_length=42, null=True),
         ),
-        migrations.AlterField(
-            model_name='initiativeplace',
-            name='old_position',
-            field=bluebottle.geo.fields.PointField(max_length=42, null=True),
-        ),
         migrations.RemoveField(
             model_name='initiativeplace',
             name='country',

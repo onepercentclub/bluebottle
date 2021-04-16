@@ -54,7 +54,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
             if self.context['location']:
                 matching['location'] = False
 
-                if obj.is_online:
+                if getattr(obj, 'is_online', False):
                     matching['location'] = True
                 else:
                     positions = []

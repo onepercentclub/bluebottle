@@ -152,9 +152,6 @@ class StripeSourcePayment(Payment):
             metadata=self.metadata
         )
 
-        if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            charge_args['on_behalf_of'] = connect_account.account_id
-
         charge = stripe.Charge.create(**charge_args)
 
         self.charge_token = charge.id

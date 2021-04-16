@@ -122,7 +122,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         language = get_current_language()
         link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
             domain, language,
-            self.__class__.__name__.lower(),
+            self.get_real_instance().__class__.__name__.lower(),
             self.pk,
             self.slug
         )

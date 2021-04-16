@@ -1,12 +1,14 @@
+import pytz
 from datetime import timedelta, date, datetime, time
 
 import mock
 from bluebottle.notifications.models import Message
+from django.contrib.gis.geos import Point
 from django.core import mail
 from django.db import connection
 from django.template import defaultfilters
 from django.utils import timezone
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from pytz import UTC
 from tenant_extras.utils import TenantLanguage
 
@@ -24,6 +26,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
 )
+from bluebottle.test.factory_models.geo import GeolocationFactory
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -126,15 +129,18 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
                 self.activity.title,
                 defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start),
-                defaultfilters.time(self.slot.end),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
+
         self.assertTrue(expected in mail.outbox[0].body)
+
         self.assertTrue(
-            "11:30 a.m. - 2:30 p.m." in mail.outbox[0].body,
+            "1:30 p.m. - 4:30 p.m." in mail.outbox[0].body,
             "Time strings should really be English format"
         )
         mail.outbox = []
@@ -146,6 +152,37 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         message.save()
         self.run_task(self.nigh)
 
+    def test_reminder_different_timezone(self):
+        self.slot.location = GeolocationFactory.create(
+            position=Point(-74.2, 40.7)
+        )
+        self.slot.save()
+
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+        with TenantLanguage('en'):
+            tz = pytz.timezone(self.slot.location.timezone)
+            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
+                self.activity.title,
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start.astimezone(tz)),
+                defaultfilters.time(self.slot.end.astimezone(tz)),
+                self.slot.start.astimezone(tz).strftime('%Z'),
+            )
+
+        self.assertTrue(expected in mail.outbox[0].body)
+
+        self.assertTrue(
+            "7:30 a.m. - 10:30 a.m. (EDT)" in mail.outbox[0].body,
+            "Time strings should really be English format"
+        )
+
     def test_reminder_single_date_dutch(self):
         nld = BlueBottleUserFactory.create(primary_language='nl')
         DateParticipantFactory.create(activity=self.activity, user=nld)
@@ -156,15 +193,16 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
         )
         with TenantLanguage('nl'):
-            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
                 self.activity.title,
                 defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start),
-                defaultfilters.time(self.slot.end),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertTrue(expected in mail.outbox[0].body)
         self.assertTrue(
-            "11:30 - 14:30" in mail.outbox[0].body,
+            "13:30 - 16:30" in mail.outbox[0].body,
             "Time strings should really be Dutch format"
         )
 
@@ -191,30 +229,33 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         mail.outbox = []
         self.run_task(self.nigh)
         with TenantLanguage('en'):
-            expected = '{} {} - {}'.format(
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start),
-                defaultfilters.time(self.slot.end),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertTrue(
             expected in mail.outbox[0].body,
             "First slot should be shown in mail"
         )
         with TenantLanguage('en'):
-            expected = '{} {} - {}'.format(
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start),
-                defaultfilters.time(self.slot2.end),
+                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
+                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertTrue(
             expected in mail.outbox[0].body,
             "Second slot should be shown in email"
         )
         with TenantLanguage('en'):
-            unexpected = '{} {} - {}'.format(
+            unexpected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot3.start),
-                defaultfilters.time(self.slot3.start),
-                defaultfilters.time(self.slot3.end),
+                defaultfilters.time(self.slot3.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot3.end.astimezone(get_current_timezone())),
+                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertFalse(
             unexpected in mail.outbox[0].body,
@@ -223,8 +264,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         with TenantLanguage('en'):
             unexpected = '{} {} - {}'.format(
                 defaultfilters.date(self.slot4.start),
-                defaultfilters.time(self.slot4.start),
-                defaultfilters.time(self.slot4.end),
+                defaultfilters.time(self.slot4.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot4.end.astimezone(get_current_timezone())),
             )
         self.assertFalse(
             unexpected in mail.outbox[0].body,

@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
+from pytz import timezone
+
 from django.template import defaultfilters
 from django.utils.translation import pgettext_lazy as pgettext
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 
 
 def get_slot_info(slot):
+    if slot.location and not slot.is_online:
+        tz = timezone(slot.location.timezone)
+    else:
+        tz = get_current_timezone()
+
+    start = slot.start.astimezone(tz)
+    end = slot.end.astimezone(tz)
+
     return {
         'title': slot.title or str(slot),
         'is_online': slot.is_online,
         'online_meeting_url': slot.online_meeting_url,
         'location': slot.location.formatted_address if slot.location else '',
         'location_hint': slot.location_hint,
-        'start_date': defaultfilters.date(slot.start),
-        'start_time': defaultfilters.time(slot.start),
-        'end_time': defaultfilters.time(slot.end),
+        'start_date': defaultfilters.date(start),
+        'start_time': defaultfilters.time(start),
+        'end_time': defaultfilters.time(end),
+        'timezone': start.strftime('%Z')
     }
 
 

@@ -507,7 +507,6 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                         'activity_title': self.funding.title,
                         'tenant_domain': u'testserver'
                     },
-                    on_behalf_of=u'acct_1234567890',
                     source=u'some-source-id',
                     statement_descriptor_suffix=u'Test',
                     transfer_data={

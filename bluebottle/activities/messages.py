@@ -220,6 +220,11 @@ class MatchingActivitiesNotification(TransitionMessage):
 
     def get_context(self, recipient, activities=None):
         context = super().get_context(recipient)
+        context['profile_incomplete'] = (
+            not (len(recipient.favourite_themes.all())) or
+            not (len(recipient.skills.all())) or
+            not (recipient.place or recipient.location)
+        )
         if activities:
             context['activities'] = [
                 self.get_activity_context(activity) for activity in activities

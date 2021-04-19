@@ -20,3 +20,12 @@ Here’s your monthly digest with activities on {{ site }} that need your suppor
 {% endnobreaks %}
 click here {{activity.url}}
 {% endfor %}{% endblock %}
+
+{% block unsubscribe %}
+{% if profile_incomplete%}
+{% trans "Complete your profile, so that we can select even more relevant activities for you" %}:
+{{site}}/member/profile
+{% endif %}
+{% trans "Don't want to receive this monthly update anymore? Unsubscribe via your profile page" %}:
+{{site}}/member/profile
+{% endblock %}`

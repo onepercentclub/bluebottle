@@ -164,6 +164,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         body = mail.outbox[-1].body
 
         self.assertTrue('/en/initiatives/activities/list' in body)
+        self.assertFalse(
+            "Complete your profile, so that we can select even more relevant activities for you"
+            in body
+        )
 
         for activity in self.matches + self.partial_matches:
             self.assertTrue(activity.title in body)
@@ -180,6 +184,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         body = mail.outbox[-1].body
 
         self.assertTrue('/en/initiatives/activities/list' in body)
+        self.assertTrue(
+            "Complete your profile, so that we can select even more relevant activities for you"
+            in body
+        )
 
         for activity in self.matches:
             self.assertTrue(activity.title in body)
@@ -209,6 +217,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         body = mail.outbox[-1].body
 
         self.assertTrue('/en/initiatives/activities/list' in body)
+        self.assertFalse(
+            "Complete your profile, so that we can select even more relevant activities for you"
+            in body
+        )
 
         for activity in self.matches + self.partial_matches:
             self.assertTrue(activity.title in body)

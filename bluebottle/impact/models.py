@@ -2,7 +2,7 @@
 from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 

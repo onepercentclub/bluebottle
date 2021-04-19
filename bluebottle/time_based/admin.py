@@ -6,7 +6,7 @@ from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, T
 from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin

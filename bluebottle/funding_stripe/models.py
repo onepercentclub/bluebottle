@@ -17,7 +17,7 @@ from bluebottle.funding.exception import PaymentException
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 

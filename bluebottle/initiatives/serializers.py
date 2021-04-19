@@ -1,7 +1,7 @@
 from builtins import object
 
 from django.db.models import Sum, Count
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import (

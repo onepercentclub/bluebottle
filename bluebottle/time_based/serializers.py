@@ -27,7 +27,7 @@ from bluebottle.utils.utils import reverse_signed
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
-    is_online = serializers.NullBooleanField(required=False)
+    is_online = serializers.BooleanField(required=False, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -56,7 +56,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 
 class ActivitySlotSerializer(ModelSerializer):
-    is_online = serializers.NullBooleanField(required=False)
+    is_online = serializers.BooleanField(required=False, allow_null=True)
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)

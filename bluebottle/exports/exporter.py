@@ -7,7 +7,7 @@ from django.contrib import admin
 from django.db import connection
 from django.db.models.query import QuerySet
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from import_export import resources, fields
 from tablib import Databook, Dataset
@@ -234,7 +234,7 @@ class Exporter(object):
                 export_kwargs['task_meta']['done'] += dataset.height
 
             if resource.title is not None:
-                dataset.title = force_text(resource.title)[:31]  # maximum of 31 chars int title
+                dataset.title = force_str(resource.title)[:31]  # maximum of 31 chars int title
             else:
                 dataset.title = u'{name} ({app}.{model})'.format(
                     name=model._meta.verbose_name_plural,

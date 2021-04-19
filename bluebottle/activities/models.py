@@ -2,7 +2,7 @@ from builtins import str
 from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 from djchoices.choices import DjangoChoices, ChoiceItem

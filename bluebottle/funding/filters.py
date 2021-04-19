@@ -1,6 +1,6 @@
 from django.contrib.admin import SimpleListFilter
 from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.funding.models import PaymentProvider
 from bluebottle.funding.states import DonorStateMachine

@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.db import router, transaction
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField

@@ -3,7 +3,7 @@ import os
 from collections import OrderedDict
 
 from .admin_dashboard import *  # noqa
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import rules
 from PIL import ImageFile

@@ -1,5 +1,5 @@
 from builtins import object
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -54,6 +54,7 @@ class FundingCurrencyValidator(object):
     Validates that the currency of the field is the same as the activity currency
     """
     message = _('Currency does not match any of the activities currencies')
+    requires_context = True
 
     def __init__(self, fields=None, message=None):
         if fields is None:
@@ -62,12 +63,9 @@ class FundingCurrencyValidator(object):
         self.fields = fields
         self.message = message or self.message
 
-    def set_context(self, serializer):
-        if serializer.instance:
-            self.activity = serializer.instance.activity
+    def __call__(self, data, serializer_field):
+        activity = data.get('activity') or serializer_field.instance.activity
 
-    def __call__(self, data):
-        activity = data.get('activity') or self.activity
         for field in self.fields:
             if (
                 activity.target and
@@ -370,14 +368,16 @@ class DonorMemberValidator(object):
     """
     message = _('User can only be set, not changed.')
 
-    def set_context(self, serializer):
-        if serializer.instance:
-            self.user = serializer.instance.user
-        else:
-            self.user = None
+    requires_context = True
 
-    def __call__(self, data):
-        if data.get('user') and data['user'].is_authenticated and self.user and self.user != data['user']:
+    def __call__(self, data, serializer_field):
+
+        if serializer_field.instance:
+            user = serializer_field.instance.user
+        else:
+            user = None
+
+        if data.get('user') and data['user'].is_authenticated and user and user != data['user']:
             raise ValidationError(self.message)
 
 

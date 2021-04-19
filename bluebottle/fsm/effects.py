@@ -2,7 +2,7 @@ from collections import Iterable
 
 from builtins import str
 from builtins import object
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from future.utils import python_2_unicode_compatible
 

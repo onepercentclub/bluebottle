@@ -4,7 +4,7 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 from future.utils import python_2_unicode_compatible

@@ -2,7 +2,7 @@ from django.db import models
 
 from django.contrib import admin
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from .models import Slide

@@ -20,7 +20,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 

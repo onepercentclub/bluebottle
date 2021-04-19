@@ -4,7 +4,7 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.forms import StateMachineModelForm
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.deeds.models import Deed, DeedParticipant

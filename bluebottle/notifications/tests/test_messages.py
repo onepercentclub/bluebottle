@@ -7,7 +7,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 class TestMessage(TransitionMessage):

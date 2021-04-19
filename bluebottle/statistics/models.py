@@ -4,7 +4,7 @@ from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
 from django.utils.functional import lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel

@@ -10,7 +10,7 @@ from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.template import loader
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from rest_framework import status, views, response, generics

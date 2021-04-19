@@ -1,7 +1,7 @@
 import re
 
 from django.core.validators import RegexValidator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 NumericCodeValidator = RegexValidator(re.compile(r'[0-9][0-9][0-9]'),
                                       _("Enter 3 numeric characters."))

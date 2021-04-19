@@ -322,7 +322,7 @@ class StripePayoutAccount(PayoutAccount):
         for error in super(StripePayoutAccount, self).errors:
             yield error
 
-        if self.account_id and hasattr(self.account.requirements, 'errors'):
+        if self.account_id and self.account and hasattr(self.account.requirements, 'errors'):
             for error in self.account.requirements.errors:
                 if error['requirement'] == 'individual.verification.document':
                     requirement = 'individual.verification.document.front'
@@ -400,7 +400,7 @@ class StripePayoutAccount(PayoutAccount):
                         yield field
                 except AttributeError:
                     yield field
-        if not self.account.external_accounts.total_count > 0:
+        if self.account and not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
     @property

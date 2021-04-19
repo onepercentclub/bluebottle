@@ -18,7 +18,7 @@ from bluebottle.members.models import Member
 logger = logging.getLogger('bluebottle')
 
 
-def get_matching_activities(user, match_theme=True):
+def get_matching_activities(user):
     search = activity.search().filter(
         Q('terms', status=['open', 'running']) &
         Q('terms', type=['dateactivity', 'periodactivity'])

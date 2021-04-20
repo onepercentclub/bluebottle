@@ -31,6 +31,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('activities', '0042_effortcontribution_contribution_type'),
+        ('deeds_deed', '0007_auto_20210222_1644')
     ]
 
     operations = [

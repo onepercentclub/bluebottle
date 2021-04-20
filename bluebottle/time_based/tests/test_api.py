@@ -388,69 +388,6 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
-    def test_matching_all(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
-        )
-
-        slot.location.save()
-
-        user = BlueBottleUserFactory.create()
-
-        PlaceFactory.create(
-            content_object=user,
-            position=Point(x=4.9848386, y=52.3929661)
-        )
-
-        user.skills.add(self.activity.expertise)
-        user.favourite_themes.add(self.activity.initiative.theme)
-
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], True)
-        self.assertEqual(data['meta']['matching-properties']['theme'], True)
-        self.assertEqual(data['meta']['matching-properties']['location'], True)
-
-    def test_matching_all_cancelled(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        self.activity.refresh_from_db()
-        self.activity.states.cancel(save=True)
-
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
-        )
-
-        slot.location.save()
-
-        user = BlueBottleUserFactory.create()
-
-        PlaceFactory.create(
-            content_object=user,
-            position=Point(x=4.9848386, y=52.3929661)
-        )
-
-        user.skills.add(self.activity.expertise)
-        user.favourite_themes.add(self.activity.initiative.theme)
-
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
-
     def test_mismatching_skill(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
@@ -676,6 +613,69 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
                 reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
             )
         )
+
+    def test_matching_all(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        slot = self.activity.slots.first()
+        slot.location.position = Point(
+            x=4.8981734, y=52.3790565
+        )
+
+        slot.location.save()
+
+        user = BlueBottleUserFactory.create()
+
+        PlaceFactory.create(
+            content_object=user,
+            position=Point(x=4.9848386, y=52.3929661)
+        )
+
+        user.skills.add(self.activity.expertise)
+        user.favourite_themes.add(self.activity.initiative.theme)
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], True)
+        self.assertEqual(data['meta']['matching-properties']['theme'], True)
+        self.assertEqual(data['meta']['matching-properties']['location'], True)
+
+    def test_matching_all_cancelled(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+        self.activity.states.cancel(save=True)
+
+        slot = self.activity.slots.first()
+        slot.location.position = Point(
+            x=4.8981734, y=52.3790565
+        )
+
+        slot.location.save()
+
+        user = BlueBottleUserFactory.create()
+
+        PlaceFactory.create(
+            content_object=user,
+            position=Point(x=4.9848386, y=52.3929661)
+        )
+
+        user.skills.add(self.activity.expertise)
+        user.favourite_themes.add(self.activity.initiative.theme)
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], False)
+        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_place(self):
         self.activity.initiative.states.submit(save=True)

@@ -50,12 +50,18 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
         self.assertEqual(self.activity.status, 'open')
 
     def test_start(self):
+        self.activity.end = None
+        self.activity.save()
+        participants = DeedParticipantFactory.create_batch(3, activity=self.activity)
         self.run_tasks(self.activity.start + timedelta(days=1))
 
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
+            self.assertEqual(self.activity.status, 'open')
+            for participant in participants:
+                participant.refresh_from_db()
 
-        self.assertEqual(self.activity.status, 'running')
+                self.assertEqual(participant.status, 'succeeded')
 
     def test_expire(self):
         self.run_tasks(self.activity.start + timedelta(days=1))

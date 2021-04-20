@@ -7,6 +7,7 @@ from django.db import migrations
 
 
 def create_payouts(apps, schema_editor):
+    return
     Project = apps.get_model('projects', 'Project')
     Funding = apps.get_model('funding', 'Funding')
     Payout = apps.get_model('funding', 'Payout')

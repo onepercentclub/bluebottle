@@ -465,6 +465,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
                     'NON_FIELD_ERRORS_KEY', 'non_field_errors')
             ] = [conflict]
 
+            del errors['email']
+
         return errors
 
     def validate(self, data):

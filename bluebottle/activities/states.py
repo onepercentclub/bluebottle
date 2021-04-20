@@ -92,7 +92,12 @@ class ActivityStateMachine(ModelStateMachine):
 
     def is_owner(self, user):
         """user is the owner"""
-        return user == self.instance.owner or user.is_staff
+        return (
+            user == self.instance.owner or
+            user == self.instance.initiative.owner or
+            user == self.instance.initiative.activity_manager or
+            user.is_staff
+        )
 
     def should_auto_approve(self):
         """the activity should approved automatically"""

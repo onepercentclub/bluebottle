@@ -12,7 +12,7 @@ from rest_framework.status import HTTP_200_OK
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin, ThemeAdmin
 from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -212,6 +212,30 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 0)
         self.initiative.refresh_from_db()
         self.assertNotEqual(initiative.reviewer, reviewer)
+
+    def test_admin_open_initiative_disabled(self):
+        initiative = InitiativeFactory.create()
+        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+
+        self.app.set_user(self.staff_member)
+
+        page = self.app.get(url)
+
+        self.assertFalse('is_open' in page.forms[0].fields)
+
+    def test_admin_open_initiative_enabled(self):
+        InitiativePlatformSettingsFactory.create(
+            enable_open_initiatives=True
+        )
+
+        initiative = InitiativeFactory.create()
+        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+
+        self.app.set_user(self.staff_member)
+
+        page = self.app.get(url)
+
+        self.assertTrue('is_open' in page.forms[0].fields)
 
 
 class TestThemeAdmin(BluebottleAdminTestCase):

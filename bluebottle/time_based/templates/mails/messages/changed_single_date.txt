@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 {% blocktrans context 'email' %}
-The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }}.
+The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }} ({{timezone}}).
 {% endblocktrans %}
 
 {% if is_online %}

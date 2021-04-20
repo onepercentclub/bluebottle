@@ -110,6 +110,16 @@ class ActivitySearchFilter(ElasticSearchFilter):
                             ),
                             'weight': 1,
                         }),
+                        SF({
+                            'filter': ~Nested(
+                                path='expertise',
+                                query=Q(
+                                    'exists',
+                                    field='expertise.id'
+                                )
+                            ),
+                            'weight': 0.5,
+                        }),
                         SF({'weight': 0}),
                     ]
                 )
@@ -159,11 +169,25 @@ class ActivitySearchFilter(ElasticSearchFilter):
                                 'multi_value_mode': 'max',
                             },
                         }),
+                        SF({
+                            'filter': ~Q(
+                                'exists',
+                                field='expertise.id'
+                            ),
+                            'weight': 0.5,
+                        }),
+
                         SF({'weight': 0}),
                     ]
                 )
 
         return score
+
+    def get_type_filter(self, value, request):
+        if value == 'time_based':
+            return Term(type='dateactivity') | Term(type='periodactivity')
+
+        return Term(type=value)
 
     def get_start_filter(self, value, request):
         try:

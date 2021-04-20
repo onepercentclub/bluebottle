@@ -153,7 +153,7 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
         'OPTIONS': [],
-        'HEAD': [],
+        'HEAD': ['%(app_label)s.api_read_%(model_name)s'],
         'POST': ['%(app_label)s.api_add_%(model_name)s'],
         'PUT': ['%(app_label)s.api_change_%(model_name)s'],
         'PATCH': ['%(app_label)s.api_change_%(model_name)s'],
@@ -176,7 +176,7 @@ class ResourceOwnerPermission(ResourcePermission):
     perms_map = {
         'GET': ['%(app_label)s.api_read_own_%(model_name)s'],
         'OPTIONS': [],
-        'HEAD': [],
+        'HEAD': ['%(app_label)s.api_read_own_%(model_name)s'],
         'POST': ['%(app_label)s.api_add_own_%(model_name)s'],
         'PUT': ['%(app_label)s.api_change_own_%(model_name)s'],
         'PATCH': ['%(app_label)s.api_change_own_%(model_name)s'],

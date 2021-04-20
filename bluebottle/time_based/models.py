@@ -60,7 +60,8 @@ class TimeBasedActivity(Activity):
         'time_based.Skill',
         verbose_name=_('skill'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     review = models.NullBooleanField(_('review participants'), null=True, default=None)
@@ -252,6 +253,10 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
             if date:
                 return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
+        details = self.activity.details
+        if self.is_online and self.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
+
         url = u'https://calendar.google.com/calendar/render'
         params = {
             'action': u'TEMPLATE',
@@ -259,7 +264,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
             'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.start + self.duration)
             ),
-            'details': self.activity.details,
+            'details': details,
             'uid': self.uid,
         }
 

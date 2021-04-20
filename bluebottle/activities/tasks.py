@@ -69,7 +69,7 @@ def get_matching_activities(user, match_theme=True):
         query = query | ConstantScore(
             filter=Q(
                 'geo_distance',
-                distance='20000m',
+                distance='50000m',
                 position={
                     'lat': location.position.latitude,
                     'lon': location.position.longitude

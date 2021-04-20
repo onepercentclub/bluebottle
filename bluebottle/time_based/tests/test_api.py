@@ -377,7 +377,7 @@ class TimeBasedDetailAPIViewTestCase():
 
     def test_mismatching_skill(self):
         user = BlueBottleUserFactory.create()
-        user.skills.add(SkillFactory)
+        user.skills.add(SkillFactory.create())
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -632,7 +632,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
                 position=Point(x=4.9848386, y=52.3929661)
             )
         )
-
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -750,8 +749,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_location(self):
@@ -759,17 +758,16 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.location.save()
         user = BlueBottleUserFactory.create(
             location=LocationFactory.create(
-                position=Point(x=4.9848386, y=52.3929661)
+                position=Point(x=4.8948386, y=52.3929661)
             )
         )
-
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_place_too_far(self):
@@ -787,8 +785,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_location_too_far(self):
@@ -805,8 +803,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
 

@@ -3,7 +3,7 @@ import re
 import dateutil
 from django.db.models import Q as DQ
 from django_filters.rest_framework import DjangoFilterBackend
-from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
+from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
 
 from bluebottle.activities.documents import activity
 from bluebottle.activities.states import ActivityStateMachine
@@ -18,9 +18,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
     sort_fields = {
         'date': ('-activity_date', ),
         'alphabetical': ('title_keyword', ),
-        'popularity': 'popularity',
+        'popularity': 'relevancy',
+        'relevancy': 'relevancy',
     }
-    default_sort_field = 'popularity'
+    default_sort_field = 'relevancy'
 
     filters = (
         'owner.id',
@@ -58,7 +59,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'initiative_location.city': 0.5,
     }
 
-    def get_sort_popularity(self, request):
+    def get_sort_relevancy(self, request):
         score = FunctionScore(
             score_mode='sum',
             functions=[
@@ -66,120 +67,67 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     'field_value_factor',
                     field='status_score',
                     weight=10,
-                    factor=10
                 ),
                 SF(
                     'gauss',
-                    weight=0.1,
+                    weight=0.01,
                     created={
                         'scale': "365d"
-                    },
-                ),
-            ]
-        ) | FunctionScore(
-            score_mode='multiply',
-            functions=[
-                SF(
-                    'field_value_factor',
-                    field='contributor_count',
-                    missing=0
-                ),
-                SF(
-                    'gauss',
-                    weight=0.1,
-                    multi_value_mode='avg',
-                    contributors={
-                        'scale': '5d'
                     },
                 ),
             ]
         )
 
         if request.user.is_authenticated:
-            if request.user.skills:
-                score = score | FunctionScore(
-                    score_mode='first',
-                    functions=[
-                        SF({
-                            'filter': Nested(
-                                path='expertise',
-                                query=Q(
-                                    'terms',
-                                    expertise__id=[skill.pk for skill in request.user.skills.all()]
-                                )
-                            ),
-                            'weight': 1,
-                        }),
-                        SF({
-                            'filter': ~Nested(
-                                path='expertise',
-                                query=Q(
-                                    'exists',
-                                    field='expertise.id'
-                                )
-                            ),
-                            'weight': 0.5,
-                        }),
-                        SF({'weight': 0}),
-                    ]
+            matching = ConstantScore(
+                boost=0.5,
+                filter=Nested(
+                    path='theme',
+                    query=Q(
+                        'terms',
+                        theme__id=[
+                            theme.pk for theme in request.user.favourite_themes.all()
+                        ]
+                    )
+                )
+            ) | ConstantScore(
+                filter=Nested(
+                    path='expertise',
+                    query=Q(
+                        'terms',
+                        expertise__id=[
+                            skill.pk for skill in request.user.skills.all()
+                        ]
+                    )
+                )
+            ) | ConstantScore(
+                boost=0.75,
+                filter=~Nested(
+                    path='expertise',
+                    query=Q(
+                        'exists',
+                        field='expertise.id'
+                    )
+                )
+            ) | ConstantScore(
+                boost=0.9,
+                filter=Q('term', is_online=True)
+            )
+
+            location = request.user.location or request.user.place
+            if location and location.position:
+                matching = matching | ConstantScore(
+                    filter=Q(
+                        'geo_distance',
+                        distance='50000m',
+                        position={
+                            'lat': location.position.latitude,
+                            'lon': location.position.longitude
+                        },
+                    )
                 )
 
-            if request.user.favourite_themes:
-                score = score | FunctionScore(
-                    score_mode='first',
-                    functions=[
-                        SF({
-                            'filter': Nested(
-                                path='theme',
-                                query=Q(
-                                    'terms',
-                                    theme__id=[theme.pk for theme in request.user.favourite_themes.all()]
-                                )
-                            ),
-                            'weight': 1,
-                        }),
-                        SF({'weight': 0}),
-                    ]
-                )
-
-            position = None
-            if request.user.location and request.user.location.position:
-                position = {
-                    'lat': request.user.location.position.latitude,
-                    'lon': request.user.location.position.longitude
-                }
-            elif request.user.place and request.user.place.position:
-                position = {
-                    'lat': request.user.place.position.latitude,
-                    'lon': request.user.place.position.longitude
-                }
-
-            if position:
-                score = score | FunctionScore(
-                    score_mode='first',
-                    functions=[
-                        SF({
-                            'filter': {'exists': {'field': 'position'}},
-                            'weight': 1,
-                            'gauss': {
-                                'position': {
-                                    'origin': position,
-                                    'scale': "100km"
-                                },
-                                'multi_value_mode': 'max',
-                            },
-                        }),
-                        SF({
-                            'filter': ~Q(
-                                'exists',
-                                field='expertise.id'
-                            ),
-                            'weight': 0.5,
-                        }),
-
-                        SF({'weight': 0}),
-                    ]
-                )
+            score = score | (Q('terms', status=['open', 'running', 'full']) & matching)
 
         return score
 

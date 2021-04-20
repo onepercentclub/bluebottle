@@ -26,6 +26,9 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
         matching = {'skill': None, 'theme': None, 'location': None}
 
         if user.is_authenticated:
+            if obj.status != 'open':
+                return {'skill': False, 'theme': False, 'location': False}
+
             if 'skills' not in self.context:
                 self.context['skills'] = user.skills.all()
 
@@ -54,31 +57,38 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
             if self.context['location']:
                 matching['location'] = False
 
-                if getattr(obj, 'is_online', False):
-                    matching['location'] = True
-                else:
-                    positions = []
+                try:
+                    if obj.is_online:
+                        matching['location'] = True
+                except AttributeError:
                     try:
-                        if obj.location:
-                            positions = [obj.location.position.tuple]
+                        if any(slot.is_online for slot in obj.slots.all()):
+                            matching['location'] = True
                     except AttributeError:
-                        try:
-                            positions = [
-                                slot.location.position.tuple for slot in obj.slots.all() if slot.location
-                            ]
-                        except AttributeError:
-                            pass
+                        pass
 
-                        if positions:
-                            dist = min(
-                                distance(
-                                    lonlat(*pos),
-                                    lonlat(*self.context['location'].position.tuple)
-                                ) for pos in positions
-                            )
+                positions = []
+                try:
+                    if obj.location:
+                        positions = [obj.location.position.tuple]
+                except AttributeError:
+                    try:
+                        positions = [
+                            slot.location.position.tuple for slot in obj.slots.all() if slot.location
+                        ]
+                    except AttributeError:
+                        pass
 
-                            if dist.km < 20:
-                                matching['location'] = True
+                    if positions:
+                        dist = min(
+                            distance(
+                                lonlat(*pos),
+                                lonlat(*self.context['location'].position.tuple)
+                            ) for pos in positions
+                        )
+
+                        if dist.km < 20:
+                            matching['location'] = True
 
         return matching
 

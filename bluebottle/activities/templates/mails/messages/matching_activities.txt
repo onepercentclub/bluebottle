@@ -18,7 +18,7 @@ Here’s your monthly digest with activities on {{ site }} that need your suppor
 {{activity.location}}
 {% endif %}
 {% endnobreaks %}
-click here {{activity.url}}
+click here {{activity.url?utm_source=matching_email&utm_medium=email&utm_campaign=matching}}
 {% endfor %}{% endblock %}
 
 {% block unsubscribe %}

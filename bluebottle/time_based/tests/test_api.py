@@ -265,6 +265,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
+        self.activity.refresh_from_db()
 
         self.url = reverse('{}-detail'.format(self.type), args=(self.activity.pk, ))
 
@@ -291,6 +292,9 @@ class TimeBasedDetailAPIViewTestCase():
         }
 
     def test_get_owner(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -312,7 +316,7 @@ class TimeBasedDetailAPIViewTestCase():
             True
         )
         self.assertTrue(
-            {'name': 'delete', 'target': 'deleted', 'available': True}
+            {'name': 'cancel', 'target': 'cancelled', 'available': True}
             in data['meta']['transitions']
         )
         self.assertEqual(data['meta']['matching-properties']['skill'], None)
@@ -320,6 +324,9 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_matching_theme(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         user = BlueBottleUserFactory.create()
         user.favourite_themes.add(self.activity.initiative.theme)
 
@@ -333,6 +340,9 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_mismatching_theme(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         user = BlueBottleUserFactory.create()
         user.favourite_themes.add(ThemeFactory.create())
 
@@ -346,6 +356,9 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
     def test_matching_skill(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         user = BlueBottleUserFactory.create()
         user.skills.add(self.activity.expertise)
 
@@ -358,9 +371,75 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
-    def test_mismatching_skill(self):
+    def test_matching_all(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        slot = self.activity.slots.first()
+        slot.location.position = Point(
+            x=4.8981734, y=52.3790565
+        )
+
+        slot.location.save()
+
         user = BlueBottleUserFactory.create()
-        user.skills.add(SkillFactory)
+
+        PlaceFactory.create(
+            content_object=user,
+            position=Point(x=4.9848386, y=52.3929661)
+        )
+
+        user.skills.add(self.activity.expertise)
+        user.favourite_themes.add(self.activity.initiative.theme)
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], True)
+        self.assertEqual(data['meta']['matching-properties']['theme'], True)
+        self.assertEqual(data['meta']['matching-properties']['location'], True)
+
+    def test_matching_all_cancelled(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+        self.activity.states.cancel(save=True)
+
+        slot = self.activity.slots.first()
+        slot.location.position = Point(
+            x=4.8981734, y=52.3790565
+        )
+
+        slot.location.save()
+
+        user = BlueBottleUserFactory.create()
+
+        PlaceFactory.create(
+            content_object=user,
+            position=Point(x=4.9848386, y=52.3929661)
+        )
+
+        user.skills.add(self.activity.expertise)
+        user.favourite_themes.add(self.activity.initiative.theme)
+
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['meta']['matching-properties']['skill'], False)
+        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['location'], False)
+
+    def test_mismatching_skill(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        user = BlueBottleUserFactory.create()
+        user.skills.add(SkillFactory.create())
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -560,6 +639,9 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         )
 
     def test_matching_location_place(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         slot = self.activity.slots.first()
         slot.location.position = Point(
             x=4.8981734, y=52.3790565
@@ -582,6 +664,9 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_location(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         slot = self.activity.slots.first()
         slot.location.position = Point(
             x=4.8981734, y=52.3790565
@@ -604,6 +689,9 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_place_too_far(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         slot = self.activity.slots.first()
         slot.location.position = Point(x=4.4207882, y=51.9280712)
         slot.location.save()
@@ -624,6 +712,9 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_location_too_far(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         slot = self.activity.slots.first()
         slot.location.position = Point(x=4.4207882, y=51.9280712)
         slot.location.save()
@@ -697,6 +788,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         )
 
     def test_matching_location_place(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         self.activity.location.position = Point(x=4.8981734, y=52.3790565)
         self.activity.location.save()
 
@@ -716,6 +810,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_location(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         self.activity.location.position = Point(x=4.8981734, y=52.3790565)
         self.activity.location.save()
         user = BlueBottleUserFactory.create(
@@ -734,6 +831,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_place_too_far(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         self.activity.location.position = Point(x=4.4207882, y=51.9280712,)
         self.activity.location.save()
 
@@ -753,6 +853,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_location_too_far(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
         self.activity.location.position = Point(x=4.4207882, y=51.9280712,)
         self.activity.location.save()
         user = BlueBottleUserFactory.create(

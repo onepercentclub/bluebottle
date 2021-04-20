@@ -13,13 +13,13 @@
                 <tr style="border-bottom: solid 1px #DBDBDB;">
                     <td>
                         <div class="matching-item-image">
-                            <img src="{{activity.image}}" alt="activity image" width="200" height="200"/>
+                            <img src="{{site_url}}{{activity.image}}" alt="activity image" width="200" height="200"/>
                         </div>
                     </td>
                     <td>
                         <div class="matching-item">
                             <label class="matching-item-title">
-                                <a href="{{activity.url}}">{{activity.title}}</a>
+                                <a href="{{activity.url}}?utm_source=matching_email&utm_medium=email&utm_campaign=matching">{{activity.title}}</a>
                             </label>
                             <div class="matching-item-location">
                                 {% if activity.is_online %}
@@ -74,3 +74,17 @@
         </tbody>
     </table>
 {% endblock %}
+
+{% block unsubscribe %}
+    {% if profile_incomplete%}
+        <p>
+            <a href="{{site}}/member/profile">
+                {% trans "Complete your profile" %}
+            </a>
+            {% trans ", so that we can select even more relevant activities for you." %}
+        </p>
+    {% endif %}
+    <p>
+    {% trans "Don't want to receive this monthly update anymore? Unsubscribe" %}
+    <a href="{{site}}/member/profile"> {% trans "via your profile page." %}
+{% endblock %}`

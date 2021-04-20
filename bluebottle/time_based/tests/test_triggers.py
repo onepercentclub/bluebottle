@@ -668,12 +668,14 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = 'The activity "{}" takes place on {} {} - {}'.format(
+            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
                 self.activity.title,
                 defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start),
-                defaultfilters.time(self.slot.end),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
+
         self.assertTrue(expected in mail.outbox[0].body)
 
     def test_changed_multiple_dates(self):
@@ -692,17 +694,19 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = '{} {} - {}'.format(
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start),
-                defaultfilters.time(self.slot.end),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertTrue(expected in mail.outbox[0].body)
         with TenantLanguage('en'):
-            expected = '{} {} - {}'.format(
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start),
-                defaultfilters.time(self.slot2.end),
+                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
+                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
         self.assertTrue(expected in mail.outbox[0].body)
 

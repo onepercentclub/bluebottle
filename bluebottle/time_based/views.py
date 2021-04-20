@@ -6,6 +6,7 @@ from bluebottle.utils.admin import prep_field
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
+from django.utils.translation import ugettext_lazy as _
 
 import icalendar
 
@@ -147,7 +148,9 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
 
 class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
-    queryset = DateParticipant.objects.prefetch_related('user')
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'slot_participants', 'slot_participants__slot'
+    )
     serializer_class = DateParticipantSerializer
 
 
@@ -304,7 +307,12 @@ class DateActivityIcalView(PrivateFileView):
         for slot in slots:
             event = icalendar.Event()
             event.add('summary', instance.title)
-            event.add('description', instance.details)
+
+            details = instance.details
+            if slot.is_online and slot.online_meeting_url:
+                details += _('\nJoin: {url}').format(url=slot.online_meeting_url)
+
+            event.add('description', details)
             event.add('url', instance.get_absolute_url())
             event.add('dtstart', slot.start.astimezone(utc))
             event.add('dtend', (slot.start + slot.duration).astimezone(utc))
@@ -340,7 +348,12 @@ class ActivitySlotIcalView(PrivateFileView):
 
         slot = icalendar.Event()
         slot.add('summary', instance.activity.title)
-        slot.add('description', instance.activity.details)
+
+        details = instance.activity.details
+        if instance.is_online and instance.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=instance.online_meeting_url)
+
+        slot.add('description', details)
         slot.add('url', instance.activity.get_absolute_url())
         slot.add('dtstart', instance.start.astimezone(utc))
         slot.add('dtend', (instance.start + instance.duration).astimezone(utc))

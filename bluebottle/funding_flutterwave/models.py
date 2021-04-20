@@ -33,8 +33,26 @@ class FlutterwavePaymentProvider(PaymentProvider):
                 provider='flutterwave',
                 name='Credit card',
                 code='credit_card',
-                currencies=['NGN'],
-            )
+                currencies=['NGN', 'KES', 'USD'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
+                name='M-PESA/Airtel',
+                code='mpesa',
+                currencies=['KES'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
+                name='PayPal',
+                code='paypal',
+                currencies=['NGN', 'USD'],
+            ),
+            PaymentMethod(
+                provider='flutterwave',
+                name='OrangeMoney',
+                code='orangemoney',
+                currencies=['XOF'],
+            ),
         ]
 
     @property
@@ -58,6 +76,7 @@ class FlutterwaveBankAccount(BankAccount):
 
     BANK_CHOICES = (
         ("", "Select bank"),
+        # NGN
         ("044", "Access Bank"),
         ("063", "Access Bank PLC (Diamond)"),
         ("023", "Citi Bank"),
@@ -82,7 +101,47 @@ class FlutterwaveBankAccount(BankAccount):
         ("033", "United Bank for Africa"),
         ("215", "Unity Bank PLC"),
         ("035", "Wema Bank PLC"),
-        ("057", "Zenith bank PLC")
+        ("057", "Zenith bank PLC"),
+        # KE
+        ("01", "Kenya Commercial Bank Limited"),
+        ("11", "Co-operative Bank of Kenya Limited"),
+        ("31", "CFC Stanbic Bank Kenya Limited"),
+        ("41", "NIC Bank Limited"),
+        ("51", "Jamii Bora Bank"),
+        ("61", "Housing Finance Bank"),
+        ("14", "Oriental Commercial Bank Limited"),
+        ("54", "Victoria Commercial Bank Limited"),
+        ("07", "Commercial Bank of Africa Limited"),
+        ("49", "Equatorial Commercial Bank Limited"),
+        ("57", "Investments n Mortgages Bank Limited"),
+        ("39", "Imperial Bank Limited"),
+        ("12", "National Bank of Kenya Limited"),
+        ("72", "Gulf African Bank Ltd"),
+        ("25", "Credit Bank Limited"),
+        ("35", "African Banking Corp. Bank Ltd"),
+        ("74", "First Community Bank"),
+        ("55", "Guardian Bank Limited"),
+        ("10", "Prime Bank Limited"),
+        ("20", "Dubai Bank Kenya Limited"),
+        ("30", "Chase Bank Limited"),
+        ("50", "Paramount Universal Bank Limited"),
+        ("70", "Family Bank Ltd"),
+        ("23", "Consolidated Bank of Kenya Limited"),
+        ("18", "Middle East Bank Kenya Limited"),
+        ("63", "Diamond Trust Bank Limited"),
+        ("16", "Citibank N.A."),
+        ("26", "Trans-National Bank Limited"),
+        ("68", "Equity Bank Limited"),
+        ("66", "K-Rep Bank Limited"),
+        ("76", "UBA Kenya Bank Ltd"),
+        ("19", "Bank of  Africa Kenya Limited"),
+        ("10276", "ABSA Bank Kenya PLC"),
+        ("02", "Standard Chartered Bank Limited")
+
+    )
+    COUNTRY_CHOICES = (
+        ("KE", "Kenya"),
+        ("NG", "Nigeria"),
     )
 
     type = 'flutterwave'

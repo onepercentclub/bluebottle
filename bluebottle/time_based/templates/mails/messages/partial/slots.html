@@ -8,7 +8,7 @@
         {% trans "Changed" %}
     {% endif %}
     <br/>
-    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }}
+    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }} ({{timezone}})
     <br/>
     {% if slot.is_online %}
         {% if slot.online_meeting_url %}

@@ -250,6 +250,9 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/periods'
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'location',
+        ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
@@ -360,7 +363,7 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period', 'location',
+            'start', 'deadline', 'duration', 'duration_period', 'location', 'is_online',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):

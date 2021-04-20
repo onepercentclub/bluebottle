@@ -49,11 +49,12 @@ class SlotParticipantListFilter(DjangoFilterBackend):
                 Q(participant__activity__initiative__activity_manager=request.user) |
                 Q(status=SlotParticipantStateMachine.registered.value)
             ).filter(
-                participant__status__in=[
+                Q(participant__user=request.user) |
+                Q(participant__status__in=[
                     ParticipantStateMachine.new.value,
                     ParticipantStateMachine.accepted.value,
                     ParticipantStateMachine.succeeded.value
-                ]
+                ])
             )
         else:
             queryset = queryset.filter(

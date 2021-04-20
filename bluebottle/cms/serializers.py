@@ -198,7 +198,8 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
             ).exclude(
                 status__in=[
                     'draft', 'needs_work', 'submitted',
-                    'deleted', 'closed', 'rejected'
+                    'deleted', 'cancelled', 'rejected',
+                    'expired',
                 ]
             ).order_by('?')[0:4]
         else:

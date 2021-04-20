@@ -7,27 +7,11 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 @register(Deed)
 class DeedStateMachine(ActivityStateMachine):
-    running = State(
-        _('running'),
-        'running',
-        _('The activity is currently taking place.')
-    )
-
     def has_no_end_date(self):
         return self.instance.end is None
 
-    start = Transition(
-        [
-            ActivityStateMachine.open,
-            ActivityStateMachine.succeeded,
-        ],
-        running,
-        name=_("Start"),
-        description=_("Start the activity.")
-    )
-
     succeed = Transition(
-        [ActivityStateMachine.open, running, ActivityStateMachine.expired],
+        [ActivityStateMachine.open, ActivityStateMachine.expired],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -36,7 +20,7 @@ class DeedStateMachine(ActivityStateMachine):
     expire = Transition(
         [
             ActivityStateMachine.open, ActivityStateMachine.submitted,
-            ActivityStateMachine.succeeded, running
+            ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.expired,
         name=_('Expire'),
@@ -47,32 +31,17 @@ class DeedStateMachine(ActivityStateMachine):
     )
 
     succeed_manually = Transition(
-        [
-            ActivityStateMachine.open,
-            running
-        ],
+        ActivityStateMachine.open,
         ActivityStateMachine.succeeded,
         automatic=False,
         name=_("succeed"),
-        hide_from_admin=True,
         conditions=[has_no_end_date],
         permission=ActivityStateMachine.is_owner,
         description=_("Succeed the activity.")
     )
 
-    restart = Transition(
-        [
-            ActivityStateMachine.expired,
-            ActivityStateMachine.succeeded,
-        ],
-        running,
-        name=_("Start"),
-        description=_("Restart the activity.")
-    )
-
     reopen = Transition(
         [
-            running,
             ActivityStateMachine.expired,
             ActivityStateMachine.succeeded,
         ],
@@ -98,7 +67,6 @@ class DeedStateMachine(ActivityStateMachine):
         [
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
-            running
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
@@ -139,14 +107,16 @@ class DeedParticipantStateMachine(ContributorStateMachine):
 
     def is_owner(self, user):
         """is participant"""
-        return self.instance.activity.owner == user or user.is_staff
+        return (
+            self.instance.activity.owner == user or
+            self.instance.activity.initiative.owner == user or
+            self.instance.activity.initiative.activity_manager == user or
+            user.is_staff
+        )
 
     def activity_is_open(self):
         """task is open"""
-        return self.instance.activity.status in (
-            DeedStateMachine.open.value,
-            DeedStateMachine.running.value,
-        )
+        return self.instance.activity.status == DeedStateMachine.open.value,
 
     initiate = Transition(
         EmptyState(),

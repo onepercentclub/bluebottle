@@ -152,9 +152,6 @@ class StripeSourcePayment(Payment):
             metadata=self.metadata
         )
 
-        if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            charge_args['on_behalf_of'] = connect_account.account_id
-
         charge = stripe.Charge.create(**charge_args)
 
         self.charge_token = charge.id
@@ -403,7 +400,6 @@ class StripePayoutAccount(PayoutAccount):
                         yield field
                 except AttributeError:
                     yield field
-
         if not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
@@ -475,10 +471,13 @@ class StripePayoutAccount(PayoutAccount):
                 self._account = stripe.Account.retrieve(self.account_id)
             except AuthenticationError:
                 self._account = {}
+            if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in self._account:
+                self._account = {}
         return self._account
 
     def save(self, *args, **kwargs):
         if self.account_id and not self.country == self.account.country:
+
             self.account_id = None
 
         if not self.account_id:

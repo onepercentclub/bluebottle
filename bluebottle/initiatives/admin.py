@@ -19,7 +19,6 @@ from bluebottle.wallposts.admin import WallpostInline
 
 
 class InitiativeAdminForm(StateMachineModelForm):
-
     class Meta(object):
         model = Initiative
         fields = '__all__'
@@ -105,7 +104,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     list_filter = [
         InitiativeReviewerFilter,
-        'categories',
+        ('categories', SortedRelatedFieldListFilter),
         ('theme', SortedRelatedFieldListFilter),
         StateMachineFilter,
     ]
@@ -170,6 +169,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             detail_fields.append('location')
         else:
             detail_fields.append('place')
+
+        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+            detail_fields.append('is_open')
 
         fieldsets = (
             (_('Details'), {'fields': detail_fields}),

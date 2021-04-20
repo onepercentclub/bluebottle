@@ -4,20 +4,21 @@
 {% blocktrans context 'email' %}
 Here’s your monthly digest with activities on {{ site }} that need your support to make the world a little bit better. These activities are selected based on your profile.
 {% endblocktrans %}{% for activity in activities %}
-{{activity.title}}
 
+{% nobreaks %}
+{{activity.title}}
 {{activity.when}}
 {% if activity.theme %}{{activity.theme}}{% endif %}
 
 {% if activity.expertise %}{{activity.expertise}}{% endif %}
 
-{% nobreaks %}
 {% if activity.is_online %}
 {% trans "Online / Remote" %}
 {% elif activity.location %}
 {{activity.location}}
 {% endif %}
 {% endnobreaks %}
+
 click here {{activity.url?utm_source=matching_email&utm_medium=email&utm_campaign=matching}}
 {% endfor %}{% endblock %}
 

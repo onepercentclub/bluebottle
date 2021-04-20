@@ -69,26 +69,27 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 
                 positions = []
                 try:
-                    if obj.location:
+                    if obj.location and not obj.is_online:
                         positions = [obj.location.position.tuple]
                 except AttributeError:
                     try:
                         positions = [
-                            slot.location.position.tuple for slot in obj.slots.all() if slot.location
+                            slot.location.position.tuple for slot in obj.slots.all()
+                            if slot.location and not slot.is_online
                         ]
                     except AttributeError:
                         pass
 
-                    if positions:
-                        dist = min(
-                            distance(
-                                lonlat(*pos),
-                                lonlat(*self.context['location'].position.tuple)
-                            ) for pos in positions
-                        )
+                if positions:
+                    dist = min(
+                        distance(
+                            lonlat(*pos),
+                            lonlat(*self.context['location'].position.tuple)
+                        ) for pos in positions
+                    )
 
-                        if dist.km < 20:
-                            matching['location'] = True
+                    if dist.km < 20:
+                        matching['location'] = True
 
         return matching
 

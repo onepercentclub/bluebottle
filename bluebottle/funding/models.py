@@ -683,9 +683,10 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     @property
     def payment_methods(self):
         try:
-            provider = self.provider_class.objects.get()
+            currencies = [f.target.currency for f in self.funding_set.all()]
+            provider = self.provider_class.objects.filter(paymentcurrency__code__in=currencies).first()
             return provider.payment_methods
-        except self.provider_class.DoesNotExist:
+        except (AttributeError, self.provider_class.DoesNotExist):
             return []
 
     class JSONAPIMeta(object):

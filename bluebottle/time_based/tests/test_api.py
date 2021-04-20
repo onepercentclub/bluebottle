@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta, date
+import urllib
 
 from django.contrib.gis.geos import Point
 from django.urls import reverse
@@ -121,6 +122,22 @@ class TimeBasedListAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_not_initiator(self):
+        another_user = BlueBottleUserFactory.create()
+        response = self.client.post(self.url, json.dumps(self.data), user=another_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_not_initiator_open(self):
+        self.initiative.is_open = True
+        self.initiative.states.approve(save=True)
+
+        another_user = BlueBottleUserFactory.create()
+        response = self.client.post(self.url, json.dumps(self.data), user=another_user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_not_initiator_not_approved(self):
+        self.initiative.is_open = True
+        self.initiative.save()
+
         another_user = BlueBottleUserFactory.create()
         response = self.client.post(self.url, json.dumps(self.data), user=another_user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -541,6 +558,28 @@ class TimeBasedDetailAPIViewTestCase():
             self.data['data']['attributes']['title']
         )
 
+    def test_update_manager(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.activity_manager
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
+    def test_update_initiative_owner(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=self.activity.initiative.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
     def test_update_unauthenticated(self):
         response = self.client.put(self.url, json.dumps(self.data))
 
@@ -678,7 +717,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
                 position=Point(x=4.9848386, y=52.3929661)
             )
         )
-
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -805,8 +843,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_location(self):
@@ -817,17 +855,16 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.location.save()
         user = BlueBottleUserFactory.create(
             location=LocationFactory.create(
-                position=Point(x=4.9848386, y=52.3929661)
+                position=Point(x=4.8948386, y=52.3929661)
             )
         )
-
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
 
     def test_matching_location_place_too_far(self):
@@ -848,8 +885,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_matching_location_location_too_far(self):
@@ -869,8 +906,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
+        self.assertEqual(data['meta']['matching-properties']['skill'], None)
+        self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
 
@@ -1113,6 +1150,30 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_calendar_links(self):
+        self.slot.is_online = True
+        self.slot.online_meeting_url = 'http://example.com'
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        links = response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            urllib.parse.quote_plus(self.slot.online_meeting_url) in links['google']
+        )
+        self.assertTrue(
+            'https://calendar.google.com/calendar/render?action=TEMPLATE' in links['google']
+        )
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('slot-ical', args=(self.slot.pk, ))
+            )
+        )
 
     def test_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -2161,6 +2222,10 @@ class SlotIcalTestCase(BluebottleTestCase):
             initiative=self.initiative
         )
         self.slot = self.activity.slots.first()
+        self.slot.is_online = True
+        self.slot.online_meeting_url = 'http://example.com'
+        self.slot.save()
+
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
         self.activity.states.submit(save=True)
         self.client = JSONAPITestClient()
@@ -2197,7 +2262,11 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    self.activity.description,
+                    self.activity.get_absolute_url(),
+                    self.slot.online_meeting_url
+                )
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
@@ -2219,7 +2288,12 @@ class DateIcalTestCase(BluebottleTestCase):
             title='Pollute Katwijk Beach',
             slots=[]
         )
-        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        self.slots = DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.activity,
+            is_online=True,
+            online_meeting_url='http://example.com'
+        )
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
         self.activity_url = reverse('date-detail', args=(self.activity.pk,))
@@ -2260,7 +2334,11 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    self.activity.description,
+                    self.activity.get_absolute_url(),
+                    slot.online_meeting_url
+                )
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
@@ -2303,7 +2381,11 @@ class DateIcalTestCase(BluebottleTestCase):
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(
             str(ical_event['description']),
-            '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+            '{}\n{}\nJoin: {}'.format(
+                self.activity.description,
+                self.activity.get_absolute_url(),
+                slot.online_meeting_url
+            )
         )
         self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
         self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))

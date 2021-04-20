@@ -12,11 +12,16 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         except Activity.owner.RelatedObjectDoesNotExist:
             owner = None
 
-        return user in [
+        is_owner = user in [
             owner,
             obj.initiative.owner,
             obj.initiative.activity_manager
         ]
+
+        if action == 'POST':
+            return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
+        else:
+            return is_owner
 
 
 class ActivityTypePermission(ResourcePermission):
@@ -48,7 +53,7 @@ class ContributorPermission(ResourcePermission):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
         'OPTIONS': [],
-        'HEAD': [],
+        'HEAD': ['%(app_label)s.api_read_%(model_name)s'],
         'POST': ['%(app_label)s.api_add_own_%(model_name)s'],
         'PUT': ['%(app_label)s.api_change_own_%(model_name)s'],
         'PATCH': ['%(app_label)s.api_change_own_%(model_name)s'],

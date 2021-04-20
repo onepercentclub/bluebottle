@@ -1,4 +1,4 @@
-import six
+import re
 from django import template
 from django.template.base import Node
 from django.utils.functional import allow_lazy
@@ -19,5 +19,8 @@ class NoBreakNode(Node):
         self.nodelist = nodelist
 
     def render(self, context):
-        strip_line_breaks = allow_lazy(lambda x: x.replace('\n', ''), six.text_type)
+        strip_line_breaks = allow_lazy(
+            lambda x: re.sub(r'[\n]+', '\n', x),
+            str
+        )
         return strip_line_breaks(self.nodelist.render(context).strip())

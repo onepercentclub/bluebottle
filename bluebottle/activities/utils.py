@@ -69,16 +69,16 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                         except AttributeError:
                             pass
 
-                        if positions:
-                            dist = min(
-                                distance(
-                                    lonlat(*pos),
-                                    lonlat(*self.context['location'].position.tuple)
-                                ) for pos in positions
-                            )
+                    if positions:
+                        dist = min(
+                            distance(
+                                lonlat(*pos),
+                                lonlat(*self.context['location'].position.tuple)
+                            ) for pos in positions
+                        )
 
-                            if dist.km < 20:
-                                matching['location'] = True
+                        if dist.km < 20:
+                            matching['location'] = True
 
         return matching
 

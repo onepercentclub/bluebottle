@@ -1,7 +1,10 @@
+from pytz import timezone
+
 from django.urls import reverse
 from django.template.defaultfilters import time, date
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import pgettext_lazy as pgettext
@@ -197,12 +200,24 @@ class MatchingActivitiesNotification(TransitionMessage):
                 context['when'] = pgettext('email', 'Mutliple time slots')
             else:
                 slot = slots[0]
+
+                if slot.location and not slot.is_online:
+                    tz = timezone(slot.location.timezone)
+                else:
+                    tz = get_current_timezone()
+
                 start = '{} {}'.format(
-                    date(slot.start), time(slot.start)
+                    date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))
                 ) if slot.start else pgettext('email', 'Starts immediately')
                 end = '{} {}'.format(
-                    date(slot.end), time(slot.end)
+                    date(slot.end.astimezone(tz)), time(slot.end)
                 ) if slot.end else pgettext('email', 'runs indefinitely')
+                context['when'] = '{start_date} {start_time} - {end_time} ({timezone})'.format(
+                    start_date=date(slot.start.astimezone(tz)),
+                    start_time=time(slot.start.astimezone(tz)),
+                    end_time=time(slot.end.astimezone(tz)),
+                    timezone=start.strftime('%Z')
+                )
 
                 context['when'] = '{} - {}'.format(start, end)
         else:

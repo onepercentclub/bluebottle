@@ -170,6 +170,15 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertTrue('/en/initiatives/activities/list' in body)
+        self.assertTrue(
+            'There are tons of cool activities on Test that are making a positive impact.'
+            in body
+        )
+
+        self.assertTrue(
+            'We have selected 4 activities that match with your profile. Join us!'
+            in body
+        )
         self.assertFalse(
             "Complete your profile, so that we can select even more relevant activities for you"
             in body

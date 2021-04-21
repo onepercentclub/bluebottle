@@ -162,6 +162,12 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_including_partial(self):
         recommend()
         body = mail.outbox[-1].body
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            '{}, there are 4 activities on Test matching your profile'.format(
+                self.user.first_name
+            )
+        )
 
         self.assertTrue('/en/initiatives/activities/list' in body)
         self.assertFalse(

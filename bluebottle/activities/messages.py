@@ -153,7 +153,10 @@ class MatchingActivitiesNotification(TransitionMessage):
     """
     Send a list of matching initiaives to user
     """
-    subject = pgettext('email', 'We found matching initiatives for you')
+    subject = pgettext(
+        'email',
+        '{first_name}, there are {count} activities on {site_name} matching your profile'
+    )
     template = 'messages/matching_activities'
 
     @property
@@ -244,5 +247,6 @@ class MatchingActivitiesNotification(TransitionMessage):
             context['activities'] = [
                 self.get_activity_context(activity) for activity in activities
             ]
+            context['count'] = len(context['activities'])
 
         return context

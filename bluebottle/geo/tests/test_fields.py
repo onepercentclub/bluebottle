@@ -14,4 +14,4 @@ class PointFieldTest(BluebottleTestCase):
             country=country
         )
         geolocation.save()
-        self.assertEqual(geolocation.position, Point(23.6764778, 43.0682267))
+        self.assertEqual(geolocation.position.wkt, Point(23.6764778, 43.0682267).wkt)

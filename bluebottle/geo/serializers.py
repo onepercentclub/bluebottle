@@ -1,17 +1,14 @@
 from builtins import object
-from django.conf import settings
 
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
-
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
-
 from staticmaps_signature import StaticMapURLSigner
 from timezonefinder import TimezoneFinder
 
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.geo.models import Country, Location, Place, Geolocation
 
 staticmap_url_signer = StaticMapURLSigner(
     public_key=settings.STATIC_MAPS_API_KEY, private_key=settings.STATIC_MAPS_API_SECRET
@@ -120,25 +117,6 @@ class InitiativeCountrySerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'countries'
-
-
-class InitiativePlaceSerializer(ModelSerializer):
-    country = ResourceRelatedField(queryset=Country.objects.all())
-
-    included_serializers = {
-        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
-    }
-
-    class Meta(object):
-        model = InitiativePlace
-        fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
-            'position', 'formatted_address',
-        )
-
-    class JSONAPIMeta(object):
-        included_resources = ['country', ]
-        resource_name = 'places'
 
 
 class PointSerializer(serializers.CharField):

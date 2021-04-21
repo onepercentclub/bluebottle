@@ -4,6 +4,9 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django.db.models import Q
+
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -29,7 +32,7 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, PaymentProvider
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
@@ -290,9 +293,7 @@ class MemberAdmin(UserAdmin):
             if SegmentType.objects.filter(is_active=True).count():
                 fieldsets[1][1]['fields'].append('segments')
 
-            if 'Pledge' not in (
-                item['name'] for item in properties.PAYMENT_METHODS
-            ):
+            if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[0][1]['fields'].remove('can_pledge')
 
             if CustomMemberFieldSettings.objects.count():

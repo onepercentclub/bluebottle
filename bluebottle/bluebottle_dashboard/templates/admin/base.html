@@ -4,11 +4,11 @@
 {% load jet_tags %}
 
 {% block extrastyle %}
-    <link rel="stylesheet" type="text/css" href="{% static "/admin/css/dashboard.css" %}">
-    <link rel="stylesheet" type="text/css" href="{% static "jet/css/icons/style.css" as url %}{{ url|jet_append_version }}" />
-    <link rel="stylesheet" type="text/css" href="{% static "jet/css/icons/extra-style.css" as url %}{{ url|jet_append_version }}" />
+    <link rel="stylesheet" type="text/css" href="{% static "/admin/css/dashboard.css" as url %}{{ url|jet_append_version }}" />
 {% endblock %}
-{% block extrahead %}{% endblock %}
+{% block extrahead %}
+    <script type="text/javascript" src="{% static "/admin/js/dashboard.js" as url %}{{ url|jet_append_version }}"></script>
+{% endblock %}
 
 {% block welcome-msg %}
     {% trans 'Welcome,' %}

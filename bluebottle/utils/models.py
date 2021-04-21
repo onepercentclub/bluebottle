@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
-
+from solo.models import SingletonModel
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
@@ -70,7 +70,7 @@ class MailLog(models.Model):
 
 
 @python_2_unicode_compatible
-class BasePlatformSettings(models.Model):
+class BasePlatformSettings(SingletonModel):
 
     update = models.DateTimeField(auto_now=True)
 

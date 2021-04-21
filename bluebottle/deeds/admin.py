@@ -46,6 +46,8 @@ class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
     inlines = (DeedParticipantInline,) + ActivityChildAdmin.inlines
+    list_filter = ['status']
+    search_fields = ['title', 'description']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',

@@ -98,7 +98,7 @@ class Slide(PublishableModel):
         return "{0}{1}".format(settings.MEDIA_URL, str(self.background_image))
 
     def __str__(self):
-        return self.title
+        return self.title or str(_('-empty-'))
 
     class Meta(object):
         ordering = ('language', 'sequence')

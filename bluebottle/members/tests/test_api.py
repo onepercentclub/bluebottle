@@ -203,13 +203,29 @@ class CreateUserTestCase(BluebottleTestCase):
             reverse('user-user-create'),
             {'email': email, 'password': password, 'password_confirmation': password}
         )
+        user_id = str(response.json()['id'])
+
         response = self.client.post(
             reverse('user-user-create'),
             {'email': email, 'password': password, 'password_confirmation': password}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['email'],
+            email
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['type'],
+            'email'
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['id'],
+            user_id
+        )
 
     def test_require_confirmation(self):
         self.settings.confirm_signup = True

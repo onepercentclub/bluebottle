@@ -68,7 +68,8 @@ class ReminderSingleDateNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
-        context.update(get_slot_info(slot))
+        if slot:
+            context.update(get_slot_info(slot))
         context['title'] = self.obj.title
         return context
 

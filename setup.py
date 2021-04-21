@@ -66,23 +66,13 @@ install_requires = [
     'django-tools==0.48.3',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
-<<<<<<< HEAD
     'djangorestframework-jsonapi==4.1.0',
     'drf-jwt==1.19.0',
     'djangorestframework==3.12.4',
     'dkimpy==1.0.5',
     'elasticsearch==6.8.2',
     'elasticsearch-dsl==6.4.0',
-=======
     'django_polymorphic==2.1.2',
-    'djangorestframework-jsonapi==2.8.0',
-    'djangorestframework==3.8.2',
-    'dkimpy==1.0.5',
-    'dotted==0.1.8',
-    'drf-jwt==1.19.0',
-    'elasticsearch-dsl==6.1.0',
-    'elasticsearch==6.3.0',
->>>>>>> integration/deprecation-warnings
     'geocoder==1.37.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',

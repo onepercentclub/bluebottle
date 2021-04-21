@@ -4,18 +4,18 @@
 {% block content %}
 {% blocktrans context 'email' %}
 Hi {{ recipient_name }},
-Thanks for your donation! Be sure to follow the campaign page for the latest updates on the campaign.
-Give some extra support and share this campaign with your network.
+
+Thanks for your donation! 
 {% endblocktrans %}
 
 {% include 'mails/messages/partials/donation_receipt.txt' %}
 
 {% if pledged %}
 {% blocktrans with amount=obj.amount %}
-    Please transfer the amount of {{ amount }} to "{{ title }}".
+Please transfer the amount of {{ amount }} to "{{ title }}".
 {% endblocktrans %}
 {% endif %}
 {% blocktrans %}
-    Support even more by sharing the campaign with your network
+Give some extra support and share this campaign with your network.
 {% endblocktrans %}
 {% endblock content %}

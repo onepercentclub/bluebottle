@@ -580,6 +580,44 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(third.pk))
         self.assertEqual(data['data'][3]['id'], str(second.pk))
 
+    def test_sort_matching_activity_date(self):
+        first = DateActivityFactory.create(
+            status='open',
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
+            start=now() + timedelta(days=10)
+        )
+
+        second = FundingFactory.create(
+            status='open',
+            deadline=now() + timedelta(days=9)
+        )
+
+        third = PeriodActivityFactory.create(
+            status='open',
+            deadline=now() + timedelta(days=11)
+        )
+
+        fourth = PeriodActivityFactory.create(
+            status='open',
+            deadline=None,
+            start=None
+        )
+
+        response = self.client.get(
+            self.url + '?sort=popularity'
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(fourth.pk))
+
     def test_sort_matching_skill(self):
         skill = SkillFactory.create()
         self.owner.skills.add(skill)
@@ -757,28 +795,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(third.pk))
         self.assertEqual(data['data'][3]['id'], str(second.pk))
         self.assertEqual(data['data'][4]['id'], str(first.pk))
-
-    def test_sort_matching_created(self):
-        first = DateActivityFactory.create(
-            status='open', created=now() - timedelta(days=7)
-        )
-        second = DateActivityFactory.create(
-            status='open', created=now() - timedelta(days=5)
-        )
-        third = DateActivityFactory.create(status='open', created=now() - timedelta(days=1))
-
-        response = self.client.get(
-            self.url + '?sort=popularity',
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(third.pk))
-        self.assertEqual(data['data'][1]['id'], str(second.pk))
-        self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_sort_matching_combined(self):
         theme = ThemeFactory.create()

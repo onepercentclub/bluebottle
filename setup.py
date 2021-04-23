@@ -36,6 +36,7 @@ install_requires = [
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==6.5.0',
+    'django-extensions==1.7.9',
     'django-filter==2.3.0',
     'django-fluent-contents==2.0.7',
     'django-fluent-dashboard==1.0a1',

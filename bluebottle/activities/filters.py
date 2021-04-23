@@ -1,7 +1,9 @@
 import re
-
 import dateutil
+
 from django.db.models import Q as DQ
+from django.conf import settings
+
 from django_filters.rest_framework import DjangoFilterBackend
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
 
@@ -119,7 +121,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 matching = matching | ConstantScore(
                     filter=Q(
                         'geo_distance',
-                        distance='50000m',
+                        distance='{}000m'.format(settings.MATCHING_DISTANCE),
                         position={
                             'lat': location.position.latitude,
                             'lon': location.position.longitude

@@ -1112,3 +1112,5 @@ if os.path.exists('/var/run/clamd.scan/'):
 else:
     # This is default for Ubuntu, Debian based distributions
     CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+
+MATCHING_DISTANCE = 50

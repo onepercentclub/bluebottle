@@ -1,3 +1,4 @@
+from django.conf import settings
 from builtins import object
 
 from django.utils.translation import ugettext_lazy as _
@@ -88,7 +89,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                         ) for pos in positions
                     )
 
-                    if dist.km < 20:
+                    if dist.km < settings.MATCHING_DISTANCE:
                         matching['location'] = True
 
         return matching

@@ -65,6 +65,9 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             if not slot.is_online and slot.location
         ]
 
+    def prepare_is_online(self, instance):
+        return any(slot.is_online for slot in instance.slots.all())
+
 
 @ activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):

@@ -107,7 +107,9 @@ class MemberPlatformSettings(BasePlatformSettings):
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
     subscribed = models.BooleanField(
-        default=False, help_text=_('Member is interrested in receiving updates on matching projects')
+        _('Matching'),
+        default=False,
+        help_text=_("Monthly overview of activities that match this person's profile")
     )
 
     remote_id = models.CharField(_('remote_id'),

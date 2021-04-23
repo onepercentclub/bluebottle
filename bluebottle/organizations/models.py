@@ -6,10 +6,6 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 
-from django_extensions.db.fields import (
-    CreationDateTimeField, ModificationDateTimeField
-)
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -77,11 +73,8 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
 
-    created = CreationDateTimeField(
-        _('created'),
-        help_text=_('When this contact was created.')
-    )
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
 
     required_fields = ['name', 'email']
 

@@ -104,7 +104,6 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'tenant_extras.staticfiles_finders.TenantStaticFilesFinder'
 )
 
 # List of callables that know how to import templates from various sources.

@@ -179,7 +179,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
-    campaign_notifications = models.BooleanField(_('Project Notifications'), default=True)
+    campaign_notifications = models.BooleanField(
+        _('Updates'),
+        help_text=_('Updates from initiatives and activities that this person follows'),
+        default=True
+    )
 
     website = models.URLField(_('website'), blank=True)
     facebook = models.CharField(_('facebook profile'), blank=True, max_length=50)

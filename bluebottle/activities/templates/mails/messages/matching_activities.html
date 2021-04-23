@@ -3,10 +3,22 @@
 
 {% block message %}
     <p>
-    {% blocktrans context 'email' %}
-        Here’s your monthly digest with activities on {{ site }} that need your support to make the world a little bit better. These activities are selected based on your profile.
-    {% endblocktrans %}
+        {% blocktrans context 'email' %}
+            There are tons of cool activities on {{ site_name }} that are making a positive impact. 
+
+            We have selected {{ count }} activities that match with your profile. Join us!
+        {% endblocktrans %}
     </p>
+
+    {% if profile_incomplete%}
+        <p>
+            <a href="{{site}}/member/profile">
+                {% trans "Complete your profile" %}
+            </a>
+            {% trans ", so that we can select even more relevant activities for you." %}
+        </p>
+    {% endif %}
+
     <table class="matching-activities-email-list">
         <tbody>
             {% for activity in activities %}
@@ -76,15 +88,6 @@
 {% endblock %}
 
 {% block unsubscribe %}
-    {% if profile_incomplete%}
-        <p>
-            <a href="{{site}}/member/profile">
-                {% trans "Complete your profile" %}
-            </a>
-            {% trans ", so that we can select even more relevant activities for you." %}
-        </p>
-    {% endif %}
-    <p>
     {% trans "Don't want to receive this monthly update anymore? Unsubscribe" %}
     <a href="{{site}}/member/profile"> {% trans "via your profile page." %}
 {% endblock %}`

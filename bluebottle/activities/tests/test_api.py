@@ -18,7 +18,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory
+    DateActivitySlotFactory, SkillFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -26,7 +26,6 @@ from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 

@@ -12,12 +12,11 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.activities.tasks import recommend
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, PeriodParticipantFactory
+    PeriodActivityFactory, PeriodParticipantFactory, SkillFactory
 )
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
 
 
 @override_settings(

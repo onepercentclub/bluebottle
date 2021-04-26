@@ -450,7 +450,6 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SkillPagination
-    ordering = ['name']
 
     def get_queryset(self):
         lang = self.request.LANGUAGE_CODE or properties.LANGUAGE_CODE

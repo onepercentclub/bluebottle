@@ -1,6 +1,7 @@
 import csv
 
 import icalendar
+from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
@@ -452,7 +453,8 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     ordering = ['name']
 
     def get_queryset(self):
-        return super(SkillList, self).get_queryset().order_by('translations__name')
+        lang = self.request.LANGUAGE_CODE or properties.LANGUAGE_CODE
+        return super().get_queryset().translated(lang).order_by('translations__name')
 
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

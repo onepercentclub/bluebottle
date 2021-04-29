@@ -1,31 +1,28 @@
 import json
-from datetime import timedelta, date
 import urllib
+from datetime import timedelta, date
 
+import icalendar
+from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils.timezone import now, utc
-from django.contrib.auth.models import Group, Permission
-
 from rest_framework import status
 
-import icalendar
-
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.time_based.models import SlotParticipant
-from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory
-)
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
+from bluebottle.time_based.models import SlotParticipant, Skill
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, PeriodActivityFactory,
+    DateParticipantFactory, PeriodParticipantFactory,
+    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory
+)
 
 
 class TimeBasedListAPIViewTestCase():
@@ -2405,12 +2402,15 @@ class SkillApiTestCase(BluebottleTestCase):
         super().setUp()
         MemberPlatformSettings.objects.update(closed=True)
         self.url = reverse('skill-list')
+        Skill.objects.all().delete()
+        self.skill = SkillFactory.create_batch(40)
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):
         user = BlueBottleUserFactory.create()
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results']), 40)
 
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)

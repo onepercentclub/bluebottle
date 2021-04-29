@@ -5,8 +5,10 @@ from django.db.models import Q as DQ
 from django.conf import settings
 
 from django_filters.rest_framework import DjangoFilterBackend
-from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
-
+from elasticsearch_dsl.query import (
+    FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
+)
+from elasticsearch_dsl.function import ScriptScore
 from bluebottle.activities.documents import activity
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.time_based.states import TimeBasedStateMachine
@@ -69,14 +71,21 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     'field_value_factor',
                     field='status_score',
                     weight=10,
-                ),
+                )
+            ],
+        )
+        score = score | FunctionScore(
+            score_mode='first',
+            functions=[
                 SF(
                     'gauss',
-                    weight=0.01,
-                    created={
-                        'scale': "365d"
+                    weight=0.1,
+                    filter=Q('exists', field='activity_date'),
+                    activity_date={
+                        'scale': "10d"
                     },
                 ),
+                ScriptScore(script="0")
             ]
         )
 

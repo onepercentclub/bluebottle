@@ -286,6 +286,12 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         ('anonymous', 'Anonymous'),
     )
 
+    def get_exclude(self, request, obj=None):
+        if not request.user.is_superuser:
+            return ('amount', 'payout_amount', )
+        else:
+            return []
+
     def amount_value(self, obj):
         if obj:
             return obj.amount

@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, ContentTextField, PhotoSerializer)
+    OEmbedField, PhotoSerializer)
 from bluebottle.funding.models import Funding, Donor
 from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
@@ -19,7 +19,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     Serializer for Wallpost Reactions.
     """
     author = UserPreviewSerializer(read_only=True)
-    text = ContentTextField()
+    text = serializers.CharField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
     class Meta(object):
@@ -136,7 +136,7 @@ class MediaWallpostSerializer(WallpostSerializerBase):
     should be subclassed for the specific
     model it's a Wallpost about. See ProjectMediaWallpost for an example.
     """
-    text = ContentTextField(required=False)
+    text = serializers.CharField(required=False)
     video_html = OEmbedField(
         source='video_url',
         maxwidth='560',
@@ -157,7 +157,7 @@ class TextWallpostSerializer(WallpostSerializerBase):
     should be subclassed for the specific
     model it's a Wallpost about. See ProjectTextWallpost for an example.
     """
-    text = ContentTextField()
+    text = serializers.CharField()
 
     class Meta(object):
         model = TextWallpost
@@ -184,7 +184,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
     should be subclassed for the specific
     model it's a Wallpost about. See ProjectTextWallpost for an example.
     """
-    text = ContentTextField()
+    text = serializers.CharField()
 
     # related_type = serializers.CharField(source='related_type.model')
     # related_object = WallpostRelatedField(source='related_object')

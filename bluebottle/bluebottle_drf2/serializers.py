@@ -3,7 +3,6 @@ standard_library.install_aliases()
 import logging
 import os
 from os.path import isfile
-import re
 import sys
 from urllib.error import URLError
 import urllib.parse
@@ -12,8 +11,6 @@ import urllib.parse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.template import defaultfilters
-from django.template.defaultfilters import linebreaks
-from django.utils.html import strip_tags, urlize
 
 from micawber.contrib.mcdjango import providers
 from micawber.exceptions import ProviderException
@@ -82,31 +79,6 @@ class SorlImageField(RestrictedImageField):
             return ""
         relative_url = settings.MEDIA_URL + thumbnail.name
         return relative_url
-
-
-class ContentTextField(serializers.CharField):
-    """
-    A serializer for content text such as text field found in Reaction and
-    TextWallpost. This serializer creates clickable links for text urls and
-    adds <br/> and/or <p></p> in-place of new line characters.
-    """
-
-    def to_representation(self, value):
-        # Convert model instance text -> text for reading.
-        text = super(ContentTextField, self).to_representation(value)
-        # This is equivalent to the django template filter:
-        # '{{ value|urlize|linebreaks }}'. Note: Text from the
-        # database is escaped again here (on read) just as a
-        # double check for HTML / JS injection.
-        text = linebreaks(urlize(text, None, True, True))
-        # This ensure links open in a new window (BB-136).
-        return re.sub(r'<a ', '<a target="_blank" ', text)
-
-    def to_internal_value(self, value):
-        # Convert text -> model instance text for writing.
-        text = super(ContentTextField, self).to_internal_value(value)
-        # HTML tags are stripped and any HTML / JS that is left is escaped.
-        return strip_tags(text)
 
 
 class OEmbedField(serializers.Field):

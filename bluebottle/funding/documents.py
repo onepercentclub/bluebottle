@@ -7,7 +7,7 @@ from bluebottle.members.models import Member
 SCORE_MAP = {
     'open': 1,
     'succeeded': 0.5,
-    'partially_funded': 0.4,
+    'partially_funded': 0.5,
     'refundend': 0.3,
 }
 

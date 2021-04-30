@@ -483,7 +483,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
-        self.assertEqual(response.data['results'][0]['text'], '<p>What a nice initiative!</p>')
+        self.assertEqual(response.data['results'][0]['text'], 'What a nice initiative!')
         self.assertEqual(response.data['results'][0]['author']['about_me'], 'I like to give away all my moneys!')
 
     def test_donation_wallposts_other_user(self):

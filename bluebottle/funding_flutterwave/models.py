@@ -41,12 +41,12 @@ class FlutterwavePaymentProvider(PaymentProvider):
                 code='mpesa',
                 currencies=['KES'],
             ),
-            PaymentMethod(
-                provider='flutterwave',
-                name='PayPal',
-                code='paypal',
-                currencies=['NGN', 'USD'],
-            ),
+            # PaymentMethod(
+            #     provider='flutterwave',
+            #     name='PayPal',
+            #     code='paypal',
+            #     currencies=['NGN', 'USD'],
+            # ),
             PaymentMethod(
                 provider='flutterwave',
                 name='OrangeMoney',

@@ -75,3 +75,6 @@ class DeedParticipant(Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/deeds/participant'
+
+
+from bluebottle.deeds.periodic_tasks import *  # noqa

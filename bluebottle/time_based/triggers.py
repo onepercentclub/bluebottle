@@ -492,11 +492,22 @@ def all_slots_finished(effect):
     ).count() == 0
 
 
+def not_all_slots_finished(effect):
+    """
+    not all slots have finished
+    """
+    return not all_slots_finished(effect)
+
+
 def all_slots_cancelled(effect):
     """
     all slots are cancelled
     """
-    return effect.instance.activity.slots.exclude(status__in=['cancelled', 'deleted']).count() == 0
+    return effect.instance.activity.slots.exclude(
+        status__in=['cancelled', 'deleted']
+    ).exclude(
+        id=effect.instance.id,
+    ).count() == 0
 
 
 def all_slots_will_be_full(effect):
@@ -511,6 +522,13 @@ def activity_has_no_accepted_participants(effect):
     activity does not have any accepted participants
     """
     return effect.instance.activity.accepted_participants.count() == 0
+
+
+def activity_has_accepted_participants(effect):
+    """
+    activity does not have any accepted participants
+    """
+    return effect.instance.activity.accepted_participants.count() > 0
 
 
 def slot_selection_is_all(effect):
@@ -532,8 +550,49 @@ def slot_selection_is_free(effect):
 @register(DateActivitySlot)
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
+        TransitionTrigger(
+            ActivitySlotStateMachine.mark_complete,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                ),
+
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.reschedule,
+                ),
+            ]
+        ),
         ModelDeletedTrigger(
-            effects=[ResetSlotSelectionEffect]
+            effects=[
+                ResetSlotSelectionEffect,
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                        activity_has_accepted_participants
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.expire,
+                    conditions=[
+                        all_slots_finished,
+                        activity_has_no_accepted_participants
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        not_all_slots_finished,
+                        all_slots_will_be_full,
+                        slot_selection_is_free
+                    ]
+                ),
+            ]
         ),
 
         TransitionTrigger(

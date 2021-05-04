@@ -78,8 +78,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_anonymous(self):
         succeeded = DateActivityFactory.create(
-            owner=self.owner, status='succeeded'
+            owner=self.owner,
         )
+        succeeded.initiative.states.submit(save=True)
+        succeeded.initiative.states.approve(save=True)
+        succeeded.states.submit(save=True)
+
+        slot = succeeded.slots.get()
+        slot.start = now() - timedelta(days=10)
+        slot.save()
+
+        DateParticipantFactory.create(
+            activity=succeeded
+        )
+
         open = DateActivityFactory.create(status='open')
         DateActivityFactory.create(status='submitted')
         DateActivityFactory.create(status='closed')
@@ -591,8 +603,22 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_matching_status(self):
         DateActivityFactory.create(status='closed')
-        second = DateActivityFactory.create(status='succeeded')
-        DateParticipantFactory.create(activity=second)
+
+        second = DateActivityFactory.create(
+            owner=self.owner,
+        )
+        second.initiative.states.submit(save=True)
+        second.initiative.states.approve(save=True)
+        second.states.submit(save=True)
+
+        slot = second.slots.get()
+        slot.start = now() - timedelta(days=10)
+        slot.save()
+
+        DateParticipantFactory.create(
+            activity=second
+        )
+
         third = DateActivityFactory.create(
             status='open',
             capacity=1

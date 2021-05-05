@@ -15,8 +15,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         is_owner = user in [
             owner,
             obj.initiative.owner,
-            obj.initiative.activity_manager
-        ]
+        ] or user in obj.initiative.activity_managers.all()
 
         if action == 'POST':
             return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
@@ -68,8 +67,7 @@ class ContributorPermission(ResourcePermission):
             return user.has_perms(perms) and user in [
                 obj.activity.owner,
                 obj.activity.initiative.owner,
-                obj.activity.initiative.activity_manager
-            ]
+            ] or user in obj.activity.initiative.activity_managers.all()
 
 
 class ContributionPermission(ResourcePermission):
@@ -81,8 +79,7 @@ class ContributionPermission(ResourcePermission):
         return user in [
             obj.contributor.activity.owner,
             obj.contributor.activity.initiative.owner,
-            obj.contributor.activity.initiative.activity_manager
-        ]
+        ] or user in obj.contributor.activity.initiative.activity_managers.all()
 
 
 class DeleteActivityPermission(ResourcePermission):

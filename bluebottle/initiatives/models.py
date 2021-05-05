@@ -54,6 +54,15 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         related_name='activity_manager_%(class)ss',
     )
 
+    activity_managers = models.ManyToManyField(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('co-initiators'),
+        help_text=_('Co-initiators can create and edit activities for '
+                    'this initiative, but cannot edit the initiative itself.'),
+        related_name='activity_managers_%(class)ss',
+    )
     promoter = models.ForeignKey(
         'members.Member',
         verbose_name=_('promoter'),
@@ -192,9 +201,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             else:
                 self.slug = 'new'
 
-        if not self.activity_manager:
-            self.activity_manager = self.owner
-
         try:
             if InitiativePlatformSettings.objects.get().require_organization:
                 self.has_organization = True
@@ -218,6 +224,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         self.story = clean_html(self.story)
 
         super(Initiative, self).save(**kwargs)
+
+        if not self.activity_managers.exists():
+            self.activity_managers.add(self.owner)
 
 
 class InitiativePlatformSettings(BasePlatformSettings):

@@ -111,8 +111,7 @@ class TimeBasedListAPIViewTestCase():
 
     def test_create_as_activity_manager(self):
         activity_manager = BlueBottleUserFactory.create()
-        self.initiative.activity_manager = activity_manager
-        self.initiative.save()
+        self.initiative.activity_managers.add(activity_manager)
 
         response = self.client.post(self.url, json.dumps(self.data), user=activity_manager)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -422,7 +421,7 @@ class TimeBasedDetailAPIViewTestCase():
 
     def test_update_manager(self):
         response = self.client.put(
-            self.url, json.dumps(self.data), user=self.activity.initiative.activity_manager
+            self.url, json.dumps(self.data), user=self.activity.initiative.activity_managers.first()
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1117,7 +1116,7 @@ class ParticipantDetailViewTestCase():
         )
 
     def test_get_activity_manager(self):
-        response = self.client.get(self.url, user=self.activity.initiative.activity_manager)
+        response = self.client.get(self.url, user=self.activity.initiative.activity_managers.first())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

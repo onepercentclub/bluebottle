@@ -17,12 +17,22 @@ class InitiativeFactory(factory.DjangoModelFactory):
     story = factory.Faker('text')
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
-    activity_manager = factory.SubFactory(BlueBottleUserFactory)
+    activity_managers = factory.SubFactory(BlueBottleUserFactory)
     has_organization = False
 
     theme = factory.SubFactory(ThemeFactory)
     image = factory.SubFactory(ImageFactory)
     place = factory.SubFactory(GeolocationFactory)
+
+    @factory.post_generation
+    def activity_managers(self, create, extracted, **kwargs):
+        if not extracted:
+            extracted = [BlueBottleUserFactory.create()]
+
+        # A list of groups were passed in, use them
+        self.activity_managers.clear()
+        for manager in extracted:
+            self.activity_managers.add(manager)
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):

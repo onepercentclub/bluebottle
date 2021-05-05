@@ -439,11 +439,12 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
-        if self.context['request'].user not in [
+
+        user = self.context['request'].user
+        if user not in [
             instance.user,
             instance.activity.owner,
-            instance.activity.initiative.activity_manager
-        ]:
+        ] and user not in instance.activity.initiative.activity_managers.all():
             del result['motivation']
             del result['document']
 

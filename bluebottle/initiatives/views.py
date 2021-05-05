@@ -36,7 +36,7 @@ from bluebottle.utils.views import (
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.prefetch_related(
-        'place', 'location', 'owner', 'activity_manager', 'image', 'categories', 'theme'
+        'place', 'location', 'owner', 'activity_managers', 'image', 'categories', 'theme'
     )
 
     def get_serializer_class(self):
@@ -61,7 +61,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'promoter': ['promoter'],
-        'activity_manager': ['activity_manager'],
+        'activity_managers': ['activity_managers'],
         'theme': ['theme'],
         'place': ['place'],
         'location': ['location'],

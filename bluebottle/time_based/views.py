@@ -134,7 +134,7 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
             queryset = self.queryset.filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
             )
         else:

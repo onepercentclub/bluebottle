@@ -236,11 +236,11 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
-        if not self.context['request'].user in [
+        user = self.context['request'].user
+        if user not in [
             self.instance.owner,
             self.instance.initiative.owner,
-            self.instance.initiative.activity_manager
-        ]:
+        ] and user not in self.instance.initiative.activity_managers.all():
             del fields['bank_account']
             del fields['required']
             del fields['errors']

@@ -16,7 +16,7 @@ class ParticipantListFilter(DjangoFilterBackend):
             queryset = queryset.instance_of(DeedParticipant).filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
-                Q(activity__initiative__activity_manager=request.user) |
+                Q(activity__initiative__activity_managers=request.user) |
                 Q(status__in=[
                     DeedParticipantStateMachine.accepted.value,
                     DeedParticipantStateMachine.succeeded.value

@@ -70,6 +70,33 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ActiviyManagersInline(admin.TabularInline):
+    model = Initiative.activity_managers.through
+    show_change_link = True
+    extra = 0
+
+    def user_link(self, obj, field):
+        user = obj.member
+
+        url = reverse(
+            'admin:{0}_{1}_change'.format(
+                user._meta.app_label,
+                user._meta.model_name
+            ),
+            args=[obj.id]
+        )
+        return format_html(u"<a href='{}'>{}</a>", str(url), getattr(user, field))
+
+    def full_name(self, obj):
+        return self.user_link(obj, 'full_name')
+
+    def email(self, obj):
+        return self.user_link(obj, 'email')
+
+    readonly_fields = ('full_name', 'email', )
+    exclude = ('member', )
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
 

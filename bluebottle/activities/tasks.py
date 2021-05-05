@@ -91,7 +91,7 @@ def get_matching_activities(user):
         ).exclude(contributors__user=user)
     )
 
-    if len(activities) < 4:
+    if len(activities) < 3:
         partially_matched = [activity for activity in result if activity._score == 2]
         activities += list(
             Activity.objects.filter(

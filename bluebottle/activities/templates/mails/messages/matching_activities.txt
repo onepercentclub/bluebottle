@@ -15,7 +15,7 @@ We have selected {{ count }} activities that match with your profile. Join us!
 {{activity.when}}
 {% if activity.theme %}{{activity.theme}}{% endif %}
 
-{% if activity.expertise %}{{activity.expertise}}{% endif %}
+{% if activity.expertise %}{{activity.expertise}}{% else %}{%trans "No specific skill needed"%}{% endif %}
 
 {% if activity.is_online %}
 {% trans "Online / Remote" %}

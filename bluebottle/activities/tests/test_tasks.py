@@ -71,17 +71,6 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             )
         )
 
-        self.matches.append(
-            PeriodActivityFactory.create(
-                expertise=self.user.skills.first(),
-                is_online=True,
-                location=GeolocationFactory.create(position=self.rotterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
-            )
-        )
-
         self.non_matches = []
         self.partial_matches = []
 
@@ -163,7 +152,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         body = mail.outbox[-1].body
         self.assertEqual(
             mail.outbox[-1].subject,
-            '{}, there are 4 activities on Test matching your profile'.format(
+            '{}, there are 3 activities on Test matching your profile'.format(
                 self.user.first_name
             )
         )
@@ -175,7 +164,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertTrue(
-            'We have selected 4 activities that match with your profile. Join us!'
+            'We have selected 3 activities that match with your profile. Join us!'
             in body
         )
         self.assertFalse(

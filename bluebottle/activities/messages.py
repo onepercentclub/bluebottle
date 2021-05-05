@@ -245,8 +245,8 @@ class MatchingActivitiesNotification(TransitionMessage):
         )
         if activities:
             context['activities'] = [
-                self.get_activity_context(activity) for activity in activities
+                self.get_activity_context(activity) for activity in activities[:3]
             ]
-            context['count'] = len(context['activities'])
+            context['count'] = len(activities)
 
         return context

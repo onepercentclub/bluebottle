@@ -16,7 +16,7 @@ class ParticipantListFilter(DjangoFilterBackend):
             queryset = queryset.instance_of(DateParticipant, PeriodParticipant).filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
-                Q(activity__initiative__activity_manager=request.user) |
+                Q(activity__initiative__activity_managers=request.user) |
                 Q(status__in=[
                     ParticipantStateMachine.new.value,
                     ParticipantStateMachine.accepted.value,
@@ -46,7 +46,7 @@ class SlotParticipantListFilter(DjangoFilterBackend):
             queryset = queryset.filter(
                 Q(participant__user=request.user) |
                 Q(participant__activity__owner=request.user) |
-                Q(participant__activity__initiative__activity_manager=request.user) |
+                Q(participant__activity__initiative__activity_managers=request.user) |
                 Q(status=SlotParticipantStateMachine.registered.value)
             ).filter(
                 Q(participant__user=request.user) |

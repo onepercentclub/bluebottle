@@ -8,7 +8,7 @@ class ActivityStateMachine(ModelStateMachine):
     draft = State(
         _('draft'),
         'draft',
-        _('The activity has been created, but not yet completed. The activity manager is still editing the activity.')
+        _('The activity has been created, but not yet completed. An activity manager is still editing the activity.')
     )
     submitted = State(
         _('submitted'),
@@ -26,7 +26,7 @@ class ActivityStateMachine(ModelStateMachine):
         _(
             'The activity does not fit the programme or does not comply with the rules. '
             'The activity does not appear on the platform, but counts in the report. '
-            'The activity cannot be edited by the activity manager.'
+            'The activity cannot be edited by an activity manager.'
         )
     )
     deleted = State(
@@ -35,7 +35,7 @@ class ActivityStateMachine(ModelStateMachine):
         _(
             'The activity has been removed. The activity does not appear on '
             'the platform and does not count in the report. '
-            'The activity cannot be edited by the activity manager.'
+            'The activity cannot be edited by an activity manager.'
         )
     )
     cancelled = State(
@@ -43,7 +43,7 @@ class ActivityStateMachine(ModelStateMachine):
         'cancelled',
         _(
             'The activity is not executed. The activity does not appear on the platform, '
-            'but counts in the report. The activity cannot be edited by the activity manager.'
+            'but counts in the report. The activity cannot be edited by an activity manager.'
         )
     )
 
@@ -52,7 +52,7 @@ class ActivityStateMachine(ModelStateMachine):
         'expired',
         _(
             'The activity has ended, but did have any contributions . The activity does not appear on the platform, '
-            'but counts in the report. The activity cannot be edited by the activity manager.'
+            'but counts in the report. The activity cannot be edited by an activity manager.'
         )
     )
     open = State(
@@ -95,7 +95,7 @@ class ActivityStateMachine(ModelStateMachine):
         return (
             user == self.instance.owner or
             user == self.instance.initiative.owner or
-            user == self.instance.initiative.activity_manager or
+            user in self.instance.initiative.activity_managers.all() or
             user.is_staff
         )
 
@@ -129,7 +129,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_(
             'Reject the activity if it does not fit the programme or '
             'if it does not comply with the rules. '
-            'The activity manager can no longer edit the activity '
+            'An activity manager can no longer edit the activity '
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back '
             'office and will continue to count in the reporting.'
@@ -175,7 +175,7 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Cancel'),
         description=_(
             'Cancel if the activity will not be executed. '
-            'The activity manager can no longer edit the activity '
+            'An activity manager can no longer edit the activity '
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
@@ -194,7 +194,7 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Restore'),
         description=_(
             "The activity status is changed to 'Needs work'. "
-            "The manager of the activity has to enter a new date and can make changes. "
+            "An manager of the activity has to enter a new date and can make changes. "
             "The activity will then be reopened to participants."
         ),
         automatic=False,

@@ -79,9 +79,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     raw_id_fields = (
         'owner', 'reviewer',
-        'promoter', 'activity_manager',
+        'promoter',
         'organization', 'organization_contact',
-        'place'
+        'place',
     )
 
     def lookup_allowed(self, key, value):
@@ -149,8 +149,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ('organization', 'Organization'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Owner email'),
-        ('activity_manager__full_name', 'Activity Manager'),
-        ('activity_manager__email', 'Activity Manager email'),
         ('promotor__full_name', 'Promotor'),
         ('promotor__email', 'Promotor email'),
         ('reviewer__full_name', 'Reviewer'),
@@ -187,8 +185,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )
             }),
             (_('Status'), {'fields': (
+                'reviewer', 'activity_managers',
                 'valid',
-                'reviewer', 'activity_manager',
+                'reviewer',
                 'promoter', 'status', 'states',
                 'created', 'updated',
             )}),
@@ -200,7 +199,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )}),
             )
         return fieldsets
-
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):
@@ -223,6 +221,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ])))
 
     valid.short_description = _('Steps to complete initiative')
+    autocomplete_fields = ['activity_managers']
 
     class Media(object):
         js = ('admin/js/inline-activities-add.js',)

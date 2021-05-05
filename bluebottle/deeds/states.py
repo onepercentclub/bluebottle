@@ -73,7 +73,7 @@ class DeedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
         description=_(
             'Cancel if the activity will not be executed. '
-            'The activity manager can no longer edit the activity '
+            'An activity manager can no longer edit the activity '
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
@@ -110,7 +110,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         return (
             self.instance.activity.owner == user or
             self.instance.activity.initiative.owner == user or
-            self.instance.activity.initiative.activity_manager == user or
+            user in self.instance.activity.initiative.activity_managers.all() or
             user.is_staff
         )
 

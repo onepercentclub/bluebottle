@@ -748,7 +748,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         managed_initiatives = InitiativeFactory.create_batch(
-            2, status='submitted', activity_manager=self.owner
+            2, status='submitted', activity_managers=[self.owner]
         )
         InitiativeFactory.create_batch(4, status='submitted')
 
@@ -819,7 +819,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
@@ -830,7 +830,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['activity-managers']['data'][0]['id'], str(self.owner.pk))
 
     def test_filter_promoter(self):
         """
@@ -852,7 +852,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self owner or activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
         InitiativeFactory.create_batch(4, status='approved')
 

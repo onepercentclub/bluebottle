@@ -370,7 +370,7 @@ class MemberAdmin(UserAdmin):
     def initiatives(self, obj):
         initiatives = []
         initiative_url = reverse('admin:initiatives_initiative_changelist')
-        for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
+        for field in ['owner', 'reviewer', 'promoter', 'activity_managers']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
                 link = initiative_url + '?{}_id={}'.format(field, obj.id)
                 initiatives.append(format_html(

@@ -38,7 +38,7 @@ class InitiativeDocument(DocType):
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
-    activity_manager = fields.NestedField(properties={
+    activity_managers = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
@@ -50,7 +50,6 @@ class InitiativeDocument(DocType):
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
-    activity_manager_id = fields.KeywordField()
 
     theme = fields.NestedField(properties={
         'id': fields.KeywordField(),

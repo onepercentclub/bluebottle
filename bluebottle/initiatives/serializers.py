@@ -147,7 +147,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
-    activity_manager = ResourceRelatedField(read_only=True)
+    activity_managers = ResourceRelatedField(read_only=True, many=True)
     activities = FilteredPolymorphicResourceRelatedField(
         filter_backend=ActivityFilter,
         polymorphic_serializer=ActivityListSerializer,
@@ -230,7 +230,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
@@ -250,7 +250,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         fsm_fields = ['status']
         fields = (
             'id', 'title', 'pitch', 'categories',
-            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'owner', 'reviewer', 'promoter', 'activity_managers',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
@@ -264,7 +264,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'owner', 'reviewer', 'promoter', 'activity_managers',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities',
             'activities.image', 'activities.location',
@@ -279,7 +279,7 @@ class InitiativeListSerializer(ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    activity_manager = ResourceRelatedField(read_only=True)
+    activity_managers = ResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -289,7 +289,7 @@ class InitiativeListSerializer(ModelSerializer):
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
@@ -300,7 +300,7 @@ class InitiativeListSerializer(ModelSerializer):
         fsm_fields = ['status']
         fields = (
             'id', 'title', 'pitch', 'categories',
-            'owner', 'activity_manager',
+            'owner', 'activity_managers',
             'slug', 'has_organization', 'transitions',
             'story', 'image', 'theme', 'place', 'location'
         )
@@ -309,7 +309,7 @@ class InitiativeListSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'activity_manager',
+            'owner', 'activity_managers',
             'categories', 'theme', 'place', 'location',
             'image', 'organization',
         ]

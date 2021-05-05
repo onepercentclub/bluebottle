@@ -4,9 +4,7 @@ from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.text import Truncator
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
+from django.utils.translation import gettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
@@ -37,25 +35,37 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
     # TextWallposts, system Wallposts for donations etc.)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'),
-                               related_name="%(class)s_wallpost", blank=True,
-                               null=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('author'),
+        related_name="%(class)s_wallpost", blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
     editor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True,
-        null=True, help_text=_("The last user to edit this wallpost."))
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name=_('editor'),
+        blank=True,
+        null=True,
+        help_text=_("The last user to edit this wallpost.")
+    )
 
     # The metadata for the wall post.
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)
 
     # Generic foreign key so we can connect it to any object.
     content_type = models.ForeignKey(
-        ContentType, verbose_name=_('content type'),
-        related_name="content_type_set_for_%(class)s")
+        ContentType,
+        verbose_name=_('content type'),
+        related_name="content_type_set_for_%(class)s",
+        on_delete=models.CASCADE
+    )
     object_id = models.PositiveIntegerField(_('object ID'))
     content_object = fields.GenericForeignKey('content_type', 'object_id')
 
@@ -64,10 +74,13 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     share_with_linkedin = models.BooleanField(default=False)
     email_followers = models.BooleanField(default=True)
 
-    donation = models.ForeignKey('funding.Donor',
-                                 verbose_name=_("Donor"),
-                                 related_name='wallpost',
-                                 null=True, blank=True)
+    donation = models.ForeignKey(
+        'funding.Donor',
+        verbose_name=_("Donor"),
+        related_name='wallpost',
+        null=True, blank=True,
+        on_delete=models.CASCADE
+    )
 
     pinned = models.BooleanField(
         default=False,
@@ -174,8 +187,12 @@ class MediaWallpost(Wallpost):
 
 
 class MediaWallpostPhoto(models.Model):
-    mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
-                                      null=True, blank=True)
+    mediawallpost = models.ForeignKey(
+        MediaWallpost,
+        related_name='photos',
+        null=True, blank=True,
+        on_delete=models.CASCADE
+    )
     results_page = models.BooleanField(default=True)
     photo = models.ImageField(
         upload_to='mediawallpostphotos',
@@ -190,14 +207,22 @@ class MediaWallpostPhoto(models.Model):
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'),
-                               related_name="%(class)s_wallpost_photo",
-                               blank=True, null=True)
-    editor = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('editor'), blank=True, null=True,
-                               help_text=_(
-                                   "The last user to edit this wallpost photo."))
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('author'),
+        related_name="%(class)s_wallpost_photo",
+        blank=True, null=True,
+        on_delete=models.CASCADE
+    )
+    editor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('editor'),
+        blank=True, null=True,
+        help_text=_(
+            "The last user to edit this wallpost photo."
+        ),
+        on_delete=models.CASCADE
+    )
 
     @property
     def owner(self):
@@ -237,8 +262,11 @@ class SystemWallpost(Wallpost):
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True)
 
     # Generic foreign key so we can connect any object to it.
-    related_type = models.ForeignKey(ContentType,
-                                     verbose_name=_('related type'))
+    related_type = models.ForeignKey(
+        ContentType,
+        verbose_name=_('related type'),
+        on_delete=models.CASCADE
+    )
     related_id = models.PositiveIntegerField(_('related ID'))
     related_object = fields.GenericForeignKey('related_type', 'related_id')
 
@@ -252,22 +280,27 @@ class Reaction(AnonymizationMixin, models.Model):
 
     # Who posted this reaction. User will need to be logged in to
     # make a reaction.
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'),
-                               related_name='wallpost_reactions')
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('author'),
+        related_name='wallpost_reactions',
+        on_delete=models.CASCADE
+    )
     editor = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True,
         null=True, related_name='+',
-        help_text=_("The last user to edit this reaction."))
+        help_text=_("The last user to edit this reaction."),
+        on_delete=models.CASCADE
+    )
 
     # The reaction text and the wallpost it's a reaction to.
     text = models.TextField(_('reaction text'),
                             max_length=WALLPOST_REACTION_MAX_LENGTH)
-    wallpost = models.ForeignKey(Wallpost, related_name='reactions')
+    wallpost = models.ForeignKey(Wallpost, related_name='reactions', on_delete=models.CASCADE)
 
     # Metadata for the reaction.
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)

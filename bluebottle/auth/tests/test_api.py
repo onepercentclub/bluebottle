@@ -1,6 +1,6 @@
 from mock import patch
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -30,8 +30,7 @@ class UserTokenTestCase(BluebottleTestCase):
             reverse("token-auth"),
             data={'email': self.user.email, 'password': 'testing'}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, 'token')
+        self.assertContains(response, 'token', status_code=status.HTTP_201_CREATED)
 
     @patch('bluebottle.auth.middleware.LAST_SEEN_DELTA', 0.000001)
     def test_last_seen(self):

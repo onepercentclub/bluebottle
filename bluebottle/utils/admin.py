@@ -11,9 +11,9 @@ from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
-from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
+from solo.admin import SingletonModelAdmin
 
 from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
@@ -148,9 +148,8 @@ class TotalAmountAdminChangeList(ChangeList):
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 
-class BasePlatformSettingsAdmin(SingletonAdmin):
-    def has_delete_permission(self, request, obj=None):
-        return False
+class BasePlatformSettingsAdmin(SingletonModelAdmin):
+    pass
 
 
 def log_action(obj, user, change_message='Changed', action_flag=CHANGE):

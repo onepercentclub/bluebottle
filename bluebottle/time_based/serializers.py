@@ -13,22 +13,21 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField
-from bluebottle.time_based.filters import ParticipantListFilter, SlotParticipantListFilter
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
     SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
+from bluebottle.time_based.states import SlotParticipantStateMachine, ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
-    contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
-    is_online = serializers.NullBooleanField(required=False)
+    is_online = serializers.BooleanField(required=False, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -57,7 +56,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 
 class ActivitySlotSerializer(ModelSerializer):
-    is_online = serializers.NullBooleanField(required=False)
+    is_online = serializers.BooleanField(required=False, allow_null=True)
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
@@ -88,9 +87,9 @@ class ActivitySlotSerializer(ModelSerializer):
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
 
-    participants = FilteredRelatedField(
+    participants = SerializerMethodResourceRelatedField(
+        model=SlotParticipant,
         many=True,
-        filter_backend=SlotParticipantListFilter,
         related_link_view_name='slot-participants',
         related_link_url_kwarg='slot_id',
         source='slot_participants'
@@ -99,6 +98,9 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
+
+    def get_participants(self, obj):
+        return obj.slot_participants.all()
 
     def get_links(self, instance):
         if instance.start and instance.duration:
@@ -141,12 +143,27 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = FilteredRelatedField(
+    contributors = SerializerMethodResourceRelatedField(
+        model=DateParticipant,
         many=True,
-        filter_backend=ParticipantListFilter,
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
     )
+
+    def get_contributors(self, instance):
+        user = self.context['request'].user
+        return [
+            contributor for contributor in instance.contributors.all() if (
+                isinstance(contributor, DateParticipant) and (
+                    contributor.status in [
+                        ParticipantStateMachine.new.value,
+                        ParticipantStateMachine.accepted.value,
+                        ParticipantStateMachine.succeeded.value
+                    ] or
+                    user in (instance.owner, instance.initiative.owner, contributor.user)
+                )
+            )
+        ]
 
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
@@ -212,13 +229,28 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = FilteredRelatedField(
+    contributors = SerializerMethodResourceRelatedField(
+        model=PeriodParticipant,
         many=True,
-        filter_backend=ParticipantListFilter,
         related_link_view_name='period-participants',
         related_link_url_kwarg='activity_id'
 
     )
+
+    def get_contributors(self, instance):
+        user = self.context['request'].user
+        return [
+            contributor for contributor in instance.contributors.all() if (
+                isinstance(contributor, PeriodParticipant) and (
+                    contributor.status in [
+                        ParticipantStateMachine.new.value,
+                        ParticipantStateMachine.accepted.value,
+                        ParticipantStateMachine.succeeded.value
+                    ] or
+                    user in (instance.owner, instance.initiative.owner, contributor.user)
+                )
+            )
+        ]
 
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',
@@ -481,11 +513,30 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 class DateParticipantSerializer(ParticipantSerializer):
 
-    slots = FilteredRelatedField(
+    slots = SerializerMethodResourceRelatedField(
+        model=SlotParticipant,
         many=True,
-        filter_backend=SlotParticipantListFilter,
         source='slot_participants'
     )
+
+    def get_slots(self, instance):
+        user = self.context['request'].user
+        slots = instance.slot_participants.all()
+        if (
+            not user.is_authenticated or
+            user.pk not in (
+                instance.user_id,
+                instance.activity.owner_id,
+                instance.activity.initiative.activity_manager
+            )
+        ):
+            return [
+                slot for slot in slots if (
+                    slot.status == SlotParticipantStateMachine.registered.value
+                )
+            ]
+        else:
+            return slots
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant

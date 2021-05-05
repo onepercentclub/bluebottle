@@ -1,4 +1,4 @@
-from html.parser import HTMLParser
+from html import unescape
 from urllib.parse import urlencode
 
 import pytz
@@ -24,7 +24,7 @@ tf = TimezoneFinder()
 
 from builtins import object
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 class TimeBasedActivity(Activity):
@@ -128,7 +128,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def details(self):
-        details = HTMLParser().unescape(
+        details = unescape(
             u'{}\n{}'.format(
                 strip_tags(self.description), self.get_absolute_url()
             )
@@ -295,7 +295,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
 
 class DateActivitySlot(ActivitySlot):
-    activity = models.ForeignKey(DateActivity, related_name='slots')
+    activity = models.ForeignKey(DateActivity, related_name='slots', on_delete=models.CASCADE)
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
@@ -395,8 +395,10 @@ class PeriodActivity(TimeBasedActivity):
     )
 
     is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
-    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
-                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location = models.ForeignKey(
+        Geolocation, verbose_name=_('location'),
+        null=True, blank=True, on_delete=models.SET_NULL
+    )
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     start = models.DateField(
@@ -473,7 +475,7 @@ class PeriodActivity(TimeBasedActivity):
 
 
 class PeriodActivitySlot(ActivitySlot):
-    activity = models.ForeignKey(PeriodActivity, related_name='slots')
+    activity = models.ForeignKey(PeriodActivity, related_name='slots', on_delete=models.CASCADE)
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
@@ -571,8 +573,12 @@ class PeriodParticipant(Participant, Contributor):
 
 class SlotParticipant(TriggerMixin, models.Model):
 
-    slot = models.ForeignKey(DateActivitySlot, related_name='slot_participants')
-    participant = models.ForeignKey(DateParticipant, related_name='slot_participants')
+    slot = models.ForeignKey(
+        DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
+    )
+    participant = models.ForeignKey(
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
+    )
 
     status = models.CharField(max_length=40)
     auto_approve = True
@@ -626,7 +632,9 @@ class TimeContribution(Contribution):
         choices=ContributionTypeChoices.choices,
     )
 
-    slot_participant = models.ForeignKey(SlotParticipant, null=True, related_name='contributions')
+    slot_participant = models.ForeignKey(
+        SlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = _("Time contribution")

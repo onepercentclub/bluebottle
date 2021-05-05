@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import TimeContribution, SlotParticipant, ContributionTypeChoices

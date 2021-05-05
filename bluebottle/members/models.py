@@ -9,7 +9,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from multiselectfield import MultiSelectField
 
@@ -21,10 +21,12 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 
 class CustomMemberFieldSettings(SortableMixin):
-
-    member_settings = models.ForeignKey('members.MemberPlatformSettings',
-                                        null=True,
-                                        related_name='extra_fields')
+    member_settings = models.ForeignKey(
+        'members.MemberPlatformSettings',
+        null=True,
+        related_name='extra_fields',
+        on_delete=models.CASCADE
+    )
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=200, null=True, blank=True)
@@ -39,8 +41,8 @@ class CustomMemberFieldSettings(SortableMixin):
 
 
 class CustomMemberField(models.Model):
-    member = models.ForeignKey('members.Member', related_name='extra')
-    field = models.ForeignKey('members.CustomMemberFieldSettings')
+    member = models.ForeignKey('members.Member', related_name='extra', on_delete=models.CASCADE)
+    field = models.ForeignKey('members.CustomMemberFieldSettings', on_delete=models.CASCADE)
     value = models.CharField(max_length=5000, null=True, blank=True)
 
 
@@ -134,7 +136,6 @@ class Member(BlueBottleBaseUser):
         verbose_name=_('Segment'),
         related_name='users',
         blank=True,
-        null=True
     )
 
     def __init__(self, *args, **kwargs):
@@ -199,7 +200,7 @@ class Member(BlueBottleBaseUser):
 
 class UserActivity(models.Model):
 
-    user = models.ForeignKey(Member, null=True)
+    user = models.ForeignKey(Member, null=True, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     path = models.CharField(max_length=200, null=True, blank=True)
 

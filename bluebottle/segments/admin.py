@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from bluebottle.segments.models import SegmentType, Segment
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 class SegmentInline(admin.TabularInline):

@@ -7,7 +7,7 @@ from Crypto.Cipher import AES
 from Crypto import Random
 import mock
 from django.contrib.auth import get_user_model
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import RequestFactory
 
 from bluebottle.members.models import Member

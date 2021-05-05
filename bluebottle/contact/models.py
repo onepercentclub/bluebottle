@@ -1,10 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 
@@ -28,13 +26,14 @@ class ContactMessage(models.Model):
                               default=ContactStatus.new)
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), blank=True, null=True)
+                               verbose_name=_('author'), blank=True, null=True,
+                               on_delete=models.CASCADE)
     name = models.CharField(_("Name"), max_length=200)
     email = models.EmailField(_("Email"), max_length=200)
     message = models.TextField(_("Message"))
 
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+    creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
+    modification_date = models.DateTimeField(_('last modification'), auto_now=True)
 
     def __str__(self):
         return self.message[0:30]

@@ -3,6 +3,7 @@ import mock
 import stripe
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from django.db import ProgrammingError, connection
+from django.test.utils import override_settings
 
 from bluebottle.funding_stripe.models import (
     StripePayoutAccount, ExternalAccount
@@ -11,6 +12,13 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'

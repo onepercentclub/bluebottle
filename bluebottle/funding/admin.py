@@ -15,7 +15,7 @@ from django.http import HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
@@ -110,7 +110,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def payout_link(self, obj):
@@ -647,7 +647,7 @@ class DonorInline(PaymentLinkMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 

@@ -32,11 +32,11 @@ class TestNewsAdmin(BluebottleAdminTestCase):
                                    obj=news_item,
                                    form=form, change=True)
         news_item.refresh_from_db()
-        self.assertEquals(news_item.author, self.superuser)
+        self.assertEqual(news_item.author, self.superuser)
 
         news_item.author = user
         self.news_admin.save_model(request=self.request,
                                    obj=news_item,
                                    form=form, change=True)
         news_item.refresh_from_db()
-        self.assertEquals(news_item.author, user)
+        self.assertEqual(news_item.author, user)

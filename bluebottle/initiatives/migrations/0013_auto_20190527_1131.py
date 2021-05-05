@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
-import django_fsm
 
 
 class Migration(migrations.Migration):
@@ -23,6 +22,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='initiative',
             name='status',
-            field=django_fsm.FSMField(choices=[(b'created', 'created'), (b'submitted', 'submitted'), (b'needs_work', 'needs work'), (b'approved', 'approved'), (b'closed', 'closed')], default=b'created', max_length=50, protected=True),
+            field=models.CharField(choices=[(b'created', 'created'), (b'submitted', 'submitted'), (b'needs_work', 'needs work'), (b'approved', 'approved'), (b'closed', 'closed')], default=b'created', max_length=50),
         ),
     ]

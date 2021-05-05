@@ -6,7 +6,6 @@ import bluebottle.files.fields
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import django_fsm
 
 
 class Migration(migrations.Migration):

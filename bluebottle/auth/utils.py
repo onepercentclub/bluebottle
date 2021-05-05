@@ -13,7 +13,7 @@ USER_MODEL = get_user_model()
 def user_from_request(strategy, backend, *args, **kwargs):
     user = strategy.request.user
 
-    if user.is_authenticated():
+    if user.is_authenticated:
         return {'user': strategy.request.user}
 
 

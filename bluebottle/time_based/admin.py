@@ -6,7 +6,7 @@ from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, T
 from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
@@ -51,7 +51,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return self.can_edit(obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         activity = self.get_parent_object_from_request(request)
         return self.can_edit(activity)
 
@@ -296,7 +296,7 @@ class SlotParticipantInline(admin.TabularInline):
     readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):

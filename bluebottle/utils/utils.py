@@ -19,9 +19,8 @@ from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
-from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
@@ -37,82 +36,6 @@ def clean_html(content):
 
 def get_languages():
     return properties.LANGUAGES
-
-
-class StatusDefinition(object):
-    """
-    Various status definitions for FSM's
-    """
-    NEW = 'new'
-    IN_PROGRESS = 'in_progress'
-    PENDING = 'pending'
-    NEEDS_APPROVAL = 'needs_approval'
-    CREATED = 'created'
-    LOCKED = 'locked'
-    PLEDGED = 'pledged'
-    APPROVED = 'approved'
-    SUCCESS = 'success'
-    STARTED = 'started'
-    SCHEDULED = 'scheduled'
-    RE_SCHEDULED = 're_scheduled'
-    CANCELLED = 'cancelled'
-    AUTHORIZED = 'authorized'
-    SETTLED = 'settled'
-    CONFIRMED = 'confirmed'
-    CHARGED_BACK = 'charged_back'
-    REFUND_REQUESTED = 'refund_requested'
-    REFUNDED = 'refunded'
-    PAID = 'paid'
-    FAILED = 'failed'
-    RETRY = 'retry'
-    PARTIAL = 'partial'
-    UNKNOWN = 'unknown'
-
-
-class FSMTransition(object):
-    """
-    Class mixin to add transition_to method for Django FSM
-    """
-
-    def transition_to(self, new_status, save=True):
-        # If the new_status is the same as then current then return early
-        if self.status == new_status:
-            return
-
-        # Lookup the available next transition - from Django FSM
-        available_transitions = self.get_available_status_transitions()
-
-        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(
-            self.__class__.__name__, self.pk, self.status, new_status))
-
-        # Check that the new_status is in the available transitions -
-        # created with Django FSM decorator
-        for transition in available_transitions:
-            if transition.name == new_status:
-                transition_method = transition.method
-
-        # Call state transition method
-        try:
-            instance_method = getattr(self, transition_method.__name__)
-            instance_method()
-        except UnboundLocalError:
-            tenant = connection.tenant.schema_name
-            raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2} {3} {4}".format(
-                    self.status,
-                    new_status,
-                    self.__class__.__name__,
-                    self.id,
-                    tenant
-                ))
-
-        if save:
-            self.save()
-
-    def refresh_from_db(self):
-        """Refreshes this instance from db"""
-        new_self = self.__class__.objects.get(pk=self.pk)
-        self.__dict__.update(new_self.__dict__)
 
 
 def get_client_ip(request=None):

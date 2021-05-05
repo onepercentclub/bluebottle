@@ -8,8 +8,10 @@ class Follow(models.Model):
     Generic Follow class. A Follow object is a generic reference between a
     user and another Django model.
     """
-    user = models.ForeignKey('members.Member', related_name='follows')
-    content_type = models.ForeignKey(ContentType, related_name='follow_object')
+    user = models.ForeignKey('members.Member', related_name='follows', on_delete=models.CASCADE)
+    content_type = models.ForeignKey(
+        ContentType, related_name='follow_object', on_delete=models.CASCADE
+    )
     instance_id = models.PositiveIntegerField()
     instance = fields.GenericForeignKey('content_type', 'instance_id')
 

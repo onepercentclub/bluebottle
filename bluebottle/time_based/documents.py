@@ -1,3 +1,5 @@
+from django_elasticsearch_dsl.registries import registry
+
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
@@ -19,7 +21,8 @@ class TimeBasedActivityDocument:
         return SCORE_MAP.get(instance.status, 0)
 
 
-@activity.doc_type
+@registry.register_document
+@activity.document
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
@@ -31,7 +34,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if isinstance(related_instance, DateActivitySlot):
             return related_instance.activity
 
-    class Meta(object):
+    class Django:
         related_models = (Initiative, Member, DateParticipant, DateActivitySlot)
         model = DateActivity
 
@@ -60,13 +63,14 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_position(self, instance):
         return [
-            {'lat': slot.location.position.get_y(), 'lon': slot.location.position.get_x()}
+            {'lat': slot.location.position.y, 'lon': slot.location.position.x}
             for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]
 
 
-@ activity.doc_type
+@registry.register_document
+@activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
@@ -76,7 +80,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if isinstance(related_instance, PeriodParticipant):
             return PeriodActivity.objects.filter(contributors=related_instance)
 
-    class Meta(object):
+    class Django:
         related_models = (Initiative, Member, PeriodParticipant)
         model = PeriodActivity
 
@@ -89,7 +93,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
             position = instance.location.position
-            return {'lat': position.get_y(), 'lon': position.get_x()}
+            return {'lat': position.y, 'lon': position.x}
 
     def prepare_end(self, instance):
         return instance.deadline

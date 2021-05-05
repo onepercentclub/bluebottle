@@ -2,7 +2,7 @@ from builtins import object
 import hashlib
 import os
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField

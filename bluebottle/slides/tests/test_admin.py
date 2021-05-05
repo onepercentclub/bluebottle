@@ -1,6 +1,6 @@
 # coding=utf-8
 from bluebottle.test.factory_models.slides import SlideFactory
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.test.utils import BluebottleAdminTestCase
 

@@ -1,6 +1,6 @@
 from builtins import object
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -11,14 +11,14 @@ from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     is_follower = serializers.SerializerMethodField()
@@ -96,7 +96,7 @@ class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -197,7 +197,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
@@ -220,7 +220,7 @@ class BaseContributorListSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')

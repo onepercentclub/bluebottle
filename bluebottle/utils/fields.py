@@ -9,7 +9,7 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
@@ -155,14 +155,12 @@ class PrivateFileField(models.FileField):
 
 
 class FSMStatusValidator(object):
-    def set_context(self, serializers_field):
-        self.instance = serializers_field.parent.instance
-        self.source = serializers_field.source
+    requires_context = True
 
-    def __call__(self, value):
+    def __call__(self, value, serializer_field):
         available_transitions = getattr(
             self.instance,
-            'get_available_{}_transitions'.format(self.source)
+            'get_available_{}_transitions'.format(serializer_field.source)
         )()
 
         transitions = [
@@ -173,7 +171,7 @@ class FSMStatusValidator(object):
         if len(transitions) != 1:
             raise ValidationError(
                 'Cannot transition from {} to {}'.format(
-                    getattr(self.instance, self.source),
+                    getattr(serializer_field.instance, serializer_field.source),
                     value
                 )
             )

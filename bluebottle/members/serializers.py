@@ -1,12 +1,11 @@
 from builtins import object
 
-from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.signing import TimestampSigner
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
@@ -41,12 +40,12 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
         if all(credentials.values()):
             request = self.context['request']
 
-            if is_already_locked(request):
+            user = authenticate(request, **credentials)
+
+            if getattr(request, 'axes_locked_out', False):
                 raise exceptions.Throttled(
                     600, 'Too many failed password attempts.'
                 )
-
-            user = authenticate(request, **credentials)
 
             if user:
                 if not user.is_active:
@@ -337,14 +336,15 @@ class UserDataExportSerializer(UserProfileSerializer):
 
 
 class PasswordValidator(object):
-    def set_context(self, field):
-        if field.parent.instance:
-            self.user = field.parent.instance
-        else:
-            self.user = None
+    requires_context = True
 
-    def __call__(self, value):
-        password_validation.validate_password(value, self.user)
+    def __call__(self, value, serializer_field):
+        if serializer_field.parent.instance:
+            user = serializer_field.parent.instance
+        else:
+            user = None
+
+        password_validation.validate_password(value, user)
         return value
 
 

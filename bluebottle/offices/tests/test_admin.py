@@ -125,21 +125,21 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         url = reverse('admin:geo_location_changelist')
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Office group')
         self.assertContains(response, 'Office region')
 
     def test_activity_admin_region_filters(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.activities_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'By office group')
         self.assertNotContains(response, 'by office region')
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         response = self.client.get(self.activities_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'By office group')
         self.assertContains(response, 'By office region')
         response = self.client.get(self.activities_url, {
@@ -147,7 +147,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
             'initiative__location__subregion__id__exact': self.location1.subregion.id,
             'initiative__location__id__exact': self.location1.id,
         })
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_initiative_admin_region_filters(self):
         self.client.force_login(self.superuser)
@@ -156,7 +156,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
             'location__subregion__id__exact': self.location1.subregion.id,
             'location__id__exact': self.location1.id,
         })
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_dateactivity_admin_region_filters(self):
         self.client.force_login(self.superuser)
@@ -165,7 +165,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
             'initiative__location__subregion__id__exact': self.location1.subregion.id,
             'initiative__location__id__exact': self.location1.id,
         })
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_dashboards_office_admin(self):
         initiative_settings = InitiativePlatformSettings.objects.get()
@@ -176,7 +176,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         url = reverse('admin:index')
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Recently submitted initiatives for my office:')
         self.assertContains(response, 'Recently submitted initiatives for my office region:')
         self.assertContains(response, 'Recently submitted initiatives for my office group:')
@@ -194,7 +194,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         url = reverse('admin:app_list', args=('initiatives',))
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Recently submitted initiatives for my office:')
         self.assertContains(response, 'Recently submitted initiatives for my office region:')
         self.assertContains(response, 'Recently submitted initiatives for my office group:')

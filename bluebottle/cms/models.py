@@ -1,12 +1,13 @@
 from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
 from adminsortable.fields import SortableForeignKey
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
+from solo.models import SingletonModel
 
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
@@ -54,7 +55,7 @@ class ResultPage(TranslatableModel):
         )
 
 
-class HomePage(TranslatableModel):
+class HomePage(SingletonModel, TranslatableModel):
     content = PlaceholderField('content')
     translations = TranslatedFields()
 
@@ -80,7 +81,7 @@ class LinkPermission(models.Model):
 
 @python_2_unicode_compatible
 class SiteLinks(models.Model):
-    language = models.OneToOneField('utils.Language', null=False)
+    language = models.OneToOneField('utils.Language', null=False, on_delete=models.CASCADE)
     has_copyright = models.BooleanField(null=False, default=True)
 
     class Meta:
@@ -99,7 +100,7 @@ class LinkGroup(SortableMixin):
         ('social', _('Social')),
     )
 
-    site_links = models.ForeignKey(SiteLinks, related_name='link_groups')
+    site_links = models.ForeignKey(SiteLinks, related_name='link_groups', on_delete=models.CASCADE)
     name = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
     title = models.CharField(_('Title'), blank=True, max_length=50)
     group_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
@@ -123,7 +124,7 @@ class Link(SortableMixin):
         ('news', _('News')),
     )
 
-    link_group = SortableForeignKey(LinkGroup, related_name='links')
+    link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
     highlight = models.BooleanField(default=False)
     title = models.CharField(_('Title'), null=False, max_length=100)
@@ -171,7 +172,7 @@ class Stat(SortableMixin, models.Model):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
+    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True, on_delete=models.CASCADE)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
     title = models.CharField(max_length=63)
 
@@ -184,7 +185,7 @@ class Stat(SortableMixin, models.Model):
 
 
 class Quote(models.Model):
-    block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
+    block = models.ForeignKey('cms.QuotesContent', related_name='quotes', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
     quote = models.TextField()
     image = ImageField(
@@ -342,7 +343,7 @@ class SupporterTotalContent(TitledContent):
 
 
 class Slide(SortableMixin, models.Model):
-    block = models.ForeignKey('cms.SlidesContent', related_name='slides')
+    block = models.ForeignKey('cms.SlidesContent', related_name='slides', on_delete=models.CASCADE)
     tab_text = models.CharField(
         _("Tab text"), max_length=100,
         help_text=_("This is shown on tabs beneath the banner.")
@@ -402,7 +403,7 @@ class SlidesContent(TitledContent):
 
 
 class Step(SortableMixin, models.Model):
-    block = models.ForeignKey('cms.StepsContent', related_name='steps')
+    block = models.ForeignKey('cms.StepsContent', related_name='steps', on_delete=models.CASCADE)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='step_images/',
@@ -468,7 +469,7 @@ class CategoriesContent(TitledContent):
 
 
 class Logo(SortableMixin, models.Model):
-    block = models.ForeignKey('cms.LogosContent', related_name='logos')
+    block = models.ForeignKey('cms.LogosContent', related_name='logos', on_delete=models.CASCADE)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='logo_images/',
@@ -505,7 +506,7 @@ class LogosContent(TitledContent):
 
 
 class ContentLink(SortableMixin, models.Model):
-    block = models.ForeignKey('cms.LinksContent', related_name='links')
+    block = models.ForeignKey('cms.LinksContent', related_name='links', on_delete=models.CASCADE)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='link_images/',
@@ -539,7 +540,7 @@ class LinksContent(TitledContent):
 
 
 class Greeting(models.Model):
-    block = models.ForeignKey('cms.WelcomeContent', related_name='greetings')
+    block = models.ForeignKey('cms.WelcomeContent', related_name='greetings', on_delete=models.CASCADE)
     text = models.TextField()
 
 

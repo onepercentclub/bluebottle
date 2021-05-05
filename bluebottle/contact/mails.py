@@ -1,8 +1,8 @@
 import re
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives

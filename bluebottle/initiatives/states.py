@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, register
 from bluebottle.initiatives.models import Initiative

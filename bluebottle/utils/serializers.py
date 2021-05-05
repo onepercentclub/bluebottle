@@ -7,15 +7,17 @@ from html.parser import HTMLParser
 
 from urllib.error import HTTPError
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.db import models
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.core.validators import BaseValidator
 from django.http.request import validate_host
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.utils import model_meta
-from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
+
+from rest_framework_json_api.relations import ResourceRelatedField
 
 from captcha import client
 
@@ -174,59 +176,6 @@ class RelatedResourcePermissionField(BasePermissionField):
             for perm in view.get_permissions())
 
 
-class FilteredRelatedField(SerializerMethodResourceRelatedField):
-    """
-    Filter a related queryset based on `filter_backend`.
-    Example:
-    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
-    Note: `many=True` is required
-    """
-    def __init__(self, **kwargs):
-        self.filter_backend = kwargs.pop('filter_backend', None)
-        kwargs['read_only'] = True
-        super(FilteredRelatedField, self).__init__(**kwargs)
-
-    def get_attribute(self, instance):
-        queryset = super(FilteredRelatedField, self).get_attribute(instance)
-        filter_backend = self.child_relation.filter_backend
-        queryset = filter_backend().filter_queryset(
-            request=self.context['request'],
-            queryset=queryset,
-            view=self.context['view']
-        )
-        return queryset
-
-
-class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedField):
-    """
-    Filter a related queryset based on `filter_backend`.
-    Example:
-    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
-    Note: `many=True` is required
-    """
-
-    _skip_polymorphic_optimization = False
-
-    def use_pk_only_optimization(self):
-        return False
-
-    def __init__(self, **kwargs):
-        self.polymorphic_serializer = kwargs.pop('polymorphic_serializer', None)
-        self.filter_backend = kwargs.pop('filter_backend', None)
-        kwargs['read_only'] = True
-        super(FilteredPolymorphicResourceRelatedField, self).__init__(**kwargs)
-
-    def get_attribute(self, instance):
-        queryset = super(FilteredPolymorphicResourceRelatedField, self).get_attribute(instance)
-        filter_backend = self.child_relation.filter_backend
-        queryset = filter_backend().filter_queryset(
-            request=self.context['request'],
-            queryset=queryset,
-            view=self.context['view']
-        )
-        return queryset
-
-
 class CaptchaField(serializers.CharField):
     def to_internal_value(self, data):
         result = super(CaptchaField, self).to_internal_value(data)
@@ -303,3 +252,18 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):
         return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)
+
+
+class AnonymizedResourceRelatedField(ResourceRelatedField):
+    def get_attribute(self, parent):
+        if parent.anonymized:
+            return AnonymousUser()
+
+        return super().get_attribute(parent)
+
+    def to_representation(self, value):
+        result = super().to_representation(value)
+        if not value.pk:
+            result['id'] = 'anonymous'
+
+        return result

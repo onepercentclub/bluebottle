@@ -7,7 +7,6 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django_extensions.db.fields
-import django_fsm
 
 
 class Migration(migrations.Migration):
@@ -23,7 +22,7 @@ class Migration(migrations.Migration):
             name='Order',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[(b'created', 'Created'), (b'locked', 'Locked'), (b'pledged', 'Pledged'), (b'pending', 'Pending'), (b'success', 'Success'), (b'failed', 'Failed')], default=b'created', max_length=50, protected=True)),
+                ('status', models.CharField(choices=[(b'created', 'Created'), (b'locked', 'Locked'), (b'pledged', 'Pledged'), (b'pending', 'Pending'), (b'success', 'Success'), (b'failed', 'Failed')], default=b'created', max_length=50)),
                 ('order_type', models.CharField(default=b'one-off', max_length=100)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='Created')),
                 ('updated', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='Updated')),
@@ -35,6 +34,6 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(models.Model, bluebottle.utils.utils.FSMTransition),
+            bases=(models.Model, ),
         ),
     ]

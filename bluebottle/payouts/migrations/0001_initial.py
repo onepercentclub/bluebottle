@@ -7,7 +7,6 @@ from django.db import migrations, models
 from django.db.models.fields import DecimalField
 
 import django_extensions.db.fields
-import django_fsm
 
 import bluebottle.utils.utils
 
@@ -41,9 +40,9 @@ class Migration(migrations.Migration):
                                                null=True, verbose_name='Closed')),
                 ('planned',
                  models.DateField(help_text='Date on which this batch should be processed.', verbose_name='Planned')),
-                ('status', django_fsm.FSMField(
+                ('status', models.CharField(
                     choices=[(b'new', 'New'), (b'in_progress', 'In progress'), (b'settled', 'Settled'),
-                             (b'retry', 'Retry')], default=b'new', max_length=20, protected=True,
+                             (b'retry', 'Retry')], default=b'new', max_length=20,
                     verbose_name='status')),
                 ('protected', models.BooleanField(default=False,
                                                   help_text='If a payout is protected, the amounts can only be updated via journals.',
@@ -83,7 +82,7 @@ class Migration(migrations.Migration):
                 'abstract': False,
                 'get_latest_by': 'end_date',
             },
-            bases=(models.Model, bluebottle.utils.utils.FSMTransition),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='ProjectPayout',
@@ -95,9 +94,9 @@ class Migration(migrations.Migration):
                                                null=True, verbose_name='Closed')),
                 ('planned',
                  models.DateField(help_text='Date on which this batch should be processed.', verbose_name='Planned')),
-                ('status', django_fsm.FSMField(
+                ('status', models.CharField(
                     choices=[(b'new', 'New'), (b'in_progress', 'In progress'), (b'settled', 'Settled'),
-                             (b'retry', 'Retry')], default=b'new', max_length=20, protected=True,
+                             (b'retry', 'Retry')], default=b'new', max_length=20,
                     verbose_name='status')),
                 ('protected', models.BooleanField(default=False,
                                                   help_text='If a payout is protected, the amounts can only be updated via journals.',
@@ -135,6 +134,6 @@ class Migration(migrations.Migration):
                 'abstract': False,
                 'get_latest_by': 'created',
             },
-            bases=(models.Model, bluebottle.utils.utils.FSMTransition),
+            bases=(models.Model, ),
         ),
     ]

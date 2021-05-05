@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 
@@ -12,7 +12,7 @@ from bluebottle.utils.utils import get_class
 
 
 class Message(models.Model):
-    recipient = models.ForeignKey('members.Member')
+    recipient = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     sent = models.DateTimeField(null=True, blank=True)
     adapter = models.CharField(max_length=30, default='email')
     template = models.CharField(max_length=100)

@@ -6,7 +6,6 @@ import bluebottle.files.fields
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import django_fsm
 
 
 class Migration(migrations.Migration):

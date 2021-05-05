@@ -35,14 +35,14 @@ class TestPageAdmin(BluebottleAdminTestCase):
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, self.superuser)
+        self.assertEqual(page.author, self.superuser)
 
         page.author = user
         self.page_admin.save_model(request=self.request,
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, user)
+        self.assertEqual(page.author, user)
 
     def test_upload_link_to_png(self):
         page = PageFactory.create()
@@ -51,65 +51,66 @@ class TestPageAdmin(BluebottleAdminTestCase):
         page_admin_url = reverse('admin:pages_page_change', args=(page.id,))
         response = self.client.get(page_admin_url)
         csrf = self.get_csrf_token(response)
+        with open('./bluebottle/files/tests/files/test-image.png', "rb") as image:
+            data = {
+                "csrfmiddlewaretoken": csrf,
+                "slug": page.slug,
+                "title": page.title,
+                "language": 'en',
+                "auhtor": page.author.id,
+                "status": "published",
+                "publication_date_0": "2013-07-05",
+                "publication_date_1": "14:13:53",
+                "initial-publication_date_0": "2013-07-05",
+                "initial-publication_date_1": "14:13:53",
+                "publication_end_date_0": "",
+                "publication_end_date_1": "",
 
-        data = {
-            "csrfmiddlewaretoken": csrf,
-            "slug": page.slug,
-            "title": page.title,
-            "language": 'en',
-            "auhtor": page.author.id,
-            "status": "published",
-            "publication_date_0": "2013-07-05",
-            "publication_date_1": "14:13:53",
-            "initial-publication_date_0": "2013-07-05",
-            "initial-publication_date_1": "14:13:53",
-            "publication_end_date_0": "",
-            "publication_end_date_1": "",
+                "placeholder-fs-TOTAL_FORMS": 1,
+                "placeholder-fs-INITIAL_FORMS": 1,
+                "placeholder-fs-MIN_NUM_FORMS": 0,
+                "placeholder-fs-MAX_NUM_FORMS": 1000,
+                "placeholder-fs-0-id": placeholder.id,
+                "placeholder-fs-0-slot": 'blog_contents',
+                "placeholder-fs-0-role": "m",
+                "placeholder-fs-0-title": "Body",
 
-            "placeholder-fs-TOTAL_FORMS": 1,
-            "placeholder-fs-INITIAL_FORMS": 1,
-            "placeholder-fs-MIN_NUM_FORMS": 0,
-            "placeholder-fs-MAX_NUM_FORMS": 1000,
-            "placeholder-fs-0-id": placeholder.id,
-            "placeholder-fs-0-slot": 'blog_contents',
-            "placeholder-fs-0-role": "m",
-            "placeholder-fs-0-title": "Body",
+                "documentitem-TOTAL_FORMS": 1,
+                "documentitem-INITIAL_FORMS": 0,
+                "documentitem-MIN_NUM_FORMS": 0,
+                "documentitem-MAX_NUM_FORMS": 1000,
+                # "documentitem-0-contentitem_ptr": '',
+                "documentitem-0-placeholder": placeholder.id,
+                "documentitem-0-placeholder_slot": "blog_contents",
+                "documentitem-0-sort_order": 0,
+                "documentitem-0-text": "Link",
+                "documentitem-0-document": image,
 
-            "documentitem-TOTAL_FORMS": 1,
-            "documentitem-INITIAL_FORMS": 0,
-            "documentitem-MIN_NUM_FORMS": 0,
-            "documentitem-MAX_NUM_FORMS": 1000,
-            # "documentitem-0-contentitem_ptr": '',
-            "documentitem-0-placeholder": placeholder.id,
-            "documentitem-0-placeholder_slot": "blog_contents",
-            "documentitem-0-sort_order": 0,
-            "documentitem-0-text": "Link",
-            "documentitem-0-document": open('./bluebottle/files/tests/files/test-image.png', "rb"),
+                "actionitem-TOTAL_FORMS": "0",
+                "actionitem-INITIAL_FORMS": "0",
+                "rawhtmlitem-TOTAL_FORMS": "0",
+                "rawhtmlitem-INITIAL_FORMS": "0",
+                "oembeditem-TOTAL_FORMS": "0",
+                "oembeditem-INITIAL_FORMS": "0",
+                "pictureitem-TOTAL_FORMS": "0",
+                "pictureitem-INITIAL_FORMS": "0",
+                "imagetextitem-TOTAL_FORMS": "0",
+                "imagetextitem-INITIAL_FORMS": "0",
+                "textitem-TOTAL_FORMS": "0",
+                "textitem-INITIAL_FORMS": "0",
+                "imagetextrounditem-TOTAL_FORMS": "0",
+                "imagetextrounditem-INITIAL_FORMS": "0",
+                "columnsitem-TOTAL_FORMS": "0",
+                "columnsitem-INITIAL_FORMS": "0",
 
-            "actionitem-TOTAL_FORMS": "0",
-            "actionitem-INITIAL_FORMS": "0",
-            "rawhtmlitem-TOTAL_FORMS": "0",
-            "rawhtmlitem-INITIAL_FORMS": "0",
-            "oembeditem-TOTAL_FORMS": "0",
-            "oembeditem-INITIAL_FORMS": "0",
-            "pictureitem-TOTAL_FORMS": "0",
-            "pictureitem-INITIAL_FORMS": "0",
-            "imagetextitem-TOTAL_FORMS": "0",
-            "imagetextitem-INITIAL_FORMS": "0",
-            "textitem-TOTAL_FORMS": "0",
-            "textitem-INITIAL_FORMS": "0",
-            "imagetextrounditem-TOTAL_FORMS": "0",
-            "imagetextrounditem-INITIAL_FORMS": "0",
-            "columnsitem-TOTAL_FORMS": "0",
-            "columnsitem-INITIAL_FORMS": "0",
+                '_continue': 'Save and continue editing',
+            }
 
-            '_continue': 'Save and continue editing',
-        }
+            response = self.client.post(page_admin_url, data)
 
-        response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_link_to_capital_png(self):
         page = PageFactory.create()
@@ -119,64 +120,66 @@ class TestPageAdmin(BluebottleAdminTestCase):
         response = self.client.get(page_admin_url)
         csrf = self.get_csrf_token(response)
 
-        data = {
-            "csrfmiddlewaretoken": csrf,
-            "slug": page.slug,
-            "title": page.title,
-            "language": 'en',
-            "auhtor": page.author.id,
-            "status": "published",
-            "publication_date_0": "2013-07-05",
-            "publication_date_1": "14:13:53",
-            "initial-publication_date_0": "2013-07-05",
-            "initial-publication_date_1": "14:13:53",
-            "publication_end_date_0": "",
-            "publication_end_date_1": "",
+        with open('./bluebottle/files/tests/files/Test-Image2.PNG', "rb") as image:
+            data = {
+                "csrfmiddlewaretoken": csrf,
+                "slug": page.slug,
+                "title": page.title,
+                "language": 'en',
+                "auhtor": page.author.id,
+                "status": "published",
+                "publication_date_0": "2013-07-05",
+                "publication_date_1": "14:13:53",
+                "initial-publication_date_0": "2013-07-05",
+                "initial-publication_date_1": "14:13:53",
+                "publication_end_date_0": "",
+                "publication_end_date_1": "",
 
-            "placeholder-fs-TOTAL_FORMS": 1,
-            "placeholder-fs-INITIAL_FORMS": 1,
-            "placeholder-fs-MIN_NUM_FORMS": 0,
-            "placeholder-fs-MAX_NUM_FORMS": 1000,
-            "placeholder-fs-0-id": placeholder.id,
-            "placeholder-fs-0-slot": 'blog_contents',
-            "placeholder-fs-0-role": "m",
-            "placeholder-fs-0-title": "Body",
+                "placeholder-fs-TOTAL_FORMS": 1,
+                "placeholder-fs-INITIAL_FORMS": 1,
+                "placeholder-fs-MIN_NUM_FORMS": 0,
+                "placeholder-fs-MAX_NUM_FORMS": 1000,
+                "placeholder-fs-0-id": placeholder.id,
+                "placeholder-fs-0-slot": 'blog_contents',
+                "placeholder-fs-0-role": "m",
+                "placeholder-fs-0-title": "Body",
 
-            "documentitem-TOTAL_FORMS": 1,
-            "documentitem-INITIAL_FORMS": 0,
-            "documentitem-MIN_NUM_FORMS": 0,
-            "documentitem-MAX_NUM_FORMS": 1000,
-            # "documentitem-0-contentitem_ptr": '',
-            "documentitem-0-placeholder": placeholder.id,
-            "documentitem-0-placeholder_slot": "blog_contents",
-            "documentitem-0-sort_order": 0,
-            "documentitem-0-text": "Link",
-            "documentitem-0-document": open('./bluebottle/files/tests/files/Test-Image2.PNG', "rb"),
+                "documentitem-TOTAL_FORMS": 1,
+                "documentitem-INITIAL_FORMS": 0,
+                "documentitem-MIN_NUM_FORMS": 0,
+                "documentitem-MAX_NUM_FORMS": 1000,
+                # "documentitem-0-contentitem_ptr": '',
+                "documentitem-0-placeholder": placeholder.id,
+                "documentitem-0-placeholder_slot": "blog_contents",
+                "documentitem-0-sort_order": 0,
+                "documentitem-0-text": "Link",
+                "documentitem-0-document": image,
 
-            "actionitem-TOTAL_FORMS": "0",
-            "actionitem-INITIAL_FORMS": "0",
-            "rawhtmlitem-TOTAL_FORMS": "0",
-            "rawhtmlitem-INITIAL_FORMS": "0",
-            "oembeditem-TOTAL_FORMS": "0",
-            "oembeditem-INITIAL_FORMS": "0",
-            "pictureitem-TOTAL_FORMS": "0",
-            "pictureitem-INITIAL_FORMS": "0",
-            "imagetextitem-TOTAL_FORMS": "0",
-            "imagetextitem-INITIAL_FORMS": "0",
-            "textitem-TOTAL_FORMS": "0",
-            "textitem-INITIAL_FORMS": "0",
-            "imagetextrounditem-TOTAL_FORMS": "0",
-            "imagetextrounditem-INITIAL_FORMS": "0",
-            "columnsitem-TOTAL_FORMS": "0",
-            "columnsitem-INITIAL_FORMS": "0",
+                "actionitem-TOTAL_FORMS": "0",
+                "actionitem-INITIAL_FORMS": "0",
+                "rawhtmlitem-TOTAL_FORMS": "0",
+                "rawhtmlitem-INITIAL_FORMS": "0",
+                "oembeditem-TOTAL_FORMS": "0",
+                "oembeditem-INITIAL_FORMS": "0",
+                "pictureitem-TOTAL_FORMS": "0",
+                "pictureitem-INITIAL_FORMS": "0",
+                "imagetextitem-TOTAL_FORMS": "0",
+                "imagetextitem-INITIAL_FORMS": "0",
+                "textitem-TOTAL_FORMS": "0",
+                "textitem-INITIAL_FORMS": "0",
+                "imagetextrounditem-TOTAL_FORMS": "0",
+                "imagetextrounditem-INITIAL_FORMS": "0",
+                "columnsitem-TOTAL_FORMS": "0",
+                "columnsitem-INITIAL_FORMS": "0",
 
-            '_continue': 'Save and continue editing',
-        }
+                '_continue': 'Save and continue editing',
+            }
 
-        response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+            response = self.client.post(page_admin_url, data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_link_to_pptx(self):
         page = PageFactory.create()
@@ -185,65 +188,66 @@ class TestPageAdmin(BluebottleAdminTestCase):
         page_admin_url = reverse('admin:pages_page_change', args=(page.id,))
         response = self.client.get(page_admin_url)
         csrf = self.get_csrf_token(response)
+        with open('./bluebottle/files/tests/files/test.pptx', "rb") as image:
+            data = {
+                "csrfmiddlewaretoken": csrf,
+                "slug": page.slug,
+                "title": page.title,
+                "language": 'en',
+                "auhtor": page.author.id,
+                "status": "published",
+                "publication_date_0": "2013-07-05",
+                "publication_date_1": "14:13:53",
+                "initial-publication_date_0": "2013-07-05",
+                "initial-publication_date_1": "14:13:53",
+                "publication_end_date_0": "",
+                "publication_end_date_1": "",
 
-        data = {
-            "csrfmiddlewaretoken": csrf,
-            "slug": page.slug,
-            "title": page.title,
-            "language": 'en',
-            "auhtor": page.author.id,
-            "status": "published",
-            "publication_date_0": "2013-07-05",
-            "publication_date_1": "14:13:53",
-            "initial-publication_date_0": "2013-07-05",
-            "initial-publication_date_1": "14:13:53",
-            "publication_end_date_0": "",
-            "publication_end_date_1": "",
+                "placeholder-fs-TOTAL_FORMS": 1,
+                "placeholder-fs-INITIAL_FORMS": 1,
+                "placeholder-fs-MIN_NUM_FORMS": 0,
+                "placeholder-fs-MAX_NUM_FORMS": 1000,
+                "placeholder-fs-0-id": placeholder.id,
+                "placeholder-fs-0-slot": 'blog_contents',
+                "placeholder-fs-0-role": "m",
+                "placeholder-fs-0-title": "Body",
 
-            "placeholder-fs-TOTAL_FORMS": 1,
-            "placeholder-fs-INITIAL_FORMS": 1,
-            "placeholder-fs-MIN_NUM_FORMS": 0,
-            "placeholder-fs-MAX_NUM_FORMS": 1000,
-            "placeholder-fs-0-id": placeholder.id,
-            "placeholder-fs-0-slot": 'blog_contents',
-            "placeholder-fs-0-role": "m",
-            "placeholder-fs-0-title": "Body",
+                "documentitem-TOTAL_FORMS": 1,
+                "documentitem-INITIAL_FORMS": 0,
+                "documentitem-MIN_NUM_FORMS": 0,
+                "documentitem-MAX_NUM_FORMS": 1000,
+                # "documentitem-0-contentitem_ptr": '',
+                "documentitem-0-placeholder": placeholder.id,
+                "documentitem-0-placeholder_slot": "blog_contents",
+                "documentitem-0-sort_order": 0,
+                "documentitem-0-text": "Link",
+                "documentitem-0-document": image,
 
-            "documentitem-TOTAL_FORMS": 1,
-            "documentitem-INITIAL_FORMS": 0,
-            "documentitem-MIN_NUM_FORMS": 0,
-            "documentitem-MAX_NUM_FORMS": 1000,
-            # "documentitem-0-contentitem_ptr": '',
-            "documentitem-0-placeholder": placeholder.id,
-            "documentitem-0-placeholder_slot": "blog_contents",
-            "documentitem-0-sort_order": 0,
-            "documentitem-0-text": "Link",
-            "documentitem-0-document": open('./bluebottle/files/tests/files/test.pptx', "rb"),
+                "actionitem-TOTAL_FORMS": "0",
+                "actionitem-INITIAL_FORMS": "0",
+                "rawhtmlitem-TOTAL_FORMS": "0",
+                "rawhtmlitem-INITIAL_FORMS": "0",
+                "oembeditem-TOTAL_FORMS": "0",
+                "oembeditem-INITIAL_FORMS": "0",
+                "pictureitem-TOTAL_FORMS": "0",
+                "pictureitem-INITIAL_FORMS": "0",
+                "imagetextitem-TOTAL_FORMS": "0",
+                "imagetextitem-INITIAL_FORMS": "0",
+                "textitem-TOTAL_FORMS": "0",
+                "textitem-INITIAL_FORMS": "0",
+                "imagetextrounditem-TOTAL_FORMS": "0",
+                "imagetextrounditem-INITIAL_FORMS": "0",
+                "columnsitem-TOTAL_FORMS": "0",
+                "columnsitem-INITIAL_FORMS": "0",
 
-            "actionitem-TOTAL_FORMS": "0",
-            "actionitem-INITIAL_FORMS": "0",
-            "rawhtmlitem-TOTAL_FORMS": "0",
-            "rawhtmlitem-INITIAL_FORMS": "0",
-            "oembeditem-TOTAL_FORMS": "0",
-            "oembeditem-INITIAL_FORMS": "0",
-            "pictureitem-TOTAL_FORMS": "0",
-            "pictureitem-INITIAL_FORMS": "0",
-            "imagetextitem-TOTAL_FORMS": "0",
-            "imagetextitem-INITIAL_FORMS": "0",
-            "textitem-TOTAL_FORMS": "0",
-            "textitem-INITIAL_FORMS": "0",
-            "imagetextrounditem-TOTAL_FORMS": "0",
-            "imagetextrounditem-INITIAL_FORMS": "0",
-            "columnsitem-TOTAL_FORMS": "0",
-            "columnsitem-INITIAL_FORMS": "0",
+                '_continue': 'Save and continue editing',
+            }
 
-            '_continue': 'Save and continue editing',
-        }
+            response = self.client.post(page_admin_url, data)
 
-        response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(page.content.contentitems.count(), 1)
-        self.assertEquals(DocumentItem.objects.count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(page.content.contentitems.count(), 1)
+        self.assertEqual(DocumentItem.objects.count(), 1)
 
     def test_upload_malicious_html(self):
         page = PageFactory.create()
@@ -252,65 +256,66 @@ class TestPageAdmin(BluebottleAdminTestCase):
         page_admin_url = reverse('admin:pages_page_change', args=(page.id,))
         response = self.client.get(page_admin_url)
         csrf = self.get_csrf_token(response)
+        with open('./bluebottle/pages/tests/files/xss.html', "rb") as image:
+            data = {
+                "csrfmiddlewaretoken": csrf,
+                "slug": page.slug,
+                "title": page.title,
+                "language": 'en',
+                "auhtor": page.author.id,
+                "status": "published",
+                "publication_date_0": "2013-07-05",
+                "publication_date_1": "14:13:53",
+                "initial-publication_date_0": "2013-07-05",
+                "initial-publication_date_1": "14:13:53",
+                "publication_end_date_0": "",
+                "publication_end_date_1": "",
 
-        data = {
-            "csrfmiddlewaretoken": csrf,
-            "slug": page.slug,
-            "title": page.title,
-            "language": 'en',
-            "auhtor": page.author.id,
-            "status": "published",
-            "publication_date_0": "2013-07-05",
-            "publication_date_1": "14:13:53",
-            "initial-publication_date_0": "2013-07-05",
-            "initial-publication_date_1": "14:13:53",
-            "publication_end_date_0": "",
-            "publication_end_date_1": "",
+                "placeholder-fs-TOTAL_FORMS": 1,
+                "placeholder-fs-INITIAL_FORMS": 1,
+                "placeholder-fs-MIN_NUM_FORMS": 0,
+                "placeholder-fs-MAX_NUM_FORMS": 1000,
+                "placeholder-fs-0-id": placeholder.id,
+                "placeholder-fs-0-slot": 'blog_contents',
+                "placeholder-fs-0-role": "m",
+                "placeholder-fs-0-title": "Body",
 
-            "placeholder-fs-TOTAL_FORMS": 1,
-            "placeholder-fs-INITIAL_FORMS": 1,
-            "placeholder-fs-MIN_NUM_FORMS": 0,
-            "placeholder-fs-MAX_NUM_FORMS": 1000,
-            "placeholder-fs-0-id": placeholder.id,
-            "placeholder-fs-0-slot": 'blog_contents',
-            "placeholder-fs-0-role": "m",
-            "placeholder-fs-0-title": "Body",
+                "documentitem-TOTAL_FORMS": 1,
+                "documentitem-INITIAL_FORMS": 0,
+                "documentitem-MIN_NUM_FORMS": 0,
+                "documentitem-MAX_NUM_FORMS": 1000,
+                "documentitem-0-placeholder": placeholder.id,
+                "documentitem-0-placeholder_slot": "blog_contents",
+                "documentitem-0-sort_order": 0,
+                "documentitem-0-text": "Link",
+                "documentitem-0-document": image,
 
-            "documentitem-TOTAL_FORMS": 1,
-            "documentitem-INITIAL_FORMS": 0,
-            "documentitem-MIN_NUM_FORMS": 0,
-            "documentitem-MAX_NUM_FORMS": 1000,
-            "documentitem-0-placeholder": placeholder.id,
-            "documentitem-0-placeholder_slot": "blog_contents",
-            "documentitem-0-sort_order": 0,
-            "documentitem-0-text": "Link",
-            "documentitem-0-document": open('./bluebottle/pages/tests/files/xss.html', "rb"),
+                "actionitem-TOTAL_FORMS": "0",
+                "actionitem-INITIAL_FORMS": "0",
+                "rawhtmlitem-TOTAL_FORMS": "0",
+                "rawhtmlitem-INITIAL_FORMS": "0",
+                "oembeditem-TOTAL_FORMS": "0",
+                "oembeditem-INITIAL_FORMS": "0",
+                "pictureitem-TOTAL_FORMS": "0",
+                "pictureitem-INITIAL_FORMS": "0",
+                "imagetextitem-TOTAL_FORMS": "0",
+                "imagetextitem-INITIAL_FORMS": "0",
+                "textitem-TOTAL_FORMS": "0",
+                "textitem-INITIAL_FORMS": "0",
+                "imagetextrounditem-TOTAL_FORMS": "0",
+                "imagetextrounditem-INITIAL_FORMS": "0",
+                "columnsitem-TOTAL_FORMS": "0",
+                "columnsitem-INITIAL_FORMS": "0",
 
-            "actionitem-TOTAL_FORMS": "0",
-            "actionitem-INITIAL_FORMS": "0",
-            "rawhtmlitem-TOTAL_FORMS": "0",
-            "rawhtmlitem-INITIAL_FORMS": "0",
-            "oembeditem-TOTAL_FORMS": "0",
-            "oembeditem-INITIAL_FORMS": "0",
-            "pictureitem-TOTAL_FORMS": "0",
-            "pictureitem-INITIAL_FORMS": "0",
-            "imagetextitem-TOTAL_FORMS": "0",
-            "imagetextitem-INITIAL_FORMS": "0",
-            "textitem-TOTAL_FORMS": "0",
-            "textitem-INITIAL_FORMS": "0",
-            "imagetextrounditem-TOTAL_FORMS": "0",
-            "imagetextrounditem-INITIAL_FORMS": "0",
-            "columnsitem-TOTAL_FORMS": "0",
-            "columnsitem-INITIAL_FORMS": "0",
+                '_continue': 'Save and continue editing',
+            }
 
-            '_continue': 'Save and continue editing',
-        }
+            response = self.client.post(page_admin_url, data)
 
-        response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
             "Mime type &#39;application/pdf&#39; doesn&#39;t match the filename extension &#39;.html&#39;."
         )
-        self.assertEquals(page.content.contentitems.count(), 0)
-        self.assertEquals(DocumentItem.objects.count(), 0)
+        self.assertEqual(page.content.contentitems.count(), 0)
+        self.assertEqual(DocumentItem.objects.count(), 0)

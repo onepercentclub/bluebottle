@@ -158,7 +158,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
-    activity_managers = AnonymizedResourceRelatedField(read_only=True)
     activities = PolymorphicSerializerMethodResourceRelatedField(
         ActivityListSerializer,
         model=Activity,

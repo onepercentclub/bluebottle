@@ -23,13 +23,13 @@
         <tbody>
             {% for activity in activities %}
                 <tr style="border-bottom: solid 1px #DBDBDB;">
-                    <td>
-                        <div class="matching-item-image">
-                            <img src="{{site_url}}{{activity.image}}" alt="activity image" width="200" height="200"/>
+                    <td class="column">
+                        <div class="matching-item-image p-0 pt-16">
+                            <img src="{{site_url}}{{activity.image}}" alt="activity image" width="88" height="88"/>
                         </div>
                     </td>
-                    <td>
-                        <div class="matching-item">
+                    <td class="column">
+                        <div class="matching-item p-0">
                             <label class="matching-item-title">
                                 <a class="matching-item-link" href="{{activity.url}}?utm_source=matching_email&utm_medium=email&utm_campaign=matching">{{activity.title}}</a>
                             </label>

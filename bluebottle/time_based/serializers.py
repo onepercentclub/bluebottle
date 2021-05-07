@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
+    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField
 )
-from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.utils import (

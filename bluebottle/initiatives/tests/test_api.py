@@ -485,6 +485,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 2)
+        self.assertEqual(
+            data['relationships']['activities']['data'][0]['type'],
+            'activities/fundings'
+        )
+        self.assertEqual(
+            data['relationships']['activities']['data'][1]['type'],
+            'activities/time-based/dates'
+        )
 
         event_data = get_include(response, 'activities/time-based/dates')
         self.assertEqual(event_data['id'], str(event.pk))

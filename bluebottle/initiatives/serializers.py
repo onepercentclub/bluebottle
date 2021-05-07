@@ -8,12 +8,11 @@ from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
-from rest_framework_json_api.relations import (
-    SerializerMethodResourceRelatedField
-)
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
 from bluebottle.activities.models import EffortContribution, Activity
 from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
@@ -159,7 +158,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
-    activities = SerializerMethodResourceRelatedField(
+    activity_managers = AnonymizedResourceRelatedField(read_only=True)
+    activities = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityListSerializer,
         model=Activity,
         many=True,
         read_only=True

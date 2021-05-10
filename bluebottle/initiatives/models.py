@@ -255,6 +255,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
+
     enable_impact = models.BooleanField(
         default=False,
         help_text=_("Allow activity managers to indicate the impact they make.")
@@ -274,6 +275,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_participant_exports = models.BooleanField(
         default=False,
         help_text=_("Add a link to activities so managers van download a contributor list.")
+    )
+    enable_matching_emails = models.BooleanField(
+        default=False,
+        help_text=_("Send monthly updates with matching activities to users that are subscribed.")
     )
 
     @property

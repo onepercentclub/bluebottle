@@ -1,7 +1,14 @@
+from pytz import timezone
+
+from django.urls import reverse
+from django.template.defaultfilters import time, date
+
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import pgettext_lazy as pgettext
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
@@ -140,3 +147,106 @@ class ActivityExpiredNotification(ActivityNotification):
     """
     subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_expired'
+
+
+class MatchingActivitiesNotification(TransitionMessage):
+    """
+    Send a list of matching initiaives to user
+    """
+    subject = pgettext(
+        'email',
+        '{first_name}, there are {count} activities on {site_name} matching your profile'
+    )
+    template = 'messages/matching_activities'
+
+    @property
+    def action_link(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/list".format(
+            domain, language
+        )
+
+    action_title = pgettext('email', 'View more activities')
+
+    def get_recipients(self):
+        """user"""
+        return [self.obj]
+
+    def get_activity_context(self, activity):
+        from bluebottle.time_based.models import DateActivity
+
+        context = {
+            'title': activity.title,
+            'url': activity.get_absolute_url(),
+            'image': (
+                reverse('activity-image', args=(activity.pk, '200x200'))
+                if activity.image else
+                reverse('initiative-image', args=(activity.initiative.pk, '200x200'))
+            ),
+            'expertise': activity.expertise.name if activity.expertise else None,
+            'theme': activity.initiative.theme.name,
+        }
+        if isinstance(activity, DateActivity):
+            slots = activity.slots.filter(status='open')
+            context['is_online'] = all(
+                slot.is_online for slot in slots
+            )
+            if not context['is_online']:
+                locations = set(str(slot.location) for slot in slots)
+                if len(locations) == 1:
+                    context['location'] = locations[0]
+                else:
+                    context['location'] = pgettext('email', 'Multiple locations')
+
+            if len(slots) > 1:
+                context['when'] = pgettext('email', 'Mutliple time slots')
+            else:
+                slot = slots[0]
+
+                if slot.location and not slot.is_online:
+                    tz = timezone(slot.location.timezone)
+                else:
+                    tz = get_current_timezone()
+
+                start = '{} {}'.format(
+                    date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))
+                ) if slot.start else pgettext('email', 'Starts immediately')
+                end = '{} {}'.format(
+                    date(slot.end.astimezone(tz)), time(slot.end)
+                ) if slot.end else pgettext('email', 'runs indefinitely')
+                context['when'] = '{start_date} {start_time} - {end_time} ({timezone})'.format(
+                    start_date=date(slot.start.astimezone(tz)),
+                    start_time=time(slot.start.astimezone(tz)),
+                    end_time=time(slot.end.astimezone(tz)),
+                    timezone=start.strftime('%Z')
+                )
+
+                context['when'] = '{} - {}'.format(start, end)
+        else:
+            if activity.is_online:
+                context['is_online'] = True
+            else:
+                context['location'] = activity.location
+
+            start = date(activity.start) if activity.start else pgettext('email', 'starts immediately')
+            end = date(activity.deadline) if activity.deadline else pgettext('email', 'runs indefinitely')
+
+            context['when'] = '{} - {}'.format(start, end)
+
+        return context
+
+    def get_context(self, recipient, activities=None):
+        context = super().get_context(recipient)
+        context['profile_incomplete'] = (
+            not (len(recipient.favourite_themes.all())) or
+            not (len(recipient.skills.all())) or
+            not (recipient.place or recipient.location)
+        )
+        if activities:
+            context['activities'] = [
+                self.get_activity_context(activity) for activity in activities[:3]
+            ]
+            context['count'] = len(activities)
+
+        return context

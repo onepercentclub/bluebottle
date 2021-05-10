@@ -1,0 +1,97 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            There are tons of cool activities on {{ site_name }} that are making a positive impact. 
+
+            We have selected {{ count }} activities that match with your profile. Join us!
+        {% endblocktrans %}
+    </p>
+
+    {% if profile_incomplete%}
+        <p class="matching-activities-profile-incomplete">
+            <a class="matching-activities-profile-link" href="{{site}}/member/profile">
+                {% trans "Complete your profile" %}
+            </a>
+            {% trans ", so that we can select even more relevant activities for you." %}
+        </p>
+    {% endif %}
+
+    <table class="matching-activities-email-list">
+        <tbody>
+            {% for activity in activities %}
+                <tr style="border-bottom: solid 1px #DBDBDB;">
+                    <td class="column">
+                        <div class="matching-item-image p-0 pt-16">
+                            <img src="{{site_url}}{{activity.image}}" alt="activity image" width="88" height="88"/>
+                        </div>
+                    </td>
+                    <td class="column">
+                        <div class="matching-item p-0">
+                            <label class="matching-item-title">
+                                <a class="matching-item-link" href="{{activity.url}}?utm_source=matching_email&utm_medium=email&utm_campaign=matching">{{activity.title}}</a>
+                            </label>
+                            <div class="matching-item-location">
+                                {% if activity.is_online %}
+                                    <small class="matching-item-location--place">
+                                        <span class="matching-icon">
+                                            <svg width="21" height="18" viewBox="0 0 14 18" xmlns="http://www.w3.org/2000/svg" class="fill-current"><path d="M7 0C3.578 0 0 2.66 0 7.043c0 4.148 6.222 10.487 6.456 10.722A.704.704 0 0 0 7 18a.704.704 0 0 0 .544-.235C7.778 17.53 14 11.191 14 7.043 14 2.661 10.422 0 7 0zm0 9.391c-1.322 0-2.333-1.017-2.333-2.348 0-1.33 1.01-2.347 2.333-2.347 1.322 0 2.333 1.017 2.333 2.347S8.323 9.391 7 9.391z" fill="#4A4A4A" fill-rule="nonzero"></path></svg>
+                                        </span>
+
+                                        <span class="matching-icon-text">{% trans "Online / Remote" %}</span>
+                                    </small>
+                                {% elif activity.location %}
+                                    <small class="matching-item-location--place">
+                                        <span class="matching-icon">
+                                            <svg width="21" height="18" viewBox="0 0 14 18" xmlns="http://www.w3.org/2000/svg" class="fill-current"><path d="M7 0C3.578 0 0 2.66 0 7.043c0 4.148 6.222 10.487 6.456 10.722A.704.704 0 0 0 7 18a.704.704 0 0 0 .544-.235C7.778 17.53 14 11.191 14 7.043 14 2.661 10.422 0 7 0zm0 9.391c-1.322 0-2.333-1.017-2.333-2.348 0-1.33 1.01-2.347 2.333-2.347 1.322 0 2.333 1.017 2.333 2.347S8.323 9.391 7 9.391z" fill="#4A4A4A" fill-rule="nonzero"></path></svg>
+                                        </span>
+
+                                        <span class="matching-icon-text">{{activity.location}}</span>
+                                    </small>
+                                {% endif %}
+                                <small class="matching-item-location--date">
+                                    <span class="matching-icon">
+                                        <svg width="21" height="18" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" class="fill-current"><path d="M19 2h-3V0h-2v2h-3V0H9v2H6V0H4v2H1c-.483 0-1 .288-1 1v16c0 .659.313 1 1 1h18c.627 0 1-.373 1-1V3c0-.589-.353-1-1-1zm-1 16H2V7h16v11z" fill="#4A4A4A"></path></svg>
+                                    </span>
+
+                                    <span class="matching-icon-text">{{activity.when}}</span>
+                                </small>
+                            </div>
+                            <div class="matching-item-expertise-theme">
+                                <small class="matching-item-expertise-theme--expertise">
+                                    <span class="matching-icon">
+                                        <svg width="21" height="15" viewBox="0 0 21 15" xmlns="http://www.w3.org/2000/svg" class="fill-current"><g fill-rule="nonzero" fill="#4A4A4A"><path d="M18 5h2v6c0 .667-.333 1-1 1s-1-.333-1-1V5zM11.006 10.134C10.12 10.134 8.119 9.423 5 8v4c0 1.97 3.018 3 6 3s6-1.03 6-3V8c-3.112 1.423-5.11 2.134-5.994 2.134z"></path><path d="M20.983 3.93L11 0C11.075-.013 7.725 1.265.947 3.836V5L11 9c.07 0 3.398-1.298 9.983-3.892V3.93z"></path></g></svg>
+                                    </span>
+
+                                        <span class="matching-icon-text">
+                                            {% if activity.expertise %}
+                                                {{activity.expertise}}
+                                            {% else %}
+                                                {% trans 'No specific skill needed' %}
+                                            {% endif %}
+                                        </span>
+                                </small>
+                                {% if activity.theme %}
+                                    <small class="matching-item-expertise-theme--theme">
+                                        <span class="matching-icon">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7 8.3l-8-8C7.5.1 7.3 0 7 0H1C.4 0 0 .4 0 1v6c0 .3.1.5.3.7l8 8c.2.2.4.3.7.3.3 0 .5-.1.7-.3l6-6c.4-.4.4-1 0-1.4zM4 5c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1z" fill="#4A4A4A"/></svg>
+                                        </span>
+
+                                        <span class="matching-icon-text">{{activity.theme}}</span>
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block unsubscribe %}
+    {% trans "Don't want to receive this monthly update anymore? Unsubscribe" %}
+    <a href="{{site}}/member/profile"> {% trans "via your profile page." %}
+{% endblock %}`

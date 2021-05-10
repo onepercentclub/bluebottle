@@ -37,6 +37,8 @@ class ElasticSearchFilter(filters.SearchFilter):
             try:
                 scoring = getattr(self, 'get_sort_{}'.format(sort))(request)
                 search = search.query(scoring)
+                for i in search.extra(explain=True).execute():
+                    print(i.activity_date, i.status, i.meta.score)
             except AttributeError:
                 search = search.sort(*sort)
 

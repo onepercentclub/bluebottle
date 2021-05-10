@@ -1,16 +1,32 @@
 from datetime import timedelta, date
 
 import factory.fuzzy
+from bluebottle.utils.models import Language
 from django.utils.timezone import now
 
-from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant
-)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.time_based.models import (
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill
+)
+
+
+class SkillFactory(factory.DjangoModelFactory):
+
+    class Meta(object):
+        model = Skill
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super(SkillFactory, cls)._create(model_class, *args, **kwargs)
+        for language in Language.objects.all():
+            obj.set_current_language(language.code)
+            obj.name = "Name {} {}".format(language.code, obj.id)
+            obj.description = "Description {} {}".format(language.code, obj.id)
+        obj.save()
+        return obj
 
 
 class TimeBasedFactory(factory.DjangoModelFactory):
@@ -44,6 +60,7 @@ class DateActivityFactory(TimeBasedFactory):
         model = DateActivity
 
     slot_selection = 'all'
+    expertise = factory.SubFactory(SkillFactory)
 
     slots = factory.RelatedFactory(
         DateActivitySlotFactory,
@@ -60,6 +77,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     duration_period = 'overall'
     is_online = False
     location = factory.SubFactory(GeolocationFactory)
+    expertise = factory.SubFactory(SkillFactory)
 
     start = (now() + timedelta(weeks=2)).date()
 

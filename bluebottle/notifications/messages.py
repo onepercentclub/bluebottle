@@ -112,7 +112,7 @@ class TransitionMessage(object):
         path = "{}.{}".format(self.__module__, self.__class__.__name__)
         return MessageTemplate.objects.filter(message=path).first()
 
-    def get_messages(self):
+    def get_messages(self, **base_context):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         recipients = list(set(self.get_recipients()))
@@ -128,7 +128,7 @@ class TransitionMessage(object):
                     if count:
                         continue
 
-                context = self.get_context(recipient)
+                context = self.get_context(recipient, **base_context)
                 subject = str(self.subject.format(**context))
 
                 body_html = None
@@ -158,8 +158,8 @@ class TransitionMessage(object):
         """the owner"""
         return [self.obj.owner]
 
-    def compose_and_send(self):
-        for message in self.get_messages():
-            context = self.get_context(message.recipient)
+    def compose_and_send(self, **base_context):
+        for message in self.get_messages(**base_context):
+            context = self.get_context(message.recipient, **base_context)
             message.save()
             message.send(**context)

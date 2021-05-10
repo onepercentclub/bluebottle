@@ -1,9 +1,12 @@
+from django.conf import settings
 from builtins import object
 
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
+
+from geopy.distance import distance, lonlat
 
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.impact.models import ImpactGoal
@@ -12,6 +15,84 @@ from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
 from bluebottle.utils.serializers import ResourcePermissionField
+
+
+class MatchingPropertiesField(serializers.ReadOnlyField):
+    def __init__(self, **kwargs):
+        kwargs['source'] = '*'
+        super().__init__(**kwargs)
+
+    def to_representation(self, obj):
+        user = self.context['request'].user
+        matching = {'skill': None, 'theme': None, 'location': None}
+
+        if user.is_authenticated:
+            if obj.status != 'open':
+                return {'skill': False, 'theme': False, 'location': False}
+
+            if 'skills' not in self.context:
+                self.context['skills'] = user.skills.all()
+
+            if 'themes' not in self.context:
+                self.context['themes'] = user.favourite_themes.all()
+
+            if 'location' not in self.context:
+                self.context['location'] = user.location or user.place
+
+            if self.context['skills']:
+                matching['skill'] = False
+                try:
+                    if obj.expertise in self.context['skills']:
+                        matching['skill'] = True
+                except AttributeError:
+                    pass
+
+            if self.context['themes']:
+                matching['theme'] = False
+                try:
+                    if obj.initiative.theme in self.context['themes']:
+                        matching['theme'] = True
+                except AttributeError:
+                    pass
+
+            if self.context['location']:
+                matching['location'] = False
+
+                try:
+                    if obj.is_online:
+                        matching['location'] = True
+                except AttributeError:
+                    try:
+                        if any(slot.is_online for slot in obj.slots.all()):
+                            matching['location'] = True
+                    except AttributeError:
+                        pass
+
+                positions = []
+                try:
+                    if obj.location and not obj.is_online:
+                        positions = [obj.location.position.tuple]
+                except AttributeError:
+                    try:
+                        positions = [
+                            slot.location.position.tuple for slot in obj.slots.all()
+                            if slot.location and not slot.is_online
+                        ]
+                    except AttributeError:
+                        pass
+
+                if positions:
+                    dist = min(
+                        distance(
+                            lonlat(*pos),
+                            lonlat(*self.context['location'].position.tuple)
+                        ) for pos in positions
+                    )
+
+                    if dist.km < settings.MATCHING_DISTANCE:
+                        matching['location'] = True
+
+        return matching
 
 
 # This can't be in serializers because of circular imports
@@ -26,6 +107,8 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+
+    matching_properties = MatchingPropertiesField()
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -74,6 +157,7 @@ class BaseActivitySerializer(ModelSerializer):
             'updated',
             'errors',
             'required',
+            'matching_properties',
         )
 
     class JSONAPIMeta(object):
@@ -102,6 +186,7 @@ class BaseActivityListSerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+    matching_properties = MatchingPropertiesField()
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
@@ -137,6 +222,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'permissions',
             'created',
             'updated',
+            'matching_properties',
         )
 
     class JSONAPIMeta(object):

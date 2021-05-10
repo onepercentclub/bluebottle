@@ -96,8 +96,9 @@ class InitiativeDocument(DocType):
 
     def get_queryset(self):
         return super(InitiativeDocument, self).get_queryset().select_related(
-            'theme', 'place', 'owner', 'promoter',
-        )
+            'theme', 'place', 'owner', 'promoter', 'reviewer', 'activity_manager',
+            'location'
+        ).prefetch_related('activities', 'categories')
 
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):

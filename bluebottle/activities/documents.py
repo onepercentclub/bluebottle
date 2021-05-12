@@ -118,14 +118,14 @@ class ActivityDocument(DocType):
     def prepare_contributors(self, instance):
         return [
             contributor.created for contributor
-            in instance.contributors.filter(status__in=('new', 'success', 'accepted'))
+            in instance.contributors.filter(status__in=('succeeded', 'accepted'))
         ]
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
 
     def prepare_contributor_count(self, instance):
-        return instance.contributors.filter(status__in=('new', 'success', 'accepted')).count()
+        return instance.contributors.filter(status__in=('succeeded', 'accepted')).count()
 
     def prepare_country(self, instance):
         if instance.initiative.location:

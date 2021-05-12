@@ -723,6 +723,33 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(second.pk))
         self.assertEqual(data['data'][4]['id'], str(first.pk))
 
+    def test_sort_contribution_count(self):
+
+        deadline = now() + timedelta(days=2)
+        first = FundingFactory.create(status='open', deadline=deadline)
+        deadline = now() + timedelta(days=10)
+        second = FundingFactory.create(status='open', deadline=deadline)
+        third = FundingFactory.create(status='open', deadline=deadline)
+        fourth = FundingFactory.create(status='open', deadline=deadline)
+        fifth = FundingFactory.create(status='open', deadline=deadline)
+
+        DonorFactory.create_batch(10, activity=fourth, status='succeeded')
+        DonorFactory.create_batch(5, activity=fifth, status='succeeded')
+        DonorFactory.create_batch(3, activity=third, status='succeeded')
+
+        response = self.client.get(
+            self.url + '?sort=popularity'
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 5)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][2]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][3]['id'], str(third.pk))
+        self.assertEqual(data['data'][4]['id'], str(second.pk))
+
     def test_filter_country(self):
         country1 = CountryFactory.create()
         country2 = CountryFactory.create()

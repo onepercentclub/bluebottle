@@ -89,6 +89,17 @@ class ActivitySearchFilter(ElasticSearchFilter):
             ]
         )
 
+        score = score | FunctionScore(
+            score_mode='sum',
+            functions=[
+                SF(
+                    'field_value_factor',
+                    field='contributor_count',
+                    weight=0.01,
+                ),
+            ]
+        )
+
         if request.user.is_authenticated:
             matching = ConstantScore(
                 boost=0.5,

@@ -47,6 +47,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('linkedin', _('LinkedIn')),
         ('whatsapp', _('Whatsapp')),
         ('yammer', _('Yammer')),
+        ('teams', _('Teams')),
         ('email', _('Email')),
     )
 

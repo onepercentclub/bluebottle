@@ -2,6 +2,7 @@ from builtins import str
 from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
+from bluebottle.funding.models import Donor
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
@@ -90,6 +91,7 @@ class ActivityDocument(DocType):
 
     contributors = fields.DateField()
     contributor_count = fields.IntegerField()
+    donation_count = fields.IntegerField()
 
     start = fields.DateField()
     end = fields.DateField()
@@ -121,11 +123,14 @@ class ActivityDocument(DocType):
             in instance.contributors.filter(status__in=('succeeded', 'accepted'))
         ]
 
-    def prepare_type(self, instance):
-        return str(instance.__class__.__name__.lower())
-
     def prepare_contributor_count(self, instance):
         return instance.contributors.filter(status__in=('succeeded', 'accepted')).count()
+
+    def prepare_donation_count(self, instance):
+        return instance.contributors.instance_of(Donor).filter(status='succeeded').count()
+
+    def prepare_type(self, instance):
+        return str(instance.__class__.__name__.lower())
 
     def prepare_country(self, instance):
         if instance.initiative.location:

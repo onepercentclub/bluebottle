@@ -94,7 +94,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
             functions=[
                 SF(
                     'field_value_factor',
-                    field='contributor_count',
+                    field='donation_count',
                     weight=0.002,
                 ),
             ]

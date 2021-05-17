@@ -48,6 +48,6 @@ class TargetValidator(Validator):
     def is_valid(self):
         if self.instance.target is None:
             return False
-        if self.instance.target.amount == 0:
+        if self.instance.target.amount <= 0:
             return False
         return True

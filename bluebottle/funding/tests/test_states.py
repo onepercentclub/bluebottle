@@ -63,7 +63,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(funding.status, 'submitted')
 
-    def test_submit_invalid(self):
+    def test_submit_missing_budget(self):
         funding = FundingFactory.create(
             initiative=self.initiative,
             target=Money(1000, 'EUR')
@@ -72,6 +72,29 @@ class FundingStateMachineTests(BluebottleTestCase):
         funding.save()
         with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
             funding.states.submit()
+        self.assertTrue('Please specify a budget' in [er.message for er in funding.errors])
+
+    def test_submit_negative_target(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(-1000, 'EUR')
+        )
+        funding.bank_account = self.bank_account
+        funding.save()
+        with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
+            funding.states.submit()
+        self.assertTrue('Please specify a target' in [er.message for er in funding.errors])
+
+    def test_submit_empty_target(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=None
+        )
+        funding.bank_account = self.bank_account
+        funding.save()
+        with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
+            funding.states.submit()
+        self.assertTrue('Please specify a target' in [er.message for er in funding.errors])
 
     def test_empty_target(self):
         funding = FundingFactory.create(

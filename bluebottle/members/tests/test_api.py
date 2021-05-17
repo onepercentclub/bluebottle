@@ -195,6 +195,20 @@ class CreateUserTestCase(BluebottleTestCase):
         self.assertEqual(member.is_active, True)
         self.assertTrue(member.check_password(password))
 
+    def test_create_invalid(self):
+        email = 'test@example%2ecom'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'password_confirmation': password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['email'][0],
+            'Enter a valid email address.'
+        )
+
     def test_create_twice(self):
         email = 'test@example.com'
         password = 'test@example.com'

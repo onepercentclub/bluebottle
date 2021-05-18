@@ -257,9 +257,6 @@ class MemberAdmin(UserAdmin):
                             'last_login',
                             'date_joined',
                             'deleted',
-                            'is_co_financer',
-                            'can_pledge',
-                            'verified',
                             'partner_organization',
                             'primary_language',
                         ]
@@ -274,7 +271,16 @@ class MemberAdmin(UserAdmin):
                 ],
                 [
                     _('Permissions'),
-                    {'fields': ['is_active', 'is_staff', 'is_superuser', 'groups']}
+                    {'fields': [
+                        'is_active',
+                        'is_staff',
+                        'is_superuser',
+                        'groups',
+                        'is_co_financer',
+                        'can_pledge',
+                        'verified',
+                        'kyc'
+                    ]}
                 ],
                 [
                     _('Engagement'),
@@ -299,7 +305,7 @@ class MemberAdmin(UserAdmin):
                 fieldsets[1][1]['fields'].append('segments')
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
-                fieldsets[0][1]['fields'].remove('can_pledge')
+                fieldsets[2][1]['fields'].remove('can_pledge')
 
             if CustomMemberFieldSettings.objects.count():
                 extra = (
@@ -320,7 +326,7 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding'
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'kyc'
         ]
 
         user_groups = request.user.groups.all()
@@ -370,7 +376,7 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (PlaceInline, UserActivityInline)
+    inlines = (PlaceInline, UserActivityInline,)
 
     def initiatives(self, obj):
         initiatives = []
@@ -459,6 +465,18 @@ class MemberAdmin(UserAdmin):
             "<a href='{}'>{}</a>",
             welcome_mail_url, _("Resend welcome email"),
         )
+
+    def kyc(self, obj):
+        if not obj.funding_payout_account.count():
+            return '-'
+        kyc_url = reverse('admin:funding_payoutaccount_changelist') + '?owner__id__exact={}'.format(obj.id)
+        return format_html(
+            "<a href='{}'>{} {}</a>",
+            kyc_url,
+            obj.funding_payout_account.count(),
+            _("accounts")
+        )
+    kyc.short_description = _("KYC accounts")
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that the add form does not show inlines """

@@ -749,7 +749,6 @@ class StatisticsDateTest(BluebottleTestCase):
             activity = DateActivityFactory(
                 initiative=initiative,
                 transition_date=past_date,
-                status='succeeded',
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )
@@ -761,9 +760,9 @@ class StatisticsDateTest(BluebottleTestCase):
 
             DateParticipantFactory.create(
                 activity=activity,
-                status='succeeded',
                 user=other_user
             )
+            activity.states.submit(save=True)
 
     def test_all(self):
         stats = Statistics()

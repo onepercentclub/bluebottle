@@ -18,6 +18,8 @@ from rest_framework import serializers
 from rest_framework.utils import model_meta
 
 from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework.relations import ManyRelatedField, MANY_RELATION_KWARGS
+
 
 from captcha import client
 
@@ -254,7 +256,25 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
         return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)
 
 
+class ManyAnonymizedResourceRelatedField(ManyRelatedField):
+    def get_attribute(self, parent):
+        result = super().get_attribute(parent)
+
+        if parent.anonymized:
+            result = [AnonymousUser() for item in result.all()]
+
+        return result
+
+
 class AnonymizedResourceRelatedField(ResourceRelatedField):
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {'child_relation': cls(*args, **kwargs)}
+        for key in kwargs:
+            if key in MANY_RELATION_KWARGS:
+                list_kwargs[key] = kwargs[key]
+        return ManyAnonymizedResourceRelatedField(**list_kwargs)
+
     def get_attribute(self, parent):
         if parent.anonymized:
             return AnonymousUser()

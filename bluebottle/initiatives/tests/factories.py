@@ -26,10 +26,12 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
     @factory.post_generation
     def activity_managers(self, create, extracted, **kwargs):
+        if extracted == []:
+            return
+
         if not extracted:
             extracted = [BlueBottleUserFactory.create()]
 
-        # A list of groups were passed in, use them
         self.activity_managers.clear()
         for manager in extracted:
             self.activity_managers.add(manager)

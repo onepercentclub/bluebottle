@@ -1164,7 +1164,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertEqual(
-            data['data']['relationships']['activity-manager']['data']['id'], 'anonymous'
+            data['data']['relationships']['activity-managers']['data'][0]['id'], 'anonymous'
         )
 
         self.assertEqual(
@@ -1206,8 +1206,8 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertEqual(
-            data['data']['relationships']['activity-manager']['data']['id'],
-            str(initiative.activity_manager.pk)
+            data['data']['relationships']['activity-managers']['data'][0]['id'],
+            str(initiative.activity_managers.first().pk)
         )
 
         self.assertEqual(

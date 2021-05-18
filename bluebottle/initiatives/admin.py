@@ -212,10 +212,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )
             }),
             (_('Status'), {'fields': (
-                'reviewer', 'activity_managers',
+                'reviewer', 'activity_managers', 'promoter',
                 'valid',
-                'reviewer',
-                'promoter', 'status', 'states',
+                'status', 'states',
                 'created', 'updated',
             )}),
         )

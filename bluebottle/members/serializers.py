@@ -5,11 +5,14 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from django.core.signing import TimestampSigner
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, exceptions
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
+
+import passwordmeter
 
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
@@ -23,6 +26,7 @@ from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+
 
 BB_USER_MODEL = get_user_model()
 
@@ -425,6 +429,28 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
     def validate_password(self, password):
         return make_password(password)
+
+
+class PasswordStrengthSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    email = serializers.CharField(write_only=True, allow_blank=True)
+    strength = serializers.SerializerMethodField()
+
+    def validate(self, data):
+        user = BB_USER_MODEL(**data)
+        validate_password(data['password'], user)
+        return data
+
+    def get_strength(self, data):
+        strength, _ = passwordmeter.test(data['password'])
+        return strength
+
+    class Meta(object):
+        model = BB_USER_MODEL
+        fields = ('id', 'password', 'email', 'strength')
+
+    class JSONAPIMeta:
+        resource_name = 'password-strengths'
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

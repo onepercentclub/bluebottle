@@ -1,3 +1,4 @@
+import json
 from builtins import range
 import time
 
@@ -12,7 +13,7 @@ from rest_framework import status
 
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -654,3 +655,64 @@ class UserActivityTest(BluebottleTestCase):
             len(activity.path), 200
         )
         self.assertTrue(activity.path.startswith('/aaaaaaa'))
+
+
+class PasswordStrengthDetailTest(BluebottleTestCase):
+    def setUp(self):
+        super(PasswordStrengthDetailTest, self).setUp()
+
+        self.url = reverse('password-strength')
+        self.client = JSONAPITestClient()
+        self.data = {
+            'data': {
+                'type': 'password-strength',
+                'attributes': {
+                    'email': 'admin@example.com',
+                    'password': 'blabla',
+                }
+            }
+        }
+
+    def test_too_short(self):
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too short. It must contain at least 8 characters.'
+        )
+
+    def test_common(self):
+        self.data['data']['attributes']['password'] = 'password'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too common.'
+        )
+
+    def test_email(self):
+        self.data['data']['attributes']['password'] = 'adminexample'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'The password is too similar to the email address.'
+        )
+
+    def test_valid_fair(self):
+        print(self.url)
+        self.data['data']['attributes']['password'] = 'somepassword'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] < 0.25)
+
+    def test_valid_string(self):
+        self.data['data']['attributes']['password'] = '243AfecioIEOIj^%efw'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] > 0.5)

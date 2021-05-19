@@ -16,7 +16,7 @@ changes = ''
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.17',
-    'Pillow==7.2.0' if sys.version_info.major == 3 else 'Pillow==6.2.2',
+    'Pillow==7.2.0',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
@@ -117,7 +117,7 @@ install_requires = [
 
     # Github requirements
     'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
-    'django-tenant-extras @ git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.14#egg=django-tenant-extras-2.0.14',
+    'django-tenant-extras @ git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.15#egg=django-tenant-extras-2.0.15',
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
 ]

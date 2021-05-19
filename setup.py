@@ -83,6 +83,7 @@ install_requires = [
     'munch==2.5.0',
     'django-multiselectfield==0.1.8',
     'openpyxl==2.4.8',
+    'passwordmeter==0.1.8',
     'pendulum==1.2.4',
     'psycopg2-binary==2.8.6',
     'py-moneyed==0.8',

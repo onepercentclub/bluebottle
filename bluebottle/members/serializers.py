@@ -477,16 +477,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return errors
 
     def validate(self, data):
-        if 'email_confirmation' in data and data['email'] != data['email_confirmation']:
-            raise serializers.ValidationError(_('Email confirmation mismatch'))
+        if 'email_confirmation' in data:
+            if data['email'] != data['email_confirmation']:
+                raise serializers.ValidationError(_('Email confirmation mismatch'))
+            del data['email_confirmation']
 
         settings = MemberPlatformSettings.objects.get()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'token': _('Signup requires a confirmation token')})
-
-        del data['email_confirmation']
         data['password'] = make_password(data['password'])
         return data
 

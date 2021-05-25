@@ -298,7 +298,7 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
             )
             authorization_logger.error(error)
 
-        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
+        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 201:
             try:
                 data = json.loads(request.body)
             except ValueError:

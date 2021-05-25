@@ -350,6 +350,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
+    def test_current_user_url_variations(self):
+        response = self.client.get('/api/users/current', token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        response = self.client.get('/api/users/current/', token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
     def test_logout_authenticated(self):
         """
         Test logout of authenticated user

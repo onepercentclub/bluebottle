@@ -61,9 +61,9 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         model = Activity
         meta_fields = (
             'permissions',
-            'transitions',
             'created',
             'updated',
+            'matching_properties',
         )
 
     class JSONAPIMeta(object):

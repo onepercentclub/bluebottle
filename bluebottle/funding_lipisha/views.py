@@ -1,8 +1,10 @@
 import logging
 
+from bluebottle.funding.authentication import DonorAuthentication
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.generic import View
 from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.views import PaymentList
@@ -18,6 +20,10 @@ logger = logging.getLogger(__name__)
 class LipishaPaymentList(PaymentList):
     queryset = LipishaPayment.objects.all()
     serializer_class = LipishaPaymentSerializer
+
+    authentication_classes = (
+        JSONWebTokenAuthentication, DonorAuthentication,
+    )
 
     def perform_create(self, serializer):
         super(LipishaPaymentList, self).perform_create(serializer)

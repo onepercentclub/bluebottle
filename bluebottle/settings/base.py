@@ -695,7 +695,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__country__name', 'Country'),
                 ('location__country__alpha2_code', 'Country Code'),
 
-                ('expertise', 'Expertise'),
+                ('expertise', 'Skill'),
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
                 ('preparation', 'Preparation time'),
@@ -735,7 +735,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('description', 'Description'),
                 ('status', 'Status'),
 
-                ('expertise', 'Expertise'),
+                ('expertise', 'Skill'),
 
                 ('capacity', 'People needed'),
                 ('created', 'Date created'),
@@ -1109,3 +1109,5 @@ if os.path.exists('/var/run/clamd.scan/'):
 else:
     # This is default for Ubuntu, Debian based distributions
     CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+
+MATCHING_DISTANCE = 50

@@ -1311,6 +1311,75 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, 'open')
         self.assertStatus(self.activity, 'open')
 
+    def test_fill_new_slot(self):
+        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'open')
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        participant2 = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
+        self.assertStatus(self.slot1, 'full')
+        self.assertStatus(self.activity, 'full')
+
+        new_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            capacity=1
+        )
+
+        self.assertStatus(self.activity, 'open')
+
+        new_slot.delete()
+
+        self.assertStatus(self.activity, 'full')
+
+    def test_expire_new_slot(self):
+        self.participant.delete()
+
+        self.slot1.start = now() - timedelta(days=1)
+        self.slot1.save()
+        self.assertStatus(self.slot1, 'finished')
+        self.assertStatus(self.activity, 'open')
+
+        self.slot2.start = now() - timedelta(days=1)
+        self.slot2.save()
+        self.assertStatus(self.slot2, 'finished')
+        self.assertStatus(self.activity, 'expired')
+
+        new_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            capacity=1
+        )
+
+        self.assertStatus(self.activity, 'open')
+
+        new_slot.delete()
+
+        self.assertStatus(self.activity, 'expired')
+
+    def test_succeed_new_slot(self):
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.slot1.start = now() - timedelta(days=1)
+        self.slot1.save()
+        self.assertStatus(self.slot1, 'finished')
+        self.assertStatus(self.activity, 'open')
+
+        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.slot2.start = now() - timedelta(days=1)
+        self.slot2.save()
+        self.assertStatus(self.slot2, 'finished')
+        self.assertStatus(self.activity, 'succeeded')
+
+        new_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            capacity=1
+        )
+
+        self.assertStatus(self.activity, 'open')
+
+        new_slot.delete()
+
+        self.assertStatus(self.activity, 'succeeded')
+
     def test_refill_slot(self):
         self.test_unfill_slot()
         self.slot_part.states.reapply(save=True)

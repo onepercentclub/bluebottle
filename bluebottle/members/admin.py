@@ -261,8 +261,6 @@ class MemberAdmin(UserAdmin):
                             'can_pledge',
                             'verified',
                             'partner_organization',
-                            'campaign_notifications',
-                            'newsletter',
                             'primary_language',
                         ]
                     }
@@ -271,7 +269,7 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        ['picture', 'about_me', 'favourite_themes', 'skills']
+                        ['picture', 'about_me', 'matching_options_set', 'favourite_themes', 'skills']
                     }
                 ],
                 [
@@ -283,6 +281,13 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         ['initiatives', 'date_activities', 'period_activities', 'funding']
+                    }
+                ],
+                [
+                    _('Notifications'),
+                    {
+                        'fields':
+                        ['campaign_notifications', 'subscribed']
                     }
                 ],
             ]

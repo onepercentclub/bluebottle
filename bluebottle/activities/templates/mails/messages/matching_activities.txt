@@ -1,0 +1,33 @@
+{% extends "mails/messages/activity_base.txt" %}
+{% load i18n %}{%load nobreaks %}
+{% block message %}
+{% blocktrans context 'email' %}
+There are tons of cool activities on {{ site_name }} that are making a positive impact. 
+
+We have selected {{ count }} activities that match with your profile. Join us!
+{% endblocktrans %}
+{% if profile_incomplete%}{% trans "Complete your profile, so that we can select even more relevant activities for you" %}:
+{{site}}/member/profile
+{% endif %}
+{% for activity in activities %}
+{% nobreaks %}
+{{activity.title}}
+{{activity.when}}
+{% if activity.theme %}{{activity.theme}}{% endif %}
+
+{% if activity.expertise %}{{activity.expertise}}{% else %}{%trans "No specific skill needed"%}{% endif %}
+
+{% if activity.is_online %}
+{% trans "Online / Remote" %}
+{% elif activity.location %}
+{{activity.location}}
+{% endif %}
+{% endnobreaks %}
+
+click here {{activity.url}}?utm_source=matching_email&utm_medium=email&utm_campaign=matching
+{% endfor %}{% endblock %}
+
+{% block unsubscribe %}
+{% trans "Don't want to receive this monthly update anymore? Unsubscribe via your profile page" %}:
+{{site}}/member/profile
+{% endblock %}`

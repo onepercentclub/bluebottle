@@ -444,7 +444,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def errors(self):
         errors = super(UserCreateSerializer, self).errors
 
-        if 'email' in errors and 'email' in self.data:
+        if 'email' in errors and 'email' in self.data and errors['email'][0].code == 'unique':
             user = self.Meta.model.objects.get(email=self.data['email'])
 
             conflict = {

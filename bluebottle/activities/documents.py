@@ -1,6 +1,7 @@
 from builtins import str
 from django_elasticsearch_dsl import Document, fields
 
+from bluebottle.funding.models import Donor
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
@@ -68,6 +69,8 @@ class ActivityDocument(Document):
         }
     )
 
+    is_online = fields.BooleanField('is_online')
+
     location = fields.NestedField(
         attr='location',
         properties={
@@ -87,6 +90,7 @@ class ActivityDocument(Document):
 
     contributors = fields.DateField()
     contributor_count = fields.IntegerField()
+    donation_count = fields.IntegerField()
 
     start = fields.DateField()
     end = fields.DateField()
@@ -115,14 +119,17 @@ class ActivityDocument(Document):
     def prepare_contributors(self, instance):
         return [
             contributor.created for contributor
-            in instance.contributors.filter(status__in=('new', 'success', 'accepted'))
+            in instance.contributors.filter(status__in=('succeeded', 'accepted'))
         ]
+
+    def prepare_contributor_count(self, instance):
+        return instance.contributors.filter(status__in=('succeeded', 'accepted')).count()
+
+    def prepare_donation_count(self, instance):
+        return instance.contributors.instance_of(Donor).filter(status='succeeded').count()
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
-
-    def prepare_contributor_count(self, instance):
-        return instance.contributors.filter(status__in=('new', 'success', 'accepted')).count()
 
     def prepare_country(self, instance):
         if instance.initiative.location:
@@ -140,6 +147,10 @@ class ActivityDocument(Document):
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
             return {'id': instance.expertise_id}
+
+    def prepare_is_online(self, instance):
+        if hasattr(instance, 'is_online'):
+            return instance.is_online
 
     def prepare_position(self, instance):
         return None

@@ -219,13 +219,13 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_notification_platform_settings(self):
         # Create notification platform settings and confirm they end up correctly in settings api
         NotificationPlatformSettings.objects.create(
-            match_options=['theme', 'skill', 'location'],
+            match_options=True,
             share_options=['twitter', 'facebook_at_work'],
             facebook_at_work_url='https://my.facebook.com'
         )
 
         response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['notifications']['match_options'], ['theme', 'skill', 'location'])
+        self.assertEqual(response.data['platform']['notifications']['match_options'], True)
         self.assertEqual(response.data['platform']['notifications']['share_options'], ['twitter', 'facebook_at_work'])
         self.assertEqual(response.data['platform']['notifications']['facebook_at_work_url'], 'https://my.facebook.com')
 

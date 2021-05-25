@@ -74,7 +74,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Activities on a date').cell(0, 9).value,
-            'Expertise'
+            'Skill'
         )
 
         self.assertEqual(

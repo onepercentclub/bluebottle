@@ -1,14 +1,11 @@
 import csv
 
-from rest_framework.pagination import PageNumberPagination
-
-from bluebottle.utils.admin import prep_field
+import icalendar
+from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
 from django.utils.translation import gettext_lazy as _
-
-import icalendar
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -37,16 +34,15 @@ from bluebottle.time_based.serializers import (
     SlotParticipantSerializer,
     SlotParticipantTransitionSerializer, SkillSerializer
 )
-
 from bluebottle.transitions.views import TransitionList
-
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
-    PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView
+    PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
 
 
@@ -445,8 +441,8 @@ class PeriodParticipantExportView(PrivateFileView):
         return response
 
 
-class SkillPagination(PageNumberPagination):
-    page_size = 1000
+class SkillPagination(JsonApiPagination):
+    page_size = 100
 
 
 class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
@@ -456,7 +452,8 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     pagination_class = SkillPagination
 
     def get_queryset(self):
-        return super().get_queryset().order_by('translations__name')
+        lang = self.request.LANGUAGE_CODE or properties.LANGUAGE_CODE
+        return super().get_queryset().translated(lang).order_by('translations__name')
 
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

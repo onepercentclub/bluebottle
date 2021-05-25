@@ -18,7 +18,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory
+    DateActivitySlotFactory, SkillFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -26,7 +26,6 @@ from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -78,8 +77,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_anonymous(self):
         succeeded = DateActivityFactory.create(
-            owner=self.owner, status='succeeded'
+            owner=self.owner,
         )
+        succeeded.initiative.states.submit(save=True)
+        succeeded.initiative.states.approve(save=True)
+        succeeded.states.submit(save=True)
+
+        slot = succeeded.slots.get()
+        slot.start = now() - timedelta(days=10)
+        slot.save()
+
+        DateParticipantFactory.create(
+            activity=succeeded
+        )
+
         open = DateActivityFactory.create(status='open')
         DateActivityFactory.create(status='submitted')
         DateActivityFactory.create(status='closed')
@@ -552,47 +563,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
         self.assertEqual(data['data'][2]['id'], str(second.pk))
 
-    def test_sort_matching_popularity(self):
-        first = DateActivityFactory.create(status='open')
-        second = DateActivityFactory.create(status='open')
-        DateParticipantFactory.create(
-            activity=second,
-            created=now() - timedelta(days=7),
-        )
-
-        third = DateActivityFactory.create(status='open')
-        DateParticipantFactory.create(
-            activity=third,
-            created=now() - timedelta(days=5),
-        )
-
-        fourth = DateActivityFactory.create(status='open')
-        DateParticipantFactory.create(
-            activity=fourth,
-            created=now() - timedelta(days=7),
-        )
-        DateParticipantFactory.create(
-            activity=fourth,
-            created=now() - timedelta(days=5),
-        )
-
-        response = self.client.get(
-            self.url + '?sort=popularity',
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 4)
-        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
-        self.assertEqual(data['data'][1]['id'], str(third.pk))
-        self.assertEqual(data['data'][2]['id'], str(second.pk))
-        self.assertEqual(data['data'][3]['id'], str(first.pk))
-
     def test_sort_matching_status(self):
         DateActivityFactory.create(status='closed')
-        second = DateActivityFactory.create(status='succeeded')
-        DateParticipantFactory.create(activity=second)
+
+        second = DateActivityFactory.create(
+            owner=self.owner,
+        )
+        second.initiative.states.submit(save=True)
+        second.initiative.states.approve(save=True)
+        second.states.submit(save=True)
+
+        slot = second.slots.get()
+        slot.start = now() - timedelta(days=10)
+        slot.save()
+
+        DateParticipantFactory.create(
+            activity=second
+        )
+
         third = DateActivityFactory.create(
             status='open',
             capacity=1
@@ -617,16 +605,52 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(third.pk))
         self.assertEqual(data['data'][3]['id'], str(second.pk))
 
+    def test_sort_matching_activity_date(self):
+        first = DateActivityFactory.create(
+            status='open',
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
+            start=now() + timedelta(days=10)
+        )
+
+        second = FundingFactory.create(
+            status='open',
+            deadline=now() + timedelta(days=9)
+        )
+
+        third = PeriodActivityFactory.create(
+            status='open',
+            deadline=now() + timedelta(days=11)
+        )
+
+        fourth = PeriodActivityFactory.create(
+            status='open',
+            deadline=None,
+            start=None
+        )
+
+        response = self.client.get(
+            self.url + '?sort=popularity'
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(fourth.pk))
+
     def test_sort_matching_skill(self):
         skill = SkillFactory.create()
         self.owner.skills.add(skill)
         self.owner.save()
 
         first = PeriodActivityFactory.create(status='full')
-        PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
 
         second = PeriodActivityFactory.create(status='full', expertise=skill)
-        PeriodParticipantFactory.create_batch(3, activity=second, status='accepted')
 
         third = PeriodActivityFactory.create(status='open')
         fourth = PeriodActivityFactory.create(status='open', expertise=skill)
@@ -687,14 +711,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         first = PeriodActivityFactory.create(status='full')
-        PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
 
         second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10.0))
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
-        PeriodParticipantFactory.create_batch(3, activity=second, status='accepted')
 
         third = PeriodActivityFactory.create(
             status='open',
@@ -703,14 +725,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         fourth = PeriodActivityFactory.create(
             status='open',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(21.0, 9.0))
-        )
-        fifth = PeriodActivityFactory.create(
-            is_online=False,
-            status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
 
-        sixth = PeriodActivityFactory.create(
+        fifth = PeriodActivityFactory.create(
             is_online=True,
             status='open',
             location=None
@@ -723,14 +741,40 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 6)
+        self.assertEqual(data['meta']['pagination']['count'], 5)
 
-        self.assertEqual(data['data'][0]['id'], str(fifth.pk))
-        self.assertEqual(data['data'][1]['id'], str(sixth.pk))
-        self.assertEqual(data['data'][2]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][1]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][4]['id'], str(first.pk))
+
+    def test_sort_contribution_count(self):
+
+        deadline = now() + timedelta(days=2)
+        first = FundingFactory.create(status='open', deadline=deadline)
+        deadline = now() + timedelta(days=10)
+        second = FundingFactory.create(status='open', deadline=deadline)
+        third = FundingFactory.create(status='open', deadline=deadline)
+        fourth = FundingFactory.create(status='open', deadline=deadline)
+        fifth = FundingFactory.create(status='open', deadline=deadline)
+
+        DonorFactory.create_batch(10, activity=fourth, status='succeeded')
+        DonorFactory.create_batch(5, activity=fifth, status='succeeded')
+        DonorFactory.create_batch(3, activity=third, status='succeeded')
+
+        response = self.client.get(
+            self.url + '?sort=popularity'
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 5)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][2]['id'], str(fifth.pk))
         self.assertEqual(data['data'][3]['id'], str(third.pk))
         self.assertEqual(data['data'][4]['id'], str(second.pk))
-        self.assertEqual(data['data'][5]['id'], str(first.pk))
 
     def test_filter_country(self):
         country1 = CountryFactory.create()
@@ -771,25 +815,22 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.save()
 
         first = PeriodActivityFactory.create(status='full')
-        PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
 
         second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10.0))
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
-        PeriodParticipantFactory.create_batch(3, activity=second, status='accepted')
 
         third = PeriodActivityFactory.create(status='open')
         fourth = PeriodActivityFactory.create(
             status='open',
-            is_online=False,
-            location=GeolocationFactory.create(position=Point(21.0, 9.0))
+            is_online=True,
         )
         fifth = PeriodActivityFactory.create(
             status='open',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10.0))
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
 
         response = self.client.get(
@@ -806,28 +847,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(third.pk))
         self.assertEqual(data['data'][3]['id'], str(second.pk))
         self.assertEqual(data['data'][4]['id'], str(first.pk))
-
-    def test_sort_matching_created(self):
-        first = DateActivityFactory.create(
-            status='open', created=now() - timedelta(days=7)
-        )
-        second = DateActivityFactory.create(
-            status='open', created=now() - timedelta(days=5)
-        )
-        third = DateActivityFactory.create(status='open', created=now() - timedelta(days=1))
-
-        response = self.client.get(
-            self.url + '?sort=popularity',
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(third.pk))
-        self.assertEqual(data['data'][1]['id'], str(second.pk))
-        self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_sort_matching_combined(self):
         theme = ThemeFactory.create()
@@ -852,13 +871,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         second = PeriodActivityFactory.create(
             status='open',
-            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
             initiative=initiative,
             is_online=False
         )
         third = PeriodActivityFactory.create(
             status='open',
-            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
             initiative=initiative,
             expertise=skill,
             is_online=False

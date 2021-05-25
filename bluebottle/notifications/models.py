@@ -40,12 +40,6 @@ class Message(models.Model):
 
 
 class NotificationPlatformSettings(BasePlatformSettings):
-    MATCH_OPTIONS = (
-        ('theme', _('Theme')),
-        ('skill', _('Skill')),
-        ('location', _('Location')),
-    )
-
     SHARE_OPTIONS = (
         ('twitter', _('Twitter')),
         ('facebook', _('Facebook')),
@@ -53,6 +47,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('linkedin', _('LinkedIn')),
         ('whatsapp', _('Whatsapp')),
         ('yammer', _('Yammer')),
+        ('teams', _('Teams')),
         ('email', _('Email')),
     )
 
@@ -61,9 +56,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
 
-    match_options = MultiSelectField(
-        max_length=100, choices=MATCH_OPTIONS, blank=True
-    )
+    match_options = models.BooleanField(default=False)
 
     class Meta(object):
         verbose_name_plural = _('notification settings')

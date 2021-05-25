@@ -1,4 +1,5 @@
 from builtins import str
+from django import forms
 from django.db import models
 from django.contrib import admin
 from django.urls import reverse
@@ -45,9 +46,18 @@ class OrganizationContactAdmin(admin.ModelAdmin):
     actions = (export_as_csv_action(fields=export_fields), )
 
 
+class OrganizationForm(forms.ModelForm):
+    website = forms.CharField(required=True)
+
+    class Meta:
+        model = Organization
+        fields = '__all__'
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationInitiativeInline, )
+    form = OrganizationForm
 
     list_display = ('name', 'website', 'created')
     list_filter = (

@@ -19,6 +19,7 @@ from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
+from bluebottle.clients import properties
 from bluebottle.utils.utils import get_client_ip
 
 LAST_SEEN_DELTA = 10  # in minutes
@@ -91,7 +92,7 @@ class SlidingJwtTokenMiddleware(object):
             # hasn't been renewed in JWT_TOKEN_RENEWAL_DELTA
             exp = payload.get('exp')
             created_timestamp = exp - int(
-                api_settings.JWT_EXPIRATION_DELTA.total_seconds())
+                properties.JWT_EXPIRATION_DELTA.total_seconds())
             renewal_timestamp = created_timestamp + int(
                 settings.JWT_TOKEN_RENEWAL_DELTA.total_seconds())
             now_timestamp = timegm(datetime.utcnow().utctimetuple())
@@ -106,10 +107,11 @@ class SlidingJwtTokenMiddleware(object):
 
             # Get and check orig_iat
             orig_iat = payload.get('orig_iat')
+
             if orig_iat:
                 # verify expiration
                 expiration_timestamp = orig_iat + int(
-                    api_settings.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
+                    settings.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
                 if now_timestamp > expiration_timestamp:
                     # Token has passed renew time limit - just return existing
                     # response. We need to test this process because it is

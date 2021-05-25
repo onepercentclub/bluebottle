@@ -186,21 +186,21 @@ if not DEBUG:
 
 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
     'JWT_LEEWAY': 0,
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
-    'JWT_ALLOW_TOKEN_RENEWAL': True,
+    'JWT_ALLOW_REFRESH': True,
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
-    'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
     'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
-
+    'JWT_PAYLOAD_HANDLER': 'bluebottle.members.utils.jwt_payload_handler',
 }
 
 # Time between attempts to refresh the jwt token automatically on standard request
 # TODO: move this setting into the JWT_AUTH settings.
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
+JWT_TOKEN_RENEWAL_LIMIT = datetime.timedelta(days=90)
+JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',

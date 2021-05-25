@@ -1,7 +1,7 @@
 import re
 from django import template
 from django.template.base import Node
-from django.utils.functional import keep_lazy
+from django.utils.functional import keep_lazy_text
 
 
 register = template.Library()
@@ -19,8 +19,7 @@ class NoBreakNode(Node):
         self.nodelist = nodelist
 
     def render(self, context):
-        strip_line_breaks = keep_lazy(
-            lambda x: re.sub(r'[\n]+', '\n', x),
-            str
+        strip_line_breaks = keep_lazy_text(
+            lambda x: re.sub(r'[\n]+', '\n', x)
         )
         return strip_line_breaks(self.nodelist.render(context).strip())

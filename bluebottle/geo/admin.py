@@ -41,7 +41,7 @@ class LocationFilter(admin.SimpleListFilter):
 
 class CountryAdmin(TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
-    search_fields = ('name', 'alpha2_code', 'alpha3_code')
+    search_fields = ('translations__name', 'alpha2_code', 'alpha3_code')
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
 

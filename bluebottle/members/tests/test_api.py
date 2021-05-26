@@ -48,7 +48,6 @@ class LoginTestCase(BluebottleTestCase):
             response = self.client.post(
                 reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
             )
-
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         response = self.client.post(
@@ -186,7 +185,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -215,13 +214,13 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         user_id = str(response.json()['id'])
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -241,6 +240,19 @@ class CreateUserTestCase(BluebottleTestCase):
             user_id
         )
 
+    def test_failed_multiple(self):
+        email = 'test@example.com'
+        password = 'secret1234'
+        Member.objects.create(email=email)
+
+        for i in range(0, 11):
+            response = self.client.post(
+                reverse('user-user-create'),
+                {'email': email, 'password': password, 'email_confirmation': email}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_require_confirmation(self):
         self.settings.confirm_signup = True
         self.settings.save()
@@ -250,7 +262,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

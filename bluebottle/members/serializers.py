@@ -1,5 +1,6 @@
 from builtins import object
 
+from axes.handlers.proxy import AxesProxyHandler
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
@@ -434,7 +435,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     email_confirmation = serializers.EmailField(
-        label=_('password_confirmation'), max_length=254, required=False)
+        label=_('email_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
     token = serializers.CharField(required=False, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -465,22 +466,28 @@ class UserCreateSerializer(serializers.ModelSerializer):
                     'NON_FIELD_ERRORS_KEY', 'non_field_errors')
             ] = [conflict]
 
+            request = self.context['request']
+            AxesProxyHandler.user_login_failed(self, {}, request)
+            if getattr(request, 'axes_locked_out', False):
+                raise exceptions.Throttled(
+                    600, 'Too many failed registration attempts.'
+                )
             del errors['email']
 
         return errors
 
     def validate(self, data):
-        if 'email_confirmation' in data and data['email'] != data['email_confirmation']:
-            raise serializers.ValidationError(_('Email confirmation mismatch'))
+        if 'email_confirmation' in data:
+            if data['email'] != data['email_confirmation']:
+                raise serializers.ValidationError(_('Email confirmation mismatch'))
+            del data['email_confirmation']
 
         settings = MemberPlatformSettings.objects.get()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'token': _('Signup requires a confirmation token')})
-
         data['password'] = make_password(data['password'])
-
         return data
 
     class Meta(object):

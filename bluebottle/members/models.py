@@ -62,6 +62,10 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Domain that all email should belong to'),
         max_length=256
     )
+    session_only = models.BooleanField(
+        default=False,
+        help_text=_('Limit user session to browser session')
+    )
 
     require_consent = models.BooleanField(
         default=False, help_text=_('Require users to consent to cookies')

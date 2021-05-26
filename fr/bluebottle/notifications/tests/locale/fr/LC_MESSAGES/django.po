@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-05 15:59+0100\n"
-"PO-Revision-Date: 2021-05-26 15:28\n"
+"PO-Revision-Date: 2021-05-26 15:32\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -20,9 +20,9 @@ msgstr ""
 #: bluebottle/notifications/tests/test_messages.py:14
 #, python-brace-format
 msgid "Test message for {title}"
-msgstr ""
+msgstr "Message de essai pour {title}"
 
 #: bluebottle/notifications/tests/test_messages.py:25
 msgid "Test message"
-msgstr ""
+msgstr "Message d'essai"
 

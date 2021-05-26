@@ -278,6 +278,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
 
+    def test_patch_activity_manager(self):
+        manager = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(manager)
+        response = self.client.patch(
+            self.url,
+            json.dumps(self.data),
+            user=manager
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['title'], 'Some title')
+
     def test_put_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path, 'rb') as test_file:

@@ -179,6 +179,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '3/hour'
+    }
 }
 
 if not DEBUG:

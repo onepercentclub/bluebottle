@@ -16,4 +16,9 @@ class SettingsView(views.APIView):
         Return settings
         """
         obj = get_public_properties(request)
+        if obj['platform']['members']['closed'] and not request.user.is_authenticated:
+            obj = {
+                'platform': {'members': {'closed': True}}
+            }
+
         return response.Response(obj)

@@ -198,6 +198,11 @@ class Member(BlueBottleBaseUser):
     def __str__(self):
         return self.full_name
 
+    def save(self, *args, **kwargs):
+        if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
+            self.submitted_initiative_notifications = False
+        super(Member, self).save(*args, **kwargs)
+
 
 class UserActivity(models.Model):
 

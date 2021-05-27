@@ -179,7 +179,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:initiatives_initiative_change', args=(self.id,))
-        link = '{}/{}'.format(domain, url)
+        link = '{}{}'.format(domain, url)
         return link
 
     def save(self, **kwargs):

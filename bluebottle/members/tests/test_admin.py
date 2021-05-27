@@ -520,3 +520,50 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
             '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
             in response.text
         )
+
+
+class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(MemberNotificationsAdminTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+        self.member_admin_url = reverse(
+            'admin:members_member_change',
+            args=(self.user.id,)
+        )
+
+    def test_initiative_admin(self):
+        self.app.set_user(self.staff_member)
+
+        # Normal user should not have submitted_initiative_notifications checkbox
+        page = self.app.get(self.member_admin_url)
+        self.assertFalse('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('is_staff', True)
+        form.submit()
+
+        # Made user into a staff member
+        # Should have submitted_initiative_notifications checkbox now
+        page = self.app.get(self.member_admin_url)
+        self.assertTrue('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('submitted_initiative_notifications', True)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.submitted_initiative_notifications)
+
+        # Demote user into normal member
+        # Should unset submitted_initiative_notifications boolean
+        page = self.app.get(self.member_admin_url)
+        form = page.forms[0]
+        form.set('is_staff', False)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.submitted_initiative_notifications)

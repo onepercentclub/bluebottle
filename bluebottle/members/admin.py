@@ -313,6 +313,9 @@ class MemberAdmin(UserAdmin):
 
                 fieldsets.append(extra)
 
+            if obj and (obj.is_staff or obj.is_superuser):
+                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+
         return fieldsets
 
     def get_readonly_fields(self, request, obj=None):

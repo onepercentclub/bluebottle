@@ -7,7 +7,7 @@ from bluebottle.time_based.states import TimeBasedStateMachine
 
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
-    InitiativeCancelledOwnerMessage, AssignedReviewerMessage
+    InitiativeCancelledOwnerMessage, AssignedReviewerMessage, InitiativeSubmittedStaffMessage
 )
 
 from bluebottle.notifications.effects import NotificationEffect
@@ -24,6 +24,7 @@ class InitiativeTriggers(TriggerManager):
             ReviewStateMachine.submit,
             effects=[
                 RelatedTransitionEffect('activities', ActivityStateMachine.auto_submit),
+                NotificationEffect(InitiativeSubmittedStaffMessage)
             ]
         ),
 

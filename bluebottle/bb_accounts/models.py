@@ -124,6 +124,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                     default=False,
                                     help_text=_('Designates whether this user should be treated as active. Unselect '
                                                 'this instead of deleting accounts.'))
+
     disable_token = models.CharField(blank=True, max_length=32, null=True)
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
@@ -184,6 +185,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         _('Updates'),
         help_text=_('Updates from initiatives and activities that this person follows'),
         default=True
+    )
+    submitted_initiative_notifications = models.BooleanField(
+        _('Submitted initiatives'),
+        help_text=_('Staff member receives a notification when an initiative is submitted an ready to be reviewed.'),
+        default=False
     )
 
     website = models.URLField(_('website'), blank=True)

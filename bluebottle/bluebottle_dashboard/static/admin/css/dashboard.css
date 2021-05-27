@@ -170,3 +170,7 @@ form .aligned strong+p.help {
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.select2-container .select2-selection--single {
+    height: 38px!important;
+}

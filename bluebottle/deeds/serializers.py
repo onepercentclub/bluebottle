@@ -113,9 +113,11 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     activity = ResourceRelatedField(
         queryset=Deed.objects.all()
     )
+    permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
 
         validators = [
             UniqueTogetherValidator(

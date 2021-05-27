@@ -517,6 +517,7 @@ class DateParticipantSerializer(ParticipantSerializer):
         many=True,
         source='slot_participants'
     )
+    permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
 
     def get_slots(self, instance):
         user = self.context['request'].user
@@ -540,6 +541,7 @@ class DateParticipantSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
         fields = ParticipantSerializer.Meta.fields + ('slots', )
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
 
         validators = [
             UniqueTogetherValidator(
@@ -562,8 +564,12 @@ class DateParticipantSerializer(ParticipantSerializer):
 
 
 class PeriodParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('period-participant-detail', view_args=('pk',))
+
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant
+
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
 
         validators = [
             UniqueTogetherValidator(

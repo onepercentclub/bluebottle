@@ -276,10 +276,11 @@ class TestPlatformSettingsApi(BluebottleTestCase):
                 'platform': {
                     'members': {
                         'closed': True,
-                        'confirm_signup': False,
-                        'email_domain': None,
+                        'background': '',
                         'login_methods': ['password'],
-                        'session_only': False
+                        'session_only': False,
+                        'email_domain': None,
+                        'confirm_signup': False,
                     }
                 }
             }

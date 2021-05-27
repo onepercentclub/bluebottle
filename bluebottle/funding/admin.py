@@ -554,7 +554,10 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
-    search_fields = ['stripepayoutaccount__account_id']
+    search_fields = [
+        'stripepayoutaccount__account_id',
+        'owner__first_name', 'owner__last_name', 'owner__email'
+    ]
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,

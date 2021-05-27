@@ -308,7 +308,6 @@ class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
@@ -319,7 +318,7 @@ class BaseContributorSerializer(ModelSerializer):
     class Meta(object):
         model = Contributor
         fields = ('user', 'activity', 'status', )
-        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+        meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -333,12 +332,10 @@ class BaseContributorSerializer(ModelSerializer):
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
 
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-
     class Meta(object):
         model = Contribution
         fields = ('value', 'status', )
-        meta_fields = ('permissions', 'created', )
+        meta_fields = ('created', )
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'

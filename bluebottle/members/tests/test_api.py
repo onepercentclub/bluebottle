@@ -1,5 +1,8 @@
 from builtins import range
 import time
+from datetime import datetime, timedelta
+from calendar import timegm
+from bluebottle.clients import properties
 
 import mock
 from captcha import client
@@ -9,6 +12,8 @@ from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
 from rest_framework import status
+
+from rest_framework_jwt.settings import api_settings
 
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -35,6 +40,52 @@ class LoginTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_expired_token(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        token = response.json()['token']
+
+        with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(days=8)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+
+            self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_expired_token_exp_in_properties(self):
+        properties.JWT_EXPIRATION_DELTA = timedelta(hours=1)
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        token = response.json()['token']
+
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(token)
+        )
+
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+        with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(minutes=61)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+
+            self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_login_failed(self):
         response = self.client.post(
@@ -666,3 +717,32 @@ class UserActivityTest(BluebottleTestCase):
             len(activity.path), 200
         )
         self.assertTrue(activity.path.startswith('/aaaaaaa'))
+
+
+class RefreshTokenTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user = BlueBottleUserFactory.create()
+
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        payload = jwt_payload_handler(self.user)
+        payload['exp'] = datetime.utcnow() + properties.JWT_EXPIRATION_DELTA - timedelta(minutes=35)
+        payload['orig_iat'] = timegm((datetime.now() - timedelta(minutes=35)).utctimetuple())
+
+        token = jwt_encode_handler(payload)
+
+        self.token = "JWT {0}".format(token)
+
+        self.url = reverse('settings')
+
+    def test_refresh(self):
+        response = self.client.get(self.url, token=self.token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_token = response['Refresh-Token']
+
+        response = self.client.get(reverse('user-current'), token=new_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['id'], self.user.pk)

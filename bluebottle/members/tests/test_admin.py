@@ -274,7 +274,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities', 'funding',
-            'is_superuser'
+            'is_superuser', 'kyc'
         ))
 
         self.assertEqual(expected_fields, set(fields))
@@ -285,7 +285,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'date_activities', 'period_activities', 'funding',
-            'is_superuser'
+            'is_superuser', 'kyc'
         ))
 
         self.assertEqual(expected_fields, set(fields))
@@ -293,10 +293,10 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
     def test_can_pledge_field(self):
         fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
-        self.assertFalse('can_pledge' in fieldsets[0][1]['fields'])
+        self.assertFalse('can_pledge' in fieldsets[2][1]['fields'])
         PledgePaymentProvider.objects.create()
         fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
-        self.assertTrue('can_pledge' in fieldsets[0][1]['fields'])
+        self.assertTrue('can_pledge' in fieldsets[2][1]['fields'])
 
     def test_email_equal_more_groups(self):
         group = Group.objects.create(name='test')

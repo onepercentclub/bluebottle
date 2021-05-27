@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
 
+from rest_framework.throttling import UserRateThrottle
+
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
@@ -19,6 +21,17 @@ from .permissions import DonationOwnerPermission
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
+
+
+class WallpostRateThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        try:
+            if request.data['email_followers']:
+                return super().allow_request(request, view)
+        except KeyError:
+            pass
+
+        return True
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -111,6 +124,7 @@ class TextWallpostList(WallpostOwnerFilterMixin, ParentTypeFilterMixin, SetAutho
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
+    throttle_classes = [WallpostRateThrottle]
 
     permission_classes = (
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
@@ -137,6 +151,7 @@ class MediaWallpostList(TextWallpostList):
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
+    throttle_classes = [WallpostRateThrottle]
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

@@ -574,6 +574,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'consent_link',
             'closed',
             'email_domain',
+            'session_only',
             'confirm_signup',
             'login_methods',
             'background',

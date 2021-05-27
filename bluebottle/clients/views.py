@@ -16,9 +16,20 @@ class SettingsView(views.APIView):
         Return settings
         """
         obj = get_public_properties(request)
-        if obj['platform']['members']['closed'] and not request.user.is_authenticated:
+
+        member_settings = obj['platform']['members']
+        if member_settings['closed'] and not request.user.is_authenticated:
             obj = {
-                'platform': {'members': {'closed': True}}
+                'platform': {
+                    'members': {
+                        'closed': member_settings['closed'],
+                        'background': member_settings['background'],
+                        'login_methods': member_settings['login_methods'],
+                        'session_only': member_settings['session_only'],
+                        'email_domain': member_settings['email_domain'],
+                        'confirm_signup': member_settings['confirm_signup'],
+                    }
+                }
             }
 
         return response.Response(obj)

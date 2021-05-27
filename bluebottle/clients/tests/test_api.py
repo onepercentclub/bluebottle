@@ -272,5 +272,15 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
         self.assertEqual(
             response.data,
-            {'platform': {'members': {'closed': True}}}
+            {
+                'platform': {
+                    'members': {
+                        'closed': True,
+                        'confirm_signup': False,
+                        'email_domain': None,
+                        'login_methods': ['password'],
+                        'session_only': False
+                    }
+                }
+            }
         )

@@ -36,10 +36,10 @@ for client in Client.objects.all():
                     initiative.execute_triggers(send_messages=False)
                     initiative.save()
 
-                for wallpost in Wallpost.objects.filter(owner=duplicate):
+                for wallpost in Wallpost.objects.filter(author=duplicate):
                     wallpost.author = first
                     wallpost.save()
 
                 duplicate.anonymize()
-                duplicate.email = 'merged-{}@example.com'.format(first.pk)
+                duplicate.email = 'merged-{}-{}@example.com'.format(first.pk, duplicate.pk)
                 duplicate.save()

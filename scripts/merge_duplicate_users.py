@@ -36,3 +36,5 @@ for client in Client.objects.all():
                     initiative.save()
 
                 duplicate.anonymize()
+                duplicate.email = 'merged-{}@example.com'.format(first.pk)
+                duplicate.save()

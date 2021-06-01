@@ -147,7 +147,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
 
 
 @admin.register(HomePage)
-class HomePageAdmin(SingletonModelAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
+class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

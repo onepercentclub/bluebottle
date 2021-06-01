@@ -103,7 +103,7 @@ def get_matching_activities(user):
 
 
 @periodic_task(
-    run_every=(crontab(0, 0, day_of_month='1')),
+    run_every=(crontab(0, 0, day_of_month='2')),
     name="recommend",
     ignore_result=True
 )

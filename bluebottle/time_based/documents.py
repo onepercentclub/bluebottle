@@ -35,6 +35,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         related_models = (Initiative, Member, DateParticipant, DateActivitySlot)
         model = DateActivity
 
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related(
+            'slots'
+        )
+
     def prepare_location(self, instance):
         return [
             {'id': slot.location.id, 'formatted_address': slot.location.formatted_address}

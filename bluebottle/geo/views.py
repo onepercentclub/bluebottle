@@ -27,7 +27,8 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
             alpha2_code__isnull=False
         )
         if 'filter[used]' in self.request.GET:
-            return qs.filter(
+            qs = qs.filter(
+                Q(location__initiative__status='approved') |
                 Q(geolocation__initiative__status='approved') |
                 Q(geolocation__periodactivity__status__in=self.public_statuses) |
                 (
@@ -35,8 +36,7 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
                     Q(geolocation__dateactivityslot__status__in=self.public_statuses)
                 )
             ).distinct()
-        else:
-            return qs
+        return qs
 
 
 class CountryDetail(RetrieveAPIView):

@@ -1,0 +1,4 @@
+files:
+  - source: bluebottle/notifications/tests/locale/en/LC_MESSAGES/django.po
+    translation: >-
+      bluebottle/notifications/tests/locale/%two_letters_code%/LC_MESSAGES/django.po

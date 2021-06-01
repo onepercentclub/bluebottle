@@ -8,6 +8,7 @@ from bluebottle.clients.utils import LocalTenant
 
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.initiatives.models import Initiative
+from bluebottle.wallposts.models import Wallpost
 
 
 for client in Client.objects.all():
@@ -34,6 +35,10 @@ for client in Client.objects.all():
                     initiative.owner = first
                     initiative.execute_triggers(send_messages=False)
                     initiative.save()
+
+                for wallpost in Wallpost.objects.filter(owner=duplicate):
+                    wallpost.author = first
+                    wallpost.save()
 
                 duplicate.anonymize()
                 duplicate.email = 'merged-{}@example.com'.format(first.pk)

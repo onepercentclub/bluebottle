@@ -3,6 +3,7 @@ from builtins import range
 
 from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
+from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory
@@ -125,17 +126,17 @@ class UsedCountryListTestCase(GeoTestCase):
         )
 
     def test_api_used_country_list_endpoint(self):
-        response = self.client.get(reverse('country-list'), {'filter[used]': True})
+        response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 3)
         countries = [country['id'] for country in response.json()]
         self.assertEqual(len(countries), 3)
 
     def test_api_used_country_list_endpoint_with_offices(self):
-        ireland = Country.objects.get(translations__name="Turkey")
+        ireland = Country.objects.get(translations__name="Ireland")
         office = LocationFactory.create(country=ireland)
-        InitiativeFactory.create(location=office, status='approved')
-        response = self.client.get(reverse('country-list'), {'filter[used]': True})
+        InitiativeFactory.create(location=office, status='approved', place=None)
+        response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 4)
         countries = [country['id'] for country in response.json()]

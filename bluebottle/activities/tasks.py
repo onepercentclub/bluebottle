@@ -117,6 +117,9 @@ def recommend():
 
                     if activities:
                         notification = MatchingActivitiesNotification(user)
-                        notification.compose_and_send(
-                            activities=activities
-                        )
+                        try:
+                            notification.compose_and_send(
+                                activities=activities
+                            )
+                        except Exception as e:
+                            logger.error(e)

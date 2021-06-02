@@ -4,6 +4,9 @@ import logging
 import re
 import dkim
 
+import premailer
+import html2text
+
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
 from django.utils import translation
@@ -20,6 +23,11 @@ from bluebottle.mails.models import MailPlatformSettings
 from tenant_extras.utils import TenantLanguage
 
 logger = logging.getLogger(__name__)
+
+
+to_text = html2text.HTML2Text()
+to_text.ignore_tables = True
+to_text.ignore_images = True
 
 
 class TenantAwareBackend(EmailBackend):
@@ -114,12 +122,18 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
     with TenantLanguage(language):
         ctx = ClientContext(kwargs)
         ctx['to'] = to  # Add the recipient to the context
-        text_content = get_template(
-            '{0}.txt'.format(template_name)).render(ctx.flatten())
-        html_content = get_template(
-            '{0}.html'.format(template_name)).render(ctx.flatten())
+        html_content = premailer.transform(
+            get_template(
+                '{0}.html'.format(template_name)
+            ).render(
+                ctx.flatten()
+            ),
+            base_url=ctx['site']
+        )
+        text_content = to_text.handle(html_content)
 
         args = dict(subject=subject, body=text_content, to=[to.email])
+
         if cc:
             args['cc'] = cc
         if bcc:

@@ -12,8 +12,7 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
-from bluebottle.utils.utils import get_current_language
-from bluebottle.utils.email_backend import to_text
+from bluebottle.utils.utils import get_current_language, to_text
 
 
 @python_2_unicode_compatible

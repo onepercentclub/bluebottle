@@ -5,7 +5,6 @@ import re
 import dkim
 
 import premailer
-import html2text
 
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
@@ -19,15 +18,11 @@ from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.mails.models import MailPlatformSettings
+from bluebottle.utils.utils import to_text
 
 from tenant_extras.utils import TenantLanguage
 
 logger = logging.getLogger(__name__)
-
-
-to_text = html2text.HTML2Text()
-to_text.ignore_tables = True
-to_text.ignore_images = True
 
 
 class TenantAwareBackend(EmailBackend):

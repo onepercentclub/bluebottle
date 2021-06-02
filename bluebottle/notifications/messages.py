@@ -3,6 +3,7 @@ from builtins import object
 from builtins import str
 from operator import attrgetter
 
+
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import loader
 from django.utils.html import format_html
@@ -12,6 +13,7 @@ from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language
+from bluebottle.utils.email_backend import to_text
 
 
 @python_2_unicode_compatible
@@ -65,9 +67,7 @@ class TransitionMessage(object):
 
     @property
     def generic_content_text(self):
-        context = self.get_generic_context()
-        template = loader.get_template("mails/{}.txt".format(self.template))
-        return template.render(context)
+        return to_text.handle(self.generic_content_html())
 
     def get_content_html(self, recipient):
         context = self.get_context(recipient)
@@ -75,9 +75,7 @@ class TransitionMessage(object):
         return template.render(context)
 
     def get_content_text(self, recipient):
-        context = self.get_context(recipient)
-        template = loader.get_template("mails/{}.txt".format(self.template))
-        return template.render(context)
+        return to_text.handle(self.get_content_html(recipient))
 
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name

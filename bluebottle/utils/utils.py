@@ -32,6 +32,8 @@ from bluebottle.clients import properties
 to_text = html2text.HTML2Text()
 to_text.ignore_tables = True
 to_text.ignore_images = True
+to_text.body_width = 0
+to_text.ignore_emphasis = True
 
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',

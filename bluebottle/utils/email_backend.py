@@ -123,7 +123,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
             ).render(
                 ctx.flatten()
             ),
-            base_url=ctx['site']
+            base_url=tenant_url()
         )
         text_content = to_text.handle(html_content)
 

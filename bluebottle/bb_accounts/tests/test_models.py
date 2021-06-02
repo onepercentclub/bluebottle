@@ -129,7 +129,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
-        self.assertTrue('password: https://testserver/setpassword' in mail.outbox[0].body)
+        self.assertTrue('[Set password](https://testserver/setpassword' in mail.outbox[0].body)
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
@@ -151,7 +151,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
-        self.assertTrue('Take me there: https://testserver\n' in mail.outbox[0].body)
+        self.assertTrue('[Take me there](https://testserver)' in mail.outbox[0].body)
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
@@ -174,7 +174,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertEqual("Welcome to Test!", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
-        self.assertTrue('Take me there: https://testserver/partner\n' in mail.outbox[0].body)
+        self.assertTrue('[Take me there](https://testserver/partner)' in mail.outbox[0].body)
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
@@ -196,7 +196,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
-        self.assertTrue('Take me there: https://testserver\n' in mail.outbox[0].body)
+        self.assertTrue('[Take me there](https://testserver)' in mail.outbox[0].body)
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)

@@ -188,8 +188,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertTrue('/en/initiatives/activities/list' in body)
         self.assertTrue(
-            "Complete your profile, so that we can select even more relevant activities for you"
-            in body
+            (
+                "[ Complete your profile ](https://testserver/member/profile) , "
+                "so that we can select even more relevant activities for you"
+            ) in body
         )
 
         for activity in self.matches:

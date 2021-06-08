@@ -832,6 +832,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         PeriodParticipantFactory.create_batch(3, activity=third, status='accepted')
 
         PeriodActivityFactory.create(status='open', initiative=initiative4, is_online=True)
+        date = DateActivityFactory.create(status='open', initiative=initiative1)
+        DateActivitySlotFactory.create(activity=date, status='open', is_online=True)
 
         response = self.client.get(
             self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
@@ -841,10 +843,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         # Country filter should activities with initiative with office with that country,
         # but also activities with a (geo)location in that country
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
+        self.assertEqual(data['meta']['pagination']['count'], 4)
         self.assertEqual(data['data'][0]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(date.pk))
+        self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))

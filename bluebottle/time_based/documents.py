@@ -53,7 +53,8 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         ]
 
     def prepare_country(self, instance):
-        return [
+        countries = [super().prepare_country(instance)]
+        return countries + [
             slot.location.country_id for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]

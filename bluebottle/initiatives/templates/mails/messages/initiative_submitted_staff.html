@@ -1,0 +1,14 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans context 'email' %}
+        Hi {{ recipient_name }},<br>
+        The initiative <i>{{ title }}</i> has been submitted by {{ initiator_name }} and is waiting for a review.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ url }}"
+       class="action-email">{% trans 'View the initiative' context 'email' %}</a>
+{% endblock %}`

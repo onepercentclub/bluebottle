@@ -63,8 +63,8 @@ class BaseParticipantAdminInline(admin.TabularInline):
         is not available in the regular admin.ModelAdmin as an attribute.
         """
         resolved = resolve(request.path_info)
-        if resolved.args:
-            return self.parent_model.objects.get(pk=resolved.args[0])
+        if 'object_id' in resolved.kwargs:
+            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
         return None
 
     def edit(self, obj):

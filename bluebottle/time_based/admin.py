@@ -165,12 +165,13 @@ class DateActivityASlotInline(admin.TabularInline):
         },
     }
 
-    readonly_fields = ['link']
+    readonly_fields = ['link', 'timezone', ]
 
     fields = [
         'link',
         'title',
         'start',
+        'timezone',
         'duration',
         'is_online',
     ]
@@ -180,6 +181,13 @@ class DateActivityASlotInline(admin.TabularInline):
     def link(self, obj):
         url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
+
+    def timezone(self, obj):
+        if not obj.is_online and obj.location:
+            return obj.location.timezone
+        else:
+            return str(obj.start.astimezone(get_current_timezone()).tzinfo)
+    timezone.short_description = _('Timezone')
 
 
 @admin.register(DateActivity)
@@ -417,7 +425,7 @@ class DateSlotAdmin(SlotAdmin):
             if offset.total_seconds() != 0:
                 timezone_text = _(
                     'Local time in "{location}" is {local_time}. '
-                    'This is {offset} hours {relation} then in the '
+                    'This is {offset} hours {relation} compared to the '
                     'standard platform timezone ({current_timezone}).'
                 ).format(
                     location=obj.location,

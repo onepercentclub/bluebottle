@@ -38,6 +38,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         related_models = (Initiative, Member, DateParticipant, DateActivitySlot)
         model = DateActivity
 
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related(
+            'slots'
+        )
+
     def prepare_location(self, instance):
         return [
             {'id': slot.location.id, 'formatted_address': slot.location.formatted_address}
@@ -56,7 +61,8 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         ]
 
     def prepare_country(self, instance):
-        return [
+        countries = [super().prepare_country(instance)]
+        return countries + [
             slot.location.country_id for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]

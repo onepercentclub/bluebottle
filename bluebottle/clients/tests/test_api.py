@@ -12,6 +12,7 @@ from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -237,3 +238,50 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
+
+    def test_member_platform_settings(self):
+        MemberPlatformSettings.objects.create(
+            closed=False,
+            require_consent=True
+        )
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['members']['closed'], False)
+        self.assertEqual(response.data['platform']['members']['require_consent'], True)
+
+    def test_member_platform_settings_closed(self):
+        MemberPlatformSettings.objects.create(
+            closed=True,
+            require_consent=True,
+        )
+
+        user = BlueBottleUserFactory.create()
+        user_token = "JWT {0}".format(user.get_jwt_token())
+
+        response = self.client.get(self.settings_url, token=user_token)
+        self.assertEqual(response.data['platform']['members']['closed'], True)
+        self.assertEqual(response.data['platform']['members']['require_consent'], True)
+
+    def test_member_platform_settings_closed_anonymous(self):
+        MemberPlatformSettings.objects.create(
+            closed=True,
+            require_consent=True,
+        )
+
+        response = self.client.get(self.settings_url)
+
+        self.assertEqual(
+            response.data,
+            {
+                'platform': {
+                    'members': {
+                        'closed': True,
+                        'background': '',
+                        'login_methods': ['password'],
+                        'session_only': False,
+                        'email_domain': None,
+                        'confirm_signup': False,
+                    }
+                }
+            }
+        )

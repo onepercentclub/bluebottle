@@ -103,7 +103,9 @@ class ActivityDocument(Document):
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative', 'owner',
+            'initiative', 'owner'
+        ).prefetch_related(
+            'contributors'
         )
 
     @classmethod

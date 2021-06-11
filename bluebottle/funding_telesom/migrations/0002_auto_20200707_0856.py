@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='telesompayment',
             name='currency',
-            field=models.CharField(default=b'USD', max_length=3),
+            field=models.CharField(default=b'USD', max_length=50),
         ),
     ]

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('description', models.CharField(default=b'', max_length=255, verbose_name='description')),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=255, verbose_name='title')),
                 ('description', models.TextField(blank=True, verbose_name='description')),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12, verbose_name='amount')),
                 ('deadline', models.DateTimeField(null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
             name='Reward',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12, verbose_name='Amount')),
                 ('title', models.CharField(max_length=200, verbose_name='Title')),
                 ('description', models.CharField(max_length=500, verbose_name='Description')),
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='donation',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='funding',
@@ -89,7 +89,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='funding',
             name='target_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AddField(
             model_name='reward',

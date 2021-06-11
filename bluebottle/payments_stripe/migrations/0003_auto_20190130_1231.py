@@ -21,6 +21,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='stripepayment',
             name='payout_currency',
-            field=models.CharField(default=b'EUR', max_length=3),
+            field=models.CharField(default=b'EUR', max_length=50),
         ),
     ]

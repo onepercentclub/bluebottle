@@ -36,5 +36,5 @@ class Migration(migrations.Migration):
                 ('objects', models.manager.Manager()),
             ],
         ),
-        migrations.RunPython(migrate_stats),
+        # migrations.RunPython(migrate_stats),
     ]

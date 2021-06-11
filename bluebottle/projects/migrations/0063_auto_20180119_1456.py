@@ -52,6 +52,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='projectcreatetemplate',
             name='default_amount_asked_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
     ]

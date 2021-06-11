@@ -24,27 +24,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='amount_asked_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
         migrations.AddField(
             model_name='project',
             name='amount_donated_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
         migrations.AddField(
             model_name='project',
             name='amount_extra_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
         migrations.AddField(
             model_name='project',
             name='amount_needed_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
         migrations.AddField(
             model_name='projectbudgetline',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='project',

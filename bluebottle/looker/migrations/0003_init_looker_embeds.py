@@ -36,6 +36,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(generate_looker_embeds, dummy)
+        # migrations.RunPython(generate_looker_embeds, dummy)
 
     ]

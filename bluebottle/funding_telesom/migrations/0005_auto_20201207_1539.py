@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='telesompayment',
             name='currency',
-            field=models.CharField(default='USD', max_length=3),
+            field=models.CharField(default='USD', max_length=50),
         ),
         migrations.AlterField(
             model_name='telesompayment',

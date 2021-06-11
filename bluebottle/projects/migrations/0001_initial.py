@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('description', models.CharField(default=b'', max_length=255, verbose_name='description')),
-                ('currency', models.CharField(default=b'EUR', max_length=3)),
+                ('currency', models.CharField(default=b'EUR', max_length=50)),
                 ('amount', models.PositiveIntegerField(verbose_name='amount (in cents)')),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True)),
                 ('updated', django_extensions.db.fields.ModificationDateTimeField(auto_now=True)),

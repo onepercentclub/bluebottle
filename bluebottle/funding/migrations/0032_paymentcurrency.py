@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='PaymentCurrency',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(default=b'EUR', max_length=3)),
+                ('code', models.CharField(default=b'EUR', max_length=50)),
                 ('min_amount', models.DecimalField(decimal_places=2, default=5.0, max_digits=10)),
                 ('max_amount', models.DecimalField(blank=True, decimal_places=2, default=5.0, max_digits=10, null=True)),
                 ('default1', models.DecimalField(decimal_places=2, default=10.0, max_digits=10)),

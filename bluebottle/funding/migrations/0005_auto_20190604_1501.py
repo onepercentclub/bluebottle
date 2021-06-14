@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='donation',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='funding',
@@ -33,6 +33,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='funding',
             name='target_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
     ]

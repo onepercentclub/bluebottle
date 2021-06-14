@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name='MoneyContribution',
             fields=[
                 ('contribution_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='activities.Contribution')),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices=[('EUR', 'Euro')], decimal_places=2, default_currency='EUR', max_digits=12)),
             ],
             options={

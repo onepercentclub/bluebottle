@@ -4,7 +4,7 @@ import json
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone, now
@@ -278,6 +278,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
 
+    def test_patch_activity_manager(self):
+        manager = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(manager)
+        response = self.client.patch(
+            self.url,
+            json.dumps(self.data),
+            user=manager
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['title'], 'Some title')
+
     def test_put_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path, 'rb') as test_file:
@@ -485,6 +497,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 2)
+        activity_types = [rel['type'] for rel in data['relationships']['activities']['data']]
+
+        self.assertTrue(
+            'activities/fundings' in activity_types
+        )
+        self.assertTrue(
+            'activities/time-based/dates' in activity_types
+        )
 
         event_data = get_include(response, 'activities/time-based/dates')
         self.assertEqual(event_data['id'], str(event.pk))
@@ -748,7 +768,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         managed_initiatives = InitiativeFactory.create_batch(
-            2, status='submitted', activity_manager=self.owner
+            2, status='submitted', activity_managers=[self.owner]
         )
         InitiativeFactory.create_batch(4, status='submitted')
 
@@ -819,7 +839,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
@@ -830,7 +850,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['activity-managers']['data'][0]['id'], str(self.owner.pk))
 
     def test_filter_promoter(self):
         """
@@ -852,7 +872,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self owner or activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
         InitiativeFactory.create_batch(4, status='approved')
 

@@ -2,7 +2,7 @@ from builtins import str
 from django import forms
 from django.db import models
 from django.contrib import admin
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact

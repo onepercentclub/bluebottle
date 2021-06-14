@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import mock
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status

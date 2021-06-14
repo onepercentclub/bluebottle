@@ -765,9 +765,9 @@ class ParticipantTriggerTestCase():
     def test_initial_added_through_admin(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
 
@@ -796,10 +796,11 @@ class ParticipantTriggerTestCase():
 
     def test_initial_removed_through_admin(self):
         mail.outbox = []
+
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
         mail.outbox = []
@@ -849,9 +850,9 @@ class ParticipantTriggerTestCase():
     def test_initial_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=participant.user, send_messages=True)
         participant.save()
 
@@ -882,9 +883,9 @@ class ParticipantTriggerTestCase():
     def test_initial_no_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.activity
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=participant.user, send_messages=True)
         participant.save()
 

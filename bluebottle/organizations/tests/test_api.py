@@ -4,7 +4,7 @@ standard_library.install_aliases()
 from urllib.parse import urlencode
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.organizations.models import Organization

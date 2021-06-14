@@ -37,10 +37,9 @@ class ActivityList(JsonApiViewMixin, ListAPIView):
         'initiative__theme',
         'initiative__place',
         'initiative__image',
-        'initiative__activity_manager',
         'initiative__location__country',
         'initiative__organization',
-    )
+    ).prefetch_related('initiative__activity_managers')
     serializer_class = ActivityListSerializer
     model = Activity
 

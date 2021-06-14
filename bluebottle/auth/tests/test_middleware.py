@@ -12,6 +12,7 @@ class LockdownTestCase(BluebottleTestCase):
         mw = LockdownMiddleware()
         rf = RequestFactory()
         request = rf.get('/')
+        request.LANGUAGE_CODE = 'en'
         request.META = {'HTTP_X_LOCKDOWN': 'sssht'}
         # Mock a session
         request.session = type("MockSession", (object, ), {"get": lambda self, prop: "bla"})()

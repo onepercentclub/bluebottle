@@ -1141,111 +1141,175 @@ class ContributorListAPITestCase(BluebottleTestCase):
 )
 @tag('elasticsearch')
 class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
+    anonymous_resource = {
+        'id': 'anonymous',
+        'type': 'members',
+        'attributes': {
+            'is-anonymous': True
+        }
+    }
+
     def setUp(self):
         super(ActivityAPIAnonymizationTestCase, self).setUp()
         self.member_settings = MemberPlatformSettings.load()
 
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
-        last_year = now() - timedelta(days=400)
-        self.old_date_activity = DateActivityFactory.create(
-            created=last_year,
-            status='open'
-        )
-        DateParticipantFactory.create(
-            activity=self.old_date_activity,
-            created=last_year
-        )
-        DateParticipantFactory.create(
-            activity=self.old_date_activity
-        )
 
-        self.new_date_activity = DateActivityFactory.create(
-            status='open'
-        )
-        DateParticipantFactory.create(
-            activity=self.new_date_activity,
-            created=last_year
-        )
-        DateParticipantFactory.create(
-            activity=self.new_date_activity
-        )
-        self.new_url = reverse('date-detail', args=(self.new_date_activity.id,))
-        self.old_url = reverse('date-detail', args=(self.old_date_activity.id,))
-
-    def _get_members(self, data):
-        return [item for item in data['included'] if item['type'] == 'members' and item['attributes']['first-name']]
-
-    def _get_anonymous(self, data):
-        return [item for item in data['included'] if item['type'] == 'members' and item['attributes']['is-anonymous']]
-
-    def test_no_max_age(self):
-        response = self.client.get(self.old_url, user=self.owner)
-        self.new_date_activity.initiative.promoter = BlueBottleUserFactory.create()
-        self.new_date_activity.initiative.save()
-        data = json.loads(response.content)
-        members = self._get_members(data)
-        anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 0)
-
-        contributors_response = self.client.get(
-            data['data']['relationships']['contributors']['links']['related'], user=self.owner
-        )
-        contributors_data = json.loads(contributors_response.content)
-        members = self._get_members(contributors_data)
-        anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 0)
-
-        response = self.client.get(self.new_url, user=self.owner)
-        data = json.loads(response.content)
-        members = self._get_members(data)
-        anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 3)
-        self.assertEqual(len(anonymous), 0)
-
-        contributors_response = self.client.get(
-            data['data']['relationships']['contributors']['links']['related'], user=self.owner
-        )
-        contributors_data = json.loads(contributors_response.content)
-        members = self._get_members(contributors_data)
-        anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 0)
-
-    def test_max_age(self):
+    def test_activity_over_max_age(self):
         self.member_settings.anonymization_age = 300
         self.member_settings.save()
-        response = self.client.get(self.old_url, user=self.owner)
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        members = self._get_members(data)
-        anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 1)
-        self.assertEqual(len(anonymous), 1)
 
-        contributors_response = self.client.get(
-            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        activity = DateActivityFactory.create(
+            created=now() - timedelta(days=400),
+            status='open'
         )
-        contributors_data = json.loads(contributors_response.content)
-        members = self._get_members(contributors_data)
-        anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 1)
-        self.assertEqual(len(anonymous), 1)
 
-        response = self.client.get(self.new_url, user=self.owner)
-        data = json.loads(response.content)
-        members = self._get_members(data)
-        anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 0)
+        data = self.client.get(
+            reverse('date-detail', args=(activity.id,))
+        ).json()
 
-        contributors_response = self.client.get(
-            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        self.assertEqual(
+            data['data']['relationships']['owner']['data']['id'], 'anonymous'
         )
-        contributors_data = json.loads(contributors_response.content)
-        members = self._get_members(contributors_data)
-        anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 1)
-        self.assertEqual(len(anonymous), 1)
+
+        self.assertTrue(self.anonymous_resource in data['included'])
+
+    def test_activity_not_over_max_age(self):
+        self.member_settings.anonymization_age = 300
+        self.member_settings.save()
+
+        activity = DateActivityFactory.create(
+            created=now() - timedelta(days=200),
+            status='open'
+        )
+
+        data = self.client.get(
+            reverse('date-detail', args=(activity.id,))
+        ).json()
+
+        self.assertEqual(
+            data['data']['relationships']['owner']['data']['id'], str(activity.owner.pk)
+        )
+
+        self.assertTrue(self.anonymous_resource not in data['included'])
+
+    def test_initiative_over_max_age(self):
+        self.member_settings.anonymization_age = 300
+        self.member_settings.save()
+
+        initiative = InitiativeFactory.create(
+            status='open',
+            promoter=BlueBottleUserFactory.create(),
+            reviewer=BlueBottleUserFactory.create(),
+        )
+
+        initiative.created = now() - timedelta(days=400)
+        initiative.save()
+
+        DateActivityFactory.create(
+            initiative=initiative,
+            created=now() - timedelta(days=400),
+            status='open'
+        )
+        data = self.client.get(
+            reverse('initiative-detail', args=(initiative.id,))
+        ).json()
+
+        self.assertEqual(
+            data['data']['relationships']['owner']['data']['id'], 'anonymous'
+        )
+
+        self.assertEqual(
+            data['data']['relationships']['activity-managers']['data'][0]['id'], 'anonymous'
+        )
+
+        self.assertEqual(
+            data['data']['relationships']['reviewer']['data']['id'], 'anonymous'
+        )
+
+        included_activity = [
+            included for included in data['included'] if
+            included['type'] == 'activities/time-based/dates'
+        ][0]
+
+        self.assertEqual(
+            included_activity['relationships']['owner']['data']['id'], 'anonymous'
+        )
+
+    def test_initiative_not_over_max_age(self):
+        self.member_settings.anonymization_age = 300
+        self.member_settings.save()
+
+        initiative = InitiativeFactory.create(
+            status='open',
+            promoter=BlueBottleUserFactory.create(),
+            reviewer=BlueBottleUserFactory.create(),
+        )
+
+        initiative.created = now() - timedelta(days=200)
+        initiative.save()
+
+        activity = DateActivityFactory.create(
+            initiative=initiative,
+            status='open'
+        )
+        data = self.client.get(
+            reverse('initiative-detail', args=(initiative.id,))
+        ).json()
+
+        self.assertEqual(
+            data['data']['relationships']['owner']['data']['id'], str(initiative.owner.pk)
+        )
+
+        self.assertEqual(
+            data['data']['relationships']['activity-managers']['data'][0]['id'],
+            str(initiative.activity_managers.first().pk)
+        )
+
+        self.assertEqual(
+            data['data']['relationships']['reviewer']['data']['id'], str(initiative.reviewer.pk)
+        )
+
+        included_activity = [
+            included for included in data['included'] if
+            included['type'] == 'activities/time-based/dates'
+        ][0]
+
+        self.assertEqual(
+            included_activity['relationships']['owner']['data']['id'], str(activity.owner.pk)
+        )
+
+    def test_participants_over_max_age(self):
+        self.member_settings.anonymization_age = 300
+        self.member_settings.save()
+
+        activity = DateActivityFactory.create(
+            created=now() - timedelta(days=400),
+            status='open'
+        )
+
+        activity_data = self.client.get(
+            reverse('date-detail', args=(activity.id,))
+        ).json()
+
+        DateParticipantFactory.create(
+            activity=activity,
+            created=now() - timedelta(days=350),
+        )
+        new_participant = DateParticipantFactory.create(
+            activity=activity
+        )
+
+        data = self.client.get(
+            activity_data['data']['relationships']['contributors']['links']['related'],
+            user=self.owner
+        ).json()
+        self.assertEqual(
+            data['data'][0]['relationships']['user']['data']['id'],
+            'anonymous'
+        )
+        self.assertEqual(
+            data['data'][1]['relationships']['user']['data']['id'],
+            str(new_participant.user.pk)
+        )

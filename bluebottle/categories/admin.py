@@ -5,7 +5,7 @@ from django.contrib.admin.options import TabularInline
 from django.db import models
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableStackedInline, TranslatableAdmin
 from sorl.thumbnail.admin import AdminImageMixin
 

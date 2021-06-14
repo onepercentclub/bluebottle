@@ -17,5 +17,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_homepage)
+        # migrations.RunPython(migrate_homepage)
     ]

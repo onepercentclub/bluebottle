@@ -30,11 +30,11 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(initiative.status, 'needs_work')
 
     def test_activity_manager(self):
-        initiative = InitiativeFactory(activity_manager=None)
-        self.assertEqual(initiative.owner, initiative.activity_manager)
+        initiative = InitiativeFactory(activity_managers=[])
+        self.assertTrue(initiative.owner in initiative.activity_managers.all())
 
     def test_absolute_url(self):
-        initiative = InitiativeFactory(activity_manager=None)
+        initiative = InitiativeFactory(activity_managers=[])
         expected = 'http://testserver/en/initiatives/details/{}/{}'.format(initiative.id, initiative.slug)
         self.assertEqual(initiative.get_absolute_url(), expected)
 

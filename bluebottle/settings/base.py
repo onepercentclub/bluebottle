@@ -3,7 +3,7 @@ import os
 from collections import OrderedDict
 
 from .admin_dashboard import *  # noqa
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import rules
 from PIL import ImageFile
@@ -104,7 +104,6 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'tenant_extras.staticfiles_finders.TenantStaticFilesFinder'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -118,7 +117,6 @@ TEMPLATES = [
                 'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
-                'django.template.loaders.eggs.Loader',
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
@@ -142,7 +140,7 @@ TEMPLATES = [
 
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
@@ -163,7 +161,8 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare'
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'axes.middleware.AxesMiddleware',
 )
 
 REST_FRAMEWORK = {
@@ -192,7 +191,8 @@ JWT_AUTH = {
     'JWT_LEEWAY': 0,
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
-    'JWT_ALLOW_REFRESH': True,
+    'JWT_ALLOW_TOKEN_RENEWAL': True,
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
     'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
@@ -226,7 +226,7 @@ PASSWORD_HASHERS = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesModelBackend',
+    'axes.backends.AxesBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -265,8 +265,8 @@ SOCIAL_AUTH_PIPELINE = (
 AFOM_ENABLED = False
 
 SHARED_APPS = (
-    'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
+    'tenant_schemas',
 
     # Django apps
     'django.contrib.sessions',
@@ -278,11 +278,7 @@ SHARED_APPS = (
 
     # 3rd party apps
     'lockdown',
-    'django_extensions',
-    'raven.contrib.django',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'loginas',
-    'geoposition',
     'tenant_extras',
     'localflavor',
     'corsheaders',
@@ -290,7 +286,7 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'django_singleton_admin',
+    'solo',
     'django_filters',
     'multiselectfield',
 
@@ -299,8 +295,6 @@ SHARED_APPS = (
 
 TENANT_APPS = (
     'polymorphic',
-    'modeltranslation',
-
     'social_django',
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
@@ -367,7 +361,6 @@ TENANT_APPS = (
     'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
-    'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.offices',
     'bluebottle.pages',
@@ -425,8 +418,9 @@ TENANT_APPS = (
 
     'bluebottle.cms',
 
+    'django.contrib.gis',
     'djmoney',
-    'django_singleton_admin',
+    'solo',
     'nested_inline',
     'permissions_widget',
     'django.forms',
@@ -1102,11 +1096,13 @@ AXES_META_PRECEDENCE_ORDER = [
     'REMOTE_ADDR',
 ]
 AXES_NUM_PROXIES = 1
+AXES_USERNAME_FORM_FIELD = 'email'
 
 RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
 RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
 USE_X_FORWARDED_HOST = True
 
+ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 
 # Socket is not configured. Lets guess.
 if os.path.exists('/var/run/clamd.scan/'):

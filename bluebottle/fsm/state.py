@@ -1,6 +1,6 @@
 from builtins import str
 from builtins import object
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.dispatch import Signal
 from future.utils import with_metaclass
 from stripe.six import python_2_unicode_compatible

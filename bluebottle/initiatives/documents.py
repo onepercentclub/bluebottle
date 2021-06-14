@@ -1,5 +1,5 @@
-from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+from django_elasticsearch_dsl import Document, fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
@@ -21,8 +21,9 @@ initiative.settings(
 )
 
 
-@initiative.doc_type
-class InitiativeDocument(DocType):
+@registry.register_document
+@initiative.document
+class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     story = fields.TextField()
@@ -38,7 +39,7 @@ class InitiativeDocument(DocType):
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
-    activity_manager = fields.NestedField(properties={
+    activity_managers = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
@@ -50,7 +51,6 @@ class InitiativeDocument(DocType):
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
-    activity_manager_id = fields.KeywordField()
 
     theme = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -83,7 +83,7 @@ class InitiativeDocument(DocType):
         }
     )
 
-    class Meta(object):
+    class Django:
         model = Initiative
         related_models = (
             Geolocation,

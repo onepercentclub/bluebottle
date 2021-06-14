@@ -13,7 +13,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.db import models
 from django.forms import BaseInlineFormSet
@@ -23,7 +23,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
@@ -206,7 +206,7 @@ class UserActivityInline(admin.TabularInline):
 
     formset = LimitModelFormset
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 
@@ -384,7 +384,7 @@ class MemberAdmin(UserAdmin):
     def initiatives(self, obj):
         initiatives = []
         initiative_url = reverse('admin:initiatives_initiative_changelist')
-        for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
+        for field in ['owner', 'reviewer', 'promoter', 'activity_managers']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
                 link = initiative_url + '?{}_id={}'.format(field, obj.id)
                 initiatives.append(format_html(
@@ -611,5 +611,4 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('user', 'key')
 
 
-admin.site.unregister(Token)
 admin.site.register(Token, TokenAdmin)

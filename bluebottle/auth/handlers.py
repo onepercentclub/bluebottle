@@ -1,5 +1,5 @@
 from past.builtins import basestring
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 
 
 def resource_access_handler(request, resource):

@@ -1,7 +1,7 @@
 from django import forms
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.forms.models import ModelFormMetaclass
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
 
 

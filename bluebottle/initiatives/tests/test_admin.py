@@ -256,3 +256,19 @@ class TestThemeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_theme_changelist')
         response = self.app.get(url, user=self.staff_member)
         self.assertEqual(response.status, '200 OK')
+
+
+class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def test_admin_open_initiative_disabled(self):
+        # Check multiple input shows labels
+        url = reverse('admin:initiatives_initiativeplatformsettings_changelist')
+        self.app.set_user(self.superuser)
+        page = self.app.get(url)
+        input_html = page.html.find('div', {'class': 'field-activity_types'}).text
+        self.assertTrue('Deed' in input_html)
+        self.assertTrue('Funding' in input_html)

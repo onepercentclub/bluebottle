@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
 
-from builtins import object
 import regex
 
 from django import http
 from django.conf import settings
 from django.db import connection
+from django.utils.deprecation import MiddlewareMixin
 
 from bluebottle.redirects.models import Redirect
 from bluebottle.clients import properties
 
 
-class RedirectFallbackMiddleware(object):
+class RedirectFallbackMiddleware(MiddlewareMixin):
     """
     A modified version of django.contrib.redirects, this app allows
     us to optionally redirect users using regular expressions.

@@ -77,7 +77,7 @@ class TestMailBackend(EmailBackend):
         request = ThreadLocal.get_current_request()
 
         try:
-            request.user.is_authenticated()
+            request.user.is_authenticated
             recipient = request.user.email
         except Exception:
             recipient = str(email_message.recipients()[0])

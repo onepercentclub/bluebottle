@@ -96,7 +96,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['title'] = 'Activity with multiple slots'
         form['description'] = 'Lorem etc'
         form['owner'] = self.owner.id
-        form['review'] = 3
+        form['review'] = 'true'
         page = form.submit().follow()
         self.assertEqual(page.status, '200 OK', 'Activity is added, now we can add a slot.')
 
@@ -143,6 +143,27 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         page.forms['confirm'].submit().follow()
 
         self.assertEqual(len(participant.slot_participants.all()), 3)
+
+    def test_add_participants(self):
+        activity = DateActivityFactory.create(initiative=self.initiative, status='open')
+        DateParticipantFactory.create(activity=activity)
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk, ))
+        page = self.app.get(url)
+        self.assertFalse(
+            'First complete and submit the activity before managing participants.' in
+            page.text
+        )
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        activity.status = 'rejected'
+        activity.save()
+        page = self.app.get(url)
+        self.assertTrue(
+            'First complete and submit the activity before managing participants.' in
+            page.text
+        )
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):

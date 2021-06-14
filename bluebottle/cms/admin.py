@@ -1,15 +1,16 @@
 from builtins import str
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 from django.shortcuts import redirect
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from nested_inline.admin import NestedStackedInline
+from solo.admin import SingletonModelAdmin
 
 from bluebottle.statistics.statistics import Statistics
 
@@ -37,8 +38,8 @@ class LinkInline(SortableStackedInline):
     fields = (
         ('title', 'highlight'),
         'link_permissions',
-        ('component', 'component_id'),
-        'external_link',
+        ('component', 'component_id',),
+        'external_link'
     )
 
 
@@ -51,16 +52,16 @@ class LinkGroupAdmin(NonSortableParentAdmin):
         return {}
 
     def response_add(self, request, obj, post_url_continue=None):
-        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id,)))
 
     def response_change(self, request, obj):
-        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id,)))
 
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
     readonly_fields = ('title', 'edit_url',)
-    fields = ('name', 'title', 'edit_url', )
+    fields = ('name', 'title', 'edit_url',)
     extra = 0
 
     def edit_url(self, obj):
@@ -74,6 +75,7 @@ class LinkGroupInline(SortableTabularInline):
                 str(reverse(url, args=(obj.id,))), _('Edit this group')
             )
         return _('First save to edit this group')
+
     edit_url.short_name = 'Edit group'
 
 
@@ -145,15 +147,14 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
 
 
 @admin.register(HomePage)
-class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
+class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
 
-    fields = ('content', )
+    fields = ('content',)
 
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
-
     exclude = ('logo', 'favicon')

@@ -36,6 +36,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='donation',
             name='payout_amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', b'Euro')], default=b'EUR', editable=False, max_length=50),
         ),
     ]

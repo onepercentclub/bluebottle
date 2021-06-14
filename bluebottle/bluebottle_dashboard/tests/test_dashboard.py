@@ -1,7 +1,7 @@
 # coding=utf-8
 from django.test.client import RequestFactory
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
@@ -73,9 +73,9 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
         }
 
         response = self.client.post(self.widget_admin_url, data, format='multipart')
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.dashboard.refresh_from_db()
-        self.assertEquals(self.dashboard.title, 'Links')
+        self.assertEqual(self.dashboard.title, 'Links')
 
     def test_changing_widget_title_with_csrf(self):
         response = self.client.get(self.widget_admin_url)
@@ -89,9 +89,9 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
             '_save': 'Save'
         }
         response = self.client.post(self.widget_admin_url, data, format='multipart')
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.dashboard.refresh_from_db()
-        self.assertEquals(self.dashboard.title, 'Nice Links')
+        self.assertEqual(self.dashboard.title, 'Nice Links')
 
 
 class AdminMenuTestCase(BluebottleAdminTestCase):

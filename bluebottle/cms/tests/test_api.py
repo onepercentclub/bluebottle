@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 from django.utils.timezone import now
 from fluent_contents.models import Placeholder
@@ -43,15 +43,17 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-        image = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        self.page = ResultPageFactory(title='Results last year', image=image)
+        with open('./bluebottle/projects/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            self.page = ResultPageFactory(title='Results last year', image=image)
+
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
         cache.clear()
 
     def test_results_header(self):
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Image should come in 4 sizes
         self.assertEqual(len(response.data['image']), 6)
         self.assertEqual(response.data['title'], self.page.title)
@@ -82,7 +84,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
@@ -122,7 +124,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
@@ -137,7 +139,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.quote = QuoteFactory(block=block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -153,7 +155,7 @@ class ResultPageTestCase(BluebottleTestCase):
         block.activities.add(activity)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -169,7 +171,7 @@ class ResultPageTestCase(BluebottleTestCase):
         )
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -186,7 +188,7 @@ class ResultPageTestCase(BluebottleTestCase):
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
@@ -202,10 +204,10 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stat = StatFactory(block=stat_block)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data['blocks']), 2)
-        self.assertEquals(response.data['blocks'][0]['type'], 'quotes')
-        self.assertEquals(response.data['blocks'][1]['type'], 'statistics')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['blocks']), 2)
+        self.assertEqual(response.data['blocks'][0]['type'], 'quotes')
+        self.assertEqual(response.data['blocks'][1]['type'], 'statistics')
 
     def test_results_supporters(self):
         yesterday = now() - timedelta(days=1)
@@ -238,7 +240,7 @@ class ResultPageTestCase(BluebottleTestCase):
         SupporterTotalContent.objects.create_for_placeholder(self.placeholder)
 
         response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         block = response.data['blocks'][0]
         self.assertEqual(block['type'], 'supporter_total')
@@ -297,16 +299,17 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides_png(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.png', 'rb'))
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
 
-        for i in range(0, 4):
-            SlideFactory(
-                image=image,
-                sequence=i,
-                publication_date=now(),
-                status='published',
-                language='en'
-            )
+            for i in range(0, 4):
+                SlideFactory(
+                    image=image,
+                    sequence=i,
+                    publication_date=now(),
+                    status='published',
+                    language='en'
+                )
 
         response = self.client.get(self.url)
 
@@ -321,16 +324,18 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides_svg(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        for i in range(0, 4):
-            SlideFactory(
-                image=image,
-                sequence=i,
-                publication_date=now(),
-                status='published',
-                language='en'
-            )
+        with open('./bluebottle/cms/tests/test_images/upload.svg', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                SlideFactory(
+                    image=image,
+                    sequence=i,
+                    publication_date=now(),
+                    status='published',
+                    language='en'
+                )
 
         response = self.client.get(self.url)
 
@@ -350,10 +355,11 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_links(self):
         block = LinksContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
 
-        for i in range(0, 4):
-            ContentLinkFactory.create(block=block, image=image)
+            for i in range(0, 4):
+                ContentLinkFactory.create(block=block, image=image)
 
         response = self.client.get(self.url)
 
@@ -384,15 +390,17 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_steps(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        for i in range(0, 4):
-            StepFactory.create(
-                block=block,
-                header='test header',
-                text='<a href="http://example.com">link</a>',
-                image=image
-            )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                StepFactory.create(
+                    block=block,
+                    header='test header',
+                    text='<a href="http://example.com">link</a>',
+                    image=image
+                )
 
         response = self.client.get(self.url)
 
@@ -406,14 +414,16 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_steps_unsafe(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
-        StepFactory.create(
-            block=block,
-            header='test header',
-            text='<script src="http://example.com"></script>Some text',
-            image=image
-        )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            StepFactory.create(
+                block=block,
+                header='test header',
+                text='<script src="http://example.com"></script>Some text',
+                image=image
+            )
 
         response = self.client.get(self.url)
 
@@ -493,22 +503,31 @@ class PageTestCase(BluebottleTestCase):
     def test_page(self):
         html = RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
         text = TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
-        document = DocumentItem.objects.create_for_placeholder(
-            self.placeholder,
-            document=File(open('./bluebottle/projects/test_images/upload.png', 'rb'),),
-            text='Some file upload'
-        )
-        picture = PictureItem.objects.create_for_placeholder(
-            self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
-            align='center'
-        )
-        image_text = ImageTextItem.objects.create_for_placeholder(
-            self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
-            text='some text',
-            align='center'
-        )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            document = DocumentItem.objects.create_for_placeholder(
+                self.placeholder,
+                document=image,
+                text='Some file upload'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            picture = PictureItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                align='center'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            image_text = ImageTextItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                text='some text',
+                align='center'
+            )
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
 
@@ -603,8 +622,9 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        SitePlatformSettings.objects.create(favicon=favicon)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            favicon = File(f)
+            SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
 
@@ -620,8 +640,9 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         )
 
     def test_site_platform_settings_logo(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
-        SitePlatformSettings.objects.create(favicon=favicon)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            favicon = File(f)
+            SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
 

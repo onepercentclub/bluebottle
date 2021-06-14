@@ -15,8 +15,7 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import ModificationDateTimeField
+from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
@@ -129,7 +128,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     disable_token = models.CharField(blank=True, max_length=32, null=True)
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    updated = ModificationDateTimeField()
+
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
     last_seen = models.DateTimeField(_('Last Seen'), blank=True, null=True)
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
@@ -176,7 +177,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                         choices=lazy(get_language_choices, tuple)(),
                                         default=lazy(get_default_language, str)(),
                                         help_text=_('Language used for website and emails.'),
-                                        max_length=5)
+                                        max_length=7)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
@@ -202,7 +203,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         help_text=_('Users that are connected to a partner organisation '
                     'will skip the organisation step in initiative create.'),
         related_name='partner_organization_members',
-        verbose_name=_('Partner organisation'))
+        verbose_name=_('Partner organisation'),
+        on_delete=models.CASCADE
+    )
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
     welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)

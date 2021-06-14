@@ -71,8 +71,8 @@ def get_matching_activities(user):
                 'geo_distance',
                 distance='50000m',
                 position={
-                    'lat': location.position.latitude,
-                    'lon': location.position.longitude
+                    'lat': location.position.y,
+                    'lon': location.position.x
                 },
             )
         )
@@ -84,18 +84,18 @@ def get_matching_activities(user):
         )
     ).extra(explain=True).execute()
 
-    matched = [activity for activity in result if activity._score > 2]
+    matched = [activity for activity in result if activity.meta.score > 2]
     activities = list(
         Activity.objects.filter(
-            pk__in=[match._id for match in matched],
+            pk__in=[int(match.meta.id) for match in matched],
         ).exclude(contributors__user=user)
     )
 
     if len(activities) < 3:
-        partially_matched = [activity for activity in result if activity._score == 2]
+        partially_matched = [activity for activity in result if activity.meta.score == 2]
         activities += list(
             Activity.objects.filter(
-                pk__in=[match._id for match in partially_matched],
+                pk__in=[int(match.meta.id) for match in partially_matched],
             ).exclude(contributors__user=user)
         )
 

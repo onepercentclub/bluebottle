@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
@@ -88,7 +88,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         name=_('Cancel'),
         description=_(
             'Cancel if the activity will not be executed. '
-            'The activity manager can no longer edit the activity '
+            'An activity manager can no longer edit the activity '
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
@@ -316,11 +316,14 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def can_accept_participant(self, user):
         """can accept participant"""
-        return user in [
-            self.instance.activity.owner,
-            self.instance.activity.initiative.activity_manager,
-            self.instance.activity.initiative.owner
-        ] or user.is_staff
+        return (
+            user in [
+                self.instance.activity.owner,
+                self.instance.activity.initiative.owner
+            ] or
+            user.is_staff or
+            user in self.instance.activity.initiative.activity_managers.all()
+        )
 
     def can_reject_participant(self, user):
         """can accept participant"""
@@ -477,11 +480,14 @@ class SlotParticipantStateMachine(ModelStateMachine):
 
     def can_accept_participant(self, user):
         """can accept participant"""
-        return user in [
-            self.instance.activity.owner,
-            self.instance.activity.initiative.activity_manager,
-            self.instance.activity.initiative.owner
-        ] or user.is_staff
+        return (
+            user in [
+                self.instance.activity.owner,
+                self.instance.activity.initiative.owner
+            ] or
+            user.is_staff or
+            user in self.instance.activity.initiative.activity_managers.all()
+        )
 
     def can_reject_participant(self, user):
         """can accept participant"""

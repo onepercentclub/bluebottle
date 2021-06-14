@@ -2,7 +2,7 @@ from builtins import str
 from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -26,6 +26,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         'members.Member',
         verbose_name=_('activity manager'),
         related_name='activities',
+        on_delete=models.CASCADE
     )
 
     highlight = models.BooleanField(default=False,
@@ -43,7 +44,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     review_status = models.CharField(max_length=40, default='draft')
 
-    initiative = models.ForeignKey(Initiative, related_name='activities')
+    initiative = models.ForeignKey(Initiative, related_name='activities', on_delete=models.CASCADE)
 
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
@@ -147,8 +148,12 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     transition_date = models.DateTimeField(null=True, blank=True)
     contributor_date = models.DateTimeField(null=True, blank=True)
 
-    activity = models.ForeignKey(Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE)
-    user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
+    activity = models.ForeignKey(
+        Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
+    )
+    user = models.ForeignKey(
+        'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE
+    )
 
     @property
     def owner(self):

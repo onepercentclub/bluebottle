@@ -1,35 +1,42 @@
 from builtins import object
 
 from django.db.models import Sum, Count
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
-from bluebottle.activities.filters import ActivityFilter
-from bluebottle.activities.models import EffortContribution
+from bluebottle.activities.models import EffortContribution, Activity
+from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
 from bluebottle.clients import properties
-from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
+
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+
 from bluebottle.funding.models import MoneyContribution
-from bluebottle.geo.models import Geolocation, Location
+from bluebottle.funding.states import FundingStateMachine
+
+from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
+
 from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.states import TimeBasedStateMachine
+
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import (
     SafeField,
@@ -38,8 +45,8 @@ from bluebottle.utils.fields import (
     FSMField
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin,
-    FilteredPolymorphicResourceRelatedField)
+    ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
+)
 
 
 class ThemeSerializer(ModelSerializer):
@@ -105,8 +112,9 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'members'
 
     def to_representation(self, instance):
-        if 'parent' in self.context and getattr(self.context['parent'], 'anonymized', False):
-            return {"id": 0, "is_anonymous": True}
+        if instance.is_anonymous:
+            return {'id': 'anonymous', "is_anonymous": True}
+
         return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
 
 
@@ -144,13 +152,15 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
-    activity_manager = ResourceRelatedField(read_only=True)
-    activities = FilteredPolymorphicResourceRelatedField(
-        filter_backend=ActivityFilter,
-        polymorphic_serializer=ActivityListSerializer,
+    activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
+    reviewer = AnonymizedResourceRelatedField(read_only=True)
+    promoter = AnonymizedResourceRelatedField(read_only=True)
+    activities = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityListSerializer,
+        model=Activity,
         many=True,
         read_only=True
     )
@@ -165,6 +175,32 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
 
     is_open = serializers.ReadOnlyField()
+
+    def get_activities(self, instance):
+        user = self.context['request'].user
+        activities = [
+            activity for activity in instance.activities.all() if
+            activity.status != ActivityStateMachine.deleted.value
+        ]
+
+        public_statuses = [
+            ActivityStateMachine.succeeded.value,
+            ActivityStateMachine.open.value,
+            TimeBasedStateMachine.full.value,
+            FundingStateMachine.partially_funded.value,
+        ]
+
+        if user not in (
+            instance.owner, instance.activity_manager
+        ):
+            return [
+                activity for activity in activities if (
+                    activity.status in public_statuses or
+                    user == activity.owner
+                )
+            ]
+        else:
+            return activities
 
     def get_stats(self, obj):
         default_currency = properties.DEFAULT_CURRENCY
@@ -230,7 +266,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
@@ -250,7 +286,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         fsm_fields = ['status']
         fields = (
             'id', 'title', 'pitch', 'categories',
-            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'owner', 'reviewer', 'promoter', 'activity_managers',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
@@ -264,7 +300,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'owner', 'reviewer', 'promoter', 'activity_managers',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities',
             'activities.image', 'activities.location',
@@ -277,9 +313,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 class InitiativeListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    activity_manager = ResourceRelatedField(read_only=True)
+    activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -289,7 +325,7 @@ class InitiativeListSerializer(ModelSerializer):
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
@@ -300,7 +336,7 @@ class InitiativeListSerializer(ModelSerializer):
         fsm_fields = ['status']
         fields = (
             'id', 'title', 'pitch', 'categories',
-            'owner', 'activity_manager',
+            'owner', 'activity_managers',
             'slug', 'has_organization', 'transitions',
             'story', 'image', 'theme', 'place', 'location'
         )
@@ -309,7 +345,7 @@ class InitiativeListSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'activity_manager',
+            'owner', 'activity_managers',
             'categories', 'theme', 'place', 'location',
             'image', 'organization',
         ]
@@ -376,65 +412,6 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = OrganizationContact
         fields = ('name', 'email', 'phone', )
-
-
-class InitiativeSubmitSerializer(ModelSerializer):
-    title = serializers.CharField(
-        required=True,
-        error_messages={'blank': _('Title is required')}
-    )
-    pitch = serializers.CharField(required=True, error_messages={'blank': _('Pitch is required')})
-    story = serializers.CharField(required=True, error_messages={'blank': _('Story is required')})
-
-    theme = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Theme.objects.all(),
-        error_messages={'null': _('Theme is required')}
-    )
-    image = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Image.objects.all(),
-        error_messages={'null': _('Image is required')}
-    )
-    owner = serializers.PrimaryKeyRelatedField(
-        required=True,
-        queryset=Member.objects.all(),
-        error_messages={'null': _('Owner is required')}
-    )
-    place = serializers.PrimaryKeyRelatedField(
-        allow_null=True,
-        allow_empty=True,
-        queryset=Geolocation.objects.all()
-    )
-    organization = OrganizationSubmitSerializer(
-        error_messages={'null': _('Organization is required')}
-    )
-    organization_contact = OrganizationContactSubmitSerializer(
-        error_messages={'null': _('Organization contact is required')}
-    )
-
-    # TODO add dependent fields: has_organization/organization/organization_contact and
-    # place / location
-
-    def validate(self, data):
-        """
-        Check that location or place is set
-        """
-        if Location.objects.count():
-            if not self.initial_data['location']:
-                raise serializers.ValidationError("Location is required")
-        elif not self.initial_data['place']:
-            raise serializers.ValidationError("Place is required")
-        return data
-
-    class Meta(object):
-        model = Initiative
-        fields = (
-            'title', 'pitch', 'owner',
-            'has_organization', 'organization',
-            'organization_contact', 'story', 'video_url', 'image',
-            'theme', 'place',
-        )
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):

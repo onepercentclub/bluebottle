@@ -4,11 +4,7 @@ from builtins import object
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
-
-from django_extensions.db.fields import (
-    CreationDateTimeField, ModificationDateTimeField
-)
+from django.utils.translation import gettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
 
@@ -26,10 +22,12 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     slug = models.SlugField(_('slug'), max_length=100)
     description = models.TextField(_('description'), default='', blank=True)
 
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
+    )
 
     website = models.URLField(_('website'), blank=True)
     logo = ImageField(
@@ -71,13 +69,12 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
     name = models.TextField(_('name'), null=True, blank=True, max_length=100)
     email = models.EmailField(_('email'), null=True, blank=True, max_length=254)
     phone = models.TextField(_('phone'), null=True, blank=True, max_length=40)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True)
-
-    created = CreationDateTimeField(
-        _('created'),
-        help_text=_('When this contact was created.')
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
-    updated = ModificationDateTimeField(_('updated'))
+
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
 
     required_fields = ['name', 'email']
 

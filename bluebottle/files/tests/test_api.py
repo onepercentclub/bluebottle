@@ -1,7 +1,7 @@
 from builtins import str
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 
 from bluebottle.files.models import Image, Document

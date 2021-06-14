@@ -1,6 +1,5 @@
 from builtins import str
-from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+from django_elasticsearch_dsl import Document, fields
 
 from bluebottle.funding.models import Donor
 from bluebottle.utils.documents import MultiTenantIndex
@@ -17,7 +16,7 @@ activity.settings(
 )
 
 
-class ActivityDocument(DocType):
+class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
@@ -97,7 +96,7 @@ class ActivityDocument(DocType):
     end = fields.DateField()
     activity_date = fields.DateField()
 
-    class Meta(object):
+    class Django:
         model = Activity
 
     date_field = None

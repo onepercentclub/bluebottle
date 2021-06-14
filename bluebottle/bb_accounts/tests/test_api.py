@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 from django.utils.http import int_to_base36
 from rest_framework import status

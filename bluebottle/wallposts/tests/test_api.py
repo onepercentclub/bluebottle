@@ -1,6 +1,6 @@
 from builtins import str
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import status
 

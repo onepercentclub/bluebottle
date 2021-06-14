@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-05 15:59+0100\n"
-"PO-Revision-Date: 2021-05-26 15:32\n"
+"PO-Revision-Date: 2021-06-14 14:48\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -15,14 +15,14 @@ msgstr ""
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: nl\n"
 "X-Crowdin-File: /master/bluebottle/notifications/tests/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 16\n"
+"X-Crowdin-File-ID: 34\n"
 
 #: bluebottle/notifications/tests/test_messages.py:14
 #, python-brace-format
 msgid "Test message for {title}"
-msgstr "Testbericht voor {title}"
+msgstr ""
 
 #: bluebottle/notifications/tests/test_messages.py:25
 msgid "Test message"
-msgstr "Testbericht"
+msgstr ""
 

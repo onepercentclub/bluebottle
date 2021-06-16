@@ -1,5 +1,4 @@
 import importlib
-from builtins import object
 
 import rules
 from django.urls.base import reverse_lazy
@@ -18,9 +17,6 @@ from bluebottle.members.dashboard import RecentMembersDashboard
 
 class CustomIndexDashboard(Dashboard):
     columns = 2
-
-    class Media(object):
-        css = ('css/admin/dashboard.css', )
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)

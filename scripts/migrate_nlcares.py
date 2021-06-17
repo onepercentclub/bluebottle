@@ -1,21 +1,75 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from urllib.parse import unquote
 
 import pytz
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
+from django.core.files import File
 from django.db import connection
+from django.db import models
 from django.utils.timezone import now
 
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.initiatives.models import Theme, Initiative
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotParticipant, DateParticipant
+from bluebottle.organizations.models import OrganizationContact
+from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotParticipant, DateParticipant, \
+    TimeBasedActivity
 
 ams = pytz.timezone('Europe/Amsterdam')
+
+
+def create_model(Model, app_label='children', module='', options=None):
+    """
+    Create specified model
+    """
+    model_name = Model.__name__
+
+    class Meta:
+        managed = False
+        db_table = Model._meta.db_table
+
+    if app_label:
+        # app_label must be set using the Meta inner class
+        setattr(Meta, 'app_label', app_label)
+
+    # Update Meta with any options that were provided
+    if options is not None:
+        for key, value in options.iteritems():
+            setattr(Meta, key, value)
+
+    # Set up a dictionary to simulate declarations within a class
+    attrs = {'__module__': module, 'Meta': Meta}
+
+    # Add in any fields that were provided
+    fields = dict()
+    for field in Model._meta.fields:
+        name = field.attname
+        if name == 'id' or field.attname == 'id':
+            continue
+        if name.endswith('ptr_id'):
+            fields[name] = models.IntegerField(primary_key=True)
+            continue
+        if name.endswith('_id'):
+            name = name.replace('_id', '')
+        if field.model.__name__ == model_name:
+            fields[name] = field.clone()
+
+    # Hack it away
+    if model_name == 'DateActivity':
+        del fields['activity_ptr_id']
+
+    # Create the class, which automatically triggers ModelBase processing
+    attrs.update(fields)
+    model = type(f'{model_name}Shadow', (models.Model,), attrs)
+    return model
 
 
 def add_tz(date):
@@ -45,12 +99,17 @@ mapping = {
         'created': 'created_at',
     },
     'activity': {
-        'id': 'id',
         'initiative_id': 'id',
         'title': 'name_nl',
         'slug': 'slug_nl',
         'description': 'description_nl',
         'created': 'created_at',
+    },
+    'time_based_activity': {
+        'activity_ptr_id': 'id',
+    },
+    'date_activity': {
+        'timebasedactivity_ptr_id': 'id',
     },
     'slot': {
         'id': 'id',
@@ -99,60 +158,96 @@ def import_themes(rows):
 
 
 def import_initiatives(rows):
+    TimeBasedActivityShadow = create_model(TimeBasedActivity)
+    DateActivityShadow = create_model(DateActivity)
+    date_type = ContentType.objects.get_for_model(DateActivity).id
+
     initiatives = []
     activities = []
+    time_based_activities = []
+    date_activities = []
+    contacts = []
+    images = []
+    main_user = Member.objects.get(email='jeroen@nlcares.nl')
     for row in rows:
+        initiative_id = row.find("field[@name='id']").text
         initiative = Initiative(
+            id=initiative_id,
             status='approved'
         )
-        initiative_id = row.find("field[@name='id']").text
         email = row.find("field[@name='contact_email']").text or 'initiator{}@example.com'.format(initiative_id)
         first_name = row.find("field[@name='contact_firstname']").text or 'Nomen'
         last_name = row.find("field[@name='contact_lastname']").text or 'Nescio'
-        owner, _c = Member.objects.get_or_create(
+        contact_phone = row.find("field[@name='contact_phone']").text or ''
+        contact = OrganizationContact(
+            name="{} {}".format(first_name, last_name),
             email=email,
-            defaults={
-                'first_name': first_name,
-                'last_name': last_name,
-                'is_active': True
-            })
+            phone=contact_phone,
+            owner=main_user
+        )
+        contacts.append(contact)
+        try:
+            owner = Member.objects.get(email=email)
+        except Member.DoesNotExist:
+            owner = main_user
         for k in mapping['initiative']:
             v = mapping['initiative'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             initiative.__setattr__(k, value)
             initiative.owner = owner
+            initiative.organization_contact = contact
 
-            # image_url = row.find("field[@name='image_url']").text
-            # if image_url:
-            #     try:
-            #         name, _ = urlretrieve(image_url)
-            #         image = Image(
-            #             owner=owner
-            #         )
-            #         image.file.save("image_%s" % initiative.id, File(open(name, 'rb')))
-            #         image.save()
-            #         initiative.image = image
-            #     except HTTPError:
-            #         pass
-            #     except URLError:
-            #         pass
-            initiative.created = add_tz(initiative.created)
+        image_url = row.find("field[@name='image_url']").text
+        if image_url:
+            try:
+                image = Image(
+                    owner=owner
+                )
+                image_url = image_url.replace('https://s3.eu-central-1.amazonaws.com', 'data')
+                image_url = unquote(image_url)
+                image.file.save("image_%s.jpg" % initiative.id, File(open(image_url, 'rb')))
+                images.append(image)
+                initiative.image = image
+            except FileNotFoundError:
+                pass
+        initiative.created = add_tz(initiative.created)
         initiatives.append(initiative)
 
-        activity = DateActivity()
+        activity = Activity(
+            id=initiative_id
+        )
         for k in mapping['activity']:
             v = mapping['activity'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             activity.__setattr__(k, value)
+            activity.polymorphic_ctype_id = date_type
             activity.status = 'open'
             activity.created = add_tz(activity.created)
             activity.owner = owner
+            activity.slot_selection = 'free'
         activities.append(activity)
+
+        time_based_activity = TimeBasedActivityShadow(
+            activity_ptr_id=initiative_id
+        )
+        time_based_activities.append(time_based_activity)
+
+        date_activity = DateActivityShadow(
+            timebasedactivity_ptr_id=initiative_id
+        )
+        date_activities.append(date_activity)
+
+    print("Writing contacts")
+    OrganizationContact.objects.bulk_create(contacts)
+    print("Writing initiative images")
+    # Image.objects.bulk_create(images)
     print("Writing initiatives")
     Initiative.objects.bulk_create(initiatives)
+
     print("Writing activities")
-    for activity in activities:
-        activity.save()
+    Activity.objects.bulk_create(activities)
+    TimeBasedActivityShadow.objects.bulk_create(time_based_activities)
+    DateActivityShadow.objects.bulk_create(date_activities)
 
 
 def import_initiative_themes(rows):
@@ -187,9 +282,16 @@ def import_slots(rows):
 
 
 def import_slot_participants(rows):
+    DateParticipantShadow = create_model(DateParticipant)
+    date_participant_type = ContentType.objects.get_for_model(DateParticipant).id
+
+    contributors = []
+    date_participants = []
     slot_participants = []
-    print('Writing participants')
+
+    print('Reading participants')
     for row in rows:
+        contributor_id = row.find("field[@name='id']").text
         shift_id = row.find("field[@name='shift_id']").text
         user_id = row.find("field[@name='user_id']").text
         status = row.find("field[@name='status']").text
@@ -200,13 +302,30 @@ def import_slot_participants(rows):
         else:
             status = 'succeeded'
         activity = DateActivity.objects.get(slots__id=shift_id)
-        participant, _c = DateParticipant.objects.get_or_create(user_id=user_id, activity=activity)
+        contributor = Contributor(
+            id=contributor_id,
+            user_id=user_id,
+            activity_id=activity.id,
+            polymorphic_ctype_id=date_participant_type
+        )
+        contributors.append(contributor)
+
+        date_participant = DateParticipantShadow(
+            contributor_ptr_id=contributor_id
+        )
+        date_participants.append(date_participant)
+
         slot_participant = SlotParticipant(
-            participant=participant,
+            participant_id=contributor_id,
             slot_id=shift_id,
             status=status
         )
         slot_participants.append(slot_participant)
+
+    print('Writing participants')
+    Contributor.objects.bulk_create(contributors)
+    DateParticipantShadow.objects.bulk_create(date_participants)
+
     print('Writing slot participants')
     SlotParticipant.objects.bulk_create(slot_participants)
 
@@ -276,35 +395,35 @@ def run(*args):
         print("Reading XML")
         root = ET.parse('./nlcares.xml').getroot()
 
-        # # Import users
-        # print("Importing users")
-        # rows = root.find('database').find('table_data[@name="users"]').findall('row')
-        # import_users(rows)
-        #
-        # print("Importing themes")
-        # # Import themes
-        # rows = root.find('database').find('table_data[@name="activity_types"]').findall('row')
-        # import_themes(rows)
-        #
-        # # Import initiatives & Activities
-        # print("Importing initiatives")
-        # rows = root.find('database').find('table_data[@name="activities"]').findall('row')
-        # import_initiatives(rows)
-        #
-        # # Import Initiative theme
-        # print("Importing slot locations")
-        # rows = root.find('database').find('table_data[@name="activity_activity_type"]').findall('row')
-        # import_initiative_themes(rows)
-        #
-        # # Import slots
-        # print("Importing slots")
-        # rows = root.find('database').find('table_data[@name="shifts"]').findall('row')
-        # import_slots(rows)
-        #
-        # # Import activity/slot location
-        # print("Importing slot locations")
-        # rows = root.find('database').find('table_data[@name="events"]').findall('row')
-        # import_activity_location(rows)
+        # Import users
+        print("Importing users")
+        rows = root.find('database').find('table_data[@name="users"]').findall('row')
+        import_users(rows)
+
+        print("Importing themes")
+        # Import themes
+        rows = root.find('database').find('table_data[@name="activity_types"]').findall('row')
+        import_themes(rows)
+
+        # Import initiatives & Activities
+        print("Importing initiatives")
+        rows = root.find('database').find('table_data[@name="activities"]').findall('row')
+        import_initiatives(rows)
+
+        # Import Initiative theme
+        print("Importing activity types / themes")
+        rows = root.find('database').find('table_data[@name="activity_activity_type"]').findall('row')
+        import_initiative_themes(rows)
+
+        # Import slots
+        print("Importing slots")
+        rows = root.find('database').find('table_data[@name="shifts"]').findall('row')
+        import_slots(rows)
+
+        # Import activity/slot location
+        print("Importing slot locations")
+        rows = root.find('database').find('table_data[@name="events"]').findall('row')
+        import_activity_location(rows)
 
         # [shift_user] / DateParticipant + SlotParticipants + Contribution
         print("Importing slot participants")
@@ -328,6 +447,10 @@ def run(*args):
 """
 Clear all tables:
 
+
+delete from time_based_dateparticipant
+delete from activities_contributor;
+
 delete from time_based_timecontribution;
 delete from time_based_slotparticipant;
 delete from time_based_dateparticipant;
@@ -348,6 +471,11 @@ delete from geo_geolocation;
 delete from initiatives_theme_translation;
 delete from initiatives_theme;
 delete from files_image;
-delete from notifications_message; delete from members_member_groups; delete from members_member;
+delete from notifications_message;
+delete from members_member_groups;
+delete from follow_follow;
+delete from organizations_organizationcontact;
+delete from members_useractivity;
+delete from members_member;
 
 """

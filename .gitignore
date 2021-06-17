@@ -51,6 +51,7 @@ bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
 # Misc stuff
+data
 env
 docs/_build
 .idea

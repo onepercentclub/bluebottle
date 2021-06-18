@@ -382,9 +382,8 @@ def import_users(rows):
         user.created = add_tz(user.created)
         users.append(user)
     Member.objects.bulk_create(users)
-    Member.objects.update(groups=[authenticated])
-    for mem in Member.objects.filter(is_staff=True).all():
-        staff.user_set.add(mem)
+    authenticated.user_set.add(*Member.objects.all())
+    staff.user_set.add(*Member.objects.filter(is_staff=True).all())
     update_sequence('members_member')
 
 
@@ -484,6 +483,7 @@ delete from members_member_groups;
 delete from follow_follow;
 delete from organizations_organizationcontact;
 delete from members_useractivity;
+delete from django_admin_log;
 delete from members_member;
 
 """

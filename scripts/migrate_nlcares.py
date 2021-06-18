@@ -155,6 +155,7 @@ def import_themes(rows):
         theme.set_current_language('en')
         theme.name = row.find("field[@name='name']").text
         theme.save()
+    update_sequence('initiatives_theme')
 
 
 def import_initiatives(rows):
@@ -240,14 +241,16 @@ def import_initiatives(rows):
     print("Writing contacts")
     OrganizationContact.objects.bulk_create(contacts)
     print("Writing initiative images")
-    # Image.objects.bulk_create(images)
+    Image.objects.bulk_create(images)
     print("Writing initiatives")
     Initiative.objects.bulk_create(initiatives)
+    update_sequence('initiatives_initiative')
 
     print("Writing activities")
     Activity.objects.bulk_create(activities)
     TimeBasedActivityShadow.objects.bulk_create(time_based_activities)
     DateActivityShadow.objects.bulk_create(date_activities)
+    update_sequence('activities_activity')
 
 
 def import_initiative_themes(rows):
@@ -279,6 +282,7 @@ def import_slots(rows):
         slot.created = add_tz(slot.created)
         slots.append(slot)
     DateActivitySlot.objects.bulk_create(slots)
+    update_sequence('time_based_dateactivityslot')
 
 
 def import_slot_participants(rows):
@@ -328,6 +332,7 @@ def import_slot_participants(rows):
 
     print('Writing slot participants')
     SlotParticipant.objects.bulk_create(slot_participants)
+    update_sequence('activity_contributor')
 
 
 def import_activity_location(rows):
@@ -352,10 +357,12 @@ def import_activity_location(rows):
         locations.append(location)
     Geolocation.objects.bulk_create(locations)
     DateActivitySlot.objects.bulk_update(slots, ['location_id'])
+    update_sequence('geo_geolocation')
 
 
 def import_users(rows):
     staff = Group.objects.get(name='Staff')
+    authenticated = Group.objects.get(name='Authenticated')
     users = []
     for row in rows:
 
@@ -375,6 +382,7 @@ def import_users(rows):
         user.created = add_tz(user.created)
         users.append(user)
     Member.objects.bulk_create(users)
+    Member.objects.update(groups=[authenticated])
     for mem in Member.objects.filter(is_staff=True).all():
         staff.user_set.add(mem)
     update_sequence('members_member')
@@ -432,9 +440,9 @@ def run(*args):
 
         # [references] / >> Segments
 
-        # [cities] / ??
+        # [cities] / Location city
 
-        # [city_districts] / ??
+        # [city_districts] / Location city district
 
         # [social_institutions] / ?? Partner orgs?
         #

@@ -20,6 +20,7 @@ from bluebottle.geo.models import Geolocation, Country
 from bluebottle.initiatives.models import Theme, Initiative
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import OrganizationContact
+from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotParticipant, DateParticipant, \
     TimeBasedActivity
 
@@ -125,6 +126,8 @@ mapping = {
         'email': 'email',
         'created': 'created_at',
         'password': 'password',
+        'phone_number': 'phone',
+        'birthdate': 'birthday',
     },
     'location': {
         'id': 'id',
@@ -133,6 +136,11 @@ mapping = {
         'street': 'street',
         'postal_code': 'zipcode',
         'created': 'created_at',
+    },
+    'segment': {
+        'id': 'id',
+        'name': 'name',
+        'slug': 'slug',
     }
 }
 
@@ -169,7 +177,7 @@ def import_initiatives(rows):
     date_activities = []
     contacts = []
     images = []
-    main_user = Member.objects.get(email='jeroen@nlcares.nl')
+    cares_user = Member.objects.get(email='info@nlcares.nl')
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
         initiative = Initiative(
@@ -184,13 +192,13 @@ def import_initiatives(rows):
             name="{} {}".format(first_name, last_name),
             email=email,
             phone=contact_phone,
-            owner=main_user
+            owner=cares_user
         )
         contacts.append(contact)
         try:
             owner = Member.objects.get(email=email)
         except Member.DoesNotExist:
-            owner = main_user
+            owner = cares_user
         for k in mapping['initiative']:
             v = mapping['initiative'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
@@ -202,7 +210,7 @@ def import_initiatives(rows):
         if image_url:
             try:
                 image = Image(
-                    owner=owner
+                    owner=owner,
                 )
                 image_url = image_url.replace('https://s3.eu-central-1.amazonaws.com', 'data')
                 image_url = unquote(image_url)
@@ -240,8 +248,10 @@ def import_initiatives(rows):
 
     print("Writing contacts")
     OrganizationContact.objects.bulk_create(contacts)
+
     print("Writing initiative images")
-    Image.objects.bulk_create(images)
+    # Image.objects.bulk_create(images)
+
     print("Writing initiatives")
     Initiative.objects.bulk_create(initiatives)
     update_sequence('initiatives_initiative')
@@ -332,7 +342,7 @@ def import_slot_participants(rows):
 
     print('Writing slot participants')
     SlotParticipant.objects.bulk_create(slot_participants)
-    update_sequence('activity_contributor')
+    update_sequence('activities_contributor')
 
 
 def import_activity_location(rows):
@@ -361,9 +371,19 @@ def import_activity_location(rows):
 
 
 def import_users(rows):
+    # Get admin user so we can save it later with a new ID
+    admin, _c = Member.objects.get_or_create(
+        email='admin@example.com',
+        is_superuser=True,
+    )
+    admin.id = None
+    Member.objects.all().delete()
+    update_sequence('members_member')
+
     staff = Group.objects.get(name='Staff')
     authenticated = Group.objects.get(name='Authenticated')
     users = []
+    segments = []
     for row in rows:
 
         user = Member()
@@ -380,11 +400,53 @@ def import_users(rows):
         if row.find("field[@name='active']").text != '0':
             user.is_active = True
         user.created = add_tz(user.created)
+        segment_id = row.find("field[@name='reference_id']").text
+        segment_ids = Segment.objects.values_list('id', flat=True)
+        if segment_id and int(segment_id) in segment_ids:
+            segment = Member.segments.through(
+                member=user,
+                segment_id=segment_id
+            )
+            segments.append(segment)
         users.append(user)
+
+    print("Writing users")
     Member.objects.bulk_create(users)
     authenticated.user_set.add(*Member.objects.all())
     staff.user_set.add(*Member.objects.filter(is_staff=True).all())
     update_sequence('members_member')
+    admin.save()
+
+    print("Writing user segments")
+    Member.segments.through.objects.bulk_create(segments)
+
+    # Create some users we need
+    nlcares = Member.objects.create(
+        first_name='NL Cares',
+        last_name='Office',
+        email='info@nlcares.nl',
+        username='info@nlcares.nl',
+        is_staff=True,
+        is_active=True
+    )
+    authenticated.user_set.add(nlcares)
+    staff.user_set.add(nlcares)
+
+
+def import_segments(rows):
+    segments = []
+    reference = SegmentType.objects.create(name='Reference', slug='reference')
+    for row in rows:
+        segment = Segment(
+            type=reference,
+            alternate_names=[]
+        )
+        for k in mapping['segment']:
+            v = mapping['segment'][k]
+            value = row.find("field[@name='{}']".format(v)).text or ''
+            segment.__setattr__(k, value)
+        segments.append(segment)
+    Segment.objects.bulk_create(segments)
 
 
 def run(*args):
@@ -397,10 +459,13 @@ def run(*args):
         properties.SEND_WELCOME_MAIL = False
         properties.CELERY_MAIL = False
 
-        update_sequence('members_member')
-
         print("Reading XML")
         root = ET.parse('./nlcares.xml').getroot()
+
+        # [references] / >> Segments
+        print("Importing refrences/segments")
+        rows = root.find('database').find('table_data[@name="references"]').findall('row')
+        import_segments(rows)
 
         # Import users
         print("Importing users")
@@ -437,8 +502,6 @@ def run(*args):
         rows = root.find('database').find('table_data[@name="shift_user"]').findall('row')
         import_slot_participants(rows)
 
-        # [references] / >> Segments
-
         # [cities] / Location city
 
         # [city_districts] / Location city district
@@ -455,12 +518,11 @@ def run(*args):
 Clear all tables:
 
 
-delete from time_based_dateparticipant
-delete from activities_contributor;
 
 delete from time_based_timecontribution;
 delete from time_based_slotparticipant;
 delete from time_based_dateparticipant;
+delete from activities_contributor;
 
 delete from activities_organizer;
 delete from activities_effortcontribution;
@@ -484,6 +546,9 @@ delete from follow_follow;
 delete from organizations_organizationcontact;
 delete from members_useractivity;
 delete from django_admin_log;
-delete from members_member;
+delete from members_member_segments;
+delete from segments_segment;
+delete from segments_segmenttype;
+delete from members_member where email != 'admin@example.com';
 
 """

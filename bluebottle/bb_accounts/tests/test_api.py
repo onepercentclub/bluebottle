@@ -457,7 +457,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         new_user_email = 'nijntje74@hetkonijntje.nl'
         first_name = 'Nijntje'
         last_name = 'het Konijntje'
-        new_user_password = 'password'
+        new_user_password = 'some-password'
 
         # Test username generation with duplicates.
         response = self.client.post(self.user_create_api_url,
@@ -475,7 +475,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
     def test_password_reset(self):
         # Setup: create a user.
         new_user_email = 'nijntje94@hetkonijntje.nl'
-        new_user_password = 'password'
+        new_user_password = 'some-password'
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})

@@ -1,5 +1,25 @@
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.translation import ugettext_lazy as _
+
+
+class InitiativeSubmittedStaffMessage(TransitionMessage):
+    subject = _('A new initiative is ready to be reviewed.')
+    template = 'messages/initiative_submitted_staff'
+    context = {
+        'title': 'title',
+        'initiator_name': 'owner.first_name',
+        'url': 'get_admin_url'
+    }
+
+    def get_recipients(self):
+        """enabled staff members"""
+        from bluebottle.members.models import Member
+        return list(
+            Member.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).
+            filter(submitted_initiative_notifications=True).all()
+        )
 
 
 class InitiativeApprovedOwnerMessage(TransitionMessage):

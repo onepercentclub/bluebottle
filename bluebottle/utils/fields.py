@@ -9,10 +9,17 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
+from rest_framework.fields import Field
+
+from rest_framework_json_api.relations import (
+    PolymorphicResourceRelatedField,
+    MANY_RELATION_KWARGS,
+    LINKS_PARAMS
+)
 
 from .utils import clean_html
 
@@ -155,14 +162,12 @@ class PrivateFileField(models.FileField):
 
 
 class FSMStatusValidator(object):
-    def set_context(self, serializers_field):
-        self.instance = serializers_field.parent.instance
-        self.source = serializers_field.source
+    requires_context = True
 
-    def __call__(self, value):
+    def __call__(self, value, serializer_field):
         available_transitions = getattr(
             self.instance,
-            'get_available_{}_transitions'.format(self.source)
+            'get_available_{}_transitions'.format(serializer_field.source)
         )()
 
         transitions = [
@@ -173,7 +178,7 @@ class FSMStatusValidator(object):
         if len(transitions) != 1:
             raise ValidationError(
                 'Cannot transition from {} to {}'.format(
-                    getattr(self.instance, self.source),
+                    getattr(serializer_field.instance, serializer_field.source),
                     value
                 )
             )
@@ -210,3 +215,56 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 }
             } for field in value
         ]
+
+
+class PolymorhpicSerializerMethodFieldBase(Field):
+    def __init__(self, serializer_class, method_name=None, *args, **kwargs):
+        self.method_name = method_name
+        kwargs["source"] = "*"
+        kwargs["read_only"] = True
+        super().__init__(serializer_class, **kwargs)
+
+    def bind(self, field_name, parent):
+        default_method_name = "get_{field_name}".format(field_name=field_name)
+        if self.method_name is None:
+            self.method_name = default_method_name
+        super().bind(field_name, parent)
+
+    def get_attribute(self, instance):
+        serializer_method = getattr(self.parent, self.method_name)
+        return serializer_method(instance)
+
+
+class PolymorphicManySerializerMethodResourceRelatedField(
+    PolymorhpicSerializerMethodFieldBase, PolymorphicResourceRelatedField
+):
+    def __init__(self, polymorphic_serializer, child_relation=None, **kwargs):
+        assert child_relation is not None, "`child_relation` is a required argument."
+        self.child_relation = child_relation
+        super().__init__(polymorphic_serializer, **kwargs)
+        self.child_relation.bind(field_name="", parent=self)
+
+    def to_representation(self, value):
+        return [self.child_relation.to_representation(item) for item in value]
+
+
+class PolymorphicSerializerMethodResourceRelatedField(
+    PolymorhpicSerializerMethodFieldBase, PolymorphicResourceRelatedField
+):
+    """
+    Allows us to use serializer method RelatedFields
+    with return querysets
+    """
+
+    many_kwargs = [
+        *MANY_RELATION_KWARGS, *LINKS_PARAMS, "method_name", "model",
+    ]
+    many_cls = PolymorphicManySerializerMethodResourceRelatedField
+
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {"child_relation": cls(*args, **kwargs)}
+        for key in kwargs:
+            if key in cls.many_kwargs:
+                list_kwargs[key] = kwargs[key]
+        return cls.many_cls(*args, **list_kwargs)

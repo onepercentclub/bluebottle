@@ -2,6 +2,7 @@
 {% if wrap_label %}
     <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
 {% endif %}
-{% if wrap_label %} 
-    {{ widget.label }}</label>
+{{ widget.label }}
+{% if wrap_label %}
+    </label>
 {% endif %}

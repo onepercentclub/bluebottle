@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
@@ -70,6 +70,33 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ActiviyManagersInline(admin.TabularInline):
+    model = Initiative.activity_managers.through
+    show_change_link = True
+    extra = 0
+
+    def user_link(self, obj, field):
+        user = obj.member
+
+        url = reverse(
+            'admin:{0}_{1}_change'.format(
+                user._meta.app_label,
+                user._meta.model_name
+            ),
+            args=[obj.id]
+        )
+        return format_html(u"<a href='{}'>{}</a>", str(url), getattr(user, field))
+
+    def full_name(self, obj):
+        return self.user_link(obj, 'full_name')
+
+    def email(self, obj):
+        return self.user_link(obj, 'email')
+
+    readonly_fields = ('full_name', 'email', )
+    exclude = ('member', )
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
 
@@ -79,9 +106,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     raw_id_fields = (
         'owner', 'reviewer',
-        'promoter', 'activity_manager',
+        'promoter',
         'organization', 'organization_contact',
-        'place'
+        'place',
     )
 
     def lookup_allowed(self, key, value):
@@ -149,8 +176,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ('organization', 'Organization'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Owner email'),
-        ('activity_manager__full_name', 'Activity Manager'),
-        ('activity_manager__email', 'Activity Manager email'),
         ('promotor__full_name', 'Promotor'),
         ('promotor__email', 'Promotor email'),
         ('reviewer__full_name', 'Reviewer'),
@@ -187,9 +212,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )
             }),
             (_('Status'), {'fields': (
+                'reviewer', 'activity_managers', 'promoter',
                 'valid',
-                'reviewer', 'activity_manager',
-                'promoter', 'status', 'states',
+                'status', 'states',
                 'created', 'updated',
             )}),
         )
@@ -200,7 +225,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )}),
             )
         return fieldsets
-
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):
@@ -223,6 +247,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ])))
 
     valid.short_description = _('Steps to complete initiative')
+    autocomplete_fields = ['activity_managers']
 
     class Media(object):
         js = ('admin/js/inline-activities-add.js',)

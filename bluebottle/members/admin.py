@@ -13,7 +13,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.db import models
 from django.forms import BaseInlineFormSet
@@ -23,7 +23,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
@@ -119,7 +119,7 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
         'closed', 'confirm_signup', 'enable_segments', 'create_segments', 'login_methods',
-        'email_domain', 'background', 'require_consent', 'consent_link',
+        'email_domain', 'session_only', 'background', 'require_consent', 'consent_link',
         'anonymization_age'
     )
 
@@ -206,7 +206,7 @@ class UserActivityInline(admin.TabularInline):
 
     formset = LimitModelFormset
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 
@@ -257,9 +257,6 @@ class MemberAdmin(UserAdmin):
                             'last_login',
                             'date_joined',
                             'deleted',
-                            'is_co_financer',
-                            'can_pledge',
-                            'verified',
                             'partner_organization',
                             'primary_language',
                         ]
@@ -274,7 +271,16 @@ class MemberAdmin(UserAdmin):
                 ],
                 [
                     _('Permissions'),
-                    {'fields': ['is_active', 'is_staff', 'is_superuser', 'groups']}
+                    {'fields': [
+                        'is_active',
+                        'is_staff',
+                        'is_superuser',
+                        'groups',
+                        'is_co_financer',
+                        'can_pledge',
+                        'verified',
+                        'kyc'
+                    ]}
                 ],
                 [
                     _('Engagement'),
@@ -299,7 +305,7 @@ class MemberAdmin(UserAdmin):
                 fieldsets[1][1]['fields'].append('segments')
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
-                fieldsets[0][1]['fields'].remove('can_pledge')
+                fieldsets[2][1]['fields'].remove('can_pledge')
 
             if CustomMemberFieldSettings.objects.count():
                 extra = (
@@ -313,6 +319,9 @@ class MemberAdmin(UserAdmin):
 
                 fieldsets.append(extra)
 
+            if obj and (obj.is_staff or obj.is_superuser):
+                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+
         return fieldsets
 
     def get_readonly_fields(self, request, obj=None):
@@ -320,7 +329,7 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding'
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'kyc'
         ]
 
         user_groups = request.user.groups.all()
@@ -370,12 +379,12 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (PlaceInline, UserActivityInline)
+    inlines = (PlaceInline, UserActivityInline,)
 
     def initiatives(self, obj):
         initiatives = []
         initiative_url = reverse('admin:initiatives_initiative_changelist')
-        for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
+        for field in ['owner', 'reviewer', 'promoter', 'activity_managers']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
                 link = initiative_url + '?{}_id={}'.format(field, obj.id)
                 initiatives.append(format_html(
@@ -459,6 +468,18 @@ class MemberAdmin(UserAdmin):
             "<a href='{}'>{}</a>",
             welcome_mail_url, _("Resend welcome email"),
         )
+
+    def kyc(self, obj):
+        if not obj.funding_payout_account.count():
+            return '-'
+        kyc_url = reverse('admin:funding_payoutaccount_changelist') + '?owner__id__exact={}'.format(obj.id)
+        return format_html(
+            "<a href='{}'>{} {}</a>",
+            kyc_url,
+            obj.funding_payout_account.count(),
+            _("accounts")
+        )
+    kyc.short_description = _("KYC accounts")
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that the add form does not show inlines """
@@ -590,5 +611,4 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('user', 'key')
 
 
-admin.site.unregister(Token)
 admin.site.register(Token, TokenAdmin)

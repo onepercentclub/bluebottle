@@ -201,6 +201,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         BudgetLineFactory.create(activity=funding)
 
         incomplete_activity = DateActivityFactory.create(initiative=self.initiative, title='')
+
         self.initiative.states.submit(save=True)
 
         activity.refresh_from_db()

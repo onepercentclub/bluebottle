@@ -20,7 +20,7 @@ from django.test.utils import override_settings
 from django.conf import settings
 from django.utils import timezone
 
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
@@ -93,7 +93,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.add_member_url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)
@@ -104,18 +104,18 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Send reset password mail')
 
         # Assert password reset link sends the right email
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(reset_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
         self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
@@ -125,24 +125,24 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_resend_welcome(self):
         user = BlueBottleUserFactory.create(welcome_email_is_sent=True)
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Resend welcome email')
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(welcome_email_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(welcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
@@ -155,7 +155,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         response = self.client.post(welcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
@@ -274,7 +274,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities', 'funding',
-            'is_superuser'
+            'is_superuser', 'kyc'
         ))
 
         self.assertEqual(expected_fields, set(fields))
@@ -285,7 +285,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'date_activities', 'period_activities', 'funding',
-            'is_superuser'
+            'is_superuser', 'kyc'
         ))
 
         self.assertEqual(expected_fields, set(fields))
@@ -293,10 +293,10 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
     def test_can_pledge_field(self):
         fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
-        self.assertFalse('can_pledge' in fieldsets[0][1]['fields'])
+        self.assertFalse('can_pledge' in fieldsets[2][1]['fields'])
         PledgePaymentProvider.objects.create()
         fieldsets = self.member_admin.get_fieldsets(self.request, self.member)
-        self.assertTrue('can_pledge' in fieldsets[0][1]['fields'])
+        self.assertTrue('can_pledge' in fieldsets[2][1]['fields'])
 
     def test_email_equal_more_groups(self):
         group = Group.objects.create(name='test')
@@ -514,9 +514,56 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         DonorFactory.create_batch(10, user=user, status='succeeded', amount=Money(35, 'EUR'))
         url = reverse('admin:members_member_change', args=(user.id,))
         response = self.app.get(url, user=self.staff_member)
-        self.assertEquals(response.status, '200 OK')
+        self.assertEqual(response.status, '200 OK')
         self.assertTrue('Funding donations:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
             in response.text
         )
+
+
+class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(MemberNotificationsAdminTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+        self.member_admin_url = reverse(
+            'admin:members_member_change',
+            args=(self.user.id,)
+        )
+
+    def test_initiative_admin(self):
+        self.app.set_user(self.staff_member)
+
+        # Normal user should not have submitted_initiative_notifications checkbox
+        page = self.app.get(self.member_admin_url)
+        self.assertFalse('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('is_staff', True)
+        form.submit()
+
+        # Made user into a staff member
+        # Should have submitted_initiative_notifications checkbox now
+        page = self.app.get(self.member_admin_url)
+        self.assertTrue('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('submitted_initiative_notifications', True)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.submitted_initiative_notifications)
+
+        # Demote user into normal member
+        # Should unset submitted_initiative_notifications boolean
+        page = self.app.get(self.member_admin_url)
+        form = page.forms[0]
+        form.set('is_staff', False)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.submitted_initiative_notifications)

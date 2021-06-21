@@ -4,7 +4,7 @@ from django.utils.timezone import now
 
 from bluebottle.deeds.messages import DeedReminderNotification
 from bluebottle.notifications.effects import NotificationEffect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask

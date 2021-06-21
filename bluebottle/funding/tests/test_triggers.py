@@ -132,6 +132,7 @@ class DonorTriggerTests(BluebottleTestCase):
         ):
             self.assertEqual(self.funding.status, 'partially_funded')
             self.funding.states.refund(save=True)
+            self.donor.refresh_from_db()
             self.payment.states.refund(save=True)
 
         self.donor.refresh_from_db()

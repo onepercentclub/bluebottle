@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 
@@ -43,7 +43,8 @@ class Segment(models.Model):
     type = models.ForeignKey(
         SegmentType,
         verbose_name=_('type'),
-        related_name='segments'
+        related_name='segments',
+        on_delete=models.CASCADE
     )
 
     def save(self, *args, **kwargs):

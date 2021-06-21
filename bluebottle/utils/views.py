@@ -226,7 +226,7 @@ class OwnerListViewMixin(object):
 
 class TranslatedApiViewMixin(object):
     def get_queryset(self):
-        qs = super(TranslatedApiViewMixin, self).get_queryset().language(
+        qs = super(TranslatedApiViewMixin, self).get_queryset().translated(
             get_language()
         )
         qs = qs.order_by(*qs.model._meta.ordering)
@@ -265,7 +265,7 @@ class ESPaginator(Paginator):
             page = self._get_page(search[bottom:top], number, self)
 
             try:
-                pks = [result._id for result in search[bottom:top]]
+                pks = [result.meta.id for result in search[bottom:top].execute()]
                 queryset = queryset.filter(pk__in=pks)
             except ValueError:
                 pks = search.to_queryset().values_list('id', flat=True)

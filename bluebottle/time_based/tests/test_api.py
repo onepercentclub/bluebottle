@@ -112,8 +112,7 @@ class TimeBasedListAPIViewTestCase():
 
     def test_create_as_activity_manager(self):
         activity_manager = BlueBottleUserFactory.create()
-        self.initiative.activity_manager = activity_manager
-        self.initiative.save()
+        self.initiative.activity_managers.add(activity_manager)
 
         response = self.client.post(self.url, json.dumps(self.data), user=activity_manager)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -450,8 +449,40 @@ class TimeBasedDetailAPIViewTestCase():
 
     def test_get_contributors(self):
         self.participant_factory.create_batch(4, activity=self.activity)
-        self.participant_factory.create(activity=self.activity, user=self.activity.owner)
+        withdrawn = self.participant_factory.create(activity=self.activity)
+        withdrawn.states.withdraw(save=True)
         response = self.client.get(self.url, user=self.activity.owner)
+
+        self.response_data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(self.response_data['relationships']['contributors']['data']),
+            5
+        )
+
+    def test_get_contributors_anonymous(self):
+        self.participant_factory.create_batch(4, activity=self.activity)
+        withdrawn = self.participant_factory.create(activity=self.activity)
+        withdrawn.states.withdraw(save=True)
+        response = self.client.get(self.url)
+
+        self.response_data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(self.response_data['relationships']['contributors']['data']),
+            4
+        )
+
+    def test_get_contributors_participant(self):
+        self.participant_factory.create_batch(4, activity=self.activity)
+        withdrawn = self.participant_factory.create(activity=self.activity)
+        withdrawn.states.withdraw(save=True)
+        participant = self.participant_factory.create(activity=self.activity)
+        participant.states.withdraw(save=True)
+
+        response = self.client.get(self.url, user=participant.user)
 
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -494,7 +525,7 @@ class TimeBasedDetailAPIViewTestCase():
 
     def test_update_manager(self):
         response = self.client.put(
-            self.url, json.dumps(self.data), user=self.activity.initiative.activity_manager
+            self.url, json.dumps(self.data), user=self.activity.initiative.activity_managers.first()
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1432,7 +1463,7 @@ class ParticipantDetailViewTestCase():
         )
 
     def test_get_activity_manager(self):
-        response = self.client.get(self.url, user=self.activity.initiative.activity_manager)
+        response = self.client.get(self.url, user=self.activity.initiative.activity_managers.first())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1757,6 +1788,7 @@ class RelatedParticipantsAPIViewTestCase():
             )
 
         self.participants[0].states.remove(save=True)
+        self.participants[1].states.remove(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
@@ -1774,10 +1806,19 @@ class RelatedParticipantsAPIViewTestCase():
         self.response = self.client.get(self.url)
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 9)
+        self.assertEqual(len(self.response.json()['data']), 8)
 
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
+
+    def test_get_removed_participant(self):
+        self.response = self.client.get(self.url, user=self.participants[0].user)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 9)
+
+        included_documents = self.included_by_type(self.response, 'private-documents')
+        self.assertEqual(len(included_documents), 1)
 
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -1821,7 +1862,8 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
             )
 
         self.participants[0].states.remove(save=True)
-        self.participants[1].slot_participants.all()[0].states.remove(save=True)
+        self.participants[1].states.remove(save=True)
+        self.participants[2].slot_participants.all()[0].states.remove(save=True)
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
@@ -1837,10 +1879,18 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         included_slot_participants = self.included_by_type(
             self.response,
             'contributors/time-based/slot-participants')
-        self.assertEqual(len(included_slot_participants), 18)
+        self.assertEqual(len(included_slot_participants), 20)
 
     def test_get_anonymous(self):
         super().test_get_anonymous()
+        included_slot_participants = self.included_by_type(
+            self.response,
+            'contributors/time-based/slot-participants')
+
+        self.assertEqual(len(included_slot_participants), 15)
+
+    def test_get_removed_participant(self):
+        super().test_get_removed_participant()
         included_slot_participants = self.included_by_type(
             self.response,
             'contributors/time-based/slot-participants')

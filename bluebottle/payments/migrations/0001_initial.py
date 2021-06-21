@@ -8,7 +8,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django_extensions.db.fields
 import django_extensions.db.fields.json
-import django_fsm
 
 
 class Migration(migrations.Migration):
@@ -26,7 +25,7 @@ class Migration(migrations.Migration):
             name='OrderPayment',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[(b'created', 'Created'), (b'started', 'Started'), (b'cancelled', 'Cancelled'), (b'pledged', 'Pledged'), (b'authorized', 'Authorized'), (b'settled', 'Settled'), (b'charged_back', 'Charged_back'), (b'refunded', 'Refunded'), (b'failed', 'Failed'), (b'unknown', 'Unknown')], default=b'created', max_length=50, protected=True)),
+                ('status', models.CharField(choices=[(b'created', 'Created'), (b'started', 'Started'), (b'cancelled', 'Cancelled'), (b'pledged', 'Pledged'), (b'authorized', 'Authorized'), (b'settled', 'Settled'), (b'charged_back', 'Charged_back'), (b'refunded', 'Refunded'), (b'failed', 'Failed'), (b'unknown', 'Unknown')], default=b'created', max_length=50)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='Created')),
                 ('updated', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='Updated')),
                 ('closed', models.DateTimeField(blank=True, editable=False, null=True, verbose_name='Closed')),
@@ -35,7 +34,7 @@ class Migration(migrations.Migration):
                 ('payment_method', models.CharField(blank=True, default=b'', max_length=20)),
                 ('integration_data', django_extensions.db.fields.json.JSONField(blank=True, max_length=5000, verbose_name='Integration data')),
             ],
-            bases=(models.Model, bluebottle.utils.utils.FSMTransition),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='OrderPaymentAction',
@@ -51,7 +50,7 @@ class Migration(migrations.Migration):
             name='Payment',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[(b'created', 'Created'), (b'started', 'Started'), (b'cancelled', 'Cancelled'), (b'pledged', 'Pledged'), (b'authorized', 'Authorized'), (b'settled', 'Settled'), (b'charged_back', 'Charged_back'), (b'refunded', 'Refunded'), (b'failed', 'Failed'), (b'unknown', 'Unknown')], default=b'started', max_length=50)),
+                ('status', models.CharField(choices=[(b'created', 'Created'), (b'started', 'Started'), (b'cancelled', 'Cancelled'), (b'pledged', 'Pledged'), (b'authorized', 'Authorized'), (b'settled', 'Settled'), (b'charged_back', 'Charged_back'), (b'refunded', 'Refunded'), (b'failed', 'Failed'), (b'unknown', 'Unknown')], default=b'started', max_length=50)),
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='Created')),
                 ('updated', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='Updated')),
                 ('order_payment', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='payments.OrderPayment')),

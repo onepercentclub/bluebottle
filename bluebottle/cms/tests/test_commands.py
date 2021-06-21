@@ -211,8 +211,8 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
         )
 
         call_command('dumppages', '-f', 'test_pages.json')
-        json_file = open("test_pages.json", "r")
-        test_output = json.load(json_file)
+        with open("test_pages.json", "r") as json_file:
+            test_output = json.load(json_file)
 
         self.assertEqual(test_output, PAGE_DUMP)
 
@@ -277,8 +277,8 @@ class LinkDumpCommandsTestCase(BluebottleTestCase):
         )
 
         call_command('dumplinks', '-f', 'test_links.json')
-        json_file = open("test_links.json", "r")
-        test_output = json.load(json_file)
+        with open("test_links.json", "r") as json_file:
+            test_output = json.load(json_file)
 
         self.assertEqual(test_output, LINK_DUMP)
 

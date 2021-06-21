@@ -6,7 +6,7 @@ from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, T
 from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
@@ -51,7 +51,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return self.can_edit(obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         activity = self.get_parent_object_from_request(request)
         return self.can_edit(activity)
 
@@ -63,8 +63,8 @@ class BaseParticipantAdminInline(admin.TabularInline):
         is not available in the regular admin.ModelAdmin as an attribute.
         """
         resolved = resolve(request.path_info)
-        if resolved.args:
-            return self.parent_model.objects.get(pk=resolved.args[0])
+        if 'object_id' in resolved.kwargs:
+            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
         return None
 
     def edit(self, obj):
@@ -165,12 +165,13 @@ class DateActivityASlotInline(admin.TabularInline):
         },
     }
 
-    readonly_fields = ['link']
+    readonly_fields = ['link', 'timezone', ]
 
     fields = [
         'link',
         'title',
         'start',
+        'timezone',
         'duration',
         'is_online',
     ]
@@ -180,6 +181,13 @@ class DateActivityASlotInline(admin.TabularInline):
     def link(self, obj):
         url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
+
+    def timezone(self, obj):
+        if not obj.is_online and obj.location:
+            return obj.location.timezone
+        else:
+            return str(obj.start.astimezone(get_current_timezone()).tzinfo)
+    timezone.short_description = _('Timezone')
 
 
 @admin.register(DateActivity)
@@ -296,7 +304,7 @@ class SlotParticipantInline(admin.TabularInline):
     readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):
@@ -417,7 +425,7 @@ class DateSlotAdmin(SlotAdmin):
             if offset.total_seconds() != 0:
                 timezone_text = _(
                     'Local time in "{location}" is {local_time}. '
-                    'This is {offset} hours {relation} then in the '
+                    'This is {offset} hours {relation} compared to the '
                     'standard platform timezone ({current_timezone}).'
                 ).format(
                     location=obj.location,

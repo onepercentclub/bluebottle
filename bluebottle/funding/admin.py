@@ -15,7 +15,7 @@ from django.http import HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
@@ -110,7 +110,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def payout_link(self, obj):
@@ -554,7 +554,10 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
-    search_fields = ['stripepayoutaccount__account_id']
+    search_fields = [
+        'stripepayoutaccount__account_id',
+        'owner__first_name', 'owner__last_name', 'owner__email'
+    ]
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
@@ -647,7 +650,7 @@ class DonorInline(PaymentLinkMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 

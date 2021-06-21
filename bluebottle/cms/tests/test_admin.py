@@ -28,3 +28,23 @@ class TestResultPageAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Stats')
         self.assertContains(response, 'Activities')
+
+
+class HomePageAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+
+    def test_admin_language_tabs(self):
+        # Test that language tabs show
+        url = reverse('admin:cms_homepage_changelist')
+        page = self.app.get(url)
+        tabs = page.html.find('div', {'class': 'parler-language-tabs'})
+        self.assertTrue('Dutch' in tabs.text)
+        self.assertTrue('English' in tabs.text)
+        self.assertTrue('French' in tabs.text)

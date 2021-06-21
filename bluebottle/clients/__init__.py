@@ -5,8 +5,6 @@ from threading import local
 from django.conf import settings
 from django.utils._os import safe_join
 
-from tenant_schemas.postgresql_backend.base import FakeTenant
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +23,8 @@ class TenantProperties(local):
         # Always default to standard django settings, e.g.
         # when tenant has no specific config, has no directory
         # or when no MULTI_TENANT_DIR is configured
+
+        from tenant_schemas.postgresql_backend.base import FakeTenant
         try:
             props_mod = safe_join(settings.MULTI_TENANT_DIR,
                                   tenant.client_name,

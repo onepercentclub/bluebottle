@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='budgetline',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='budgetline',
@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='donation',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='donation',
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='funding',
             name='target_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='fundraiser',
@@ -72,12 +72,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fundraiser',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
         migrations.AlterField(
             model_name='paymentcurrency',
             name='code',
-            field=models.CharField(default='EUR', max_length=3),
+            field=models.CharField(default='EUR', max_length=50),
         ),
         migrations.AlterField(
             model_name='plainpayoutaccount',
@@ -92,6 +92,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='reward',
             name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=3),
+            field=djmoney.models.fields.CurrencyField(choices=[('EUR', 'Euro')], default='EUR', editable=False, max_length=50),
         ),
     ]

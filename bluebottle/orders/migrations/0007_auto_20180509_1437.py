@@ -5,21 +5,10 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-from bluebottle.utils.utils import StatusDefinition
 
 
 def set_refund_status(apps, schema_editor):
-    Order = apps.get_model('orders', 'Order')
-    Order._meta.get_field('status').protected = False
-
-    for order in Order.objects.filter(order_payments__status=StatusDefinition.REFUNDED):
-
-        if any(donation.project.status.slug == 'refunded' for donation in order.donations.all()):
-            order.status = StatusDefinition.CANCELLED
-        else:
-            order.status = StatusDefinition.REFUNDED
-
-        order.save()
+    pass
 
 
 class Migration(migrations.Migration):

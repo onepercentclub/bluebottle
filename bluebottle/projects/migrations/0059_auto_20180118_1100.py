@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=300)),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12)),
                 ('organization', models.ForeignKey(help_text='Default partner organization', null=True, on_delete=django.db.models.deletion.CASCADE, to='organizations.Organization')),
                 ('project_settings', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='templates', to='projects.ProjectPlatformSettings')),

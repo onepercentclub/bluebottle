@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db.models import F
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
 
 from bluebottle.fsm.effects import Effect

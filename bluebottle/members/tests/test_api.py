@@ -1,15 +1,20 @@
 import json
 from builtins import range
 import time
+from datetime import datetime, timedelta
+from calendar import timegm
+from bluebottle.clients import properties
 
 import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
 from rest_framework import status
+
+from rest_framework_jwt.settings import api_settings
 
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -30,12 +35,58 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         current_user_response = self.client.get(
             reverse('user-current'), token='JWT {}'.format(response.json()['token'])
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_expired_token(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+
+        with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(days=8)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+
+            self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_expired_token_exp_in_properties(self):
+        properties.JWT_EXPIRATION_DELTA = timedelta(hours=1)
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(token)
+        )
+
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+        with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(minutes=61)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+
+            self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_login_failed(self):
         response = self.client.post(
@@ -49,7 +100,6 @@ class LoginTestCase(BluebottleTestCase):
             response = self.client.post(
                 reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
             )
-
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         response = self.client.post(
@@ -77,7 +127,7 @@ class LoginTestCase(BluebottleTestCase):
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_login_inactive(self):
         self.user.is_active = False
@@ -187,7 +237,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -216,13 +266,13 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         user_id = str(response.json()['id'])
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -242,6 +292,19 @@ class CreateUserTestCase(BluebottleTestCase):
             user_id
         )
 
+    def test_failed_multiple(self):
+        email = 'test@example.com'
+        password = 'secret1234'
+        Member.objects.create(email=email)
+
+        for i in range(0, 11):
+            response = self.client.post(
+                reverse('user-user-create'),
+                {'email': email, 'password': password, 'email_confirmation': email}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_require_confirmation(self):
         self.settings.confirm_signup = True
         self.settings.save()
@@ -251,7 +314,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -267,7 +330,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
     def test_confirm(self):
         email = 'test@example.com'
-        password = 'test@example.com'
+        password = 'some-password'
 
         member = Member.objects.create(email=email, is_active=False)
         mail.outbox = []
@@ -299,7 +362,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
     def test_confirm_twice(self):
         email = 'test@example.com'
-        password = 'test@example.com'
+        password = 'some-password'
 
         member = Member.objects.create(email=email, is_active=False)
 
@@ -547,7 +610,7 @@ class PasswordSetTest(BluebottleTestCase):
     def test_update_password_wrong_password(self):
         response = self.client.put(
             self.set_password_url,
-            {'password': 'other-password', 'new_password': 'new@example.com'},
+            {'password': 'other-password', 'new_password': 'new-password'},
             token=self.user_token
         )
 
@@ -665,7 +728,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.data = {
             'data': {
-                'type': 'password-strength',
+                'type': 'password-strengths',
                 'attributes': {
                     'email': 'admin@example.com',
                     'password': 'blabla',
@@ -703,7 +766,6 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         )
 
     def test_valid_fair(self):
-        print(self.url)
         self.data['data']['attributes']['password'] = 'somepassword'
         response = self.client.post(self.url, data=json.dumps(self.data))
         self.assertEqual(response.status_code, 201)
@@ -716,3 +778,32 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 201)
         data = response.json()['data']['attributes']
         self.assertTrue(data['strength'] > 0.5)
+
+
+class RefreshTokenTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user = BlueBottleUserFactory.create()
+
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        payload = jwt_payload_handler(self.user)
+        payload['exp'] = datetime.utcnow() + properties.JWT_EXPIRATION_DELTA - timedelta(minutes=35)
+        payload['orig_iat'] = timegm((datetime.now() - timedelta(minutes=35)).utctimetuple())
+
+        token = jwt_encode_handler(payload)
+
+        self.token = "JWT {0}".format(token)
+
+        self.url = reverse('settings')
+
+    def test_refresh(self):
+        response = self.client.get(self.url, token=self.token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_token = response['Refresh-Token']
+
+        response = self.client.get(reverse('user-current'), token=new_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['id'], self.user.pk)

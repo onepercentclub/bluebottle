@@ -5,7 +5,7 @@ from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -126,11 +126,11 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             queryset = self.queryset.filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
             )
         else:

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.sessions import middleware
 from django.db import connection
 from django.utils import translation
+
 from tenant_extras.middleware import tenant_translation
 
 from bluebottle.clients import properties

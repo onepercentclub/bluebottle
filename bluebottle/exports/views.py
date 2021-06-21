@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied, ImproperlyConfigured
 from django.db import connection
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.urls.base import reverse
 from django.views.generic import FormView, View
 from django.views.decorators.csrf import csrf_protect

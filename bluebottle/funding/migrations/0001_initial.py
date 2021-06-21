@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             name='Donation',
             fields=[
                 ('contribution_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='activities.Contribution')),
-                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('amount_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('amount', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12)),
             ],
             options={
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('activity_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='activities.Activity')),
                 ('deadline', models.DateField(blank=True, null=True, verbose_name='deadline')),
                 ('duration', models.PositiveIntegerField(blank=True, null=True, verbose_name='duration')),
-                ('target_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
+                ('target_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=50)),
                 ('target', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12)),
                 ('accepted_currencies', multiselectfield.db.fields.MultiSelectField(choices=[(b'EUR', 'Euro')], default=[], max_length=100)),
             ],

@@ -16,7 +16,9 @@ from bluebottle.funding.models import Funding
 from bluebottle.files.models import RelatedImage
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
-from bluebottle.initiatives.permissions import InitiativeStatusPermission
+from bluebottle.initiatives.permissions import (
+    InitiativeStatusPermission, InitiativeOwnerPermission
+)
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
@@ -36,7 +38,7 @@ from bluebottle.utils.views import (
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.prefetch_related(
-        'place', 'location', 'owner', 'activity_manager', 'image', 'categories', 'theme'
+        'place', 'location', 'owner', 'activity_managers', 'image', 'categories', 'theme'
     )
 
     def get_serializer_class(self):
@@ -53,7 +55,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         InitiativeSearchFilter,
     )
 
-    filter_fields = {
+    filterset_fields = {
         'owner__id': ('exact', 'in',),
     }
 
@@ -61,7 +63,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'promoter': ['promoter'],
-        'activity_manager': ['activity_manager'],
+        'activity_managers': ['activity_managers'],
         'theme': ['theme'],
         'place': ['place'],
         'location': ['location'],
@@ -121,7 +123,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 
     permission_classes = (
         InitiativeStatusPermission,
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, InitiativeOwnerPermission),
     )
 
     prefetch_for_includes = {

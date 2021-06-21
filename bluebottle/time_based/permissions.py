@@ -36,11 +36,13 @@ class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
     def has_object_permission(self, request, view, obj):
         if not obj:
             return True
-        if obj and request.user in [
-            obj.user,
-            obj.activity.owner,
-            obj.activity.initiative.activity_manager
-        ]:
+        if obj and (
+            request.user in [
+                obj.user,
+                obj.activity.owner,
+            ] or
+            request.user in obj.activity.initiative.activity_managers.all()
+        ):
             return True
         return False
 
@@ -49,7 +51,7 @@ class CanExportParticipantsPermission(IsOwner):
     """ Allows access only to obj owner. """
 
     def has_object_action_permission(self, action, user, obj):
-        return (obj.owner == user or obj.initiative.activity_manager == user) \
+        return (obj.owner == user or user in obj.initiative.activity_managers.all()) \
             and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):

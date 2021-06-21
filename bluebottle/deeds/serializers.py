@@ -11,10 +11,10 @@ from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.deeds.filters import ParticipantListFilter
+from bluebottle.deeds.states import DeedParticipantStateMachine
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
-from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class DeedSerializer(BaseActivitySerializer):
@@ -25,9 +25,9 @@ class DeedSerializer(BaseActivitySerializer):
         source='get_my_contributor'
     )
 
-    contributors = FilteredRelatedField(
+    contributors = SerializerMethodResourceRelatedField(
+        model=DeedParticipant,
         many=True,
-        filter_backend=ParticipantListFilter,
         related_link_view_name='related-deed-participants',
         related_link_url_kwarg='activity_id'
     )
@@ -39,6 +39,21 @@ class DeedSerializer(BaseActivitySerializer):
         permission=CanExportParticipantsPermission,
         read_only=True
     )
+
+    def get_contributors(self, instance):
+        user = self.context['request'].user
+        return [
+            contributor for contributor in instance.contributors.all() if (
+                isinstance(contributor, DeedParticipant) and (
+                    contributor.status in [
+                        DeedParticipantStateMachine.new.value,
+                        DeedParticipantStateMachine.accepted.value,
+                        DeedParticipantStateMachine.succeeded.value
+                    ] or
+                    user in (instance.owner, instance.initiative.owner, contributor.user)
+                )
+            )
+        ]
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user
@@ -98,9 +113,11 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     activity = ResourceRelatedField(
         queryset=Deed.objects.all()
     )
+    permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
 
         validators = [
             UniqueTogetherValidator(

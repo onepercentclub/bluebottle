@@ -2,18 +2,16 @@ from builtins import object
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 
 @python_2_unicode_compatible
 class Terms(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    created = CreationDateTimeField(_('creation date'))
-    updated = ModificationDateTimeField(_('last modification'))
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
 
     date = models.DateTimeField()
 
@@ -40,9 +38,9 @@ class Terms(models.Model):
 
 
 class TermsAgreement(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    terms = models.ForeignKey(Terms)
-    created = CreationDateTimeField(_('Date'))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    terms = models.ForeignKey(Terms, on_delete=models.CASCADE)
+    created = models.DateTimeField(_('Date'), auto_now_add=True)
 
     @classmethod
     def get_current(cls, user):

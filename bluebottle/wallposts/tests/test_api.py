@@ -1,6 +1,6 @@
 from builtins import str
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import status
 
@@ -182,6 +182,74 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3)
+
+
+class WallpostRateLimitTestCase(UserTestsMixin, BluebottleTestCase):
+    def setUp(self):
+        super(WallpostRateLimitTestCase, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.activity = DateActivityFactory.create(owner=self.owner)
+        self.media_wallpost_url = reverse('media_wallpost_list')
+
+    def test_rate_limit_sharing(self):
+        """
+        Tests that only 3 wallpost are possible in succession.
+        """
+        wallpost_data = {
+            'parent_id': self.initiative.id,
+            'parent_type': 'initiative',
+            'text': 'I can share stuff!',
+            'email_followers': True
+        }
+
+        for i in range(3):
+            response = self.client.post(
+                self.media_wallpost_url,
+                wallpost_data,
+                token=self.owner_token
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(
+            self.media_wallpost_url,
+            wallpost_data,
+            token=self.owner_token
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_rate_limit_no_sharing(self):
+        """
+        Tests that more then 3 wallposts are possible if wallpost is not shared
+        """
+        wallpost_data = {
+            'parent_id': self.initiative.id,
+            'parent_type': 'initiative',
+            'text': 'I can share stuff!',
+            'email_followers': False
+        }
+
+        for i in range(3):
+            response = self.client.post(
+                self.media_wallpost_url,
+                wallpost_data,
+                token=self.owner_token
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(
+            self.media_wallpost_url,
+            wallpost_data,
+            token=self.owner_token
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class WallpostDeletePermissionTest(BluebottleTestCase):

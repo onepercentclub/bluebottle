@@ -552,6 +552,9 @@ def run(*args):
 
         # Save city + city districts > geolocation
 
+        print("FIX ME: ORGANIZER CONTRIBUTIONS")
+        print("FIX ME: TIME CONTRIBUTIONS")
+
 
 """
 Clear all tables:

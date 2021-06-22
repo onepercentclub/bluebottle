@@ -5,7 +5,6 @@ from urllib.parse import unquote
 import pytz
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import connection
 from django.db import models
@@ -19,12 +18,14 @@ from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.initiatives.models import Theme, Initiative
 from bluebottle.members.models import Member
-from bluebottle.organizations.models import OrganizationContact
+from bluebottle.organizations.models import OrganizationContact, Organization
 from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotParticipant, DateParticipant, \
     TimeBasedActivity
 
 ams = pytz.timezone('Europe/Amsterdam')
+
+cities = {}
 
 
 def create_model(Model, app_label='children', module='', options=None):
@@ -96,7 +97,6 @@ mapping = {
         'id': 'id',
         'title': 'name_nl',
         'slug': 'slug_nl',
-        'story': 'description_nl',
         'created': 'created_at',
     },
     'activity': {
@@ -132,7 +132,6 @@ mapping = {
     'location': {
         'id': 'id',
         'locality': 'city',
-        'formatted_address': 'name',
         'street': 'street',
         'postal_code': 'zipcode',
         'created': 'created_at',
@@ -182,8 +181,11 @@ def import_initiatives(rows):
         initiative_id = row.find("field[@name='id']").text
         initiative = Initiative(
             id=initiative_id,
-            status='approved'
+            status='approved',
+            has_organization=False
         )
+
+        # Extract contact
         email = row.find("field[@name='contact_email']").text or 'initiator{}@example.com'.format(initiative_id)
         first_name = row.find("field[@name='contact_firstname']").text or 'Nomen'
         last_name = row.find("field[@name='contact_lastname']").text or 'Nescio'
@@ -195,6 +197,7 @@ def import_initiatives(rows):
             owner=cares_user
         )
         contacts.append(contact)
+
         try:
             owner = Member.objects.get(email=email)
         except Member.DoesNotExist:
@@ -205,6 +208,9 @@ def import_initiatives(rows):
             initiative.__setattr__(k, value)
             initiative.owner = owner
             initiative.organization_contact = contact
+            description = row.find("field[@name='description_nl']").text
+            initiative.pitch = description
+            initiative.story = description
 
         image_url = row.find("field[@name='image_url']").text
         if image_url:
@@ -248,8 +254,9 @@ def import_initiatives(rows):
 
     print("Writing contacts")
     OrganizationContact.objects.bulk_create(contacts)
+    update_sequence('organizations_organizationcontact')
 
-    print("Writing initiative images")
+    # print("Writing initiative images")
     # Image.objects.bulk_create(images)
 
     print("Writing initiatives")
@@ -352,12 +359,12 @@ def import_activity_location(rows):
     for row in rows:
         location = Geolocation(
             country=nld,
-            position=Point(0, 0)
         )
         for k in mapping['location']:
             v = mapping['location'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             location.__setattr__(k, value)
+        location.formatted_address = "{}, {}".format(location.street, location.locality)
         location.position = 'point(5.2793703 52.2129919)'
         activity_id = row.find("field[@name='activity_id']").text
         location_id = row.find("field[@name='id']").text
@@ -449,6 +456,25 @@ def import_segments(rows):
     Segment.objects.bulk_create(segments)
 
 
+def import_partner_organizations(rows):
+    orgs = []
+    for row in rows:
+        org = Organization(
+            id=row.find("field[@name='id']").text,
+            name=row.find("field[@name='name']").text,
+            slug=row.find("field[@name='slug']").text,
+        )
+        orgs.append(org)
+    Organization.objects.bulk_create(orgs)
+    update_sequence('organizations_organization')
+
+
+def import_locations(rows):
+    for row in rows:
+        pass
+    print("FIX ME: IMPORT DISTRICTS")
+
+
 def run(*args):
     tne = Client.objects.get(schema_name='nlcares')
     with LocalTenant(tne):
@@ -462,8 +488,17 @@ def run(*args):
         print("Reading XML")
         root = ET.parse('./nlcares.xml').getroot()
 
-        # [references] / >> Segments
-        print("Importing refrences/segments")
+        # [districts] >> geolocations
+        print("Importing cities")
+        rows = root.find('database').find('table_data[@name="cities"]').findall('row')
+        for row in rows:
+            cities[row.find("field[@name='id']").text] = row.find("field[@name='name']").text
+
+        rows = root.find('database').find('table_data[@name="city_districts"]').findall('row')
+        import_locations(rows)
+
+        # [references] >> Segments
+        print("Importing references/segments")
         rows = root.find('database').find('table_data[@name="references"]').findall('row')
         import_segments(rows)
 
@@ -472,18 +507,23 @@ def run(*args):
         rows = root.find('database').find('table_data[@name="users"]').findall('row')
         import_users(rows)
 
-        print("Importing themes")
-        # Import themes
-        rows = root.find('database').find('table_data[@name="activity_types"]').findall('row')
-        import_themes(rows)
-
         # Import initiatives & Activities
         print("Importing initiatives")
         rows = root.find('database').find('table_data[@name="activities"]').findall('row')
         import_initiatives(rows)
 
+        # [social_institutions] >> Partner organizations
+        print("Importing partner organizations")
+        rows = root.find('database').find('table_data[@name="social_institutions"]').findall('row')
+        import_partner_organizations(rows)
+
+        # Import themes
+        print("Importing themes")
+        rows = root.find('database').find('table_data[@name="activity_types"]').findall('row')
+        import_themes(rows)
+
         # Import Initiative theme
-        print("Importing activity types / themes")
+        print("Importing activity themes")
         rows = root.find('database').find('table_data[@name="activity_activity_type"]').findall('row')
         import_initiative_themes(rows)
 
@@ -506,7 +546,6 @@ def run(*args):
 
         # [city_districts] / Location city district
 
-        # [social_institutions] / ?? Partner orgs?
         #
         # activity contacts > partner org contacts
         # nl cares admin > activity owner

@@ -77,7 +77,7 @@ class ElasticSearchFilter(filters.SearchFilter):
             return Bool(should=queries)
 
     def get_filter(self, request, field):
-        value = request.GET['filter[{}]'.format(field)]
+        value = request.GET.get('filter[{}]'.format(field))
 
         if '.' in field:
             path = field.split('.')[0]

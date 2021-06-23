@@ -181,6 +181,6 @@ class Command(BaseCommand):
             self.stderr.write("Error: %s" % '; '.join(e.messages))
             name = None
             return False
-        except IntegrityError as e:
+        except IntegrityError:
             self.stderr.write("Error: We've already got a tenant with that name or property.")
             return False

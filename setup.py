@@ -38,7 +38,7 @@ install_requires = [
     'django-elasticsearch-dsl==6.5.0',
     'django-extensions==1.7.9',
     'django-filter==2.3.0',
-    'django-fluent-contents==2.0.7',
+    # 'django-fluent-contents==2.0.7',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
     'django-geoposition==0.3.0',
@@ -118,6 +118,7 @@ install_requires = [
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@dc14004b5d732100a0d619618bfc96edfcfcde1a#egg=django-tenant-extras-2.0.16',
+    'django-fluent-contents@git+https://github.com/onepercentclub/django-fluent-contents.git@4e9ca11585ac2a3fae6c3ca94f9d1e6ddc38880b#egg=django-fluent-contents-4e9ca11',
     'django-taggit-autocomplete-modified@git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
 ]
 

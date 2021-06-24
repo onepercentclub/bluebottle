@@ -1,8 +1,11 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from html import unescape
+from random import random
 from urllib.parse import unquote
 
 import pytz
+from bs4 import BeautifulSoup
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
@@ -15,7 +18,7 @@ from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.files.models import Image
-from bluebottle.geo.models import Geolocation, Country
+from bluebottle.geo.models import Geolocation, Country, Place
 from bluebottle.initiatives.models import Theme, Initiative
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import OrganizationContact, Organization
@@ -24,8 +27,7 @@ from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotPar
     TimeBasedActivity
 
 ams = pytz.timezone('Europe/Amsterdam')
-
-cities = {}
+nld_id = 149
 
 
 def create_model(Model, app_label='children', module='', options=None):
@@ -85,8 +87,8 @@ def add_tz(date):
 
 
 status_mapping = {
-    'In progress': 'open',
-    'Planned': 'open',
+    'In Progress': 'open',
+    'Planned': 'draft',
     'completed': 'succeeded',
     'confirmed': 'succeeded',
     'no-show': 'cancelled',
@@ -103,7 +105,6 @@ mapping = {
         'initiative_id': 'id',
         'title': 'name_nl',
         'slug': 'slug_nl',
-        'description': 'description_nl',
         'created': 'created_at',
     },
     'time_based_activity': {
@@ -144,6 +145,48 @@ mapping = {
 }
 
 
+def split_description(text):
+    if not text:
+        return {}
+    html = unescape(text)
+    parts = {}
+    bs = BeautifulSoup(html, 'lxml')
+    for h3 in bs.find_all('h3'):
+        title = h3.text
+        if 'impact' in title or 'Impact' in title:
+            title = 'impact'
+        if 'activiteit' in title or 'Activiteit' in title:
+            title = 'intro'
+        content = ''
+        sibling = h3.next_sibling
+        while sibling and sibling.name == 'p':
+            content += sibling.text
+            sibling = sibling.next_sibling
+        if title and content:
+            parts[h3.text] = content
+    return parts
+
+
+def extract_pitch(text):
+    parts = split_description(text)
+    if 'impact' in parts:
+        return parts['impact']
+    if 'intro' in parts:
+        return parts['intro']
+    return '-'
+
+
+def extract_story(text):
+    if not text:
+        return '-'
+    html = unescape(text)
+    bs = BeautifulSoup(html, 'lxml')
+    h3 = bs.find('h3')
+    if h3:
+        h3.extract()
+    return bs.html
+
+
 def update_sequence(table):
     with connection.cursor() as cursor:
         sql = "SELECT setval(pg_get_serial_sequence('{0}','id'), " \
@@ -179,9 +222,11 @@ def import_initiatives(rows):
     cares_user = Member.objects.get(email='info@nlcares.nl')
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
+        status = row.find("field[@name='status']").text
+        status = status_mapping[status]
         initiative = Initiative(
             id=initiative_id,
-            status='approved',
+            status=status,
             has_organization=False
         )
 
@@ -202,25 +247,30 @@ def import_initiatives(rows):
             owner = Member.objects.get(email=email)
         except Member.DoesNotExist:
             owner = cares_user
+        description = row.find("field[@name='description_nl']").text or '-'
+        # story = extract_story(description)
+        story = description
         for k in mapping['initiative']:
             v = mapping['initiative'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             initiative.__setattr__(k, value)
-            initiative.owner = owner
-            initiative.organization_contact = contact
-            description = row.find("field[@name='description_nl']").text
-            initiative.pitch = description
-            initiative.story = description
+        initiative.owner = owner
+        initiative.organization_contact = contact
+        initiative.pitch = extract_pitch(description)
+        initiative.story = story
 
         image_url = row.find("field[@name='image_url']").text
         if image_url:
             try:
                 image = Image(
-                    owner=owner,
+                    owner=owner
                 )
                 image_url = image_url.replace('https://s3.eu-central-1.amazonaws.com', 'data')
                 image_url = unquote(image_url)
-                image.file.save("image_%s.jpg" % initiative.id, File(open(image_url, 'rb')))
+                image.file.save(
+                    "image_{}-{}.jpg".format(initiative_id, int(1000 * random())),
+                    File(open(image_url, 'rb'))
+                )
                 images.append(image)
                 initiative.image = image
             except FileNotFoundError:
@@ -229,26 +279,28 @@ def import_initiatives(rows):
         initiatives.append(initiative)
 
         activity = Activity(
-            id=initiative_id
+            id=initiative_id,
         )
         for k in mapping['activity']:
             v = mapping['activity'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             activity.__setattr__(k, value)
             activity.polymorphic_ctype_id = date_type
+            activity.description = story
             activity.status = 'open'
             activity.created = add_tz(activity.created)
             activity.owner = owner
-            activity.slot_selection = 'free'
         activities.append(activity)
 
         time_based_activity = TimeBasedActivityShadow(
-            activity_ptr_id=initiative_id
+            activity_ptr_id=initiative_id,
+            review=False,
         )
         time_based_activities.append(time_based_activity)
 
         date_activity = DateActivityShadow(
-            timebasedactivity_ptr_id=initiative_id
+            timebasedactivity_ptr_id=initiative_id,
+            slot_selection='free',
         )
         date_activities.append(date_activity)
 
@@ -256,8 +308,10 @@ def import_initiatives(rows):
     OrganizationContact.objects.bulk_create(contacts)
     update_sequence('organizations_organizationcontact')
 
-    # print("Writing initiative images")
-    # Image.objects.bulk_create(images)
+    print("Writing initiative images")
+    # bulk_create screws op uuid
+    for i in images:
+        i.save()
 
     print("Writing initiatives")
     Initiative.objects.bulk_create(initiatives)
@@ -353,27 +407,35 @@ def import_slot_participants(rows):
 
 
 def import_activity_location(rows):
-    locations = []
     slots = []
-    nld = Country.objects.get(alpha2_code='NL')
+    initiatives = []
     for row in rows:
-        location = Geolocation(
-            country=nld,
+        address = "{}, {}".format(
+            row.find("field[@name='street']").text,
+            row.find("field[@name='city']").text
         )
-        for k in mapping['location']:
-            v = mapping['location'][k]
-            value = row.find("field[@name='{}']".format(v)).text or ''
-            location.__setattr__(k, value)
-        location.formatted_address = "{}, {}".format(location.street, location.locality)
-        location.position = 'point(5.2793703 52.2129919)'
+        location, _c = Geolocation.objects.get_or_create(
+            country_id=nld_id,
+            locality=row.find("field[@name='city']").text,
+            street=row.find("field[@name='street']").text,
+            position=None,
+            defaults={
+                'postal_code': row.find("field[@name='zipcode']").text,
+                'formatted_address': address
+            }
+        )
         activity_id = row.find("field[@name='activity_id']").text
-        location_id = row.find("field[@name='id']").text
+        initiative_id = activity_id
         slots += list(DateActivitySlot.objects.filter(activity_id=activity_id).all())
+        initiative = Initiative.objects.get(id=initiative_id)
+        initiative.place_id = location
+        initiatives.append(initiative)
         for slot in slots:
-            slot.location_id = location_id
-        locations.append(location)
-    Geolocation.objects.bulk_create(locations)
+            slot.location_id = location.id
+    print("Writing slot locations")
     DateActivitySlot.objects.bulk_update(slots, ['location_id'])
+    print("Writing initiative locations")
+    Initiative.objects.bulk_update(initiatives, ['place_id'])
     update_sequence('geo_geolocation')
 
 
@@ -391,6 +453,7 @@ def import_users(rows):
     authenticated = Group.objects.get(name='Authenticated')
     users = []
     segments = []
+    locations = []
     for row in rows:
 
         user = Member()
@@ -415,6 +478,20 @@ def import_users(rows):
                 segment_id=segment_id
             )
             segments.append(segment)
+        city = row.find("field[@name='city']").text
+        street = row.find("field[@name='street']").text
+        houseno_att = row.find("field[@name='houseno_att']").text
+        if houseno_att:
+            street = "{} {}".format(street, houseno_att)
+        zipcode = row.find("field[@name='zipcode']").text
+        location = Place(
+            country_id=nld_id,
+            street=street,
+            locality=city,
+            postal_code=zipcode,
+            content_object=user
+        )
+        locations.append(location)
         users.append(user)
 
     print("Writing users")
@@ -426,6 +503,9 @@ def import_users(rows):
 
     print("Writing user segments")
     Member.segments.through.objects.bulk_create(segments)
+
+    print("Writing user locations")
+    Place.objects.bulk_create(locations)
 
     # Create some users we need
     nlcares = Member.objects.create(
@@ -469,7 +549,7 @@ def import_partner_organizations(rows):
     update_sequence('organizations_organization')
 
 
-def import_locations(rows):
+def import_locations(rows, cities):
     for row in rows:
         pass
     print("FIX ME: IMPORT DISTRICTS")
@@ -491,11 +571,12 @@ def run(*args):
         # [districts] >> geolocations
         print("Importing cities")
         rows = root.find('database').find('table_data[@name="cities"]').findall('row')
+        cities = {}
         for row in rows:
             cities[row.find("field[@name='id']").text] = row.find("field[@name='name']").text
 
         rows = root.find('database').find('table_data[@name="city_districts"]').findall('row')
-        import_locations(rows)
+        import_locations(rows, cities)
 
         # [references] >> Segments
         print("Importing references/segments")
@@ -586,11 +667,13 @@ delete from notifications_message;
 delete from members_member_groups;
 delete from follow_follow;
 delete from organizations_organizationcontact;
+delete from organizations_organization;
 delete from members_useractivity;
 delete from django_admin_log;
 delete from members_member_segments;
 delete from segments_segment;
 delete from segments_segmenttype;
+delete from geo_place;
 delete from members_member where email != 'admin@example.com';
 
 """

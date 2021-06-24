@@ -100,6 +100,14 @@ class PlaceInline(GenericStackedInline):
     model = Place
     max_num = 1
     extra = 0
+    fields = [
+        'street',
+        'locality',
+        'postal_code',
+        'country',
+        'formatted_address',
+        'position'
+    ]
 
 
 admin.site.register(Location, LocationAdmin)

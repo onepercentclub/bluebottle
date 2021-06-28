@@ -13,7 +13,7 @@ from django.db import connection
 from django.db import models
 from django.utils.timezone import now
 
-from bluebottle.activities.models import Activity, Contributor
+from bluebottle.activities.models import Activity, Contributor, Organizer, EffortContribution, Contribution
 from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -24,7 +24,7 @@ from bluebottle.members.models import Member
 from bluebottle.organizations.models import OrganizationContact, Organization
 from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotParticipant, DateParticipant, \
-    TimeBasedActivity
+    TimeBasedActivity, TimeContribution
 
 ams = pytz.timezone('Europe/Amsterdam')
 nld_id = 149
@@ -211,7 +211,11 @@ def import_themes(rows):
 def import_initiatives(rows):
     TimeBasedActivityShadow = create_model(TimeBasedActivity)
     DateActivityShadow = create_model(DateActivity)
+    OrganizerShadow = create_model(Organizer)
+    EffortContributionShadow = create_model(EffortContribution)
     date_type = ContentType.objects.get_for_model(DateActivity).id
+    organizer_type = ContentType.objects.get_for_model(Organizer).id
+    effort_type = ContentType.objects.get_for_model(EffortContribution).id
 
     initiatives = []
     activities = []
@@ -219,15 +223,21 @@ def import_initiatives(rows):
     date_activities = []
     contacts = []
     images = []
+    cities = []
+    contributors = []
+    organizers = []
+    contributions = []
+    effort_contributions = []
     cares_user = Member.objects.get(email='info@nlcares.nl')
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
-        status = row.find("field[@name='status']").text
-        status = status_mapping[status]
+
+        # status = row.find("field[@name='status']").text
+        # status = status_mapping[status]
         initiative = Initiative(
             id=initiative_id,
-            status=status,
-            has_organization=False
+            status='approved',
+            has_organization=False,
         )
 
         # Extract contact
@@ -304,6 +314,40 @@ def import_initiatives(rows):
         )
         date_activities.append(date_activity)
 
+        city_id = row.find("field[@name='city_id']").text
+        if city_id:
+            city_id = 100 + int(city_id)
+            city = Activity.segments.through(
+                activity_id=initiative_id,
+                segment_id=city_id
+            )
+            cities.append(city)
+
+        contributor = Contributor(
+            id=initiative_id,
+            user=owner,
+            activity=activity,
+            status='succeeded',
+            polymorphic_ctype_id=organizer_type
+        )
+        contributors.append(contributor)
+        organizer = OrganizerShadow(
+            contributor_ptr_id=initiative_id,
+        )
+        organizers.append(organizer)
+
+        contribution = Contribution(
+            id=initiative_id,
+            contributor=contributor,
+            polymoprhic_ctype_id=effort_type
+        )
+        contributions.append(contribution)
+        effort_contribution = EffortContributionShadow(
+            contribution_ptr_id=initiative_id,
+            contribution_type='organizer'
+        )
+        effort_contributions.append(effort_contribution)
+
     print("Writing contacts")
     OrganizationContact.objects.bulk_create(contacts)
     update_sequence('organizations_organizationcontact')
@@ -322,6 +366,15 @@ def import_initiatives(rows):
     TimeBasedActivityShadow.objects.bulk_create(time_based_activities)
     DateActivityShadow.objects.bulk_create(date_activities)
     update_sequence('activities_activity')
+
+    print("Writing initiative cities (segments)")
+    Activity.segments.through.objects.bulk_create(cities)
+
+    print("Writing organizers & contributions")
+    Contributor.objects.bulk_create(contributors)
+    OrganizerShadow.objects.bulk_create(organizers)
+    Contribution.objects.bulk_create(contributions)
+    EffortContributionShadow.objects.bulk_create(effort_contributions)
 
 
 def import_initiative_themes(rows):
@@ -359,10 +412,14 @@ def import_slots(rows):
 def import_slot_participants(rows):
     DateParticipantShadow = create_model(DateParticipant)
     date_participant_type = ContentType.objects.get_for_model(DateParticipant).id
+    TimeContributionShadow = create_model(TimeContribution)
+    time_contribution_type = ContentType.objects.get_for_model(TimeContribution).id
 
     contributors = []
     date_participants = []
     slot_participants = []
+    contributions = []
+    time_contributions = []
 
     print('Reading participants')
     for row in rows:
@@ -377,6 +434,7 @@ def import_slot_participants(rows):
         else:
             status = 'succeeded'
         activity = DateActivity.objects.get(slots__id=shift_id)
+        contributor_id = 200000 + int(contributor_id)
         contributor = Contributor(
             id=contributor_id,
             user_id=user_id,
@@ -397,6 +455,22 @@ def import_slot_participants(rows):
         )
         slot_participants.append(slot_participant)
 
+        contribution_id = 100000 + int(contributor_id)
+        contribution = Contribution(
+            id=contribution_id,
+            contributor=contributor,
+            polymorphic_ctype_id=time_contribution_type
+        )
+        contributions.append(contribution)
+
+        time_contribution = TimeContributionShadow(
+            contribution_ptr_id=contribution_id,
+            contribution_type='date',
+            slot_participant=slot_participant,
+            value=timedelta(hours=1)
+        )
+        time_contributions.append(time_contribution)
+
     print('Writing participants')
     Contributor.objects.bulk_create(contributors)
     DateParticipantShadow.objects.bulk_create(date_participants)
@@ -404,6 +478,11 @@ def import_slot_participants(rows):
     print('Writing slot participants')
     SlotParticipant.objects.bulk_create(slot_participants)
     update_sequence('activities_contributor')
+
+    print('Writing time contributions')
+    Contribution.objects.bulk_create(contributions)
+    TimeContributionShadow.objects.bulk_create(time_contributions)
+    update_sequence('activities_contribution')
 
 
 def import_activity_location(rows):
@@ -424,18 +503,21 @@ def import_activity_location(rows):
                 'formatted_address': address
             }
         )
+        organization_id = row.find("field[@name='social_institution_id']").text
         activity_id = row.find("field[@name='activity_id']").text
         initiative_id = activity_id
-        slots += list(DateActivitySlot.objects.filter(activity_id=activity_id).all())
+        activity_slots = list(DateActivitySlot.objects.filter(activity_id=activity_id).all())
         initiative = Initiative.objects.get(id=initiative_id)
-        initiative.place_id = location
+        initiative.place = location
+        initiative.organization_id = organization_id
         initiatives.append(initiative)
-        for slot in slots:
-            slot.location_id = location.id
+        for slot in activity_slots:
+            slot.location = location
+        slots += activity_slots
     print("Writing slot locations")
     DateActivitySlot.objects.bulk_update(slots, ['location_id'])
     print("Writing initiative locations")
-    Initiative.objects.bulk_update(initiatives, ['place_id'])
+    Initiative.objects.bulk_update(initiatives, ['place_id', 'organization_id'])
     update_sequence('geo_geolocation')
 
 
@@ -470,6 +552,7 @@ def import_users(rows):
         if row.find("field[@name='active']").text != '0':
             user.is_active = True
         user.created = add_tz(user.created)
+
         segment_id = row.find("field[@name='reference_id']").text
         segment_ids = Segment.objects.values_list('id', flat=True)
         if segment_id and int(segment_id) in segment_ids:
@@ -478,6 +561,16 @@ def import_users(rows):
                 segment_id=segment_id
             )
             segments.append(segment)
+
+        city_id = row.find("field[@name='volunteer_city']").text
+        if city_id:
+            city_id = 100 + int(city_id)
+            segment = Member.segments.through(
+                member=user,
+                segment_id=city_id
+            )
+            segments.append(segment)
+
         city = row.find("field[@name='city']").text
         street = row.find("field[@name='street']").text
         houseno_att = row.find("field[@name='houseno_att']").text
@@ -536,7 +629,7 @@ def import_segments(rows):
     Segment.objects.bulk_create(segments)
 
 
-def import_partner_organizations(rows):
+def import_organizations(rows):
     orgs = []
     for row in rows:
         org = Organization(
@@ -545,14 +638,22 @@ def import_partner_organizations(rows):
             slug=row.find("field[@name='slug']").text,
         )
         orgs.append(org)
+    print("Writing partner organizations")
     Organization.objects.bulk_create(orgs)
     update_sequence('organizations_organization')
 
 
-def import_locations(rows, cities):
+def import_cities(rows):
+    city_segment = SegmentType.objects.create(name='City', slug='city')
     for row in rows:
-        pass
-    print("FIX ME: IMPORT DISTRICTS")
+        id = 100 + int(row.find("field[@name='id']").text)
+        city = Segment.objects.create(
+            type=city_segment,
+            id=id,
+            alternate_names=[],
+            name=row.find("field[@name='name']").text
+        )
+        city.save()
 
 
 def run(*args):
@@ -571,12 +672,7 @@ def run(*args):
         # [districts] >> geolocations
         print("Importing cities")
         rows = root.find('database').find('table_data[@name="cities"]').findall('row')
-        cities = {}
-        for row in rows:
-            cities[row.find("field[@name='id']").text] = row.find("field[@name='name']").text
-
-        rows = root.find('database').find('table_data[@name="city_districts"]').findall('row')
-        import_locations(rows, cities)
+        import_cities(rows)
 
         # [references] >> Segments
         print("Importing references/segments")
@@ -596,7 +692,7 @@ def run(*args):
         # [social_institutions] >> Partner organizations
         print("Importing partner organizations")
         rows = root.find('database').find('table_data[@name="social_institutions"]').findall('row')
-        import_partner_organizations(rows)
+        import_organizations(rows)
 
         # Import themes
         print("Importing themes")
@@ -623,24 +719,20 @@ def run(*args):
         rows = root.find('database').find('table_data[@name="shift_user"]').findall('row')
         import_slot_participants(rows)
 
-        # [cities] / Location city
-
-        # [city_districts] / Location city district
-
-        #
         # activity contacts > partner org contacts
-        # nl cares admin > activity owner
+        print("FIX ME: SET VALUE for TIME DURATION")
 
-        # Save city + city districts > geolocation
+        print("FIX ME: CHANGE STATUSES FOR SLOTS")
+        print("FIX ME: CHANGE STATUSES FOR SLOT PARTICIPANTS")
+        print("FIX ME: CHANGE STATUSES FOR CONTRIBUTIONS")
 
-        print("FIX ME: ORGANIZER CONTRIBUTIONS")
-        print("FIX ME: TIME CONTRIBUTIONS")
+        print("FIX ME: CHANGE STATUSES FOR PARTICIPANTS")
+        print("FIX ME: CHANGE STATUSES FOR ACTIVITIES")
+        print("FIX ME: CHANGE STATUSES FOR INITIATIVES")
 
 
 """
 Clear all tables:
-
-
 
 delete from time_based_timecontribution;
 delete from time_based_slotparticipant;
@@ -657,11 +749,16 @@ delete from time_based_dateactivity;
 delete from time_based_timebasedactivity;
 delete from activities_activity;
 
+delete from initiatives_initiative_categories;
+delete from categories_category_translation;
+delete from categories_category;
+delete from initiatives_initiative_activity_managers;
 delete from initiatives_initiative;
-delete from geo_geolocation;
-
 delete from initiatives_theme_translation;
 delete from initiatives_theme;
+
+delete from geo_geolocation;
+
 delete from files_image;
 delete from notifications_message;
 delete from members_member_groups;
@@ -669,11 +766,15 @@ delete from follow_follow;
 delete from organizations_organizationcontact;
 delete from organizations_organization;
 delete from members_useractivity;
+delete from activities_effortcontribution;
+delete from activities_organizer;
 delete from django_admin_log;
+delete from activities_activity_segments;
 delete from members_member_segments;
 delete from segments_segment;
 delete from segments_segmenttype;
 delete from geo_place;
+delete from members_member_favourite_themes;
 delete from members_member where email != 'admin@example.com';
 
 """

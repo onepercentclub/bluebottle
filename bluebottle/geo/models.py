@@ -6,9 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.template.defaultfilters import slugify
-
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
@@ -224,7 +222,9 @@ class Geolocation(models.Model):
 
     @property
     def timezone(self):
-        return tf.timezone_at(
-            lng=self.position.x,
-            lat=self.position.y
-        )
+        if self.position:
+            return tf.timezone_at(
+                lng=self.position.x,
+                lat=self.position.y
+            )
+        return 'Amsterdam/Europe'

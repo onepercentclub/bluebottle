@@ -339,7 +339,7 @@ def import_initiatives(rows):
         contribution = Contribution(
             id=initiative_id,
             contributor=contributor,
-            polymoprhic_ctype_id=effort_type
+            polymorphic_ctype_id=effort_type
         )
         contributions.append(contribution)
         effort_contribution = EffortContributionShadow(
@@ -418,8 +418,7 @@ def import_slot_participants(rows):
     contributors = []
     date_participants = []
     slot_participants = []
-    contributions = []
-    time_contributions = []
+    participants = {}
 
     print('Reading participants')
     for row in rows:
@@ -434,31 +433,54 @@ def import_slot_participants(rows):
         else:
             status = 'succeeded'
         activity = DateActivity.objects.get(slots__id=shift_id)
-        contributor_id = 200000 + int(contributor_id)
-        contributor = Contributor(
-            id=contributor_id,
-            user_id=user_id,
-            activity_id=activity.id,
-            polymorphic_ctype_id=date_participant_type
-        )
-        contributors.append(contributor)
-
-        date_participant = DateParticipantShadow(
-            contributor_ptr_id=contributor_id
-        )
-        date_participants.append(date_participant)
-
+        activity_id = str(activity.id)
         slot_participant = SlotParticipant(
-            participant_id=contributor_id,
             slot_id=shift_id,
             status=status
         )
-        slot_participants.append(slot_participant)
+        if user_id not in participants or activity_id not in participants[user_id]:
+            participants[user_id] = {
+                activity_id: []
+            }
+        participants[user_id][activity_id].append(slot_participant)
 
-        contribution_id = 100000 + int(contributor_id)
+    for user_id in participants:
+        for activity_id in participants[user_id]:
+            participant_id = int(user_id) * 10000 + int(activity_id)
+            contributor = Contributor(
+                id=participant_id,
+                user_id=user_id,
+                activity_id=activity_id,
+                status='accepted',
+                polymorphic_ctype_id=date_participant_type
+            )
+            contributors.append(contributor)
+            date_participant = DateParticipantShadow(
+                contributor_ptr_id=participant_id
+            )
+            date_participants.append(date_participant)
+            for slot_participant in participants[user_id][activity_id]:
+                slot_participant.participant_id = participant_id
+                slot_participants.append(slot_participant)
+
+    print('Writing participants')
+    Contributor.objects.bulk_create(contributors)
+    DateParticipantShadow.objects.bulk_create(date_participants)
+    update_sequence('activities_contributor')
+
+    print('Writing slot participants')
+    SlotParticipant.objects.bulk_create(slot_participants, ignore_conflicts=True)
+    update_sequence('time_based_slotparticipant')
+
+    contributions = []
+    time_contributions = []
+
+    for slot_participant in SlotParticipant.objects.all():
+        contribution_id = slot_participant.id
+        contributor_id = slot_participant.participant_id
         contribution = Contribution(
             id=contribution_id,
-            contributor=contributor,
+            contributor_id=contributor_id,
             polymorphic_ctype_id=time_contribution_type
         )
         contributions.append(contribution)
@@ -466,18 +488,10 @@ def import_slot_participants(rows):
         time_contribution = TimeContributionShadow(
             contribution_ptr_id=contribution_id,
             contribution_type='date',
-            slot_participant=slot_participant,
+            slot_participant_id=contribution_id,
             value=timedelta(hours=1)
         )
         time_contributions.append(time_contribution)
-
-    print('Writing participants')
-    Contributor.objects.bulk_create(contributors)
-    DateParticipantShadow.objects.bulk_create(date_participants)
-
-    print('Writing slot participants')
-    SlotParticipant.objects.bulk_create(slot_participants)
-    update_sequence('activities_contributor')
 
     print('Writing time contributions')
     Contribution.objects.bulk_create(contributions)
@@ -721,6 +735,9 @@ def run(*args):
 
         # activity contacts > partner org contacts
         print("FIX ME: SET VALUE for TIME DURATION")
+        DateActivitySlot.objects.filter(start__lte=now()).update(status='finished')
+        SlotParticipant.objects.filter(slot__start__lte=now()).update(status='succeeded')
+        TimeContribution.objects.filter(slot_participant__slot__start__lte=now()).update(status='succeeded')
 
         print("FIX ME: CHANGE STATUSES FOR SLOTS")
         print("FIX ME: CHANGE STATUSES FOR SLOT PARTICIPANTS")
@@ -737,17 +754,17 @@ Clear all tables:
 delete from time_based_timecontribution;
 delete from time_based_slotparticipant;
 delete from time_based_dateparticipant;
-delete from activities_contributor;
 
-delete from activities_organizer;
-delete from activities_effortcontribution;
-delete from activities_contribution;
-delete from activities_contributor;
 
 delete from time_based_dateactivityslot;
 delete from time_based_dateactivity;
 delete from time_based_timebasedactivity;
 delete from activities_activity;
+
+delete from activities_organizer;
+delete from activities_contributor;
+delete from activities_effortcontribution;
+delete from activities_contribution;
 
 delete from initiatives_initiative_categories;
 delete from categories_category_translation;

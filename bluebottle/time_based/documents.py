@@ -71,7 +71,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return [
             {'lat': slot.location.position.y, 'lon': slot.location.position.x}
             for slot in instance.slots.all()
-            if not slot.is_online and slot.location
+            if not slot.is_online and slot.location and slot.location.position
         ]
 
     def prepare_is_online(self, instance):

@@ -227,4 +227,4 @@ class Geolocation(models.Model):
                 lng=self.position.x,
                 lat=self.position.y
             )
-        return 'Amsterdam/Europe'
+        return 'Europe/Amsterdam'

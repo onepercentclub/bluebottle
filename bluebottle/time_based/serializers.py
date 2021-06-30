@@ -635,8 +635,12 @@ class SlotParticipantTransitionSerializer(TransitionSerializer):
 
 
 class TimeContributionSerializer(BaseContributionSerializer):
+    permissions = ResourcePermissionField('time-contribution-detail', view_args=('pk',))
+
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
+
+        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions', )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-contributions'

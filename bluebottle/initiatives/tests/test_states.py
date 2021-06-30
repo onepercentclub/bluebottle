@@ -115,9 +115,9 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.draft.value
         )
 
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
+        self.initiative.states.submit()
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.submitted.value
         )
 
     def test_has_organization(self):

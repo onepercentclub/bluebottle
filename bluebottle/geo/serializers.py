@@ -96,13 +96,12 @@ class SimplePointSerializer(serializers.CharField):
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-
-    position = SimplePointSerializer()
+    position = SimplePointSerializer(required=False, allow_null=True)
 
     class Meta(object):
         model = Place
         fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'id', 'street', 'postal_code', 'street_number', 'locality', 'province', 'country',
             'position', 'formatted_address',
         )
 

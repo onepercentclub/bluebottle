@@ -442,7 +442,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         )
 
         self.assertTrue(
-            'You have requested a refund for your donation to the campaign "{}"'.format(
+            'Your donation to "{}" will be fully refunded within 10 days.'.format(
                 self.funding.title
             ) in mail.outbox[0].body
         )

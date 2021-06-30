@@ -42,6 +42,18 @@ class LoginTestCase(BluebottleTestCase):
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
+    def test_login_different_case(self):
+        response = self.client.post(
+            reverse('token-auth'),
+            {'email': self.email.replace('test', 'Test'), 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+        )
+
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
     def test_expired_token(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
@@ -199,6 +211,17 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
+    def test_create_already_active_different_case(self):
+        email = 'test@example.com'
+
+        Member.objects.create(email=email, is_active=True)
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email.title()})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_create_correct_domain(self):
         email = 'test@example.com'
         self.settings.email_domain = 'example.com'
@@ -273,6 +296,42 @@ class CreateUserTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('user-user-create'),
             {'email': email, 'password': password, 'email_confirmation': email}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['email'],
+            email
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['type'],
+            'email'
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['id'],
+            user_id
+        )
+
+    def test_create_twice_different_case(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'email_confirmation': email}
+        )
+        user_id = str(response.json()['id'])
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {
+                'email': email.replace('test', 'Test'),
+                'password': password,
+                'email_confirmation': email.replace('test', 'Test')
+            }
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -514,6 +573,30 @@ class EmailSetTest(BluebottleTestCase):
             self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
         )
         self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
+
+    def test_update_duplicate(self):
+        existing_user = BlueBottleUserFactory.create()
+
+        response = self.client.put(
+            self.set_email_url,
+            {'password': 'some-password', 'email': existing_user.email},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+
+    def test_update_duplicate_upper_case(self):
+        existing_user = BlueBottleUserFactory.create()
+
+        response = self.client.put(
+            self.set_email_url,
+            {'password': 'some-password', 'email': existing_user.email},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
 
     def test_update_email_unauthenticated(self):
         response = self.client.put(

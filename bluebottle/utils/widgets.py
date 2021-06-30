@@ -17,11 +17,11 @@ from django.utils.dateparse import parse_duration
 
 
 class SecureAdminURLFieldWidget(AdminURLFieldWidget):
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         if value and urlparse(value).scheme not in ('http', 'https',):
             return super(AdminURLFieldWidget, self).render(name, value, attrs)
         else:
-            return super(SecureAdminURLFieldWidget, self).render(name, value, attrs)
+            return super(SecureAdminURLFieldWidget, self).render(name, value, attrs, renderer)
 
 
 def get_time_factors(td):

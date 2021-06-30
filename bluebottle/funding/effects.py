@@ -22,7 +22,10 @@ class GeneratePayoutsEffect(Effect):
 
     def post_save(self, **kwargs):
         from bluebottle.funding.models import Payout
-        Payout.generate(self.instance)
+        try:
+            Payout.generate(self.instance)
+        except AssertionError:
+            pass
 
     def __str__(self):
         return _('Generate payouts, so that payouts can be approved')

@@ -335,10 +335,12 @@ def import_initiatives(rows):
             contributor_ptr_id=initiative_id,
         )
         organizers.append(organizer)
-
+        start = row.find("field[@name='created_at']").text
+        start = add_tz(start)
         contribution = Contribution(
             id=initiative_id,
             contributor=contributor,
+            start=start,
             polymorphic_ctype_id=effort_type
         )
         contributions.append(contribution)
@@ -475,11 +477,13 @@ def import_slot_participants(rows):
     contributions = []
     time_contributions = []
 
-    for slot_participant in SlotParticipant.objects.all():
+    for slot_participant in SlotParticipant.objects.select_related('slot').all():
         contribution_id = slot_participant.id
         contributor_id = slot_participant.participant_id
         contribution = Contribution(
             id=contribution_id,
+            created=slot_participant.slot.start,
+            start=slot_participant.slot.start,
             contributor_id=contributor_id,
             polymorphic_ctype_id=time_contribution_type
         )
@@ -489,7 +493,7 @@ def import_slot_participants(rows):
             contribution_ptr_id=contribution_id,
             contribution_type='date',
             slot_participant_id=contribution_id,
-            value=timedelta(hours=1)
+            value=slot_participant.slot.duration
         )
         time_contributions.append(time_contribution)
 

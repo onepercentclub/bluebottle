@@ -1,3 +1,4 @@
+import json
 import os
 
 import geocoder
@@ -6,6 +7,9 @@ from django.contrib.gis.geos import Point
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.geo.models import Geolocation, Place
+
+with open('geocoding.json') as json_file:
+    lookup = json.load(json_file)
 
 
 def geocode(address):
@@ -18,11 +22,27 @@ def geocode(address):
     return None
 
 
-def run(*args):
-    import json
-    with open('geocoding.json') as json_file:
-        lookup = json.load(json_file)
+def set_location(loc):
+    if loc.street in ['thuis!', 'Thuis!']:
+        address = "Amsterdam, Nederland"
+    else:
+        address = "{}, {}, Nederland".format(loc.street, loc.locality)
 
+    try:
+        position = Point(lookup[address])
+    except KeyError:
+        position = geocode(address)
+        if position:
+            lookup[address] = position.coords
+    if position:
+        loc.position = position
+        loc.save()
+    else:
+        print("Could not find a location for {}".format(address))
+        print("geolocation {}".format(loc.id))
+
+
+def run(*args):
     if not os.environ.get('GOOGLE_API_KEY'):
         print("export GOOGLE_API_KEY xxx")
         print("Look up secret at https://console.cloud.google.com/apis/credentials")
@@ -35,33 +55,16 @@ def run(*args):
         for loc in Geolocation.objects.filter(position__isnull=True).all():
             count += 1
             print("{} / {}".format(count, total))
-            if loc.street in ['thuis!', 'Thuis!']:
-                address = "Amsterdam, Nederland"
-            else:
-                address = "{}, {}, Nederland".format(loc.street, loc.locality)
-            try:
-                position = Point(lookup[address])
-            except KeyError:
-                position = geocode(address)
-                if position:
-                    lookup[address] = position.coords
-            if position:
-                loc.position = position
-                loc.save()
-            else:
-                print("Could not find a location for {}".format(address))
-                print("geolocation {}".format(loc.id))
+            set_location(loc)
+
+        print("Geocoding user locations")
         total = Place.objects.filter(position__isnull=True).count()
+        count = 0
+        for loc in Place.objects.filter(position__isnull=True).all():
+            count += 1
+            print("{} / {}".format(count, total))
+            set_location(loc)
 
         print('Write geocoding file')
         with open('geocoding.json', 'w') as outfile:
             json.dump(lookup, outfile, indent=4)
-
-        print("Geocoding user locations")
-        count = 0
-        # for loc in Place.objects.filter(position__isnull=True).all():
-        #     count += 1
-        #     print("{} / {}".format(count, total))
-        #     address = "{}, {}, Nederland".format(loc.street, loc.locality)
-        #     loc.position = geocode(address)
-        #     loc.save()

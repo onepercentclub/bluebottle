@@ -1,8 +1,0 @@
-{% extends "mails/messages/participant_base.txt" %}
-{% load i18n %}
-
-{% block message%}
-    {% blocktrans context 'email' %}{{ participant_name }} has been removed from your activity "{{ title }}".{% endblocktrans %}
-
-    {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
-{% endblock %}

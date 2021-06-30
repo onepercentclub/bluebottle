@@ -1,3 +1,4 @@
+import json
 from builtins import range
 import time
 from datetime import datetime, timedelta
@@ -17,7 +18,7 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -388,7 +389,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
     def test_confirm(self):
         email = 'test@example.com'
-        password = 'test@example.com'
+        password = 'some-password'
 
         member = Member.objects.create(email=email, is_active=False)
         mail.outbox = []
@@ -420,7 +421,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
     def test_confirm_twice(self):
         email = 'test@example.com'
-        password = 'test@example.com'
+        password = 'some-password'
 
         member = Member.objects.create(email=email, is_active=False)
 
@@ -692,7 +693,7 @@ class PasswordSetTest(BluebottleTestCase):
     def test_update_password_wrong_password(self):
         response = self.client.put(
             self.set_password_url,
-            {'password': 'other-password', 'new_password': 'new@example.com'},
+            {'password': 'other-password', 'new_password': 'new-password'},
             token=self.user_token
         )
 
@@ -800,6 +801,66 @@ class UserActivityTest(BluebottleTestCase):
             len(activity.path), 200
         )
         self.assertTrue(activity.path.startswith('/aaaaaaa'))
+
+
+class PasswordStrengthDetailTest(BluebottleTestCase):
+    def setUp(self):
+        super(PasswordStrengthDetailTest, self).setUp()
+
+        self.url = reverse('password-strength')
+        self.client = JSONAPITestClient()
+        self.data = {
+            'data': {
+                'type': 'password-strengths',
+                'attributes': {
+                    'email': 'admin@example.com',
+                    'password': 'blabla',
+                }
+            }
+        }
+
+    def test_too_short(self):
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too short. It must contain at least 8 characters.'
+        )
+
+    def test_common(self):
+        self.data['data']['attributes']['password'] = 'password'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too common.'
+        )
+
+    def test_email(self):
+        self.data['data']['attributes']['password'] = 'adminexample'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'The password is too similar to the email address.'
+        )
+
+    def test_valid_fair(self):
+        self.data['data']['attributes']['password'] = 'somepassword'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] < 0.25)
+
+    def test_valid_string(self):
+        self.data['data']['attributes']['password'] = '243AfecioIEOIj^%efw'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] > 0.5)
 
 
 class RefreshTokenTest(BluebottleTestCase):

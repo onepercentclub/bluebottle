@@ -13,7 +13,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = SegmentType
-        fields = ('id', 'name', 'slug', 'enable_search', 'segments')
+        fields = ('id', 'name', 'slug', 'enable_search', 'user_editable', 'segments')
 
     class JSONAPIMeta(object):
         included_resources = ['segments', ]

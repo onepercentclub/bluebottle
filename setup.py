@@ -21,6 +21,7 @@ install_requires = [
     'South==1.0.2',
     'Sphinx==1.6.3',
     'SurveyGizmo==1.2.2',
+    'bcrypt==3.2.0',
     'beautifulsoup4==4.6.0',
     'bleach==3.3.0',
     'celery==4.3',

@@ -6,7 +6,6 @@ from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
 from django.template.defaultfilters import slugify
-
 from django.utils.translation import gettext_lazy as _
 
 import geocoder
@@ -243,7 +242,9 @@ class Geolocation(models.Model):
 
     @property
     def timezone(self):
-        return tf.timezone_at(
-            lng=self.position.x,
-            lat=self.position.y
-        )
+        if self.position:
+            return tf.timezone_at(
+                lng=self.position.x,
+                lat=self.position.y
+            )
+        return 'Europe/Amsterdam'

@@ -267,6 +267,7 @@ AFOM_ENABLED = False
 SHARED_APPS = (
     'bluebottle.clients',  # you must list the app where your tenant model resides in
     'tenant_schemas',
+    'django_extensions',
 
     # Django apps
     'django.contrib.sessions',

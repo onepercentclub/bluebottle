@@ -980,7 +980,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            deadline=now() + datetime.timedelta(days=9)
+            deadline=(now() + datetime.timedelta(days=9)).date()
         )
 
         response = self.client.get(

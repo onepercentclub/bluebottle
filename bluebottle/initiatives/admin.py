@@ -203,6 +203,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Description'), {
                 'fields': (
                     'pitch', 'story', 'image', 'video_url',
+                    'place', 'location'
                 )
             }),
             (_('Organization'), {
@@ -225,6 +226,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )}),
             )
         return fieldsets
+
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):

@@ -27,7 +27,6 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
@@ -178,38 +177,6 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         data = response.json()
         self.assertTrue(
             '/data/attributes/title' in (error['source']['pointer'] for error in data['data']['meta']['errors'])
-        )
-
-    def test_create_validation_organization_website(self):
-        organization = OrganizationFactory.create(website='')
-
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title',
-                    'has_organization': True
-                },
-                'relationships': {
-                    'organization': {
-                        'data': {
-                            'type': 'organizations',
-                            'id': organization.pk
-                        },
-                    }
-                }
-
-            }
-        }
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        organization = get_include(response, 'organizations')
-        self.assertTrue(
-            '/data/attributes/website' in (error['source']['pointer'] for error in organization['meta']['required'])
         )
 
     def test_create_with_location(self):

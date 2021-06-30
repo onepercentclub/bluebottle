@@ -1,12 +1,15 @@
 from builtins import object
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, ContentType
 from django.contrib.gis.db.models import PointField
+from django.contrib.gis.geos import Point
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+
+import geocoder
+
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
@@ -194,6 +197,23 @@ class Place(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    def save(self, *args, **kwargs):
+        if self.locality and self.country and not self.position:
+            result = geocoder.google(
+                '{} {}'.format(self.locality, self.country.name),
+                key=settings.MAPS_API_KEY
+
+            )
+            if result.lat and result.lng:
+                self.position = Point(
+                    x=float(result.lng),
+                    y=float(result.lat)
+                )
+
+                self.formatted_address = result.raw['formatted_address']
+
+        super().save(*args, **kwargs)
 
 
 @python_2_unicode_compatible

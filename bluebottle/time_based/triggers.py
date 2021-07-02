@@ -20,7 +20,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    CreatePeriodTimeContributionEffect, SetEndDateEffect,
+    CreatePeriodTimeContributionEffect, CreateOverallTimeContributionEffect, SetEndDateEffect,
     ClearDeadlineEffect,
     RescheduleSlotDurationsEffect,
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
@@ -1263,6 +1263,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 CreatePeriodTimeContributionEffect,
+                CreateOverallTimeContributionEffect
             ]
         ),
 

@@ -2206,6 +2206,9 @@ class TimeContributionDetailAPIViewTestCase():
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            response.json()['data']['meta']['permissions']['PUT']
+        )
 
     def test_get_contributor(self):
         response = self.client.get(self.url, user=self.participant.user)

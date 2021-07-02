@@ -3,6 +3,8 @@ from builtins import object
 import os
 from datetime import timedelta
 
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from djmoney.money import Money
 
@@ -273,7 +275,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding',
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds',
             'is_superuser', 'kyc'
         ))
 
@@ -284,7 +286,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'date_activities', 'period_activities', 'funding',
+            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds',
             'is_superuser', 'kyc'
         ))
 
@@ -518,6 +520,18 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('Funding donations:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
+            in response.text
+        )
+
+    def test_engagement_shows_initiative_owner(self):
+        user = BlueBottleUserFactory.create()
+        InitiativeFactory.create_batch(5, owner=user)
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')
+        self.assertTrue('Initiatives:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/initiatives/initiative/?owner_id={}">5</a>'.format(user.id)
             in response.text
         )
 

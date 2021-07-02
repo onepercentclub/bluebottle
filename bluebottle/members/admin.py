@@ -4,6 +4,7 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from bluebottle.deeds.models import DeedParticipant
 from django.db.models import Q
 
 from bluebottle.funding_pledge.models import PledgePaymentProvider
@@ -286,7 +287,7 @@ class MemberAdmin(UserAdmin):
                     _('Engagement'),
                     {
                         'fields':
-                        ['initiatives', 'date_activities', 'period_activities', 'funding']
+                        ['initiatives', 'date_activities', 'period_activities', 'funding', 'deeds']
                     }
                 ],
                 [
@@ -329,7 +330,8 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding', 'kyc'
+            'initiatives', 'period_activities', 'date_activities',
+            'funding', 'deeds', 'kyc'
         ]
 
         user_groups = request.user.groups.all()
@@ -393,14 +395,14 @@ class MemberAdmin(UserAdmin):
                     Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count(),
                     field,
                 ))
-        if Initiative.objects.filter(status='approved', **{field: obj}).count():
-            link = initiative_url + '?{}_id={}'.format(field, obj.id)
-            initiatives.append(format_html(
-                '<a href="{}">{}</a> open {}',
-                link,
-                Initiative.objects.filter(status='approved', **{field: obj}).count(),
-                field,
-            ))
+            if Initiative.objects.filter(status='approved', **{field: obj}).count():
+                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                initiatives.append(format_html(
+                    '<a href="{}">{}</a> open {}',
+                    link,
+                    Initiative.objects.filter(status='approved', **{field: obj}).count(),
+                    field,
+                ))
         return format_html('<br/>'.join(initiatives)) or _('None')
     initiatives.short_description = _('Initiatives')
 
@@ -446,6 +448,21 @@ class MemberAdmin(UserAdmin):
             ))
         return format_html('<br/>'.join(donations)) or _('None')
     funding.short_description = _('Funding donations')
+
+    def deeds(self, obj):
+        participants = []
+        participant_url = reverse('admin:deeds_deedparticipant_changelist')
+        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
+            if DeedParticipant.objects.filter(status=status, user=obj).count():
+                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
+                participants.append(format_html(
+                    '<a href="{}">{}</a> {}',
+                    link,
+                    DateParticipant.objects.filter(status=status, user=obj).count(),
+                    status,
+                ))
+        return format_html('<br/>'.join(participants)) or _('None')
+    date_activities.short_description = _('Deed participation')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')

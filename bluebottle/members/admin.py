@@ -462,7 +462,7 @@ class MemberAdmin(UserAdmin):
                     status,
                 ))
         return format_html('<br/>'.join(participants)) or _('None')
-    date_activities.short_description = _('Deed participation')
+    deeds.short_description = _('Deed participation')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')

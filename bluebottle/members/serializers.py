@@ -250,9 +250,10 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=Theme.objects)
 
-    is_active = serializers.BooleanField(read_only=True)
+    segments = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Segment.objects)
 
-    segments = OldSegmentSerializer(many=True, read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta(object):
         model = BB_USER_MODEL

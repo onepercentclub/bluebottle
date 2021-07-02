@@ -11,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
 from django.db import connection
 from django.db import models
+from django.db.models import Count, F
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Activity, Contributor, Organizer, EffortContribution, Contribution
@@ -570,6 +571,8 @@ def import_users(rows):
         if row.find("field[@name='active']").text != '0':
             user.is_active = True
         user.created = add_tz(user.created)
+        user.date_joined = add_tz(user.created)
+        user.last_login = add_tz(row.find("field[@name='last_login_at']").text)
 
         segment_id = row.find("field[@name='reference_id']").text
         segment_ids = Segment.objects.values_list('id', flat=True)
@@ -738,18 +741,30 @@ def run(*args):
         import_slot_participants(rows)
 
         # activity contacts > partner org contacts
-        print("FIX ME: SET VALUE for TIME DURATION")
         DateActivitySlot.objects.filter(start__lte=now()).update(status='finished')
         SlotParticipant.objects.filter(slot__start__lte=now()).update(status='succeeded')
         TimeContribution.objects.filter(slot_participant__slot__start__lte=now()).update(status='succeeded')
 
-        print("FIX ME: CHANGE STATUSES FOR SLOTS")
-        print("FIX ME: CHANGE STATUSES FOR SLOT PARTICIPANTS")
-        print("FIX ME: CHANGE STATUSES FOR CONTRIBUTIONS")
+        # Update time contribution statuses
+        TimeContribution.objects.exclude(
+            slot_participant__status='cancelled',
+        ).filter(
+            slot_participant__slot__start__lte=now()
+        ).update(status='succeeded')
 
-        print("FIX ME: CHANGE STATUSES FOR PARTICIPANTS")
-        print("FIX ME: CHANGE STATUSES FOR ACTIVITIES")
-        print("FIX ME: CHANGE STATUSES FOR INITIATIVES")
+        # Update date activity slot statuses
+        DateActivitySlot.objects.filter(
+            start__lte=now()
+        ).update(status='finished')
+        DateActivitySlot.objects.annotate(participants=Count('slot_participants')).filter(
+            participants__gte=F('capacity'),
+            capacity__isnull=False,
+            start__gt=now()
+        ).update(status='full')
+
+        DateActivity.objects.exclude(
+            slots__start__gt=now()
+        ).update(status='succeeded')
 
 
 """
@@ -770,6 +785,9 @@ delete from activities_contributor;
 delete from activities_effortcontribution;
 delete from activities_contribution;
 
+update initiatives_initiative set organization_id = null, organization_contact_id = null;
+delete from organizations_organizationcontact;
+delete from organizations_organization;
 delete from initiatives_initiative_categories;
 delete from categories_category_translation;
 delete from categories_category;
@@ -784,8 +802,6 @@ delete from files_image;
 delete from notifications_message;
 delete from members_member_groups;
 delete from follow_follow;
-delete from organizations_organizationcontact;
-delete from organizations_organization;
 delete from members_useractivity;
 delete from activities_effortcontribution;
 delete from activities_organizer;

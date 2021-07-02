@@ -8,6 +8,9 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 @register(Deed)
 class DeedStateMachine(ActivityStateMachine):
     def has_no_end_date(self):
+        """
+        Has no end date
+        """
         return self.instance.end is None
 
     succeed = Transition(

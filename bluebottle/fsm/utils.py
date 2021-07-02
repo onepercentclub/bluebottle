@@ -1,8 +1,10 @@
 import re
 from datetime import timedelta
 
+from bluebottle.deeds.models import DeedParticipant, Deed
 from django.core.exceptions import FieldDoesNotExist
 from django.utils.timezone import now
+from polymorphic.models import PolymorphicModel
 
 from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
@@ -53,11 +55,13 @@ def setup_instance(model):
     if isinstance(instance, Donor):
         PledgePayment(donation=instance)
         instance.activity = Funding(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, MoneyContribution):
         donor = Donor()
         donor.activity = Funding(title="[activity title]")
+        donor.activity.pre_save_polymorphic()
         donor.user = Member(first_name='[first name]', last_name='[last name]')
         PledgePayment(donation=donor)
         instance.contributor = donor
@@ -71,6 +75,7 @@ def setup_instance(model):
 
     if isinstance(instance, PeriodParticipant):
         instance.activity = PeriodActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivity):
@@ -79,6 +84,7 @@ def setup_instance(model):
 
     if isinstance(instance, DateParticipant):
         instance.activity = DateActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivitySlot):
@@ -92,6 +98,7 @@ def setup_instance(model):
     if isinstance(instance, TimeContribution):
         contributor = PeriodParticipant()
         contributor.activity = PeriodActivity(title="[activity title]")
+        contributor.activity.pre_save_polymorphic()
         contributor.user = Member(first_name='[first name]', last_name='[last name]')
         instance.contributor = contributor
         instance.start = now() + timedelta(days=4)
@@ -99,6 +106,18 @@ def setup_instance(model):
 
     if isinstance(instance, PayoutAccount):
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, Deed):
+        instance.title = "[activity title]"
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, DeedParticipant):
+        instance.activity = Deed(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, PolymorphicModel):
+        instance.pre_save_polymorphic()
 
     return instance
 

@@ -31,14 +31,11 @@ def find_position(loc):
         position = Point(lookup[address])
     except KeyError:
         position = geocode(address)
-        if position:
-            lookup[address] = position.coords
-    if position:
-        return position
-    else:
+    if not position or position.x < 0:
         print("Could not find a location for {}".format(address))
         print("geolocation {}".format(loc.id))
-    return
+        position = Point([4.9041389, 52.3675734])
+    return position
 
 
 def run(*args):

@@ -11,7 +11,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
 from django.db import connection
 from django.db import models
+from django.db.models import Count, F
 from django.utils.timezone import now
+
 
 from bluebottle.activities.models import Activity, Contributor, Organizer, EffortContribution, Contribution
 from bluebottle.clients import properties
@@ -430,10 +432,8 @@ def import_slot_participants(rows):
         status = row.find("field[@name='status']").text
         if status == 'no-show':
             status = 'cancelled'
-        elif status == 'planned':
-            status = 'accepted'
         else:
-            status = 'succeeded'
+            status = 'registered'
         activity = DateActivity.objects.get(slots__id=shift_id)
         activity_id = str(activity.id)
         slot_participant = SlotParticipant(
@@ -738,14 +738,24 @@ def run(*args):
         import_slot_participants(rows)
 
         # activity contacts > partner org contacts
-        print("FIX ME: SET VALUE for TIME DURATION")
         DateActivitySlot.objects.filter(start__lte=now()).update(status='finished')
-        SlotParticipant.objects.filter(slot__start__lte=now()).update(status='succeeded')
-        TimeContribution.objects.filter(slot_participant__slot__start__lte=now()).update(status='succeeded')
 
-        print("FIX ME: CHANGE STATUSES FOR SLOTS")
-        print("FIX ME: CHANGE STATUSES FOR SLOT PARTICIPANTS")
-        print("FIX ME: CHANGE STATUSES FOR CONTRIBUTIONS")
+        # Update time contribution statuses
+        TimeContribution.objects.exclude(
+            slot_participant__status='cancelled',
+        ).filter(
+            slot_participant__slot__start__lte=now()
+        ).update(status='succeeded')
+
+        # Update date activity slot statuses
+        DateActivitySlot.objects.filter(
+            start__lte=now()
+        ).update(status='finished')
+        DateActivitySlot.objects.annotate(participants=Count('slot_participants')).filter(
+            participants__gte=F('capacity'),
+            capacity__isnull=False,
+            start__gt=now()
+        ).update(status='full')
 
         print("FIX ME: CHANGE STATUSES FOR PARTICIPANTS")
         print("FIX ME: CHANGE STATUSES FOR ACTIVITIES")
@@ -763,12 +773,12 @@ delete from time_based_dateparticipant;
 delete from time_based_dateactivityslot;
 delete from time_based_dateactivity;
 delete from time_based_timebasedactivity;
-delete from activities_activity;
 
 delete from activities_organizer;
 delete from activities_contributor;
 delete from activities_effortcontribution;
 delete from activities_contribution;
+delete from activities_activity;
 
 delete from initiatives_initiative_categories;
 delete from categories_category_translation;
@@ -780,6 +790,7 @@ delete from initiatives_theme;
 
 delete from geo_geolocation;
 
+delete from files_relatedimage;
 delete from files_image;
 delete from notifications_message;
 delete from members_member_groups;

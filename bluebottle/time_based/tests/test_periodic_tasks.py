@@ -335,6 +335,66 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
         self.assertEqual(self.activity.status, 'succeeded')
 
 
+class OverallPeriodParticipantPeriodicTest(BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.initiative.save()
+        start = date.today() + timedelta(days=10)
+        deadline = date.today() + timedelta(days=26)
+
+        self.activity = self.factory.create(
+            initiative=self.initiative,
+            review=False,
+            start=start,
+            deadline=deadline,
+            duration=timedelta(hours=2),
+            duration_period='overall'
+        )
+        self.activity.states.submit(save=True)
+        self.participant = self.participant_factory.create(activity=self.activity)
+
+    def refresh(self):
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.participant.refresh_from_db()
+            self.activity.refresh_from_db()
+
+    def run_tasks(self, when):
+        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+            mock_date.today.return_value = when
+            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+            with mock.patch('bluebottle.time_based.triggers.date') as mock_date:
+                mock_date.today.return_value = when
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+                with mock.patch('bluebottle.time_based.effects.date') as mock_date:
+                    mock_date.today.return_value = when
+                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+                    with mock.patch.object(
+                            timezone, 'now',
+                            return_value=timezone.get_current_timezone().localize(
+                                datetime(when.year, when.month, when.day)
+                            )
+                    ):
+                        with_a_deadline_tasks()
+                        period_participant_tasks()
+                        time_contribution_tasks()
+
+    def test_no_contribution_create(self):
+        self.participant.current_period = now()
+
+        self.run_tasks(self.activity.start + timedelta(weeks=1, days=1))
+        self.run_tasks(self.activity.start + timedelta(weeks=2, days=1))
+        self.run_tasks(self.activity.start + timedelta(weeks=3, days=1))
+
+        self.assertEqual(len(self.participant.contributions.all()), 1)
+
+
 class PeriodParticipantPeriodicTest(BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory

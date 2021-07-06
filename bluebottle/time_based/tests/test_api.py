@@ -1069,6 +1069,26 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         for slot in response.json()['data']:
             self.assertTrue(slot['id'] in slot_ids)
 
+    def test_get_many(self):
+        DateActivitySlotFactory.create_batch(12, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(self.url, {'activity': self.activity.id})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(len(response.json()['data']), 8)
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
+        response = self.client.get(self.url, {'activity': self.activity.id, 'page[number]': 2})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(len(response.json()['data']), 5)
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
     def test_get_no_activity_id(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

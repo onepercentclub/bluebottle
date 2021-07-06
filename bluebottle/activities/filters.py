@@ -161,7 +161,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
             return Range(
                 duration={
                     'gte': dateutil.parser.parse(start) if start else None,
-                    'lte': datetime.combine(dateutil.parser.parse(end), time.max) if end else None
+                    'lte': datetime.combine(dateutil.parser.parse(end), time.max) if end else None,
+                    'relation': 'within',
                 }
             )
         except ValueError:

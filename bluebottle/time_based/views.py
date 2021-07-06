@@ -6,6 +6,8 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.response import Response
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -93,7 +95,8 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class DateSlotListView(JsonApiViewMixin, CreateAPIView):
+class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
+
     related_permission_classes = {
         'activity': [
             ActivityStatusPermission,
@@ -101,7 +104,25 @@ class DateSlotListView(JsonApiViewMixin, CreateAPIView):
             DeleteActivityPermission
         ]
     }
-    permission_classes = [DateSlotActivityStatusPermission, ]
+
+    def list(self, request, *args, **kwargs):
+        try:
+            activity_id = request.GET['activity']
+            activity = DateActivity.objects.get(pk=int(activity_id))
+
+            page = self.paginate_queryset(activity.slots.all())
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(activity.slots.all(), many=True)
+            return Response(serializer.data)
+        except KeyError:
+            raise ValidationError('Missing required parameter: activity')
+        except (ValueError, DateActivity.DoesNotExist):
+            raise NotFound('date activity: {}'.format(activity_id))
+
+    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 

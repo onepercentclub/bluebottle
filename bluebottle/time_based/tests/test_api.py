@@ -1058,6 +1058,38 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
             }
         }
 
+    def test_get(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(self.url, {'activity': self.activity.id})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
+    def test_get_no_activity_id(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_invalid_activity_id(self):
+        response = self.client.get(self.url, {'activity': 'some-thing-wrong'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_incorrect_activity_id(self):
+        response = self.client.get(self.url, {'activity': 1034320})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_closed_site(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+
+        response = self.client.get(self.url, {'activity': self.activity.pk})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_create_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
 

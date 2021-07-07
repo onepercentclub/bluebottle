@@ -399,21 +399,27 @@ def import_initiative_themes(rows):
 def import_slots(rows):
     slots = []
     for row in rows:
-        slot = DateActivitySlot(
-            is_online=False
-        )
-        for k in mapping['slot']:
-            v = mapping['slot'][k]
-            value = row.find("field[@name='{}']".format(v)).text or ''
-            slot.__setattr__(k, value)
-        slot.duration = timedelta(hours=float(row.find("field[@name='duration']").text.replace('-', '')))
-        slot.start = add_tz(slot.start)
-        if slot.start + slot.duration < now():
-            slot.status = 'succeeded'
-        else:
-            slot.status = 'open'
-        slot.created = add_tz(slot.created)
-        slots.append(slot)
+        deleted = row.find("field[@name='deleted_at']").text
+        if deleted:
+            continue
+        start = add_tz(row.find("field[@name='start_time']").text)
+        if start > add_tz(datetime.strptime('2019-01-01 01:00:00', '%Y-%m-%d %H:%M:%S')):
+            slot = DateActivitySlot(
+                is_online=False,
+                title='Time slot'
+            )
+            for k in mapping['slot']:
+                v = mapping['slot'][k]
+                value = row.find("field[@name='{}']".format(v)).text or ''
+                slot.__setattr__(k, value)
+            slot.duration = timedelta(hours=float(row.find("field[@name='duration']").text.replace('-', '')))
+            slot.start = add_tz(slot.start)
+            if slot.start + slot.duration < now():
+                slot.status = 'succeeded'
+            else:
+                slot.status = 'open'
+            slot.created = add_tz(slot.created)
+            slots.append(slot)
     DateActivitySlot.objects.bulk_create(slots)
     update_sequence('time_based_dateactivityslot')
 
@@ -769,9 +775,12 @@ def run(*args):
         ).update(status='full')
 
         # Update date activity slot statuses
-        DateActivitySlot.objects.filter(
+        DateActivitySlot.objects.exclude(
+            status='cancelled'
+        ).filter(
             start__lte=now()
         ).update(status='finished')
+
         DateActivitySlot.objects.annotate(participants=Count('slot_participants')).filter(
             participants__gte=F('capacity'),
             capacity__isnull=False,
@@ -782,30 +791,42 @@ def run(*args):
             slots__start__gt=now()
         ).update(status='succeeded')
 
+        for activity in DateActivity.objects.filter(status='open').all():
+            if activity.slots.filter(status='open', start__gt=now()).count() == 0:
+                if activity.slots.filter(status='finished').count() > 0:
+                    activity.status = 'succeeded'
+                else:
+                    activity.status = 'cancelled'
+                activity.save()
+
+        DateActivity.objects.filter(
+            slots__isnull=True
+        ).all().delete()
+
         Initiative.objects.filter(
-            activity__slots__isnull=True
+            activities__isnull=True
         ).all().delete()
 
         # Activity managers
-        # cares_owner = Member.objects.get(email='info@nlcares.nl')
-        # for activity in DateActivity.objects.filter(status='open', owner=cares_owner).all():
-        #     contact = activity.initiative.organization_contact
-        #     name = contact.name
-        #     parts = name.split(' ')
-        #     first_name = parts.pop()
-        #     last_name = ' '.join(parts)
-        #     owner, _c = Member.objects.get_or_create(
-        #         email=contact.email,
-        #         username=contact.email,
-        #         defaults={
-        #             'first_name': first_name,
-        #             'last_name': last_name,
-        #             'is_active': True
-        #         }
-        #
-        #     )
-        #     activity.owner = owner
-        #     activity.save()
+        cares_owner = Member.objects.get(email='info@nlcares.nl')
+        for activity in DateActivity.objects.filter(status='open', owner=cares_owner).all():
+            contact = activity.initiative.organization_contact
+            name = contact.name
+            parts = name.split(' ')
+            first_name = parts.pop()
+            last_name = ' '.join(parts)
+            owner, _c = Member.objects.get_or_create(
+                email=contact.email,
+                username=contact.email,
+                defaults={
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'is_active': True
+                }
+
+            )
+            activity.owner = owner
+            activity.save()
 
 
 """

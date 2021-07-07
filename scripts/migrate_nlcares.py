@@ -229,6 +229,16 @@ def import_initiatives(rows):
     contributions = []
     effort_contributions = []
     cares_user = Member.objects.get(email='info@nlcares.nl')
+
+    placeholder_image = Image(
+        owner=cares_user
+    )
+    placeholder_image.file.save(
+        "placeholder.png",
+        File(open('data/nlcares/placeholder.png', 'rb'))
+    )
+    placeholder_image.save()
+
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
 
@@ -292,7 +302,10 @@ def import_initiatives(rows):
                 images.append(image)
                 initiative.image = image
             except FileNotFoundError:
-                pass
+                initiative.image = placeholder_image
+        else:
+            initiative.image = placeholder_image
+
         initiative.created = add_tz(initiative.created)
         initiatives.append(initiative)
 

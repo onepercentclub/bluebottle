@@ -88,6 +88,16 @@ class MemberPlatformSettings(BasePlatformSettings):
         ]
     )
 
+    enable_gender = models.BooleanField(
+        default=False,
+        help_text=_('Show gender question in profile form')
+    )
+
+    enable_birthdate = models.BooleanField(
+        default=False,
+        help_text=_('Show birthdate question in profile form')
+    )
+
     enable_segments = models.BooleanField(
         default=False,
         help_text=_('Enable segments for users e.g. department or job title.')

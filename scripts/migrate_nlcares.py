@@ -888,6 +888,7 @@ delete from segments_segment cascade;
 delete from segments_segmenttype cascade;
 delete from geo_place cascade;
 delete from members_member_favourite_themes cascade;
+update pages_page set author_id = null;
 delete from members_member cascade where email != 'admin@example.com';
 
 """

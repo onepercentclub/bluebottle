@@ -234,19 +234,17 @@ def import_initiatives(rows):
         owner=cares_user
     )
     placeholder_image.file.save(
-        "placeholder.png",
-        File(open('data/nlcares/placeholder.png', 'rb'))
+        "placeholder.jpg",
+        File(open('data/nlcares/placeholder.jpg', 'rb'))
     )
     placeholder_image.save()
 
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
 
-        status = row.find("field[@name='status']").text
-        status = status_mapping[status]
         initiative = Initiative(
             id=initiative_id,
-            status=status,
+            status='approved',
             has_organization=False,
         )
         # Extract contact
@@ -283,8 +281,8 @@ def import_initiatives(rows):
             initiative.__setattr__(k, value)
         initiative.owner = owner
         initiative.organization_contact_id = contact.id
-        initiative.pitch = extract_pitch(description)
-        initiative.story = story
+        initiative.pitch = "Lees hier meer over het initiatief waar de activiteit deel van uitmaakt."
+        initiative.story = extract_pitch(description)
         initiative.created = add_tz(initiative.created)
 
         image_url = row.find("field[@name='image_url']").text
@@ -767,6 +765,7 @@ def run(*args):
         rows = root.find('database').find('table_data[@name="shift_user"]').findall('row')
         import_slot_participants(rows)
 
+        print("Fixing activity + contribution statuses")
         # activity contacts > partner org contacts
         DateActivitySlot.objects.filter(start__lte=now()).update(status='finished')
 
@@ -812,21 +811,40 @@ def run(*args):
                     activity.status = 'cancelled'
                 activity.save()
 
+        print("Remove activities without slots")
         DateActivity.objects.filter(
             slots__isnull=True
         ).all().delete()
+
+        print("Merging activities and updating titles")
+        activities = []
+        initiatives = []
+        for org in Organization.objects.filter(initiatives__isnull=False).all():
+            first = org.initiatives.first()
+            first.title = org.name
+            initiatives.append(first)
+            for initiative in org.initiatives.all():
+                if initiative != first:
+                    for activity in initiative.activities.all():
+                        activity.initiative_id = first.id
+                        activities.append(activity)
+
+        print("Updating activities")
+        Initiative.objects.bulk_update(initiatives, ['title'])
+        DateActivity.objects.bulk_update(activities, ['initiative_id'])
 
         Initiative.objects.filter(
             activities__isnull=True
         ).all().delete()
 
+        print("Create activity manager accounts")
         # Activity managers
         cares_owner = Member.objects.get(email='info@nlcares.nl')
         for activity in DateActivity.objects.filter(status='open', owner=cares_owner).all():
             contact = activity.initiative.organization_contact
             name = contact.name
             parts = name.split(' ')
-            first_name = parts.pop()
+            first_name = parts.pop(0)
             last_name = ' '.join(parts)
             owner, _c = Member.objects.get_or_create(
                 email=contact.email,
@@ -840,6 +858,8 @@ def run(*args):
             )
             activity.owner = owner
             activity.save()
+
+        print("That's it! All done!")
 
 
 """

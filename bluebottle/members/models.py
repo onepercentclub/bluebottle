@@ -98,6 +98,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Show birthdate question in profile form')
     )
 
+    enable_address = models.BooleanField(
+        default=False,
+        help_text=_('Show address question in profile form')
+    )
+
     enable_segments = models.BooleanField(
         default=False,
         help_text=_('Enable segments for users e.g. department or job title.')

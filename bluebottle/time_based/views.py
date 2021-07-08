@@ -1,13 +1,14 @@
 import csv
+from datetime import datetime, time
 
+import dateutil
 import icalendar
 from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.timezone import utc
+from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError, NotFound
-from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -105,22 +106,29 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         ]
     }
 
-    def list(self, request, *args, **kwargs):
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
         try:
-            activity_id = request.GET['activity']
-            activity = DateActivity.objects.get(pk=int(activity_id))
-
-            page = self.paginate_queryset(activity.slots.all())
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
-
-            serializer = self.get_serializer(activity.slots.all(), many=True)
-            return Response(serializer.data)
+            activity_id = self.request.GET['activity']
+            queryset = queryset.filter(activity_id=int(activity_id))
         except KeyError:
             raise ValidationError('Missing required parameter: activity')
-        except (ValueError, DateActivity.DoesNotExist):
-            raise NotFound('date activity: {}'.format(activity_id))
+        except ValueError:
+            raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
+
+        tz = get_current_timezone()
+
+        start = self.request.GET.get('start')
+        if start:
+            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+
+        end = self.request.GET.get('end')
+        if end:
+            queryset = queryset.filter(
+                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+            )
+
+        return queryset
 
     permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()

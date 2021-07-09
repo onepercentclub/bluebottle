@@ -10,8 +10,8 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Member
 
-    username = factory.Faker('email')
-    email = factory.Faker('email')
+    username = factory.Sequence(lambda n: u'user_{0}'.format(n))
+    email = factory.Sequence(lambda o: u'user_{0}@onepercentclub.com'.format(o))
     first_name = factory.Sequence(lambda f: u'user_{0}'.format(f))
     last_name = factory.Sequence(lambda l: u'user_{0}'.format(l))
     is_active = True

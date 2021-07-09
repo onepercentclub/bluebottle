@@ -580,6 +580,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'login_methods',
             'background',
             'enable_gender',
+            'enable_address',
             'enable_birthdate',
         )
 

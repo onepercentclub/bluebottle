@@ -1,13 +1,13 @@
 from builtins import str
+
 from django import forms
-from django.db import models
 from django.contrib import admin
+from django.db import models
 from django.urls import reverse
 from django.utils.html import format_html
 
-from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import Member
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -33,7 +33,7 @@ class OrganizationInitiativeInline(admin.TabularInline):
 
 @admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
-    model = Member
+    inlines = (OrganizationInitiativeInline, )
     fields = ('name', 'email', 'phone', )
     list_display = ('name', 'email', 'phone', )
 

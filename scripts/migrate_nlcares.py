@@ -14,7 +14,6 @@ from django.db import models
 from django.db.models import Count, F
 from django.utils.timezone import now
 
-
 from bluebottle.activities.models import Activity, Contributor, Organizer, EffortContribution, Contribution
 from bluebottle.clients import properties
 from bluebottle.clients.models import Client
@@ -165,7 +164,7 @@ def split_description(text):
             content += sibling.text
             sibling = sibling.next_sibling
         if title and content:
-            parts[h3.text] = content
+            parts[title] = content
     return parts
 
 
@@ -182,11 +181,11 @@ def extract_story(text):
     if not text:
         return '-'
     html = unescape(text)
-    bs = BeautifulSoup(html, 'lxml')
+    bs = BeautifulSoup(html, 'html.parser')
     h3 = bs.find('h3')
     if h3:
         h3.extract()
-    return bs.html
+    return str(bs).replace('h3', 'h4')
 
 
 def update_sequence(table):
@@ -223,7 +222,6 @@ def import_initiatives(rows):
     activities = []
     time_based_activities = []
     date_activities = []
-    contacts = []
     images = []
     cities = []
     contributors = []
@@ -231,45 +229,61 @@ def import_initiatives(rows):
     contributions = []
     effort_contributions = []
     cares_user = Member.objects.get(email='info@nlcares.nl')
+
+    placeholder_image = Image(
+        owner=cares_user
+    )
+    placeholder_image.file.save(
+        "placeholder.jpg",
+        File(open('data/nlcares/placeholder.jpg', 'rb'))
+    )
+    placeholder_image.save()
+
     for row in rows:
         initiative_id = row.find("field[@name='id']").text
 
-        # status = row.find("field[@name='status']").text
-        # status = status_mapping[status]
         initiative = Initiative(
             id=initiative_id,
             status='approved',
             has_organization=False,
         )
-
         # Extract contact
         email = row.find("field[@name='contact_email']").text or 'initiator{}@example.com'.format(initiative_id)
         first_name = row.find("field[@name='contact_firstname']").text or 'Nomen'
         last_name = row.find("field[@name='contact_lastname']").text or 'Nescio'
         contact_phone = row.find("field[@name='contact_phone']").text or ''
-        contact = OrganizationContact(
-            name="{} {}".format(first_name, last_name),
+
+        contact, _c = OrganizationContact.objects.get_or_create(
             email=email,
-            phone=contact_phone,
-            owner=cares_user
+            defaults={
+                'name': "{} {}".format(first_name, last_name),
+                'phone': contact_phone,
+                'owner': cares_user
+            }
         )
-        contacts.append(contact)
 
         try:
             owner = Member.objects.get(email=email)
         except Member.DoesNotExist:
             owner = cares_user
         description = row.find("field[@name='description_nl']").text or '-'
-        # story = extract_story(description)
-        story = description
+        story = extract_story(description)
+        story_en = row.find("field[@name='description_en']").text
+        if story_en:
+            story = "<i>English below</i><br/><br/>{}<h2>English</h2>{}".format(
+                story,
+                story_en
+            )
+
         for k in mapping['initiative']:
             v = mapping['initiative'][k]
             value = row.find("field[@name='{}']".format(v)).text or ''
             initiative.__setattr__(k, value)
         initiative.owner = owner
-        initiative.organization_contact = contact
-        initiative.pitch = extract_pitch(description)
-        initiative.story = story
+        initiative.organization_contact_id = contact.id
+        initiative.pitch = "Lees hier meer over het initiatief waar de activiteit deel van uitmaakt."
+        initiative.story = extract_pitch(description)
+        initiative.created = add_tz(initiative.created)
 
         image_url = row.find("field[@name='image_url']").text
         if image_url:
@@ -286,7 +300,10 @@ def import_initiatives(rows):
                 images.append(image)
                 initiative.image = image
             except FileNotFoundError:
-                pass
+                initiative.image = placeholder_image
+        else:
+            initiative.image = placeholder_image
+
         initiative.created = add_tz(initiative.created)
         initiatives.append(initiative)
 
@@ -303,6 +320,9 @@ def import_initiatives(rows):
             activity.created = add_tz(activity.created)
             activity.owner = owner
         activities.append(activity)
+
+        # if initiative.status == 'draft':
+        #     activity.status = 'draft'
 
         time_based_activity = TimeBasedActivityShadow(
             activity_ptr_id=initiative_id,
@@ -352,10 +372,6 @@ def import_initiatives(rows):
         )
         effort_contributions.append(effort_contribution)
 
-    print("Writing contacts")
-    OrganizationContact.objects.bulk_create(contacts)
-    update_sequence('organizations_organizationcontact')
-
     print("Writing initiative images")
     # bulk_create screws op uuid
     for i in images:
@@ -394,21 +410,27 @@ def import_initiative_themes(rows):
 def import_slots(rows):
     slots = []
     for row in rows:
-        slot = DateActivitySlot(
-            is_online=False
-        )
-        for k in mapping['slot']:
-            v = mapping['slot'][k]
-            value = row.find("field[@name='{}']".format(v)).text or ''
-            slot.__setattr__(k, value)
-        slot.duration = timedelta(hours=float(row.find("field[@name='duration']").text.replace('-', '')))
-        slot.start = add_tz(slot.start)
-        if slot.start + slot.duration < now():
-            slot.status = 'succeeded'
-        else:
-            slot.status = 'open'
-        slot.created = add_tz(slot.created)
-        slots.append(slot)
+        deleted = row.find("field[@name='deleted_at']").text
+        if deleted:
+            continue
+        start = add_tz(row.find("field[@name='start_time']").text)
+        if start > add_tz(datetime.strptime('2019-01-01 01:00:00', '%Y-%m-%d %H:%M:%S')):
+            slot = DateActivitySlot(
+                is_online=False,
+                title='Time slot'
+            )
+            for k in mapping['slot']:
+                v = mapping['slot'][k]
+                value = row.find("field[@name='{}']".format(v)).text or ''
+                slot.__setattr__(k, value)
+            slot.duration = timedelta(hours=float(row.find("field[@name='duration']").text.replace('-', '')))
+            slot.start = add_tz(slot.start)
+            if slot.start + slot.duration < now():
+                slot.status = 'succeeded'
+            else:
+                slot.status = 'open'
+            slot.created = add_tz(slot.created)
+            slots.append(slot)
     DateActivitySlot.objects.bulk_create(slots)
     update_sequence('time_based_dateactivityslot')
 
@@ -434,7 +456,10 @@ def import_slot_participants(rows):
             status = 'cancelled'
         else:
             status = 'registered'
-        activity = DateActivity.objects.get(slots__id=shift_id)
+        try:
+            activity = DateActivity.objects.get(slots__id=shift_id)
+        except DateActivity.DoesNotExist:
+            continue
         activity_id = str(activity.id)
         slot_participant = SlotParticipant(
             slot_id=shift_id,
@@ -528,6 +553,7 @@ def import_activity_location(rows):
         initiative = Initiative.objects.get(id=initiative_id)
         initiative.place = location
         initiative.organization_id = organization_id
+        initiative.has_organization = True
         initiatives.append(initiative)
         for slot in activity_slots:
             slot.location = location
@@ -535,7 +561,7 @@ def import_activity_location(rows):
     print("Writing slot locations")
     DateActivitySlot.objects.bulk_update(slots, ['location_id'])
     print("Writing initiative locations")
-    Initiative.objects.bulk_update(initiatives, ['place_id', 'organization_id'])
+    Initiative.objects.bulk_update(initiatives, ['place_id', 'organization_id', 'has_organization'])
     update_sequence('geo_geolocation')
 
 
@@ -739,6 +765,7 @@ def run(*args):
         rows = root.find('database').find('table_data[@name="shift_user"]').findall('row')
         import_slot_participants(rows)
 
+        print("Fixing activity + contribution statuses")
         # activity contacts > partner org contacts
         DateActivitySlot.objects.filter(start__lte=now()).update(status='finished')
 
@@ -760,9 +787,12 @@ def run(*args):
         ).update(status='full')
 
         # Update date activity slot statuses
-        DateActivitySlot.objects.filter(
+        DateActivitySlot.objects.exclude(
+            status='cancelled'
+        ).filter(
             start__lte=now()
         ).update(status='finished')
+
         DateActivitySlot.objects.annotate(participants=Count('slot_participants')).filter(
             participants__gte=F('capacity'),
             capacity__isnull=False,
@@ -773,53 +803,112 @@ def run(*args):
             slots__start__gt=now()
         ).update(status='succeeded')
 
+        for activity in DateActivity.objects.filter(status='open').all():
+            if activity.slots.filter(status='open', start__gt=now()).count() == 0:
+                if activity.slots.filter(status='finished').count() > 0:
+                    activity.status = 'succeeded'
+                else:
+                    activity.status = 'cancelled'
+                activity.save()
+
+        print("Remove activities without slots")
+        DateActivity.objects.filter(
+            slots__isnull=True
+        ).all().delete()
+
+        print("Merging activities and updating titles")
+        activities = []
+        initiatives = []
+        for org in Organization.objects.filter(initiatives__isnull=False).all():
+            first = org.initiatives.first()
+            first.title = org.name
+            initiatives.append(first)
+            for initiative in org.initiatives.all():
+                if initiative != first:
+                    for activity in initiative.activities.all():
+                        activity.initiative_id = first.id
+                        activities.append(activity)
+
+        print("Updating activities")
+        Initiative.objects.bulk_update(initiatives, ['title'])
+        DateActivity.objects.bulk_update(activities, ['initiative_id'])
+
+        Initiative.objects.filter(
+            activities__isnull=True
+        ).all().delete()
+
+        print("Create activity manager accounts")
+        # Activity managers
+        cares_owner = Member.objects.get(email='info@nlcares.nl')
+        for activity in DateActivity.objects.filter(status='open', owner=cares_owner).all():
+            contact = activity.initiative.organization_contact
+            name = contact.name
+            parts = name.split(' ')
+            first_name = parts.pop(0)
+            last_name = ' '.join(parts)
+            owner, _c = Member.objects.get_or_create(
+                email=contact.email,
+                username=contact.email,
+                defaults={
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'is_active': True
+                }
+
+            )
+            activity.owner = owner
+            activity.save()
+
+        print("That's it! All done!")
+
 
 """
 Clear all tables:
 
-delete from time_based_timecontribution;
-delete from time_based_slotparticipant;
-delete from time_based_dateparticipant;
+delete from time_based_timecontribution cascade;
+delete from time_based_slotparticipant cascade;
+delete from time_based_dateparticipant cascade;
 
 
-delete from time_based_dateactivityslot;
-delete from time_based_dateactivity;
-delete from time_based_timebasedactivity;
+delete from time_based_dateactivityslot cascade;
+delete from time_based_dateactivity cascade;
+delete from time_based_timebasedactivity cascade;
 
-delete from activities_organizer;
-delete from activities_contributor;
-delete from activities_effortcontribution;
-delete from activities_contribution;
-delete from activities_activity;
+delete from activities_organizer cascade;
+delete from activities_effortcontribution cascade;
+delete from activities_contribution cascade;
+delete from activities_contributor cascade;
+delete from activities_activity cascade;
 
 update initiatives_initiative set organization_id = null, organization_contact_id = null;
-delete from organizations_organizationcontact;
-delete from organizations_organization;
-delete from initiatives_initiative_categories;
-delete from categories_category_translation;
-delete from categories_category;
-delete from initiatives_initiative_activity_managers;
-delete from initiatives_initiative;
-delete from initiatives_theme_translation;
-delete from initiatives_theme;
+delete from organizations_organizationcontact cascade;
+delete from organizations_organization cascade;
+delete from initiatives_initiative_categories cascade;
+delete from categories_category_translation cascade;
+delete from categories_category cascade;
+delete from initiatives_initiative_activity_managers cascade;
+delete from initiatives_initiative cascade;
+delete from initiatives_theme_translation cascade;
+delete from initiatives_theme cascade;
 
-delete from geo_geolocation;
+delete from geo_geolocation cascade;
 
-delete from files_relatedimage;
-delete from files_image;
-delete from notifications_message;
-delete from members_member_groups;
-delete from follow_follow;
-delete from members_useractivity;
-delete from activities_effortcontribution;
-delete from activities_organizer;
-delete from django_admin_log;
-delete from activities_activity_segments;
-delete from members_member_segments;
-delete from segments_segment;
-delete from segments_segmenttype;
-delete from geo_place;
-delete from members_member_favourite_themes;
-delete from members_member where email != 'admin@example.com';
+delete from files_relatedimage cascade;
+delete from files_image cascade;
+delete from notifications_message cascade;
+delete from members_member_groups cascade;
+delete from follow_follow cascade;
+delete from members_useractivity cascade;
+delete from activities_effortcontribution cascade;
+delete from activities_organizer cascade;
+delete from django_admin_log cascade;
+delete from activities_activity_segments cascade;
+delete from members_member_segments cascade;
+delete from segments_segment cascade;
+delete from segments_segmenttype cascade;
+delete from geo_place cascade;
+delete from members_member_favourite_themes cascade;
+update pages_page set author_id = null;
+delete from members_member cascade where email != 'admin@example.com';
 
 """

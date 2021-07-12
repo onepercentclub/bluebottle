@@ -380,16 +380,18 @@ class DateActivityListSerializer(TimeBasedActivityListSerializer):
         tz = get_current_timezone()
 
         slots = obj.slots.all()
+        try:
+            if start:
+                slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            elif only_upcoming:
+                slots = slots.filter(start__gte=now())
 
-        if start:
-            slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
-        elif only_upcoming:
-            slots = slots.filter(start__gte=now())
-
-        if end:
-            slots = slots.filter(
-                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
-            )
+            if end:
+                slots = slots.filter(
+                    start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+                )
+        except ValueError:
+            pass
 
         return slots
 

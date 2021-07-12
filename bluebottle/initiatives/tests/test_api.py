@@ -457,7 +457,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             status='partially_funded',
             initiative=self.initiative
         )
-        slot = DateActivitySlotFactory.create(activity=event)
+        DateActivitySlotFactory.create(activity=event)
         response = self.client.get(self.url)
 
         data = response.json()['data']
@@ -485,12 +485,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             funding_data['attributes']['title'],
             funding.title
-        )
-
-        slot_data = get_include(response, 'activities/time-based/date-slots')
-        self.assertEqual(
-            slot_data['id'],
-            str(slot.pk)
         )
 
         activity_image = event_data['relationships']['image']['data']

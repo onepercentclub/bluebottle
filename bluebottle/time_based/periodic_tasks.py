@@ -9,7 +9,7 @@ from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
-from bluebottle.time_based.messages import ReminderSingleDateNotification, ReminderMultipleDatesNotification
+from bluebottle.time_based.messages import ReminderSingleDateNotification
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
@@ -144,9 +144,6 @@ class DateActivityReminderTask(ModelPeriodicTask):
     def has_one_slot(effect):
         return effect.instance.slots.count() == 1
 
-    def has_multiple_slots(effect):
-        return effect.instance.slots.count() > 1
-
     effects = [
         NotificationEffect(
             ReminderSingleDateNotification,
@@ -154,12 +151,6 @@ class DateActivityReminderTask(ModelPeriodicTask):
                 has_one_slot
             ]
         ),
-        NotificationEffect(
-            ReminderMultipleDatesNotification,
-            conditions=[
-                has_multiple_slots
-            ]
-        )
     ]
 
     def __str__(self):

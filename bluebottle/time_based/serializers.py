@@ -179,7 +179,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True
     )
 
-    slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
@@ -200,7 +199,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
-            'slots',
             'slot_selection',
             'preparation',
             'participants_export_url'
@@ -209,8 +207,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
-            'slots',
-            'slots.location',
             'my_contributor',
             'my_contributor.slots',
         ]
@@ -218,10 +214,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
             'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
 

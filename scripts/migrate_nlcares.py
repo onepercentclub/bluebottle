@@ -544,7 +544,7 @@ def import_slot_participants(rows):
         time_contributions.append(time_contribution)
 
     print('Writing time contributions')
-    Contribution.objects.bulk_create(contributions, ignore_conflicts=True)
+    Contribution.objects.bulk_create(contributions)
     TimeContributionShadow.objects.bulk_create(time_contributions)
     update_sequence('activities_contribution')
 

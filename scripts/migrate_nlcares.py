@@ -5,6 +5,9 @@ from random import random
 from urllib.parse import unquote
 
 import pytz
+from bluebottle.slides.models import Slide
+
+from bluebottle.pages.models import Page
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
@@ -29,6 +32,24 @@ from bluebottle.time_based.models import DateActivity, DateActivitySlot, SlotPar
 
 ams = pytz.timezone('Europe/Amsterdam')
 nld_id = 149
+
+staff_emails = [
+    "info@nlcares.nl",
+    "alle@nlcares.nl",
+    "annelies@nlcares.nl",
+    "nadin@nlcares.nl",
+    "renske@nlcares.nl",
+    "jeroen@nlcares.nl",
+    "arwen@nlcares.nl",
+    "helena@nlcares.nl",
+    "inge@nlcares.nl",
+    "jord@nlcares.nl",
+    "maaike@nlcares.nl",
+    "rifka@nlcares.nl",
+    "nina@nlcares.nl",
+    "myrna@nlcares.nl",
+    "vera@nlcares.nl",
+]
 
 
 def create_model(Model, app_label='children', module='', options=None):
@@ -426,7 +447,7 @@ def import_slots(rows):
             slot.duration = timedelta(hours=float(row.find("field[@name='duration']").text.replace('-', '')))
             slot.start = add_tz(slot.start)
             if slot.start + slot.duration < now():
-                slot.status = 'succeeded'
+                slot.status = 'finished'
             else:
                 slot.status = 'open'
             slot.created = add_tz(slot.created)
@@ -523,8 +544,8 @@ def import_slot_participants(rows):
         time_contributions.append(time_contribution)
 
     print('Writing time contributions')
-    Contribution.objects.bulk_create(contributions)
-    TimeContributionShadow.objects.bulk_create(time_contributions)
+    Contribution.objects.bulk_create(contributions, ignore_conflicts=True)
+    TimeContributionShadow.objects.bulk_create(time_contributions, ignore_conflicts=True)
     update_sequence('activities_contribution')
 
 
@@ -591,7 +612,7 @@ def import_users(rows):
         if not user.email:
             user.email = 'user{}@example.com'.format(user.id)
         user.username = user.email
-        if '@nlcares.nl' in user.email or '@sonnyspaan.nl' in user.email:
+        if user.email in staff_emails:
             user.is_staff = True
         if row.find("field[@name='active']").text != '0':
             user.is_active = True
@@ -807,6 +828,8 @@ def run(*args):
             if activity.slots.filter(status='open', start__gt=now()).count() == 0:
                 if activity.slots.filter(status='finished').count() > 0:
                     activity.status = 'succeeded'
+                elif activity.slots.filter(status='full').count() > 0:
+                    activity.status = 'full'
                 else:
                     activity.status = 'cancelled'
                 activity.save()
@@ -839,8 +862,8 @@ def run(*args):
 
         print("Create activity manager accounts")
         # Activity managers
-        cares_owner = Member.objects.get(email='info@nlcares.nl')
-        for activity in DateActivity.objects.filter(status='open', owner=cares_owner).all():
+        cares_user = Member.objects.get(email='info@nlcares.nl')
+        for activity in DateActivity.objects.filter(status='open', owner=cares_user).all():
             contact = activity.initiative.organization_contact
             name = contact.name
             parts = name.split(' ')
@@ -858,6 +881,10 @@ def run(*args):
             )
             activity.owner = owner
             activity.save()
+
+        print("Update authors")
+        Page.objects.update(author=cares_user)
+        Slide.objects.update(author=cares_user)
 
         print("That's it! All done!")
 
@@ -909,6 +936,8 @@ delete from segments_segmenttype cascade;
 delete from geo_place cascade;
 delete from members_member_favourite_themes cascade;
 update pages_page set author_id = null;
+update slides_slide set author_id = null;
+delete from authtoken_token cascade;
 delete from members_member cascade where email != 'admin@example.com';
 
 """

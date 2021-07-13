@@ -1060,6 +1060,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
 
         response = self.client.get(self.url, {'activity': self.activity.id})
         self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
 
         slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
         for slot in response.json()['data']:
@@ -1087,6 +1088,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
             }
         )
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(latest.pk))
 
     def test_get_filtered_end(self):
@@ -1111,6 +1113,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
             }
         )
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(first.pk))
 
     def test_get_filtered_both(self):
@@ -1136,6 +1139,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
             }
         )
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
 
     def test_get_many(self):

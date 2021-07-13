@@ -117,6 +117,18 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         else:
             return {}
 
+    def get_root_meta(self, resource, many):
+        if many:
+            try:
+                activity_id = self.context['request'].GET['activity']
+                return {
+                    'total': len(self.context['view'].queryset.filter(activity_id=int(activity_id))),
+                }
+            except (KeyError, ValueError):
+                pass
+
+        return {}
+
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
         fields = ActivitySlotSerializer.Meta.fields + (

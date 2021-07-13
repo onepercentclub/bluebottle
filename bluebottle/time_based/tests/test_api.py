@@ -199,10 +199,6 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
         activity_url = reverse('date-detail', args=(activity_id,))
         response = self.client.get(activity_url, user=self.user)
-        relationships = response.json()['data']['relationships']
-        self.assertEqual(len(relationships['slots']['data']), 2)
-        slots = self.included_by_type(response, 'activities/time-based/date-slots')
-        self.assertEqual(len(slots), 2)
         self.response_data = response.json()['data']
         # Now we can submit the activity
         self.assertEqual(

@@ -545,7 +545,7 @@ def import_slot_participants(rows):
 
     print('Writing time contributions')
     Contribution.objects.bulk_create(contributions, ignore_conflicts=True)
-    TimeContributionShadow.objects.bulk_create(time_contributions, ignore_conflicts=True)
+    TimeContributionShadow.objects.bulk_create(time_contributions)
     update_sequence('activities_contribution')
 
 
@@ -896,7 +896,8 @@ delete from time_based_timecontribution cascade;
 delete from time_based_slotparticipant cascade;
 delete from time_based_dateparticipant cascade;
 
-
+delete from deeds_deedparticipant cascade;
+delete from deeds_deed cascade;
 delete from time_based_dateactivityslot cascade;
 delete from time_based_dateactivity cascade;
 delete from time_based_timebasedactivity cascade;
@@ -937,6 +938,8 @@ delete from geo_place cascade;
 delete from members_member_favourite_themes cascade;
 update pages_page set author_id = null;
 update slides_slide set author_id = null;
+delete from wallposts_mediawallpost cascade;
+delete from wallposts_wallpost cascade;
 delete from authtoken_token cascade;
 delete from members_member cascade where email != 'admin@example.com';
 

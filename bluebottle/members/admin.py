@@ -119,9 +119,9 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
-        'closed', 'confirm_signup', 'enable_segments', 'create_segments', 'login_methods',
-        'email_domain', 'session_only', 'background', 'require_consent', 'consent_link',
-        'anonymization_age'
+        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
+        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
+        'background', 'require_consent', 'consent_link', 'anonymization_age'
     )
 
     inlines = [

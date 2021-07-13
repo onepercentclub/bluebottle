@@ -579,6 +579,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'confirm_signup',
             'login_methods',
             'background',
+            'enable_gender',
+            'enable_address',
+            'enable_birthdate',
         )
 
 

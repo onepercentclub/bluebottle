@@ -53,13 +53,14 @@ def run(*args):
             count += 1
             print("{} / {}".format(count, total))
             loc.position = find_position(loc)
-            if count % 100 == 0:
+            if count % 1000 == 0:
                 print('Write geocoding file an records')
                 with open('geocoding.json', 'w') as outfile:
                     json.dump(lookup, outfile, indent=4)
                 Geolocation.objects.bulk_update(locations, ['position'])
                 locations = []
             locations.append(loc)
+        Geolocation.objects.bulk_update(locations, ['position'])
 
         print('Write geocoding file')
         with open('geocoding.json', 'w') as outfile:
@@ -71,7 +72,7 @@ def run(*args):
         count = 0
         for loc in Place.objects.filter(position__isnull=True).all():
             count += 1
-            if count % 100 == 0:
+            if count % 1000 == 0:
                 print('Write geocoding file and records')
                 with open('geocoding.json', 'w') as outfile:
                     json.dump(lookup, outfile, indent=4)
@@ -80,6 +81,7 @@ def run(*args):
             print("{} / {}".format(count, total))
             loc.position = find_position(loc)
             places.append(loc)
+        Place.objects.bulk_update(places, ['position'])
 
         print('Write geocoding file')
         with open('geocoding.json', 'w') as outfile:

@@ -340,6 +340,7 @@ def import_initiatives(rows):
             activity.status = 'open'
             activity.created = add_tz(activity.created)
             activity.owner = owner
+            activity.image = initiative.image
         activities.append(activity)
 
         # if initiative.status == 'draft':

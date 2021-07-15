@@ -470,7 +470,6 @@ def import_slot_participants(rows):
 
     print('Reading participants')
     for row in rows:
-        contributor_id = row.find("field[@name='id']").text
         shift_id = row.find("field[@name='shift_id']").text
         user_id = row.find("field[@name='user_id']").text
         status = row.find("field[@name='status']").text
@@ -487,15 +486,15 @@ def import_slot_participants(rows):
             slot_id=shift_id,
             status=status
         )
-        if user_id not in participants or activity_id not in participants[user_id]:
-            participants[user_id] = {
-                activity_id: []
-            }
+        if user_id not in participants:
+            participants[user_id] = {}
+        if activity_id not in participants[user_id]:
+            participants[user_id][activity_id] = []
         participants[user_id][activity_id].append(slot_participant)
 
     for user_id in participants:
         for activity_id in participants[user_id]:
-            participant_id = int(user_id) * 10000 + int(activity_id)
+            participant_id = int(user_id) + 100000 * int(activity_id)
             contributor = Contributor(
                 id=participant_id,
                 user_id=user_id,
@@ -843,7 +842,7 @@ def run(*args):
         print("Merging activities and updating titles")
         activities = []
         initiatives = []
-        for org in Organization.objects.filter(initiatives__isnull=False).all():
+        for org in Organization.objects.prefetch_related('initiatives').filter(initiatives__isnull=False).all():
             first = org.initiatives.first()
             first.title = org.name
             initiatives.append(first)
@@ -857,6 +856,7 @@ def run(*args):
         Initiative.objects.bulk_update(initiatives, ['title'])
         DateActivity.objects.bulk_update(activities, ['initiative_id'])
 
+        print("Removing empty initiatives")
         Initiative.objects.filter(
             activities__isnull=True
         ).all().delete()

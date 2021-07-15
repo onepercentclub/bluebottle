@@ -1,10 +1,8 @@
 from datetime import datetime, time
 
+import dateutil
 from django.db.models.functions import Trunc
 from django.utils.timezone import now, get_current_timezone
-
-import dateutil
-
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
@@ -25,7 +23,7 @@ from bluebottle.time_based.models import (
     SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
-from bluebottle.time_based.states import SlotParticipantStateMachine, ParticipantStateMachine
+from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -531,7 +529,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
-    contributions = ResourceRelatedField(read_only=True, many=True)
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
@@ -551,7 +548,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
-            'contributions',
         )
 
         validators = [
@@ -566,46 +562,19 @@ class ParticipantSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'document',
-            'contributions',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
     }
 
 
 class DateParticipantSerializer(ParticipantSerializer):
 
-    slots = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
-        many=True,
-        source='slot_participants'
-    )
     permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
-
-    def get_slots(self, instance):
-        user = self.context['request'].user
-        slots = instance.slot_participants.all()
-        if (
-            not user.is_authenticated or
-            user.pk not in (
-                instance.user_id,
-                instance.activity.owner_id,
-                instance.activity.initiative.activity_manager
-            )
-        ):
-            return [
-                slot for slot in slots if (
-                    slot.status == SlotParticipantStateMachine.registered.value
-                )
-            ]
-        else:
-            return slots
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantSerializer.Meta.fields + ('slots', )
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
 
         validators = [
@@ -617,13 +586,11 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slots', ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
-            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'
         }
     )
 
@@ -678,9 +645,14 @@ class SlotParticipantSerializer(ModelSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
-        included_resources = ['participant', 'slot']
+        included_resources = [
+            'participant',
+            'slot',
+            'participant.user'
+        ]
 
     included_serializers = {
+        'participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }

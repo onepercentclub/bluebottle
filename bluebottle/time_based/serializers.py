@@ -548,6 +548,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
+            'contributions',
         )
 
         validators = [
@@ -597,6 +598,7 @@ class DateParticipantSerializer(ParticipantSerializer):
 
 class PeriodParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('period-participant-detail', view_args=('pk',))
+    contributions = ResourceRelatedField(read_only=True, many=True)
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant
@@ -612,10 +614,16 @@ class PeriodParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/period-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            'contributions',
+        ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer'}
+        **{
+            'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
+            'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+        }
     )
 
 

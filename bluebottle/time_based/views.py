@@ -3,7 +3,6 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
@@ -14,6 +13,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission
 )
+from bluebottle.clients import properties
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
@@ -35,7 +35,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, DateParticipantListSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -174,9 +174,9 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
 class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'slot_participants', 'slot_participants__slot'
+        'user',
     )
-    serializer_class = DateParticipantSerializer
+    serializer_class = DateParticipantListSerializer
 
 
 class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
@@ -191,7 +191,10 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
             participant__status__in=['accepted', 'new']
         )
 
-    queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
+    queryset = SlotParticipant.objects.prefetch_related(
+        'participant',
+        'participant__user',
+    )
     serializer_class = SlotParticipantSerializer
 
 

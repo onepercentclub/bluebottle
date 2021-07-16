@@ -381,15 +381,16 @@ def import_initiatives(rows):
         organizers.append(organizer)
         start = row.find("field[@name='created_at']").text
         start = add_tz(start)
+        contribution_id = 100000 + int(initiative_id)
         contribution = Contribution(
-            id=initiative_id,
+            id=contribution_id,
             contributor=contributor,
             start=start,
             polymorphic_ctype_id=effort_type
         )
         contributions.append(contribution)
         effort_contribution = EffortContributionShadow(
-            contribution_ptr_id=initiative_id,
+            contribution_ptr_id=contribution_id,
             contribution_type='organizer'
         )
         effort_contributions.append(effort_contribution)

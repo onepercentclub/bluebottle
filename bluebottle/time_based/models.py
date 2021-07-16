@@ -88,8 +88,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'review', ]
-        return fields
+        return super().required_fields + ['title', 'description', 'review', ]
 
     @property
     def participants(self):
@@ -321,11 +320,12 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = [
+        fields = super().required_fields + [
             'start',
             'duration',
             'is_online',
         ]
+
         if not self.is_online:
             fields.append('location')
         return fields

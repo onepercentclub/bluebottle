@@ -151,7 +151,7 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'target', 'bank_account']
+        fields = super().required_fields + ['title', 'description', 'target', 'bank_account']
 
         if not self.duration:
             fields.append('deadline')

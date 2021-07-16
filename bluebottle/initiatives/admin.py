@@ -191,6 +191,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ]
 
         if Location.objects.count():
+            if obj and obj.is_open:
+                detail_fields.append('is_global')
+
             detail_fields.append('location')
         else:
             detail_fields.append('place')

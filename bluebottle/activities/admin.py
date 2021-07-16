@@ -335,6 +335,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         ):
             fields = fields + ('send_impact_reminder_message_link',)
 
+        if obj and obj.initiative.is_global:
+            fields = fields + ('office_location', )
+
         return fields
 
     list_display = [

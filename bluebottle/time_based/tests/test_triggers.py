@@ -688,27 +688,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.execute_triggers(user=self.user, send_messages=True)
         self.slot.save()
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'The details of activity "{}" have changed'.format(self.activity.title)
-        )
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
-                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(expected in mail.outbox[0].body)
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_reschedule_contributions(self):
         DateParticipantFactory.create_batch(5, activity=self.activity)

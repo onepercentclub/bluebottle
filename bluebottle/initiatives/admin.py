@@ -203,6 +203,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Description'), {
                 'fields': (
                     'pitch', 'story', 'image', 'video_url',
+                    'place', 'location'
                 )
             }),
             (_('Organization'), {
@@ -225,6 +226,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )}),
             )
         return fieldsets
+
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):
@@ -263,7 +265,6 @@ class ThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
     readonly_fields = ('initiative_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
-    ordering = ('translations__name',)
 
     def initiative_link(self, obj):
         url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)

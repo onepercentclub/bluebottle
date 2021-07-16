@@ -1,3 +1,5 @@
+from unittest import skip
+
 import pytz
 from datetime import timedelta, date, datetime, time
 
@@ -206,6 +208,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             "Time strings should really be Dutch format"
         )
 
+    @skip('No multiple slots reminder mails for now')
     def test_reminder_multiple_dates(self):
         self.slot2 = DateActivitySlotFactory.create(
             activity=self.activity,

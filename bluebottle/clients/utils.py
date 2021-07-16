@@ -245,7 +245,11 @@ def get_public_properties(request):
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
                 'funding': get_platform_settings('funding.FundingPlatformSettings'),
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
-                'translations': get_platform_settings('utils.TranslationPlatformSettings'),
+                'translations': dict(
+                    (key, value) for key, value
+                    in get_platform_settings('utils.TranslationPlatformSettings').items()
+                    if value
+                ),
                 'currencies': get_currency_settings(),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }

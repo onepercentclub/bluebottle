@@ -60,6 +60,13 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             if slot.start and slot.duration
         ]
 
+    def prepare_duration(self, instance):
+        return [
+            {'gte': slot.start, 'lte': slot.end}
+            for slot in instance.slots.all()
+            if slot.start and slot.duration
+        ]
+
     def prepare_country(self, instance):
         countries = [super().prepare_country(instance)]
         return countries + [
@@ -71,7 +78,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return [
             {'lat': slot.location.position.y, 'lon': slot.location.position.x}
             for slot in instance.slots.all()
-            if not slot.is_online and slot.location
+            if not slot.is_online and slot.location and slot.location.position
         ]
 
     def prepare_is_online(self, instance):
@@ -106,3 +113,9 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_end(self, instance):
         return instance.deadline
+
+    def prepare_duration(self, instance):
+        if instance.start and instance.deadline and instance.start > instance.deadline:
+            return {}
+
+        return {'gte': instance.start, 'lte': instance.deadline}

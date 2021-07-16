@@ -1,11 +1,14 @@
 import csv
+from datetime import datetime, time
 
+import dateutil
 import icalendar
 from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.timezone import utc
+from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -93,7 +96,8 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class DateSlotListView(JsonApiViewMixin, CreateAPIView):
+class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
+
     related_permission_classes = {
         'activity': [
             ActivityStatusPermission,
@@ -101,7 +105,32 @@ class DateSlotListView(JsonApiViewMixin, CreateAPIView):
             DeleteActivityPermission
         ]
     }
-    permission_classes = [DateSlotActivityStatusPermission, ]
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        try:
+            activity_id = self.request.GET['activity']
+            queryset = queryset.filter(activity_id=int(activity_id))
+        except KeyError:
+            raise ValidationError('Missing required parameter: activity')
+        except ValueError:
+            raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
+
+        tz = get_current_timezone()
+
+        start = self.request.GET.get('start')
+        if start:
+            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+
+        end = self.request.GET.get('end')
+        if end:
+            queryset = queryset.filter(
+                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+            )
+
+        return queryset
+
+    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 

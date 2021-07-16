@@ -199,10 +199,6 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
         activity_url = reverse('date-detail', args=(activity_id,))
         response = self.client.get(activity_url, user=self.user)
-        relationships = response.json()['data']['relationships']
-        self.assertEqual(len(relationships['slots']['data']), 2)
-        slots = self.included_by_type(response, 'activities/time-based/date-slots')
-        self.assertEqual(len(slots), 2)
         self.response_data = response.json()['data']
         # Now we can submit the activity
         self.assertEqual(
@@ -1035,7 +1031,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
         self.url = reverse('date-slot-list')
-        self.activity = DateActivityFactory.create()
+        self.activity = DateActivityFactory.create(slots=[])
 
         self.data = {
             'data': {
@@ -1057,6 +1053,137 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
                 }
             }
         }
+
+    def test_get(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(self.url, {'activity': self.activity.id})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
+    def test_get_filtered_start(self):
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=self.activity
+        )
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=4),
+            activity=self.activity
+        )
+        latest = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=6),
+            activity=self.activity
+        )
+
+        response = self.client.get(
+            self.url,
+            {
+                'activity': self.activity.id,
+                'start': (now() + timedelta(days=5)).strftime('%Y-%m-%d')
+            }
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['data'][0]['id'], str(latest.pk))
+
+    def test_get_filtered_end(self):
+        first = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=self.activity
+        )
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=4),
+            activity=self.activity
+        )
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=6),
+            activity=self.activity
+        )
+
+        response = self.client.get(
+            self.url,
+            {
+                'activity': self.activity.id,
+                'end': (now() + timedelta(days=3)).strftime('%Y-%m-%d')
+            }
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['data'][0]['id'], str(first.pk))
+
+    def test_get_filtered_both(self):
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=self.activity
+        )
+        middle = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=4),
+            activity=self.activity
+        )
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=6),
+            activity=self.activity
+        )
+
+        response = self.client.get(
+            self.url,
+            {
+                'activity': self.activity.id,
+                'start': (now() + timedelta(days=3)).strftime('%Y-%m-%d'),
+                'end': (now() + timedelta(days=5)).strftime('%Y-%m-%d')
+            }
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
+
+    def test_get_many(self):
+        DateActivitySlotFactory.create_batch(12, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(self.url, {'activity': self.activity.id})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(len(response.json()['data']), 8)
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
+        response = self.client.get(self.url, {'activity': self.activity.id, 'page[number]': 2})
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(len(response.json()['data']), 4)
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
+    def test_get_no_activity_id(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_invalid_activity_id(self):
+        response = self.client.get(self.url, {'activity': 'some-thing-wrong'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_incorrect_activity_id(self):
+        response = self.client.get(self.url, {'activity': 1034320})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['meta']['pagination']['count'], 0)
+        self.assertEqual(len(response.json()['data']), 0)
+
+    def test_get_closed_site(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
+
+        response = self.client.get(self.url, {'activity': self.activity.pk})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
@@ -1089,6 +1216,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_open_activity(self):
+        DateActivitySlotFactory.create(activity=self.activity)
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
         self.activity.states.submit(save=True)

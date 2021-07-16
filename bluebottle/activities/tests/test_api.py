@@ -1,6 +1,6 @@
 from builtins import str
 import json
-from datetime import timedelta
+from datetime import timedelta, date
 import dateutil
 
 from django.contrib.auth.models import Group, Permission
@@ -241,11 +241,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         assignment = PeriodActivityFactory.create(
             status='open',
-            deadline=next_month
+            deadline=next_month.date()
         )
         PeriodActivityFactory.create(
             status='open',
-            deadline=after
+            deadline=after.date()
         )
 
         # Feature is not dealing with time. Disabling timezone check for test
@@ -293,6 +293,202 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(assignment.pk) not in found)
         self.assertTrue(str(funding.pk) not in found)
 
+    def test_activity_date_filter_slots(self):
+        first = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        for days in (2, 4, 6):
+            DateActivitySlotFactory.create(
+                activity=first,
+                start=now() + timedelta(days=days)
+            )
+
+        second = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        for days in (6, 8, 10):
+            DateActivitySlotFactory.create(
+                activity=second,
+                start=now() + timedelta(days=days)
+            )
+
+        start = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertTrue(str(first.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=5)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertTrue(str(first.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=6)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertTrue(str(first.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(second.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=6)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=6)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertTrue(str(first.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(second.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=7)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=7)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
+        start = (now() + timedelta(days=8)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=10)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertTrue(str(second.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=12)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
+    def test_activity_date_filter_period(self):
+        open_end = PeriodActivityFactory.create(
+            status='open',
+            start=date.today() + timedelta(days=5),
+            deadline=None
+        )
+
+        open_start = PeriodActivityFactory.create(
+            status='open',
+            start=None,
+            deadline=date.today() + timedelta(days=20)
+        )
+
+        first = PeriodActivityFactory.create(
+            status='open',
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=10)
+        )
+
+        second = PeriodActivityFactory.create(
+            status='open',
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=15)
+        )
+
+        third = PeriodActivityFactory.create(
+            status='open',
+            start=date.today() + timedelta(days=15),
+            deadline=date.today() + timedelta(days=20)
+        )
+
+        start = (now() + timedelta(days=5)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=5)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertTrue(str(first.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(open_start.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(open_end.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=14)).strftime('%Y-%m-%d')
+        end = (now() + timedelta(days=18)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}&filter[end]={end}'.format(
+                    start=start, end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertTrue(str(open_start.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(open_end.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(second.pk) in [item['id'] for item in data['data']])
+        self.assertTrue(str(third.pk) in [item['id'] for item in data['data']])
+
+        start = (now() + timedelta(days=25)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[start]={start}'.format(
+                    start=start
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertTrue(str(open_end.pk) in [item['id'] for item in data['data']])
+
+        end = (now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        data = json.loads(
+            self.client.get(
+                self.url + '?filter[end]={end}'.format(
+                    end=end
+                ),
+                user=self.owner
+            ).content
+        )
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertTrue(str(open_start.pk) in [item['id'] for item in data['data']])
+
     def test_activity_invalid_date_filter(self):
         next_month = now() + dateutil.relativedelta.relativedelta(months=1)
         after = now() + dateutil.relativedelta.relativedelta(months=2)
@@ -308,7 +504,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         PeriodActivityFactory.create(
             status='open',
-            deadline=next_month
+            deadline=next_month.date()
         )
         response = self.client.get(
             self.url + '?filter[start]=0'
@@ -547,6 +743,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         third = PeriodActivityFactory.create(
             status='open',
+            start=now() + timedelta(days=4),
             deadline=now() + timedelta(days=11)
         )
 
@@ -621,6 +818,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         third = PeriodActivityFactory.create(
             status='open',
+            start=now() + timedelta(days=4),
             deadline=now() + timedelta(days=11)
         )
 

@@ -1,3 +1,10 @@
+from datetime import datetime, time
+
+from django.db.models.functions import Trunc
+from django.utils.timezone import now, get_current_timezone
+
+import dateutil
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
@@ -110,6 +117,18 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         else:
             return {}
 
+    def get_root_meta(self, resource, many):
+        if many:
+            try:
+                activity_id = self.context['request'].GET['activity']
+                return {
+                    'total': len(self.context['view'].queryset.filter(activity_id=int(activity_id))),
+                }
+            except (KeyError, ValueError):
+                pass
+
+        return {}
+
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
         fields = ActivitySlotSerializer.Meta.fields + (
@@ -172,7 +191,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True
     )
 
-    slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
@@ -193,7 +211,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
-            'slots',
             'slot_selection',
             'preparation',
             'participants_export_url'
@@ -202,8 +219,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
-            'slots',
-            'slots.location',
             'my_contributor',
             'my_contributor.slots',
         ]
@@ -211,10 +226,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
             'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
 
@@ -368,12 +381,64 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
 
 class DateActivityListSerializer(TimeBasedActivityListSerializer):
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
-    slots = ResourceRelatedField(many=True, required=False, read_only=True, model=DateActivitySlot)
+
+    date_info = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+
+    def get_filtered_slots(self, obj, only_upcoming=False):
+
+        start = self.context['request'].GET.get('filter[start]')
+        end = self.context['request'].GET.get('filter[end]')
+        tz = get_current_timezone()
+
+        slots = obj.slots.all()
+        try:
+            if start:
+                slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            elif only_upcoming:
+                slots = slots.filter(start__gte=now())
+
+            if end:
+                slots = slots.filter(
+                    start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+                )
+        except ValueError:
+            pass
+
+        return slots
+
+    def get_date_info(self, obj):
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        starts = set(
+            slots.annotate(date=Trunc('start', kind='day')).values_list('date')
+        )
+
+        return {
+            'count': len(starts),
+            'first': min(starts)[0].date() if starts else None,
+        }
+
+    def get_location_info(self, obj):
+        slots = self.get_filtered_slots(obj, only_upcoming=False)
+
+        locations = slots.values_list('is_online', 'location__locality', 'location__country__alpha2_code')
+        location_names = [
+            '{}, {}'.format(
+                location[1],
+                location[2]
+            ) for location in locations if location[1] or location[2]
+        ]
+
+        return {
+            'is_online': all(location[0] for location in locations) if locations else False,
+            'location': location_names[0] if len(set(location_names)) == 1 else None,
+            'has_multiple': any(location[0] for location in locations) or len(set(location_names)) > 1
+        }
 
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = DateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'slots',
+            'location_info', 'date_info',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):

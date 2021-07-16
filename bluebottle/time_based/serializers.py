@@ -408,7 +408,7 @@ class DateActivityListSerializer(TimeBasedActivityListSerializer):
         return slots
 
     def get_date_info(self, obj):
-        slots = self.get_filtered_slots(obj, True)
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
         starts = set(
             slots.annotate(date=Trunc('start', kind='day')).values_list('date')
         )
@@ -419,7 +419,7 @@ class DateActivityListSerializer(TimeBasedActivityListSerializer):
         }
 
     def get_location_info(self, obj):
-        slots = self.get_filtered_slots(obj, True)
+        slots = self.get_filtered_slots(obj, only_upcoming=False)
 
         locations = slots.values_list('is_online', 'location__locality', 'location__country__alpha2_code')
         location_names = [

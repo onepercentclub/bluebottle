@@ -175,6 +175,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
 
     is_open = serializers.ReadOnlyField()
+    is_global = serializers.ReadOnlyField()
 
     def get_activities(self, instance):
         user = self.context['request'].user
@@ -290,7 +291,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required', 'stats', 'is_open',
+            'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
         meta_fields = (

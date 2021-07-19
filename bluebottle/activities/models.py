@@ -91,7 +91,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     @property
     def fallback_location(self):
-        return self.office_location or self.initiative.location
+        return self.initiative.location or self.office_location
 
     @property
     def stats(self):

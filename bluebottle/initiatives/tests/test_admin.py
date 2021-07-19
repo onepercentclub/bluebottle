@@ -16,6 +16,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.factory_models.geo import LocationFactory
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
@@ -53,6 +54,26 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Messages')
         self.assertContains(response, 'Offices')
         self.assertContains(response, 'Impact location')
+
+    def test_initiative_open(self):
+        LocationFactory.create()
+        self.initiative.is_open = True
+        self.initiative.save()
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(self.initiative.id,))
+        response = self.client.get(admin_url)
+        self.assertContains(response, 'Is global')
+
+    def test_initiative_closed(self):
+        LocationFactory.create()
+        self.initiative.is_open = False
+        self.initiative.save()
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(self.initiative.id,))
+        response = self.client.get(admin_url)
+        self.assertNotContains(response, 'Is global')
 
     def test_initiative_admin_with_organization_contact(self):
         self.initiative.contact = OrganizationFactory.create()

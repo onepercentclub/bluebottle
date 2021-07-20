@@ -129,6 +129,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
+        ('fallback_location', 'Office Location'),
         ('capacity', 'Capacity'),
         ('review', 'Review participants')
     )

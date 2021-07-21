@@ -278,6 +278,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
             'my_contributor.slots',
+            'my_contributor.slots.slot',
         ]
 
     included_serializers = dict(
@@ -285,6 +286,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         **{
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
             'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'my_contributor.slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
 

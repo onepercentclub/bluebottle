@@ -1,5 +1,3 @@
-from unittest import skip
-
 import pytz
 from datetime import timedelta, date, datetime, time
 
@@ -208,7 +206,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             "Time strings should really be Dutch format"
         )
 
-    @skip('No multiple slots reminder mails for now')
     def test_reminder_multiple_dates(self):
         self.slot2 = DateActivitySlotFactory.create(
             activity=self.activity,
@@ -231,53 +228,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.slot4.states.cancel(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
-                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(
-            expected in mail.outbox[0].body,
-            "First slot should be shown in mail"
-        )
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(
-            expected in mail.outbox[0].body,
-            "Second slot should be shown in email"
-        )
-        with TenantLanguage('en'):
-            unexpected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot3.start),
-                defaultfilters.time(self.slot3.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot3.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertFalse(
-            unexpected in mail.outbox[0].body,
-            "Third slot should not show because the user withdrew")
 
-        with TenantLanguage('en'):
-            unexpected = '{} {} - {}'.format(
-                defaultfilters.date(self.slot4.start),
-                defaultfilters.time(self.slot4.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot4.end.astimezone(get_current_timezone())),
-            )
-        self.assertFalse(
-            unexpected in mail.outbox[0].body,
-            "Fourth slot should not show because it was cancelled")
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(self.activity.title)
-        )
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):

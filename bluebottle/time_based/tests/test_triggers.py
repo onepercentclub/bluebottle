@@ -373,6 +373,79 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'open')
 
+    def test_change_start_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = date.today() + timedelta(days=4)
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts on {start} and ends on {end}'.format(
+                start=defaultfilters.date(self.activity.start),
+                end=defaultfilters.date(self.activity.deadline)
+            )
+        )
+
+    def test_unset_start_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = None
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts immediately and ends on {end}'.format(
+                end=defaultfilters.date(self.activity.deadline),
+            )
+        )
+
+    def test_change_deadline_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = date.today() + timedelta(days=40)
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts on {start} and ends on {end}'.format(
+                start=defaultfilters.date(self.activity.start),
+                end=defaultfilters.date(self.activity.deadline),
+            )
+        )
+
+    def test_unset_both_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts immediately and runs indefinitely'
+        )
+
     def test_unset_start(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)

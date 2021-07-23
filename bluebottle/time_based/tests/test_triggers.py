@@ -390,6 +390,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 start=defaultfilters.date(self.activity.start),
                 end=defaultfilters.date(self.activity.deadline)
             )
+            in mail.outbox[-1].body
         )
 
     def test_unset_start_notification(self):
@@ -408,6 +409,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             'The activity starts immediately and ends on {end}'.format(
                 end=defaultfilters.date(self.activity.deadline),
             )
+            in mail.outbox[-1].body
         )
 
     def test_change_deadline_notification(self):
@@ -427,6 +429,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 start=defaultfilters.date(self.activity.start),
                 end=defaultfilters.date(self.activity.deadline),
             )
+            in mail.outbox[-1].body
         )
 
     def test_unset_both_notification(self):
@@ -444,6 +447,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.save()
         self.assertTrue(
             'The activity starts immediately and runs indefinitely'
+            in mail.outbox[-1].body
         )
 
     def test_unset_start(self):

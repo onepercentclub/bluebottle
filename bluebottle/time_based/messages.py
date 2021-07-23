@@ -68,7 +68,7 @@ class DeadlineChangedNotification(TransitionMessage):
                 'emai', 'ends on {end}'
             ).format(end=defaultfilters.date(self.obj.deadline))
         else:
-            context['start'] = pgettext('emai', 'runs indefinitely')
+            context['end'] = pgettext('emai', 'runs indefinitely')
 
         return context
 

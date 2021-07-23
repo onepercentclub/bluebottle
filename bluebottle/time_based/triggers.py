@@ -165,7 +165,7 @@ def start_is_not_passed(effect):
     start date hasn't passed
     """
     return (
-        effect.instance.start and
+        effect.instance.start is None or
         effect.instance.start > date.today()
     )
 

@@ -81,7 +81,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                     except AttributeError:
                         pass
 
-                if positions:
+                if positions and self.context['location'].position:
                     dist = min(
                         distance(
                             lonlat(*pos),

@@ -231,10 +231,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     )
 
-    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
-        ('start', 'Start'),
-        ('duration', 'TimeContribution'),
-    )
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 

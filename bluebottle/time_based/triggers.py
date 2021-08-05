@@ -35,7 +35,7 @@ from bluebottle.time_based.messages import (
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
-    ChangedSingleDateNotification, ChangedMultipleDatesNotification, ActivitySucceededManuallyNotification,
+    ChangedSingleDateNotification, ActivitySucceededManuallyNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification
 )
 from bluebottle.time_based.models import (
@@ -165,7 +165,7 @@ def start_is_not_passed(effect):
     start date hasn't passed
     """
     return (
-        effect.instance.start and
+        effect.instance.start is None or
         effect.instance.start > date.today()
     )
 
@@ -422,15 +422,6 @@ class ActivitySlotTriggers(TriggerManager):
                         has_one_slot
                     ]
                 ),
-                NotificationEffect(
-                    ChangedMultipleDatesNotification,
-                    conditions=[
-                        has_accepted_participants,
-                        is_not_finished,
-                        has_multiple_slots
-                    ]
-                )
-
             ]
         ),
         ModelChangedTrigger(

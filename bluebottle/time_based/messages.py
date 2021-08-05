@@ -53,6 +53,25 @@ class DeadlineChangedNotification(TransitionMessage):
             participant.user for participant in self.obj.accepted_participants
         ]
 
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+
+        if self.obj.start:
+            context['start'] = pgettext(
+                'emai', 'on {start}'
+            ).format(start=defaultfilters.date(self.obj.start))
+        else:
+            context['start'] = pgettext('emai', 'immediately')
+
+        if self.obj.deadline:
+            context['end'] = pgettext(
+                'emai', 'ends on {end}'
+            ).format(end=defaultfilters.date(self.obj.deadline))
+        else:
+            context['end'] = pgettext('emai', 'runs indefinitely')
+
+        return context
+
 
 class ReminderSingleDateNotification(TransitionMessage):
     """
@@ -112,43 +131,6 @@ class ChangedSingleDateNotification(TransitionMessage):
         """participants that signed up"""
         return [
             participant.user for participant in self.obj.activity.accepted_participants
-        ]
-
-
-class ChangedMultipleDatesNotification(TransitionMessage):
-    """
-    Notification when slot details (date, time or location) changed for an activity with multiple slots
-    """
-    subject = pgettext('email', 'The details of activity "{title}" have changed')
-    template = 'messages/changed_multiple_dates'
-    context = {
-        'title': 'activity.title',
-    }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context['slots'] = []
-        slots = self.obj.activity.slots.filter(
-            status__in=['full', 'open', 'running'],
-            slot_participants__participant__user=recipient,
-            slot_participants__status='registered'
-        ).order_by('start')
-        for slot in slots:
-            info = get_slot_info(slot)
-            info['changed'] = slot.id == self.obj.id
-            context['slots'].append(info)
-        return context
-
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url()
-
-    action_title = pgettext('email', 'View activity')
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
         ]
 
 

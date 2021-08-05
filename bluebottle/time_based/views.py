@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, time
+from pytz import timezone
 
 import dateutil
 import icalendar
@@ -423,7 +424,13 @@ class DateParticipantExportView(PrivateFileView):
         slots = activity.active_slots.order_by('start')
         row = [field[1] for field in self.fields]
         for slot in slots:
-            row.append(slot.title or str(slot))
+            if slot.location and not slot.is_online:
+                tz = timezone(slot.location.timezone)
+            else:
+                tz = get_current_timezone()
+            start = slot.start.astimezone(tz)
+
+            row.append("{}\n{}".format(slot.title or str(slot), start.strftime('%d-%m-%y %H:%M')))
         writer.writerow(row)
         for participant in activity.contributors.instance_of(
             DateParticipant

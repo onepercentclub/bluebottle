@@ -154,7 +154,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    reviewer = ResourceRelatedField(read_only=True)
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
@@ -175,7 +174,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
 
     is_open = serializers.ReadOnlyField()
-    is_global = serializers.ReadOnlyField()
 
     def get_activities(self, instance):
         user = self.context['request'].user

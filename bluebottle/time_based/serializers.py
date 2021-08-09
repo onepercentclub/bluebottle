@@ -557,7 +557,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
-            'contributions',
         )
 
         validators = [

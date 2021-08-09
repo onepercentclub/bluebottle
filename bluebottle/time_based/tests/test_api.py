@@ -640,16 +640,9 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
     def test_get_my_contributor(self):
         participant = DateParticipantFactory.create(activity=self.activity)
-
         response = self.client.get(self.url, user=participant.user)
-
         included_participant = get_first_included_by_type(response, 'contributors/time-based/date-participants')
-        included_slot = get_first_included_by_type(response, 'activities/time-based/date-slots')
-
         self.assertEqual(str(participant.pk), included_participant['id'])
-        self.assertEqual(
-            str(participant.slot_participants.first().slot.pk), included_slot['id']
-        )
 
     def test_matching_all(self):
         self.activity.initiative.states.submit(save=True)

@@ -10,6 +10,18 @@ function removeRedundantTabs() {
     }
 }
 
+function addHashToInlinePaginator() {
+    // Make sure nested inline paginator links to the same inline tab
+    jQuery('.paginator .btn-page').each(function(index, btn){
+        if (btn.href) {
+            btn.href = btn.href.split('#')[0]
+            btn.href += document.location.hash;
+        }
+    });
+}
+
 window.onload = function() {
     removeRedundantTabs();
+    addHashToInlinePaginator();
+    window.onhashchange = addHashToInlinePaginator;
 };

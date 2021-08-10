@@ -1,3 +1,4 @@
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from pytz import timezone
 from django.contrib import admin
 from django.db import models
@@ -25,8 +26,9 @@ from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
-class BaseParticipantAdminInline(admin.TabularInline):
+class BaseParticipantAdminInline(TabularInlinePaginated):
     model = Participant
+    per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
                        'created', 'transition_date', 'status', 'disabled')
     raw_id_fields = ('user', 'document')
@@ -152,9 +154,9 @@ class TimeBasedActivityAdminForm(StateMachineModelForm):
         }
 
 
-class DateActivityASlotInline(admin.TabularInline):
+class DateActivityASlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-
+    per_page = 20
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(

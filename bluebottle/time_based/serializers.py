@@ -612,6 +612,9 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         model = PeriodParticipant
 
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
+        fields = ParticipantSerializer.Meta.fields + (
+            'contributions',
+        )
 
         validators = [
             UniqueTogetherValidator(

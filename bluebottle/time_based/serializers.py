@@ -585,7 +585,10 @@ class DateParticipantSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
-
+        included_resources = [
+            'user',
+            'document',
+        ]
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
@@ -599,6 +602,7 @@ class DateParticipantSerializer(ParticipantSerializer):
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
+            'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
         }
     )

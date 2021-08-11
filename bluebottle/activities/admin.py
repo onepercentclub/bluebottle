@@ -5,6 +5,7 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
@@ -576,41 +577,13 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
     link.short_description = _('View on site')
 
 
-class ActivityAdminInline(StackedPolymorphicInline):
+class ActivityAdminInline(TabularInlinePaginated):
     model = Activity
-    readonly_fields = ['title', 'created', 'owner']
+    readonly_fields = ['activity_link', 'polymorphic_ctype', 'created', 'owner', 'status']
     fields = readonly_fields
     extra = 0
     can_delete = False
 
-    class DeedInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'end', 'state_name']
-        fields = readonly_fields
-        model = Deed
-
-    class FundingInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'target', 'deadline', 'state_name']
-        fields = readonly_fields
-        model = Funding
-
-    class DateInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'state_name']
-
-        fields = readonly_fields
-        model = DateActivity
-
-    class PeriodInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'deadline', 'state_name']
-        fields = readonly_fields
-        model = PeriodActivity
-
-    child_inlines = (
-        FundingInline,
-        PeriodInline,
-        DateInline,
-        DeedInline
-    )
+    def activity_link(self, obj):
+        url = reverse('admin:activities_activity_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)

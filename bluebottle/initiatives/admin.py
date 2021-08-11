@@ -227,7 +227,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             )
         return fieldsets
 
-    inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
+    inlines = [
+        ActivityAdminInline,
+        MessageAdminInline,
+        WallpostInline
+    ]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)

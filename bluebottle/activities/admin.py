@@ -5,7 +5,7 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_admin_inline_paginator.admin import TabularInlinePaginated
+from django_admin_inline_paginator.admin import PaginationFormSetBase
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
@@ -577,13 +577,52 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
     link.short_description = _('View on site')
 
 
-class ActivityAdminInline(TabularInlinePaginated):
+class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
-    readonly_fields = ['activity_link', 'polymorphic_ctype', 'created', 'owner', 'status']
+    readonly_fields = ['title', 'created', 'owner']
     fields = readonly_fields
     extra = 0
     can_delete = False
 
-    def activity_link(self, obj):
-        url = reverse('admin:activities_activity_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
+    class DeedInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'start', 'end', 'state_name']
+        fields = readonly_fields
+        model = Deed
+
+    class FundingInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'target', 'deadline', 'state_name']
+        fields = readonly_fields
+        model = Funding
+
+    class DateInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'start', 'state_name']
+
+        fields = readonly_fields
+        model = DateActivity
+
+    class PeriodInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'start', 'deadline', 'state_name']
+        fields = readonly_fields
+        model = PeriodActivity
+
+    child_inlines = (
+        FundingInline,
+        PeriodInline,
+        DateInline,
+        DeedInline
+    )
+
+    pagination_key = 'page'
+    template = 'admin/activities_paginated.html'
+
+    per_page = 10
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super().get_formset(request, obj, **kwargs)
+
+        class PaginationFormSet(PaginationFormSetBase, formset_class):
+            pagination_key = self.pagination_key
+
+        PaginationFormSet.request = request
+        PaginationFormSet.per_page = self.per_page
+        return PaginationFormSet

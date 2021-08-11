@@ -255,9 +255,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     valid.short_description = _('Steps to complete initiative')
     autocomplete_fields = ['activity_managers']
 
-    class Media(object):
-        js = ('admin/js/inline-activities-add.js',)
-
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):

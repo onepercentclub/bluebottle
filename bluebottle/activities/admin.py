@@ -571,11 +571,6 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
 
     activity_link.short_description = _('Edit activity')
 
-    def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
-
-    link.short_description = _('View on site')
-
 
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity

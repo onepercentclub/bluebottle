@@ -2018,7 +2018,6 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
     def test_get_removed_participant(self):
         super().test_get_removed_participant()
         self.assertEqual(len(self.response.data), 9)
-        self.assertEqual(self.response.data[0]['permissions']['PUT'], False)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):

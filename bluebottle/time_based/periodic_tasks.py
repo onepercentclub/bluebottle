@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 
-from django.db.models import DateTimeField, ExpressionWrapper, F
-from django.db.models import Q
+from django.db.models import DateTimeField, ExpressionWrapper, F, Q, Count
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -137,9 +136,13 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 class DateActivityReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
-        return DateActivity.objects.filter(slots__start__lte=timezone.now() + timedelta(days=5),
-                                           status__in=['open', 'full']
-                                           )
+        return DateActivity.objects.annotate(
+            slot_count=Count('slots')
+        ).filter(
+            slot_count=1,
+            slots__start__lte=timezone.now() + timedelta(days=5),
+            status__in=['open', 'full']
+        ).distinct()
 
     def has_one_slot(effect):
         return effect.instance.slots.count() == 1

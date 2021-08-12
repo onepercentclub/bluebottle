@@ -27,6 +27,7 @@ install_requires = [
     'celery==4.3',
     'clamd==1.0.2',
     'defusedxml==0.6.0',
+    'django-admin-inline-paginator==0.2',
     'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==1.4.1',

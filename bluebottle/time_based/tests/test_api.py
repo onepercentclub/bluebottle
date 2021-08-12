@@ -638,6 +638,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
             )
         )
 
+    def test_get_my_contributor(self):
+        participant = DateParticipantFactory.create(activity=self.activity)
+        response = self.client.get(self.url, user=participant.user)
+        included_participant = get_first_included_by_type(response, 'contributors/time-based/date-participants')
+        self.assertEqual(str(participant.pk), included_participant['id'])
+
     def test_matching_all(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
@@ -1486,6 +1492,10 @@ class ParticipantListViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def get_participants(self):
+        response = self.client.get(self.url, json.dumps(self.data))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
@@ -1997,33 +2007,17 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
 
     def test_get_owner(self):
         super().test_get_owner()
-
         self.assertEqual(len(self.response.data), 10)
-        included_contributions = self.included_by_type(
-            self.response,
-            'contributions/time-contributions')
-        self.assertEqual(len(included_contributions), 20)
-
-        included_slot_participants = self.included_by_type(
-            self.response,
-            'contributors/time-based/slot-participants')
-        self.assertEqual(len(included_slot_participants), 20)
+        self.assertEqual(self.response.data[0]['permissions']['PUT'], True)
 
     def test_get_anonymous(self):
         super().test_get_anonymous()
-        included_slot_participants = self.included_by_type(
-            self.response,
-            'contributors/time-based/slot-participants')
-
-        self.assertEqual(len(included_slot_participants), 15)
+        self.assertEqual(len(self.response.data), 8)
+        self.assertEqual(self.response.data[0]['permissions']['PUT'], False)
 
     def test_get_removed_participant(self):
         super().test_get_removed_participant()
-        included_slot_participants = self.included_by_type(
-            self.response,
-            'contributors/time-based/slot-participants')
-
-        self.assertEqual(len(included_slot_participants), 17)
+        self.assertEqual(len(self.response.data), 9)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):

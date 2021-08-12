@@ -636,6 +636,9 @@ class TimeContribution(Contribution):
         SlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
     )
 
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-contribution'
+
     class Meta:
         verbose_name = _("Time contribution")
         verbose_name_plural = _("Contributions")

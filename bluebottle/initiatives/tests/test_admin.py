@@ -258,6 +258,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         self.assertTrue('is_open' in page.forms[0].fields)
 
+    def test_paginated_activities(self):
+        self.app.set_user(self.staff_member)
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        page = self.app.get(admin_url)
+        self.assertTrue('<span class="btn-page page-selected">1</span>' in page.text)
+
 
 class TestThemeAdmin(BluebottleAdminTestCase):
 

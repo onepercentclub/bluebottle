@@ -53,6 +53,25 @@ class DeadlineChangedNotification(TransitionMessage):
             participant.user for participant in self.obj.accepted_participants
         ]
 
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+
+        if self.obj.start:
+            context['start'] = pgettext(
+                'emai', 'on {start}'
+            ).format(start=defaultfilters.date(self.obj.start))
+        else:
+            context['start'] = pgettext('emai', 'immediately')
+
+        if self.obj.deadline:
+            context['end'] = pgettext(
+                'emai', 'ends on {end}'
+            ).format(end=defaultfilters.date(self.obj.deadline))
+        else:
+            context['end'] = pgettext('emai', 'runs indefinitely')
+
+        return context
+
 
 class ReminderSingleDateNotification(TransitionMessage):
     """

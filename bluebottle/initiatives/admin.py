@@ -230,7 +230,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             )
         return fieldsets
 
-    inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
+    inlines = [
+        ActivityAdminInline,
+        MessageAdminInline,
+        WallpostInline
+    ]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
@@ -253,9 +257,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     valid.short_description = _('Steps to complete initiative')
     autocomplete_fields = ['activity_managers']
-
-    class Media(object):
-        js = ('admin/js/inline-activities-add.js',)
 
 
 @admin.register(InitiativePlatformSettings)

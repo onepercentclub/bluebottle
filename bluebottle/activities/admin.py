@@ -323,8 +323,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_detail_fields(self, request, obj):
         fields = self.detail_fields
         if obj and obj.initiative.is_global:
-            fields = fields + ('office_location', )
-
+            fields = list(fields)
+            fields.insert(10, 'office_location')
+            fields = tuple(fields)
         return fields
 
     def get_description_fields(self, request, obj):

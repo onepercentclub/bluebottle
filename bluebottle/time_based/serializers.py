@@ -46,6 +46,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'expertise',
             'my_contributor',
+            'my_contributor.user',
             'my_contributor.contributions',
             'my_contributor.document',
         ]
@@ -55,6 +56,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 

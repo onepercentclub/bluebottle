@@ -81,6 +81,5 @@ class InitiativeTriggers(TriggerManager):
             effects=[
                 RemoveLocationEffect
             ]
-        )
-
+        ),
     ]

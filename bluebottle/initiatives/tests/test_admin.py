@@ -11,7 +11,7 @@ from rest_framework.status import HTTP_200_OK
 
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin, ThemeAdmin
-from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.initiatives.models import Initiative, Theme, InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
@@ -239,24 +239,46 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
 
         self.app.set_user(self.staff_member)
-
         page = self.app.get(url)
-
         self.assertFalse('is_open' in page.forms[0].fields)
 
     def test_admin_open_initiative_enabled(self):
         InitiativePlatformSettingsFactory.create(
             enable_open_initiatives=True
         )
-
         initiative = InitiativeFactory.create()
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
-
         self.app.set_user(self.staff_member)
-
         page = self.app.get(url)
-
         self.assertTrue('is_open' in page.forms[0].fields)
+
+    def test_global_initiative_set(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_open_initiatives = True
+        initiative_settings.save()
+        locations = LocationFactory.create_batch(5)
+        initiative = InitiativeFactory.create(
+            is_open=True,
+            location=locations[0]
+        )
+        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+        self.app.set_user(self.staff_member)
+        page = self.app.get(url)
+        form = page.forms[0]
+        self.assertTrue('is_open' in form.fields)
+        self.assertTrue('is_global' in form.fields)
+        self.assertTrue('location' in form.fields)
+        form['is_global'] = True
+        page = form.submit()
+        self.assertTrue('<h3>Remove location</h3>' in page.text)
+        form = page.forms[0]
+        page = form.submit().follow()
+        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+        self.app.set_user(self.staff_member)
+        page = self.app.get(url)
+        form = page.forms[0]
+        self.assertTrue('is_global' in form.fields)
+        self.assertFalse('location' in form.fields)
 
     def test_paginated_activities(self):
         self.app.set_user(self.staff_member)

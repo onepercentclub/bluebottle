@@ -324,7 +324,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         fields = self.detail_fields
         if obj and obj.initiative.is_global:
             fields = list(fields)
-            fields.insert(10, 'office_location')
+            fields.insert(3, 'office_location')
             fields = tuple(fields)
         return fields
 

@@ -115,8 +115,8 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     is_global = models.BooleanField(
         verbose_name=_('is global'),
         help_text=_(
-            'Global initiatives do not have a location. Instead the location '
-            'is stored on the respective initiatives'
+            'Global initiatives do not have a location. '
+            'Instead the location is stored on the respective activities.'
         ),
         default=False
     )

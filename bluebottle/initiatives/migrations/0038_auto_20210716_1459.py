@@ -16,6 +16,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='initiative',
             name='is_global',
-            field=models.BooleanField(default=False, help_text='Global initiatives do not have a location. Instead the location is stored on the respective initiatives', verbose_name='is global'),
+            field=models.BooleanField(
+                default=False,
+                help_text='Global initiatives do not have a location. '
+                          'Instead the location is stored on the respective activities.',
+                verbose_name='is global'),
         ),
     ]

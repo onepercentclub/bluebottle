@@ -112,6 +112,15 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'geo.Location', verbose_name=_('office'),
         null=True, blank=True, on_delete=models.SET_NULL)
 
+    is_global = models.BooleanField(
+        verbose_name=_('is global'),
+        help_text=_(
+            'Global initiatives do not have a location. '
+            'Instead the location is stored on the respective activities.'
+        ),
+        default=False
+    )
+
     has_organization = models.NullBooleanField(null=True, default=None)
 
     organization = models.ForeignKey(
@@ -174,10 +183,11 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             if not self.owner.partner_organization:
                 fields.append('organization_contact')
 
-        if Location.objects.count():
-            fields.append('location')
-        else:
-            fields.append('place')
+        if not self.is_global:
+            if Location.objects.count():
+                fields.append('location')
+            else:
+                fields.append('place')
 
         return fields
 

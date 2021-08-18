@@ -211,7 +211,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
-    def test_initiative_location(self):
+    def test_initiative_location_filter(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
         activity = DateActivityFactory.create(status='open', initiative=initiative)
@@ -225,6 +225,32 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(activity.pk))
+
+    def test_initiative_location_global_filter(self):
+        location = LocationFactory.create()
+        initiative = InitiativeFactory.create(status='open', location=location)
+        activity = DateActivityFactory.create(
+            status='open', initiative=initiative
+        )
+
+        global_initiative = InitiativeFactory.create(status='open', is_global=True)
+        global_activity = DateActivityFactory.create(
+            status='open', initiative=global_initiative, office_location=location
+        )
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        initiative_ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in initiative_ids)
+        self.assertTrue(str(global_activity.pk) in initiative_ids)
 
     def test_activity_date_filter(self):
         next_month = now() + dateutil.relativedelta.relativedelta(months=1)

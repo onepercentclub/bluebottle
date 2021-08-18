@@ -9,6 +9,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Funding
+from bluebottle.deeds.models import Deed
 from bluebottle.members.models import Member
 
 
@@ -75,7 +76,6 @@ class InitiativeDocument(Document):
     })
 
     location = fields.NestedField(
-        attr='location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -91,7 +91,8 @@ class InitiativeDocument(Document):
             Theme,
             Funding,
             PeriodActivity,
-            DateActivity
+            DateActivity,
+            Deed
         )
 
     def get_queryset(self):
@@ -124,6 +125,20 @@ class InitiativeDocument(Document):
                 )
             )
         ]
+
+    def prepare_location(self, instance):
+        if instance.is_global:
+            return [{
+                'id': activity.office_location.id,
+                'name': activity.office_location.name,
+                'city': activity.office_location.city
+            } for activity in instance.activities.all() if activity.office_location]
+        elif instance.location:
+            return {
+                'id': instance.location.id,
+                'name': instance.location.name,
+                'city': instance.location.city
+            }
 
     def prepare_activity_owners(self, instance):
         return [

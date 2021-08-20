@@ -616,7 +616,11 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 
 class DateParticipantSerializer(ParticipantSerializer):
-    slots = ResourceRelatedField(source='slot_participants', many=True, queryset=SlotParticipant.objects.all())
+    slots = ResourceRelatedField(
+        source='slot_participants',
+        many=True,
+        read_only=True
+    )
     permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
 
     class Meta(ParticipantSerializer.Meta):

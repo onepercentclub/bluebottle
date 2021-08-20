@@ -203,7 +203,15 @@ class DateActivitySlotInfoMixin():
         slots = self.get_filtered_slots(obj, only_upcoming=False)
         is_online = len(slots) and len(slots.filter(is_online=True)) == len(slots)
 
-        if len(slots) == 0:
+        locations = slots.values_list(
+            'location__locality',
+            'location__country__alpha2_code',
+            'location__formatted_address',
+            'online_meeting_url',
+            'location_hint'
+        )
+
+        if not len(slots) or not len(locations):
             return {
                 'is_online': is_online,
                 'online_meeting_url': None,
@@ -213,13 +221,6 @@ class DateActivitySlotInfoMixin():
                 'has_multiple': False
             }
 
-        locations = slots.values_list(
-            'location__locality',
-            'location__country__alpha2_code',
-            'location__formatted_address',
-            'online_meeting_url',
-            'location_hint'
-        )
         has_multiple = len(set(locations)) > 1 and not is_online
         location = '{} - {}'.format(locations[0][0], locations[0][1]) if not has_multiple and locations[0][0] else None
         return {

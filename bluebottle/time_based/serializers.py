@@ -625,7 +625,7 @@ class DateParticipantSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
-        fields = ParticipantSerializer.Meta.meta_fields + ('slots', )
+        fields = ParticipantSerializer.Meta.fields + ('slots', )
         included_resources = [
             'user',
             'document',

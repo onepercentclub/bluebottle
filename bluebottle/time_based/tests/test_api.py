@@ -1580,9 +1580,7 @@ class ParticipantDetailViewTestCase():
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.data = response.json()['data']
 
         self.assertEqual(
@@ -1606,7 +1604,6 @@ class ParticipantDetailViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()['data']
-
         self.assertEqual(
             data['attributes']['motivation'],
             self.participant.motivation

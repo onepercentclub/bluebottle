@@ -295,6 +295,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
+        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
@@ -303,7 +304,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
             'participants_export_url',
             'date_info',
             'location_info',
-            'slot_count',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

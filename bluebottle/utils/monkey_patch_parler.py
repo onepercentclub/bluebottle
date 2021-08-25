@@ -1,29 +1,31 @@
-from builtins import object
 import parler.appsettings
 from parler.utils.conf import add_default_language_settings
 
-from bluebottle.clients import properties
-
-appsettings = parler.appsettings
+from bluebottle.utils.models import Language
 
 
-class TenantAwareParlerAppsettings(object):
-    @property
-    def PARLER_DEFAULT_LANGUAGE_CODE(self):
-        return properties.LANGUAGE_CODE
+def getattr(name):
+    if name == 'PARLER_LANGUAGES':
+        languages = Language.objects.all()
 
-    @property
-    def PARLER_LANGUAGES(self):
         return add_default_language_settings({
-            1: [{'code': lang[0]} for lang in properties.LANGUAGES],
+            1: [{'code': lang.code} for lang in languages],
             'default': {
-                'fallbacks': [lang[0] for lang in properties.LANGUAGES],
+                'fallbacks': [lang.code for lang in languages],
                 'hide_untranslated': False
             }
         })
 
-    def __getattr__(self, attr):
-        return getattr(appsettings, attr)
+    if name == 'PARLER_DEFAULT_LANGUAGE_CODE':
+        default = Language.objects.filter(default=True).first()
+        if default:
+            return default.code
+        else:
+            return 'en'
+
+    raise AttributeError(f"module 'parler.appsettings' has no attribute '{name}'")
 
 
-parler.appsettings = TenantAwareParlerAppsettings()
+parler.appsettings.__getattr__ = getattr
+del parler.appsettings.PARLER_LANGUAGES
+del parler.appsettings.PARLER_DEFAULT_LANGUAGE_CODE

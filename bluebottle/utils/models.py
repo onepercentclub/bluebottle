@@ -12,12 +12,6 @@ from solo.models import SingletonModel
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
-import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_migration  # noqa
-import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
-import bluebottle.utils.monkey_patch_parler  # noqa
-import bluebottle.utils.monkey_patch_password_validators  # noqa
-import bluebottle.utils.monkey_patch_jet  # noqa
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager
@@ -30,8 +24,10 @@ class Language(models.Model):
     A language - ISO 639-1
     """
     code = models.CharField(max_length=2, blank=False)
+    sub_code = models.CharField(max_length=2, blank=True)
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)
+    default = models.BooleanField(default=False)
 
     class Meta(object):
         ordering = ['language_name']

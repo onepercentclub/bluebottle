@@ -4,9 +4,13 @@ from bluebottle.clients import properties
 
 
 def set_default(apps, schema_editor):
-    Language = apps.get_model('utils', 'Language')
+    try: 
+        Language = apps.get_model('utils', 'Language')
 
-    language = Language.objects.get(code=properties.LANGUAGE_CODE)
+        language = Language.objects.get(code=properties.LANGUAGE_CODE)
+    except Language.DoesNotExist:
+        language = Language.objects.first()
+
     language.default = True
     language.save()
 

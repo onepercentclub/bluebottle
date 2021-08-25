@@ -127,7 +127,10 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
                 try:
                     contributor_id = self.context['request'].GET['contributor']
-                    queryset = queryset.filter(slot_participants__participant_id=contributor_id)
+                    queryset = queryset.filter(
+                        slot_participants__status__in=['registered', 'succeeded'],
+                        slot_participants__participant_id=contributor_id
+                    )
                 except KeyError:
                     pass
 

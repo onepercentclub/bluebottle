@@ -119,7 +119,10 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         try:
             contributor_id = self.request.GET['contributor']
-            queryset = queryset.filter(slot_participants__participant_id=contributor_id)
+            queryset = queryset.filter(
+                slot_participants__status__in=['registered', 'succeeded'],
+                slot_participants__participant_id=contributor_id
+            )
         except ValueError:
             raise ValidationError('Invalid parameter: contributor ({})'.format(contributor_id))
         except KeyError:

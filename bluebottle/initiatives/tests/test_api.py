@@ -13,6 +13,7 @@ from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
+from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
@@ -762,6 +763,22 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
+
+    def test_filter_country(self):
+        nl = Country.objects.get(alpha2_code='nl')
+        location = LocationFactory.create(country=nl)
+        initiative = InitiativeFactory.create(status='approved', location=location)
+        InitiativeFactory.create(status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[country]={}'.format(nl.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
 
     def test_filter_location(self):
         location = LocationFactory.create()

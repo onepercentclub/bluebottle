@@ -1149,38 +1149,40 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
 
-    def test_get_filtered_by_contributor(self):
-        DateActivitySlotFactory.create(
+    def test_get_filtered_contributor_id(self):
+        participant = DateParticipantFactory.create(activity=self.activity)
+
+        slot = DateActivitySlotFactory.create(
             start=now() + timedelta(days=2),
             activity=self.activity
         )
-        slot = DateActivitySlotFactory.create(
+
+        slot_participant = SlotParticipantFactory(slot=slot, participant=participant)
+        slot_participant.states.withdraw(save=True)
+
+        second = DateActivitySlotFactory.create(
             start=now() + timedelta(days=4),
             activity=self.activity
         )
-        DateActivitySlotFactory.create(
+        slot_participant = SlotParticipantFactory(slot=second, participant=participant)
+
+        third = DateActivitySlotFactory.create(
             start=now() + timedelta(days=6),
             activity=self.activity
         )
-
-        supporter = BlueBottleUserFactory.create()
-        contributor = DateParticipantFactory.create(activity=self.activity, user=supporter)
-        SlotParticipantFactory.create(
-            participant=contributor,
-            slot=slot
-        )
+        other_participant = DateParticipantFactory.create(activity=self.activity)
+        slot_participant = SlotParticipantFactory(slot=third, participant=other_participant)
 
         response = self.client.get(
             self.url,
             {
                 'activity': self.activity.id,
-                'contributor': contributor.id
+                'contributor': participant.id
             }
         )
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
         self.assertEqual(response.json()['meta']['total'], 1)
-        self.assertEqual(len(response.json()['data']), 1)
-        self.assertEqual(response.json()['data'][0]['id'], str(slot.pk))
+        self.assertEqual(response.json()['data'][0]['id'], str(second.pk))
 
     def test_get_many(self):
         DateActivitySlotFactory.create_batch(12, activity=self.activity)

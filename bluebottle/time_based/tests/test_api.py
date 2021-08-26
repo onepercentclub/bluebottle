@@ -1038,7 +1038,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
         self.url = reverse('date-slot-list')
-        self.activity = DateActivityFactory.create(slots=[])
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
 
         self.data = {
             'data': {
@@ -1148,6 +1148,39 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
+
+    def test_get_filtered_by_contributor(self):
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=self.activity
+        )
+        slot = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=4),
+            activity=self.activity
+        )
+        DateActivitySlotFactory.create(
+            start=now() + timedelta(days=6),
+            activity=self.activity
+        )
+
+        supporter = BlueBottleUserFactory.create()
+        contributor = DateParticipantFactory.create(activity=self.activity, user=supporter)
+        SlotParticipantFactory.create(
+            participant=contributor,
+            slot=slot
+        )
+
+        response = self.client.get(
+            self.url,
+            {
+                'activity': self.activity.id,
+                'contributor': contributor.id
+            }
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], 1)
+        self.assertEqual(len(response.json()['data']), 1)
+        self.assertEqual(response.json()['data'][0]['id'], str(slot.pk))
 
     def test_get_many(self):
         DateActivitySlotFactory.create_batch(12, activity=self.activity)

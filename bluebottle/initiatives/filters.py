@@ -27,7 +27,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'owner.id',
         'activity_managers.id',
         'theme.id',
-        'country.id',
+        'country',
         'categories.id',
         'categories.slug',
         'location.id',

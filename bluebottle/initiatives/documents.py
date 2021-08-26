@@ -49,6 +49,7 @@ class InitiativeDocument(Document):
         'full_name': fields.TextField()
     })
 
+    country = fields.LongField()
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()

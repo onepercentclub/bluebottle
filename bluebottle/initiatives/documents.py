@@ -49,6 +49,7 @@ class InitiativeDocument(Document):
         'full_name': fields.TextField()
     })
 
+    country = fields.LongField()
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
@@ -68,7 +69,6 @@ class InitiativeDocument(Document):
     })
 
     place = fields.NestedField(properties={
-        'country': fields.LongField(attr='country.pk'),
         'province': fields.TextField(),
         'locality': fields.TextField(),
         'street': fields.TextField(),
@@ -147,3 +147,9 @@ class InitiativeDocument(Document):
                 'full_name': activity.owner.full_name
             } for activity in instance.activities.all()
         ]
+
+    def prepare_country(self, instance):
+        if instance.location:
+            return instance.location.country_id
+        if instance.place:
+            return instance.place.country_id

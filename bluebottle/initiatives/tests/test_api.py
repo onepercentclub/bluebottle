@@ -766,7 +766,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         mordor = CountryFactory.create(name='Mordor')
         location = LocationFactory.create(country=mordor)
         initiative = InitiativeFactory.create(status='approved', place=None, location=location)
-        location = LocationFactory.create()
+        location = LocationFactory.create(country=CountryFactory.create(name='Gondor'))
         InitiativeFactory.create(status='approved', place=None, location=location)
 
         response = self.client.get(

@@ -149,7 +149,9 @@ class InitiativeDocument(Document):
         ]
 
     def prepare_country(self, instance):
-        if instance.location:
-            return instance.location.country_id
-        if instance.place:
-            return instance.place.country_id
+        countries = []
+        if instance.place and instance.place.country_id:
+            countries += [instance.place.country_id]
+        if instance.location and instance.location.country_id:
+            countries += [instance.location.country_id]
+        return countries

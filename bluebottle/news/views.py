@@ -1,3 +1,5 @@
+from bluebottle.utils.utils import get_language_from_request
+from django.http import Http404
 from rest_framework import generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
@@ -38,9 +40,19 @@ class NewsItemList(generics.ListAPIView):
 class NewsItemDetail(generics.RetrieveAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
-    lookup_field = 'slug'
 
-    def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemDetail, self).get_queryset()
-        qs = qs.published()
-        return qs
+    def get_object(self):
+        language = get_language_from_request(self.request)
+        queryset = self.queryset.published()
+        queryset = queryset.filter(slug=self.kwargs['slug'])
+        if queryset.count() > 1:
+            obj = queryset.filter(language=language).first()
+        else:
+            try:
+                obj = queryset.get()
+            except NewsItem.DoesNotExist:
+                raise Http404('No news item with that slug.')
+
+        self.check_object_permissions(self.request, obj)
+
+        return obj

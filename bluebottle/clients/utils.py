@@ -18,6 +18,7 @@ from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
+from bluebottle.utils.models import Language
 from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
@@ -237,7 +238,7 @@ def get_public_properties(request):
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
-            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
+            'languages': [{'code': lang.full_code, 'name': lang.language_name} for lang in Language.objects.all()],
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {

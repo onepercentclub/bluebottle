@@ -9,9 +9,9 @@ def getattr(name):
         languages = Language.objects.all()
 
         return add_default_language_settings({
-            1: [{'code': lang.code} for lang in languages],
+            1: [{'code': lang.full_code} for lang in languages],
             'default': {
-                'fallbacks': [lang.code for lang in languages],
+                'fallbacks': [lang.full_code for lang in languages],
                 'hide_untranslated': False
             }
         })
@@ -19,7 +19,7 @@ def getattr(name):
     if name == 'PARLER_DEFAULT_LANGUAGE_CODE':
         default = Language.objects.filter(default=True).first()
         if default:
-            return default.code
+            return default.full_code
         else:
             return 'en'
 

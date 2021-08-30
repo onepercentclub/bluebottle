@@ -32,6 +32,13 @@ class Language(models.Model):
     class Meta(object):
         ordering = ['language_name']
 
+    @property
+    def full_code(self):
+        if self.sub_code:
+            return f'{self.code}-{self.sub_code}'
+        else:
+            return self.code
+
     def __str__(self):
         return self.language_name
 

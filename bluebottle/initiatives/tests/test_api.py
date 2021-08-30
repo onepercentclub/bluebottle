@@ -766,16 +766,13 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         mordor = CountryFactory.create(name='Mordor')
         location = LocationFactory.create(country=mordor)
         initiative = InitiativeFactory.create(status='approved', place=None, location=location)
-        location = LocationFactory.create(country=CountryFactory.create(name='Gondor'))
-        InitiativeFactory.create(status='approved', place=None, location=location)
+        InitiativeFactory.create(status='approved', place=None)
 
         response = self.client.get(
             self.url + '?filter[country]={}'.format(mordor.pk),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
-
         data = json.loads(response.content)
-
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(initiative.pk))
 

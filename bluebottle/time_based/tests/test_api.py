@@ -1940,6 +1940,18 @@ class RelatedParticipantsAPIViewTestCase():
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 10)
 
+    def test_get_with_duplicate_files(self):
+        file = PrivateDocumentFactory.create(owner=self.participants[2].user)
+        self.participants[2].document = file
+        self.participants[2].save()
+        self.participants[3].document = file
+        self.participants[3].save()
+        self.response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 10)
+        included_documents = self.included_by_type(self.response, 'private-documents')
+        self.assertEqual(len(included_documents), 9)
+
     def test_get_anonymous(self):
         self.response = self.client.get(self.url)
 

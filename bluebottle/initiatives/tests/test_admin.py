@@ -55,6 +55,20 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Offices')
         self.assertContains(response, 'Impact location')
 
+    def test_initiative_admin_wrong_id(self):
+        image = ImageFactory.create()
+        self.initiative.image = image
+        self.initiative.save()
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(123456789,))
+        response = self.client.get(admin_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/en/admin/')
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'Initiative with ID "123456789" doesn\'t exist. Perhaps it was deleted?')
+
     def test_initiative_open(self):
         LocationFactory.create()
         self.initiative.is_open = True

@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='notificationplatformsettings',
             name='default_yammer_group_id',
-            field=models.URLField(blank=True, max_length=100, null=True),
+            field=models.CharField(blank=True, max_length=100, null=True),
         ),
     ]

@@ -117,6 +117,17 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         except ValueError:
             raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
 
+        try:
+            contributor_id = self.request.GET['contributor']
+            queryset = queryset.filter(
+                slot_participants__status__in=['registered', 'succeeded'],
+                slot_participants__participant_id=contributor_id
+            )
+        except ValueError:
+            raise ValidationError('Invalid parameter: contributor ({})'.format(contributor_id))
+        except KeyError:
+            pass
+
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')

@@ -5,6 +5,7 @@ from fluent_contents.models import Placeholder
 from bluebottle.cms.models import StatsContent, ActivitiesContent
 from bluebottle.test.factory_models.cms import ResultPageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.factory_models.utils import LanguageFactory
 
 
 class TestResultPageAdmin(BluebottleAdminTestCase):
@@ -42,7 +43,9 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
 
     def test_admin_language_tabs(self):
         # Test that language tabs show
+        LanguageFactory.create(code='fr', language_name='French')
         url = reverse('admin:cms_homepage_changelist')
+
         page = self.app.get(url)
         tabs = page.html.find('div', {'class': 'parler-language-tabs'})
         self.assertTrue('Dutch' in tabs.text)

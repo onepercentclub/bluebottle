@@ -10,14 +10,10 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.clients import properties
 from bluebottle.impact.models import ICONS
 from bluebottle.statistics.statistics import Statistics
 from bluebottle.utils.managers import TranslatablePolymorphicManager
-
-
-def get_languages():
-    return properties.LANGUAGES
+from bluebottle.utils.models import get_language_choices
 
 
 @python_2_unicode_compatible
@@ -228,7 +224,7 @@ class Statistic(models.Model):
         max_length=7,
         blank=True,
         null=True,
-        choices=lazy(get_languages, tuple)())
+        choices=lazy(get_language_choices, tuple)())
 
     def __str__(self):
         return self.title

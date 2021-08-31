@@ -1,12 +1,12 @@
 import parler.appsettings
 from parler.utils.conf import add_default_language_settings
 
-from bluebottle.utils.models import Language
+from bluebottle.utils.models import get_languages, get_default_language
 
 
 def getattr(name):
     if name == 'PARLER_LANGUAGES':
-        languages = Language.objects.all()
+        languages = get_languages()
 
         return add_default_language_settings({
             1: [{'code': lang.full_code} for lang in languages],
@@ -17,11 +17,7 @@ def getattr(name):
         })
 
     if name == 'PARLER_DEFAULT_LANGUAGE_CODE':
-        default = Language.objects.filter(default=True).first()
-        if default:
-            return default.full_code
-        else:
-            return 'en'
+        return get_default_language()
 
     raise AttributeError(f"module 'parler.appsettings' has no attribute '{name}'")
 

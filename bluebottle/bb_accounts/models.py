@@ -21,10 +21,10 @@ from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.clients import properties
 from bluebottle.initiatives.models import Theme
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -81,16 +81,6 @@ class BlueBottleUserManager(BaseUserManager):
         u.is_superuser = True
         u.save(using=self._db)
         return u
-
-
-def get_language_choices():
-    """ Lazyly get the language choices."""
-    return properties.LANGUAGES
-
-
-def get_default_language():
-    """ Lazyly get the default language."""
-    return properties.LANGUAGE_CODE
 
 
 @python_2_unicode_compatible

@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, ProgrammingError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -16,6 +16,24 @@ from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager
 )
+
+
+def get_languages():
+    return Language.objects.all()
+
+
+def get_default_language():
+    try:
+        return Language.objects.filter(default=True).first().full_code
+    except AttributeError:
+        return 'en'
+
+
+def get_language_choices():
+    try:
+        return [(lang.code, lang.language_name) for lang in Language.objects.all()]
+    except ProgrammingError:
+        return [('en', 'English')]
 
 
 @python_2_unicode_compatible

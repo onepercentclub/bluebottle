@@ -46,6 +46,12 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     initiative = models.ForeignKey(Initiative, related_name='activities', on_delete=models.CASCADE)
 
+    office_location = models.ForeignKey(
+        'geo.Location', verbose_name=_('office'),
+        help_text=_("Office is set on activity level because the "
+                    "initiative is set to 'global' or no initiative has been specified."),
+        null=True, blank=True, on_delete=models.SET_NULL)
+
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
     description = models.TextField(
@@ -86,8 +92,19 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         raise NotImplementedError
 
     @property
+    def fallback_location(self):
+        return self.initiative.location or self.office_location
+
+    @property
     def stats(self):
         return {}
+
+    @property
+    def required_fields(self):
+        if self.initiative_id and self.initiative.is_global:
+            return ['office_location']
+        else:
+            return []
 
     class Meta(object):
         verbose_name = _("Activity")

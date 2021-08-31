@@ -85,7 +85,7 @@ class ActivityDocument(Document):
     )
 
     initiative_location = fields.NestedField(
-        attr='initiative.location',
+        attr='fallback_location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),

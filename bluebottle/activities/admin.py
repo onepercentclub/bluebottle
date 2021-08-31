@@ -321,7 +321,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fields
 
     def get_detail_fields(self, request, obj):
-        return self.detail_fields
+        fields = self.detail_fields
+        if obj and obj.initiative.is_global:
+            fields = list(fields)
+            fields.insert(3, 'office_location')
+            fields = tuple(fields)
+        return fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields
@@ -335,7 +340,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
                 InitiativePlatformSettings.objects.get().enable_impact
         ):
             fields = fields + ('send_impact_reminder_message_link',)
-
         return fields
 
     list_display = [

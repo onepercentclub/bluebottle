@@ -178,6 +178,9 @@ class Location(models.Model):
 
         super(Location, self).save()
 
+    class JSONAPIMeta(object):
+        resource_name = 'locations'
+
     def __str__(self):
         return self.name
 
@@ -232,7 +235,7 @@ class Geolocation(models.Model):
     anonymized = False
 
     class JSONAPIMeta(object):
-        resource_name = 'locations'
+        resource_name = 'geo-locations'
 
     def __str__(self):
         if self.locality:

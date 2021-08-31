@@ -5,6 +5,7 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.time_based.states import TimeBasedStateMachine
 
+from bluebottle.initiatives.effects import RemoveLocationEffect
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
     InitiativeCancelledOwnerMessage, AssignedReviewerMessage, InitiativeSubmittedStaffMessage
@@ -74,6 +75,11 @@ class InitiativeTriggers(TriggerManager):
             effects=[
                 NotificationEffect(AssignedReviewerMessage)
             ]
-        )
-
+        ),
+        ModelChangedTrigger(
+            'is_global',
+            effects=[
+                RemoveLocationEffect
+            ]
+        ),
     ]

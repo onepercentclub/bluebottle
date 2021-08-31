@@ -154,7 +154,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    reviewer = ResourceRelatedField(read_only=True)
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
@@ -290,7 +289,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required', 'stats', 'is_open',
+            'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
         meta_fields = (
@@ -445,6 +444,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_office_regions',
             'enable_multiple_dates',
             'enable_participant_exports',
+            'enable_open_initiatives',
             'has_locations'
         )
 

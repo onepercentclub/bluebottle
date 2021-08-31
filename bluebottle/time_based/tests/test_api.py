@@ -670,6 +670,7 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
+        self.assertEqual(data['meta']['slot-count'], 1)
         self.assertEqual(data['meta']['matching-properties']['skill'], True)
         self.assertEqual(data['meta']['matching-properties']['theme'], True)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
@@ -1037,7 +1038,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
         self.url = reverse('date-slot-list')
-        self.activity = DateActivityFactory.create(slots=[])
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
 
         self.data = {
             'data': {
@@ -1147,6 +1148,41 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
+
+    def test_get_filtered_contributor_id(self):
+        participant = DateParticipantFactory.create(activity=self.activity)
+
+        slot = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=self.activity
+        )
+
+        slot_participant = SlotParticipantFactory(slot=slot, participant=participant)
+        slot_participant.states.withdraw(save=True)
+
+        second = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=4),
+            activity=self.activity
+        )
+        slot_participant = SlotParticipantFactory(slot=second, participant=participant)
+
+        third = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=6),
+            activity=self.activity
+        )
+        other_participant = DateParticipantFactory.create(activity=self.activity)
+        slot_participant = SlotParticipantFactory(slot=third, participant=other_participant)
+
+        response = self.client.get(
+            self.url,
+            {
+                'activity': self.activity.id,
+                'contributor': participant.id
+            }
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], 1)
+        self.assertEqual(response.json()['meta']['total'], 1)
+        self.assertEqual(response.json()['data'][0]['id'], str(second.pk))
 
     def test_get_many(self):
         DateActivitySlotFactory.create_batch(12, activity=self.activity)
@@ -1580,9 +1616,7 @@ class ParticipantDetailViewTestCase():
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.data = response.json()['data']
 
         self.assertEqual(
@@ -1606,7 +1640,6 @@ class ParticipantDetailViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()['data']
-
         self.assertEqual(
             data['attributes']['motivation'],
             self.participant.motivation
@@ -1939,6 +1972,18 @@ class RelatedParticipantsAPIViewTestCase():
 
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 10)
+
+    def test_get_with_duplicate_files(self):
+        file = PrivateDocumentFactory.create(owner=self.participants[2].user)
+        self.participants[2].document = file
+        self.participants[2].save()
+        self.participants[3].document = file
+        self.participants[3].save()
+        self.response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 10)
+        included_documents = self.included_by_type(self.response, 'private-documents')
+        self.assertEqual(len(included_documents), 9)
 
     def test_get_anonymous(self):
         self.response = self.client.get(self.url)

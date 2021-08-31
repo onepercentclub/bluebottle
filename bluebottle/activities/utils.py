@@ -147,7 +147,8 @@ class BaseActivitySerializer(ModelSerializer):
             'stats',
             'errors',
             'required',
-            'goals'
+            'goals',
+            'office_location',
         )
 
         meta_fields = (

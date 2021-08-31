@@ -191,7 +191,10 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ]
 
         if Location.objects.count():
-            detail_fields.append('location')
+            if obj and obj.is_open:
+                detail_fields.append('is_global')
+            if obj and not obj.is_global:
+                detail_fields.append('location')
         else:
             detail_fields.append('place')
 
@@ -203,7 +206,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Description'), {
                 'fields': (
                     'pitch', 'story', 'image', 'video_url',
-                    'place', 'location'
                 )
             }),
             (_('Organization'), {

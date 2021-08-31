@@ -77,7 +77,14 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
     def test_location_info_no_slots(self):
         self.assertAttribute(
             'location_info',
-            {'has_multiple': False, 'is_online': False, 'location': None}
+            {
+                'has_multiple': False,
+                'is_online': False,
+                'location': None,
+                'online_meeting_url': None,
+                'address': None,
+                'hint': None,
+            }
         )
 
     def test_location_info_single_slot(self):
@@ -87,7 +94,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': '{}, {}'.format(slot.location.locality, slot.location.country.alpha2_code)
+                'location': '{} - {}'.format(slot.location.locality, slot.location.country.alpha2_code),
+                'online_meeting_url': None,
+                'address': slot.location.formatted_address,
+                'hint': None,
             }
         )
 
@@ -98,7 +108,14 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
         self.assertAttribute(
             'location_info',
-            {'has_multiple': True, 'is_online': True, 'location': None}
+            {
+                'has_multiple': False,
+                'is_online': True,
+                'location': None,
+                'online_meeting_url': None,
+                'address': None,
+                'hint': None,
+            }
         )
 
     def test_location_info_multiple_locations(self):
@@ -108,7 +125,14 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
         self.assertAttribute(
             'location_info',
-            {'has_multiple': True, 'is_online': False, 'location': None}
+            {
+                'has_multiple': True,
+                'is_online': False,
+                'location': None,
+                'online_meeting_url': None,
+                'address': None,
+                'hint': None,
+            }
         )
 
     def test_location_info_multiple_dates_filtered(self):
@@ -123,10 +147,12 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': '{}, {}'.format(
+                'location': '{} - {}'.format(
                     slots[0].location.locality, slots[0].location.country.alpha2_code
-                )
-
+                ),
+                'online_meeting_url': None,
+                'address': slots[0].location.formatted_address,
+                'hint': None,
             },
             {
                 'filter[start]': (now() + timedelta(days=1)).strftime('%Y-%m-%d'),

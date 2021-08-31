@@ -1,33 +1,32 @@
-from builtins import str
 import datetime
 import json
+from builtins import str
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
-from django.urls import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
-
-from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
+from moneyed import Money
 from rest_framework import status
 
-from bluebottle.initiatives.models import Initiative
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Theme
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
     DateActivitySlotFactory
 )
-from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 def get_include(response, name):
@@ -763,6 +762,20 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
 
+    def test_filter_country(self):
+        mordor = CountryFactory.create(name='Mordor')
+        location = LocationFactory.create(country=mordor)
+        initiative = InitiativeFactory.create(status='approved', place=None, location=location)
+        InitiativeFactory.create(status='approved', place=None)
+
+        response = self.client.get(
+            self.url + '?filter[country]={}'.format(mordor.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
+
     def test_filter_location(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='approved', location=location)
@@ -777,6 +790,27 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(initiative.pk))
+
+    def test_filter_location_global(self):
+        location = LocationFactory.create()
+        initiative = InitiativeFactory.create(status='approved', location=location)
+
+        global_initiative = InitiativeFactory.create(status='approved', is_global=True)
+        DeedFactory.create(initiative=global_initiative, office_location=location)
+
+        InitiativeFactory.create(status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[location.id]={}'.format(location.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        initiative_ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(initiative.pk) in initiative_ids)
+        self.assertTrue(str(global_initiative.pk) in initiative_ids)
 
     def test_filter_not_owner(self):
         """

@@ -1,5 +1,8 @@
 from builtins import object
 from datetime import timedelta
+
+from memoize import memoize
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,10 +21,15 @@ from bluebottle.utils.managers import (
 )
 
 
+TIMEOUT = 5 * 60
+
+
+@memoize(timeout=TIMEOUT)
 def get_languages():
     return Language.objects.all()
 
 
+@memoize(timeout=TIMEOUT)
 def get_default_language():
     try:
         return Language.objects.filter(default=True).first().full_code
@@ -29,6 +37,7 @@ def get_default_language():
         return 'en'
 
 
+@memoize(timeout=TIMEOUT)
 def get_language_choices():
     try:
         return [(lang.code, lang.language_name) for lang in Language.objects.all()]

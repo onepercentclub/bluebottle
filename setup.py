@@ -14,7 +14,7 @@ readme = read_file('README.rst')
 changes = ''
 
 install_requires = [
-    'Babel==2.4.0',
+    'Babel==2.9.1',
     'Django==2.2.24',
     'Pillow==8.3.0',
     'South==1.0.2',

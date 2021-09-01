@@ -9,6 +9,11 @@ from bluebottle.redirects.models import Redirect
 
 
 @override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
     APPEND_SLASH=False,
     MIDDLEWARE=list(settings.MIDDLEWARE) + [
         'bluebottle.redirects.middleware.RedirectFallbackMiddleware'

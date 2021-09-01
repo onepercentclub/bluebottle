@@ -27,6 +27,7 @@ from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.fields import RestrictedImageFormField
+from bluebottle.utils.models import Language
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.permissions import (
     ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
@@ -411,6 +412,7 @@ class MoneySerializerTestCase(BluebottleTestCase):
 class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def setUp(self):
         super(TestTenantAwareParlerAppsettings, self).setUp()
+        Language.objects.update(default=False)
 
         LanguageFactory.create(code='fr', default=True, language_name='French')
         LanguageFactory.create(code='pt', sub_code='br', language_name='Brazilian Portuguese')

@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from memoize import memoize
 
+from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -37,12 +38,18 @@ def get_default_language():
         return 'en'
 
 
-@memoize(timeout=TIMEOUT)
 def get_language_choices():
-    try:
-        return [(lang.code, lang.language_name) for lang in Language.objects.all()]
-    except (ProgrammingError, OperationalError):
-        return [('en', 'English')]
+    cache_key = 'LANUAGE_CHOICES'
+    result = cache.get(cache_key)
+
+    if not result:
+        try:
+            result = [(lang.code, lang.language_name) for lang in Language.objects.all()]
+            cache.set(cache_key, result)
+        except (ProgrammingError, OperationalError):
+            result = [('en', 'English')]
+
+    return result
 
 
 @python_2_unicode_compatible

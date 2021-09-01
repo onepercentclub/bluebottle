@@ -62,7 +62,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
             'id': 'docdata-ideal',
             'profile': 'ideal',
             'name': 'iDEAL',
-            'restricted_countries': ('NL', ),
+            'restricted_countries': ('NL',),
             'currencies': {
                 'EUR': {'max_amount': 100}
             }
@@ -71,7 +71,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
             'id': 'docdata-directdebit',
             'profile': 'directdebit',
             'name': 'Direct Debit',
-            'restricted_countries': ('NL', 'BE', ),
+            'restricted_countries': ('NL', 'BE',),
             'currencies': {
                 'EUR': {'min_amount': 10, 'max_amount': 100}
             }
@@ -94,30 +94,30 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         expected = [
             {
-                'symbol': u'\u20ac',
+                'symbol': '€',
                 'code': 'EUR',
-                'name': u'Euro',
+                'name': 'Euro',
                 'rate': Decimal(1.5),
                 'minAmount': 0
             },
             {
-                'symbol': u'\u20a6',
+                'symbol': '₦',
                 'code': 'NGN',
-                'name': u'Nigerian Naira',
+                'name': 'Nigerian Naira',
                 'rate': Decimal(500.0),
                 'minAmount': 3000
             },
             {
-                'symbol': u'$',
+                'symbol': '$',
                 'code': 'USD',
-                'name': u'US Dollar',
+                'name': 'US Dollar',
                 'rate': Decimal(1.0),
                 'minAmount': 5
             },
             {
-                'symbol': u'CFA',
+                'symbol': 'CFA',
                 'code': 'XOF',
-                'name': u'West African CFA Franc',
+                'name': 'West African CFA Franc',
                 'rate': Decimal(1000.0),
                 'minAmount': 5000
             },

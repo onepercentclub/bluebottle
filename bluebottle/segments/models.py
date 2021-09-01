@@ -1,7 +1,7 @@
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 

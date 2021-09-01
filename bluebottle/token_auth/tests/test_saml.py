@@ -1,4 +1,7 @@
 from future import standard_library
+
+from ...segments.tests.factories import SegmentTypeFactory, SegmentFactory
+
 standard_library.install_aliases()
 import urllib.parse
 import os
@@ -137,7 +140,7 @@ class TestSAMLTokenAuthentication(TestCase):
             )
             error.assert_called()
 
-    def test_auth_succes_missing_field(self):
+    def test_auth_success_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
         settings['assertion_mapping']['is_staff'] = 'test'
 
@@ -198,7 +201,7 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
-    def test_auth_existing_succes(self):
+    def test_auth_existing_success(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with remote_id with caps
             BlueBottleUserFactory.create(
@@ -475,6 +478,47 @@ class TestSAMLTokenAuthentication(TestCase):
             )
             self.assertEqual(
                 result['segment.team'], ['Marketing', 'Online Marketing']
+            )
+
+    def test_parse_segments(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.segment': ['segment', 'section'],
+            }
+        )
+
+        segment_type = SegmentTypeFactory.create(slug='segment')
+        SegmentFactory.create(
+            type=segment_type,
+            name='Marketing',
+            alternate_names=['MarkCom', 'Propaganda', 'Online Marketing']
+        )
+        SegmentFactory.create(
+            type=segment_type,
+            name='Sales'
+        )
+
+        with self.settings(TOKEN_AUTH=settings):
+            user = BlueBottleUserFactory.create()
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request)
+
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Online Marketing', 'Marketing']
+            })
+            self.assertEqual(
+                list(user.segments.values_list('name', flat=True)),
+                ['Marketing']
+            )
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Sales', 'Marketing']
+            })
+            self.assertEqual(
+                list(user.segments.values_list('name', flat=True)),
+                ['Marketing', 'Sales']
             )
 
     def test_parse_user_missing(self):

@@ -269,6 +269,7 @@ SHARED_APPS = (
     'tenant_schemas',
     'django_extensions',
     'django_admin_inline_paginator',
+    'django_better_admin_arrayfield',
 
     # Django apps
     'django.contrib.sessions',

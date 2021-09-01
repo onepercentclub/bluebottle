@@ -1,26 +1,21 @@
-from future import standard_library
-
-from ...segments.tests.factories import SegmentTypeFactory, SegmentFactory
-
-standard_library.install_aliases()
-import urllib.parse
 import os
-from mock import patch
+import urllib.parse
+import xml.etree.ElementTree as ET
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import TestCase, RequestFactory
-
+from future import standard_library
+from mock import patch
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
-import xml.etree.ElementTree as ET
 
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
-from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
 
-from .saml_settings import TOKEN_AUTH_SETTINGS
-from ...test.factory_models.geo import LocationFactory
+standard_library.install_aliases()
 
 
 class TestSAMLTokenAuthentication(TestCase):

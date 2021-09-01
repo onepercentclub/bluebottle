@@ -1,6 +1,7 @@
 from django.urls.base import reverse
 
 from fluent_contents.models import Placeholder
+from django.test.utils import override_settings
 
 from bluebottle.cms.models import StatsContent, ActivitiesContent
 from bluebottle.test.factory_models.cms import ResultPageFactory
@@ -31,6 +32,13 @@ class TestResultPageAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Activities')
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
+)
 class HomePageAdminTestCase(BluebottleAdminTestCase):
 
     extra_environ = {}

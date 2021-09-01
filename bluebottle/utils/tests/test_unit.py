@@ -409,6 +409,13 @@ class MoneySerializerTestCase(BluebottleTestCase):
         )
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
+)
 class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def setUp(self):
         super(TestTenantAwareParlerAppsettings, self).setUp()

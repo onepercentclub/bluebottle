@@ -11,7 +11,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory
+    DateParticipantFactory, SlotParticipantFactory
 )
 
 
@@ -164,6 +164,35 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
             'First complete and submit the activity before managing participants.' in
             page.text
         )
+
+
+class DateParticipantAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.supporter = BlueBottleUserFactory.create()
+        self.participant = DateParticipantFactory.create(status='participant')
+        slot = self.participant.activity.slots.first()
+        SlotParticipantFactory.create(
+            participant=self.participant,
+            slot=slot
+        )
+
+    def test_adjusting_contribution(self):
+        self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        form = page.forms[0]
+        form['contributions-0-value_0'] = 0
+        form['contributions-0-value_1'] = 0
+        page = form.submit()
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('This field is required.' in page.text)
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):

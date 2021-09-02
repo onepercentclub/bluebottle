@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
 from bluebottle.segments.models import SegmentType, Segment
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +12,7 @@ class SegmentInline(admin.TabularInline):
 
 
 @admin.register(SegmentType)
-class SegmentAdmin(admin.ModelAdmin):
+class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
     model = SegmentType
     inlines = [SegmentInline]
 

@@ -19,8 +19,6 @@ def getattr(name):
     if name == 'PARLER_DEFAULT_LANGUAGE_CODE':
         return get_default_language()
 
-    raise AttributeError(f"module 'parler.appsettings' has no attribute '{name}'")
-
 
 parler.appsettings.__getattr__ = getattr
 del parler.appsettings.PARLER_LANGUAGES

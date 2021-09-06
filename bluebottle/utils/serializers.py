@@ -82,7 +82,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Language
-        fields = ('id', 'code', 'language_name', 'native_name')
+        fields = ('id', 'code', 'language_name', 'native_name', 'default')
 
 
 class MLStripper(HTMLParser):

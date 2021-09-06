@@ -1,10 +1,9 @@
 from django.urls.base import reverse
-
 from fluent_contents.models import Placeholder
 from django.test.utils import override_settings
 
 from bluebottle.cms.models import StatsContent, ActivitiesContent
-from bluebottle.test.factory_models.cms import ResultPageFactory
+from bluebottle.test.factory_models.cms import ResultPageFactory, LinkGroupFactory, LinkFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.utils import LanguageFactory
 
@@ -25,7 +24,7 @@ class TestResultPageAdmin(BluebottleAdminTestCase):
         self.placeholder = Placeholder.objects.create_for_object(result_page, slot='content')
         StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
         ActivitiesContent.objects.create_for_placeholder(self.placeholder, title='Activities r us!')
-        result_page_url = reverse('admin:cms_resultpage_change', args=(result_page.id, ))
+        result_page_url = reverse('admin:cms_resultpage_change', args=(result_page.id,))
         response = self.client.get(result_page_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Stats')
@@ -40,7 +39,6 @@ class TestResultPageAdmin(BluebottleAdminTestCase):
     },
 )
 class HomePageAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -59,3 +57,37 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('Dutch' in tabs.text)
         self.assertTrue('English' in tabs.text)
         self.assertTrue('French' in tabs.text)
+
+
+class SiteLinkAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.link_group = LinkGroupFactory.create()
+        LinkFactory.create(link_group=self.link_group)
+        self.app.set_user(self.superuser)
+
+    def test_adding_sitelinks(self):
+        url = reverse('admin:cms_linkgroup_change', args=(self.link_group.id,))
+        page = self.app.get(url)
+        form = page.forms[0]
+        form['links-0-title'] = 'Some page'
+        form['links-0-component'] = 'page'
+        form['links-0-component_id'] = ''
+        page = form.submit()
+        self.assertTrue(
+            "If you use Page you should also set the page slug as the component id."
+            in page.text
+        )
+        form = page.forms[0]
+        form['links-0-title'] = 'Some page'
+        form['links-0-component'] = 'page'
+        form['links-0-component_id'] = 'hupsakidee'
+        page = form.submit()
+        self.assertTrue(
+            "Page with this slug does not exist for this language."
+            in page.text
+        )

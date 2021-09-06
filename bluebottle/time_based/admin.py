@@ -417,7 +417,7 @@ class DateSlotAdmin(SlotAdmin):
     ]
 
     def get_form(self, request, obj=None, **kwargs):
-        if not obj.is_online and obj.location:
+        if obj and not obj.is_online and obj.location:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()

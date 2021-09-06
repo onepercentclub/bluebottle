@@ -174,3 +174,11 @@ form .aligned strong+p.help {
 .select2-container .select2-selection--single {
     height: 38px!important;
 }
+
+.array-item {
+    margin: 8px 0;
+}
+
+.array-item input {
+    padding: 6px;
+}

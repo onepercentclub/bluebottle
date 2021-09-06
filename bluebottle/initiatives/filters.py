@@ -24,9 +24,12 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     default_sort_field = 'date'
 
     filters = (
-        'owner.id', 'activity_managers.id',
-        'theme.id', 'place.country',
-        'categories.id', 'categories.slug',
+        'owner.id',
+        'activity_managers.id',
+        'theme.id',
+        'country',
+        'categories.id',
+        'categories.slug',
         'location.id',
     )
 

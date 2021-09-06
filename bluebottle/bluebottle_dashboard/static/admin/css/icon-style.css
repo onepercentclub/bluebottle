@@ -20,6 +20,7 @@
   font-style: normal;
 }
 
+.inline-deletelink,
 [class^="bb-icon-"], [class*=" bb-icon-"],
 [class^="cp-item-"], [class*=" cp-item-"] {
   /* use !important to prevent issues with browser extensions that change fonts */
@@ -101,9 +102,16 @@
 .bb-icon-user:before {
   content: "\e924";
 }
+.inline-deletelink:before,
 .bb-icon-small-remove:before {
   content: "\e925";
 }
+.inline-deletelink:before {
+  font-size: 10px;
+  color: #777777;
+}
+
+
 .bb-icon-square-download:before {
   content: "\e926";
 }

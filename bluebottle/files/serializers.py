@@ -46,7 +46,7 @@ class PrivateDocumentField(DocumentField):
         parent = self.parent.instance
         # We might have a list when getting this for included serializers
         if isinstance(parent, (QuerySet, tuple, list)):
-            parent = self.context['view'].get_queryset().get(**{self.field_name: value.pk})
+            parent = self.context['view'].get_queryset().filter(**{self.field_name: value.pk}).first()
 
         if not self.has_parent_permissions(parent):
             return None

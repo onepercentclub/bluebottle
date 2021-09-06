@@ -49,14 +49,14 @@ class NotificationAdminMixin(object):
             with transaction.atomic(using=router.db_for_write(self.model)):
                 return self._changeform_view(request, object_id, form_url, extra_context)
 
-        obj = self.model.objects.get(pk=object_id)
+        obj = self.get_object(request, object_id)
         new = None
         ModelForm = self.get_form(request, obj)
 
         if request.method == 'POST':
             form = ModelForm(request.POST, request.FILES, instance=obj)
             new = self.save_form(request, form, change=True)
-        old = self.model.objects.get(pk=object_id)
+        old = self.get_object(request, object_id)
 
         confirm = request.POST.get('confirm', False)
         send_messages = request.POST.get('send_messages', True)

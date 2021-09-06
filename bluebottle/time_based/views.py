@@ -117,6 +117,17 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         except ValueError:
             raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
 
+        try:
+            contributor_id = self.request.GET['contributor']
+            queryset = queryset.filter(
+                slot_participants__status__in=['registered', 'succeeded'],
+                slot_participants__participant_id=contributor_id
+            )
+        except ValueError:
+            raise ValidationError('Invalid parameter: contributor ({})'.format(contributor_id))
+        except KeyError:
+            pass
+
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')
@@ -187,10 +198,30 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs).filter(
-            slot_id=self.kwargs['slot_id'],
-            participant__status__in=['accepted', 'new']
-        )
+        user = self.request.user
+        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
+
+        if user.is_anonymous:
+            queryset = queryset.filter(
+                status__in=('registered', 'succeeded'),
+                participant__status__in=('accepted', 'new'),
+            )
+        elif (
+            user not in (
+                activity.owner,
+                activity.initiative.owner,
+            )
+        ):
+            queryset = queryset.filter(
+                Q(
+                    status__in=('registered', 'succeeded'),
+                    participant__status__in=('accepted', 'new'),
+                ) |
+                Q(participant__user=user)
+            )
+
+        return queryset
 
     queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
     serializer_class = SlotParticipantSerializer

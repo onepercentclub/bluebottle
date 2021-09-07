@@ -39,15 +39,15 @@ def get_default_language():
 
 
 def get_language_choices():
-    cache_key = 'LANUAGE_CHOICES'
-    result = cache.get(cache_key)
+    try:
+        cache_key = 'LANUAGE_CHOICES'
+        result = cache.get(cache_key)
 
-    if not result:
-        try:
+        if not result:
             result = [(lang.code, lang.language_name) for lang in Language.objects.all()]
             cache.set(cache_key, result)
-        except (ProgrammingError, OperationalError):
-            result = [('en', 'English')]
+    except (ProgrammingError, OperationalError, AttributeError):
+        result = [('en', 'English')]
 
     return result
 

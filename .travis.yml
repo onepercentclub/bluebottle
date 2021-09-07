@@ -32,7 +32,7 @@ before_install:
   - psql -c "ALTER ROLE testuser SUPERUSER"
 install:
   - pip install pip==21.2.4
-  - pip install --upgrade wheel setuptools mercurial
+  - pip install --upgrade wheel setuptools==58.0.1 mercurial
   - pip install --upgrade -I flake8==3.9.2
   - pip install -e .[test] --trusted-host github.com
 before_script:

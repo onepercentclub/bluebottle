@@ -9,7 +9,10 @@ def set_default(apps, schema_editor):
 
         language = Language.objects.get(code=properties.LANGUAGE_CODE)
     except Language.DoesNotExist:
-        language = Language.objects.first()
+        try:
+            language = Language.objects.get()
+        except Language.DoesNotExist:
+            return
 
     language.default = True
     language.save()

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib.admin import AdminSite
 from django.urls import reverse
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
@@ -208,3 +209,65 @@ class TestSkillAdmin(BluebottleAdminTestCase):
         url = reverse('admin:time_based_skill_changelist')
         response = self.app.get(url, user=self.staff_member)
         self.assertEqual(response.status, '200 OK')
+
+
+class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        activity1 = DateActivityFactory.create(
+            slot_selection='free',
+            capacity=None,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() + timedelta(days=4),
+            capacity=2
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() + timedelta(days=4),
+            capacity=3
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() - timedelta(days=3),
+            capacity=None
+        )
+        activity2 = DateActivityFactory.create(
+            slot_selection='all',
+            capacity=5,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity2,
+            start=now() + timedelta(days=5),
+            capacity=None
+        )
+        DateActivitySlotFactory.create(
+            activity=activity2,
+            start=now() - timedelta(days=1),
+            capacity=None
+        )
+        self.app.set_user(self.staff_member)
+
+    def test_adjusting_contribution(self):
+        self.url = reverse('admin:time_based_dateactivityslot_changelist')
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('5 slots' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">3</td>' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">-</td>' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">5</td>' in page.text)
+
+        self.assertTrue('<td class="field-required">Required</td>' in page.text)
+        self.assertTrue('<td class="field-required">Optional</td>' in page.text)
+        page = page.click('Upcoming')
+        self.assertTrue('3 slots' in page.text)
+        page = page.click('Required')
+        self.assertTrue('1 slot' in page.text)

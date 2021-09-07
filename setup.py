@@ -109,7 +109,6 @@ install_requires = [
     'sorl-thumbnail==12.6.3',
     'staticmaps-signature==0.2.0',
     'stripe==2.33.0',
-    'suds-jurko==0.6',
     'surlex==0.2.0',
     'tablib==0.14.0',
     'timezonefinder==3.4.2',

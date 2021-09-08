@@ -6,7 +6,9 @@ from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField
+    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField,
+    HyperlinkedRelatedField
+
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -93,8 +95,8 @@ class ActivitySlotSerializer(ModelSerializer):
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
 
-    participants = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
+    participants = HyperlinkedRelatedField(
+        read_only=True,
         many=True,
         related_link_view_name='slot-participants',
         related_link_url_kwarg='slot_id',
@@ -104,9 +106,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
-
-    def get_participants(self, obj):
-        return obj.slot_participants.all()
 
     def get_links(self, instance):
         if instance.start and instance.duration:

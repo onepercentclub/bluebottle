@@ -791,7 +791,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             'account_holder_name': 'Jane Austen',
             'account_holder_type': 'individual',
             'bank_name': 'STRIPE TEST BANK',
-            'country': 'US',
+            'country': 'NL',
             'currency': 'usd',
             'fingerprint': '1JWtPxqbdX5Gamtc',
             'last4': '6789',
@@ -872,11 +872,11 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
+        self.payout_account.refresh_from_db()
 
         message = mail.outbox[0]
 
-        self.assertEqual(payout_account.status, 'verified')
+        self.assertEqual(self.payout_account.status, 'verified')
         self.assertEqual(
             message.subject, u'Your identity has been verified'
         )
@@ -898,7 +898,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account.individual.requirements.currently_due = []
         self.connect_account.individual.requirements.past_due = []
         self.connect_account.individual.requirements.pending_verification = False
-
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
@@ -911,9 +910,11 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
-        self.assertEqual(payout_account.status, 'incomplete')
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, 'incomplete')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+        self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])
 
         # Missing fields
         self.connect_account.individual.requirements.eventually_due = []
@@ -934,9 +935,9 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
+        self.payout_account.refresh_from_db()
         self.funding.refresh_from_db()
-        self.assertEqual(payout_account.status, 'incomplete')
+        self.assertEqual(self.payout_account.status, 'incomplete')
 
         # No missing fields. Should be approved now
         self.connect_account.individual.requirements.eventually_due = []
@@ -960,6 +961,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
         self.funding.refresh_from_db()
         self.assertEqual(payout_account.status, u'verified')
+        self.assertEqual(mail.outbox[1].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[1].bcc, [])
 
     def test_pending(self):
         data = {
@@ -1078,7 +1081,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, 'incomplete')
-
-        self.assertEqual(
-            len(mail.outbox), 0
-        )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+        self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])

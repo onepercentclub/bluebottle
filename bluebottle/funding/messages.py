@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from bluebottle.notifications.messages import TransitionMessage
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+
+from bluebottle.notifications.messages import TransitionMessage
 
 
 class DonationSuccessActivityManagerMessage(TransitionMessage):
@@ -165,6 +167,9 @@ class PayoutAccountRejected(TransitionMessage):
     def get_recipients(self):
         """the activity organizer"""
         return [self.obj.owner]
+
+    def get_bcc_addresses(self):
+        return settings.SUPPORT_EMAIL_ADDRESSES
 
 
 class PayoutAccountVerified(TransitionMessage):

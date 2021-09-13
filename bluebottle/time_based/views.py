@@ -1,9 +1,7 @@
-import os
 from datetime import datetime, time
 
 import dateutil
 import icalendar
-import xlsxwriter
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
@@ -48,6 +46,7 @@ from bluebottle.utils.views import (
     CreateAPIView, ListAPIView, JsonApiViewMixin,
     PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
+from bluebottle.utils.xlsx import generate_xlsx_response
 
 
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
@@ -98,7 +97,6 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 
 class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
-
     related_permission_classes = {
         'activity': [
             ActivityStatusPermission,
@@ -207,11 +205,9 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 status__in=('registered', 'succeeded'),
                 participant__status__in=('accepted', 'new'),
             )
-        elif (
-            user not in (
-                activity.owner,
-                activity.initiative.owner,
-            )
+        elif user not in (
+            activity.owner,
+            activity.initiative.owner,
         ):
             queryset = queryset.filter(
                 Q(
@@ -439,29 +435,21 @@ class DateParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = DateActivity
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-
-        filename = 'participants for {}.xlsx'.format(activity.title)
-        workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
-        worksheet = workbook.add_worksheet()
-
         slots = activity.active_slots.order_by('start')
+        filename = 'participants for {}.xlsx'.format(activity.title)
         row = [field[1] for field in self.fields]
         for slot in slots:
             start = slot.start.replace(tzinfo=None)
             row.append("{}\n{}".format(slot.title or str(slot), start.strftime('%d-%m-%y %H:%M')))
-        worksheet.write_row(0, 0, row)
-        t = 0
-        for participant in activity.contributors.instance_of(
-            DateParticipant
-        ):
-            t += 1
+        rows = [row]
+        for participant in activity.contributors.instance_of(DateParticipant):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
             for slot in slots:
                 slot_participant = slot.slot_participants.filter(participant=participant).first()
@@ -469,16 +457,9 @@ class DateParticipantExportView(PrivateFileView):
                     row.append(slot_participant.status)
                 else:
                     row.append('-')
-            worksheet.write_row(t, 0, row)
+            rows.append(row)
 
-        workbook.close()
-
-        file_path = os.path.join(os.path.dirname(os.path.realpath(__name__)), filename)
-        response = HttpResponse(open(file_path, 'rb').read())
-        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        response['Content-Disposition'] = 'attachment; filename=%s' % filename
-
-        return response
+        return generate_xlsx_response(filename=filename, data=rows)
 
 
 class PeriodParticipantExportView(PrivateFileView):
@@ -487,36 +468,23 @@ class PeriodParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = PeriodActivity
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-
         filename = 'participants for {}.xlsx'.format(activity.title)
-        workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
-        worksheet = workbook.add_worksheet()
 
-        row = [field[1] for field in self.fields]
-        worksheet.write_row(0, 0, row)
+        rows = []
+        rows.append([field[1] for field in self.fields])
 
-        t = 0
-        for participant in activity.contributors.instance_of(
-            PeriodParticipant
-        ):
+        for t, participant in enumerate(activity.contributors.instance_of(PeriodParticipant)):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
-            t += 1
-            worksheet.write_row(t, 0, row)
+            rows.append(row)
 
-        workbook.close()
-
-        file_path = os.path.join(os.path.dirname(os.path.realpath(__name__)), filename)
-        response = HttpResponse(open(file_path, 'rb').read())
-        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        response['Content-Disposition'] = 'attachment; filename=%s' % filename
-        return response
+        return generate_xlsx_response(filename=filename, data=rows)
 
 
 class SkillPagination(JsonApiPagination):

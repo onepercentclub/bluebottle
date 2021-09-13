@@ -1,4 +1,3 @@
-import csv
 import os
 from datetime import datetime, time
 
@@ -496,19 +495,27 @@ class PeriodParticipantExportView(PrivateFileView):
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
 
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
-        response['Content-Type'] = 'text/csv'
+        filename = 'participants for {}.xlsx'.format(activity.title)
+        workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
+        worksheet = workbook.add_worksheet()
 
-        writer = csv.writer(response)
         row = [field[1] for field in self.fields]
-        writer.writerow(row)
+        worksheet.write_row(0, 0, row)
+
+        t = 0
         for participant in activity.contributors.instance_of(
             PeriodParticipant
         ):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
-            writer.writerow(row)
+            t += 1
+            worksheet.write_row(t, 0, row)
 
+        workbook.close()
+
+        file_path = os.path.join(os.path.dirname(os.path.realpath(__name__)), filename)
+        response = HttpResponse(open(file_path, 'rb').read())
+        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
         return response
 
 

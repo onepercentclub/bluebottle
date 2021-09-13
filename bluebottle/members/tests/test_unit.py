@@ -27,6 +27,26 @@ class TestMemberPlatformSettings(BluebottleTestCase):
         member.refresh_from_db()
         self.assertEqual(member.extra.count(), 1)
 
+    def test_extra_member_fields_double(self):
+        member = BlueBottleUserFactory.create()
+        custom = CustomMemberFieldSettings.objects.create(name='custom')
+
+        # Check that the slug is set correctly
+        self.assertEqual(custom.slug, 'custom')
+
+        # Check that the project doesn't have extra field yet
+        member.refresh_from_db()
+        self.assertEqual(member.extra.count(), 0)
+
+        CustomMemberField.objects.create(member=member, value='This is nice!', field=custom)
+        CustomMemberField.objects.create(member=member, value='This is extra nice!', field=custom)
+
+        # And now  we should still be able to get the value
+        self.assertEqual(
+            member.extra_custom,
+            'This is nice!'
+        )
+
 
 class TestMonkeyPatchPasswordValidators(BluebottleTestCase):
     password_validators = [

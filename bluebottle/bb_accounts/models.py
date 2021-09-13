@@ -399,7 +399,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # Magically get extra fields
         if name.startswith('extra_'):
             name = name.replace('extra_', '')
-            return self.extra.get(field__name=name).value
+            return self.extra.filter(field__name=name).first().value
         return super(BlueBottleBaseUser, self).__getattribute__(name)
 
 

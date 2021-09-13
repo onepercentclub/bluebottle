@@ -1,10 +1,10 @@
 import csv
+import os
 from datetime import datetime, time
-from pytz import timezone
 
 import dateutil
 import icalendar
-from bluebottle.clients import properties
+import xlsxwriter
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
@@ -15,6 +15,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission
 )
+from bluebottle.clients import properties
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
@@ -447,25 +448,21 @@ class DateParticipantExportView(PrivateFileView):
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
 
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
-        response['Content-Type'] = 'text/csv'
+        filename = 'participants for {}.xlsx'.format(activity.title)
+        workbook = xlsxwriter.Workbook(filename, {'remove_timezone': True})
+        worksheet = workbook.add_worksheet()
 
-        writer = csv.writer(response)
         slots = activity.active_slots.order_by('start')
         row = [field[1] for field in self.fields]
         for slot in slots:
-            if slot.location and not slot.is_online:
-                tz = timezone(slot.location.timezone)
-            else:
-                tz = get_current_timezone()
-            start = slot.start.astimezone(tz)
-
+            start = slot.start.replace(tzinfo=None)
             row.append("{}\n{}".format(slot.title or str(slot), start.strftime('%d-%m-%y %H:%M')))
-        writer.writerow(row)
+        worksheet.write_row(0, 0, row)
+        t = 0
         for participant in activity.contributors.instance_of(
             DateParticipant
         ):
+            t += 1
             row = [prep_field(request, participant, field[0]) for field in self.fields]
             for slot in slots:
                 slot_participant = slot.slot_participants.filter(participant=participant).first()
@@ -473,7 +470,14 @@ class DateParticipantExportView(PrivateFileView):
                     row.append(slot_participant.status)
                 else:
                     row.append('-')
-            writer.writerow(row)
+            worksheet.write_row(t, 0, row)
+
+        workbook.close()
+
+        file_path = os.path.join(os.path.dirname(os.path.realpath(__name__)), filename)
+        response = HttpResponse(open(file_path, 'rb').read())
+        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
 
         return response
 

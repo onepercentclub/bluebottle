@@ -1,6 +1,7 @@
 from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -20,6 +21,12 @@ class Message(models.Model):
     body_html = models.TextField(blank=True, null=True)
     body_txt = models.TextField(blank=True, null=True)
     custom_message = models.TextField(blank=True, null=True)
+    bcc = ArrayField(
+        models.CharField(max_length=200, null=True),
+        blank=True,
+        null=True,
+        default=[]
+    )
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

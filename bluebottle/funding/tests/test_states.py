@@ -612,7 +612,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):

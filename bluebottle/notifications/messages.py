@@ -151,12 +151,16 @@ class TransitionMessage(object):
                     recipient=recipient,
                     body_html=body_html,
                     body_txt=body_txt,
+                    bcc=self.get_bcc_addresses(),
                     custom_message=custom_message
                 )
 
     def get_recipients(self):
         """the owner"""
         return [self.obj.owner]
+
+    def get_bcc_addresses(self):
+        return []
 
     def compose_and_send(self, **base_context):
         for message in self.get_messages(**base_context):

@@ -6,18 +6,23 @@
     <p class="donation-intro">
         {% blocktrans context 'email' %}
             Hi {{ recipient_name }},<br/>
-           
-
-            We have received some feedback on your identity verification. 
+            <br/>
+            We have received some feedback on your identity verification. <br/>
             Please check out the comments and make the appropriate changes. 
-
+            <br/><br/>
             When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
         {% endblocktrans %}
     </p>
-{% endblock content %} 
+    <p class="important">
+        {% blocktrans context 'email' %}
+            If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.
+            All donations will be returned to your supporters!
+        {% endblocktrans %}
+    </p>
+{% endblock content %}
 
 {% block action %}
     <a href="{{ site }}/initiatives/activities/funding/kyc" class="action-email">
-       {% trans 'Update your data' context 'email' %}:
+       {% trans 'Update your data' context 'email' %}
     </a>
 {% endblock %}`

@@ -161,7 +161,7 @@ class FundingCancelledMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
-    subject = _(u'Your identity verification needs some work')
+    subject = _(u'Your identity verification could not be verified!')
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
@@ -169,6 +169,7 @@ class PayoutAccountRejected(TransitionMessage):
         return [self.obj.owner]
 
     def get_bcc_addresses(self):
+        """platform support email addresses"""
         return settings.SUPPORT_EMAIL_ADDRESSES
 
 

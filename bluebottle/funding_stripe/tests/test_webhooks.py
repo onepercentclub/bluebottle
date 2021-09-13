@@ -913,7 +913,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.payout_account.refresh_from_db()
         self.assertEqual(self.payout_account.status, 'incomplete')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
         self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])
 
         # Missing fields
@@ -1049,7 +1049,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, u'Your identity verification needs some work'
+            message.subject, u'Your identity verification could not be verified!'
         )
         self.assertTrue(
             '/initiatives/activities/funding/kyc' in message.body
@@ -1082,5 +1082,5 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.assertEqual(payout_account.status, 'incomplete')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
         self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])

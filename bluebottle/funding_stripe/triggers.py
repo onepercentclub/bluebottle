@@ -66,17 +66,6 @@ class StripePayoutAccountTriggers(TriggerManager):
                 )
             ]
         ),
-
-        TransitionTrigger(
-            PayoutAccountStateMachine.set_incomplete,
-            effects=[
-                NotificationEffect(PayoutAccountRejected),
-                RelatedTransitionEffect(
-                    'external_accounts',
-                    StripeBankAccountStateMachine.reject
-                )
-            ]
-        ),
     ]
 
 

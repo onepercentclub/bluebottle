@@ -436,20 +436,20 @@ class StripePayoutAccount(PayoutAccount):
                     self.states.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
                 if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                    self.states.reject()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != self.states.verified.value:
-                    self.states.verify()
+                    self.states.reject()
             elif len(self.missing_fields):
                 if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                    self.states.reject()
             elif len(self.pending_fields):
                 if self.status != self.states.pending.value:
                     # Submit to transition to pending
                     self.states.submit()
             else:
                 if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                    self.states.reject()
         else:
             if self.status != self.states.incomplete.value:
                 self.states.set_incomplete()

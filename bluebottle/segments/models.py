@@ -42,7 +42,7 @@ class Segment(models.Model):
 
     alternate_names = ArrayField(
         models.CharField(max_length=200),
-        blank=True
+        default=list
     )
     type = models.ForeignKey(
         SegmentType,

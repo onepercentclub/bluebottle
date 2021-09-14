@@ -911,7 +911,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout_account.refresh_from_db()
-        self.assertEqual(self.payout_account.status, 'incomplete')
+        self.assertEqual(self.payout_account.status, 'rejected')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
         self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])
@@ -937,7 +937,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.payout_account.refresh_from_db()
         self.funding.refresh_from_db()
-        self.assertEqual(self.payout_account.status, 'incomplete')
+        self.assertEqual(self.payout_account.status, 'rejected')
 
         # No missing fields. Should be approved now
         self.connect_account.individual.requirements.eventually_due = []
@@ -1018,7 +1018,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, 'incomplete')
+        self.assertEqual(payout_account.status, 'rejected')
 
     def test_document_rejected(self):
         data = {
@@ -1081,6 +1081,4 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, 'incomplete')
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
-        self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])
+        self.assertEqual(len(mail.outbox), 0)

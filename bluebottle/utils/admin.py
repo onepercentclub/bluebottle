@@ -1,4 +1,5 @@
 import csv
+import datetime
 from builtins import str
 
 import six
@@ -48,6 +49,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
+
+    if isinstance(attr, datetime.datetime):
+        attr = attr.strftime('%d-%m-%y %H:%M')
 
     output = attr() if callable(attr) else attr
 

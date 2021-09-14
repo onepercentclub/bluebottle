@@ -82,7 +82,6 @@ class DeedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
-        hide_from_admin=True,
     )
 
 

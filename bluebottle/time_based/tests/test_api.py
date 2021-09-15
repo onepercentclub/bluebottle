@@ -1103,6 +1103,20 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(latest.pk))
 
+    def test_get_invalid_start(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(
+            self.url, {'activity': self.activity.id, 'start': 'invalid'}
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
     def test_get_filtered_end(self):
         first = DateActivitySlotFactory.create(
             start=now() + timedelta(days=2),
@@ -1127,6 +1141,20 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(first.pk))
+
+    def test_get_invalid_end(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(
+            self.url, {'activity': self.activity.id, 'end': 'invalid'}
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
 
     def test_get_filtered_both(self):
         DateActivitySlotFactory.create(

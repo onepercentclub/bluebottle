@@ -129,14 +129,18 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')
-        if start:
+        try:
             queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+        except (ValueError, TypeError):
+            pass
 
         end = self.request.GET.get('end')
-        if end:
+        try:
             queryset = queryset.filter(
                 start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
             )
+        except (ValueError, TypeError):
+            pass
 
         return queryset
 

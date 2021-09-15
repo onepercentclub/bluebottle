@@ -25,7 +25,7 @@ class Message(models.Model):
         models.CharField(max_length=200, null=True),
         blank=True,
         null=True,
-        default=[]
+        default=list
     )
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

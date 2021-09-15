@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from bluebottle.notifications.messages import TransitionMessage
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+
+from bluebottle.notifications.messages import TransitionMessage
 
 
 class DonationSuccessActivityManagerMessage(TransitionMessage):
@@ -159,12 +161,16 @@ class FundingCancelledMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
-    subject = _(u'Your identity verification needs some work')
+    subject = _(u'Your identity verification could not be verified!')
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
         """the activity organizer"""
         return [self.obj.owner]
+
+    def get_bcc_addresses(self):
+        """platform support email addresses"""
+        return settings.SUPPORT_EMAIL_ADDRESSES
 
 
 class PayoutAccountVerified(TransitionMessage):

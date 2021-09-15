@@ -16,6 +16,11 @@ warnings.filterwarnings(
 CSRF_COOKIE_SECURE = False
 ALLOWED_HOSTS = ['*']
 
+SUPPORT_EMAIL_ADDRESSES = [
+    'support@example.com',
+    'helpdesk@example.com',
+]
+
 MERCHANT_ACCOUNTS = [
     {
         'merchant': 'docdata',

@@ -65,7 +65,7 @@ class StripePayoutAccountTriggers(TriggerManager):
                     StripeBankAccountStateMachine.reject
                 )
             ]
-        )
+        ),
     ]
 
 

@@ -1,12 +1,14 @@
 import json
 import urllib
 from datetime import timedelta, date
+from io import BytesIO
 
 import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils.timezone import now, utc
+from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
@@ -93,7 +95,7 @@ class TimeBasedListAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_disabled(self):
-        self.settings.activity_types = ('funding', )
+        self.settings.activity_types = ('funding',)
         self.settings.save()
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
@@ -276,7 +278,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.activity = self.factory.create()
         self.activity.refresh_from_db()
 
-        self.url = reverse('{}-detail'.format(self.type), args=(self.activity.pk, ))
+        self.url = reverse('{}-detail'.format(self.type), args=(self.activity.pk,))
 
         self.data = {
             'data': {
@@ -415,7 +417,10 @@ class TimeBasedDetailAPIViewTestCase():
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Motivation,Registration Date' in export_response.content)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(sheet['A1'].value, 'Email')
+        self.assertEqual(sheet['B1'].value, 'Name')
+        self.assertEqual(sheet['C1'].value, 'Motivation')
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -902,7 +907,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
-        self.activity.location.position = Point(x=4.4207882, y=51.9280712,)
+        self.activity.location.position = Point(x=4.4207882, y=51.9280712, )
         self.activity.location.save()
 
         user = BlueBottleUserFactory.create()
@@ -924,7 +929,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
-        self.activity.location.position = Point(x=4.4207882, y=51.9280712,)
+        self.activity.location.position = Point(x=4.4207882, y=51.9280712, )
         self.activity.location.save()
         user = BlueBottleUserFactory.create(
             location=LocationFactory.create(
@@ -1098,6 +1103,20 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(latest.pk))
 
+    def test_get_invalid_start(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(
+            self.url, {'activity': self.activity.id, 'start': 'invalid'}
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
+
     def test_get_filtered_end(self):
         first = DateActivitySlotFactory.create(
             start=now() + timedelta(days=2),
@@ -1122,6 +1141,20 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
         self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
         self.assertEqual(response.json()['data'][0]['id'], str(first.pk))
+
+    def test_get_invalid_end(self):
+        DateActivitySlotFactory.create_batch(3, activity=self.activity)
+        DateActivitySlotFactory.create_batch(3, activity=DateActivityFactory.create())
+
+        response = self.client.get(
+            self.url, {'activity': self.activity.id, 'end': 'invalid'}
+        )
+        self.assertEqual(response.json()['meta']['pagination']['count'], len(self.activity.slots.all()))
+        self.assertEqual(response.json()['meta']['total'], len(self.activity.slots.all()))
+
+        slot_ids = [str(slot.pk) for slot in self.activity.slots.all()]
+        for slot in response.json()['data']:
+            self.assertTrue(slot['id'] in slot_ids)
 
     def test_get_filtered_both(self):
         DateActivitySlotFactory.create(
@@ -1275,7 +1308,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.activity = DateActivityFactory.create()
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
 
-        self.url = reverse('date-slot-detail', args=(self.slot.pk, ))
+        self.url = reverse('date-slot-detail', args=(self.slot.pk,))
         self.data = {
             'data': {
                 'type': 'activities/time-based/date-slots',
@@ -1369,7 +1402,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
 
         self.assertTrue(
             links['ical'].startswith(
-                reverse('slot-ical', args=(self.slot.pk, ))
+                reverse('slot-ical', args=(self.slot.pk,))
             )
         )
 
@@ -1509,7 +1542,7 @@ class ParticipantListViewTestCase():
         private_doc = self.included_by_type(response, 'private-documents')[0]
         self.assertTrue(
             private_doc['attributes']['link'].startswith(
-                '{}?signature='.format(reverse(self.document_url_name, args=(data['id'], )))
+                '{}?signature='.format(reverse(self.document_url_name, args=(data['id'],)))
             )
         )
 
@@ -1565,7 +1598,7 @@ class ParticipantDetailViewTestCase():
             motivation='My motivation'
         )
 
-        self.url = reverse(self.url_name, args=(self.participant.pk, ))
+        self.url = reverse(self.url_name, args=(self.participant.pk,))
 
         self.private_document_url = reverse('private-document-list')
         self.png_document_path = './bluebottle/files/tests/files/test-image.png'

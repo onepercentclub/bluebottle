@@ -11,7 +11,12 @@ Please check out the comments and make the appropriate changes.
 When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
 
 {% endblocktrans %}
-{% endblock content %} 
+{% blocktrans context 'email' %}
+If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.
+All donations will be returned to your supporters!
+{% endblocktrans %}
+
+{% endblock content %}
 {% block action %}
    {% trans 'Update your data' context 'email' %}: {{ site }}/initiatives/activities/funding/kyc
 {% endblock %}`

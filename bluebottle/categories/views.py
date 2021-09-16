@@ -27,4 +27,4 @@ class CategoryDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-    lookup_field = 'slug'
+    lookup_field = 'pk'

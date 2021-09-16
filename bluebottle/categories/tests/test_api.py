@@ -76,7 +76,7 @@ class CategoriesTestCase(BluebottleTestCase):
 
         CategoryContentFactory.create(**category_content)
 
-        url = reverse('category-detail', kwargs={'slug': category.slug})
+        url = reverse('category-detail', kwargs={'pk': category.pk})
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

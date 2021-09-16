@@ -1,11 +1,14 @@
 from builtins import object
+
+from rest_framework_json_api.serializers import ModelSerializer
+
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from rest_framework import serializers
 
 from bluebottle.categories.models import Category, CategoryContent
 
 
-class CategoryContentSerializer(serializers.ModelSerializer):
+class CategoryContentSerializer(ModelSerializer):
     title = serializers.CharField(required=True)
     description = serializers.CharField(required=False)
     image = ImageSerializer(required=False)
@@ -18,8 +21,11 @@ class CategoryContentSerializer(serializers.ModelSerializer):
         model = CategoryContent
         fields = ('title', 'description', 'image', 'video_url', 'link_text', 'link_url', 'sequence')
 
+    class JSONAPIMeta(object):
+        resource_name = 'category/content'
 
-class CategorySerializer(serializers.ModelSerializer):
+
+class CategorySerializer(ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     title = serializers.CharField()
     description = serializers.CharField()
@@ -29,4 +35,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Category
-        fields = ('id', 'title', 'description', 'image', 'video', 'image_logo', 'contents')
+        fields = ('id', 'slug', 'title', 'description', 'image', 'video', 'image_logo', 'contents')
+
+    class JSONAPIMeta(object):
+        resource_name = 'categories'

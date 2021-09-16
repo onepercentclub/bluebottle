@@ -43,17 +43,19 @@ class CategoriesTestCase(BluebottleTestCase):
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['title'], 'Nice things')
-        self.assertEqual(data[1]['title'], 'Other things')
+
+        self.assertEqual(len(data['data']), 2)
+        self.assertEqual(data['data'][0]['attributes']['title'], 'Nice things')
+        self.assertEqual(data['data'][1]['attributes']['title'], 'Other things')
 
         # Confirm that we can retrieve dutch titles too.
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['title'], 'Andere dingen')
-        self.assertEqual(data[1]['title'], 'Leuke dingen')
+        self.assertEqual(len(data['data']), 2)
+
+        self.assertEqual(data['data'][0]['attributes']['title'], 'Andere dingen')
+        self.assertEqual(data['data'][1]['attributes']['title'], 'Leuke dingen')
 
     def test_category_content(self):
         category_details = {
@@ -78,7 +80,7 @@ class CategoriesTestCase(BluebottleTestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content)
+        data = json.loads(response.content)['data']['attributes']
         self.assertEqual(data['contents'][0]['title'], 'category content title')
         self.assertEqual(data['contents'][0]['description'], 'category content description')
         self.assertEqual(data['contents'][0]['video_url'], 'http://vimeo.com')

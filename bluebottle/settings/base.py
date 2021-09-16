@@ -23,6 +23,8 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
+SUPPORT_EMAIL_ADDRESSES = []
+
 MANAGERS = ADMINS
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -179,7 +181,7 @@ REST_FRAMEWORK = {
         'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'user': '3/hour'
+        'user': '10/hour'
     }
 }
 

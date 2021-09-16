@@ -145,7 +145,7 @@ class Link(SortableMixin):
                 raise ValidationError({
                     'component_id': _("If you use Page you should also set the page slug as the component id.")
                 })
-            language = self.link_group.site_links.language
+            language = self.link_group.site_links.language.code
             if not Page.objects.filter(slug=self.component_id, language=language).count():
                 raise ValidationError({
                     'component_id': _("Page with this slug does not exist for this language.")

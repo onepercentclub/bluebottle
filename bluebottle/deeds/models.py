@@ -10,6 +10,10 @@ class Deed(Activity):
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
+    target = models.IntegerField(
+        blank=True, null=True,
+        help_text=_('The number of users you want to participate.')
+    )
 
     auto_approve = True
 

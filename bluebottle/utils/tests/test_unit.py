@@ -23,19 +23,22 @@ from django.utils.encoding import force_bytes
 
 from moneyed import Money
 
-from bluebottle.clients import properties
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.fields import RestrictedImageFormField
-from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
+from bluebottle.utils.models import Language
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.permissions import (
     ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
     OneOf
 )
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
+
+from bluebottle.test.factory_models.utils import LanguageFactory
 from ..email_backend import send_mail, create_message
+
+from parler import appsettings
 
 
 def generate_random_slug():
@@ -406,29 +409,37 @@ class MoneySerializerTestCase(BluebottleTestCase):
         )
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
+)
 class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def setUp(self):
         super(TestTenantAwareParlerAppsettings, self).setUp()
-        self.appsettings = TenantAwareParlerAppsettings()
-        languages = (
-            ('nl', 'Dutch'),
-            ('en', 'English'),
-        )
+        Language.objects.update(default=False)
 
-        setattr(properties, 'LANGUAGES', languages)
+        LanguageFactory.create(code='fr', default=True, language_name='French')
+        LanguageFactory.create(code='pt', sub_code='br', language_name='Brazilian Portuguese')
 
     def test_language_code(self):
-        self.assertEqual(self.appsettings.PARLER_DEFAULT_LANGUAGE_CODE, 'en')
+        self.assertEqual(appsettings.PARLER_DEFAULT_LANGUAGE_CODE, 'fr')
 
     def test_languages(self):
-        parler_languages = self.appsettings.PARLER_LANGUAGES
-        self.assertEqual(parler_languages['default']['code'], 'en')
-        self.assertEqual(parler_languages[1][0]['code'], 'nl')
-        self.assertEqual(parler_languages[1][1]['code'], 'en')
+        parler_languages = appsettings.PARLER_LANGUAGES
+        self.assertEqual(parler_languages['default']['code'], 'fr')
+
+        codes = [language['code'] for language in parler_languages[1]]
+
+        self.assertTrue('en' in codes)
+        self.assertTrue('nl' in codes)
+        self.assertTrue('fr' in codes)
+        self.assertTrue('pt-br' in codes)
 
     def test_default(self):
-        self.assertEqual(self.appsettings.PARLER_SHOW_EXCLUDED_LANGUAGE_TABS, False)
-        pass
+        self.assertEqual(appsettings.PARLER_SHOW_EXCLUDED_LANGUAGE_TABS, False)
 
 
 class TestResourcePermission(BluebottleTestCase):

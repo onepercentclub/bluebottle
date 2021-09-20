@@ -9,15 +9,10 @@ from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import PublishableModel, AnonymizationMixin
+from bluebottle.utils.models import PublishableModel, AnonymizationMixin, get_language_choices
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
-
-def get_languages():
-    return properties.LANGUAGES
 
 
 @python_2_unicode_compatible
@@ -41,7 +36,7 @@ class NewsItem(AnonymizationMixin, PublishableModel):
     )
     language = models.CharField(_("language"),
                                 max_length=7,
-                                choices=lazy(get_languages, tuple)())
+                                choices=lazy(get_language_choices, list)())
     contents = PlaceholderField("blog_contents", plugins=[
         'TextPlugin',
         'ImageTextPlugin',

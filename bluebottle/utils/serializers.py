@@ -78,9 +78,11 @@ class MoneySerializer(serializers.DecimalField):
 
 
 class LanguageSerializer(serializers.ModelSerializer):
+    code = serializers.CharField(source='full_code')
+
     class Meta(object):
         model = Language
-        fields = ('id', 'code', 'language_name', 'native_name')
+        fields = ('id', 'code', 'language_name', 'native_name', 'default')
 
 
 class MLStripper(HTMLParser):

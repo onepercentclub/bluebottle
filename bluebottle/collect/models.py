@@ -1,14 +1,36 @@
 from django.db import models
+from django.db.models import SET_NULL
 
 from django.utils.translation import gettext_lazy as _
+from parler.models import TranslatedFields
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
+from bluebottle.utils.models import SortableTranslatableModel
+
+
+class CollectType(SortableTranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta(object):
+        verbose_name = _('collect type')
+        verbose_name_plural = _('collect types')
+        permissions = (
+            ('api_read_collect_type', 'Can view collect type through API'),
+        )
 
 
 class CollectActivity(Activity):
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
+
+    type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     auto_approve = True
 
@@ -47,6 +69,9 @@ class CollectActivity(Activity):
 
 
 class CollectContributor(Contributor):
+
+    value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+
     class Meta(object):
         verbose_name = _("Contributor")
         verbose_name_plural = _("Contributors")

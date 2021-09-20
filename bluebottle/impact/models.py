@@ -123,6 +123,13 @@ class ImpactGoal(models.Model):
         null=True
     )
 
+    coupled_with_contributions = models.BooleanField(
+        _('coupled with contributions'),
+        help_text=_(
+            'Update realized impact automatically when a contribution is added'),
+        default=False
+    )
+
     class Meta(object):
         verbose_name = _('impact goal')
         verbose_name_plural = _('impact goals')

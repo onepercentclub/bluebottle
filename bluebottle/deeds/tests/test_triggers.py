@@ -9,10 +9,12 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import SetContributionDateEffect
 
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
     NewParticipantNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification
 
@@ -468,3 +470,30 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)
             self.assertNotificationEffect(ParticipantFinishedNotification)
+
+
+class EffortContributionTriggersTestCase(TriggerTestCase):
+    factory = EffortContributionFactory
+
+    def setUp(self):
+        self.defaults = {}
+
+        self.contribution = EffortContributionFactory.create()
+
+        self.impact_goal = ImpactGoalFactory.create(
+            activity=self.contribution.contributor.activity,
+            target=100,
+            coupled_with_contributions=True
+        )
+
+    def test_succeed_update_impact(self):
+        self.create()
+        self.model.states.succeed()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)
+
+    def test_fail_update_impact(self):
+        self.create()
+        self.model.states.fail()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)

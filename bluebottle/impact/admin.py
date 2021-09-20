@@ -10,7 +10,7 @@ class ImpactGoalInline(admin.TabularInline):
     model = ImpactGoal
     extra = 0
     readonly_fields = ('unit', )
-    fields = ('type', 'target', 'unit', 'realized')
+    fields = ('type', 'target', 'unit', 'realized', 'coupled_with_contributions')
 
     def unit(self, obj):
         return obj.type.unit

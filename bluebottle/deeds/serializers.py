@@ -149,10 +149,12 @@ class DeedParticipantTransitionSerializer(TransitionSerializer):
 
     included_serializers = {
         'resource': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
+        'resource.activity': 'bluebottle.deeds.serializers.DeedSerializer',
+        'resource.activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/deeds/participant-transitions'
         included_resources = [
-            'resource',
+            'resource', 'resource.activity', 'resource.activity.goals'
         ]

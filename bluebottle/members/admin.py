@@ -359,7 +359,7 @@ class MemberAdmin(UserAdmin):
     export_fields = (
         ('username', 'username'),
         ('email', 'email'),
-        ('phone_number', 'phone_ umber'),
+        ('phone_number', 'phone number'),
         ('remote_id', 'remote id'),
         ('first_name', 'first name'),
         ('last_name', 'last name'),

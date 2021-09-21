@@ -21,6 +21,7 @@ from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
+from ..segments.models import SegmentType
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -104,6 +105,8 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
+                for segment_type in SegmentType.objects.all():
+                    labels.append(segment_type.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
         for obj in queryset:
@@ -117,6 +120,9 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value)
+                for segment_type in SegmentType.objects.all():
+                    segments = ", ".join(obj.segments.filter(type=segment_type).values_list('name', flat=True))
+                    row.append(segments)
             if isinstance(obj, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:

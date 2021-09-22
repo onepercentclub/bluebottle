@@ -85,6 +85,22 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'deeds.deed',
                 'permissions': ['deeds.change_deed']
             },
+            {
+                'name': 'deeds.deedparticipant',
+                'permissions': ['deeds.change_deedparticipant']
+            },
+        ]
+    },
+    {
+        'label': _('Collect'),
+        'app_label': 'collect',
+        'permissions': ['collect.change_collectactivity'],
+        'enabled': 'initiatives.InitiativePlatformSettings.collect_enabled',
+        'items': [
+            {
+                'name': 'collect.collectactivity',
+                'permissions': ['collect.change_collectactivity']
+            },
         ]
     },
     {

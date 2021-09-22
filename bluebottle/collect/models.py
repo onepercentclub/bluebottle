@@ -21,7 +21,7 @@ class CollectType(SortableTranslatableModel):
         verbose_name = _('collect type')
         verbose_name_plural = _('collect types')
         permissions = (
-            ('api_read_collect_type', 'Can view collect type through API'),
+            ('api_read_collecttype', 'Can view collect type through API'),
         )
 
 

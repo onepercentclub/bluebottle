@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'collect type',
                 'verbose_name_plural': 'collect types',
-                'permissions': (('api_read_collect_type', 'Can view collect type through API'),),
+                'permissions': (('api_read_collecttype', 'Can view collect type through API'),),
             },
             bases=(parler.models.TranslatableModelMixin, models.Model),
         ),

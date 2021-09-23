@@ -372,9 +372,7 @@ class CollectActivityContributorListViewAPITestCase(APITestCase):
 
     def test_create(self):
         self.perform_create(user=self.user)
-
         self.assertStatus(status.HTTP_201_CREATED)
-
         self.assertIncluded('activity')
         self.assertIncluded('user')
 
@@ -386,7 +384,6 @@ class CollectActivityContributorListViewAPITestCase(APITestCase):
 
     def test_create_anonymous(self):
         self.perform_create()
-
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
@@ -440,7 +437,7 @@ class ContributorExportViewAPITestCase(APITestCase):
         super().setUp()
 
         initiative_settings = InitiativePlatformSettings.load()
-        initiative_settings.enable_contributor_exports = True
+        initiative_settings.enable_participant_exports = True
         initiative_settings.save()
 
         self.activity = CollectActivityFactory.create(
@@ -461,14 +458,10 @@ class ContributorExportViewAPITestCase(APITestCase):
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
         reader = csv.DictReader(io.StringIO(response.content.decode()))
-
-        for row in reader:
-            self.assertTrue('Email' in row)
-            self.assertTrue('Name' in row)
-            self.assertTrue('Registration Date' in row)
-            self.assertTrue('Status' in row)
+        self.assertEqual(reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status'])
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

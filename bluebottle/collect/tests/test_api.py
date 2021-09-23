@@ -4,14 +4,12 @@ import io
 
 from rest_framework import status
 
+from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
+    CollectActivityTransitionSerializer, CollectContributorSerializer, CollectContributorTransitionSerializer
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.test.utils import APITestCase
-from bluebottle.deeds.serializers import (
-    DeedListSerializer, DeedSerializer, DeedTransitionSerializer,
-    DeedParticipantSerializer, DeedParticipantTransitionSerializer
-)
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -22,9 +20,9 @@ class CollectActivityListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.url = reverse('deed-list')
-        self.serializer = DeedListSerializer
-        self.factory = DeedFactory
+        self.url = reverse('collect-activity-list')
+        self.serializer = CollectActivityListSerializer
+        self.factory = CollectActivityFactory
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
@@ -35,7 +33,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
 
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.append('deed')
+        settings.activity_types.append('collectactivity')
         settings.save()
 
     def test_create_complete(self):
@@ -94,7 +92,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
 
     def test_create_disabled_activity_type(self):
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.remove('deed')
+        settings.activity_types.remove('collectactivity')
         settings.save()
 
         self.perform_create(user=self.user)
@@ -102,12 +100,12 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
-class DeedsDetailViewAPITestCase(APITestCase):
+class CollectActivitysDetailViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.serializer = DeedSerializer
-        self.factory = DeedFactory
+        self.serializer = CollectActivitySerializer
+        self.factory = CollectActivityFactory
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
@@ -116,14 +114,14 @@ class DeedsDetailViewAPITestCase(APITestCase):
         }
         self.model = self.factory.create(**self.defaults)
 
-        self.accepted_participants = DeedParticipantFactory.create_batch(
+        self.accepted_contributors = CollectContributorFactory.create_batch(
             5, activity=self.model, status='accepted'
         )
-        self.withdrawn_participants = DeedParticipantFactory.create_batch(
+        self.withdrawn_contributors = CollectContributorFactory.create_batch(
             5, activity=self.model, status='withdrawn'
         )
 
-        self.url = reverse('deed-detail', args=(self.model.pk, ))
+        self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
 
@@ -146,25 +144,25 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertTransition('delete')
         self.assertRelationship(
             'contributors',
-            self.accepted_participants + self.withdrawn_participants
+            self.accepted_contributors + self.withdrawn_contributors
         )
 
-    def test_get_with_participant(self):
-        participant = DeedParticipantFactory.create(activity=self.model, user=self.user)
+    def test_get_with_contributor(self):
+        contributor = CollectContributorFactory.create(activity=self.model, user=self.user)
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
-        self.assertIncluded('my-contributor', participant)
+        self.assertIncluded('my-contributor', contributor)
 
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
         self.assertRelationship(
             'contributors',
-            self.accepted_participants + [participant]
+            self.accepted_contributors + [contributor]
         )
 
     def test_get_anonymous(self):
@@ -179,7 +177,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
 
-        self.assertRelationship('contributors', self.accepted_participants)
+        self.assertRelationship('contributors', self.accepted_contributors)
 
     def test_get_closed_site(self):
         with self.closed_site():
@@ -227,14 +225,14 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedTranistionListViewAPITestCase(APITestCase):
+class CollectActivityTranistionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.url = reverse('deed-transition-list')
-        self.serializer = DeedTransitionSerializer
+        self.url = reverse('collect-activity-transition-list')
+        self.serializer = CollectActivityTransitionSerializer
 
-        self.activity = DeedFactory.create(
+        self.activity = CollectActivityFactory.create(
             initiative=InitiativeFactory.create(status='approved'),
             start=date.today() + timedelta(days=10),
             end=date.today() + timedelta(days=20),
@@ -270,24 +268,24 @@ class DeedTranistionListViewAPITestCase(APITestCase):
         self.assertEqual(self.defaults['resource'].status, 'draft')
 
 
-class RelatedDeedParticipantViewAPITestCase(APITestCase):
+class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.serializer = DeedParticipantSerializer
-        self.factory = DeedParticipantFactory
+        self.serializer = CollectContributorSerializer
+        self.factory = CollectContributorFactory
 
-        self.activity = DeedFactory.create(
+        self.activity = CollectActivityFactory.create(
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
             start=date.today() + timedelta(days=10),
             end=date.today() + timedelta(days=20),
         )
 
-        DeedParticipantFactory.create_batch(5, activity=self.activity, status='accepted')
-        DeedParticipantFactory.create_batch(5, activity=self.activity, status='withdrawn')
+        CollectContributorFactory.create_batch(5, activity=self.activity, status='accepted')
+        CollectContributorFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
-        self.url = reverse('related-deed-participants', args=(self.activity.pk, ))
+        self.url = reverse('related-collect-contributors', args=(self.activity.pk, ))
 
     def test_get(self):
         self.perform_get(user=self.activity.owner)
@@ -297,8 +295,8 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] in ('accepted', 'withdrawn')
-                for participant in self.response.json()['data']
+                contributor['attributes']['status'] in ('accepted', 'withdrawn')
+                for contributor in self.response.json()['data']
             )
         )
 
@@ -310,8 +308,8 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] == 'accepted'
-                for participant in self.response.json()['data']
+                contributor['attributes']['status'] == 'accepted'
+                for contributor in self.response.json()['data']
             )
         )
 
@@ -327,8 +325,8 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] == 'succeeded'
-                for participant in self.response.json()['data']
+                contributor['attributes']['status'] == 'succeeded'
+                for contributor in self.response.json()['data']
             )
         )
 
@@ -340,8 +338,8 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                participant['attributes']['status'] == 'accepted'
-                for participant in self.response.json()['data']
+                contributor['attributes']['status'] == 'accepted'
+                for contributor in self.response.json()['data']
             )
         )
 
@@ -351,15 +349,15 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedParticipantListViewAPITestCase(APITestCase):
+class CollectActivityContributorListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.url = reverse('deed-participant-list')
-        self.serializer = DeedParticipantSerializer
-        self.factory = DeedParticipantFactory
+        self.url = reverse('collect-contributor-list')
+        self.serializer = CollectContributorSerializer
+        self.factory = CollectContributorFactory
 
-        self.activity = DeedFactory.create(
+        self.activity = CollectActivityFactory.create(
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
             start=date.today() + timedelta(days=10),
@@ -392,15 +390,15 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedParticipantTranistionListViewAPITestCase(APITestCase):
+class CollectActivityContributorTranistionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.url = reverse('deed-participant-transition-list')
-        self.serializer = DeedParticipantTransitionSerializer
+        self.url = reverse('collect-contributor-transition-list')
+        self.serializer = CollectContributorTransitionSerializer
 
-        self.participant = DeedParticipantFactory.create(
-            activity=DeedFactory.create(
+        self.contributor = CollectContributorFactory.create(
+            activity=CollectActivityFactory.create(
                 initiative=InitiativeFactory.create(status='approved'),
                 start=date.today() + timedelta(days=10),
                 end=date.today() + timedelta(days=20),
@@ -408,57 +406,57 @@ class DeedParticipantTranistionListViewAPITestCase(APITestCase):
         )
 
         self.defaults = {
-            'resource': self.participant,
+            'resource': self.contributor,
             'transition': 'withdraw',
         }
 
         self.fields = ['resource', 'transition', ]
 
     def test_create(self):
-        self.perform_create(user=self.participant.user)
+        self.perform_create(user=self.contributor.user)
         self.assertStatus(status.HTTP_201_CREATED)
-        self.assertIncluded('resource', self.participant)
+        self.assertIncluded('resource', self.contributor)
 
-        self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'withdrawn')
+        self.contributor.refresh_from_db()
+        self.assertEqual(self.contributor.status, 'withdrawn')
 
     def test_create_other_user(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-        self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'accepted')
+        self.contributor.refresh_from_db()
+        self.assertEqual(self.contributor.status, 'accepted')
 
     def test_create_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-        self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, 'accepted')
+        self.contributor.refresh_from_db()
+        self.assertEqual(self.contributor.status, 'accepted')
 
 
-class ParticipantExportViewAPITestCase(APITestCase):
+class ContributorExportViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
         initiative_settings = InitiativePlatformSettings.load()
-        initiative_settings.enable_participant_exports = True
+        initiative_settings.enable_contributor_exports = True
         initiative_settings.save()
 
-        self.activity = DeedFactory.create(
+        self.activity = CollectActivityFactory.create(
             start=date.today() + timedelta(days=10),
             end=date.today() + timedelta(days=20),
         )
 
-        self.participants = DeedParticipantFactory.create_batch(
+        self.contributors = CollectContributorFactory.create_batch(
             5, activity=self.activity
         )
-        self.url = reverse('deed-detail', args=(self.activity.pk, ))
+        self.url = reverse('collect-activity-detail', args=(self.activity.pk, ))
 
     @property
     def export_url(self):
-        if self.response and self.response.json()['data']['attributes']['participants-export-url']:
-            return self.response.json()['data']['attributes']['participants-export-url']['url']
+        if self.response and self.response.json()['data']['attributes']['contributors-export-url']:
+            return self.response.json()['data']['attributes']['contributors-export-url']['url']
 
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
@@ -478,8 +476,8 @@ class ParticipantExportViewAPITestCase(APITestCase):
         response = self.client.get(self.export_url + 'test')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get_participant(self):
-        self.perform_get(user=self.participants[0].user)
+    def test_get_contributor(self):
+        self.perform_get(user=self.contributors[0].user)
         self.assertIsNone(self.export_url)
 
     def test_get_other_user(self):

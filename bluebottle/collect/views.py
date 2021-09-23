@@ -136,7 +136,7 @@ class CollectContributorExportView(PrivateFileView):
         activity = self.get_object()
 
         response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
+        response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
         response['Content-Type'] = 'text/csv'
 
         writer = csv.writer(response)
@@ -144,10 +144,10 @@ class CollectContributorExportView(PrivateFileView):
         row = [field[1] for field in self.fields]
         writer.writerow(row)
 
-        for participant in activity.contributors.instance_of(
+        for contributor in activity.contributors.instance_of(
             CollectContributor
         ):
-            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            row = [prep_field(request, contributor, field[0]) for field in self.fields]
             writer.writerow(row)
 
         return response

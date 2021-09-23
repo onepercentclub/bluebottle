@@ -20,10 +20,18 @@ class Migration(migrations.Migration):
                 ('start', models.DateField(blank=True, null=True)),
                 ('end', models.DateField(blank=True, null=True)),
             ],
-            options={
-                'verbose_name': 'Collect',
-                'verbose_name_plural': 'Collects',
-                'permissions': (('api_read_collect', 'Can view collect activity through the API'), ('api_add_collect', 'Can add collect activity through the API'), ('api_change_collect', 'Can change collect activity through the API'), ('api_delete_collect', 'Can delete collect activity through the API'), ('api_read_own_collect', 'Can view own collect activity through the API'), ('api_add_own_collect', 'Can add own collect activity through the API'), ('api_change_own_collect', 'Can change own collect activity through the API'), ('api_delete_own_collect', 'Can delete own collect activity through the API')),
+            options={'permissions': (
+                    ('api_read_collectactivity', 'Can view collect activity through the API'),
+                    ('api_add_collectactivity', 'Can add collect activity through the API'),
+                    ('api_change_collectactivity', 'Can change collect activity through the API'),
+                    ('api_delete_collectactivity', 'Can delete collect activity through the API'),
+                    ('api_read_own_collectactivity', 'Can view own collect activity through the API'),
+                    ('api_add_own_collectactivity', 'Can add own collect activity through the API'),
+                    ('api_change_own_collectactivity', 'Can change own collect activity through the API'),
+                    ('api_delete_own_collectactivity', 'Can delete own collect activity through the API')
+                ),
+                'verbose_name': 'Collect Activity',
+                'verbose_name_plural': 'Collect Activities'
             },
             bases=('activities.activity',),
         ),

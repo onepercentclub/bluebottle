@@ -15,7 +15,7 @@ urlpatterns = [
 
     url(r'^/(?P<pk>\d+)$',
         CollectActivityDetailView.as_view(),
-        name='deed-detail'),
+        name='collect-activity-detail'),
 
     url(r'^/transitions$',
         CollectActivityTransitionList.as_view(),
@@ -23,19 +23,19 @@ urlpatterns = [
 
     url(r'^/(?P<activity_id>\d+)/contributors$',
         CollectActivityRelatedCollectContributorList.as_view(),
-        name='related-collect-activity-contributors'),
+        name='related-collect-contributors'),
 
     url(r'^/contributors$',
         CollectContributorList.as_view(),
-        name='collect-activity-contributor-list'),
+        name='collect-contributor-list'),
     url(r'^/contributors/(?P<pk>\d+)$',
         CollectContributorDetail.as_view(),
-        name='collect-activity-participant-detail'),
+        name='collect-contributor-detail'),
     url(r'^/contributors/transitions$',
         CollectContributorTransitionList.as_view(),
-        name='collect-activity-contributor-transition-list'),
+        name='collect-contributor-transition-list'),
 
     url(r'^/export/(?P<pk>[\d]+)$',
         CollectContributorExportView.as_view(),
-        name='collect-activity-contributor-export'),
+        name='collect-contributors-export'),
 ]

@@ -249,7 +249,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),
         ('deed', _('Deed')),
-        ('collect', _('Collect activity')),
+        ('collectactivity', _('Collect activity')),
     )
 
     ACTIVITY_SEARCH_FILTERS = (
@@ -311,7 +311,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
     @property
     def collect_enabled(self):
-        return 'collect' in self.activity_types
+        return 'collectactivity' in self.activity_types
 
     @property
     def funding_enabled(self):

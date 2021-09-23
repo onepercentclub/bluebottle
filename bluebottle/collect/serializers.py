@@ -18,7 +18,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class CollectActivitySerializer(BaseActivitySerializer):
-    permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
+    permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
         model=CollectContributor,
         read_only=True,
@@ -28,14 +28,14 @@ class CollectActivitySerializer(BaseActivitySerializer):
     contributors = SerializerMethodResourceRelatedField(
         model=CollectContributor,
         many=True,
-        related_link_view_name='related-deed-participants',
+        related_link_view_name='related-collect-contributors',
         related_link_url_kwarg='activity_id'
     )
 
-    participants_export_url = PrivateFileSerializer(
-        'deed-participant-export',
+    contributors_export_url = PrivateFileSerializer(
+        'collect-contributors-export',
         url_args=('pk', ),
-        filename='participant.csv',
+        filename='contributors.csv',
         permission=CanExportParticipantsPermission,
         read_only=True
     )
@@ -67,7 +67,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'contributors',
             'start',
             'end',
-            'participants_export_url',
+            'contributors_export_url',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -85,7 +85,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
 
 
 class CollectActivityListSerializer(BaseActivityListSerializer):
-    permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
+    permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
 
     class Meta(BaseActivityListSerializer.Meta):
         model = CollectActivity
@@ -106,14 +106,14 @@ class CollectActivityTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         included_resources = ['resource', ]
-        resource_name = 'activities/deed-transitions'
+        resource_name = 'activities/collect-activity-transitions'
 
 
 class CollectContributorSerializer(BaseContributorSerializer):
     activity = ResourceRelatedField(
         queryset=CollectActivity.objects.all()
     )
-    permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
+    permissions = ResourcePermissionField('collect-contributor-detail', view_args=('pk',))
 
     class Meta(BaseContributorSerializer.Meta):
         model = CollectContributor
@@ -127,7 +127,7 @@ class CollectContributorSerializer(BaseContributorSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/collect/participants'
+        resource_name = 'contributors/collect/contributors'
         included_resources = [
             'user', 'activity',
         ]
@@ -151,7 +151,7 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collect/participant-transitions'
+        resource_name = 'contributors/collect/collect-contributor-transitions'
         included_resources = [
             'resource',
         ]

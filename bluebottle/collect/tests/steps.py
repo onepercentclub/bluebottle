@@ -3,7 +3,6 @@ import json
 from django.urls import reverse
 
 from bluebottle.collect.models import CollectActivity
-from bluebottle.deeds.models import Deed
 
 
 def api_create_collect_activity(
@@ -93,4 +92,4 @@ def api_read_collect_activity(
     response = test.client.get(url, user=request_user)
     test.assertEqual(response.status_code, status_code, msg)
     if status_code == 200:
-        return Deed.objects.get(id=response.data['id'])
+        return CollectActivity.objects.get(id=response.data['id'])

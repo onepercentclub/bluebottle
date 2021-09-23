@@ -1,0 +1,157 @@
+from rest_framework.validators import UniqueTogetherValidator
+
+from rest_framework_json_api.relations import (
+    ResourceRelatedField,
+    SerializerMethodResourceRelatedField
+)
+
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
+
+from bluebottle.activities.utils import (
+    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
+)
+from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.collect.states import CollectContributorStateMachine
+from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.utils.serializers import ResourcePermissionField
+
+
+class CollectActivitySerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
+    my_contributor = SerializerMethodResourceRelatedField(
+        model=CollectContributor,
+        read_only=True,
+        source='get_my_contributor'
+    )
+
+    contributors = SerializerMethodResourceRelatedField(
+        model=CollectContributor,
+        many=True,
+        related_link_view_name='related-deed-participants',
+        related_link_url_kwarg='activity_id'
+    )
+
+    participants_export_url = PrivateFileSerializer(
+        'deed-participant-export',
+        url_args=('pk', ),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
+    def get_contributors(self, instance):
+        user = self.context['request'].user
+        return [
+            contributor for contributor in instance.contributors.all() if (
+                isinstance(contributor, CollectContributor) and (
+                    contributor.status in [
+                        CollectContributorStateMachine.new.value,
+                        CollectContributorStateMachine.accepted.value,
+                        CollectContributorStateMachine.succeeded.value
+                    ] or
+                    user in (instance.owner, instance.initiative.owner, contributor.user)
+                )
+            )
+        ]
+
+    def get_my_contributor(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = CollectActivity
+        fields = BaseActivitySerializer.Meta.fields + (
+            'my_contributor',
+            'contributors',
+            'start',
+            'end',
+            'participants_export_url',
+        )
+
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/collect'
+        included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
+            'my_contributor',
+        ]
+
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
+        }
+    )
+
+
+class CollectActivityListSerializer(BaseActivityListSerializer):
+    permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
+
+    class Meta(BaseActivityListSerializer.Meta):
+        model = CollectActivity
+        fields = BaseActivityListSerializer.Meta.fields + (
+            'start',
+            'end',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/collect'
+
+
+class CollectActivityTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=CollectActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.collect.serializers.CollectActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/deed-transitions'
+
+
+class CollectContributorSerializer(BaseContributorSerializer):
+    activity = ResourceRelatedField(
+        queryset=CollectActivity.objects.all()
+    )
+    permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
+
+    class Meta(BaseContributorSerializer.Meta):
+        model = CollectContributor
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=CollectContributor.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/collect/participants'
+        included_resources = [
+            'user', 'activity',
+        ]
+
+    included_serializers = {
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.collect.serializers.CollectActivitySerializer',
+    }
+
+
+class CollectContributorListSerializer(CollectContributorSerializer):
+    pass
+
+
+class CollectContributorTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=CollectContributor.objects.all())
+    field = 'states'
+
+    included_serializers = {
+        'resource': 'bluebottle.collect.serializers.CollectContributorSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/collect/participant-transitions'
+        included_resources = [
+            'resource',
+        ]

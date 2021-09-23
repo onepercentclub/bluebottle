@@ -54,7 +54,7 @@ class CollectActivity(Activity):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'activities/collects'
+        resource_name = 'activities/collectactivities'
 
     @property
     def required_fields(self):
@@ -89,4 +89,4 @@ class CollectContributor(Contributor):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collects/contributor'
+        resource_name = 'contributors/collectactivities/contributor'

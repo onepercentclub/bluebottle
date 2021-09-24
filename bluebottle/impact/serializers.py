@@ -35,7 +35,7 @@ class ImpactGoalSerializer(ModelSerializer):
     class Meta(object):
         model = ImpactGoal
         fields = (
-            'id', 'target', 'realized', 'activity', 'type', 'coupled_with_contributions',
+            'id', 'target', 'realized', 'activity', 'type',
         )
 
     class JSONAPIMeta(object):

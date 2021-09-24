@@ -12,7 +12,8 @@ class UpdateImpactGoalEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.contributor.activity
-        goals = ImpactGoal.objects.filter(activity=activity, coupled_with_contributions=True)
+
+        goals = ImpactGoal.objects.filter(activity=activity)
 
         for goal in goals:
             goal.realized = len(
@@ -20,7 +21,11 @@ class UpdateImpactGoalEffect(Effect):
                     contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
                 ).filter(
                     contributor__activity=activity,
-                    status='succeeded',
+                    status__in=['succeeded', 'new', ]
                 )
             )
             goal.save()
+
+    @property
+    def is_valid(self):
+        return self.instance.contributor.activity.target

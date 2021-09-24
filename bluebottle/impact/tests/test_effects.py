@@ -1,20 +1,21 @@
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.deeds.tests.factories import EffortContributionFactory
+from bluebottle.deeds.tests.factories import DeedParticipantFactory, DeedFactory
 from bluebottle.impact.tests.factories import ImpactGoalFactory
 
 
 class CreateEffortContributionTestCase(BluebottleTestCase):
     def setUp(self):
-        self.contribution = EffortContributionFactory.create()
-        self.contribution.contributor.activity.initiative.states.submit(save=True)
-        self.contribution.contributor.activity.states.submit(save=True)
-        self.contribution.contributor.activity.initiative.states.approve(save=True)
+        self.activity = DeedFactory.create(target=10)
+        self.activity.initiative.states.submit(save=True)
+        self.activity.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
 
+        participant = DeedParticipantFactory.create(activity=self.activity)
+        self.contribution = participant.contributions.first()
         self.impact_goal = ImpactGoalFactory.create(
-            activity=self.contribution.contributor.activity,
+            activity=self.activity,
             target=100,
             realized=0,
-            coupled_with_contributions=True
         )
 
     def test_status_new(self):
@@ -27,8 +28,8 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         self.assertEqual(self.impact_goal.realized, 1)
 
     def test_status_succeed_not_coupled(self):
-        self.impact_goal.coupled_with_contributions = False
-        self.impact_goal.save()
+        self.activity.target = None
+        self.activity.save()
 
         self.contribution.states.succeed(save=True)
         self.impact_goal.refresh_from_db()

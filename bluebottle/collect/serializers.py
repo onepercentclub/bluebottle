@@ -1,15 +1,12 @@
-from rest_framework.validators import UniqueTogetherValidator
-
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     SerializerMethodResourceRelatedField
 )
 
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.collect.states import CollectContributorStateMachine
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -71,7 +68,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
-        resource_name = 'activities/collect'
+        resource_name = 'activities/collects'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
         ]
@@ -118,13 +115,7 @@ class CollectContributorSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = CollectContributor
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=CollectContributor.objects.all(),
-                fields=('activity', 'user')
-            )
-        ]
+        fields = BaseContributorSerializer.Meta.fields + ('value',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/collect/contributors'

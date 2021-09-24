@@ -225,7 +225,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class CollectActivityTranistionListViewAPITestCase(APITestCase):
+class CollectActivityTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 

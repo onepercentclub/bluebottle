@@ -57,7 +57,7 @@ class CollectActivity(Activity):
     validators = [EndDateValidator]
 
     class JSONAPIMeta(object):
-        resource_name = 'activities/collectactivities'
+        resource_name = 'activities/collects'
 
     @property
     def accepted_contributors(self):
@@ -98,4 +98,4 @@ class CollectContributor(Contributor):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collectactivities/contributor'
+        resource_name = 'contributors/collects/contributor'

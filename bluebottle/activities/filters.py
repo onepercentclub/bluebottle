@@ -27,7 +27,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'owner.id',
         'theme.id',
         'country',
-        'categories.slug',
+        'categories.id',
         'expertise.id',
         'type',
         'status',

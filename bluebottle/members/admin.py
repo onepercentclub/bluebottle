@@ -305,6 +305,13 @@ class MemberAdmin(UserAdmin):
             if SegmentType.objects.filter(is_active=True).count():
                 fieldsets[1][1]['fields'].append('segments')
 
+            member_settings = MemberPlatformSettings.load()
+
+            if member_settings.enable_gender:
+                fieldsets[0][1]['fields'].append('gender')
+            if member_settings.enable_birthdate:
+                fieldsets[0][1]['fields'].append('birthdate')
+
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
@@ -352,8 +359,9 @@ class MemberAdmin(UserAdmin):
     export_fields = (
         ('username', 'username'),
         ('email', 'email'),
-        ('remote_id', 'remote_id'),
-        ('first_name', 'first_name'),
+        ('phone_number', 'phone number'),
+        ('remote_id', 'remote id'),
+        ('first_name', 'first name'),
         ('last_name', 'last name'),
         ('date_joined', 'date joined'),
 
@@ -365,7 +373,25 @@ class MemberAdmin(UserAdmin):
         ('subscribed', 'subscribed to matching projects'),
     )
 
-    actions = (export_as_csv_action(fields=export_fields),)
+    def get_export_fields(self):
+        fields = self.export_fields
+        member_settings = MemberPlatformSettings.load()
+        if member_settings.enable_gender:
+            fields += (('gender', 'gender'),)
+        if member_settings.enable_birthdate:
+            fields += (('birthdate', 'birthdate'),)
+        if member_settings.enable_address:
+            fields += (('place__street', 'street'),)
+            fields += (('place__street_number', 'street_number'),)
+            fields += (('place__locality', 'city'),)
+            fields += (('place__postal_code', 'postal_code'),)
+            fields += (('place__country__name', 'country'),)
+        return fields
+
+    def get_actions(self, request):
+        self.actions = (export_as_csv_action(fields=self.get_export_fields()),)
+
+        return super(MemberAdmin, self).get_actions(request)
 
     form = MemberChangeForm
     add_form = MemberCreationForm

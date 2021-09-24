@@ -33,7 +33,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
 
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.append('collectactivity')
+        settings.activity_types.append('collect')
         settings.save()
 
     def test_create_complete(self):
@@ -92,7 +92,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
 
     def test_create_disabled_activity_type(self):
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.remove('collectactivity')
+        settings.activity_types.remove('collect')
         settings.save()
 
         self.perform_create(user=self.user)

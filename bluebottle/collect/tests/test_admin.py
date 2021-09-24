@@ -27,7 +27,7 @@ class CollectActivityAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url)
         self.assertFalse('Collect' in page.text)
 
-        initiative_settings.activity_types = ['dateactivity', 'periodactivity', 'collectactivity']
+        initiative_settings.activity_types = ['dateactivity', 'periodactivity', 'collect']
         initiative_settings.save()
         url = reverse('admin:index')
         page = self.app.get(url)

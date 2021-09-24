@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                     ('api_add_collectactivity', 'Can add collect activity through the API'),
                     ('api_change_collectactivity', 'Can change collect activity through the API'),
                     ('api_delete_collectactivity', 'Can delete collect activity through the API'),
+
                     ('api_read_own_collectactivity', 'Can view own collect activity through the API'),
                     ('api_add_own_collectactivity', 'Can add own collect activity through the API'),
                     ('api_change_own_collectactivity', 'Can change own collect activity through the API'),
@@ -48,6 +49,7 @@ class Migration(migrations.Migration):
                     ('api_add_collectcontributor', 'Can add collect contributor through the API'),
                     ('api_change_collectcontributor', 'Can change collect contributor through the API'),
                     ('api_delete_collectcontributor', 'Can delete collect contributor through the API'),
+
                     ('api_read_own_collectcontributor', 'Can view own collect contributor through the API'),
                     ('api_add_own_collectcontributor', 'Can add own collect contributor through the API'),
                     ('api_change_own_collectcontributor', 'Can change own collect contributor through the API'),

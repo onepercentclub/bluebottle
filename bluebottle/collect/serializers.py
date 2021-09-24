@@ -92,7 +92,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
-        resource_name = 'activities/collect'
+        resource_name = 'activities/collects'
 
 
 class CollectActivityTransitionSerializer(TransitionSerializer):

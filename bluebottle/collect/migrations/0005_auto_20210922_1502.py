@@ -28,11 +28,14 @@ def add_group_permissions(apps, schema_editor):
             },
             'Authenticated': {
                 'perms': (
-                    'api_read_collectactivity', 'api_add_own_collectactivity',
-                    'api_change_own_collectactivity', 'api_delete_own_collectactivity',
+
+                    'api_read_collectactivity',
+                    'api_add_own_collectactivity', 'api_change_own_collectactivity',
+                    'api_delete_own_collectactivity',
                     'api_read_collectcontributor', 'api_add_own_collectcontributor',
                     'api_change_own_collectcontributor', 'api_delete_own_collectcontributor',
-                    'api_add_collectcontributor', 'api_read_collecttype',
+                    'api_read_collectcontributor', 'api_add_collectcontributor',
+                    'api_read_collecttype',
                 )
             }
     }

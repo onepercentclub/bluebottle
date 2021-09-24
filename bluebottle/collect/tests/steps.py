@@ -12,7 +12,7 @@ def api_create_collect_activity(
         request_user = initiative.owner
     test.data = {
         'data': {
-            'type': 'activities/collectactivities',
+            'type': 'activities/collects',
             'attributes': attributes,
             'relationships': {
                 'initiative': {
@@ -38,7 +38,7 @@ def api_update_collect_activity(
         request_user = activity.owner
     test.data = {
         'data': {
-            'type': 'activities/collectactivities',
+            'type': 'activities/collects',
             'id': activity.id,
             'attributes': attributes,
             'relationships': {
@@ -72,7 +72,7 @@ def api_collect_activity_transition(
             'relationships': {
                 'resource': {
                     'data': {
-                        'type': 'activities/collectactivities',
+                        'type': 'activities/collects',
                         'id': activity.pk
                     }
                 }

@@ -100,12 +100,10 @@ class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
         self.check_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
         serializer.save(user=self.request.user)
 
 

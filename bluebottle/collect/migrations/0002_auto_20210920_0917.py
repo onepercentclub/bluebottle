@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='collectactivity',
+            name='CollectActivity',
             options={'permissions': (
                 ('api_read_collectactivity', 'Can view collect activity through the API'),
                 ('api_add_collectactivity', 'Can add collect activity through the API'),

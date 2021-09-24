@@ -43,7 +43,16 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Contributor',
                 'verbose_name_plural': 'Contributors',
-                'permissions': (('api_read_collectcontributor', 'Can view collect through the API'), ('api_add_collectcontributor', 'Can add collect through the API'), ('api_change_collectcontributor', 'Can change collect through the API'), ('api_delete_collectcontributor', 'Can delete collect through the API'), ('api_read_own_collectcontributor', 'Can view own collect through the API'), ('api_add_own_collectcontributor', 'Can add own collect through the API'), ('api_change_own_collectcontributor', 'Can change own collect through the API'), ('api_delete_own_collectcontributor', 'Can delete own collect through the API')),
+                'permissions': (
+                    ('api_read_collectcontributor', 'Can view collect contributor through the API'),
+                    ('api_add_collectcontributor', 'Can add collect contributor through the API'),
+                    ('api_change_collectcontributor', 'Can change collect contributor through the API'),
+                    ('api_delete_collectcontributor', 'Can delete collect contributor through the API'),
+                    ('api_read_own_collectcontributor', 'Can view own collect contributor through the API'),
+                    ('api_add_own_collectcontributor', 'Can add own collect contributor through the API'),
+                    ('api_change_own_collectcontributor', 'Can change own collect contributor through the API'),
+                    ('api_delete_own_collectcontributor', 'Can delete own collect contributor through the API')
+                ),
             },
             bases=('activities.contributor',),
         ),

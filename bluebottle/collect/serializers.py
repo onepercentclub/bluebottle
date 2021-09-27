@@ -65,18 +65,21 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'start',
             'end',
             'contributors_export_url',
+            'location',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/collects'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
+            'location'
         ]
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
             'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 
@@ -118,9 +121,10 @@ class CollectContributorSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + ('value',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/collect/contributors'
+        resource_name = 'contributors/collect/contributor'
         included_resources = [
-            'user', 'activity',
+            'user',
+            'activity',
         ]
 
     included_serializers = {

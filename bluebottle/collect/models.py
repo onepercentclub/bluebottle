@@ -6,6 +6,7 @@ from parler.models import TranslatedFields
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.deeds.validators import EndDateValidator
+from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
 
 
@@ -32,6 +33,8 @@ class CollectActivity(Activity):
     end = models.DateField(blank=True, null=True)
 
     type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
+
+    location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
 
     auto_approve = True
 
@@ -98,4 +101,4 @@ class CollectContributor(Contributor):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collects/contributor'
+        resource_name = 'contributors/collect/contributors'

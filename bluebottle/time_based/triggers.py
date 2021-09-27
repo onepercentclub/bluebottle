@@ -605,7 +605,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     TimeBasedStateMachine.succeed,
                     conditions=[
                         all_slots_finished,
-                        has_accepted_participants
+                        activity_has_accepted_participants
                     ]
                 ),
                 RelatedTransitionEffect(

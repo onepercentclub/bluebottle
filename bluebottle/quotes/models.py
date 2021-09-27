@@ -5,7 +5,12 @@ from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.utils.models import PublishableModel, get_language_choices
+from bluebottle.clients import properties
+from bluebottle.utils.models import PublishableModel
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 @python_2_unicode_compatible
@@ -20,7 +25,7 @@ class Quote(PublishableModel):
 
     # Contents
     language = models.CharField(_("language"), max_length=7,
-                                choices=lazy(get_language_choices, list)())
+                                choices=lazy(get_languages, tuple)())
     quote = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              verbose_name=_('Quoted member'),

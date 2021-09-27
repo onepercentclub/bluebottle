@@ -68,7 +68,6 @@ class InitProjectDataMixin(object):
         Language.objects.all().delete()
 
         language_data = [{'code': 'en', 'language_name': 'English',
-                          'default': True,
                           'native_name': 'English'},
                          {'code': 'nl', 'language_name': 'Dutch',
                           'native_name': 'Nederlands'}]

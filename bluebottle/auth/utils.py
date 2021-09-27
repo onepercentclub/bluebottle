@@ -5,7 +5,7 @@ from requests import request, HTTPError
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from bluebottle.utils.models import get_languages
+from bluebottle.clients import properties
 
 USER_MODEL = get_user_model()
 
@@ -48,11 +48,11 @@ def refresh(strategy, social, *args, **kwargs):
 
 def set_language(strategy, user, response, details,
                  is_new=False, *args, **kwargs):
-    supported_languages = [lang.code for lang in get_languages()]
+    supported_langauges = list(dict(properties.LANGUAGES).keys())
 
     try:
         language = response['locale'][:2]
-        if language in supported_languages:
+        if language in supported_langauges:
             user.primary_language = language
             user.save()
     except KeyError:

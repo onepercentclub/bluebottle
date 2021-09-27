@@ -7,7 +7,7 @@ from django.utils import translation
 
 from tenant_extras.middleware import tenant_translation
 
-from bluebottle.utils.models import get_languages, get_default_language
+from bluebottle.clients import properties
 
 
 class SubDomainSessionMiddleware(middleware.SessionMiddleware):
@@ -26,10 +26,10 @@ class APILanguageMiddleware(middleware.SessionMiddleware):
         if request.path.startswith('/api'):
             try:
                 language = request.META['HTTP_X_APPLICATION_LANGUAGE']
-                if language not in [lang.code for lang in get_languages()]:
-                    language = get_default_language()
+                if language not in [lang[0] for lang in properties.LANGUAGES]:
+                    language = properties.LANGUAGE_CODE
             except KeyError:
-                language = get_default_language()
+                language = properties.LANGUAGE_CODE
 
             translation.activate(language)
 

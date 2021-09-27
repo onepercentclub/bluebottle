@@ -99,6 +99,9 @@ GeoIP.dat
 #autoenv
 /.env
 
+#locale
+locale/en/
+
 # Analytics Testing
 analytics/*
 

@@ -8,10 +8,15 @@ from djchoices import DjangoChoices, ChoiceItem
 
 from future.utils import python_2_unicode_compatible
 
+from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import PublishableModel, get_language_choices
+from bluebottle.utils.models import PublishableModel
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 @python_2_unicode_compatible
@@ -27,7 +32,7 @@ class Slide(PublishableModel):
     slug = models.SlugField(_("Slug"))
     language = models.CharField(
         _("language"), max_length=7,
-        choices=lazy(get_language_choices, list)())
+        choices=lazy(get_languages, tuple)())
     tab_text = models.CharField(
         _("Tab text"), max_length=100,
         help_text=_("This is shown on tabs beneath the banner."))

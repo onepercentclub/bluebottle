@@ -19,9 +19,14 @@ from fluent_contents.rendering import render_placeholder
 from fluent_contents.utils.filters import apply_filters
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.utils.models import PublishableModel, get_language_choices
+from bluebottle.clients import properties
+from bluebottle.utils.models import PublishableModel
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 class DocumentItem(ContentItem):
@@ -211,9 +216,7 @@ class Page(PublishableModel):
     language = models.CharField(
         _('language'),
         max_length=7,
-        choices=lazy(get_language_choices, list)()
-    )
-
+        choices=lazy(get_languages, tuple)())
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
         'ColumnsPlugin',

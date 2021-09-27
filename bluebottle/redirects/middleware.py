@@ -8,7 +8,7 @@ from django.db import connection
 from django.utils.deprecation import MiddlewareMixin
 
 from bluebottle.redirects.models import Redirect
-from bluebottle.utils.models import get_default_language, get_languages
+from bluebottle.clients import properties
 
 
 class RedirectFallbackMiddleware(MiddlewareMixin):
@@ -49,13 +49,13 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
         # If there's no language, fallback to the LANGUAGE_CODE
         from django.utils.translation.trans_real import _active
 
-        language = get_default_language()
+        language = properties.LANGUAGE_CODE
 
         t = getattr(_active, "value", None)
         if t is not None:
             try:
                 lan = t.to_language()
-                if lan in [lang.code for lang in get_languages()]:
+                if [i[0] for i in properties.LANGUAGES if i[0] == lan]:
                     language = lan
             except AttributeError:
                 pass

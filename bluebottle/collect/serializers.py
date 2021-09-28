@@ -19,6 +19,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
+        required=False,
         source='type'
     )
 
@@ -131,7 +132,7 @@ class CollectContributorSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + ('value',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/collect/contributor'
+        resource_name = 'contributors/collect/contributors'
         included_resources = [
             'user',
             'activity',
@@ -156,7 +157,7 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collect/collect-contributor-transitions'
+        resource_name = 'contributors/collect/contributor-transitions'
         included_resources = [
             'resource',
         ]

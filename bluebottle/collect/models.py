@@ -11,6 +11,8 @@ from bluebottle.utils.models import SortableTranslatableModel
 
 
 class CollectType(SortableTranslatableModel):
+    disabled = models.BooleanField(default=False)
+
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100),
         description=models.TextField(_('description'), blank=True)

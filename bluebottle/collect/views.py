@@ -7,19 +7,19 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission
 )
-from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
-    CollectContributorTransitionSerializer
+    CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView
+    JsonApiViewMixin, PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination
 )
 
 
@@ -149,3 +149,19 @@ class CollectContributorExportView(PrivateFileView):
             writer.writerow(row)
 
         return response
+
+
+class CollectTypeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
+    serializer_class = CollectTypeSerializer
+    queryset = CollectType.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
+    pagination_class = NoPagination
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('translations__name')
+
+
+class CollectTypeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = CollectTypeSerializer
+    queryset = CollectType.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]

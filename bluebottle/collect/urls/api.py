@@ -4,7 +4,8 @@ from bluebottle.collect.views import (
     CollectContributorExportView, CollectContributorTransitionList,
     CollectContributorDetail, CollectContributorList,
     CollectActivityRelatedCollectContributorList,
-    CollectActivityTransitionList, CollectActivityDetailView, CollectActivityListView,
+    CollectActivityTransitionList, CollectActivityDetailView, CollectActivityListView, CollectTypeList,
+    CollectTypeDetail,
 )
 
 
@@ -38,4 +39,15 @@ urlpatterns = [
     url(r'^/export/(?P<pk>[\d]+)$',
         CollectContributorExportView.as_view(),
         name='collect-contributors-export'),
+
+    url(
+        r'^/types/$',
+        CollectTypeList.as_view(),
+        name='collect-type-list'
+    ),
+    url(
+        r'^/types/(?P<pk>\d+)$',
+        CollectTypeDetail.as_view(),
+        name='collect-type-detail'
+    ),
 ]

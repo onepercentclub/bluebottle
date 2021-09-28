@@ -1,3 +1,4 @@
+from rest_framework.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     SerializerMethodResourceRelatedField
@@ -7,7 +8,7 @@ from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.states import CollectContributorStateMachine
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
@@ -150,3 +151,13 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
         included_resources = [
             'resource',
         ]
+
+
+class CollectTypeSerializer(ModelSerializer):
+
+    class Meta(object):
+        model = CollectType
+        fields = ('id', 'name', 'description')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/collect-types'

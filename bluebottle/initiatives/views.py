@@ -32,7 +32,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination
 )
 
 
@@ -171,15 +171,11 @@ class InitiativeReviewTransitionList(TransitionList):
     queryset = Initiative.objects.all()
 
 
-class ThemePagination(PageNumberPagination):
-    page_size = 10000
-
-
 class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = ThemeSerializer
     queryset = Theme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
-    pagination_class = ThemePagination
+    pagination_class = NoPagination
 
     def get_queryset(self):
         return super().get_queryset().order_by('translations__name')

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-09-15 14:14+0200\n"
-"PO-Revision-Date: 2021-09-27 11:46\n"
+"PO-Revision-Date: 2021-09-28 14:43\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -2757,7 +2757,7 @@ msgstr ""
 
 #: bluebottle/funding/messages.py:18
 msgid "Thanks for your donation!"
-msgstr ""
+msgstr "Merci pour votre don!"
 
 #: bluebottle/funding/messages.py:34 bluebottle/funding/messages.py:50
 #, python-brace-format
@@ -3531,7 +3531,10 @@ msgid "\n"
 "        Hi %(recipient_name)s,<br />\n"
 "        Thanks for your donation! \n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Hi %(recipient_name)s,<br />\n"
+"        merci pour votre don! \n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:17
 #, python-format
@@ -3542,7 +3545,7 @@ msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:24
 msgid "Give some extra support and share this campaign with your network."
-msgstr ""
+msgstr "Offrez un soutien supplémentaire et partagez cette campagne avec votre réseau. "
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:29
 msgid "Share on facebook"
@@ -3574,7 +3577,8 @@ msgstr ""
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.txt:18
 msgid "\n"
 "Give some extra support and share this campaign with your network.\n"
-msgstr ""
+msgstr "\n"
+"Offrez un soutien supplémentaire et partagez cette campagne avec votre réseau.\n"
 
 #: bluebottle/funding/templates/mails/messages/donation_success_owner.html:5
 #, python-format

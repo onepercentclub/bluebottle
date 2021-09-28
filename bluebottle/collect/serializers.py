@@ -17,6 +17,11 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class CollectActivitySerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
+    collect_type = ResourceRelatedField(
+        queryset=CollectType.objects,
+        source='type'
+    )
+
     my_contributor = SerializerMethodResourceRelatedField(
         model=CollectContributor,
         read_only=True,
@@ -67,13 +72,15 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'end',
             'contributors_export_url',
             'location',
+            'collect_type'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/collects'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
-            'location'
+            'location',
+            'collect_type'
         ]
 
     included_serializers = dict(
@@ -81,6 +88,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
         **{
             'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
+
         }
     )
 

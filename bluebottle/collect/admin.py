@@ -55,6 +55,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
         'end',
         'type',
         'contributor_count',
+        'target'
     ]
 
     def contributor_count(self, obj):
@@ -67,6 +68,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     )
     description_fields = ActivityChildAdmin.description_fields + (
         'type',
+        'target',
         'location'
     )
 

@@ -37,6 +37,7 @@ class CollectActivity(Activity):
     type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
+    target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
     auto_approve = True
 

@@ -53,6 +53,8 @@ urlpatterns = [
         include('bluebottle.time_based.urls.api')),
     url(r'^api/deeds',
         include('bluebottle.deeds.urls.api')),
+    url(r'^api/collect',
+        include('bluebottle.collect.urls.api')),
     url(r'^api/assignments',
         include('bluebottle.time_based.urls.old_assignments')),
     url(r'^api/funding',

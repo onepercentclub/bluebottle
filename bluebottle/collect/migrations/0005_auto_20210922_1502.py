@@ -21,14 +21,20 @@ def add_group_permissions(apps, schema_editor):
             },
             'Anonymous': {
                 'perms': (
-                    'api_read_collect', 'api_read_collecttype', 'api_read_collectcontributor'
+                    'api_read_collectactivity',
+                    'api_read_collecttype',
+                    'api_read_collectcontributor'
                 ) if not properties.CLOSED_SITE else ()
             },
             'Authenticated': {
                 'perms': (
-                    'api_read_collect', 'api_add_own_collect', 'api_change_own_collect', 'api_delete_own_collect',
+
+                    'api_read_collectactivity',
+                    'api_add_own_collectactivity', 'api_change_own_collectactivity',
+                    'api_delete_own_collectactivity',
                     'api_read_collectcontributor', 'api_add_own_collectcontributor',
                     'api_change_own_collectcontributor', 'api_delete_own_collectcontributor',
+                    'api_read_collectcontributor', 'api_add_collectcontributor',
                     'api_read_collecttype',
                 )
             }

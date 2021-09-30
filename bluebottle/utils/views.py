@@ -15,6 +15,7 @@ from django.views.generic.detail import DetailView
 from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -299,3 +300,7 @@ class JsonApiViewMixin(AutoPrefetchMixin):
 
     def get_exception_handler(self):
         return exception_handler
+
+
+class NoPagination(PageNumberPagination):
+    page_size = 10000

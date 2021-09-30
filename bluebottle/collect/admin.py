@@ -48,6 +48,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     inlines = (CollectContributorInline,) + ActivityChildAdmin.inlines
     list_filter = ['status', 'type']
     search_fields = ['title', 'description']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',
@@ -66,6 +67,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     )
     description_fields = ActivityChildAdmin.description_fields + (
         'type',
+        'location'
     )
 
     export_as_csv_fields = (

@@ -5,10 +5,14 @@ from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
+from bluebottle.deeds.validators import EndDateValidator
+from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
 
 
 class CollectType(SortableTranslatableModel):
+    disabled = models.BooleanField(default=False)
+
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100),
         description=models.TextField(_('description'), blank=True)
@@ -32,6 +36,8 @@ class CollectActivity(Activity):
 
     type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
+    location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
+
     auto_approve = True
 
     @property
@@ -53,8 +59,16 @@ class CollectActivity(Activity):
             ('api_delete_own_collect', 'Can delete own collect activity through the API'),
         )
 
+    validators = [EndDateValidator]
+
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
+
+    @property
+    def accepted_contributors(self):
+        return self.contributors.instance_of(CollectContributor).filter(
+            status__in=('accepted', 'succeeded', )
+        )
 
     @property
     def required_fields(self):
@@ -73,20 +87,20 @@ class CollectContributor(Contributor):
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
 
     class Meta(object):
-        verbose_name = _("Contributor")
-        verbose_name_plural = _("Contributors")
+        verbose_name = _("Collect contributor")
+        verbose_name_plural = _("Collect contributors")
 
         permissions = (
-            ('api_read_collectcontributor', 'Can view collect through the API'),
-            ('api_add_collectcontributor', 'Can add collect through the API'),
-            ('api_change_collectcontributor', 'Can change collect through the API'),
-            ('api_delete_collectcontributor', 'Can delete collect through the API'),
+            ('api_read_collectcontributor', 'Can view collect contributor through the API'),
+            ('api_add_collectcontributor', 'Can add collect contributor  through the API'),
+            ('api_change_collectcontributor', 'Can change collect contributor  through the API'),
+            ('api_delete_collectcontributor', 'Can delete collect contributor  through the API'),
 
-            ('api_read_own_collectcontributor', 'Can view own collect through the API'),
-            ('api_add_own_collectcontributor', 'Can add own collect through the API'),
-            ('api_change_own_collectcontributor', 'Can change own collect through the API'),
-            ('api_delete_own_collectcontributor', 'Can delete own collect through the API'),
+            ('api_read_own_collectcontributor', 'Can view own collect contributor through the API'),
+            ('api_add_own_collectcontributor', 'Can add own collect contributor through the API'),
+            ('api_change_own_collectcontributor', 'Can change own collect contributor through the API'),
+            ('api_delete_own_collectcontributor', 'Can delete own collect contributor through the API'),
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/collects/contributor'
+        resource_name = 'contributors/collect/contributors'

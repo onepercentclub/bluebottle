@@ -9,6 +9,7 @@ from bluebottle.funding_pledge.models import PledgePaymentProvider
 from djmoney.money import Money
 
 from bluebottle.funding.tests.factories import DonorFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
@@ -342,6 +343,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.request = self.request_factory.post('/')
         self.request.user = MockUser()
         self.member_admin = MemberAdmin(Member, AdminSite())
+        self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
         member = BlueBottleUserFactory.create(username='malle-eppie')
@@ -367,8 +369,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         DonorFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -379,23 +380,22 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'remote_id', 'first_name', 'last name',
+            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
         self.assertEqual(user_data[0], 'malle-eppie')
-        self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], u'35.00 €')
-        self.assertEqual(user_data[10], '47.0')
-        self.assertEqual(user_data[13], 'Fine')
+        self.assertEqual(user_data[9], 'True')
+        self.assertEqual(user_data[10], u'35.00 €')
+        self.assertEqual(user_data[11], '47.0')
+        self.assertEqual(user_data[14], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
         CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -403,9 +403,35 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[12], 'Best friend')
+        self.assertEqual(headers[13], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[12], u'Ren Höek')
+        self.assertEqual(data[13], u'Ren Höek')
+
+    def test_member_segments_export(self):
+        member = BlueBottleUserFactory.create(username='malle-eppie')
+        food = SegmentTypeFactory.create(name='Food')
+        bb = SegmentFactory.create(type=food, name='Bitterballen')
+        drinks = SegmentTypeFactory.create(name='Drinks')
+        br = SegmentFactory.create(type=drinks, name='Bier')
+        member.segments.add(bb)
+        member.segments.add(br)
+        member.save()
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+
+        data = response.content.decode('utf-8').split("\r\n")
+        headers = data[0].split(",")
+        user_data = []
+        for row in data:
+            if row.startswith('malle-eppie'):
+                user_data = row.split(',')
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers, [
+            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'date joined', 'is initiator', 'is supporter', 'is volunteer',
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
+        self.assertEqual(user_data[13], 'Bier')
+        self.assertEqual(user_data[14], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

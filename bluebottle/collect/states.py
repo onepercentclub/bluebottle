@@ -104,11 +104,11 @@ class CollectContributorStateMachine(ContributorStateMachine):
     )
 
     def is_user(self, user):
-        """is participant"""
+        """is contributor"""
         return self.instance.user == user
 
     def is_owner(self, user):
-        """is participant"""
+        """is contributor"""
         return (
             self.instance.activity.owner == user or
             self.instance.activity.initiative.owner == user or

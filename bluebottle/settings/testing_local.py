@@ -4,7 +4,7 @@ from bluebottle.settings.testing import *
 DATABASES = {
     'default': {
         "ENGINE": "bluebottle.clients.postgresql_backend",
-        "NAME": "bluebottle_test",
+        "NAME": "test_reef",
         "USER": "",
         "PASSWORD": "",
     },

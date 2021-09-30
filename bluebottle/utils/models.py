@@ -3,10 +3,11 @@ from datetime import timedelta
 
 from memoize import memoize
 
+from django.conf import settings
 from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, ProgrammingError, OperationalError
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -65,6 +66,11 @@ class Language(models.Model):
 
     class Meta(object):
         ordering = ['language_name']
+
+    def save(self, *args, **kwargs):
+        if self.code and self.code not in (code for (code, _) in settings.LANGUAGES):
+            raise ValidationError(f'Unknown language code: {self.code}')
+        super().save(*args, **kwargs)
 
     @property
     def full_code(self):

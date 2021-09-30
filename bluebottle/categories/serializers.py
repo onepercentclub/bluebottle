@@ -26,7 +26,6 @@ class CategoryContentSerializer(ModelSerializer):
 
 
 class CategorySerializer(ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
     title = serializers.CharField()
     description = serializers.CharField()
     image = ImageSerializer(required=False)

@@ -196,8 +196,11 @@ class DateActivitySlotInfoMixin():
         starts = set(
             slots.annotate(date=Trunc('start', kind='day')).values_list('date')
         )
+        total = self.get_filtered_slots(obj)
 
         return {
+            'total': total.count(),
+            'has_multiple': total.count() > 1,
             'count': len(starts),
             'first': min(starts)[0].date() if starts else None,
         }
@@ -225,7 +228,7 @@ class DateActivitySlotInfoMixin():
             }
 
         has_multiple = len(set(locations)) > 1 and not is_online
-        location = '{} - {}'.format(locations[0][0], locations[0][1]) if not has_multiple and locations[0][0] else None
+        location = '{}, {}'.format(locations[0][0], locations[0][1]) if not has_multiple and locations[0][0] else None
         return {
             'is_online': is_online,
             'online_meeting_url': locations[0][3] if is_online and locations[0][3] else None,

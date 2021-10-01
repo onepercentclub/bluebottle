@@ -115,6 +115,12 @@ class ImpactGoal(models.Model):
         null=True
     )
 
+    realized_from_contributions = models.FloatField(
+        _('realized from contributions'),
+        blank=True,
+        null=True
+    )
+
     realized = models.FloatField(
         _('realized'),
         help_text=_(

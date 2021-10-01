@@ -16,7 +16,7 @@ class UpdateImpactGoalEffect(Effect):
         goals = ImpactGoal.objects.filter(activity=activity)
 
         for goal in goals:
-            goal.realized = len(
+            goal.realized_from_contributions = len(
                 EffortContribution.objects.exclude(
                     contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
                 ).filter(

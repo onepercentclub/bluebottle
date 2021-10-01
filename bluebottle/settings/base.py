@@ -357,7 +357,6 @@ TENANT_APPS = (
     'bluebottle.funding_telesom',
     'bluebottle.segments',
     'bluebottle.tasks',
-    'bluebottle.homepage',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',

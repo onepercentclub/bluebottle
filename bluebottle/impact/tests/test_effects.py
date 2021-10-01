@@ -19,13 +19,13 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         )
 
     def test_status_new(self):
-        self.assertEqual(self.impact_goal.realized, 0)
+        self.assertEqual(self.impact_goal.realized_from_contributions, None)
 
     def test_status_succeed(self):
         self.contribution.states.succeed(save=True)
         self.impact_goal.refresh_from_db()
 
-        self.assertEqual(self.impact_goal.realized, 1)
+        self.assertEqual(self.impact_goal.realized_from_contributions, 10.0)
 
     def test_status_succeed_not_coupled(self):
         self.activity.target = None
@@ -34,11 +34,11 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         self.contribution.states.succeed(save=True)
         self.impact_goal.refresh_from_db()
 
-        self.assertEqual(self.impact_goal.realized, 0)
+        self.assertEqual(self.impact_goal.realized_from_contributions, None)
 
     def test_status_fail(self):
         self.test_status_succeed()
         self.contribution.states.fail(save=True)
         self.impact_goal.refresh_from_db()
 
-        self.assertEqual(self.impact_goal.realized, 0)
+        self.assertEqual(self.impact_goal.realized_from_contributions, 0)

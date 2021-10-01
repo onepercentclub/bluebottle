@@ -43,7 +43,12 @@ class Deed(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description']
+        fields = super().required_fields + ['title', 'description']
+
+        if self.target:
+            fields = fields + ['goals']
+
+        return fields
 
     @property
     def participants(self):

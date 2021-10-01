@@ -204,8 +204,8 @@ JWT_AUTH = {
 # Time between attempts to refresh the jwt token automatically on standard request
 # TODO: move this setting into the JWT_AUTH settings.
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
-JWT_TOKEN_RENEWAL_LIMIT = datetime.timedelta(days=90)
-JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
+JWT_TOKEN_RENEWAL_LIMIT = datetime.timedelta(minutes=1)
+JWT_EXPIRATION_DELTA = datetime.timedelta(minutes=1)
 
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',

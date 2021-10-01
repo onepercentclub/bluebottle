@@ -1,7 +1,7 @@
+from datetime import date, timedelta
 from builtins import object
 
 import factory.fuzzy
-from pytz import UTC
 
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -19,8 +19,15 @@ class DeedFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    end = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
-    start = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
+    start = factory.fuzzy.FuzzyDate(
+        date.today(),
+        date.today() + timedelta(days=2)
+    )
+
+    end = factory.fuzzy.FuzzyDate(
+        date.today() + timedelta(days=3),
+        date.today() + timedelta(days=20)
+    )
 
 
 class DeedParticipantFactory(factory.DjangoModelFactory):

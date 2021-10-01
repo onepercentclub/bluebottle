@@ -4,6 +4,8 @@ from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.models import Contributor, Activity
+from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
+    CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedParticipantListSerializer
 )
@@ -40,6 +42,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         FundingListSerializer,
         DeedListSerializer,
+        CollectActivityListSerializer,
         DateActivityListSerializer,
         PeriodActivityListSerializer,
     ]
@@ -83,6 +86,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         FundingSerializer,
         DeedSerializer,
+        CollectActivitySerializer,
         DateActivitySerializer,
         PeriodActivitySerializer,
     ]
@@ -177,7 +181,8 @@ class ContributorListSerializer(PolymorphicModelSerializer):
         DonorListSerializer,
         DateParticipantListSerializer,
         PeriodParticipantListSerializer,
-        DeedParticipantListSerializer
+        DeedParticipantListSerializer,
+        CollectContributorListSerializer
     ]
 
     included_serializers = {

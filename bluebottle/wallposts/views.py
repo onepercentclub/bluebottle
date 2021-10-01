@@ -79,16 +79,17 @@ class ParentTypeFilterMixin(object):
         'activities/time-based/period': 'periodactivity',
         'activities/funding': 'fundingactivity',
         'activities/deed': 'deed',
+        'activities/collect': 'collectactivity',
     }
 
     def get_queryset(self):
         queryset = super(ParentTypeFilterMixin, self).get_queryset()
         parent_type = self.request.query_params.get('parent_type', None)
-        if parent_type in ['date', 'period']:
+        if parent_type in ['date', 'period', 'collect']:
             parent_type = '{}activity'.format(parent_type)
 
         parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based', 'deeds']
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based', 'deeds', 'collect']
         try:
             parent_type = self.content_type_mapping[parent_type]
         except KeyError:

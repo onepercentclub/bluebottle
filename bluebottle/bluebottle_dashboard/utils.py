@@ -33,24 +33,19 @@ def get_menu_items(context):
     Iterate over menu items and remove some based on feature flags
     """
     groups = jet_get_menu_items(context)
-    i = 0
     for group in groups:
-        j = 0
         properties = get_jet_item(group['label'])
         if 'enabled' in properties and properties['enabled']:
             prop = get_feature_flag(properties['enabled'])
             if not prop:
-                del groups[i]
-                i += 1
-                continue
+                group['hide'] = True
         for item in group['items']:
             name = item.get('name', None) or item.get('url', None)
             properties = get_jet_item(group['label'], name)
             if properties and 'enabled' in properties and properties['enabled']:
                 prop = get_feature_flag(properties['enabled'])
                 if not prop:
-                    del groups[i]['items'][j]
-            j += 1
+                    item['hide'] = True
         if group['app_label'] == 'looker':
             group['items'] = [{
                 'url': reverse('jet-dashboard:looker-embed', args=(look.id,)),
@@ -61,5 +56,12 @@ def get_menu_items(context):
                 'has_perms': True,
                 'current': False} for look in LookerEmbed.objects.all()
             ]
-        i += 1
+
+    for group in list(groups):
+        if 'hide' in group:
+            groups.remove(group)
+        else:
+            for item in list(group['items']):
+                if 'hide' in item:
+                    group['items'].remove(item)
     return groups

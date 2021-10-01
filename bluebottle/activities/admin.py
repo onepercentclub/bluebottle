@@ -14,7 +14,8 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, EffortContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.deeds.models import Deed
+from bluebottle.collect.models import CollectContributor, CollectActivity
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -34,7 +35,9 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Donor,
         Organizer,
         DateParticipant,
-        PeriodParticipant
+        PeriodParticipant,
+        DeedParticipant,
+        CollectContributor
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -499,7 +502,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Funding,
         PeriodActivity,
         DateActivity,
-        Deed
+        Deed,
+        CollectActivity
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
@@ -583,6 +587,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
+    class CollectActivityInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'start', 'end', 'state_name']
+        fields = readonly_fields
+        model = CollectActivity
+
     class DeedInline(ActivityInlineChild):
         readonly_fields = ['activity_link', 'start', 'end', 'state_name']
         fields = readonly_fields
@@ -608,7 +617,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
         FundingInline,
         PeriodInline,
         DateInline,
-        DeedInline
+        DeedInline,
+        CollectActivityInline
     )
 
     pagination_key = 'page'

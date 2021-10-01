@@ -28,7 +28,10 @@ class ActivityTypePermission(ResourcePermission):
         (settings, _) = InitiativePlatformSettings.objects.get_or_create()
 
         if request.method == 'POST':
-            return view.model.__name__.lower() in settings.activity_types
+            activity_type = view.model.__name__.lower()
+            if activity_type == 'collectactivity':
+                activity_type = 'collect'
+            return activity_type in settings.activity_types
 
         return True
 

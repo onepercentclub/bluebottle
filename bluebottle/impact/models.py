@@ -137,7 +137,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
     def required_fields(self):
         from bluebottle.deeds.models import Deed
 
-        if isinstance(self, Deed):
-            return ['type', 'target']
+        if isinstance(self.activity, Deed):
+            return ['target']
 
         return []

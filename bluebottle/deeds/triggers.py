@@ -21,7 +21,7 @@ from bluebottle.time_based.messages import ParticipantRemovedNotification, Parti
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
-from bluebottle.impact.effects import UpdateImpactGoalEffect
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
 def is_started(effect):
@@ -127,12 +127,12 @@ class DeedTriggers(ActivityTriggers):
 
         ModelChangedTrigger(
             'enable_impact',
-            effects=[UpdateImpactGoalEffect]
+            effects=[UpdateImpactGoalsForActivityEffect]
         ),
 
         ModelChangedTrigger(
             'target',
-            effects=[UpdateImpactGoalEffect]
+            effects=[UpdateImpactGoalsForActivityEffect]
         ),
 
         TransitionTrigger(

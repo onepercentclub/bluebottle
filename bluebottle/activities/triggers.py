@@ -4,7 +4,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
+from bluebottle.impact.effects import UpdateImpactGoalEffect
 
 
 def initiative_is_approved(effect):
@@ -151,14 +151,14 @@ class EffortContributionTriggers(TriggerManager):
             EffortContributionStateMachine.succeed,
             effects=[
                 SetContributionDateEffect,
-                UpdateImpactGoalsForActivityEffect
+                UpdateImpactGoalEffect
             ]
         ),
 
         TransitionTrigger(
             EffortContributionStateMachine.fail,
             effects=[
-                UpdateImpactGoalsForActivityEffect
+                UpdateImpactGoalEffect
             ]
         ),
     ]

@@ -17,6 +17,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
     NewParticipantNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -226,6 +227,58 @@ class DeedTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.reset,
                 participant.contributions.first()
             )
+
+    def test_enable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = True
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+            self.assertEqual(goal.realized_from_contributions, 2)
+
+    def test_disable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = False
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, 0.0)
+
+    def test_change_target(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.target = 4
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, 2.5)
 
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):

@@ -67,6 +67,7 @@ class DeedSerializer(BaseActivitySerializer):
             'contributors',
             'start',
             'end',
+            'enable_impact',
             'target',
             'participants_export_url',
         )

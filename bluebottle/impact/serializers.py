@@ -7,6 +7,8 @@ from bluebottle.impact.models import ImpactType, ImpactGoal
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer
 
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
+
 
 class ImpactTypeSerializer(ModelSerializer):
     class Meta(object):
@@ -27,6 +29,9 @@ class ImpactGoalSerializer(ModelSerializer):
         ActivitySerializer, queryset=Activity.objects.all()
     )
 
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+
     included_serializers = {
         'type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
@@ -36,7 +41,9 @@ class ImpactGoalSerializer(ModelSerializer):
         model = ImpactGoal
         fields = (
             'id', 'target', 'realized', 'realized_from_contributions', 'activity', 'type',
+            'required', 'errors',
         )
+        meta_fields = ['errors', 'required']
 
     class JSONAPIMeta(object):
         resource_name = 'activities/impact-goals'

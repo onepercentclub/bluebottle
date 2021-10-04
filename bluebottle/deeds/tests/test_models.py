@@ -14,13 +14,14 @@ class DeedModelTestCase(TestCase):
     def test_required(self):
         self.assertEqual(list(self.model.required), [])
 
-    def test_required_with_target(self):
-        self.model.target = 100
+    def test_required_with_impact(self):
+        self.model.enable_impact = True
         self.model.save()
 
-        self.assertEqual(list(self.model.required), ['goals'])
+        self.assertEqual(list(self.model.required), ['goals', 'target'])
 
-    def test_required_with_target_and_goal(self):
+    def test_required_with_impact_target_and_goal(self):
+        self.model.enable_impact = True
         self.model.target = 100
         self.model.save()
 

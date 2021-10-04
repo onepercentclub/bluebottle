@@ -52,6 +52,7 @@ class DeedAdmin(ActivityChildAdmin):
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
+        'enable_impact',
         'target',
         'participant_count',
     ]

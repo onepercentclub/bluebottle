@@ -18,7 +18,34 @@ class UpdateImpactGoalEffect(Effect):
         for goal in goals:
             amount = goal.target / activity.target
 
-            if self.instance.contributor.activity.enable_impact:
+            goal.realized_from_contributions = amount * len(
+                EffortContribution.objects.exclude(
+                    contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
+                ).filter(
+                    contributor__activity=activity,
+                    status__in=['succeeded', 'new', ]
+                )
+            )
+            goal.save()
+
+    @property
+    def is_valid(self):
+        return self.instance.contributor.activity.enable_impact
+
+
+class UpdateImpactGoalsForActivityEffect(Effect):
+    title = _('Update impact goals')
+    display = False
+
+    def post_save(self, **kwargs):
+        activity = self.instance
+
+        goals = ImpactGoal.objects.filter(activity=activity)
+
+        for goal in goals:
+            amount = goal.target / activity.target
+
+            if activity.enable_impact:
                 goal.realized_from_contributions = amount * len(
                     EffortContribution.objects.exclude(
                         contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
@@ -28,5 +55,6 @@ class UpdateImpactGoalEffect(Effect):
                     )
                 )
             else:
-                goal.realized_from_contributions.realized_from_contributions = 0
+                goal.realized_from_contributions = 0
+
             goal.save()

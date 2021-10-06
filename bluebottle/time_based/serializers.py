@@ -240,11 +240,11 @@ class DateActivitySlotInfoMixin():
             'is_online': is_online,
             'online_meeting_url': slot.online_meeting_url,
             'location': {
-                'locality': slot.location.locality,
+                'locality': slot.location.locality if slot.location else None,
                 'country': {
-                    'code': slot.location.country.alpha2_code,
+                    'code': slot.location.country.alpha2_code if slot.location else None,
                 },
-                'formattedAddress': slot.location.formatted_address,
+                'formattedAddress': slot.location.formatted_address if slot.location else None,
             },
             'locationHint': locations[0][4],
             'has_multiple': False

@@ -195,8 +195,11 @@ class DateActivitySlotInfoMixin():
         starts = set(
             slots.annotate(date=Trunc('start', kind='day')).values_list('date')
         )
+        total = self.get_filtered_slots(obj)
 
         return {
+            'total': total.count(),
+            'has_multiple': total.count() > 1,
             'count': len(starts),
             'first': min(starts)[0].date() if starts else None,
         }
@@ -218,20 +221,33 @@ class DateActivitySlotInfoMixin():
                 'is_online': is_online,
                 'online_meeting_url': None,
                 'location': None,
-                'address': None,
                 'hint': None,
                 'has_multiple': False
             }
 
         has_multiple = len(set(locations)) > 1 and not is_online
-        location = '{} - {}'.format(locations[0][0], locations[0][1]) if not has_multiple and locations[0][0] else None
+        if has_multiple:
+            return {
+                'is_online': False,
+                'online_meeting_url': None,
+                'location': None,
+                'locationHint': None,
+                'has_multiple': True
+            }
+        slot = slots.first()
+
         return {
             'is_online': is_online,
-            'online_meeting_url': locations[0][3] if is_online and locations[0][3] else None,
-            'location': location,
-            'address': locations[0][2] if not has_multiple else None,
-            'hint': locations[0][4] if not has_multiple else None,
-            'has_multiple': has_multiple
+            'online_meeting_url': slot.online_meeting_url,
+            'location': {
+                'locality': slot.location.locality if slot.location else None,
+                'country': {
+                    'code': slot.location.country.alpha2_code if slot.location else None,
+                },
+                'formattedAddress': slot.location.formatted_address if slot.location else None,
+            },
+            'locationHint': locations[0][4],
+            'has_multiple': False
         }
 
 

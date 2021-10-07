@@ -30,7 +30,7 @@ class UpdateImpactGoalEffect(Effect):
 
     @property
     def is_valid(self):
-        return self.instance.contributor.activity.enable_impact
+        return getattr(self.instance.contributor.activity, 'enable_impact', False)
 
 
 class UpdateImpactGoalsForActivityEffect(Effect):

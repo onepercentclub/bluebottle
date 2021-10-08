@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from builtins import object
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 
+from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.utils.models import SortableTranslatableModel, ValidatedModelMixin
 
 ICONS = [
@@ -141,3 +143,18 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
             return ['target']
 
         return []
+
+    def update(self):
+        if self.target and self.activity.enable_impact and self.activity.target:
+            amount = self.target / self.activity.target
+
+            self.realized_from_contributions = amount * len(
+                EffortContribution.objects.exclude(
+                    contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
+                ).filter(
+                    contributor__activity=self.activity,
+                    status__in=['succeeded', 'new', ]
+                )
+            )
+        else:
+            self.realized_from_contributions = None

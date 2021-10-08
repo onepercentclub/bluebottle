@@ -260,7 +260,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.model.save()
             goal.refresh_from_db()
 
-            self.assertEqual(goal.realized_from_contributions, 0.0)
+            self.assertEqual(goal.realized_from_contributions, None)
 
     def test_change_target(self):
         self.defaults['status'] = 'open'
@@ -529,14 +529,15 @@ class EffortContributionTriggersTestCase(TriggerTestCase):
     factory = EffortContributionFactory
 
     def setUp(self):
-        self.defaults = {}
-
-        self.contribution = EffortContributionFactory.create()
+        self.defaults = {
+            'contributor': DeedParticipantFactory(
+                activity=DeedFactory(enable_impact=True)
+            )
+        }
 
         self.impact_goal = ImpactGoalFactory.create(
-            activity=self.contribution.contributor.activity,
-            target=100,
-            coupled_with_contributions=True
+            activity=self.defaults['contributor'].activity,
+            target=100
         )
 
     def test_succeed_update_impact(self):

@@ -2157,6 +2157,14 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
 
         self.assertEqual(data['id'], str(self.participant.slot_participants.get().pk))
 
+    def test_create_participant_user_full(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        SlotParticipantFactory.create(slot=self.slot)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_create_participant_user_twice(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

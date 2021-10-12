@@ -27,11 +27,21 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertEqual(data[attr], value)
 
     def test_date_info_no_slots(self):
-        self.assertAttribute('date_info', {'count': 0, 'first': None})
+        self.assertAttribute('date_info', {
+            'count': 0,
+            'first': None,
+            'has_multiple': False,
+            'total': 0
+        })
 
     def test_date_info_single_slot(self):
         slot = DateActivitySlotFactory.create(activity=self.activity)
-        self.assertAttribute('date_info', {'count': 1, 'first': slot.start.date()})
+        self.assertAttribute('date_info', {
+            'count': 1,
+            'first': slot.start.date(),
+            'has_multiple': False,
+            'total': 1
+        })
 
     def test_date_info_multiple_dates(self):
         slots = [
@@ -40,10 +50,12 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6)),
         ]
 
-        self.assertAttribute(
-            'date_info',
-            {'count': 3, 'first': min(slot.start.date() for slot in slots)}
-        )
+        self.assertAttribute('date_info', {
+            'count': 3,
+            'first': min(slot.start.date() for slot in slots),
+            'has_multiple': True,
+            'total': 3
+        })
 
     def test_date_info_multiple_dates_overlapping(self):
         slots = [
@@ -52,10 +64,12 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6)),
         ]
 
-        self.assertAttribute(
-            'date_info',
-            {'count': 2, 'first': min(slot.start.date() for slot in slots)}
-        )
+        self.assertAttribute('date_info', {
+            'count': 2,
+            'first': min(slot.start.date() for slot in slots),
+            'has_multiple': True,
+            'total': 3
+        })
 
     def test_date_info_multiple_dates_filtered(self):
         slots = [
@@ -66,7 +80,12 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
         self.assertAttribute(
             'date_info',
-            {'count': 2, 'first': min(slot.start.date() for slot in slots)},
+            {
+                'count': 2,
+                'first': min(slot.start.date() for slot in slots),
+                'has_multiple': True,
+                'total': 2
+            },
             {
                 'filter[start]': (now() + timedelta(days=1)).strftime('%Y-%m-%d'),
                 'filter[end]': (now() + timedelta(days=4)).strftime('%Y-%m-%d')
@@ -78,12 +97,11 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute(
             'location_info',
             {
-                'has_multiple': False,
                 'is_online': False,
+                'has_multiple': False,
                 'location': None,
                 'online_meeting_url': None,
-                'address': None,
-                'hint': None,
+                'location_hint': None,
             }
         )
 
@@ -94,10 +112,15 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': '{} - {}'.format(slot.location.locality, slot.location.country.alpha2_code),
+                'location': {
+                    'locality': slot.location.locality,
+                    'formattedAddress': slot.location.formatted_address,
+                    'country': {
+                        'code': slot.location.country.alpha2_code
+                    }
+                },
                 'online_meeting_url': None,
-                'address': slot.location.formatted_address,
-                'hint': None,
+                'location_hint': None,
             }
         )
 
@@ -113,8 +136,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
                 'is_online': True,
                 'location': None,
                 'online_meeting_url': None,
-                'address': None,
-                'hint': None,
+                'location_hint': None,
             }
         )
 
@@ -130,8 +152,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': None,
                 'online_meeting_url': None,
-                'address': None,
-                'hint': None,
+                'location_hint': None,
             }
         )
 
@@ -142,17 +163,21 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             DateActivitySlotFactory.create(activity=self.activity, start=now() + timedelta(days=6)),
         ]
 
+        location = slots[0].location
         self.assertAttribute(
             'location_info',
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': '{} - {}'.format(
-                    slots[0].location.locality, slots[0].location.country.alpha2_code
-                ),
+                'location': {
+                    'locality': location.locality,
+                    'formattedAddress': location.formatted_address,
+                    'country': {
+                        'code': location.country.alpha2_code
+                    }
+                },
                 'online_meeting_url': None,
-                'address': slots[0].location.formatted_address,
-                'hint': None,
+                'location_hint': None,
             },
             {
                 'filter[start]': (now() + timedelta(days=1)).strftime('%Y-%m-%d'),

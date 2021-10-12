@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, ProgrammingError, OperationalError
 from django.utils.timezone import now
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
@@ -51,6 +52,19 @@ def get_language_choices():
         result = [('en', 'English')]
 
     return result
+
+
+def get_current_language():
+    language = get_language()
+
+    try:
+        try:
+            code, sub_code = language.split('-')
+            return Language.objects.get(code=code, sub_code=sub_code)
+        except ValueError:
+            return Language.objects.get(code=language)
+    except Language.DoesNotExist:
+        return Language.objects.get(default=True)
 
 
 @python_2_unicode_compatible

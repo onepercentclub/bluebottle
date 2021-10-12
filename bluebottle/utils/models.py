@@ -45,7 +45,7 @@ def get_language_choices():
         result = cache.get(cache_key)
 
         if not result:
-            result = [(lang.code, lang.language_name) for lang in Language.objects.all()]
+            result = [(lang.full_code, lang.language_name) for lang in Language.objects.all()]
             cache.set(cache_key, result)
     except (ProgrammingError, OperationalError, AttributeError):
         result = [('en', 'English')]

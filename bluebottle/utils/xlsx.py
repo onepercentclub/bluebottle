@@ -18,5 +18,5 @@ def generate_xlsx_response(filename, data):
     file_path = os.path.join(os.path.dirname(os.path.realpath(__name__)), filename)
     response = HttpResponse(open(file_path, 'rb').read())
     response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    response['Content-Disposition'] = f'attachment; filename={filename}'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

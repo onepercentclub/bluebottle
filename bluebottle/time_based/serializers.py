@@ -207,7 +207,7 @@ class DateActivitySlotInfoMixin():
 
     def get_location_info(self, obj):
         slots = self.get_filtered_slots(obj, only_upcoming=False)
-        is_online = len(slots) and len(slots.filter(is_online=True)) == len(slots)
+        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
 
         locations = slots.values_list(
             'location__locality',
@@ -219,36 +219,41 @@ class DateActivitySlotInfoMixin():
 
         if not len(slots) or not len(locations):
             return {
+                'has_multiple': False,
                 'is_online': is_online,
                 'online_meeting_url': None,
                 'location': None,
-                'hint': None,
-                'has_multiple': False
+                'location_hint': None,
             }
 
         has_multiple = len(set(locations)) > 1 and not is_online
         if has_multiple:
             return {
+                'has_multiple': True,
                 'is_online': False,
                 'online_meeting_url': None,
                 'location': None,
-                'locationHint': None,
-                'has_multiple': True
+                'location_hint': None,
             }
         slot = slots.first()
 
-        return {
-            'is_online': is_online,
-            'online_meeting_url': slot.online_meeting_url,
-            'location': {
-                'locality': slot.location.locality,
+        if is_online:
+            location = None
+        else:
+            location = {
+                'locality': slot.location.locality if slot.location else None,
                 'country': {
                     'code': slot.location.country.alpha2_code,
                 },
-                'formattedAddress': slot.location.formatted_address,
-            },
-            'locationHint': locations[0][4],
-            'has_multiple': False
+                'formattedAddress': slot.location.formatted_address if slot.location else None,
+            }
+
+        return {
+            'has_multiple': False,
+            'is_online': is_online,
+            'online_meeting_url': slot.online_meeting_url or None,
+            'location': location,
+            'location_hint': slot.location_hint,
         }
 
 

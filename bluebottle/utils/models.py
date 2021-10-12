@@ -62,9 +62,9 @@ def get_current_language():
             code, sub_code = language.split('-')
             return Language.objects.get(code=code, sub_code=sub_code)
         except ValueError:
-            return Language.objects.get(code=language)
+            return Language.objects.filter(code=language).first()
     except Language.DoesNotExist:
-        return Language.objects.get(default=True)
+        return Language.objects.filter(default=True).first().full_code
 
 
 @python_2_unicode_compatible

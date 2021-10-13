@@ -37,6 +37,8 @@ def get_default_language():
         return Language.objects.filter(default=True).first().full_code
     except AttributeError:
         return 'en'
+    except ProgrammingError:
+        return 'en'
 
 
 def get_language_choices():

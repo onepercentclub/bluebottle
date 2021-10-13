@@ -109,6 +109,11 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     labels.append(segment_type.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
+        if queryset.model is Member:
+            queryset = queryset.prefetch_related('place')
+            queryset = queryset.prefetch_related('segments')
+            queryset = queryset.prefetch_related('contributor_set')
+
         for obj in queryset:
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
 

@@ -28,6 +28,7 @@ class SegmentMixin(object):
 
 class UserFieldsMixin(object):
     user_field = ''
+    select_related = ['place', 'segments']
 
     def get_extra_fields(self):
         if self.user_field:

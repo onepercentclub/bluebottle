@@ -218,6 +218,7 @@ class SortedUnionFieldListFilter(UnionFieldListFilter):
 
 class MemberAdmin(UserAdmin):
     raw_id_fields = ('partner_organization', 'place')
+    date_hierarchy = 'date_joined'
 
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},

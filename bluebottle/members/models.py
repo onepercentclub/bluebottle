@@ -143,7 +143,7 @@ class Member(BlueBottleBaseUser):
         null=True
     )
 
-    place = models.ForeignKey(Place, null=True, on_delete=models.SET_NULL)
+    place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')

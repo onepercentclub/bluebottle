@@ -188,7 +188,7 @@ class Place(models.Model):
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
+    country = models.ForeignKey('geo.Country', blank=True, null=True, on_delete=models.SET_NULL)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 

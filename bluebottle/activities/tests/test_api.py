@@ -929,10 +929,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_location(self):
-        PlaceFactory.create(
-            content_object=self.owner,
+        self.owner.place = PlaceFactory.create(
             position=Point(20.0, 10.0)
         )
+        self.owner.save()
 
         first = PeriodActivityFactory.create(status='full')
 

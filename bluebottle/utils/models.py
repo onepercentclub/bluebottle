@@ -36,13 +36,13 @@ def get_languages():
 def get_default_language():
     try:
         return Language.objects.filter(default=True).first().full_code
-    except AttributeError:
+    except (AttributeError, ProgrammingError):
         return 'en'
 
 
 def get_language_choices():
     try:
-        cache_key = 'LANUAGE_CHOICES'
+        cache_key = 'LANGUAGE_CHOICES'
         result = cache.get(cache_key)
 
         if not result:

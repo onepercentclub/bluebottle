@@ -1,7 +1,6 @@
 from builtins import object
 
 import factory
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 
 from bluebottle.geo.models import (
@@ -56,11 +55,6 @@ class PlaceFactory(factory.DjangoModelFactory):
 
     position = Point(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
-
-    object_id = factory.SelfAttribute('content_object.id')
-    content_type = factory.LazyAttribute(
-        lambda o: ContentType.objects.get_for_model(o.content_object)
-    )
 
 
 class GeolocationFactory(factory.DjangoModelFactory):

@@ -1,15 +1,12 @@
 from builtins import object
 
+import geocoder
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, ContentType
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-
-import geocoder
-
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
@@ -197,10 +194,6 @@ class Place(models.Model):
 
     position = PointField(null=True)
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
     def save(self, *args, **kwargs):
         if self.locality and self.country and not self.position:
             result = geocoder.google(
@@ -217,6 +210,9 @@ class Place(models.Model):
                 self.formatted_address = result.raw['formatted_address']
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "{0}, {1}".format(self.locality, self.country)
 
 
 @python_2_unicode_compatible

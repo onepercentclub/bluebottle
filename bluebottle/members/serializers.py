@@ -312,10 +312,10 @@ class ManageProfileSerializer(UserProfileSerializer):
                     setattr(current_place, key, value)
                 current_place.save()
             else:
-                Place.objects.create(content_object=instance, **place)
+                instance.place = Place.objects.create(**place)
         else:
             if instance.place:
-                instance.place.delete()
+                instance.place = None
 
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 

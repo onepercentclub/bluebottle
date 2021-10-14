@@ -662,13 +662,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         user = BlueBottleUserFactory.create()
 
-        PlaceFactory.create(
-            content_object=user,
+        user.place = PlaceFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
-
         user.skills.add(self.activity.expertise)
         user.favourite_themes.add(self.activity.initiative.theme)
+        user.save()
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -724,10 +723,10 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         slot.location.save()
 
         user = BlueBottleUserFactory.create()
-        PlaceFactory.create(
-            content_object=user,
+        user.place = PlaceFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
+        user.save()
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -771,10 +770,10 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         slot.location.save()
 
         user = BlueBottleUserFactory.create()
-        PlaceFactory.create(
-            content_object=user,
+        user.place = PlaceFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
+        user.save()
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -869,10 +868,10 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.location.save()
 
         user = BlueBottleUserFactory.create()
-        PlaceFactory.create(
-            content_object=user,
+        user.place = PlaceFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
+        user.save()
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -911,10 +910,10 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.location.save()
 
         user = BlueBottleUserFactory.create()
-        PlaceFactory.create(
-            content_object=user,
+        user.place = PlaceFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
+        user.save()
 
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

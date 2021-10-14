@@ -79,6 +79,7 @@ install_requires = [
     'geocoder==1.37.0',
     'geopy==2.1.0',
     'html2text==2020.1.16',
+    'gunicorn==19.10.0',
     'html5lib==1.0b10',
     'icalendar==4.0.4',
     'influxdb==4.1.1',

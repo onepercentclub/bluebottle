@@ -3,10 +3,13 @@ from builtins import object
 import os
 from datetime import timedelta
 
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from djmoney.money import Money
 
 from bluebottle.funding.tests.factories import DonorFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
@@ -20,7 +23,7 @@ from django.test.utils import override_settings
 from django.conf import settings
 from django.utils import timezone
 
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
@@ -93,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.add_member_url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)
@@ -104,18 +107,18 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Send reset password mail')
 
         # Assert password reset link sends the right email
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(reset_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
         self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
@@ -125,24 +128,24 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_resend_welcome(self):
         user = BlueBottleUserFactory.create(welcome_email_is_sent=True)
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Resend welcome email')
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(welcome_email_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(welcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
@@ -155,7 +158,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         response = self.client.post(welcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
@@ -273,7 +276,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding',
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds',
             'is_superuser', 'kyc'
         ))
 
@@ -284,7 +287,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'date_activities', 'period_activities', 'funding',
+            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds',
             'is_superuser', 'kyc'
         ))
 
@@ -340,6 +343,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.request = self.request_factory.post('/')
         self.request.user = MockUser()
         self.member_admin = MemberAdmin(Member, AdminSite())
+        self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
         member = BlueBottleUserFactory.create(username='malle-eppie')
@@ -365,8 +369,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         DonorFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -377,23 +380,22 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'remote_id', 'first_name', 'last name',
+            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
         self.assertEqual(user_data[0], 'malle-eppie')
-        self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], u'35.00 €')
-        self.assertEqual(user_data[10], '47.0')
-        self.assertEqual(user_data[13], 'Fine')
+        self.assertEqual(user_data[9], 'True')
+        self.assertEqual(user_data[10], u'35.00 €')
+        self.assertEqual(user_data[11], '47.0')
+        self.assertEqual(user_data[14], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
         CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -401,9 +403,35 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[12], 'Best friend')
+        self.assertEqual(headers[13], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[12], u'Ren Höek')
+        self.assertEqual(data[13], u'Ren Höek')
+
+    def test_member_segments_export(self):
+        member = BlueBottleUserFactory.create(username='malle-eppie')
+        food = SegmentTypeFactory.create(name='Food')
+        bb = SegmentFactory.create(type=food, name='Bitterballen')
+        drinks = SegmentTypeFactory.create(name='Drinks')
+        br = SegmentFactory.create(type=drinks, name='Bier')
+        member.segments.add(bb)
+        member.segments.add(br)
+        member.save()
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+
+        data = response.content.decode('utf-8').split("\r\n")
+        headers = data[0].split(",")
+        user_data = []
+        for row in data:
+            if row.startswith('malle-eppie'):
+                user_data = row.split(',')
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers, [
+            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'date joined', 'is initiator', 'is supporter', 'is volunteer',
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
+        self.assertEqual(user_data[13], 'Bier')
+        self.assertEqual(user_data[14], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -514,9 +542,68 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         DonorFactory.create_batch(10, user=user, status='succeeded', amount=Money(35, 'EUR'))
         url = reverse('admin:members_member_change', args=(user.id,))
         response = self.app.get(url, user=self.staff_member)
-        self.assertEquals(response.status, '200 OK')
+        self.assertEqual(response.status, '200 OK')
         self.assertTrue('Funding donations:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
             in response.text
         )
+
+    def test_engagement_shows_initiative_owner(self):
+        user = BlueBottleUserFactory.create()
+        InitiativeFactory.create_batch(5, owner=user)
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')
+        self.assertTrue('Initiatives:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/initiatives/initiative/?owner_id={}">5</a>'.format(user.id)
+            in response.text
+        )
+
+
+class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(MemberNotificationsAdminTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+        self.member_admin_url = reverse(
+            'admin:members_member_change',
+            args=(self.user.id,)
+        )
+
+    def test_initiative_admin(self):
+        self.app.set_user(self.staff_member)
+
+        # Normal user should not have submitted_initiative_notifications checkbox
+        page = self.app.get(self.member_admin_url)
+        self.assertFalse('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('is_staff', True)
+        form.submit()
+
+        # Made user into a staff member
+        # Should have submitted_initiative_notifications checkbox now
+        page = self.app.get(self.member_admin_url)
+        self.assertTrue('id_submitted_initiative_notifications' in page.text)
+        form = page.forms[0]
+        form.set('submitted_initiative_notifications', True)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.submitted_initiative_notifications)
+
+        # Demote user into normal member
+        # Should unset submitted_initiative_notifications boolean
+        page = self.app.get(self.member_admin_url)
+        form = page.forms[0]
+        form.set('is_staff', False)
+        form.submit()
+
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.submitted_initiative_notifications)

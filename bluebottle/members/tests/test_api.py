@@ -8,7 +8,7 @@ import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
 from rest_framework import status
@@ -34,7 +34,7 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         current_user_response = self.client.get(
             reverse('user-current'), token='JWT {}'.format(response.json()['token'])
         )
@@ -45,7 +45,7 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         token = response.json()['token']
 
@@ -66,7 +66,7 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         token = response.json()['token']
 
@@ -99,7 +99,6 @@ class LoginTestCase(BluebottleTestCase):
             response = self.client.post(
                 reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
             )
-
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         response = self.client.post(
@@ -127,7 +126,7 @@ class LoginTestCase(BluebottleTestCase):
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_login_inactive(self):
         self.user.is_active = False
@@ -237,7 +236,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -266,13 +265,13 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
         user_id = str(response.json()['id'])
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -292,6 +291,19 @@ class CreateUserTestCase(BluebottleTestCase):
             user_id
         )
 
+    def test_failed_multiple(self):
+        email = 'test@example.com'
+        password = 'secret1234'
+        Member.objects.create(email=email)
+
+        for i in range(0, 11):
+            response = self.client.post(
+                reverse('user-user-create'),
+                {'email': email, 'password': password, 'email_confirmation': email}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_require_confirmation(self):
         self.settings.confirm_signup = True
         self.settings.save()
@@ -301,7 +313,7 @@ class CreateUserTestCase(BluebottleTestCase):
 
         response = self.client.post(
             reverse('user-user-create'),
-            {'email': email, 'password': password, 'password_confirmation': password}
+            {'email': email, 'password': password, 'email_confirmation': email}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

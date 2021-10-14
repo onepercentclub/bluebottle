@@ -1,13 +1,15 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.db.models import PointField
+from mapwidgets import GooglePointFieldWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.geo.models import (
     Location, Country, Place,
-    InitiativePlace, Geolocation)
+    Geolocation)
 from bluebottle.initiatives.models import Initiative
 
 
@@ -39,7 +41,7 @@ class LocationFilter(admin.SimpleListFilter):
 
 class CountryAdmin(TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
-    search_fields = ('name', 'alpha2_code', 'alpha3_code')
+    search_fields = ('translations__name', 'alpha2_code', 'alpha3_code')
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
 
@@ -47,6 +49,9 @@ admin.site.register(Country, CountryAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        PointField: {"widget": GooglePointFieldWidget},
+    }
 
     def lookup_allowed(self, key, value):
         if key in ('subregion__region__id__exact',):
@@ -89,27 +94,30 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 class PlaceInline(GenericStackedInline):
+    formfield_overrides = {
+        PointField: {"widget": GooglePointFieldWidget},
+    }
     model = Place
     max_num = 1
     extra = 0
+    fields = [
+        'street',
+        'locality',
+        'postal_code',
+        'country',
+        'formatted_address',
+        'position'
+    ]
 
 
 admin.site.register(Location, LocationAdmin)
 
 
-@admin.register(InitiativePlace)
-class InitiativePlaceAdmin(admin.ModelAdmin):
-
-    fieldsets = (
-        (_('Info'), {'fields': ('street', 'street_number', 'postal_code',
-                                'province', 'country', 'formatted_address')}),
-        (_('Map'), {'fields': ('position', )})
-    )
-
-
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
-
+    formfield_overrides = {
+        PointField: {"widget": GooglePointFieldWidget},
+    }
     list_display = ('__str__', 'street', 'locality', 'country')
 
     list_filter = ('country', )

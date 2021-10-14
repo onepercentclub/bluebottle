@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
 JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
@@ -60,6 +60,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'time_based.dateactivity',
                 'permissions': ['time_based.change_dateactivity']
+            },
+            {
+                'name': 'time_based.dateactivityslot',
+                'permissions': ['time_based.change_dateactivityslot']
             },
             {
                 'name': 'time_based.periodactivity',

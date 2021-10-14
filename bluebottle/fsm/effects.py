@@ -2,7 +2,7 @@ from collections import Iterable
 
 from builtins import str
 from builtins import object
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from future.utils import python_2_unicode_compatible
 
@@ -157,7 +157,6 @@ class BaseRelatedTransitionEffect(Effect):
             if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
                 self.executed = True
                 effect.pre_save(effects=effects)
-
                 effects.append(effect)
 
             instance.execute_triggers(effects=effects)

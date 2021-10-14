@@ -25,5 +25,5 @@ class Migration(migrations.Migration):
                 ('objects', models.manager.Manager()),
             ],
         ),
-        migrations.RunPython(migrate_projects),
+        # migrations.RunPython(migrate_projects),
     ]

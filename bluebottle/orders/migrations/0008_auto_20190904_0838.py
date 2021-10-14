@@ -174,6 +174,7 @@ class Migration(migrations.Migration):
         ('orders', '0007_auto_20180509_1437'),
         ('donations', '0011_auto_20191101_1046'),
         ('projects', '0091_project_to_initiatives'),
+        ('funding', '0001_initial'),
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
         ('funding_stripe', '0001_initial'),
         ('wallposts', '0019_auto_20191017_2204'),
@@ -182,5 +183,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_orders, wipe_donations)
+        # migrations.RunPython(migrate_orders, wipe_donations)
     ]

@@ -1,18 +1,14 @@
 import re
 import dateutil
+from datetime import datetime, time
 
-from django.db.models import Q as DQ
 from django.conf import settings
 
-from django_filters.rest_framework import DjangoFilterBackend
 from elasticsearch_dsl.query import (
     FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
 )
 from elasticsearch_dsl.function import ScriptScore
 from bluebottle.activities.documents import activity
-from bluebottle.activities.states import ActivityStateMachine
-from bluebottle.time_based.states import TimeBasedStateMachine
-from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
 
 
@@ -31,12 +27,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'owner.id',
         'theme.id',
         'country',
-        'categories.slug',
+        'categories.id',
         'expertise.id',
         'type',
         'status',
-        'start',
-        'end',
         'initiative_location.id',
         'segment',
     )
@@ -143,8 +137,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
                         'geo_distance',
                         distance='{}000m'.format(settings.MATCHING_DISTANCE),
                         position={
-                            'lat': location.position.latitude,
-                            'lon': location.position.longitude
+                            'lat': location.position.y,
+                            'lon': location.position.x
                         },
                     )
                 )
@@ -159,19 +153,27 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return Term(type=value)
 
-    def get_start_filter(self, value, request):
-        try:
-            date = dateutil.parser.parse(value).date()
-        except ValueError:
-            return None
-        return Range(end={'gte': date}) | ~Q('exists', field='end')
+    def get_duration_filter(self, value, request):
+        start = request.GET.get('filter[start]')
+        end = request.GET.get('filter[end]')
 
-    def get_end_filter(self, value, request):
         try:
-            date = dateutil.parser.parse(value).date()
+            return Range(
+                duration={
+                    'gte': dateutil.parser.parse(start) if start else None,
+                    'lte': datetime.combine(dateutil.parser.parse(end), time.max) if end else None,
+                }
+            )
         except ValueError:
             return None
-        return Range(start={'lt': date}) | ~Q('exists', field='start')
+
+    def get_filter_fields(self, request):
+        fields = super().get_filter_fields(request)
+
+        if request.GET.get('filter[start]') or request.GET.get('filter[end]'):
+            fields = fields + ['duration']
+
+        return fields
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)
@@ -212,28 +214,3 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     'rejected',
                 ])
             ]
-
-
-class ActivityFilter(DjangoFilterBackend):
-    """
-    Filter that shows only successful contributors
-    """
-    public_statuses = [
-        ActivityStateMachine.succeeded.value,
-        ActivityStateMachine.open.value,
-        TimeBasedStateMachine.full.value,
-        FundingStateMachine.partially_funded.value,
-    ]
-
-    def filter_queryset(self, request, queryset, view):
-        if request.user.id:
-            queryset = queryset.filter(
-                DQ(owner=request.user) |
-                DQ(initiative__activity_manager=request.user) |
-                DQ(initiative__owner=request.user) |
-                DQ(status__in=self.public_statuses)
-            ).exclude(status=ActivityStateMachine.deleted.value)
-        else:
-            queryset = queryset.filter(status__in=self.public_statuses)
-
-        return super(ActivityFilter, self).filter_queryset(request, queryset, view)

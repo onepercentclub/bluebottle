@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
 
-from builtins import object
 import regex
 
 from django import http
 from django.conf import settings
 from django.db import connection
+from django.utils.deprecation import MiddlewareMixin
 
 from bluebottle.redirects.models import Redirect
-from bluebottle.clients import properties
+from bluebottle.utils.models import get_default_language, get_languages
 
 
-class RedirectFallbackMiddleware(object):
+class RedirectFallbackMiddleware(MiddlewareMixin):
     """
     A modified version of django.contrib.redirects, this app allows
     us to optionally redirect users using regular expressions.
@@ -49,13 +49,13 @@ class RedirectFallbackMiddleware(object):
         # If there's no language, fallback to the LANGUAGE_CODE
         from django.utils.translation.trans_real import _active
 
-        language = properties.LANGUAGE_CODE
+        language = get_default_language()
 
         t = getattr(_active, "value", None)
         if t is not None:
             try:
                 lan = t.to_language()
-                if [i[0] for i in properties.LANGUAGES if i[0] == lan]:
+                if lan in [lang.code for lang in get_languages()]:
                     language = lan
             except AttributeError:
                 pass

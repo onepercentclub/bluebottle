@@ -24,7 +24,7 @@
     {% if transition %}
         <p>
             {% blocktrans with transition_target=transition.target.name.title %}You are about to transition "{{ obj }}" to <b>{{ transition_target }}</b>.{% endblocktrans %}
-            <span class="et icon-info">
+            <span class="et bb-icon-info">
                 <span class="et-right">
                     {{ transition.target.description }}
                 </span>

@@ -4,6 +4,7 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from bluebottle.deeds.models import DeedParticipant
 from django.db.models import Q
 
 from bluebottle.funding_pledge.models import PledgePaymentProvider
@@ -13,7 +14,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import connection
 from django.db import models
 from django.forms import BaseInlineFormSet
@@ -23,7 +24,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
@@ -118,9 +119,9 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
-        'closed', 'confirm_signup', 'enable_segments', 'create_segments', 'login_methods',
-        'email_domain', 'session_only', 'background', 'require_consent', 'consent_link',
-        'anonymization_age'
+        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
+        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
+        'background', 'require_consent', 'consent_link', 'anonymization_age'
     )
 
     inlines = [
@@ -206,7 +207,7 @@ class UserActivityInline(admin.TabularInline):
 
     formset = LimitModelFormset
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 
@@ -286,7 +287,7 @@ class MemberAdmin(UserAdmin):
                     _('Engagement'),
                     {
                         'fields':
-                        ['initiatives', 'date_activities', 'period_activities', 'funding']
+                        ['initiatives', 'date_activities', 'period_activities', 'funding', 'deeds']
                     }
                 ],
                 [
@@ -304,6 +305,13 @@ class MemberAdmin(UserAdmin):
             if SegmentType.objects.filter(is_active=True).count():
                 fieldsets[1][1]['fields'].append('segments')
 
+            member_settings = MemberPlatformSettings.load()
+
+            if member_settings.enable_gender:
+                fieldsets[0][1]['fields'].append('gender')
+            if member_settings.enable_birthdate:
+                fieldsets[0][1]['fields'].append('birthdate')
+
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
@@ -319,6 +327,9 @@ class MemberAdmin(UserAdmin):
 
                 fieldsets.append(extra)
 
+            if obj and (obj.is_staff or obj.is_superuser):
+                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+
         return fieldsets
 
     def get_readonly_fields(self, request, obj=None):
@@ -326,7 +337,8 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding', 'kyc'
+            'initiatives', 'period_activities', 'date_activities',
+            'funding', 'deeds', 'kyc'
         ]
 
         user_groups = request.user.groups.all()
@@ -347,8 +359,9 @@ class MemberAdmin(UserAdmin):
     export_fields = (
         ('username', 'username'),
         ('email', 'email'),
-        ('remote_id', 'remote_id'),
-        ('first_name', 'first_name'),
+        ('phone_number', 'phone number'),
+        ('remote_id', 'remote id'),
+        ('first_name', 'first name'),
         ('last_name', 'last name'),
         ('date_joined', 'date joined'),
 
@@ -360,7 +373,25 @@ class MemberAdmin(UserAdmin):
         ('subscribed', 'subscribed to matching projects'),
     )
 
-    actions = (export_as_csv_action(fields=export_fields),)
+    def get_export_fields(self):
+        fields = self.export_fields
+        member_settings = MemberPlatformSettings.load()
+        if member_settings.enable_gender:
+            fields += (('gender', 'gender'),)
+        if member_settings.enable_birthdate:
+            fields += (('birthdate', 'birthdate'),)
+        if member_settings.enable_address:
+            fields += (('place__street', 'street'),)
+            fields += (('place__street_number', 'street_number'),)
+            fields += (('place__locality', 'city'),)
+            fields += (('place__postal_code', 'postal_code'),)
+            fields += (('place__country__name', 'country'),)
+        return fields
+
+    def get_actions(self, request):
+        self.actions = (export_as_csv_action(fields=self.get_export_fields()),)
+
+        return super(MemberAdmin, self).get_actions(request)
 
     form = MemberChangeForm
     add_form = MemberCreationForm
@@ -381,7 +412,7 @@ class MemberAdmin(UserAdmin):
     def initiatives(self, obj):
         initiatives = []
         initiative_url = reverse('admin:initiatives_initiative_changelist')
-        for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
+        for field in ['owner', 'reviewer', 'promoter', 'activity_managers']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
                 link = initiative_url + '?{}_id={}'.format(field, obj.id)
                 initiatives.append(format_html(
@@ -390,14 +421,14 @@ class MemberAdmin(UserAdmin):
                     Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count(),
                     field,
                 ))
-        if Initiative.objects.filter(status='approved', **{field: obj}).count():
-            link = initiative_url + '?{}_id={}'.format(field, obj.id)
-            initiatives.append(format_html(
-                '<a href="{}">{}</a> open {}',
-                link,
-                Initiative.objects.filter(status='approved', **{field: obj}).count(),
-                field,
-            ))
+            if Initiative.objects.filter(status='approved', **{field: obj}).count():
+                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                initiatives.append(format_html(
+                    '<a href="{}">{}</a> open {}',
+                    link,
+                    Initiative.objects.filter(status='approved', **{field: obj}).count(),
+                    field,
+                ))
         return format_html('<br/>'.join(initiatives)) or _('None')
     initiatives.short_description = _('Initiatives')
 
@@ -443,6 +474,21 @@ class MemberAdmin(UserAdmin):
             ))
         return format_html('<br/>'.join(donations)) or _('None')
     funding.short_description = _('Funding donations')
+
+    def deeds(self, obj):
+        participants = []
+        participant_url = reverse('admin:deeds_deedparticipant_changelist')
+        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
+            if DeedParticipant.objects.filter(status=status, user=obj).count():
+                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
+                participants.append(format_html(
+                    '<a href="{}">{}</a> {}',
+                    link,
+                    DateParticipant.objects.filter(status=status, user=obj).count(),
+                    status,
+                ))
+        return format_html('<br/>'.join(participants)) or _('None')
+    deeds.short_description = _('Deed participation')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')
@@ -608,5 +654,4 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('user', 'key')
 
 
-admin.site.unregister(Token)
 admin.site.register(Token, TokenAdmin)

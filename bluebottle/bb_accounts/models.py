@@ -15,17 +15,16 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import ModificationDateTimeField
+from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.clients import properties
 from bluebottle.initiatives.models import Theme
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -84,16 +83,6 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-def get_language_choices():
-    """ Lazyly get the language choices."""
-    return properties.LANGUAGES
-
-
-def get_default_language():
-    """ Lazyly get the default language."""
-    return properties.LANGUAGE_CODE
-
-
 @python_2_unicode_compatible
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
@@ -125,10 +114,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                     default=False,
                                     help_text=_('Designates whether this user should be treated as active. Unselect '
                                                 'this instead of deleting accounts.'))
+
     disable_token = models.CharField(blank=True, max_length=32, null=True)
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    updated = ModificationDateTimeField()
+
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
     last_seen = models.DateTimeField(_('Last Seen'), blank=True, null=True)
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
@@ -175,7 +167,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                         choices=lazy(get_language_choices, tuple)(),
                                         default=lazy(get_default_language, str)(),
                                         help_text=_('Language used for website and emails.'),
-                                        max_length=5)
+                                        max_length=7)
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
@@ -183,6 +175,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         _('Updates'),
         help_text=_('Updates from initiatives and activities that this person follows'),
         default=True
+    )
+    submitted_initiative_notifications = models.BooleanField(
+        _('Submitted initiatives'),
+        help_text=_('Staff member receives a notification when an initiative is submitted an ready to be reviewed.'),
+        default=False
     )
 
     website = models.URLField(_('website'), blank=True)
@@ -196,7 +193,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         help_text=_('Users that are connected to a partner organisation '
                     'will skip the organisation step in initiative create.'),
         related_name='partner_organization_members',
-        verbose_name=_('Partner organisation'))
+        verbose_name=_('Partner organisation'),
+        on_delete=models.CASCADE
+    )
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
     welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)
@@ -390,7 +389,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # Magically get extra fields
         if name.startswith('extra_'):
             name = name.replace('extra_', '')
-            return self.extra.get(field__name=name).value
+            return self.extra.filter(field__name=name).first().value
         return super(BlueBottleBaseUser, self).__getattribute__(name)
 
 

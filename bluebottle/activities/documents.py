@@ -1,11 +1,15 @@
 from builtins import str
-from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+from django_elasticsearch_dsl import Document, fields
 
 from bluebottle.funding.models import Donor
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
+from elasticsearch_dsl.field import DateRange
+
+
+class DateRangeField(fields.DEDField, DateRange):
+    pass
 
 
 # The name of your index
@@ -17,7 +21,7 @@ activity.settings(
 )
 
 
-class ActivityDocument(DocType):
+class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
@@ -81,7 +85,7 @@ class ActivityDocument(DocType):
     )
 
     initiative_location = fields.NestedField(
-        attr='initiative.location',
+        attr='fallback_location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -95,16 +99,20 @@ class ActivityDocument(DocType):
 
     start = fields.DateField()
     end = fields.DateField()
+
+    duration = DateRangeField()
     activity_date = fields.DateField()
 
-    class Meta(object):
+    class Django:
         model = Activity
 
     date_field = None
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative', 'owner',
+            'initiative', 'owner'
+        ).prefetch_related(
+            'contributors'
         )
 
     @classmethod

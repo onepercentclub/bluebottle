@@ -24,9 +24,12 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     default_sort_field = 'date'
 
     filters = (
-        'owner.id', 'activity_manager.id',
-        'theme.id', 'place.country',
-        'categories.id', 'categories.slug',
+        'owner.id',
+        'activity_managers.id',
+        'theme.id',
+        'country',
+        'categories.id',
+        'categories.slug',
         'location.id',
     )
 
@@ -56,7 +59,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             return [
                 Nested(path='owner', query=Term(owner__id=value)) |
                 Nested(path='promoter', query=Term(promoter__id=value)) |
-                Nested(path='activity_manager', query=Term(activity_manager__id=value)) |
+                Nested(path='activity_managers', query=Term(activity_managers__id=value)) |
                 Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
                 Term(status='approved')
             ]
@@ -71,7 +74,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                 Nested(path='owner', query=Term(**{field: value})) |
                 Nested(path='promoter', query=Term(promoter__id=value)) |
                 Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
-                Nested(path='activity_manager', query=Term(activity_manager__id=value))
+                Nested(path='activity_managers', query=Term(activity_managers__id=value))
             )
 
         return super(InitiativeSearchFilter, self).get_filter(request, field)

@@ -84,7 +84,6 @@ class SAMLAuthentication(BaseTokenAuthentication):
             return url
 
     def parse_user(self, user_data):
-        logger.info('SSO Data:{}'.format(user_data))
         data = {}
         for target, source in list(self.settings['assertion_mapping'].items()):
             if isinstance(source, (list, tuple)):

@@ -1,12 +1,12 @@
 from builtins import object
 
-from axes.attempts import is_already_locked
+from axes.handlers.proxy import AxesProxyHandler
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.signing import TimestampSigner
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
@@ -41,12 +41,12 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
         if all(credentials.values()):
             request = self.context['request']
 
-            if is_already_locked(request):
+            user = authenticate(request, **credentials)
+
+            if getattr(request, 'axes_locked_out', False):
                 raise exceptions.Throttled(
                     600, 'Too many failed password attempts.'
                 )
-
-            user = authenticate(request, **credentials)
 
             if user:
                 if not user.is_active:
@@ -179,7 +179,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
-    homepage = PermissionField('homepage', view_args=('primary_language', ))
+    homepage = PermissionField('home-page-detail')
 
     class Meta(object):
         fields = [
@@ -250,9 +250,10 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=Theme.objects)
 
-    is_active = serializers.BooleanField(read_only=True)
+    segments = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Segment.objects)
 
-    segments = OldSegmentSerializer(many=True, read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -337,14 +338,15 @@ class UserDataExportSerializer(UserProfileSerializer):
 
 
 class PasswordValidator(object):
-    def set_context(self, field):
-        if field.parent.instance:
-            self.user = field.parent.instance
-        else:
-            self.user = None
+    requires_context = True
 
-    def __call__(self, value):
-        password_validation.validate_password(value, self.user)
+    def __call__(self, value, serializer_field):
+        if serializer_field.parent.instance:
+            user = serializer_field.parent.instance
+        else:
+            user = None
+
+        password_validation.validate_password(value, user)
         return value
 
 
@@ -434,7 +436,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     email_confirmation = serializers.EmailField(
-        label=_('password_confirmation'), max_length=254, required=False)
+        label=_('email_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
     token = serializers.CharField(required=False, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
@@ -465,22 +467,28 @@ class UserCreateSerializer(serializers.ModelSerializer):
                     'NON_FIELD_ERRORS_KEY', 'non_field_errors')
             ] = [conflict]
 
+            request = self.context['request']
+            AxesProxyHandler.user_login_failed(self, {}, request)
+            if getattr(request, 'axes_locked_out', False):
+                raise exceptions.Throttled(
+                    600, 'Too many failed registration attempts.'
+                )
             del errors['email']
 
         return errors
 
     def validate(self, data):
-        if 'email_confirmation' in data and data['email'] != data['email_confirmation']:
-            raise serializers.ValidationError(_('Email confirmation mismatch'))
+        if 'email_confirmation' in data:
+            if data['email'] != data['email_confirmation']:
+                raise serializers.ValidationError(_('Email confirmation mismatch'))
+            del data['email_confirmation']
 
         settings = MemberPlatformSettings.objects.get()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'token': _('Signup requires a confirmation token')})
-
         data['password'] = make_password(data['password'])
-
         return data
 
     class Meta(object):
@@ -571,6 +579,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'confirm_signup',
             'login_methods',
             'background',
+            'enable_gender',
+            'enable_address',
+            'enable_birthdate',
         )
 
 

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, connection
 from bluebottle.utils.utils import get_languages
-from django.utils.translation import activate, _trans, ugettext as _
+from django.utils.translation import activate, _trans, gettext as _
 from tenant_extras.middleware import tenant_translation
 
 

@@ -8,7 +8,7 @@ from django.contrib.auth.models import Permission
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
-from tenant_schemas.urlresolvers import reverse
+from django.urls import reverse
 
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.looker import LookerEmbedFactory

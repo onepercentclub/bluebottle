@@ -6,7 +6,7 @@ from django.utils.functional import lazy
 from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
 
@@ -19,14 +19,9 @@ from fluent_contents.rendering import render_placeholder
 from fluent_contents.utils.filters import apply_filters
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.clients import properties
-from bluebottle.utils.models import PublishableModel
+from bluebottle.utils.models import PublishableModel, get_language_choices
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
-
-def get_languages():
-    return properties.LANGUAGES
 
 
 class DocumentItem(ContentItem):
@@ -215,8 +210,10 @@ class Page(PublishableModel):
     # Contents
     language = models.CharField(
         _('language'),
-        max_length=5,
-        choices=lazy(get_languages, tuple)())
+        max_length=7,
+        choices=lazy(get_language_choices, list)()
+    )
+
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
         'ColumnsPlugin',

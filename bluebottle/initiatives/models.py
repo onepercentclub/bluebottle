@@ -6,7 +6,7 @@ from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 from parler.models import TranslatedFields
@@ -34,6 +34,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)ss',
+        on_delete=models.CASCADE
     )
 
     reviewer = models.ForeignKey(
@@ -42,6 +43,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         blank=True,
         verbose_name=_('reviewer'),
         related_name='review_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
     activity_manager = models.ForeignKey(
@@ -52,14 +54,25 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         help_text=_('The co-initiator can create and edit activities for '
                     'this initiative, but cannot edit the initiative itself.'),
         related_name='activity_manager_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
+    activity_managers = models.ManyToManyField(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('co-initiators'),
+        help_text=_('Co-initiators can create and edit activities for '
+                    'this initiative, but cannot edit the initiative itself.'),
+        related_name='activity_managers_%(class)ss',
+    )
     promoter = models.ForeignKey(
         'members.Member',
         verbose_name=_('promoter'),
         blank=True,
         null=True,
         related_name='promoter_%(class)ss',
+        on_delete=models.SET_NULL
     )
 
     created = models.DateTimeField(auto_now_add=True)
@@ -98,6 +111,15 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     location = models.ForeignKey(
         'geo.Location', verbose_name=_('office'),
         null=True, blank=True, on_delete=models.SET_NULL)
+
+    is_global = models.BooleanField(
+        verbose_name=_('is global'),
+        help_text=_(
+            'Global initiatives do not have a location. '
+            'Instead the location is stored on the respective activities.'
+        ),
+        default=False
+    )
 
     has_organization = models.NullBooleanField(null=True, default=None)
 
@@ -161,10 +183,11 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             if not self.owner.partner_organization:
                 fields.append('organization_contact')
 
-        if Location.objects.count():
-            fields.append('location')
-        else:
-            fields.append('place')
+        if not self.is_global:
+            if Location.objects.count():
+                fields.append('location')
+            else:
+                fields.append('place')
 
         return fields
 
@@ -179,7 +202,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:initiatives_initiative_change', args=(self.id,))
-        link = '{}/{}'.format(domain, url)
+        link = '{}{}'.format(domain, url)
         return link
 
     def save(self, **kwargs):
@@ -191,9 +214,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
                     self.slug = 'in-{}'.format(self.__class__.objects.all().aggregate(Max('id'))['id__max'] or 0 + 1)
             else:
                 self.slug = 'new'
-
-        if not self.activity_manager:
-            self.activity_manager = self.owner
 
         try:
             if InitiativePlatformSettings.objects.get().require_organization:
@@ -218,6 +238,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         self.story = clean_html(self.story)
 
         super(Initiative, self).save(**kwargs)
+
+        if not self.activity_managers.exists():
+            self.activity_managers.add(self.owner)
 
 
 class InitiativePlatformSettings(BasePlatformSettings):

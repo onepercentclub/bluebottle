@@ -1,4 +1,5 @@
 import csv
+import datetime
 from builtins import str
 
 import six
@@ -11,15 +12,16 @@ from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
-from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
+from solo.admin import SingletonModelAdmin
 
 from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
+from ..segments.models import SegmentType
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -48,6 +50,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
+
+    if isinstance(attr, datetime.datetime):
+        attr = attr.strftime('%d-%m-%y %H:%M')
 
     output = attr() if callable(attr) else attr
 
@@ -100,6 +105,8 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
+                for segment_type in SegmentType.objects.all():
+                    labels.append(segment_type.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
         for obj in queryset:
@@ -113,6 +120,9 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value)
+                for segment_type in SegmentType.objects.all():
+                    segments = ", ".join(obj.segments.filter(type=segment_type).values_list('name', flat=True))
+                    row.append(segments)
             if isinstance(obj, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
@@ -148,9 +158,8 @@ class TotalAmountAdminChangeList(ChangeList):
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 
-class BasePlatformSettingsAdmin(SingletonAdmin):
-    def has_delete_permission(self, request, obj=None):
-        return False
+class BasePlatformSettingsAdmin(SingletonModelAdmin):
+    pass
 
 
 def log_action(obj, user, change_message='Changed', action_flag=CHANGE):

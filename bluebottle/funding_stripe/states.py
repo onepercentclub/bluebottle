@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import Transition, State, EmptyState

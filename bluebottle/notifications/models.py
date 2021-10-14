@@ -1,9 +1,10 @@
 from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 
@@ -12,7 +13,7 @@ from bluebottle.utils.utils import get_class
 
 
 class Message(models.Model):
-    recipient = models.ForeignKey('members.Member')
+    recipient = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     sent = models.DateTimeField(null=True, blank=True)
     adapter = models.CharField(max_length=30, default='email')
     template = models.CharField(max_length=100)
@@ -20,6 +21,12 @@ class Message(models.Model):
     body_html = models.TextField(blank=True, null=True)
     body_txt = models.TextField(blank=True, null=True)
     custom_message = models.TextField(blank=True, null=True)
+    bcc = ArrayField(
+        models.CharField(max_length=200, null=True),
+        blank=True,
+        null=True,
+        default=list
+    )
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -55,6 +62,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         max_length=100, choices=SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
+    default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
 
     match_options = models.BooleanField(default=False)
 

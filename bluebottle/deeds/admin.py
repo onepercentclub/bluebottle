@@ -4,7 +4,7 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.forms import StateMachineModelForm
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -46,6 +46,8 @@ class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
     inlines = (DeedParticipantInline,) + ActivityChildAdmin.inlines
+    list_filter = ['status']
+    search_fields = ['title', 'description']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',
@@ -71,6 +73,7 @@ class DeedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
+        ('fallback_location', 'Office Location'),
         ('start', 'Start'),
         ('end', 'End'),
     )

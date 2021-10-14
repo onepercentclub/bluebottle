@@ -4,12 +4,12 @@ from collections import defaultdict
 
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.fsm.triggers import TriggerMixin
@@ -65,10 +65,13 @@ class StateMachineAdminMixin(object):
             for formset in formsets:
                 for form in formset:
                     if isinstance(form.instance, TriggerMixin):
-                        form.save(commit=False)
-                        if form.instance:
-                            effects += form.instance.execute_triggers(user=request.user, send_messages=send_messages)
-
+                        if form.is_valid():
+                            form.save(commit=False)
+                            if form.instance:
+                                effects += form.instance.execute_triggers(
+                                    user=request.user,
+                                    send_messages=send_messages
+                                )
             rendered_effects = get_effects(effects)
             if rendered_effects:
 

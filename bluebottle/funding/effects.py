@@ -7,7 +7,7 @@ import datetime
 
 from django.utils import timezone
 from django.utils.timezone import get_current_timezone, now
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter

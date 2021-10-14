@@ -1,16 +1,18 @@
-import csv
+from datetime import datetime, time
 
+import dateutil
 import icalendar
-from bluebottle.clients import properties
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.timezone import utc
-from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import utc, get_current_timezone
+from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission
 )
+from bluebottle.clients import properties
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
@@ -44,6 +46,7 @@ from bluebottle.utils.views import (
     CreateAPIView, ListAPIView, JsonApiViewMixin,
     PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
+from bluebottle.utils.xlsx import generate_xlsx_response
 
 
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
@@ -93,7 +96,7 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class DateSlotListView(JsonApiViewMixin, CreateAPIView):
+class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     related_permission_classes = {
         'activity': [
             ActivityStatusPermission,
@@ -101,7 +104,47 @@ class DateSlotListView(JsonApiViewMixin, CreateAPIView):
             DeleteActivityPermission
         ]
     }
-    permission_classes = [DateSlotActivityStatusPermission, ]
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        try:
+            activity_id = self.request.GET['activity']
+            queryset = queryset.filter(activity_id=int(activity_id))
+        except KeyError:
+            raise ValidationError('Missing required parameter: activity')
+        except ValueError:
+            raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
+
+        try:
+            contributor_id = self.request.GET['contributor']
+            queryset = queryset.filter(
+                slot_participants__status__in=['registered', 'succeeded'],
+                slot_participants__participant_id=contributor_id
+            )
+        except ValueError:
+            raise ValidationError('Invalid parameter: contributor ({})'.format(contributor_id))
+        except KeyError:
+            pass
+
+        tz = get_current_timezone()
+
+        start = self.request.GET.get('start')
+        try:
+            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+        except (ValueError, TypeError):
+            pass
+
+        end = self.request.GET.get('end')
+        try:
+            queryset = queryset.filter(
+                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+            )
+        except (ValueError, TypeError):
+            pass
+
+        return queryset
+
+    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
@@ -126,11 +169,11 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             queryset = self.queryset.filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
             )
         else:
@@ -157,10 +200,28 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
 
     def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs).filter(
-            slot_id=self.kwargs['slot_id'],
-            participant__status__in=['accepted', 'new']
-        )
+        user = self.request.user
+        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
+
+        if user.is_anonymous:
+            queryset = queryset.filter(
+                status__in=('registered', 'succeeded'),
+                participant__status__in=('accepted', 'new'),
+            )
+        elif user not in (
+            activity.owner,
+            activity.initiative.owner,
+        ):
+            queryset = queryset.filter(
+                Q(
+                    status__in=('registered', 'succeeded'),
+                    participant__status__in=('accepted', 'new'),
+                ) |
+                Q(participant__user=user)
+            )
+
+        return queryset
 
     queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
     serializer_class = SlotParticipantSerializer
@@ -378,27 +439,21 @@ class DateParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = DateActivity
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
-        response['Content-Type'] = 'text/csv'
-
-        writer = csv.writer(response)
         slots = activity.active_slots.order_by('start')
+        filename = 'participants for {}.xlsx'.format(activity.title)
         row = [field[1] for field in self.fields]
         for slot in slots:
-            row.append(slot.title or str(slot))
-        writer.writerow(row)
-        for participant in activity.contributors.instance_of(
-            DateParticipant
-        ):
+            start = slot.start.replace(tzinfo=None)
+            row.append("{}\n{}".format(slot.title or str(slot), start.strftime('%d-%m-%y %H:%M')))
+        rows = [row]
+        for participant in activity.contributors.instance_of(DateParticipant):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
             for slot in slots:
                 slot_participant = slot.slot_participants.filter(participant=participant).first()
@@ -406,9 +461,9 @@ class DateParticipantExportView(PrivateFileView):
                     row.append(slot_participant.status)
                 else:
                     row.append('-')
-            writer.writerow(row)
+            rows.append(row)
 
-        return response
+        return generate_xlsx_response(filename=filename, data=rows)
 
 
 class PeriodParticipantExportView(PrivateFileView):
@@ -417,28 +472,23 @@ class PeriodParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = PeriodActivity
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
+        filename = 'participants for {}.xlsx'.format(activity.title)
 
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
-        response['Content-Type'] = 'text/csv'
+        rows = []
+        rows.append([field[1] for field in self.fields])
 
-        writer = csv.writer(response)
-        row = [field[1] for field in self.fields]
-        writer.writerow(row)
-        for participant in activity.contributors.instance_of(
-            PeriodParticipant
-        ):
+        for t, participant in enumerate(activity.contributors.instance_of(PeriodParticipant)):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
-            writer.writerow(row)
+            rows.append(row)
 
-        return response
+        return generate_xlsx_response(filename=filename, data=rows)
 
 
 class SkillPagination(JsonApiPagination):

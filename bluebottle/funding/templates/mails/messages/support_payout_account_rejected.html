@@ -1,0 +1,20 @@
+{% extends "base.mail.html" %}
+{% load djmoney %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            Hi support,<br/>
+            <br/>
+            We have received some feedback on identity verification {{ full_name }} ({{ email }}).
+            Please check out the comments and make the appropriate changes. 
+            <br/><br/>
+            They should submit their identity verification again as soon as possible.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 
+
+{% block action %}
+   {% trans 'Make sure the initiator updates their data soonest!' context 'email' %}:
+{% endblock %}`

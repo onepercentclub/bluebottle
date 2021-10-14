@@ -11,13 +11,13 @@ from operator import attrgetter
 from django.utils.functional import cached_property
 from djmoney.money import Money
 
-from django_extensions.db.fields.json import JSONField
+from django.contrib.postgres.fields import JSONField
 
 from bluebottle.funding.exception import PaymentException
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 
@@ -33,7 +33,7 @@ from bluebottle.utils.models import ValidatorError
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
-    donation = models.ForeignKey(Donor)
+    donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -85,7 +85,7 @@ class PaymentIntent(models.Model):
 
 
 class StripePayment(Payment):
-    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
+    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)
 
     provider = 'stripe'
 
@@ -302,7 +302,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-    eventually_due = JSONField(null=True, default=[])
+    eventually_due = JSONField(null=True, default=list)
 
     @property
     def country_spec(self):
@@ -435,21 +435,21 @@ class StripePayoutAccount(PayoutAccount):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != self.states.verified.value:
                     self.states.verify()
             elif len(self.missing_fields):
-                if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
             elif len(self.pending_fields):
                 if self.status != self.states.pending.value:
                     # Submit to transition to pending
                     self.states.submit()
             else:
-                if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
         else:
             if self.status != self.states.incomplete.value:
                 self.states.set_incomplete()
@@ -509,9 +509,7 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id = self._account.id
 
         if self.account_id:
-            for field in self.account.requirements.eventually_due:
-                if field not in self.eventually_due:
-                    self.eventually_due.append(field)
+            self.eventually_due = self.account.requirements.eventually_due
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 

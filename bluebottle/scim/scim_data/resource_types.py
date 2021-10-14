@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 
 RESOURCE_TYPES = [{
     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],

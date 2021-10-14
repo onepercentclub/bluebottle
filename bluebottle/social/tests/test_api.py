@@ -6,7 +6,7 @@ import urllib.parse
 import mock
 import httmock
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase

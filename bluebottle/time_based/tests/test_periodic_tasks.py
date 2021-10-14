@@ -228,53 +228,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.slot4.states.cancel(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
-                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(
-            expected in mail.outbox[0].body,
-            "First slot should be shown in mail"
-        )
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(
-            expected in mail.outbox[0].body,
-            "Second slot should be shown in email"
-        )
-        with TenantLanguage('en'):
-            unexpected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot3.start),
-                defaultfilters.time(self.slot3.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot3.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertFalse(
-            unexpected in mail.outbox[0].body,
-            "Third slot should not show because the user withdrew")
 
-        with TenantLanguage('en'):
-            unexpected = '{} {} - {}'.format(
-                defaultfilters.date(self.slot4.start),
-                defaultfilters.time(self.slot4.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot4.end.astimezone(get_current_timezone())),
-            )
-        self.assertFalse(
-            unexpected in mail.outbox[0].body,
-            "Fourth slot should not show because it was cancelled")
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(self.activity.title)
-        )
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
@@ -333,6 +288,66 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
             self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
+
+
+class OverallPeriodParticipantPeriodicTest(BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.initiative.save()
+        start = date.today() + timedelta(days=10)
+        deadline = date.today() + timedelta(days=26)
+
+        self.activity = self.factory.create(
+            initiative=self.initiative,
+            review=False,
+            start=start,
+            deadline=deadline,
+            duration=timedelta(hours=2),
+            duration_period='overall'
+        )
+        self.activity.states.submit(save=True)
+        self.participant = self.participant_factory.create(activity=self.activity)
+
+    def refresh(self):
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.participant.refresh_from_db()
+            self.activity.refresh_from_db()
+
+    def run_tasks(self, when):
+        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+            mock_date.today.return_value = when
+            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+            with mock.patch('bluebottle.time_based.triggers.date') as mock_date:
+                mock_date.today.return_value = when
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+                with mock.patch('bluebottle.time_based.effects.date') as mock_date:
+                    mock_date.today.return_value = when
+                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+                    with mock.patch.object(
+                            timezone, 'now',
+                            return_value=timezone.get_current_timezone().localize(
+                                datetime(when.year, when.month, when.day)
+                            )
+                    ):
+                        with_a_deadline_tasks()
+                        period_participant_tasks()
+                        time_contribution_tasks()
+
+    def test_no_contribution_create(self):
+        self.participant.current_period = now()
+
+        self.run_tasks(self.activity.start + timedelta(weeks=1, days=1))
+        self.run_tasks(self.activity.start + timedelta(weeks=2, days=1))
+        self.run_tasks(self.activity.start + timedelta(weeks=3, days=1))
+
+        self.assertEqual(len(self.participant.contributions.all()), 1)
 
 
 class PeriodParticipantPeriodicTest(BluebottleTestCase):

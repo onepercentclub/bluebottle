@@ -1,26 +1,24 @@
 from builtins import object
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, ContentType
+from django.contrib.gis.db.models import PointField
+from django.contrib.gis.geos import Point
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.utils.translation import gettext_lazy as _
 
-from django.utils.translation import ugettext_lazy as _
-
-from timezonefinder import TimezoneFinder
+import geocoder
 
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
+from timezonefinder import TimezoneFinder
 
-from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
-
-from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
 
 tf = TimezoneFinder()
 
@@ -77,7 +75,7 @@ class SubRegion(GeoBaseModel):
         name=models.CharField(_("name"), max_length=100)
     )
 
-    region = models.ForeignKey(Region, verbose_name=_("region"))
+    region = models.ForeignKey(Region, verbose_name=_("region"), on_delete=models.CASCADE)
 
     class Meta(GeoBaseModel.Meta):
         verbose_name = _("sub region")
@@ -92,7 +90,7 @@ class Country(GeoBaseModel):
         name=models.CharField(_("name"), max_length=100)
     )
 
-    subregion = models.ForeignKey(SubRegion, verbose_name=_("sub region"))
+    subregion = models.ForeignKey(SubRegion, verbose_name=_("sub region"), on_delete=models.CASCADE)
     # https://en.wikipedia.org/wiki/ISO_3166-1
     alpha2_code = models.CharField(_("alpha2 code"), max_length=2, blank=True,
                                    validators=[Alpha2CodeValidator],
@@ -140,17 +138,23 @@ class Location(models.Model):
     group = models.ForeignKey(
         'geo.LocationGroup',
         verbose_name=_('location group'),
-        null=True, blank=True)
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
     subregion = models.ForeignKey(
         'offices.OfficeSubRegion',
         verbose_name=_('office group'),
         help_text=_('The organisational group this office belongs too.'),
-        null=True, blank=True)
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey(
         'geo.Country',
         help_text=_('The (geographic) country this office is located in.'),
-        blank=True, null=True)
+        blank=True, null=True,
+        on_delete=models.CASCADE
+    )
     description = models.TextField(_('description'), blank=True)
     image = ImageField(
         _('image'), max_length=255, null=True, blank=True,
@@ -174,6 +178,9 @@ class Location(models.Model):
 
         super(Location, self).save()
 
+    class JSONAPIMeta(object):
+        resource_name = 'locations'
+
     def __str__(self):
         return self.name
 
@@ -184,7 +191,7 @@ class Place(models.Model):
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country')
+    country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
@@ -194,18 +201,22 @@ class Place(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    def save(self, *args, **kwargs):
+        if self.locality and self.country and not self.position:
+            result = geocoder.google(
+                '{} {}'.format(self.locality, self.country.name),
+                key=settings.MAPS_API_KEY
 
-class InitiativePlace(models.Model):
-    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
-    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
-    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
-    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
-    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country')
+            )
+            if result.lat and result.lng:
+                self.position = Point(
+                    x=float(result.lng),
+                    y=float(result.lat)
+                )
 
-    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+                self.formatted_address = result.raw['formatted_address']
 
-    position = PointField()
+        super().save(*args, **kwargs)
 
 
 @python_2_unicode_compatible
@@ -215,16 +226,16 @@ class Geolocation(models.Model):
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country')
+    country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    position = PointField()
+    position = PointField(null=True)
 
     anonymized = False
 
     class JSONAPIMeta(object):
-        resource_name = 'locations'
+        resource_name = 'geo-locations'
 
     def __str__(self):
         if self.locality:
@@ -234,7 +245,9 @@ class Geolocation(models.Model):
 
     @property
     def timezone(self):
-        return tf.timezone_at(
-            lng=self.position.x,
-            lat=self.position.y
-        )
+        if self.position:
+            return tf.timezone_at(
+                lng=self.position.x,
+                lat=self.position.y
+            )
+        return 'Europe/Amsterdam'

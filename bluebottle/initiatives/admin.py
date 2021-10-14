@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
@@ -70,6 +70,33 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ActiviyManagersInline(admin.TabularInline):
+    model = Initiative.activity_managers.through
+    show_change_link = True
+    extra = 0
+
+    def user_link(self, obj, field):
+        user = obj.member
+
+        url = reverse(
+            'admin:{0}_{1}_change'.format(
+                user._meta.app_label,
+                user._meta.model_name
+            ),
+            args=[obj.id]
+        )
+        return format_html(u"<a href='{}'>{}</a>", str(url), getattr(user, field))
+
+    def full_name(self, obj):
+        return self.user_link(obj, 'full_name')
+
+    def email(self, obj):
+        return self.user_link(obj, 'email')
+
+    readonly_fields = ('full_name', 'email', )
+    exclude = ('member', )
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
 
@@ -79,9 +106,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     raw_id_fields = (
         'owner', 'reviewer',
-        'promoter', 'activity_manager',
+        'promoter',
         'organization', 'organization_contact',
-        'place'
+        'place',
     )
 
     def lookup_allowed(self, key, value):
@@ -149,8 +176,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ('organization', 'Organization'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Owner email'),
-        ('activity_manager__full_name', 'Activity Manager'),
-        ('activity_manager__email', 'Activity Manager email'),
         ('promotor__full_name', 'Promotor'),
         ('promotor__email', 'Promotor email'),
         ('reviewer__full_name', 'Reviewer'),
@@ -166,7 +191,10 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ]
 
         if Location.objects.count():
-            detail_fields.append('location')
+            if obj and obj.is_open:
+                detail_fields.append('is_global')
+            if obj and not obj.is_global:
+                detail_fields.append('location')
         else:
             detail_fields.append('place')
 
@@ -187,9 +215,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )
             }),
             (_('Status'), {'fields': (
+                'reviewer', 'activity_managers', 'promoter',
                 'valid',
-                'reviewer', 'activity_manager',
-                'promoter', 'status', 'states',
+                'status', 'states',
                 'created', 'updated',
             )}),
         )
@@ -201,7 +229,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             )
         return fieldsets
 
-    inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
+    inlines = [
+        ActivityAdminInline,
+        MessageAdminInline,
+        WallpostInline
+    ]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
@@ -223,9 +255,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ])))
 
     valid.short_description = _('Steps to complete initiative')
-
-    class Media(object):
-        js = ('admin/js/inline-activities-add.js',)
+    autocomplete_fields = ['activity_managers']
 
 
 @admin.register(InitiativePlatformSettings)
@@ -238,7 +268,6 @@ class ThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
     readonly_fields = ('initiative_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
-    ordering = ('translations__name',)
 
     def initiative_link(self, obj):
         url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)

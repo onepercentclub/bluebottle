@@ -4,22 +4,16 @@ from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
 from django.utils.functional import lazy
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
+from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.clients import properties
 from bluebottle.impact.models import ICONS
 from bluebottle.statistics.statistics import Statistics
 from bluebottle.utils.managers import TranslatablePolymorphicManager
-
-
-def get_languages():
-    return properties.LANGUAGES
+from bluebottle.utils.models import get_language_choices
 
 
 @python_2_unicode_compatible
@@ -160,7 +154,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 
 
 class ImpactStatistic(BaseStatistic):
-    impact_type = models.ForeignKey('impact.ImpactType')
+    impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
     def get_value(self, start=None, end=None):
         return self.impact_type.goals.filter(
@@ -221,14 +215,16 @@ class Statistic(models.Model):
     )
     active = models.BooleanField(
         help_text=_('Should this be shown or hidden.'))
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+
+    creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
+    modification_date = models.DateTimeField(_('last modification'), auto_now=True)
+
     language = models.CharField(
         _('language'),
-        max_length=5,
+        max_length=7,
         blank=True,
         null=True,
-        choices=lazy(get_languages, tuple)())
+        choices=lazy(get_language_choices, tuple)())
 
     def __str__(self):
         return self.title

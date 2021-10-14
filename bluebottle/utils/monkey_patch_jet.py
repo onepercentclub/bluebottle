@@ -1,7 +1,10 @@
 import jet.dashboard.views
+import jet.utils
 from django.contrib.admin import ModelAdmin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
 
 jet.dashboard.views.add_user_dashboard_module_view = csrf_protect(
     jet.dashboard.views.add_user_dashboard_module_view)
@@ -42,3 +45,5 @@ def formfield_for_manytomany(self, db_field, request, **kwargs):
 
 
 ModelAdmin.formfield_for_manytomany = formfield_for_manytomany
+
+jet.utils.get_menu_items = get_menu_items

@@ -1172,7 +1172,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 'code': 'EUR',
                 'name': 'Euro',
                 'maxAmount': None,
-                'symbol': u'\u20ac',
+                'symbol': '€',
                 'minAmount': 5.00,
                 'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                 'provider': 'stripe',
@@ -1190,7 +1190,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 'code': 'NGN',
                 'name': 'Nigerian Naira',
                 'maxAmount': None,
-                'symbol': u'\u20a6',
+                'symbol': '₦',
                 'minAmount': 1000.00,
                 'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                 'provider': 'flutterwave',
@@ -1673,7 +1673,7 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
 
     def assertPostNotAllowed(self, url, user=None):
         data = self.client.get(url, user=user)
-        response = self.client.patch(url, data.data, user=user)
+        response = self.client.patch(url, data.json(), user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_funding_detail(self):

@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.db import router, transaction
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField
@@ -23,7 +23,7 @@ class MessageAdminInline(GenericTabularInline):
     readonly_fields = ['sent', 'subject', 'recipient']
     fields = readonly_fields
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     extra = 0
@@ -49,14 +49,14 @@ class NotificationAdminMixin(object):
             with transaction.atomic(using=router.db_for_write(self.model)):
                 return self._changeform_view(request, object_id, form_url, extra_context)
 
-        obj = self.model.objects.get(pk=object_id)
+        obj = self.get_object(request, object_id)
         new = None
         ModelForm = self.get_form(request, obj)
 
         if request.method == 'POST':
             form = ModelForm(request.POST, request.FILES, instance=obj)
             new = self.save_form(request, form, change=True)
-        old = self.model.objects.get(pk=object_id)
+        old = self.get_object(request, object_id)
 
         confirm = request.POST.get('confirm', False)
         send_messages = request.POST.get('send_messages', True)

@@ -18,6 +18,7 @@ from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
+from bluebottle.utils.models import Language
 from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
@@ -62,9 +63,10 @@ def tenant_url(path=None):
     except AttributeError:
         domain = 'example.com'
 
-    url = "https://{0}".format(domain)
     if domain.endswith("localhost"):
-        url += ":8000"
+        url = "http://{0}:8000".format(domain)
+    else:
+        url = "https://{0}".format(domain)
     if path:
         return url + path
     return url
@@ -103,7 +105,7 @@ def get_currencies():
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
-        'symbol': get_currency_symbol(code).replace('US$', '$')
+        'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
     } for code in currencies]
 
     for currency in currencies:
@@ -237,7 +239,7 @@ def get_public_properties(request):
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
-            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
+            'languages': [{'code': lang.full_code, 'name': lang.language_name} for lang in Language.objects.all()],
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
@@ -245,7 +247,11 @@ def get_public_properties(request):
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
                 'funding': get_platform_settings('funding.FundingPlatformSettings'),
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
-                'translations': get_platform_settings('utils.TranslationPlatformSettings'),
+                'translations': dict(
+                    (key, value) for key, value
+                    in get_platform_settings('utils.TranslationPlatformSettings').items()
+                    if value
+                ),
                 'currencies': get_currency_settings(),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }

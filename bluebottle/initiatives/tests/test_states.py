@@ -115,9 +115,9 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.draft.value
         )
 
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
+        self.initiative.states.submit()
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.submitted.value
         )
 
     def test_has_organization(self):
@@ -201,6 +201,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         BudgetLineFactory.create(activity=funding)
 
         incomplete_activity = DateActivityFactory.create(initiative=self.initiative, title='')
+
         self.initiative.states.submit(save=True)
 
         activity.refresh_from_db()

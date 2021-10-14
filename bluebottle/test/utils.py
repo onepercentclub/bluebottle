@@ -68,6 +68,7 @@ class InitProjectDataMixin(object):
         Language.objects.all().delete()
 
         language_data = [{'code': 'en', 'language_name': 'English',
+                          'default': True,
                           'native_name': 'English'},
                          {'code': 'nl', 'language_name': 'Dutch',
                           'native_name': 'Nederlands'}]
@@ -513,9 +514,9 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         mail.outbox = []
 
     def get_csrf_token(self, response):
-        csrf = "name='csrfmiddlewaretoken' value='"
+        csrf = 'name="csrfmiddlewaretoken" value="'
         start = response.content.decode().find(csrf) + len(csrf)
-        end = response.content.decode().find("'", start)
+        end = response.content.decode().find('"', start)
         return response.content[start:end].decode()
 
     def admin_add_inline_form_entry(self, form, inlines):

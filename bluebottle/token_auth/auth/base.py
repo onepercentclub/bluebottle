@@ -2,6 +2,7 @@ from builtins import object
 import logging
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings, MemberPlatformSettings
@@ -89,7 +90,6 @@ class BaseTokenAuthentication(object):
                         type__slug=type_slug,
                         alternate_names__contains=[val]
                     )
-
                     user.segments.add(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
@@ -99,6 +99,8 @@ class BaseTokenAuthentication(object):
                             alternate_names=[val]
                         )
                         user.segments.add(segment)
+                except IntegrityError:
+                    pass
 
     def set_custom_data(self, user, data):
         """

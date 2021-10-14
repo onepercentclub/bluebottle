@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status

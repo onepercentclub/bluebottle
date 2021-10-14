@@ -1,5 +1,5 @@
-from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+from django_elasticsearch_dsl import Document, fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
@@ -9,6 +9,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Funding
+from bluebottle.deeds.models import Deed
 from bluebottle.members.models import Member
 
 
@@ -21,8 +22,9 @@ initiative.settings(
 )
 
 
-@initiative.doc_type
-class InitiativeDocument(DocType):
+@registry.register_document
+@initiative.document
+class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     story = fields.TextField()
@@ -38,7 +40,7 @@ class InitiativeDocument(DocType):
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
-    activity_manager = fields.NestedField(properties={
+    activity_managers = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
@@ -47,10 +49,10 @@ class InitiativeDocument(DocType):
         'full_name': fields.TextField()
     })
 
+    country = fields.LongField()
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
-    activity_manager_id = fields.KeywordField()
 
     theme = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -67,7 +69,6 @@ class InitiativeDocument(DocType):
     })
 
     place = fields.NestedField(properties={
-        'country': fields.LongField(attr='country.pk'),
         'province': fields.TextField(),
         'locality': fields.TextField(),
         'street': fields.TextField(),
@@ -75,7 +76,6 @@ class InitiativeDocument(DocType):
     })
 
     location = fields.NestedField(
-        attr='location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -83,7 +83,7 @@ class InitiativeDocument(DocType):
         }
     )
 
-    class Meta(object):
+    class Django:
         model = Initiative
         related_models = (
             Geolocation,
@@ -91,7 +91,8 @@ class InitiativeDocument(DocType):
             Theme,
             Funding,
             PeriodActivity,
-            DateActivity
+            DateActivity,
+            Deed
         )
 
     def get_queryset(self):
@@ -125,6 +126,20 @@ class InitiativeDocument(DocType):
             )
         ]
 
+    def prepare_location(self, instance):
+        if instance.is_global:
+            return [{
+                'id': activity.office_location.id,
+                'name': activity.office_location.name,
+                'city': activity.office_location.city
+            } for activity in instance.activities.all() if activity.office_location]
+        elif instance.location:
+            return {
+                'id': instance.location.id,
+                'name': instance.location.name,
+                'city': instance.location.city
+            }
+
     def prepare_activity_owners(self, instance):
         return [
             {
@@ -132,3 +147,11 @@ class InitiativeDocument(DocType):
                 'full_name': activity.owner.full_name
             } for activity in instance.activities.all()
         ]
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.place and instance.place.country_id:
+            countries += [instance.place.country_id]
+        if instance.location and instance.location.country_id:
+            countries += [instance.location.country_id]
+        return countries

@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -8,6 +8,9 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 @register(Deed)
 class DeedStateMachine(ActivityStateMachine):
     def has_no_end_date(self):
+        """
+        Has no end date
+        """
         return self.instance.end is None
 
     succeed = Transition(
@@ -73,13 +76,12 @@ class DeedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
         description=_(
             'Cancel if the activity will not be executed. '
-            'The activity manager can no longer edit the activity '
+            'An activity manager can no longer edit the activity '
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
         automatic=False,
-        hide_from_admin=True,
     )
 
 
@@ -110,7 +112,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         return (
             self.instance.activity.owner == user or
             self.instance.activity.initiative.owner == user or
-            self.instance.activity.initiative.activity_manager == user or
+            user in self.instance.activity.initiative.activity_managers.all() or
             user.is_staff
         )
 

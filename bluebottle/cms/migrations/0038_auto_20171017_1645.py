@@ -28,5 +28,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(set_title)
+        # migrations.RunPython(set_title)
     ]

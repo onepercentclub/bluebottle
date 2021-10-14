@@ -1,16 +1,11 @@
 from django.conf import settings
 from django.db import models
 from django.utils.functional import lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.clients import properties
-from bluebottle.utils.models import PublishableModel
-
-
-def get_languages():
-    return properties.LANGUAGES
+from bluebottle.utils.models import PublishableModel, get_language_choices
 
 
 @python_2_unicode_compatible
@@ -24,12 +19,13 @@ class Quote(PublishableModel):
         draft = ChoiceItem('draft', label=_("Draft"))
 
     # Contents
-    language = models.CharField(_("language"), max_length=5,
-                                choices=lazy(get_languages, tuple)())
+    language = models.CharField(_("language"), max_length=7,
+                                choices=lazy(get_language_choices, list)())
     quote = models.TextField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              verbose_name=_('Quoted member'),
-                             related_name="quote_user")
+                             related_name="quote_user",
+                             on_delete=models.CASCADE)
 
     def __str__(self):
         return self.quote

@@ -53,8 +53,6 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
-        'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
-        'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
     class Meta(object):
@@ -77,8 +75,6 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'initiative.image',
             'initiative.place',
             'initiative.location',
-            'slots',
-            'slots.location',
         ]
 
 
@@ -98,7 +94,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
-        'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
@@ -129,7 +125,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'initiative.image',
             'initiative.place',
             'initiative.location',
-            'initiative.activity_manager',
+            'initiative.activity_managers',
             'initiative.promoter',
             'initiative.organization',
             'initiative.organization_contact',

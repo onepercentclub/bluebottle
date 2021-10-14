@@ -1,6 +1,6 @@
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -41,19 +41,21 @@ class CategoriesTestCase(BluebottleTestCase):
         url = reverse('category-list')
 
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='en')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEquals(len(data), 2)
-        self.assertEquals(data[0]['title'], 'Nice things')
-        self.assertEquals(data[1]['title'], 'Other things')
+
+        self.assertEqual(len(data['data']), 2)
+        self.assertEqual(data['data'][0]['attributes']['title'], 'Nice things')
+        self.assertEqual(data['data'][1]['attributes']['title'], 'Other things')
 
         # Confirm that we can retrieve dutch titles too.
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='nl')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEquals(len(data), 2)
-        self.assertEquals(data[0]['title'], 'Andere dingen')
-        self.assertEquals(data[1]['title'], 'Leuke dingen')
+        self.assertEqual(len(data['data']), 2)
+
+        self.assertEqual(data['data'][0]['attributes']['title'], 'Andere dingen')
+        self.assertEqual(data['data'][1]['attributes']['title'], 'Leuke dingen')
 
     def test_category_content(self):
         category_details = {
@@ -74,16 +76,16 @@ class CategoriesTestCase(BluebottleTestCase):
 
         CategoryContentFactory.create(**category_content)
 
-        url = reverse('category-detail', kwargs={'slug': category.slug})
+        url = reverse('category-detail', kwargs={'pk': category.pk})
 
         response = self.client.get(url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content)
-        self.assertEquals(data['contents'][0]['title'], 'category content title')
-        self.assertEquals(data['contents'][0]['description'], 'category content description')
-        self.assertEquals(data['contents'][0]['video_url'], 'http://vimeo.com')
-        self.assertEquals(data['contents'][0]['link_text'], 'Find out more...')
-        self.assertEquals(data['contents'][0]['link_url'], 'http://link.com')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)['data']['attributes']
+        self.assertEqual(data['contents'][0]['title'], 'category content title')
+        self.assertEqual(data['contents'][0]['description'], 'category content description')
+        self.assertEqual(data['contents'][0]['video_url'], 'http://vimeo.com')
+        self.assertEqual(data['contents'][0]['link_text'], 'Find out more...')
+        self.assertEqual(data['contents'][0]['link_url'], 'http://link.com')
         self.assertTrue(all(field in ('title', 'description', 'image', 'video_url', 'link_text', 'link_url', 'sequence')
                             for field in list(data['contents'][0].keys())
                             )

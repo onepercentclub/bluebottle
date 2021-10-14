@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template.context import RequestContext
 from rest_framework_jwt.views import refresh_jwt_token
 from bluebottle.bb_accounts.views import AxesObtainJSONWebToken
@@ -22,8 +22,6 @@ urlpatterns = [
         include('bluebottle.categories.urls.api')),
     url(r'^api/geo/',
         include('bluebottle.geo.urls.api')),
-    url(r'^api/contact/',
-        include('bluebottle.contact.urls.api')),
     url(r'^api/news/',
         include('bluebottle.news.urls.api')),
     url(r'^api/pages/',
@@ -39,9 +37,6 @@ urlpatterns = [
     url(r'^api/metadata/',
         include('bluebottle.utils.urls.api')),
 
-    # Homepage API urls
-    url(r'^api/homepage/',
-        include('bluebottle.homepage.urls.api')),
     url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
@@ -102,8 +97,10 @@ urlpatterns = [
 
 # Nicely parse 500 errors so we get semantic messages in tests.
 def handler500(request):
-    response = render_to_response('500.html', {},
-                                  context_instance=RequestContext(request))
+    response = render(
+        request, '500.html', {},
+        context_instance=RequestContext(request)
+    )
     response.status_code = 500
     return response
 

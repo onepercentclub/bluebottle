@@ -11,7 +11,7 @@ class CheckedToken(models.Model):
     """
     token = models.CharField(max_length=300)
     timestamp = models.DateTimeField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ('-timestamp', 'user__username')

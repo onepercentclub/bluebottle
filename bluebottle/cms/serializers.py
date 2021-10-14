@@ -421,7 +421,7 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
         totals = totals.values(
             'pk', 'contributor__donor__amount_currency'
         ).annotate(
-            total=Sum('contributor__donor__amount', distinct=True)
+            total=Sum('contributor__donor__amount')
         )
 
         return CoFinancerSerializer(

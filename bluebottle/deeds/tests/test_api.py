@@ -207,7 +207,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         new_description = 'Test description'
         self.perform_update(
             {'description': new_description},
-            user=self.model.initiative.activity_manager
+            user=self.model.initiative.activity_managers.first()
         )
 
         self.assertStatus(status.HTTP_200_OK)

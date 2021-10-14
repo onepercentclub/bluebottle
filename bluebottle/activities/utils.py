@@ -1,7 +1,7 @@
 from django.conf import settings
 from builtins import object
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -14,7 +14,7 @@ from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -81,7 +81,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                     except AttributeError:
                         pass
 
-                if positions:
+                if positions and self.context['location'].position:
                     dist = min(
                         distance(
                             lonlat(*pos),
@@ -99,7 +99,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     is_follower = serializers.SerializerMethodField()
@@ -121,7 +121,7 @@ class BaseActivitySerializer(ModelSerializer):
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
-        'initiative.activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -147,7 +147,8 @@ class BaseActivitySerializer(ModelSerializer):
             'stats',
             'errors',
             'required',
-            'goals'
+            'goals',
+            'office_location',
         )
 
         meta_fields = (
@@ -169,7 +170,7 @@ class BaseActivitySerializer(ModelSerializer):
             'goals.type',
             'initiative.place',
             'initiative.location',
-            'initiative.activity_manager',
+            'initiative.activity_managers',
             'initiative.promoter',
             'initiative.image',
         ]
@@ -180,7 +181,7 @@ class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
-    owner = ResourceRelatedField(read_only=True)
+    owner = AnonymizedResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -283,7 +284,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
@@ -306,9 +307,8 @@ class BaseContributorListSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
@@ -319,7 +319,7 @@ class BaseContributorSerializer(ModelSerializer):
     class Meta(object):
         model = Contributor
         fields = ('user', 'activity', 'status', )
-        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+        meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -333,12 +333,10 @@ class BaseContributorSerializer(ModelSerializer):
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
 
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-
     class Meta(object):
         model = Contribution
         fields = ('value', 'status', )
-        meta_fields = ('permissions', 'created', )
+        meta_fields = ('created', )
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'

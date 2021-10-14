@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -66,3 +66,26 @@ class NewsItemsApiTest(NewsItemApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['title'], self.some_dutch_news.title)
+
+    def test_news_post_by_language(self):
+        """
+        Test retrieving a single news item.
+        """
+        NewsItemFactory.create(language='nl', slug='update', title='Hier is een update')
+        NewsItemFactory.create(language='en', slug='update', title='This is happening now')
+        news_item_url = reverse('news_post_detail', kwargs={'slug': 'update'})
+        response = self.client.get(news_item_url, HTTP_X_APPLICATION_LANGUAGE='nl')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['title'], 'Hier is een update')
+        response = self.client.get(news_item_url, HTTP_X_APPLICATION_LANGUAGE='en')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['title'], 'This is happening now')
+
+    def test_news_post_by_wrong_slug(self):
+        """
+        Test retrieving a single news item.
+        """
+        NewsItemFactory.create(language='nl', slug='update')
+        news_item_url = reverse('news_post_detail', kwargs={'slug': 'vzzbx'})
+        response = self.client.get(news_item_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

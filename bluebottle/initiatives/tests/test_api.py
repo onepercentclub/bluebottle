@@ -1,34 +1,32 @@
-from builtins import str
 import datetime
 import json
+from builtins import str
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
-from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
-
-from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
+from moneyed import Money
 from rest_framework import status
 
-from bluebottle.initiatives.models import Initiative
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Theme
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
     DateActivitySlotFactory
 )
-from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 def get_include(response, name):
@@ -180,38 +178,6 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             '/data/attributes/title' in (error['source']['pointer'] for error in data['data']['meta']['errors'])
         )
 
-    def test_create_validation_organization_website(self):
-        organization = OrganizationFactory.create(website='')
-
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title',
-                    'has_organization': True
-                },
-                'relationships': {
-                    'organization': {
-                        'data': {
-                            'type': 'organizations',
-                            'id': organization.pk
-                        },
-                    }
-                }
-
-            }
-        }
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        organization = get_include(response, 'organizations')
-        self.assertTrue(
-            '/data/attributes/website' in (error['source']['pointer'] for error in organization['meta']['required'])
-        )
-
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
         data = {
@@ -273,6 +239,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             json.dumps(self.data),
             user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['title'], 'Some title')
+
+    def test_patch_activity_manager(self):
+        manager = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(manager)
+        response = self.client.patch(
+            self.url,
+            json.dumps(self.data),
+            user=manager
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
@@ -478,13 +456,21 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             status='partially_funded',
             initiative=self.initiative
         )
-        slot = DateActivitySlotFactory.create(activity=event)
+        DateActivitySlotFactory.create(activity=event)
         response = self.client.get(self.url)
 
         data = response.json()['data']
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 2)
+        activity_types = [rel['type'] for rel in data['relationships']['activities']['data']]
+
+        self.assertTrue(
+            'activities/fundings' in activity_types
+        )
+        self.assertTrue(
+            'activities/time-based/dates' in activity_types
+        )
 
         event_data = get_include(response, 'activities/time-based/dates')
         self.assertEqual(event_data['id'], str(event.pk))
@@ -498,12 +484,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             funding_data['attributes']['title'],
             funding.title
-        )
-
-        slot_data = get_include(response, 'activities/time-based/date-slots')
-        self.assertEqual(
-            slot_data['id'],
-            str(slot.pk)
         )
 
         activity_image = event_data['relationships']['image']['data']
@@ -748,7 +728,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         managed_initiatives = InitiativeFactory.create_batch(
-            2, status='submitted', activity_manager=self.owner
+            2, status='submitted', activity_managers=[self.owner]
         )
         InitiativeFactory.create_batch(4, status='submitted')
 
@@ -782,6 +762,20 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
 
+    def test_filter_country(self):
+        mordor = CountryFactory.create(name='Mordor')
+        location = LocationFactory.create(country=mordor)
+        initiative = InitiativeFactory.create(status='approved', place=None, location=location)
+        InitiativeFactory.create(status='approved', place=None)
+
+        response = self.client.get(
+            self.url + '?filter[country]={}'.format(mordor.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
+
     def test_filter_location(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='approved', location=location)
@@ -796,6 +790,27 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(initiative.pk))
+
+    def test_filter_location_global(self):
+        location = LocationFactory.create()
+        initiative = InitiativeFactory.create(status='approved', location=location)
+
+        global_initiative = InitiativeFactory.create(status='approved', is_global=True)
+        DeedFactory.create(initiative=global_initiative, office_location=location)
+
+        InitiativeFactory.create(status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[location.id]={}'.format(location.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        initiative_ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(initiative.pk) in initiative_ids)
+        self.assertTrue(str(global_initiative.pk) in initiative_ids)
 
     def test_filter_not_owner(self):
         """
@@ -819,7 +834,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
@@ -830,7 +845,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['activity-managers']['data'][0]['id'], str(self.owner.pk))
 
     def test_filter_promoter(self):
         """
@@ -852,7 +867,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         """
         User should see initiatives where self owner or activity manager when in submitted
         """
-        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
         InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
         InitiativeFactory.create_batch(4, status='approved')
 
@@ -993,7 +1008,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            deadline=now() + datetime.timedelta(days=9)
+            deadline=(now() + datetime.timedelta(days=9)).date()
         )
 
         response = self.client.get(

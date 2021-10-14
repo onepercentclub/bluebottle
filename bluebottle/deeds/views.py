@@ -71,7 +71,7 @@ class DeedRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     serializer_class = DeedParticipantSerializer
 
     def get_queryset(self):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             queryset = self.queryset.filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |

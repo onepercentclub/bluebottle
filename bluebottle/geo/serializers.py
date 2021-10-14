@@ -1,17 +1,14 @@
 from builtins import object
-from django.conf import settings
 
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
-
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
-
 from staticmaps_signature import StaticMapURLSigner
 from timezonefinder import TimezoneFinder
 
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.geo.models import Country, Location, Place, Geolocation
 
 staticmap_url_signer = StaticMapURLSigner(
     public_key=settings.STATIC_MAPS_API_KEY, private_key=settings.STATIC_MAPS_API_SECRET
@@ -23,7 +20,7 @@ tf = TimezoneFinder()
 class StaticMapsField(serializers.ReadOnlyField):
     url = (
         "https://maps.googleapis.com/maps/api/staticmap"
-        "?center={latitude},{longitude}&zoom=10&size=220x220"
+        "?center={latitude},{longitude}&zoom=10&size=422x422"
         "&maptype=roadmap&markers={latitude},{longitude}&sensor=false"
         "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
     )
@@ -99,13 +96,12 @@ class SimplePointSerializer(serializers.CharField):
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-
-    position = SimplePointSerializer()
+    position = SimplePointSerializer(required=False, allow_null=True)
 
     class Meta(object):
         model = Place
         fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'id', 'street', 'postal_code', 'street_number', 'locality', 'province', 'country',
             'position', 'formatted_address',
         )
 
@@ -120,25 +116,6 @@ class InitiativeCountrySerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'countries'
-
-
-class InitiativePlaceSerializer(ModelSerializer):
-    country = ResourceRelatedField(queryset=Country.objects.all())
-
-    included_serializers = {
-        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
-    }
-
-    class Meta(object):
-        model = InitiativePlace
-        fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
-            'position', 'formatted_address',
-        )
-
-    class JSONAPIMeta(object):
-        included_resources = ['country', ]
-        resource_name = 'places'
 
 
 class PointSerializer(serializers.CharField):

@@ -4,20 +4,15 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import PublishableModel, AnonymizationMixin
+from bluebottle.utils.models import PublishableModel, AnonymizationMixin, get_language_choices
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
-
-def get_languages():
-    return properties.LANGUAGES
 
 
 @python_2_unicode_compatible
@@ -40,8 +35,8 @@ class NewsItem(AnonymizationMixin, PublishableModel):
         ]
     )
     language = models.CharField(_("language"),
-                                max_length=5,
-                                choices=lazy(get_languages, tuple)())
+                                max_length=7,
+                                choices=lazy(get_language_choices, list)())
     contents = PlaceholderField("blog_contents", plugins=[
         'TextPlugin',
         'ImageTextPlugin',

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib.admin import AdminSite
 from django.urls import reverse
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
@@ -11,7 +12,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory
+    DateParticipantFactory, SlotParticipantFactory
 )
 
 
@@ -96,7 +97,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['title'] = 'Activity with multiple slots'
         form['description'] = 'Lorem etc'
         form['owner'] = self.owner.id
-        form['review'] = 3
+        form['review'] = 'true'
         page = form.submit().follow()
         self.assertEqual(page.status, '200 OK', 'Activity is added, now we can add a slot.')
 
@@ -144,6 +145,56 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(len(participant.slot_participants.all()), 3)
 
+    def test_add_participants(self):
+        activity = DateActivityFactory.create(initiative=self.initiative, status='open')
+        DateParticipantFactory.create(activity=activity)
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk, ))
+        page = self.app.get(url)
+        self.assertFalse(
+            'First complete and submit the activity before managing participants.' in
+            page.text
+        )
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        activity.status = 'rejected'
+        activity.save()
+        page = self.app.get(url)
+        self.assertTrue(
+            'First complete and submit the activity before managing participants.' in
+            page.text
+        )
+
+
+class DateParticipantAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.supporter = BlueBottleUserFactory.create()
+        self.participant = DateParticipantFactory.create(status='participant')
+        slot = self.participant.activity.slots.first()
+        SlotParticipantFactory.create(
+            participant=self.participant,
+            slot=slot
+        )
+
+    def test_adjusting_contribution(self):
+        self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        form = page.forms[0]
+        form['contributions-0-value_0'] = 0
+        form['contributions-0-value_1'] = 0
+        page = form.submit()
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('This field is required.' in page.text)
+
 
 class TestSkillAdmin(BluebottleAdminTestCase):
 
@@ -158,3 +209,65 @@ class TestSkillAdmin(BluebottleAdminTestCase):
         url = reverse('admin:time_based_skill_changelist')
         response = self.app.get(url, user=self.staff_member)
         self.assertEqual(response.status, '200 OK')
+
+
+class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        activity1 = DateActivityFactory.create(
+            slot_selection='free',
+            capacity=None,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() + timedelta(days=4),
+            capacity=2
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() + timedelta(days=4),
+            capacity=3
+        )
+        DateActivitySlotFactory.create(
+            activity=activity1,
+            start=now() - timedelta(days=3),
+            capacity=None
+        )
+        activity2 = DateActivityFactory.create(
+            slot_selection='all',
+            capacity=5,
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity2,
+            start=now() + timedelta(days=5),
+            capacity=None
+        )
+        DateActivitySlotFactory.create(
+            activity=activity2,
+            start=now() - timedelta(days=1),
+            capacity=None
+        )
+        self.app.set_user(self.staff_member)
+
+    def test_adjusting_contribution(self):
+        self.url = reverse('admin:time_based_dateactivityslot_changelist')
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        self.assertTrue('5 slots' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">3</td>' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">-</td>' in page.text)
+        self.assertTrue('<td class="field-attendee_limit">5</td>' in page.text)
+
+        self.assertTrue('<td class="field-required">Required</td>' in page.text)
+        self.assertTrue('<td class="field-required">Optional</td>' in page.text)
+        page = page.click('Upcoming')
+        self.assertTrue('3 slots' in page.text)
+        page = page.click('Required')
+        self.assertTrue('1 slot' in page.text)

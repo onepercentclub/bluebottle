@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import django_fsm
 
 
 class Migration(migrations.Migration):
@@ -24,7 +23,7 @@ class Migration(migrations.Migration):
             name='Initiative',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('review_status', django_fsm.FSMField(choices=[(b'created', 'created'), (b'submitted', 'submitted'), (b'needs_work', 'needs work'), (b'accepted', 'accepted'), (b'cancelled', 'cancelled'), (b'rejected', 'rejected')], default=b'created', max_length=50, protected=True)),
+                ('review_status', models.CharField(choices=[(b'created', 'created'), (b'submitted', 'submitted'), (b'needs_work', 'needs work'), (b'accepted', 'accepted'), (b'cancelled', 'cancelled'), (b'rejected', 'rejected')], default=b'created', max_length=50)),
                 ('title', models.CharField(max_length=255, verbose_name='title')),
                 ('slug', models.SlugField(max_length=100, verbose_name='slug')),
                 ('pitch', models.TextField(blank=True, help_text='Pitch your smart idea in one sentence', verbose_name='pitch')),

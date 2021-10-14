@@ -2,7 +2,7 @@
 from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 
@@ -97,13 +97,15 @@ class ImpactGoal(models.Model):
     type = models.ForeignKey(
         ImpactType,
         verbose_name=_('type'),
-        related_name='goals'
+        related_name='goals',
+        on_delete=models.CASCADE
     )
 
     activity = models.ForeignKey(
         'activities.activity',
         verbose_name=_('activity'),
-        related_name='goals'
+        related_name='goals',
+        on_delete=models.CASCADE
     )
 
     target = models.FloatField(

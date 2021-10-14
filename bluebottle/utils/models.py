@@ -1,29 +1,56 @@
 from builtins import object
 from datetime import timedelta
+
+from memoize import memoize
+
+from django.conf import settings
+from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import models, ProgrammingError, OperationalError
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
-
+from solo.models import SingletonModel
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
-import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
-import bluebottle.utils.monkey_patch_migration  # noqa
-import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
-import bluebottle.utils.monkey_patch_parler  # noqa
-import bluebottle.utils.monkey_patch_password_validators  # noqa
-import bluebottle.utils.monkey_patch_jet  # noqa
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager
 )
+
+
+TIMEOUT = 5 * 60
+
+
+@memoize(timeout=TIMEOUT)
+def get_languages():
+    return Language.objects.all()
+
+
+@memoize(timeout=TIMEOUT)
+def get_default_language():
+    try:
+        return Language.objects.filter(default=True).first().full_code
+    except AttributeError:
+        return 'en'
+
+
+def get_language_choices():
+    try:
+        cache_key = 'LANUAGE_CHOICES'
+        result = cache.get(cache_key)
+
+        if not result:
+            result = [(lang.code, lang.language_name) for lang in Language.objects.all()]
+            cache.set(cache_key, result)
+    except (ProgrammingError, OperationalError, AttributeError):
+        result = [('en', 'English')]
+
+    return result
 
 
 @python_2_unicode_compatible
@@ -32,11 +59,25 @@ class Language(models.Model):
     A language - ISO 639-1
     """
     code = models.CharField(max_length=2, blank=False)
+    sub_code = models.CharField(max_length=2, blank=True)
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)
+    default = models.BooleanField(default=False)
 
     class Meta(object):
         ordering = ['language_name']
+
+    def save(self, *args, **kwargs):
+        if self.code and self.code not in (code for (code, _) in settings.LANGUAGES):
+            raise ValidationError(f'Unknown language code: {self.code}')
+        super().save(*args, **kwargs)
+
+    @property
+    def full_code(self):
+        if self.sub_code:
+            return f'{self.code}-{self.sub_code}'
+        else:
+            return self.code
 
     def __str__(self):
         return self.language_name
@@ -51,7 +92,7 @@ class Address(models.Model):
     line2 = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
-    country = models.ForeignKey('geo.Country', blank=True, null=True)
+    country = models.ForeignKey('geo.Country', blank=True, null=True, on_delete=models.CASCADE)
     postal_code = models.CharField(max_length=20, blank=True)
 
     class Meta(object):
@@ -63,7 +104,7 @@ class Address(models.Model):
 
 class MailLog(models.Model):
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     type = models.CharField(max_length=200)
@@ -72,7 +113,7 @@ class MailLog(models.Model):
 
 
 @python_2_unicode_compatible
-class BasePlatformSettings(models.Model):
+class BasePlatformSettings(SingletonModel):
 
     update = models.DateTimeField(auto_now=True)
 
@@ -122,10 +163,14 @@ class PublishableModel(models.Model):
                                                 null=True, blank=True,
                                                 db_index=True)
     # Metadata
-    author = models.ForeignKey('members.Member',
-                               verbose_name=_('author'), blank=True, null=True)
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+    author = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('author'),
+        blank=True, null=True,
+        on_delete=models.CASCADE
+    )
+    creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
+    modification_date = models.DateTimeField(_('last modification'), auto_now=True)
 
     objects = PublishedManager()
 

@@ -1,5 +1,5 @@
 from django.db import connection
-from django.utils.decorators import ContextDecorator
+from contextlib import ContextDecorator
 from django.utils import translation
 
 from tenant_extras.middleware import tenant_translation

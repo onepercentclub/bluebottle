@@ -1,4 +1,47 @@
 @import "elegant-tooltip.css";
+@import "icon-style.css";
+
+.sidebar-title:first-child {
+    display: none
+}
+
+.apps-hide,
+.sidebar-center-link:hover {
+    padding: 0
+}
+.apps-hide-label {
+    padding: 0 8px;
+}
+
+.form-row {
+    clear: both;
+}
+
+form .aligned strong+p.help {
+    margin-left: 12.85714rem;
+    padding-top: 4px;
+}
+
+#toolbar form #searchbar {
+    width: 280px;
+}
+
+.site-title {
+  text-align: right;
+  padding: 0 6px 8px 0;
+  font-size: 1.2rem;
+}
+
+#branding-menu {
+  background: url("/static/assets/admin/images/goodup_icon.jpg");
+  background-size: 100%;
+  width: 50px;
+  height: 50px;
+}
+
+#branding-menu:before {
+  content: ''
+}
 
 .video-container {
     position: relative;
@@ -126,4 +169,16 @@
 #content #content-main .cp-controls input.button {
     padding-top: 0;
     padding-bottom: 0;
+}
+
+.select2-container .select2-selection--single {
+    height: 38px!important;
+}
+
+.array-item {
+    margin: 8px 0;
+}
+
+.array-item input {
+    padding: 6px;
 }

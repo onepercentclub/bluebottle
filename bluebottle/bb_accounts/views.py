@@ -10,14 +10,14 @@ from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.template import loader
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
-from rest_framework_jwt.views import ObtainJSONWebToken
+from rest_framework_jwt.views import ObtainJSONWebTokenView
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -51,7 +51,7 @@ from bluebottle.utils.utils import get_client_ip
 USER_MODEL = get_user_model()
 
 
-class AxesObtainJSONWebToken(ObtainJSONWebToken):
+class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
     """
     API View that receives a POST with a user's username and password.
 
@@ -94,7 +94,7 @@ class UserActivityDetail(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
 
 

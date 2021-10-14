@@ -4,9 +4,9 @@ import urllib.parse
 
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html, mark_safe
 from django.template.loader import render_to_string
 
@@ -195,9 +195,9 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         'author__first_name', 'author__last_name', 'ip_address'
     )
     child_models = (
-        (MediaWallpost, MediaWallpostAdmin),
-        (TextWallpost, TextWallpostAdmin),
-        (SystemWallpost, SystemWallpostAdmin),
+        MediaWallpost,
+        TextWallpost,
+        SystemWallpost,
     )
 
     def type(self, obj):
@@ -310,5 +310,5 @@ class WallpostInline(GenericTabularInline):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False

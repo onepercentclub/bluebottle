@@ -3,7 +3,7 @@ from adminsortable.admin import SortableMixin
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
@@ -86,7 +86,7 @@ class Category(TranslatableModel):
 
 @python_2_unicode_compatible
 class CategoryContent(SortableMixin, TranslatableModel):
-    category = models.ForeignKey(Category, related_name='contents')
+    category = models.ForeignKey(Category, related_name='contents', on_delete=models.CASCADE)
 
     translations = TranslatedFields(
         title=models.CharField(

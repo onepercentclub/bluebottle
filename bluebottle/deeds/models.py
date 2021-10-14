@@ -1,6 +1,6 @@
 from django.db import models
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.deeds.validators import EndDateValidator
@@ -39,8 +39,7 @@ class Deed(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description']
-        return fields
+        return super().required_fields + ['title', 'description']
 
     @property
     def participants(self):

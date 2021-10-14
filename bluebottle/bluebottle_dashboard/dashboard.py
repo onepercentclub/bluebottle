@@ -1,9 +1,8 @@
 import importlib
-from builtins import object
 
 import rules
 from django.urls.base import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 from jet.dashboard.modules import LinkList
@@ -18,9 +17,6 @@ from bluebottle.members.dashboard import RecentMembersDashboard
 
 class CustomIndexDashboard(Dashboard):
     columns = 2
-
-    class Media(object):
-        css = ('css/admin/dashboard.css', )
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)

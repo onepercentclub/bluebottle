@@ -1,0 +1,18 @@
+{% extends "base.mail.txt" %}
+{% load djmoney %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans context 'email' %}
+Hi support,
+
+We have received some feedback on identity verification {{ full_name }} ({{ email }}).
+Please check out the comments and make the appropriate changes.
+
+They should submit their identity verification again as soon as possible.
+
+{% endblocktrans %}
+{% endblock content %} 
+{% block action %}
+   {% trans 'Make sure the initiator updates their data soonest!' context 'email' %}:
+{% endblock %}`

@@ -1,14 +1,21 @@
 from django.conf import settings
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
-from django.utils import six, translation
+from django.utils import translation
+
+from bluebottle.utils.models import Language
 
 from bluebottle.redirects.models import Redirect
 
 
 @override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
     APPEND_SLASH=False,
-    MIDDLEWARE_CLASSES=list(settings.MIDDLEWARE_CLASSES) + [
+    MIDDLEWARE=list(settings.MIDDLEWARE) + [
         'bluebottle.redirects.middleware.RedirectFallbackMiddleware'
     ],
     SITE_ID=1,
@@ -22,7 +29,7 @@ class RedirectTests(BluebottleTestCase):
     def test_model(self):
         r1 = Redirect.objects.create(
             old_path='/initial', new_path='/new_target')
-        self.assertEqual(six.text_type(r1), "/initial ---> /new_target")
+        self.assertEqual(str(r1), "/initial ---> /new_target")
 
     def test_redirect(self):
         Redirect.objects.create(
@@ -125,8 +132,8 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/external_http')
         # self.assertRedirects() attempts to fetch the external url, which
         # is not good in this case
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "http://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "http://example.com")
 
     def test_redirect_external_https(self):
         Redirect.objects.create(
@@ -134,45 +141,55 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/external_https')
         # self.assertRedirects() attempts to fetch the external url, which
         # is not good in this case
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "https://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "https://example.com")
 
-    @override_settings(LANGUAGE_CODE='nl',
-                       MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware',))
+    @override_settings(
+        MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware',)
+    )
     def test_redirect_language_code(self):
-        translation.deactivate()
+        translation.deactivate_all()
         Redirect.objects.create(old_path='/initial', new_path='/new_target')
         res = self.client.get('/initial')
-        self.assertEqual(res.url.split('/')[3], 'nl')
+        self.assertEqual(res.url.split('/')[3], 'en')
 
-    @override_settings(LANGUAGE_CODE='nl',
-                       MIDDLEWARE_CLASSES=(
-                           'tenant_extras.middleware.TenantLocaleMiddleware',
-                           'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-                       ))
+    @override_settings(
+        MIDDLEWARE_CLASSES=(
+            'tenant_extras.middleware.TenantLocaleMiddleware',
+            'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+        )
+    )
     def test_redirect_with_locale_middleware(self):
+        Language.objects.all().update(default=False)
+        Language.objects.filter(code='nl').update(default=True)
+
         Redirect.objects.create(
             old_path='/faq', new_path='https://example.com')
         response = self.client.get('/faq')
-        self.assertEquals(response.status_code, 301)
-        self.assertEquals(response['location'], "https://example.com")
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['location'], "https://example.com")
 
-    @override_settings(LANGUAGE_CODE='nl',
-                       MIDDLEWARE_CLASSES=(
-                           'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-                       ))
+    @override_settings(
+        MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware',)
+    )
     def test_redirect_thread_has_language(self):
+        Language.objects.all().update(default=False)
+        Language.objects.filter(code='nl').update(default=True)
+
         translation.activate('en')
         Redirect.objects.create(old_path='/initial', new_path='/new_target')
         res = self.client.get('/initial')
         self.assertEqual(res.url.split('/')[3], 'en')
 
-    @override_settings(LANGUAGE_CODE='nl',
-                       LANGUAGES=(('nl', 1),),
-                       MIDDLEWARE_CLASSES=(
-                           'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-                       ))
+    @override_settings(
+        MIDDLEWARE_CLASSES=(
+            'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+        )
+    )
     def test_redirect_language_code_not_in_languages(self):
+        Language.objects.exclude(code='nl').delete()
+        Language.objects.filter(code='nl').update(default=True)
+
         translation.activate('en')
         Redirect.objects.create(old_path='/initial', new_path='/new_target')
         res = self.client.get('/initial')

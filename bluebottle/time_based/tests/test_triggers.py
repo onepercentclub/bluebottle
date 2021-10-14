@@ -373,6 +373,83 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'open')
 
+    def test_change_start_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = date.today() + timedelta(days=4)
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts on {start} and ends on {end}'.format(
+                start=defaultfilters.date(self.activity.start),
+                end=defaultfilters.date(self.activity.deadline)
+            )
+            in mail.outbox[-1].body
+        )
+
+    def test_unset_start_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = None
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts immediately and ends on {end}'.format(
+                end=defaultfilters.date(self.activity.deadline),
+            )
+            in mail.outbox[-1].body
+        )
+
+    def test_change_deadline_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = date.today() + timedelta(days=40)
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts on {start} and ends on {end}'.format(
+                start=defaultfilters.date(self.activity.start),
+                end=defaultfilters.date(self.activity.deadline),
+            )
+            in mail.outbox[-1].body
+        )
+
+    def test_unset_both_notification(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.save()
+        self.assertTrue(
+            'The activity starts immediately and runs indefinitely'
+            in mail.outbox[-1].body
+        )
+
     def test_unset_start(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -688,27 +765,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.execute_triggers(user=self.user, send_messages=True)
         self.slot.save()
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'The details of activity "{}" have changed'.format(self.activity.title)
-        )
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
-                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
-                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(expected in mail.outbox[0].body)
-        with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot2.start),
-                defaultfilters.time(self.slot2.start.astimezone(get_current_timezone())),
-                defaultfilters.time(self.slot2.end.astimezone(get_current_timezone())),
-                self.slot2.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_reschedule_contributions(self):
         DateParticipantFactory.create_batch(5, activity=self.activity)
@@ -765,9 +822,9 @@ class ParticipantTriggerTestCase():
     def test_initial_added_through_admin(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
 
@@ -796,10 +853,11 @@ class ParticipantTriggerTestCase():
 
     def test_initial_removed_through_admin(self):
         mail.outbox = []
+
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
         mail.outbox = []
@@ -849,9 +907,9 @@ class ParticipantTriggerTestCase():
     def test_initial_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=participant.user, send_messages=True)
         participant.save()
 
@@ -882,9 +940,9 @@ class ParticipantTriggerTestCase():
     def test_initial_no_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
-            activity=self.activity
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
         )
-        participant.user.save()
         participant.execute_triggers(user=participant.user, send_messages=True)
         participant.save()
 

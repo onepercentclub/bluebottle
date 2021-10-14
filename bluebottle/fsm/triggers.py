@@ -2,7 +2,7 @@ from django.dispatch import receiver
 from builtins import str
 from builtins import zip
 from builtins import object
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 
@@ -112,6 +112,20 @@ def register(model_cls):
 
 class TriggerMixin(object):
     periodic_tasks = []
+
+    def __copy__(self):
+        result = self.__class__.__new__(self.__class__)
+        result.__dict__.update(self.__dict__)
+
+        # create a new statemachine when copying models.
+        # Without this model.states.instance still points to the old model,
+        # and state changes are only reflected on the old model.
+        for name, machine_class in list(result._state_machines.items()):
+            machine = machine_class(result)
+
+            setattr(result, name, machine)
+
+        return result
 
     def __init__(self, *args, **kwargs):
         super(TriggerMixin, self).__init__(*args, **kwargs)

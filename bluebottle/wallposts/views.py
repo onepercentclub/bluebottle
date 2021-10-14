@@ -35,8 +35,8 @@ class WallpostRateThrottle(UserRateThrottle):
 
 
 class WallpostFilter(django_filters.FilterSet):
-    parent_type = django_filters.CharFilter(name="content_type__name")
-    parent_id = django_filters.NumberFilter(name="object_id")
+    parent_type = django_filters.CharFilter(field_name="content_type__name")
+    parent_id = django_filters.NumberFilter(field_name="object_id")
 
     class Meta(object):
         model = Wallpost
@@ -238,7 +238,7 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
         ),
     )
     pagination_class = BluebottlePagination
-    filter_fields = ('wallpost',)
+    filterset_fields = ('wallpost',)
 
     owner_filter_field = 'author'
 

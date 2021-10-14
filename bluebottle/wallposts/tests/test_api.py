@@ -1,6 +1,6 @@
 from builtins import str
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import status
 
@@ -197,7 +197,7 @@ class WallpostRateLimitTestCase(UserTestsMixin, BluebottleTestCase):
 
     def test_rate_limit_sharing(self):
         """
-        Tests that only 3 wallpost are possible in succession.
+        Tests that only 10 wallpost are possible in succession.
         """
         wallpost_data = {
             'parent_id': self.initiative.id,
@@ -206,7 +206,7 @@ class WallpostRateLimitTestCase(UserTestsMixin, BluebottleTestCase):
             'email_followers': True
         }
 
-        for i in range(3):
+        for i in range(10):
             response = self.client.post(
                 self.media_wallpost_url,
                 wallpost_data,
@@ -225,7 +225,7 @@ class WallpostRateLimitTestCase(UserTestsMixin, BluebottleTestCase):
 
     def test_rate_limit_no_sharing(self):
         """
-        Tests that more then 3 wallposts are possible if wallpost is not shared
+        Tests that more then 10 wallposts are possible if wallpost is not shared
         """
         wallpost_data = {
             'parent_id': self.initiative.id,
@@ -234,7 +234,7 @@ class WallpostRateLimitTestCase(UserTestsMixin, BluebottleTestCase):
             'email_followers': False
         }
 
-        for i in range(3):
+        for i in range(10):
             response = self.client.post(
                 self.media_wallpost_url,
                 wallpost_data,

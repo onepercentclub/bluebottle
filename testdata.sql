@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.2
--- Dumped by pg_dump version 12.2
+-- Dumped from database version 13.3
+-- Dumped by pg_dump version 13.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -45,6 +45,20 @@ COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching
 
 
 --
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
+
+--
 -- Name: unaccent; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -56,6 +70,35 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
+
+
+--
+-- Name: refresh_union_table(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.refresh_union_table(my_table text, my_view text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+        DECLARE
+          schema TEXT;
+          col TEXT;
+          sql TEXT := '';
+          column_names TEXT := '';
+        BEGIN
+          FOR col IN SELECT DISTINCT column_name FROM information_schema.columns
+            WHERE table_name = my_table
+            AND column_name NOT IN ('column_name', 'password', 'tenant', 'place')
+          LOOP
+          column_names := column_names || format(', %I', col);
+          END LOOP;
+          FOR schema IN SELECT schema_name FROM clients_client
+          LOOP
+            sql := sql || format('SELECT ''%I'' AS tenant', schema) || column_names || format(' FROM %I.%I UNION ALL ', schema, my_table);
+          END LOOP;
+          EXECUTE
+            format('CREATE OR REPLACE VIEW %I AS ', my_view) || left(sql, -11);
+        END
+        $$;
 
 
 --
@@ -508,7 +551,7 @@ CREATE TABLE test.activities_activity (
     id integer NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     description text NOT NULL,
@@ -516,11 +559,99 @@ CREATE TABLE test.activities_activity (
     owner_id integer NOT NULL,
     polymorphic_ctype_id integer,
     highlight boolean NOT NULL,
-    review_status character varying(20) NOT NULL,
+    review_status character varying(40) NOT NULL,
     transition_date timestamp with time zone,
     image_id uuid,
     video_url character varying(100)
 );
+
+
+--
+-- Name: deeds_deed; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.deeds_deed (
+    activity_ptr_id integer NOT NULL,
+    start date,
+    "end" date
+);
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+--
+-- Name: funding_funding; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_funding (
+    activity_ptr_id integer NOT NULL,
+    deadline timestamp with time zone,
+    duration integer,
+    target_currency character varying(3) NOT NULL,
+    target numeric(12,2),
+    country_id integer,
+    amount_matching numeric(12,2),
+    amount_matching_currency character varying(3) NOT NULL,
+    bank_account_id integer,
+    started timestamp with time zone,
+    CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
+);
+
+
+--
+-- Name: time_based_dateactivity; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_dateactivity (
+    timebasedactivity_ptr_id integer NOT NULL,
+    online_meeting_url text NOT NULL,
+    slot_selection character varying(20)
+);
+
+
+--
+-- Name: time_based_periodactivity; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_periodactivity (
+    timebasedactivity_ptr_id integer NOT NULL,
+    deadline date,
+    duration_period character varying(20),
+    start date,
+    duration interval,
+    online_meeting_url text NOT NULL,
+    is_online boolean,
+    location_id integer,
+    location_hint text
+);
+
+
+--
+-- Name: activities; Type: VIEW; Schema: test; Owner: -
+--
+
+CREATE VIEW test.activities AS
+ SELECT (ct.model)::text AS activity_type,
+    ac.title,
+    ac.id,
+    ac.status,
+    ac.created,
+    ac.updated
+   FROM (((((test.activities_activity ac
+     LEFT JOIN test.time_based_dateactivity da ON ((da.timebasedactivity_ptr_id = ac.id)))
+     LEFT JOIN test.time_based_periodactivity pa ON ((pa.timebasedactivity_ptr_id = ac.id)))
+     LEFT JOIN test.funding_funding fu ON ((fu.activity_ptr_id = ac.id)))
+     LEFT JOIN test.deeds_deed de ON ((de.activity_ptr_id = ac.id)))
+     JOIN test.django_content_type ct ON ((ac.polymorphic_ctype_id = ct.id)));
 
 
 --
@@ -580,14 +711,29 @@ ALTER SEQUENCE test.activities_activity_segments_id_seq OWNED BY test.activities
 
 CREATE TABLE test.activities_contribution (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
+    created timestamp with time zone NOT NULL,
+    contributor_id integer NOT NULL,
+    polymorphic_ctype_id integer,
+    "end" timestamp with time zone,
+    start timestamp with time zone
+);
+
+
+--
+-- Name: activities_contributor; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.activities_contributor (
+    id integer NOT NULL,
+    status character varying(40) NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     activity_id integer NOT NULL,
     polymorphic_ctype_id integer,
     user_id integer,
     transition_date timestamp with time zone,
-    contribution_date timestamp with time zone NOT NULL
+    contributor_date timestamp with time zone
 );
 
 
@@ -608,7 +754,37 @@ CREATE SEQUENCE test.activities_contribution_id_seq
 -- Name: activities_contribution_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
 --
 
-ALTER SEQUENCE test.activities_contribution_id_seq OWNED BY test.activities_contribution.id;
+ALTER SEQUENCE test.activities_contribution_id_seq OWNED BY test.activities_contributor.id;
+
+
+--
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.activities_contributionvalue_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.activities_contributionvalue_id_seq OWNED BY test.activities_contribution.id;
+
+
+--
+-- Name: activities_effortcontribution; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.activities_effortcontribution (
+    contribution_ptr_id integer NOT NULL,
+    contribution_type character varying(20) NOT NULL
+);
 
 
 --
@@ -616,7 +792,7 @@ ALTER SEQUENCE test.activities_contribution_id_seq OWNED BY test.activities_cont
 --
 
 CREATE TABLE test.activities_organizer (
-    contribution_ptr_id integer NOT NULL
+    contributor_ptr_id integer NOT NULL
 );
 
 
@@ -629,6 +805,7 @@ CREATE TABLE test.analytics_analyticsplatformsettings (
     update timestamp with time zone NOT NULL,
     fiscal_month_offset integer NOT NULL,
     user_base integer,
+    platform_type character varying(10) NOT NULL,
     CONSTRAINT analytics_analyticsplatformsettings_fiscal_month_offset_check CHECK ((fiscal_month_offset >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_user_base_check CHECK ((user_base >= 0))
 );
@@ -655,45 +832,12 @@ ALTER SEQUENCE test.analytics_analyticsplatformsettings_id_seq OWNED BY test.ana
 
 
 --
--- Name: assignments_applicant; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.assignments_applicant (
-    contribution_ptr_id integer NOT NULL,
-    motivation text NOT NULL,
-    time_spent double precision,
-    document_id uuid
-);
-
-
---
--- Name: assignments_assignment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.assignments_assignment (
-    activity_ptr_id integer NOT NULL,
-    registration_deadline date,
-    end_date date,
-    capacity integer,
-    expertise_id integer,
-    duration double precision,
-    location_id integer,
-    is_online boolean,
-    end_date_type character varying(50),
-    preparation double precision,
-    start_time time without time zone,
-    date timestamp with time zone,
-    CONSTRAINT assignments_assignment_capacity_check CHECK ((capacity >= 0))
-);
-
-
---
 -- Name: auth_group; Type: TABLE; Schema: test; Owner: -
 --
 
 CREATE TABLE test.auth_group (
     id integer NOT NULL,
-    name character varying(80) NOT NULL
+    name character varying(150) NOT NULL
 );
 
 
@@ -839,7 +983,6 @@ CREATE TABLE test.axes_accesslog (
     user_agent character varying(255) NOT NULL,
     ip_address inet,
     username character varying(255),
-    trusted boolean NOT NULL,
     http_accept character varying(1025) NOT NULL,
     path_info character varying(255) NOT NULL,
     attempt_time timestamp with time zone NOT NULL,
@@ -898,138 +1041,6 @@ CREATE SEQUENCE test.bb_follow_follow_id_seq
 --
 
 ALTER SEQUENCE test.bb_follow_follow_id_seq OWNED BY test.bb_follow_follow.id;
-
-
---
--- Name: bb_projects_projectphase; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.bb_projects_projectphase (
-    id integer NOT NULL,
-    slug character varying(200) NOT NULL,
-    sequence integer NOT NULL,
-    active boolean NOT NULL,
-    editable boolean NOT NULL,
-    viewable boolean NOT NULL,
-    owner_editable boolean NOT NULL
-);
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.bb_projects_projectphase_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.bb_projects_projectphase_id_seq OWNED BY test.bb_projects_projectphase.id;
-
-
---
--- Name: bb_projects_projectphase_translation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.bb_projects_projectphase_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.bb_projects_projectphase_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.bb_projects_projectphase_translation_id_seq OWNED BY test.bb_projects_projectphase_translation.id;
-
-
---
--- Name: bb_projects_projecttheme; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.bb_projects_projecttheme (
-    id integer NOT NULL,
-    slug character varying(100) NOT NULL,
-    disabled boolean NOT NULL
-);
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.bb_projects_projecttheme_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.bb_projects_projecttheme_id_seq OWNED BY test.bb_projects_projecttheme.id;
-
-
---
--- Name: bb_projects_projecttheme_translation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.bb_projects_projecttheme_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.bb_projects_projecttheme_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.bb_projects_projecttheme_translation_id_seq OWNED BY test.bb_projects_projecttheme_translation.id;
 
 
 --
@@ -1554,37 +1565,6 @@ ALTER SEQUENCE test.cms_logo_id_seq OWNED BY test.cms_logo.id;
 
 
 --
--- Name: cms_projectscontent_projects; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.cms_projectscontent_projects (
-    id integer NOT NULL,
-    projectscontent_id integer NOT NULL,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.cms_projectscontent_projects_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.cms_projectscontent_projects_id_seq OWNED BY test.cms_projectscontent_projects.id;
-
-
---
 -- Name: cms_quote; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -2005,20 +1985,6 @@ CREATE TABLE test.contentitem_cms_logoscontent (
 
 
 --
--- Name: contentitem_cms_projectimagescontent; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.contentitem_cms_projectimagescontent (
-    contentitem_ptr_id integer NOT NULL,
-    title character varying(50),
-    sub_title character varying(400),
-    description text,
-    action_text character varying(40),
-    action_link character varying(100)
-);
-
-
---
 -- Name: contentitem_cms_projectscontent; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -2246,32 +2212,11 @@ CREATE TABLE test.contentitem_text_textitem (
 
 
 --
--- Name: django_content_type; Type: TABLE; Schema: test; Owner: -
+-- Name: funding_donor; Type: TABLE; Schema: test; Owner: -
 --
 
-CREATE TABLE test.django_content_type (
-    id integer NOT NULL,
-    app_label character varying(100) NOT NULL,
-    model character varying(100) NOT NULL
-);
-
-
---
--- Name: events_participant; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.events_participant (
-    contribution_ptr_id integer NOT NULL,
-    time_spent double precision NOT NULL
-);
-
-
---
--- Name: funding_donation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.funding_donation (
-    contribution_ptr_id integer NOT NULL,
+CREATE TABLE test.funding_donor (
+    contributor_ptr_id integer NOT NULL,
     amount_currency character varying(3) NOT NULL,
     amount numeric(12,2) NOT NULL,
     fundraiser_id integer,
@@ -2286,28 +2231,54 @@ CREATE TABLE test.funding_donation (
 
 
 --
+-- Name: funding_moneycontribution; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_moneycontribution (
+    contribution_ptr_id integer NOT NULL,
+    value_currency character varying(3) NOT NULL,
+    value numeric(12,2) NOT NULL
+);
+
+
+--
+-- Name: time_based_timecontribution; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_timecontribution (
+    contribution_ptr_id integer NOT NULL,
+    value interval NOT NULL,
+    slot_participant_id integer,
+    contribution_type character varying(20)
+);
+
+
+--
 -- Name: contributions; Type: VIEW; Schema: test; Owner: -
 --
 
 CREATE VIEW test.contributions AS
- SELECT replace(replace(replace((ct.model)::text, 'participant'::text, 'event'::text), 'donation'::text, 'fundraiser'::text), 'applicant'::text, 'task'::text) AS activity_type,
-    (COALESCE(p.time_spent, (0)::double precision) + COALESCE(a.time_spent, (0)::double precision)) AS time_spent,
-    d.amount,
-    d.amount_currency,
-    d.name,
-    c.user_id,
-    c.activity_id,
-    c.id,
-    c.status,
-    c.created,
-    c.updated,
-    c.contribution_date,
-    c.transition_date
-   FROM ((((test.activities_contribution c
-     JOIN test.django_content_type ct ON ((c.polymorphic_ctype_id = ct.id)))
-     LEFT JOIN test.events_participant p ON ((p.contribution_ptr_id = c.id)))
-     LEFT JOIN test.assignments_applicant a ON ((a.contribution_ptr_id = c.id)))
-     LEFT JOIN test.funding_donation d ON ((d.contribution_ptr_id = c.id)));
+ SELECT (ct.model)::text AS activity_type,
+    tc.value AS time_spent,
+    mc.value AS amount,
+    mc.value_currency AS amount_currency,
+    don.name,
+    cr.user_id,
+    cr.activity_id,
+    cr.id,
+    cn.status,
+    cr.created,
+    cr.updated,
+    cn.start AS contribution_date,
+    cn."end" AS transition_date,
+    cn.start,
+    cn."end"
+   FROM (((((test.activities_contribution cn
+     LEFT JOIN test.activities_contributor cr ON ((cn.contributor_id = cr.id)))
+     LEFT JOIN test.time_based_timecontribution tc ON ((tc.contribution_ptr_id = cn.id)))
+     LEFT JOIN test.funding_moneycontribution mc ON ((mc.contribution_ptr_id = cn.id)))
+     LEFT JOIN test.funding_donor don ON ((don.contributor_ptr_id = cr.id)))
+     JOIN test.django_content_type ct ON ((cr.polymorphic_ctype_id = ct.id)));
 
 
 --
@@ -2348,6 +2319,15 @@ CREATE SEQUENCE test.dashboard_userdashboardmodule_id_seq
 --
 
 ALTER SEQUENCE test.dashboard_userdashboardmodule_id_seq OWNED BY test.dashboard_userdashboardmodule.id;
+
+
+--
+-- Name: deeds_deedparticipant; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.deeds_deedparticipant (
+    contributor_ptr_id integer NOT NULL
+);
 
 
 --
@@ -2502,69 +2482,6 @@ CREATE SEQUENCE test.django_site_id_seq
 --
 
 ALTER SEQUENCE test.django_site_id_seq OWNED BY test.django_site.id;
-
-
---
--- Name: donations_donation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.donations_donation (
-    id integer NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    completed timestamp with time zone,
-    anonymous boolean NOT NULL,
-    fundraiser_id integer,
-    order_id integer,
-    project_id integer NOT NULL,
-    reward_id integer,
-    amount_currency character varying(3) NOT NULL,
-    name character varying(200),
-    payout_amount numeric(12,2) NOT NULL,
-    payout_amount_currency character varying(3) NOT NULL,
-    new_donation_id integer
-);
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.donations_donation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.donations_donation_id_seq OWNED BY test.donations_donation.id;
-
-
---
--- Name: events_event; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.events_event (
-    activity_ptr_id integer NOT NULL,
-    capacity integer,
-    location_hint text,
-    start_time time without time zone,
-    registration_deadline date,
-    location_id integer,
-    is_online boolean,
-    start_date date,
-    duration double precision,
-    "end" timestamp with time zone,
-    start timestamp with time zone,
-    CONSTRAINT events_event_capacity_check CHECK ((capacity >= 0))
-);
 
 
 --
@@ -2752,7 +2669,8 @@ CREATE TABLE test.funding_bankaccount (
     created timestamp with time zone NOT NULL,
     reviewed boolean NOT NULL,
     updated timestamp with time zone NOT NULL,
-    connect_account_id integer
+    connect_account_id integer,
+    status character varying(40) NOT NULL
 );
 
 
@@ -2844,25 +2762,6 @@ CREATE TABLE test.funding_flutterwave_flutterwavepaymentprovider (
     pub_key character varying(100) NOT NULL,
     sec_key character varying(100) NOT NULL,
     prefix character varying(100) NOT NULL
-);
-
-
---
--- Name: funding_funding; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.funding_funding (
-    activity_ptr_id integer NOT NULL,
-    deadline timestamp with time zone,
-    duration integer,
-    target_currency character varying(3) NOT NULL,
-    target numeric(12,2),
-    country_id integer,
-    amount_matching numeric(12,2),
-    amount_matching_currency character varying(3) NOT NULL,
-    bank_account_id integer,
-    started timestamp with time zone,
-    CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
 );
 
 
@@ -2997,7 +2896,7 @@ CREATE TABLE test.funding_lipisha_lipishapaymentprovider (
 
 CREATE TABLE test.funding_payment (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     donation_id integer NOT NULL,
@@ -3098,7 +2997,7 @@ ALTER SEQUENCE test.funding_paymentprovider_id_seq OWNED BY test.funding_payment
 
 CREATE TABLE test.funding_payout (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     date_approved timestamp with time zone,
     date_started timestamp with time zone,
     date_completed timestamp with time zone,
@@ -3136,7 +3035,7 @@ ALTER SEQUENCE test.funding_payout_id_seq OWNED BY test.funding_payout.id;
 
 CREATE TABLE test.funding_payoutaccount (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     owner_id integer NOT NULL,
     polymorphic_ctype_id integer,
     created timestamp with time zone NOT NULL,
@@ -3322,7 +3221,7 @@ CREATE TABLE test.funding_stripe_stripepayoutaccount (
     account_id character varying(40) NOT NULL,
     country character varying(2) NOT NULL,
     document_type character varying(20) NOT NULL,
-    eventually_due text
+    eventually_due jsonb
 );
 
 
@@ -3356,11 +3255,11 @@ CREATE TABLE test.funding_telesom_telesompayment (
     payment_ptr_id integer NOT NULL,
     account_number character varying(30),
     account_name character varying(30),
-    unique_id character varying(30) NOT NULL,
-    reference_id character varying(100) NOT NULL,
-    transaction_id character varying(100) NOT NULL,
-    transaction_amount character varying(100) NOT NULL,
-    issuer_transaction_id character varying(100) NOT NULL,
+    unique_id character varying(30),
+    reference_id character varying(100),
+    transaction_id character varying(100),
+    transaction_amount character varying(100),
+    issuer_transaction_id character varying(100),
     amount numeric(12,2) NOT NULL,
     currency character varying(3) NOT NULL,
     response text NOT NULL
@@ -3418,48 +3317,6 @@ CREATE TABLE test.funding_vitepay_vitepaypaymentprovider (
 
 
 --
--- Name: fundraisers_fundraiser; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.fundraisers_fundraiser (
-    id integer NOT NULL,
-    title character varying(255) NOT NULL,
-    description text NOT NULL,
-    image character varying(255),
-    video_url character varying(100) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    deadline timestamp with time zone,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    deleted timestamp with time zone,
-    location_id integer,
-    owner_id integer NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.fundraisers_fundraiser_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.fundraisers_fundraiser_id_seq OWNED BY test.fundraisers_fundraiser.id;
-
-
---
 -- Name: geo_geolocation; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -3471,8 +3328,8 @@ CREATE TABLE test.geo_geolocation (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
-    country_id integer NOT NULL
+    country_id integer NOT NULL,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -3563,56 +3420,20 @@ ALTER SEQUENCE test.geo_country_translation_id_seq OWNED BY test.geo_country_tra
 
 
 --
--- Name: geo_initiativeplace; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.geo_initiativeplace (
-    id integer NOT NULL,
-    street_number character varying(255),
-    street character varying(255),
-    postal_code character varying(255),
-    locality character varying(255),
-    province character varying(255),
-    formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
-    country_id integer NOT NULL
-);
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.geo_initiativeplace_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.geo_initiativeplace_id_seq OWNED BY test.geo_initiativeplace.id;
-
-
---
 -- Name: geo_location; Type: TABLE; Schema: test; Owner: -
 --
 
 CREATE TABLE test.geo_location (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
-    "position" character varying(42),
     city character varying(255),
     description text NOT NULL,
     image character varying(255),
     country_id integer,
     group_id integer,
-    slug character varying(255)
+    slug character varying(255),
+    subregion_id integer,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -3679,10 +3500,10 @@ CREATE TABLE test.geo_place (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
     object_id integer NOT NULL,
     content_type_id integer NOT NULL,
     country_id integer NOT NULL,
+    "position" public.geometry(Point,4326),
     CONSTRAINT geo_place_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -3939,7 +3760,7 @@ ALTER SEQUENCE test.impact_impacttype_translation_id_seq OWNED BY test.impact_im
 
 CREATE TABLE test.initiatives_initiative (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     pitch text NOT NULL,
@@ -3957,8 +3778,40 @@ CREATE TABLE test.initiatives_initiative (
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     location_id integer,
-    activity_manager_id integer
+    activity_manager_id integer,
+    is_open boolean NOT NULL
 );
+
+
+--
+-- Name: initiatives_initiative_activity_managers; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.initiatives_initiative_activity_managers (
+    id integer NOT NULL,
+    initiative_id integer NOT NULL,
+    member_id integer NOT NULL
+);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.initiatives_initiative_activity_managers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.initiatives_initiative_activity_managers_id_seq OWNED BY test.initiatives_initiative_activity_managers.id;
 
 
 --
@@ -4024,7 +3877,12 @@ CREATE TABLE test.initiatives_initiativeplatformsettings (
     contact_method character varying(100) NOT NULL,
     activity_search_filters character varying(1000) NOT NULL,
     initiative_search_filters character varying(1000) NOT NULL,
-    enable_impact boolean NOT NULL
+    enable_impact boolean NOT NULL,
+    enable_office_regions boolean NOT NULL,
+    enable_multiple_dates boolean NOT NULL,
+    enable_participant_exports boolean NOT NULL,
+    enable_matching_emails boolean NOT NULL,
+    enable_open_initiatives boolean NOT NULL
 );
 
 
@@ -4046,6 +3904,70 @@ CREATE SEQUENCE test.initiatives_initiativeplatformsettings_id_seq
 --
 
 ALTER SEQUENCE test.initiatives_initiativeplatformsettings_id_seq OWNED BY test.initiatives_initiativeplatformsettings.id;
+
+
+--
+-- Name: initiatives_theme; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.initiatives_theme (
+    id integer NOT NULL,
+    slug character varying(100) NOT NULL,
+    disabled boolean NOT NULL
+);
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.initiatives_theme_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.initiatives_theme_id_seq OWNED BY test.initiatives_theme.id;
+
+
+--
+-- Name: initiatives_theme_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.initiatives_theme_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.initiatives_theme_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.initiatives_theme_translation_id_seq OWNED BY test.initiatives_theme_translation.id;
 
 
 --
@@ -4301,7 +4223,7 @@ CREATE TABLE test.members_member (
 CREATE TABLE test.members_member_favourite_themes (
     id integer NOT NULL,
     member_id integer NOT NULL,
-    projecttheme_id integer NOT NULL
+    theme_id integer NOT NULL
 );
 
 
@@ -4485,7 +4407,8 @@ CREATE TABLE test.members_memberplatformsettings (
     background character varying(100),
     anonymization_age integer NOT NULL,
     enable_segments boolean NOT NULL,
-    create_segments boolean NOT NULL
+    create_segments boolean NOT NULL,
+    session_only boolean NOT NULL
 );
 
 
@@ -4732,7 +4655,7 @@ CREATE TABLE test.notifications_notificationplatformsettings (
     update timestamp with time zone NOT NULL,
     share_options character varying(100) NOT NULL,
     facebook_at_work_url character varying(100),
-    match_options character varying(100) NOT NULL
+    match_options boolean NOT NULL
 );
 
 
@@ -4754,6 +4677,69 @@ CREATE SEQUENCE test.notifications_notificationplatformsettings_id_seq
 --
 
 ALTER SEQUENCE test.notifications_notificationplatformsettings_id_seq OWNED BY test.notifications_notificationplatformsettings.id;
+
+
+--
+-- Name: offices_officeregion; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.offices_officeregion (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text NOT NULL
+);
+
+
+--
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.offices_officeregion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.offices_officeregion_id_seq OWNED BY test.offices_officeregion.id;
+
+
+--
+-- Name: offices_officesubregion; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.offices_officesubregion (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text NOT NULL,
+    region_id integer
+);
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.offices_officesubregion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.offices_officesubregion_id_seq OWNED BY test.offices_officesubregion.id;
 
 
 --
@@ -4906,556 +4892,6 @@ ALTER SEQUENCE test.pages_page_id_seq OWNED BY test.pages_page.id;
 
 
 --
--- Name: payments_beyonic_beyonicpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_beyonic_beyonicpayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    mobile character varying(200),
-    description character varying(200),
-    metadata text,
-    transaction_reference character varying(200),
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_docdata_docdatadirectdebitpayment (
-    payment_ptr_id integer NOT NULL,
-    merchant_order_id character varying(100) NOT NULL,
-    payment_cluster_id character varying(200) NOT NULL,
-    payment_cluster_key character varying(200) NOT NULL,
-    language character varying(5) NOT NULL,
-    ideal_issuer_id character varying(100) NOT NULL,
-    default_pm character varying(100) NOT NULL,
-    total_gross_amount integer NOT NULL,
-    currency character varying(10) NOT NULL,
-    country character varying(2),
-    total_registered integer NOT NULL,
-    total_shopper_pending integer NOT NULL,
-    total_acquirer_pending integer NOT NULL,
-    total_acquirer_approved integer NOT NULL,
-    total_captured integer NOT NULL,
-    total_refunded integer NOT NULL,
-    total_charged_back integer NOT NULL,
-    customer_id integer NOT NULL,
-    email character varying(254) NOT NULL,
-    first_name character varying(200) NOT NULL,
-    last_name character varying(200) NOT NULL,
-    address character varying(200) NOT NULL,
-    postal_code character varying(20) NOT NULL,
-    city character varying(200) NOT NULL,
-    ip_address character varying(200) NOT NULL,
-    account_name character varying(35) NOT NULL,
-    account_city character varying(35) NOT NULL,
-    iban character varying(35) NOT NULL,
-    bic character varying(35) NOT NULL,
-    agree boolean NOT NULL,
-    CONSTRAINT payments_docdata_docdatadirectdebitpayment_customer_id_check CHECK ((customer_id >= 0))
-);
-
-
---
--- Name: payments_docdata_docdatapayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_docdata_docdatapayment (
-    payment_ptr_id integer NOT NULL,
-    merchant_order_id character varying(100) NOT NULL,
-    payment_cluster_id character varying(200) NOT NULL,
-    payment_cluster_key character varying(200) NOT NULL,
-    language character varying(5) NOT NULL,
-    ideal_issuer_id character varying(100) NOT NULL,
-    default_pm character varying(100) NOT NULL,
-    total_gross_amount integer NOT NULL,
-    currency character varying(10) NOT NULL,
-    country character varying(2),
-    total_registered integer NOT NULL,
-    total_shopper_pending integer NOT NULL,
-    total_acquirer_pending integer NOT NULL,
-    total_acquirer_approved integer NOT NULL,
-    total_captured integer NOT NULL,
-    total_refunded integer NOT NULL,
-    total_charged_back integer NOT NULL,
-    customer_id integer NOT NULL,
-    email character varying(254) NOT NULL,
-    first_name character varying(200) NOT NULL,
-    last_name character varying(200) NOT NULL,
-    address character varying(200) NOT NULL,
-    postal_code character varying(20) NOT NULL,
-    city character varying(200) NOT NULL,
-    ip_address character varying(200) NOT NULL,
-    CONSTRAINT payments_docdata_docdatapayment_customer_id_check CHECK ((customer_id >= 0))
-);
-
-
---
--- Name: payments_docdata_docdatatransaction; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_docdata_docdatatransaction (
-    transaction_ptr_id integer NOT NULL,
-    status character varying(30) NOT NULL,
-    docdata_id character varying(100) NOT NULL,
-    payment_method character varying(60) NOT NULL,
-    authorization_status character varying(60) NOT NULL,
-    authorization_amount integer,
-    authorization_currency character varying(10) NOT NULL,
-    capture_status character varying(60) NOT NULL,
-    capture_amount integer,
-    chargeback_amount integer,
-    refund_amount integer,
-    capture_currency character varying(10),
-    raw_response text NOT NULL
-);
-
-
---
--- Name: payments_external_externalpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_external_externalpayment (
-    payment_ptr_id integer NOT NULL
-);
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_flutterwave_flutterwavempesapayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    business_number character varying(200),
-    account_number character varying(200),
-    kyc_info text,
-    remote_id character varying(200),
-    msisdn character varying(200),
-    third_party_transaction_id character varying(200),
-    transaction_time character varying(200),
-    transaction_reference character varying(200),
-    invoice_number character varying(200),
-    response text,
-    update_response text,
-    transaction_amount character varying(200)
-);
-
-
---
--- Name: payments_flutterwave_flutterwavepayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_flutterwave_flutterwavepayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    auth_model character varying(200),
-    card_number character varying(200),
-    customer_id character varying(100),
-    narration character varying(200),
-    response_url character varying(200),
-    country character varying(200),
-    response text,
-    update_response text,
-    transaction_reference character varying(200)
-);
-
-
---
--- Name: payments_interswitch_interswitchpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_interswitch_interswitchpayment (
-    payment_ptr_id integer NOT NULL,
-    product_id character varying(200),
-    amount character varying(200),
-    currency character varying(200) NOT NULL,
-    site_redirect_url character varying(200),
-    txn_ref character varying(200),
-    hash character varying(200),
-    pay_item_id character varying(200),
-    site_name character varying(200),
-    cust_id character varying(200),
-    cust_id_desc character varying(200),
-    cust_name character varying(200),
-    cust_name_desc character varying(200),
-    pay_item_name character varying(200),
-    local_date_time character varying(200),
-    response character varying(1000),
-    update_response character varying(1000)
-);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_interswitch_interswitchpaymentstatusupdate (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    result text NOT NULL,
-    payment_id integer NOT NULL
-);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_interswitch_interswitchpaymentstatusupdate_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_interswitch_interswitchpaymentstatusupdate_id_seq OWNED BY test.payments_interswitch_interswitchpaymentstatusupdate.id;
-
-
---
--- Name: payments_lipisha_lipishapayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_lipisha_lipishapayment (
-    payment_ptr_id integer NOT NULL,
-    reference character varying(200),
-    transaction_status character varying(200),
-    transaction_type character varying(200),
-    transaction_amount character varying(200),
-    transaction_currency character varying(200),
-    transaction_reference character varying(200),
-    transaction_reversal_status character varying(200),
-    transaction_account_name character varying(200),
-    transaction_account_number character varying(200),
-    transaction_date character varying(200),
-    transaction_email character varying(200),
-    transaction_method character varying(200),
-    transaction_mobile_number character varying(200),
-    transaction_name character varying(200),
-    transaction_fee text,
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_lipisha_lipishaproject; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_lipisha_lipishaproject (
-    projectaddon_ptr_id integer NOT NULL,
-    account_number character varying(100)
-);
-
-
---
--- Name: payments_logger_paymentlogentry; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_logger_paymentlogentry (
-    id integer NOT NULL,
-    message character varying(400) NOT NULL,
-    level character varying(15) NOT NULL,
-    "timestamp" timestamp with time zone NOT NULL,
-    payment_id integer NOT NULL
-);
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_logger_paymentlogentry_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_logger_paymentlogentry_id_seq OWNED BY test.payments_logger_paymentlogentry.id;
-
-
---
--- Name: payments_orderpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_orderpayment (
-    id integer NOT NULL,
-    status character varying(50) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    closed timestamp with time zone,
-    amount numeric(12,2) NOT NULL,
-    transaction_fee numeric(16,2),
-    payment_method character varying(60) NOT NULL,
-    integration_data text NOT NULL,
-    authorization_action_id integer,
-    order_id integer NOT NULL,
-    user_id integer,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_orderpayment_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_orderpayment_id_seq OWNED BY test.payments_orderpayment.id;
-
-
---
--- Name: payments_orderpaymentaction; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_orderpaymentaction (
-    id integer NOT NULL,
-    type character varying(20) NOT NULL,
-    method character varying(20) NOT NULL,
-    url character varying(2000) NOT NULL,
-    payload character varying(5000) NOT NULL
-);
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_orderpaymentaction_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_orderpaymentaction_id_seq OWNED BY test.payments_orderpaymentaction.id;
-
-
---
--- Name: payments_payment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_payment (
-    id integer NOT NULL,
-    status character varying(50) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    order_payment_id integer NOT NULL,
-    polymorphic_ctype_id integer
-);
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_payment_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_payment_id_seq OWNED BY test.payments_payment.id;
-
-
---
--- Name: payments_pledge_pledgestandardpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_pledge_pledgestandardpayment (
-    payment_ptr_id integer NOT NULL
-);
-
-
---
--- Name: payments_stripe_stripepayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_stripe_stripepayment (
-    payment_ptr_id integer NOT NULL,
-    source_token character varying(100),
-    charge_token character varying(100),
-    amount integer,
-    description character varying(300),
-    data text,
-    currency character varying(3) NOT NULL,
-    payout_amount integer,
-    payout_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: payments_telesom_telesompayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_telesom_telesompayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    mobile character varying(200),
-    transaction_reference character varying(100),
-    description character varying(200),
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_transaction; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_transaction (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    payment_id integer NOT NULL,
-    polymorphic_ctype_id integer
-);
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_transaction_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_transaction_id_seq OWNED BY test.payments_transaction.id;
-
-
---
--- Name: payments_vitepay_vitepaypayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_vitepay_vitepaypayment (
-    payment_ptr_id integer NOT NULL,
-    language_code character varying(10) NOT NULL,
-    currency_code character varying(10) NOT NULL,
-    country_code character varying(10) NOT NULL,
-    order_id character varying(10),
-    description character varying(500),
-    amount_100 integer,
-    buyer_ip_adress character varying(200),
-    return_url character varying(500),
-    decline_url character varying(500),
-    cancel_url character varying(500),
-    callback_url character varying(500),
-    email character varying(500),
-    p_type character varying(500) NOT NULL,
-    payment_url character varying(500)
-);
-
-
---
--- Name: payments_voucher_voucher; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_voucher_voucher (
-    id integer NOT NULL,
-    amount integer NOT NULL,
-    currency character varying(3) NOT NULL,
-    language character varying(2) NOT NULL,
-    message text NOT NULL,
-    code character varying(100) NOT NULL,
-    status character varying(20) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    sender_email character varying(254) NOT NULL,
-    sender_name character varying(100) NOT NULL,
-    receiver_email character varying(254) NOT NULL,
-    receiver_name character varying(100) NOT NULL,
-    order_id integer,
-    receiver_id integer,
-    sender_id integer,
-    CONSTRAINT payments_voucher_voucher_amount_check CHECK ((amount >= 0))
-);
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.payments_voucher_voucher_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.payments_voucher_voucher_id_seq OWNED BY test.payments_voucher_voucher.id;
-
-
---
--- Name: payments_voucher_voucherpayment; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.payments_voucher_voucherpayment (
-    payment_ptr_id integer NOT NULL,
-    voucher_id integer NOT NULL
-);
-
-
---
 -- Name: payouts_flutterwavepayoutaccount; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -5567,298 +5003,11 @@ CREATE TABLE test.payouts_stripepayoutaccount (
 
 
 --
--- Name: projects_customprojectfield; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_customprojectfield (
-    id integer NOT NULL,
-    value character varying(5000),
-    field_id integer NOT NULL,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_customprojectfield_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_customprojectfield_id_seq OWNED BY test.projects_customprojectfield.id;
-
-
---
--- Name: projects_customprojectfieldsettings; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_customprojectfieldsettings (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    description character varying(200),
-    sequence integer NOT NULL,
-    project_settings_id integer,
-    CONSTRAINT projects_customprojectfieldsettings_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_customprojectfieldsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_customprojectfieldsettings_id_seq OWNED BY test.projects_customprojectfieldsettings.id;
-
-
---
--- Name: projects_project; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_project (
-    id integer NOT NULL,
-    project_type character varying(50),
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    title character varying(255) NOT NULL,
-    slug character varying(100) NOT NULL,
-    pitch text NOT NULL,
-    favorite boolean NOT NULL,
-    deadline timestamp with time zone,
-    place character varying(200),
-    description text NOT NULL,
-    image character varying(255) NOT NULL,
-    amount_asked numeric(12,2) NOT NULL,
-    amount_donated numeric(12,2) NOT NULL,
-    amount_needed numeric(12,2) NOT NULL,
-    amount_extra numeric(12,2) NOT NULL,
-    reach integer,
-    video_url character varying(100),
-    popularity double precision,
-    is_campaign boolean NOT NULL,
-    skip_monthly boolean NOT NULL,
-    allow_overfunding boolean NOT NULL,
-    story text,
-    effects text,
-    for_who text,
-    future text,
-    date_submitted timestamp with time zone,
-    campaign_started timestamp with time zone,
-    campaign_ended timestamp with time zone,
-    campaign_funded timestamp with time zone,
-    voting_deadline timestamp with time zone,
-    country_id integer,
-    language_id integer,
-    location_id integer,
-    organization_id integer,
-    owner_id integer NOT NULL,
-    status_id integer NOT NULL,
-    theme_id integer,
-    celebrate_results boolean NOT NULL,
-    amount_asked_currency character varying(3) NOT NULL,
-    amount_donated_currency character varying(3) NOT NULL,
-    amount_extra_currency character varying(3) NOT NULL,
-    amount_needed_currency character varying(3) NOT NULL,
-    currencies character varying(100) NOT NULL,
-    payout_status character varying(50),
-    campaign_paid_out timestamp with time zone,
-    reviewer_id integer,
-    promoter_id integer,
-    task_manager_id integer,
-    campaign_edited timestamp with time zone,
-    campaign_duration integer,
-    payout_account_id integer,
-    funding_id integer,
-    CONSTRAINT projects_project_campaign_duration_2e8b3428_check CHECK ((campaign_duration >= 0)),
-    CONSTRAINT projects_project_reach_check CHECK ((reach >= 0))
-);
-
-
---
--- Name: projects_project_categories; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_project_categories (
-    id integer NOT NULL,
-    project_id integer NOT NULL,
-    category_id integer NOT NULL
-);
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_project_categories_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_project_categories_id_seq OWNED BY test.projects_project_categories.id;
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_project_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_project_id_seq OWNED BY test.projects_project.id;
-
-
---
--- Name: projects_projectaddon; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectaddon (
-    id integer NOT NULL,
-    polymorphic_ctype_id integer,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectaddon_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectaddon_id_seq OWNED BY test.projects_projectaddon.id;
-
-
---
--- Name: projects_projectbudgetline; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectbudgetline (
-    id integer NOT NULL,
-    description character varying(255) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectbudgetline_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectbudgetline_id_seq OWNED BY test.projects_projectbudgetline.id;
-
-
---
--- Name: projects_projectcreatetemplate; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectcreatetemplate (
-    id integer NOT NULL,
-    name character varying(300) NOT NULL,
-    default_amount_asked_currency character varying(3) NOT NULL,
-    project_settings_id integer,
-    description text,
-    image character varying(100),
-    default_amount_asked numeric(12,2),
-    default_description text,
-    default_image character varying(100),
-    default_title character varying(300),
-    default_pitch text,
-    sub_name character varying(300) NOT NULL
-);
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectcreatetemplate_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectcreatetemplate_id_seq OWNED BY test.projects_projectcreatetemplate.id;
-
-
---
 -- Name: projects_projectimage; Type: TABLE; Schema: test; Owner: -
 --
 
 CREATE TABLE test.projects_projectimage (
     id integer NOT NULL,
-    project_id integer NOT NULL,
     file character varying(100) NOT NULL,
     name character varying(255),
     uploaded timestamp with time zone NOT NULL
@@ -5883,128 +5032,6 @@ CREATE SEQUENCE test.projects_projectimage_id_seq
 --
 
 ALTER SEQUENCE test.projects_projectimage_id_seq OWNED BY test.projects_projectimage.id;
-
-
---
--- Name: projects_projectlocation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectlocation (
-    project_id integer NOT NULL,
-    place character varying(80),
-    street text,
-    neighborhood text,
-    city text,
-    postal_code character varying(20),
-    country character varying(40),
-    latitude numeric(21,18),
-    longitude numeric(21,18)
-);
-
-
---
--- Name: projects_projectphaselog; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectphaselog (
-    id integer NOT NULL,
-    start timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    status_id integer NOT NULL
-);
-
-
---
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectphaselog_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectphaselog_id_seq OWNED BY test.projects_projectphaselog.id;
-
-
---
--- Name: projects_projectplatformsettings; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectplatformsettings (
-    id integer NOT NULL,
-    update timestamp with time zone NOT NULL,
-    create_types character varying(100) NOT NULL,
-    create_flow character varying(100) NOT NULL,
-    contact_method character varying(100) NOT NULL,
-    contact_types character varying(100) NOT NULL,
-    allow_anonymous_rewards boolean NOT NULL,
-    facebook_at_work_url character varying(100),
-    share_options character varying(100) NOT NULL,
-    match_options character varying(100) NOT NULL
-);
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectplatformsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectplatformsettings_id_seq OWNED BY test.projects_projectplatformsettings.id;
-
-
---
--- Name: projects_projectsearchfilter; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.projects_projectsearchfilter (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    "default" character varying(100),
-    "values" character varying(500),
-    project_settings_id integer,
-    sequence integer NOT NULL,
-    CONSTRAINT projects_projectsearchfilter_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.projects_projectsearchfilter_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.projects_projectsearchfilter_id_seq OWNED BY test.projects_projectsearchfilter.id;
 
 
 --
@@ -6043,44 +5070,6 @@ CREATE SEQUENCE test.quotes_quote_id_seq
 --
 
 ALTER SEQUENCE test.quotes_quote_id_seq OWNED BY test.quotes_quote.id;
-
-
---
--- Name: rewards_reward; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.rewards_reward (
-    id integer NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    title character varying(200) NOT NULL,
-    description character varying(500) NOT NULL,
-    "limit" integer,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL,
-    new_reward_id integer
-);
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.rewards_reward_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.rewards_reward_id_seq OWNED BY test.rewards_reward.id;
 
 
 --
@@ -6371,7 +5360,9 @@ CREATE TABLE test.social_auth_usersocialauth (
     provider character varying(32) NOT NULL,
     uid character varying(255) NOT NULL,
     extra_data text NOT NULL,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    modified timestamp with time zone NOT NULL
 );
 
 
@@ -6592,51 +5583,6 @@ ALTER SEQUENCE test.statistics_statistic_id_seq OWNED BY test.statistics_statist
 
 
 --
--- Name: suggestions_suggestion; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.suggestions_suggestion (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    title text NOT NULL,
-    pitch text NOT NULL,
-    deadline date NOT NULL,
-    destination character varying(100) NOT NULL,
-    org_name character varying(100) NOT NULL,
-    org_contactname character varying(100) NOT NULL,
-    org_email character varying(254) NOT NULL,
-    org_phone character varying(64) NOT NULL,
-    org_website character varying(200) NOT NULL,
-    status character varying(64) NOT NULL,
-    token character varying(100),
-    project_id integer,
-    theme_id integer NOT NULL,
-    language character varying(10) NOT NULL
-);
-
-
---
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.suggestions_suggestion_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.suggestions_suggestion_id_seq OWNED BY test.suggestions_suggestion.id;
-
-
---
 -- Name: taggit_tag; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -6697,70 +5643,6 @@ CREATE SEQUENCE test.taggit_taggeditem_id_seq
 --
 
 ALTER SEQUENCE test.taggit_taggeditem_id_seq OWNED BY test.taggit_taggeditem.id;
-
-
---
--- Name: tasks_skill; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.tasks_skill (
-    id integer NOT NULL,
-    disabled boolean NOT NULL,
-    expertise boolean NOT NULL
-);
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.tasks_skill_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.tasks_skill_id_seq OWNED BY test.tasks_skill.id;
-
-
---
--- Name: tasks_skill_translation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.tasks_skill_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.tasks_skill_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.tasks_skill_translation_id_seq OWNED BY test.tasks_skill_translation.id;
 
 
 --
@@ -6837,6 +5719,223 @@ ALTER SEQUENCE test.terms_termsagreement_id_seq OWNED BY test.terms_termsagreeme
 CREATE TABLE test.thumbnail_kvstore (
     key character varying(200) NOT NULL,
     value text NOT NULL
+);
+
+
+--
+-- Name: time_based_dateactivityslot; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_dateactivityslot (
+    id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    status character varying(40) NOT NULL,
+    title character varying(255),
+    capacity integer,
+    start timestamp with time zone,
+    duration interval,
+    is_online boolean,
+    online_meeting_url text NOT NULL,
+    location_hint text,
+    activity_id integer NOT NULL,
+    location_id integer,
+    CONSTRAINT time_based_dateactivityslot_capacity_check CHECK ((capacity >= 0))
+);
+
+
+--
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.time_based_dateactivityslot_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.time_based_dateactivityslot_id_seq OWNED BY test.time_based_dateactivityslot.id;
+
+
+--
+-- Name: time_based_dateparticipant; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_dateparticipant (
+    contributor_ptr_id integer NOT NULL,
+    document_id uuid,
+    motivation text
+);
+
+
+--
+-- Name: time_based_periodactivityslot; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_periodactivityslot (
+    id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    status character varying(40) NOT NULL,
+    title character varying(255),
+    capacity integer,
+    start timestamp with time zone,
+    "end" timestamp with time zone,
+    activity_id integer NOT NULL,
+    CONSTRAINT time_based_periodactivityslot_capacity_check CHECK ((capacity >= 0))
+);
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.time_based_periodactivityslot_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.time_based_periodactivityslot_id_seq OWNED BY test.time_based_periodactivityslot.id;
+
+
+--
+-- Name: time_based_periodparticipant; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_periodparticipant (
+    contributor_ptr_id integer NOT NULL,
+    current_period date,
+    document_id uuid,
+    motivation text
+);
+
+
+--
+-- Name: time_based_skill; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_skill (
+    id integer NOT NULL,
+    disabled boolean NOT NULL,
+    expertise boolean NOT NULL
+);
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.time_based_skill_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.time_based_skill_id_seq OWNED BY test.time_based_skill.id;
+
+
+--
+-- Name: time_based_skill_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_skill_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.time_based_skill_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.time_based_skill_translation_id_seq OWNED BY test.time_based_skill_translation.id;
+
+
+--
+-- Name: time_based_slotparticipant; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_slotparticipant (
+    id integer NOT NULL,
+    participant_id integer NOT NULL,
+    slot_id integer NOT NULL,
+    status character varying(40) NOT NULL
+);
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.time_based_slotparticipant_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.time_based_slotparticipant_id_seq OWNED BY test.time_based_slotparticipant.id;
+
+
+--
+-- Name: time_based_timebasedactivity; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.time_based_timebasedactivity (
+    activity_ptr_id integer NOT NULL,
+    capacity integer,
+    is_online boolean,
+    location_hint text,
+    registration_deadline date,
+    review boolean,
+    expertise_id integer,
+    location_id integer,
+    preparation interval,
+    CONSTRAINT time_based_timebasedactivity_capacity_check CHECK ((capacity >= 0))
 );
 
 
@@ -7004,112 +6103,6 @@ ALTER SEQUENCE test.utils_translationplatformsettings_translation_id_seq OWNED B
 
 
 --
--- Name: v_projects; Type: VIEW; Schema: test; Owner: -
---
-
-CREATE VIEW test.v_projects AS
- SELECT "current_schema"() AS tenant,
-    'project'::character varying AS type,
-    p.id AS type_id,
-    p.title AS description,
-    NULL::integer AS parent_id,
-    NULL::character varying AS parent_description,
-    NULL::integer AS grand_parent_id,
-    NULL::character varying AS grand_parent_description,
-    timezone('Europe/Amsterdam'::text, p.campaign_ended) AS "timestamp",
-    (pp.slug)::character varying(20) AS status,
-    (concat(pp.id, ' - ', pp.slug))::character varying(80) AS status_friendly,
-    timezone('Europe/Amsterdam'::text, pl.start) AS event_timestamp,
-    (plp.slug)::character varying(20) AS event_status,
-    p.owner_id AS user_id,
-    m.email AS user_email,
-    m.remote_id AS user_remote_id,
-    date_part('year'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS year,
-    date_part('quarter'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS quarter,
-    date_part('month'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS month,
-    date_part('week'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS week,
-    l.name AS location,
-    lg.name AS location_group,
-    1 AS value,
-    NULL::integer AS value_alt
-   FROM ((((((test.projects_project p
-     LEFT JOIN test.projects_projectphaselog pl ON ((pl.project_id = p.id)))
-     LEFT JOIN test.members_member m ON ((m.id = p.owner_id)))
-     LEFT JOIN test.bb_projects_projectphase plp ON ((plp.id = pl.status_id)))
-     LEFT JOIN test.bb_projects_projectphase pp ON ((pp.id = p.status_id)))
-     LEFT JOIN test.geo_location l ON ((p.location_id = l.id)))
-     LEFT JOIN test.geo_locationgroup lg ON ((l.group_id = lg.id)));
-
-
---
--- Name: v_project_successful_report; Type: VIEW; Schema: test; Owner: -
---
-
-CREATE VIEW test.v_project_successful_report AS
- SELECT DISTINCT ON (v_projects.type_id) v_projects.type_id AS filter_id,
-    v_projects.tenant,
-    v_projects.type,
-    v_projects.type_id,
-    v_projects.description,
-    v_projects.parent_id,
-    v_projects.parent_description,
-    v_projects.grand_parent_id,
-    v_projects.grand_parent_description,
-    v_projects."timestamp",
-    v_projects.status,
-    v_projects.status_friendly,
-    v_projects.event_timestamp,
-    v_projects.event_status,
-    v_projects.user_id,
-    v_projects.user_email,
-    v_projects.user_remote_id,
-    v_projects.year,
-    v_projects.quarter,
-    v_projects.month,
-    v_projects.week,
-    v_projects.location,
-    v_projects.location_group,
-    v_projects.value,
-    v_projects.value_alt
-   FROM test.v_projects
-  WHERE (((v_projects.status)::text = 'done-complete'::text) AND ((v_projects.event_status)::text = 'done-complete'::text))
-  ORDER BY v_projects.type_id, v_projects.event_timestamp DESC;
-
-
---
--- Name: votes_vote; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.votes_vote (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    ip_address inet NOT NULL,
-    project_id integer NOT NULL,
-    voter_id integer NOT NULL
-);
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.votes_vote_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.votes_vote_id_seq OWNED BY test.votes_vote.id;
-
-
---
 -- Name: wallposts_mediawallpost; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -7270,7 +6263,7 @@ CREATE TABLE test2.activities_activity (
     id integer NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     description text NOT NULL,
@@ -7278,11 +6271,99 @@ CREATE TABLE test2.activities_activity (
     owner_id integer NOT NULL,
     polymorphic_ctype_id integer,
     highlight boolean NOT NULL,
-    review_status character varying(20) NOT NULL,
+    review_status character varying(40) NOT NULL,
     transition_date timestamp with time zone,
     image_id uuid,
     video_url character varying(100)
 );
+
+
+--
+-- Name: deeds_deed; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.deeds_deed (
+    activity_ptr_id integer NOT NULL,
+    start date,
+    "end" date
+);
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+--
+-- Name: funding_funding; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_funding (
+    activity_ptr_id integer NOT NULL,
+    deadline timestamp with time zone,
+    duration integer,
+    target_currency character varying(3) NOT NULL,
+    target numeric(12,2),
+    country_id integer,
+    amount_matching numeric(12,2),
+    amount_matching_currency character varying(3) NOT NULL,
+    bank_account_id integer,
+    started timestamp with time zone,
+    CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
+);
+
+
+--
+-- Name: time_based_dateactivity; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_dateactivity (
+    timebasedactivity_ptr_id integer NOT NULL,
+    online_meeting_url text NOT NULL,
+    slot_selection character varying(20)
+);
+
+
+--
+-- Name: time_based_periodactivity; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_periodactivity (
+    timebasedactivity_ptr_id integer NOT NULL,
+    deadline date,
+    duration_period character varying(20),
+    start date,
+    duration interval,
+    online_meeting_url text NOT NULL,
+    is_online boolean,
+    location_id integer,
+    location_hint text
+);
+
+
+--
+-- Name: activities; Type: VIEW; Schema: test2; Owner: -
+--
+
+CREATE VIEW test2.activities AS
+ SELECT (ct.model)::text AS activity_type,
+    ac.title,
+    ac.id,
+    ac.status,
+    ac.created,
+    ac.updated
+   FROM (((((test2.activities_activity ac
+     LEFT JOIN test2.time_based_dateactivity da ON ((da.timebasedactivity_ptr_id = ac.id)))
+     LEFT JOIN test2.time_based_periodactivity pa ON ((pa.timebasedactivity_ptr_id = ac.id)))
+     LEFT JOIN test2.funding_funding fu ON ((fu.activity_ptr_id = ac.id)))
+     LEFT JOIN test2.deeds_deed de ON ((de.activity_ptr_id = ac.id)))
+     JOIN test2.django_content_type ct ON ((ac.polymorphic_ctype_id = ct.id)));
 
 
 --
@@ -7342,14 +6423,29 @@ ALTER SEQUENCE test2.activities_activity_segments_id_seq OWNED BY test2.activiti
 
 CREATE TABLE test2.activities_contribution (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
+    created timestamp with time zone NOT NULL,
+    contributor_id integer NOT NULL,
+    polymorphic_ctype_id integer,
+    "end" timestamp with time zone,
+    start timestamp with time zone
+);
+
+
+--
+-- Name: activities_contributor; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.activities_contributor (
+    id integer NOT NULL,
+    status character varying(40) NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     activity_id integer NOT NULL,
     polymorphic_ctype_id integer,
     user_id integer,
     transition_date timestamp with time zone,
-    contribution_date timestamp with time zone NOT NULL
+    contributor_date timestamp with time zone
 );
 
 
@@ -7370,7 +6466,37 @@ CREATE SEQUENCE test2.activities_contribution_id_seq
 -- Name: activities_contribution_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
 --
 
-ALTER SEQUENCE test2.activities_contribution_id_seq OWNED BY test2.activities_contribution.id;
+ALTER SEQUENCE test2.activities_contribution_id_seq OWNED BY test2.activities_contributor.id;
+
+
+--
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.activities_contributionvalue_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.activities_contributionvalue_id_seq OWNED BY test2.activities_contribution.id;
+
+
+--
+-- Name: activities_effortcontribution; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.activities_effortcontribution (
+    contribution_ptr_id integer NOT NULL,
+    contribution_type character varying(20) NOT NULL
+);
 
 
 --
@@ -7378,7 +6504,7 @@ ALTER SEQUENCE test2.activities_contribution_id_seq OWNED BY test2.activities_co
 --
 
 CREATE TABLE test2.activities_organizer (
-    contribution_ptr_id integer NOT NULL
+    contributor_ptr_id integer NOT NULL
 );
 
 
@@ -7391,6 +6517,7 @@ CREATE TABLE test2.analytics_analyticsplatformsettings (
     update timestamp with time zone NOT NULL,
     fiscal_month_offset integer NOT NULL,
     user_base integer,
+    platform_type character varying(10) NOT NULL,
     CONSTRAINT analytics_analyticsplatformsettings_fiscal_month_offset_check CHECK ((fiscal_month_offset >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_user_base_check CHECK ((user_base >= 0))
 );
@@ -7417,45 +6544,12 @@ ALTER SEQUENCE test2.analytics_analyticsplatformsettings_id_seq OWNED BY test2.a
 
 
 --
--- Name: assignments_applicant; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.assignments_applicant (
-    contribution_ptr_id integer NOT NULL,
-    motivation text NOT NULL,
-    time_spent double precision,
-    document_id uuid
-);
-
-
---
--- Name: assignments_assignment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.assignments_assignment (
-    activity_ptr_id integer NOT NULL,
-    registration_deadline date,
-    end_date date,
-    capacity integer,
-    expertise_id integer,
-    duration double precision,
-    location_id integer,
-    is_online boolean,
-    end_date_type character varying(50),
-    preparation double precision,
-    start_time time without time zone,
-    date timestamp with time zone,
-    CONSTRAINT assignments_assignment_capacity_check CHECK ((capacity >= 0))
-);
-
-
---
 -- Name: auth_group; Type: TABLE; Schema: test2; Owner: -
 --
 
 CREATE TABLE test2.auth_group (
     id integer NOT NULL,
-    name character varying(80) NOT NULL
+    name character varying(150) NOT NULL
 );
 
 
@@ -7601,7 +6695,6 @@ CREATE TABLE test2.axes_accesslog (
     user_agent character varying(255) NOT NULL,
     ip_address inet,
     username character varying(255),
-    trusted boolean NOT NULL,
     http_accept character varying(1025) NOT NULL,
     path_info character varying(255) NOT NULL,
     attempt_time timestamp with time zone NOT NULL,
@@ -7660,138 +6753,6 @@ CREATE SEQUENCE test2.bb_follow_follow_id_seq
 --
 
 ALTER SEQUENCE test2.bb_follow_follow_id_seq OWNED BY test2.bb_follow_follow.id;
-
-
---
--- Name: bb_projects_projectphase; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.bb_projects_projectphase (
-    id integer NOT NULL,
-    slug character varying(200) NOT NULL,
-    sequence integer NOT NULL,
-    active boolean NOT NULL,
-    editable boolean NOT NULL,
-    viewable boolean NOT NULL,
-    owner_editable boolean NOT NULL
-);
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.bb_projects_projectphase_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.bb_projects_projectphase_id_seq OWNED BY test2.bb_projects_projectphase.id;
-
-
---
--- Name: bb_projects_projectphase_translation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.bb_projects_projectphase_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.bb_projects_projectphase_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.bb_projects_projectphase_translation_id_seq OWNED BY test2.bb_projects_projectphase_translation.id;
-
-
---
--- Name: bb_projects_projecttheme; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.bb_projects_projecttheme (
-    id integer NOT NULL,
-    slug character varying(100) NOT NULL,
-    disabled boolean NOT NULL
-);
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.bb_projects_projecttheme_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.bb_projects_projecttheme_id_seq OWNED BY test2.bb_projects_projecttheme.id;
-
-
---
--- Name: bb_projects_projecttheme_translation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.bb_projects_projecttheme_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.bb_projects_projecttheme_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.bb_projects_projecttheme_translation_id_seq OWNED BY test2.bb_projects_projecttheme_translation.id;
 
 
 --
@@ -8316,37 +7277,6 @@ ALTER SEQUENCE test2.cms_logo_id_seq OWNED BY test2.cms_logo.id;
 
 
 --
--- Name: cms_projectscontent_projects; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.cms_projectscontent_projects (
-    id integer NOT NULL,
-    projectscontent_id integer NOT NULL,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.cms_projectscontent_projects_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.cms_projectscontent_projects_id_seq OWNED BY test2.cms_projectscontent_projects.id;
-
-
---
 -- Name: cms_quote; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -8767,20 +7697,6 @@ CREATE TABLE test2.contentitem_cms_logoscontent (
 
 
 --
--- Name: contentitem_cms_projectimagescontent; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.contentitem_cms_projectimagescontent (
-    contentitem_ptr_id integer NOT NULL,
-    title character varying(50),
-    sub_title character varying(400),
-    description text,
-    action_text character varying(40),
-    action_link character varying(100)
-);
-
-
---
 -- Name: contentitem_cms_projectscontent; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -9008,32 +7924,11 @@ CREATE TABLE test2.contentitem_text_textitem (
 
 
 --
--- Name: django_content_type; Type: TABLE; Schema: test2; Owner: -
+-- Name: funding_donor; Type: TABLE; Schema: test2; Owner: -
 --
 
-CREATE TABLE test2.django_content_type (
-    id integer NOT NULL,
-    app_label character varying(100) NOT NULL,
-    model character varying(100) NOT NULL
-);
-
-
---
--- Name: events_participant; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.events_participant (
-    contribution_ptr_id integer NOT NULL,
-    time_spent double precision NOT NULL
-);
-
-
---
--- Name: funding_donation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.funding_donation (
-    contribution_ptr_id integer NOT NULL,
+CREATE TABLE test2.funding_donor (
+    contributor_ptr_id integer NOT NULL,
     amount_currency character varying(3) NOT NULL,
     amount numeric(12,2) NOT NULL,
     fundraiser_id integer,
@@ -9048,28 +7943,54 @@ CREATE TABLE test2.funding_donation (
 
 
 --
+-- Name: funding_moneycontribution; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_moneycontribution (
+    contribution_ptr_id integer NOT NULL,
+    value_currency character varying(3) NOT NULL,
+    value numeric(12,2) NOT NULL
+);
+
+
+--
+-- Name: time_based_timecontribution; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_timecontribution (
+    contribution_ptr_id integer NOT NULL,
+    value interval NOT NULL,
+    slot_participant_id integer,
+    contribution_type character varying(20)
+);
+
+
+--
 -- Name: contributions; Type: VIEW; Schema: test2; Owner: -
 --
 
 CREATE VIEW test2.contributions AS
- SELECT replace(replace(replace((ct.model)::text, 'participant'::text, 'event'::text), 'donation'::text, 'fundraiser'::text), 'applicant'::text, 'task'::text) AS activity_type,
-    (COALESCE(p.time_spent, (0)::double precision) + COALESCE(a.time_spent, (0)::double precision)) AS time_spent,
-    d.amount,
-    d.amount_currency,
-    d.name,
-    c.user_id,
-    c.activity_id,
-    c.id,
-    c.status,
-    c.created,
-    c.updated,
-    c.contribution_date,
-    c.transition_date
-   FROM ((((test2.activities_contribution c
-     JOIN test2.django_content_type ct ON ((c.polymorphic_ctype_id = ct.id)))
-     LEFT JOIN test2.events_participant p ON ((p.contribution_ptr_id = c.id)))
-     LEFT JOIN test2.assignments_applicant a ON ((a.contribution_ptr_id = c.id)))
-     LEFT JOIN test2.funding_donation d ON ((d.contribution_ptr_id = c.id)));
+ SELECT (ct.model)::text AS activity_type,
+    tc.value AS time_spent,
+    mc.value AS amount,
+    mc.value_currency AS amount_currency,
+    don.name,
+    cr.user_id,
+    cr.activity_id,
+    cr.id,
+    cn.status,
+    cr.created,
+    cr.updated,
+    cn.start AS contribution_date,
+    cn."end" AS transition_date,
+    cn.start,
+    cn."end"
+   FROM (((((test2.activities_contribution cn
+     LEFT JOIN test2.activities_contributor cr ON ((cn.contributor_id = cr.id)))
+     LEFT JOIN test2.time_based_timecontribution tc ON ((tc.contribution_ptr_id = cn.id)))
+     LEFT JOIN test2.funding_moneycontribution mc ON ((mc.contribution_ptr_id = cn.id)))
+     LEFT JOIN test2.funding_donor don ON ((don.contributor_ptr_id = cr.id)))
+     JOIN test2.django_content_type ct ON ((cr.polymorphic_ctype_id = ct.id)));
 
 
 --
@@ -9110,6 +8031,15 @@ CREATE SEQUENCE test2.dashboard_userdashboardmodule_id_seq
 --
 
 ALTER SEQUENCE test2.dashboard_userdashboardmodule_id_seq OWNED BY test2.dashboard_userdashboardmodule.id;
+
+
+--
+-- Name: deeds_deedparticipant; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.deeds_deedparticipant (
+    contributor_ptr_id integer NOT NULL
+);
 
 
 --
@@ -9264,69 +8194,6 @@ CREATE SEQUENCE test2.django_site_id_seq
 --
 
 ALTER SEQUENCE test2.django_site_id_seq OWNED BY test2.django_site.id;
-
-
---
--- Name: donations_donation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.donations_donation (
-    id integer NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    completed timestamp with time zone,
-    anonymous boolean NOT NULL,
-    fundraiser_id integer,
-    order_id integer,
-    project_id integer NOT NULL,
-    reward_id integer,
-    amount_currency character varying(3) NOT NULL,
-    name character varying(200),
-    payout_amount numeric(12,2) NOT NULL,
-    payout_amount_currency character varying(3) NOT NULL,
-    new_donation_id integer
-);
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.donations_donation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.donations_donation_id_seq OWNED BY test2.donations_donation.id;
-
-
---
--- Name: events_event; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.events_event (
-    activity_ptr_id integer NOT NULL,
-    capacity integer,
-    location_hint text,
-    start_time time without time zone,
-    registration_deadline date,
-    location_id integer,
-    is_online boolean,
-    start_date date,
-    duration double precision,
-    "end" timestamp with time zone,
-    start timestamp with time zone,
-    CONSTRAINT events_event_capacity_check CHECK ((capacity >= 0))
-);
 
 
 --
@@ -9514,7 +8381,8 @@ CREATE TABLE test2.funding_bankaccount (
     created timestamp with time zone NOT NULL,
     reviewed boolean NOT NULL,
     updated timestamp with time zone NOT NULL,
-    connect_account_id integer
+    connect_account_id integer,
+    status character varying(40) NOT NULL
 );
 
 
@@ -9606,25 +8474,6 @@ CREATE TABLE test2.funding_flutterwave_flutterwavepaymentprovider (
     pub_key character varying(100) NOT NULL,
     sec_key character varying(100) NOT NULL,
     prefix character varying(100) NOT NULL
-);
-
-
---
--- Name: funding_funding; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.funding_funding (
-    activity_ptr_id integer NOT NULL,
-    deadline timestamp with time zone,
-    duration integer,
-    target_currency character varying(3) NOT NULL,
-    target numeric(12,2),
-    country_id integer,
-    amount_matching numeric(12,2),
-    amount_matching_currency character varying(3) NOT NULL,
-    bank_account_id integer,
-    started timestamp with time zone,
-    CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
 );
 
 
@@ -9759,7 +8608,7 @@ CREATE TABLE test2.funding_lipisha_lipishapaymentprovider (
 
 CREATE TABLE test2.funding_payment (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     donation_id integer NOT NULL,
@@ -9860,7 +8709,7 @@ ALTER SEQUENCE test2.funding_paymentprovider_id_seq OWNED BY test2.funding_payme
 
 CREATE TABLE test2.funding_payout (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     date_approved timestamp with time zone,
     date_started timestamp with time zone,
     date_completed timestamp with time zone,
@@ -9898,7 +8747,7 @@ ALTER SEQUENCE test2.funding_payout_id_seq OWNED BY test2.funding_payout.id;
 
 CREATE TABLE test2.funding_payoutaccount (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     owner_id integer NOT NULL,
     polymorphic_ctype_id integer,
     created timestamp with time zone NOT NULL,
@@ -10084,7 +8933,7 @@ CREATE TABLE test2.funding_stripe_stripepayoutaccount (
     account_id character varying(40) NOT NULL,
     country character varying(2) NOT NULL,
     document_type character varying(20) NOT NULL,
-    eventually_due text
+    eventually_due jsonb
 );
 
 
@@ -10118,11 +8967,11 @@ CREATE TABLE test2.funding_telesom_telesompayment (
     payment_ptr_id integer NOT NULL,
     account_number character varying(30),
     account_name character varying(30),
-    unique_id character varying(30) NOT NULL,
-    reference_id character varying(100) NOT NULL,
-    transaction_id character varying(100) NOT NULL,
-    transaction_amount character varying(100) NOT NULL,
-    issuer_transaction_id character varying(100) NOT NULL,
+    unique_id character varying(30),
+    reference_id character varying(100),
+    transaction_id character varying(100),
+    transaction_amount character varying(100),
+    issuer_transaction_id character varying(100),
     amount numeric(12,2) NOT NULL,
     currency character varying(3) NOT NULL,
     response text NOT NULL
@@ -10180,48 +9029,6 @@ CREATE TABLE test2.funding_vitepay_vitepaypaymentprovider (
 
 
 --
--- Name: fundraisers_fundraiser; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.fundraisers_fundraiser (
-    id integer NOT NULL,
-    title character varying(255) NOT NULL,
-    description text NOT NULL,
-    image character varying(255),
-    video_url character varying(100) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    deadline timestamp with time zone,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    deleted timestamp with time zone,
-    location_id integer,
-    owner_id integer NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.fundraisers_fundraiser_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.fundraisers_fundraiser_id_seq OWNED BY test2.fundraisers_fundraiser.id;
-
-
---
 -- Name: geo_geolocation; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -10233,8 +9040,8 @@ CREATE TABLE test2.geo_geolocation (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
-    country_id integer NOT NULL
+    country_id integer NOT NULL,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -10325,56 +9132,20 @@ ALTER SEQUENCE test2.geo_country_translation_id_seq OWNED BY test2.geo_country_t
 
 
 --
--- Name: geo_initiativeplace; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.geo_initiativeplace (
-    id integer NOT NULL,
-    street_number character varying(255),
-    street character varying(255),
-    postal_code character varying(255),
-    locality character varying(255),
-    province character varying(255),
-    formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
-    country_id integer NOT NULL
-);
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.geo_initiativeplace_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.geo_initiativeplace_id_seq OWNED BY test2.geo_initiativeplace.id;
-
-
---
 -- Name: geo_location; Type: TABLE; Schema: test2; Owner: -
 --
 
 CREATE TABLE test2.geo_location (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
-    "position" character varying(42),
     city character varying(255),
     description text NOT NULL,
     image character varying(255),
     country_id integer,
     group_id integer,
-    slug character varying(255)
+    slug character varying(255),
+    subregion_id integer,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -10441,10 +9212,10 @@ CREATE TABLE test2.geo_place (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    "position" character varying(42) NOT NULL,
     object_id integer NOT NULL,
     content_type_id integer NOT NULL,
     country_id integer NOT NULL,
+    "position" public.geometry(Point,4326),
     CONSTRAINT geo_place_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -10701,7 +9472,7 @@ ALTER SEQUENCE test2.impact_impacttype_translation_id_seq OWNED BY test2.impact_
 
 CREATE TABLE test2.initiatives_initiative (
     id integer NOT NULL,
-    status character varying(20) NOT NULL,
+    status character varying(40) NOT NULL,
     title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     pitch text NOT NULL,
@@ -10719,8 +9490,40 @@ CREATE TABLE test2.initiatives_initiative (
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     location_id integer,
-    activity_manager_id integer
+    activity_manager_id integer,
+    is_open boolean NOT NULL
 );
+
+
+--
+-- Name: initiatives_initiative_activity_managers; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.initiatives_initiative_activity_managers (
+    id integer NOT NULL,
+    initiative_id integer NOT NULL,
+    member_id integer NOT NULL
+);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.initiatives_initiative_activity_managers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.initiatives_initiative_activity_managers_id_seq OWNED BY test2.initiatives_initiative_activity_managers.id;
 
 
 --
@@ -10786,7 +9589,12 @@ CREATE TABLE test2.initiatives_initiativeplatformsettings (
     contact_method character varying(100) NOT NULL,
     activity_search_filters character varying(1000) NOT NULL,
     initiative_search_filters character varying(1000) NOT NULL,
-    enable_impact boolean NOT NULL
+    enable_impact boolean NOT NULL,
+    enable_office_regions boolean NOT NULL,
+    enable_multiple_dates boolean NOT NULL,
+    enable_participant_exports boolean NOT NULL,
+    enable_matching_emails boolean NOT NULL,
+    enable_open_initiatives boolean NOT NULL
 );
 
 
@@ -10808,6 +9616,70 @@ CREATE SEQUENCE test2.initiatives_initiativeplatformsettings_id_seq
 --
 
 ALTER SEQUENCE test2.initiatives_initiativeplatformsettings_id_seq OWNED BY test2.initiatives_initiativeplatformsettings.id;
+
+
+--
+-- Name: initiatives_theme; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.initiatives_theme (
+    id integer NOT NULL,
+    slug character varying(100) NOT NULL,
+    disabled boolean NOT NULL
+);
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.initiatives_theme_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.initiatives_theme_id_seq OWNED BY test2.initiatives_theme.id;
+
+
+--
+-- Name: initiatives_theme_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.initiatives_theme_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.initiatives_theme_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.initiatives_theme_translation_id_seq OWNED BY test2.initiatives_theme_translation.id;
 
 
 --
@@ -11063,7 +9935,7 @@ CREATE TABLE test2.members_member (
 CREATE TABLE test2.members_member_favourite_themes (
     id integer NOT NULL,
     member_id integer NOT NULL,
-    projecttheme_id integer NOT NULL
+    theme_id integer NOT NULL
 );
 
 
@@ -11247,7 +10119,8 @@ CREATE TABLE test2.members_memberplatformsettings (
     background character varying(100),
     anonymization_age integer NOT NULL,
     enable_segments boolean NOT NULL,
-    create_segments boolean NOT NULL
+    create_segments boolean NOT NULL,
+    session_only boolean NOT NULL
 );
 
 
@@ -11494,7 +10367,7 @@ CREATE TABLE test2.notifications_notificationplatformsettings (
     update timestamp with time zone NOT NULL,
     share_options character varying(100) NOT NULL,
     facebook_at_work_url character varying(100),
-    match_options character varying(100) NOT NULL
+    match_options boolean NOT NULL
 );
 
 
@@ -11516,6 +10389,69 @@ CREATE SEQUENCE test2.notifications_notificationplatformsettings_id_seq
 --
 
 ALTER SEQUENCE test2.notifications_notificationplatformsettings_id_seq OWNED BY test2.notifications_notificationplatformsettings.id;
+
+
+--
+-- Name: offices_officeregion; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.offices_officeregion (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text NOT NULL
+);
+
+
+--
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.offices_officeregion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.offices_officeregion_id_seq OWNED BY test2.offices_officeregion.id;
+
+
+--
+-- Name: offices_officesubregion; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.offices_officesubregion (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text NOT NULL,
+    region_id integer
+);
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.offices_officesubregion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.offices_officesubregion_id_seq OWNED BY test2.offices_officesubregion.id;
 
 
 --
@@ -11668,556 +10604,6 @@ ALTER SEQUENCE test2.pages_page_id_seq OWNED BY test2.pages_page.id;
 
 
 --
--- Name: payments_beyonic_beyonicpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_beyonic_beyonicpayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    mobile character varying(200),
-    description character varying(200),
-    metadata text,
-    transaction_reference character varying(200),
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_docdata_docdatadirectdebitpayment (
-    payment_ptr_id integer NOT NULL,
-    merchant_order_id character varying(100) NOT NULL,
-    payment_cluster_id character varying(200) NOT NULL,
-    payment_cluster_key character varying(200) NOT NULL,
-    language character varying(5) NOT NULL,
-    ideal_issuer_id character varying(100) NOT NULL,
-    default_pm character varying(100) NOT NULL,
-    total_gross_amount integer NOT NULL,
-    currency character varying(10) NOT NULL,
-    country character varying(2),
-    total_registered integer NOT NULL,
-    total_shopper_pending integer NOT NULL,
-    total_acquirer_pending integer NOT NULL,
-    total_acquirer_approved integer NOT NULL,
-    total_captured integer NOT NULL,
-    total_refunded integer NOT NULL,
-    total_charged_back integer NOT NULL,
-    customer_id integer NOT NULL,
-    email character varying(254) NOT NULL,
-    first_name character varying(200) NOT NULL,
-    last_name character varying(200) NOT NULL,
-    address character varying(200) NOT NULL,
-    postal_code character varying(20) NOT NULL,
-    city character varying(200) NOT NULL,
-    ip_address character varying(200) NOT NULL,
-    account_name character varying(35) NOT NULL,
-    account_city character varying(35) NOT NULL,
-    iban character varying(35) NOT NULL,
-    bic character varying(35) NOT NULL,
-    agree boolean NOT NULL,
-    CONSTRAINT payments_docdata_docdatadirectdebitpayment_customer_id_check CHECK ((customer_id >= 0))
-);
-
-
---
--- Name: payments_docdata_docdatapayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_docdata_docdatapayment (
-    payment_ptr_id integer NOT NULL,
-    merchant_order_id character varying(100) NOT NULL,
-    payment_cluster_id character varying(200) NOT NULL,
-    payment_cluster_key character varying(200) NOT NULL,
-    language character varying(5) NOT NULL,
-    ideal_issuer_id character varying(100) NOT NULL,
-    default_pm character varying(100) NOT NULL,
-    total_gross_amount integer NOT NULL,
-    currency character varying(10) NOT NULL,
-    country character varying(2),
-    total_registered integer NOT NULL,
-    total_shopper_pending integer NOT NULL,
-    total_acquirer_pending integer NOT NULL,
-    total_acquirer_approved integer NOT NULL,
-    total_captured integer NOT NULL,
-    total_refunded integer NOT NULL,
-    total_charged_back integer NOT NULL,
-    customer_id integer NOT NULL,
-    email character varying(254) NOT NULL,
-    first_name character varying(200) NOT NULL,
-    last_name character varying(200) NOT NULL,
-    address character varying(200) NOT NULL,
-    postal_code character varying(20) NOT NULL,
-    city character varying(200) NOT NULL,
-    ip_address character varying(200) NOT NULL,
-    CONSTRAINT payments_docdata_docdatapayment_customer_id_check CHECK ((customer_id >= 0))
-);
-
-
---
--- Name: payments_docdata_docdatatransaction; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_docdata_docdatatransaction (
-    transaction_ptr_id integer NOT NULL,
-    status character varying(30) NOT NULL,
-    docdata_id character varying(100) NOT NULL,
-    payment_method character varying(60) NOT NULL,
-    authorization_status character varying(60) NOT NULL,
-    authorization_amount integer,
-    authorization_currency character varying(10) NOT NULL,
-    capture_status character varying(60) NOT NULL,
-    capture_amount integer,
-    chargeback_amount integer,
-    refund_amount integer,
-    capture_currency character varying(10),
-    raw_response text NOT NULL
-);
-
-
---
--- Name: payments_external_externalpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_external_externalpayment (
-    payment_ptr_id integer NOT NULL
-);
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_flutterwave_flutterwavempesapayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    business_number character varying(200),
-    account_number character varying(200),
-    kyc_info text,
-    remote_id character varying(200),
-    msisdn character varying(200),
-    third_party_transaction_id character varying(200),
-    transaction_time character varying(200),
-    transaction_reference character varying(200),
-    invoice_number character varying(200),
-    response text,
-    update_response text,
-    transaction_amount character varying(200)
-);
-
-
---
--- Name: payments_flutterwave_flutterwavepayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_flutterwave_flutterwavepayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    auth_model character varying(200),
-    card_number character varying(200),
-    customer_id character varying(100),
-    narration character varying(200),
-    response_url character varying(200),
-    country character varying(200),
-    response text,
-    update_response text,
-    transaction_reference character varying(200)
-);
-
-
---
--- Name: payments_interswitch_interswitchpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_interswitch_interswitchpayment (
-    payment_ptr_id integer NOT NULL,
-    product_id character varying(200),
-    amount character varying(200),
-    currency character varying(200) NOT NULL,
-    site_redirect_url character varying(200),
-    txn_ref character varying(200),
-    hash character varying(200),
-    pay_item_id character varying(200),
-    site_name character varying(200),
-    cust_id character varying(200),
-    cust_id_desc character varying(200),
-    cust_name character varying(200),
-    cust_name_desc character varying(200),
-    pay_item_name character varying(200),
-    local_date_time character varying(200),
-    response character varying(1000),
-    update_response character varying(1000)
-);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_interswitch_interswitchpaymentstatusupdate (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    result text NOT NULL,
-    payment_id integer NOT NULL
-);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_interswitch_interswitchpaymentstatusupdate_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_interswitch_interswitchpaymentstatusupdate_id_seq OWNED BY test2.payments_interswitch_interswitchpaymentstatusupdate.id;
-
-
---
--- Name: payments_lipisha_lipishapayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_lipisha_lipishapayment (
-    payment_ptr_id integer NOT NULL,
-    reference character varying(200),
-    transaction_status character varying(200),
-    transaction_type character varying(200),
-    transaction_amount character varying(200),
-    transaction_currency character varying(200),
-    transaction_reference character varying(200),
-    transaction_reversal_status character varying(200),
-    transaction_account_name character varying(200),
-    transaction_account_number character varying(200),
-    transaction_date character varying(200),
-    transaction_email character varying(200),
-    transaction_method character varying(200),
-    transaction_mobile_number character varying(200),
-    transaction_name character varying(200),
-    transaction_fee text,
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_lipisha_lipishaproject; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_lipisha_lipishaproject (
-    projectaddon_ptr_id integer NOT NULL,
-    account_number character varying(100)
-);
-
-
---
--- Name: payments_logger_paymentlogentry; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_logger_paymentlogentry (
-    id integer NOT NULL,
-    message character varying(400) NOT NULL,
-    level character varying(15) NOT NULL,
-    "timestamp" timestamp with time zone NOT NULL,
-    payment_id integer NOT NULL
-);
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_logger_paymentlogentry_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_logger_paymentlogentry_id_seq OWNED BY test2.payments_logger_paymentlogentry.id;
-
-
---
--- Name: payments_orderpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_orderpayment (
-    id integer NOT NULL,
-    status character varying(50) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    closed timestamp with time zone,
-    amount numeric(12,2) NOT NULL,
-    transaction_fee numeric(16,2),
-    payment_method character varying(60) NOT NULL,
-    integration_data text NOT NULL,
-    authorization_action_id integer,
-    order_id integer NOT NULL,
-    user_id integer,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_orderpayment_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_orderpayment_id_seq OWNED BY test2.payments_orderpayment.id;
-
-
---
--- Name: payments_orderpaymentaction; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_orderpaymentaction (
-    id integer NOT NULL,
-    type character varying(20) NOT NULL,
-    method character varying(20) NOT NULL,
-    url character varying(2000) NOT NULL,
-    payload character varying(5000) NOT NULL
-);
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_orderpaymentaction_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_orderpaymentaction_id_seq OWNED BY test2.payments_orderpaymentaction.id;
-
-
---
--- Name: payments_payment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_payment (
-    id integer NOT NULL,
-    status character varying(50) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    order_payment_id integer NOT NULL,
-    polymorphic_ctype_id integer
-);
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_payment_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_payment_id_seq OWNED BY test2.payments_payment.id;
-
-
---
--- Name: payments_pledge_pledgestandardpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_pledge_pledgestandardpayment (
-    payment_ptr_id integer NOT NULL
-);
-
-
---
--- Name: payments_stripe_stripepayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_stripe_stripepayment (
-    payment_ptr_id integer NOT NULL,
-    source_token character varying(100),
-    charge_token character varying(100),
-    amount integer,
-    description character varying(300),
-    data text,
-    currency character varying(3) NOT NULL,
-    payout_amount integer,
-    payout_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: payments_telesom_telesompayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_telesom_telesompayment (
-    payment_ptr_id integer NOT NULL,
-    amount character varying(200),
-    currency character varying(200),
-    mobile character varying(200),
-    transaction_reference character varying(100),
-    description character varying(200),
-    response text,
-    update_response text
-);
-
-
---
--- Name: payments_transaction; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_transaction (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    payment_id integer NOT NULL,
-    polymorphic_ctype_id integer
-);
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_transaction_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_transaction_id_seq OWNED BY test2.payments_transaction.id;
-
-
---
--- Name: payments_vitepay_vitepaypayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_vitepay_vitepaypayment (
-    payment_ptr_id integer NOT NULL,
-    language_code character varying(10) NOT NULL,
-    currency_code character varying(10) NOT NULL,
-    country_code character varying(10) NOT NULL,
-    order_id character varying(10),
-    description character varying(500),
-    amount_100 integer,
-    buyer_ip_adress character varying(200),
-    return_url character varying(500),
-    decline_url character varying(500),
-    cancel_url character varying(500),
-    callback_url character varying(500),
-    email character varying(500),
-    p_type character varying(500) NOT NULL,
-    payment_url character varying(500)
-);
-
-
---
--- Name: payments_voucher_voucher; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_voucher_voucher (
-    id integer NOT NULL,
-    amount integer NOT NULL,
-    currency character varying(3) NOT NULL,
-    language character varying(2) NOT NULL,
-    message text NOT NULL,
-    code character varying(100) NOT NULL,
-    status character varying(20) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    sender_email character varying(254) NOT NULL,
-    sender_name character varying(100) NOT NULL,
-    receiver_email character varying(254) NOT NULL,
-    receiver_name character varying(100) NOT NULL,
-    order_id integer,
-    receiver_id integer,
-    sender_id integer,
-    CONSTRAINT payments_voucher_voucher_amount_check CHECK ((amount >= 0))
-);
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.payments_voucher_voucher_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.payments_voucher_voucher_id_seq OWNED BY test2.payments_voucher_voucher.id;
-
-
---
--- Name: payments_voucher_voucherpayment; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.payments_voucher_voucherpayment (
-    payment_ptr_id integer NOT NULL,
-    voucher_id integer NOT NULL
-);
-
-
---
 -- Name: payouts_flutterwavepayoutaccount; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -12329,298 +10715,11 @@ CREATE TABLE test2.payouts_stripepayoutaccount (
 
 
 --
--- Name: projects_customprojectfield; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_customprojectfield (
-    id integer NOT NULL,
-    value character varying(5000),
-    field_id integer NOT NULL,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_customprojectfield_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_customprojectfield_id_seq OWNED BY test2.projects_customprojectfield.id;
-
-
---
--- Name: projects_customprojectfieldsettings; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_customprojectfieldsettings (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    description character varying(200),
-    sequence integer NOT NULL,
-    project_settings_id integer,
-    CONSTRAINT projects_customprojectfieldsettings_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_customprojectfieldsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_customprojectfieldsettings_id_seq OWNED BY test2.projects_customprojectfieldsettings.id;
-
-
---
--- Name: projects_project; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_project (
-    id integer NOT NULL,
-    project_type character varying(50),
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    title character varying(255) NOT NULL,
-    slug character varying(100) NOT NULL,
-    pitch text NOT NULL,
-    favorite boolean NOT NULL,
-    deadline timestamp with time zone,
-    place character varying(200),
-    description text NOT NULL,
-    image character varying(255) NOT NULL,
-    amount_asked numeric(12,2) NOT NULL,
-    amount_donated numeric(12,2) NOT NULL,
-    amount_needed numeric(12,2) NOT NULL,
-    amount_extra numeric(12,2) NOT NULL,
-    reach integer,
-    video_url character varying(100),
-    popularity double precision,
-    is_campaign boolean NOT NULL,
-    skip_monthly boolean NOT NULL,
-    allow_overfunding boolean NOT NULL,
-    story text,
-    effects text,
-    for_who text,
-    future text,
-    date_submitted timestamp with time zone,
-    campaign_started timestamp with time zone,
-    campaign_ended timestamp with time zone,
-    campaign_funded timestamp with time zone,
-    voting_deadline timestamp with time zone,
-    country_id integer,
-    language_id integer,
-    location_id integer,
-    organization_id integer,
-    owner_id integer NOT NULL,
-    status_id integer NOT NULL,
-    theme_id integer,
-    celebrate_results boolean NOT NULL,
-    amount_asked_currency character varying(3) NOT NULL,
-    amount_donated_currency character varying(3) NOT NULL,
-    amount_extra_currency character varying(3) NOT NULL,
-    amount_needed_currency character varying(3) NOT NULL,
-    currencies character varying(100) NOT NULL,
-    payout_status character varying(50),
-    campaign_paid_out timestamp with time zone,
-    reviewer_id integer,
-    promoter_id integer,
-    task_manager_id integer,
-    campaign_edited timestamp with time zone,
-    campaign_duration integer,
-    payout_account_id integer,
-    funding_id integer,
-    CONSTRAINT projects_project_campaign_duration_2e8b3428_check CHECK ((campaign_duration >= 0)),
-    CONSTRAINT projects_project_reach_check CHECK ((reach >= 0))
-);
-
-
---
--- Name: projects_project_categories; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_project_categories (
-    id integer NOT NULL,
-    project_id integer NOT NULL,
-    category_id integer NOT NULL
-);
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_project_categories_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_project_categories_id_seq OWNED BY test2.projects_project_categories.id;
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_project_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_project_id_seq OWNED BY test2.projects_project.id;
-
-
---
--- Name: projects_projectaddon; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectaddon (
-    id integer NOT NULL,
-    polymorphic_ctype_id integer,
-    project_id integer NOT NULL
-);
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectaddon_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectaddon_id_seq OWNED BY test2.projects_projectaddon.id;
-
-
---
--- Name: projects_projectbudgetline; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectbudgetline (
-    id integer NOT NULL,
-    description character varying(255) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL
-);
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectbudgetline_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectbudgetline_id_seq OWNED BY test2.projects_projectbudgetline.id;
-
-
---
--- Name: projects_projectcreatetemplate; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectcreatetemplate (
-    id integer NOT NULL,
-    name character varying(300) NOT NULL,
-    default_amount_asked_currency character varying(3) NOT NULL,
-    project_settings_id integer,
-    description text,
-    image character varying(100),
-    default_amount_asked numeric(12,2),
-    default_description text,
-    default_image character varying(100),
-    default_title character varying(300),
-    default_pitch text,
-    sub_name character varying(300) NOT NULL
-);
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectcreatetemplate_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectcreatetemplate_id_seq OWNED BY test2.projects_projectcreatetemplate.id;
-
-
---
 -- Name: projects_projectimage; Type: TABLE; Schema: test2; Owner: -
 --
 
 CREATE TABLE test2.projects_projectimage (
     id integer NOT NULL,
-    project_id integer NOT NULL,
     file character varying(100) NOT NULL,
     name character varying(255),
     uploaded timestamp with time zone NOT NULL
@@ -12645,128 +10744,6 @@ CREATE SEQUENCE test2.projects_projectimage_id_seq
 --
 
 ALTER SEQUENCE test2.projects_projectimage_id_seq OWNED BY test2.projects_projectimage.id;
-
-
---
--- Name: projects_projectlocation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectlocation (
-    project_id integer NOT NULL,
-    place character varying(80),
-    street text,
-    neighborhood text,
-    city text,
-    postal_code character varying(20),
-    country character varying(40),
-    latitude numeric(21,18),
-    longitude numeric(21,18)
-);
-
-
---
--- Name: projects_projectphaselog; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectphaselog (
-    id integer NOT NULL,
-    start timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    status_id integer NOT NULL
-);
-
-
---
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectphaselog_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectphaselog_id_seq OWNED BY test2.projects_projectphaselog.id;
-
-
---
--- Name: projects_projectplatformsettings; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectplatformsettings (
-    id integer NOT NULL,
-    update timestamp with time zone NOT NULL,
-    create_types character varying(100) NOT NULL,
-    create_flow character varying(100) NOT NULL,
-    contact_method character varying(100) NOT NULL,
-    contact_types character varying(100) NOT NULL,
-    allow_anonymous_rewards boolean NOT NULL,
-    facebook_at_work_url character varying(100),
-    share_options character varying(100) NOT NULL,
-    match_options character varying(100) NOT NULL
-);
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectplatformsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectplatformsettings_id_seq OWNED BY test2.projects_projectplatformsettings.id;
-
-
---
--- Name: projects_projectsearchfilter; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.projects_projectsearchfilter (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    "default" character varying(100),
-    "values" character varying(500),
-    project_settings_id integer,
-    sequence integer NOT NULL,
-    CONSTRAINT projects_projectsearchfilter_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.projects_projectsearchfilter_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.projects_projectsearchfilter_id_seq OWNED BY test2.projects_projectsearchfilter.id;
 
 
 --
@@ -12805,44 +10782,6 @@ CREATE SEQUENCE test2.quotes_quote_id_seq
 --
 
 ALTER SEQUENCE test2.quotes_quote_id_seq OWNED BY test2.quotes_quote.id;
-
-
---
--- Name: rewards_reward; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.rewards_reward (
-    id integer NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    title character varying(200) NOT NULL,
-    description character varying(500) NOT NULL,
-    "limit" integer,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    project_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL,
-    new_reward_id integer
-);
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.rewards_reward_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.rewards_reward_id_seq OWNED BY test2.rewards_reward.id;
 
 
 --
@@ -13133,7 +11072,9 @@ CREATE TABLE test2.social_auth_usersocialauth (
     provider character varying(32) NOT NULL,
     uid character varying(255) NOT NULL,
     extra_data text NOT NULL,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    modified timestamp with time zone NOT NULL
 );
 
 
@@ -13354,51 +11295,6 @@ ALTER SEQUENCE test2.statistics_statistic_id_seq OWNED BY test2.statistics_stati
 
 
 --
--- Name: suggestions_suggestion; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.suggestions_suggestion (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL,
-    title text NOT NULL,
-    pitch text NOT NULL,
-    deadline date NOT NULL,
-    destination character varying(100) NOT NULL,
-    org_name character varying(100) NOT NULL,
-    org_contactname character varying(100) NOT NULL,
-    org_email character varying(254) NOT NULL,
-    org_phone character varying(64) NOT NULL,
-    org_website character varying(200) NOT NULL,
-    status character varying(64) NOT NULL,
-    token character varying(100),
-    project_id integer,
-    theme_id integer NOT NULL,
-    language character varying(10) NOT NULL
-);
-
-
---
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.suggestions_suggestion_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.suggestions_suggestion_id_seq OWNED BY test2.suggestions_suggestion.id;
-
-
---
 -- Name: taggit_tag; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -13459,70 +11355,6 @@ CREATE SEQUENCE test2.taggit_taggeditem_id_seq
 --
 
 ALTER SEQUENCE test2.taggit_taggeditem_id_seq OWNED BY test2.taggit_taggeditem.id;
-
-
---
--- Name: tasks_skill; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.tasks_skill (
-    id integer NOT NULL,
-    disabled boolean NOT NULL,
-    expertise boolean NOT NULL
-);
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.tasks_skill_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.tasks_skill_id_seq OWNED BY test2.tasks_skill.id;
-
-
---
--- Name: tasks_skill_translation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.tasks_skill_translation (
-    id integer NOT NULL,
-    language_code character varying(15) NOT NULL,
-    name character varying(100) NOT NULL,
-    description text NOT NULL,
-    master_id integer
-);
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.tasks_skill_translation_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.tasks_skill_translation_id_seq OWNED BY test2.tasks_skill_translation.id;
 
 
 --
@@ -13599,6 +11431,223 @@ ALTER SEQUENCE test2.terms_termsagreement_id_seq OWNED BY test2.terms_termsagree
 CREATE TABLE test2.thumbnail_kvstore (
     key character varying(200) NOT NULL,
     value text NOT NULL
+);
+
+
+--
+-- Name: time_based_dateactivityslot; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_dateactivityslot (
+    id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    status character varying(40) NOT NULL,
+    title character varying(255),
+    capacity integer,
+    start timestamp with time zone,
+    duration interval,
+    is_online boolean,
+    online_meeting_url text NOT NULL,
+    location_hint text,
+    activity_id integer NOT NULL,
+    location_id integer,
+    CONSTRAINT time_based_dateactivityslot_capacity_check CHECK ((capacity >= 0))
+);
+
+
+--
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.time_based_dateactivityslot_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.time_based_dateactivityslot_id_seq OWNED BY test2.time_based_dateactivityslot.id;
+
+
+--
+-- Name: time_based_dateparticipant; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_dateparticipant (
+    contributor_ptr_id integer NOT NULL,
+    document_id uuid,
+    motivation text
+);
+
+
+--
+-- Name: time_based_periodactivityslot; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_periodactivityslot (
+    id integer NOT NULL,
+    created timestamp with time zone NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    status character varying(40) NOT NULL,
+    title character varying(255),
+    capacity integer,
+    start timestamp with time zone,
+    "end" timestamp with time zone,
+    activity_id integer NOT NULL,
+    CONSTRAINT time_based_periodactivityslot_capacity_check CHECK ((capacity >= 0))
+);
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.time_based_periodactivityslot_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.time_based_periodactivityslot_id_seq OWNED BY test2.time_based_periodactivityslot.id;
+
+
+--
+-- Name: time_based_periodparticipant; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_periodparticipant (
+    contributor_ptr_id integer NOT NULL,
+    current_period date,
+    document_id uuid,
+    motivation text
+);
+
+
+--
+-- Name: time_based_skill; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_skill (
+    id integer NOT NULL,
+    disabled boolean NOT NULL,
+    expertise boolean NOT NULL
+);
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.time_based_skill_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.time_based_skill_id_seq OWNED BY test2.time_based_skill.id;
+
+
+--
+-- Name: time_based_skill_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_skill_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.time_based_skill_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.time_based_skill_translation_id_seq OWNED BY test2.time_based_skill_translation.id;
+
+
+--
+-- Name: time_based_slotparticipant; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_slotparticipant (
+    id integer NOT NULL,
+    participant_id integer NOT NULL,
+    slot_id integer NOT NULL,
+    status character varying(40) NOT NULL
+);
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.time_based_slotparticipant_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.time_based_slotparticipant_id_seq OWNED BY test2.time_based_slotparticipant.id;
+
+
+--
+-- Name: time_based_timebasedactivity; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.time_based_timebasedactivity (
+    activity_ptr_id integer NOT NULL,
+    capacity integer,
+    is_online boolean,
+    location_hint text,
+    registration_deadline date,
+    review boolean,
+    expertise_id integer,
+    location_id integer,
+    preparation interval,
+    CONSTRAINT time_based_timebasedactivity_capacity_check CHECK ((capacity >= 0))
 );
 
 
@@ -13763,112 +11812,6 @@ CREATE SEQUENCE test2.utils_translationplatformsettings_translation_id_seq
 --
 
 ALTER SEQUENCE test2.utils_translationplatformsettings_translation_id_seq OWNED BY test2.utils_translationplatformsettings_translation.id;
-
-
---
--- Name: v_projects; Type: VIEW; Schema: test2; Owner: -
---
-
-CREATE VIEW test2.v_projects AS
- SELECT "current_schema"() AS tenant,
-    'project'::character varying AS type,
-    p.id AS type_id,
-    p.title AS description,
-    NULL::integer AS parent_id,
-    NULL::character varying AS parent_description,
-    NULL::integer AS grand_parent_id,
-    NULL::character varying AS grand_parent_description,
-    timezone('Europe/Amsterdam'::text, p.campaign_ended) AS "timestamp",
-    (pp.slug)::character varying(20) AS status,
-    (concat(pp.id, ' - ', pp.slug))::character varying(80) AS status_friendly,
-    timezone('Europe/Amsterdam'::text, pl.start) AS event_timestamp,
-    (plp.slug)::character varying(20) AS event_status,
-    p.owner_id AS user_id,
-    m.email AS user_email,
-    m.remote_id AS user_remote_id,
-    date_part('year'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS year,
-    date_part('quarter'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS quarter,
-    date_part('month'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS month,
-    date_part('week'::text, timezone('Europe/Amsterdam'::text, pl.start)) AS week,
-    l.name AS location,
-    lg.name AS location_group,
-    1 AS value,
-    NULL::integer AS value_alt
-   FROM ((((((test2.projects_project p
-     LEFT JOIN test2.projects_projectphaselog pl ON ((pl.project_id = p.id)))
-     LEFT JOIN test2.members_member m ON ((m.id = p.owner_id)))
-     LEFT JOIN test2.bb_projects_projectphase plp ON ((plp.id = pl.status_id)))
-     LEFT JOIN test2.bb_projects_projectphase pp ON ((pp.id = p.status_id)))
-     LEFT JOIN test2.geo_location l ON ((p.location_id = l.id)))
-     LEFT JOIN test2.geo_locationgroup lg ON ((l.group_id = lg.id)));
-
-
---
--- Name: v_project_successful_report; Type: VIEW; Schema: test2; Owner: -
---
-
-CREATE VIEW test2.v_project_successful_report AS
- SELECT DISTINCT ON (v_projects.type_id) v_projects.type_id AS filter_id,
-    v_projects.tenant,
-    v_projects.type,
-    v_projects.type_id,
-    v_projects.description,
-    v_projects.parent_id,
-    v_projects.parent_description,
-    v_projects.grand_parent_id,
-    v_projects.grand_parent_description,
-    v_projects."timestamp",
-    v_projects.status,
-    v_projects.status_friendly,
-    v_projects.event_timestamp,
-    v_projects.event_status,
-    v_projects.user_id,
-    v_projects.user_email,
-    v_projects.user_remote_id,
-    v_projects.year,
-    v_projects.quarter,
-    v_projects.month,
-    v_projects.week,
-    v_projects.location,
-    v_projects.location_group,
-    v_projects.value,
-    v_projects.value_alt
-   FROM test2.v_projects
-  WHERE (((v_projects.status)::text = 'done-complete'::text) AND ((v_projects.event_status)::text = 'done-complete'::text))
-  ORDER BY v_projects.type_id, v_projects.event_timestamp DESC;
-
-
---
--- Name: votes_vote; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.votes_vote (
-    id integer NOT NULL,
-    created timestamp with time zone NOT NULL,
-    ip_address inet NOT NULL,
-    project_id integer NOT NULL,
-    voter_id integer NOT NULL
-);
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.votes_vote_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.votes_vote_id_seq OWNED BY test2.votes_vote.id;
 
 
 --
@@ -14119,7 +12062,14 @@ ALTER TABLE ONLY test.activities_activity_segments ALTER COLUMN id SET DEFAULT n
 -- Name: activities_contribution id; Type: DEFAULT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.activities_contribution ALTER COLUMN id SET DEFAULT nextval('test.activities_contribution_id_seq'::regclass);
+ALTER TABLE ONLY test.activities_contribution ALTER COLUMN id SET DEFAULT nextval('test.activities_contributionvalue_id_seq'::regclass);
+
+
+--
+-- Name: activities_contributor id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_contributor ALTER COLUMN id SET DEFAULT nextval('test.activities_contribution_id_seq'::regclass);
 
 
 --
@@ -14169,34 +12119,6 @@ ALTER TABLE ONLY test.axes_accesslog ALTER COLUMN id SET DEFAULT nextval('test.a
 --
 
 ALTER TABLE ONLY test.bb_follow_follow ALTER COLUMN id SET DEFAULT nextval('test.bb_follow_follow_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projectphase id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase ALTER COLUMN id SET DEFAULT nextval('test.bb_projects_projectphase_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projectphase_translation id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase_translation ALTER COLUMN id SET DEFAULT nextval('test.bb_projects_projectphase_translation_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projecttheme id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projecttheme ALTER COLUMN id SET DEFAULT nextval('test.bb_projects_projecttheme_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projecttheme_translation id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projecttheme_translation ALTER COLUMN id SET DEFAULT nextval('test.bb_projects_projecttheme_translation_id_seq'::regclass);
 
 
 --
@@ -14312,13 +12234,6 @@ ALTER TABLE ONLY test.cms_logo ALTER COLUMN id SET DEFAULT nextval('test.cms_log
 
 
 --
--- Name: cms_projectscontent_projects id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.cms_projectscontent_projects ALTER COLUMN id SET DEFAULT nextval('test.cms_projectscontent_projects_id_seq'::regclass);
-
-
---
 -- Name: cms_quote id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14431,13 +12346,6 @@ ALTER TABLE ONLY test.django_site ALTER COLUMN id SET DEFAULT nextval('test.djan
 
 
 --
--- Name: donations_donation id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation ALTER COLUMN id SET DEFAULT nextval('test.donations_donation_id_seq'::regclass);
-
-
---
 -- Name: files_relatedimage id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14543,13 +12451,6 @@ ALTER TABLE ONLY test.funding_stripe_paymentintent ALTER COLUMN id SET DEFAULT n
 
 
 --
--- Name: fundraisers_fundraiser id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.fundraisers_fundraiser ALTER COLUMN id SET DEFAULT nextval('test.fundraisers_fundraiser_id_seq'::regclass);
-
-
---
 -- Name: geo_country id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14568,13 +12469,6 @@ ALTER TABLE ONLY test.geo_country_translation ALTER COLUMN id SET DEFAULT nextva
 --
 
 ALTER TABLE ONLY test.geo_geolocation ALTER COLUMN id SET DEFAULT nextval('test.geo_activityplace_id_seq'::regclass);
-
-
---
--- Name: geo_initiativeplace id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.geo_initiativeplace ALTER COLUMN id SET DEFAULT nextval('test.geo_initiativeplace_id_seq'::regclass);
 
 
 --
@@ -14655,6 +12549,13 @@ ALTER TABLE ONLY test.initiatives_initiative ALTER COLUMN id SET DEFAULT nextval
 
 
 --
+-- Name: initiatives_initiative_activity_managers id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_initiative_activity_managers ALTER COLUMN id SET DEFAULT nextval('test.initiatives_initiative_activity_managers_id_seq'::regclass);
+
+
+--
 -- Name: initiatives_initiative_categories id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14666,6 +12567,20 @@ ALTER TABLE ONLY test.initiatives_initiative_categories ALTER COLUMN id SET DEFA
 --
 
 ALTER TABLE ONLY test.initiatives_initiativeplatformsettings ALTER COLUMN id SET DEFAULT nextval('test.initiatives_initiativeplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: initiatives_theme id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_theme ALTER COLUMN id SET DEFAULT nextval('test.initiatives_theme_id_seq'::regclass);
+
+
+--
+-- Name: initiatives_theme_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_theme_translation ALTER COLUMN id SET DEFAULT nextval('test.initiatives_theme_translation_id_seq'::regclass);
 
 
 --
@@ -14809,6 +12724,20 @@ ALTER TABLE ONLY test.notifications_notificationplatformsettings ALTER COLUMN id
 
 
 --
+-- Name: offices_officeregion id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.offices_officeregion ALTER COLUMN id SET DEFAULT nextval('test.offices_officeregion_id_seq'::regclass);
+
+
+--
+-- Name: offices_officesubregion id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.offices_officesubregion ALTER COLUMN id SET DEFAULT nextval('test.offices_officesubregion_id_seq'::regclass);
+
+
+--
 -- Name: orders_order id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14837,55 +12766,6 @@ ALTER TABLE ONLY test.pages_page ALTER COLUMN id SET DEFAULT nextval('test.pages
 
 
 --
--- Name: payments_interswitch_interswitchpaymentstatusupdate id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_interswitch_interswitchpaymentstatusupdate ALTER COLUMN id SET DEFAULT nextval('test.payments_interswitch_interswitchpaymentstatusupdate_id_seq'::regclass);
-
-
---
--- Name: payments_logger_paymentlogentry id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_logger_paymentlogentry ALTER COLUMN id SET DEFAULT nextval('test.payments_logger_paymentlogentry_id_seq'::regclass);
-
-
---
--- Name: payments_orderpayment id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment ALTER COLUMN id SET DEFAULT nextval('test.payments_orderpayment_id_seq'::regclass);
-
-
---
--- Name: payments_orderpaymentaction id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpaymentaction ALTER COLUMN id SET DEFAULT nextval('test.payments_orderpaymentaction_id_seq'::regclass);
-
-
---
--- Name: payments_payment id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_payment ALTER COLUMN id SET DEFAULT nextval('test.payments_payment_id_seq'::regclass);
-
-
---
--- Name: payments_transaction id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_transaction ALTER COLUMN id SET DEFAULT nextval('test.payments_transaction_id_seq'::regclass);
-
-
---
--- Name: payments_voucher_voucher id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucher ALTER COLUMN id SET DEFAULT nextval('test.payments_voucher_voucher_id_seq'::regclass);
-
-
---
 -- Name: payouts_payoutaccount id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14900,55 +12780,6 @@ ALTER TABLE ONLY test.payouts_payoutdocument ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- Name: projects_customprojectfield id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfield ALTER COLUMN id SET DEFAULT nextval('test.projects_customprojectfield_id_seq'::regclass);
-
-
---
--- Name: projects_customprojectfieldsettings id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfieldsettings ALTER COLUMN id SET DEFAULT nextval('test.projects_customprojectfieldsettings_id_seq'::regclass);
-
-
---
--- Name: projects_project id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project ALTER COLUMN id SET DEFAULT nextval('test.projects_project_id_seq'::regclass);
-
-
---
--- Name: projects_project_categories id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project_categories ALTER COLUMN id SET DEFAULT nextval('test.projects_project_categories_id_seq'::regclass);
-
-
---
--- Name: projects_projectaddon id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectaddon ALTER COLUMN id SET DEFAULT nextval('test.projects_projectaddon_id_seq'::regclass);
-
-
---
--- Name: projects_projectbudgetline id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectbudgetline ALTER COLUMN id SET DEFAULT nextval('test.projects_projectbudgetline_id_seq'::regclass);
-
-
---
--- Name: projects_projectcreatetemplate id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectcreatetemplate ALTER COLUMN id SET DEFAULT nextval('test.projects_projectcreatetemplate_id_seq'::regclass);
-
-
---
 -- Name: projects_projectimage id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -14956,38 +12787,10 @@ ALTER TABLE ONLY test.projects_projectimage ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- Name: projects_projectphaselog id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectphaselog ALTER COLUMN id SET DEFAULT nextval('test.projects_projectphaselog_id_seq'::regclass);
-
-
---
--- Name: projects_projectplatformsettings id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectplatformsettings ALTER COLUMN id SET DEFAULT nextval('test.projects_projectplatformsettings_id_seq'::regclass);
-
-
---
--- Name: projects_projectsearchfilter id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectsearchfilter ALTER COLUMN id SET DEFAULT nextval('test.projects_projectsearchfilter_id_seq'::regclass);
-
-
---
 -- Name: quotes_quote id; Type: DEFAULT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.quotes_quote ALTER COLUMN id SET DEFAULT nextval('test.quotes_quote_id_seq'::regclass);
-
-
---
--- Name: rewards_reward id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.rewards_reward ALTER COLUMN id SET DEFAULT nextval('test.rewards_reward_id_seq'::regclass);
 
 
 --
@@ -15089,13 +12892,6 @@ ALTER TABLE ONLY test.statistics_statistic ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- Name: suggestions_suggestion id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.suggestions_suggestion ALTER COLUMN id SET DEFAULT nextval('test.suggestions_suggestion_id_seq'::regclass);
-
-
---
 -- Name: taggit_tag id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -15110,20 +12906,6 @@ ALTER TABLE ONLY test.taggit_taggeditem ALTER COLUMN id SET DEFAULT nextval('tes
 
 
 --
--- Name: tasks_skill id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.tasks_skill ALTER COLUMN id SET DEFAULT nextval('test.tasks_skill_id_seq'::regclass);
-
-
---
--- Name: tasks_skill_translation id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.tasks_skill_translation ALTER COLUMN id SET DEFAULT nextval('test.tasks_skill_translation_id_seq'::regclass);
-
-
---
 -- Name: terms_terms id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -15135,6 +12917,41 @@ ALTER TABLE ONLY test.terms_terms ALTER COLUMN id SET DEFAULT nextval('test.term
 --
 
 ALTER TABLE ONLY test.terms_termsagreement ALTER COLUMN id SET DEFAULT nextval('test.terms_termsagreement_id_seq'::regclass);
+
+
+--
+-- Name: time_based_dateactivityslot id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivityslot ALTER COLUMN id SET DEFAULT nextval('test.time_based_dateactivityslot_id_seq'::regclass);
+
+
+--
+-- Name: time_based_periodactivityslot id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivityslot ALTER COLUMN id SET DEFAULT nextval('test.time_based_periodactivityslot_id_seq'::regclass);
+
+
+--
+-- Name: time_based_skill id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_skill ALTER COLUMN id SET DEFAULT nextval('test.time_based_skill_id_seq'::regclass);
+
+
+--
+-- Name: time_based_skill_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_skill_translation ALTER COLUMN id SET DEFAULT nextval('test.time_based_skill_translation_id_seq'::regclass);
+
+
+--
+-- Name: time_based_slotparticipant id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_slotparticipant ALTER COLUMN id SET DEFAULT nextval('test.time_based_slotparticipant_id_seq'::regclass);
 
 
 --
@@ -15170,13 +12987,6 @@ ALTER TABLE ONLY test.utils_translationplatformsettings ALTER COLUMN id SET DEFA
 --
 
 ALTER TABLE ONLY test.utils_translationplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test.utils_translationplatformsettings_translation_id_seq'::regclass);
-
-
---
--- Name: votes_vote id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.votes_vote ALTER COLUMN id SET DEFAULT nextval('test.votes_vote_id_seq'::regclass);
 
 
 --
@@ -15218,7 +13028,14 @@ ALTER TABLE ONLY test2.activities_activity_segments ALTER COLUMN id SET DEFAULT 
 -- Name: activities_contribution id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.activities_contribution ALTER COLUMN id SET DEFAULT nextval('test2.activities_contribution_id_seq'::regclass);
+ALTER TABLE ONLY test2.activities_contribution ALTER COLUMN id SET DEFAULT nextval('test2.activities_contributionvalue_id_seq'::regclass);
+
+
+--
+-- Name: activities_contributor id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_contributor ALTER COLUMN id SET DEFAULT nextval('test2.activities_contribution_id_seq'::regclass);
 
 
 --
@@ -15268,34 +13085,6 @@ ALTER TABLE ONLY test2.axes_accesslog ALTER COLUMN id SET DEFAULT nextval('test2
 --
 
 ALTER TABLE ONLY test2.bb_follow_follow ALTER COLUMN id SET DEFAULT nextval('test2.bb_follow_follow_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projectphase id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase ALTER COLUMN id SET DEFAULT nextval('test2.bb_projects_projectphase_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projectphase_translation id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase_translation ALTER COLUMN id SET DEFAULT nextval('test2.bb_projects_projectphase_translation_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projecttheme id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projecttheme ALTER COLUMN id SET DEFAULT nextval('test2.bb_projects_projecttheme_id_seq'::regclass);
-
-
---
--- Name: bb_projects_projecttheme_translation id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projecttheme_translation ALTER COLUMN id SET DEFAULT nextval('test2.bb_projects_projecttheme_translation_id_seq'::regclass);
 
 
 --
@@ -15411,13 +13200,6 @@ ALTER TABLE ONLY test2.cms_logo ALTER COLUMN id SET DEFAULT nextval('test2.cms_l
 
 
 --
--- Name: cms_projectscontent_projects id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.cms_projectscontent_projects ALTER COLUMN id SET DEFAULT nextval('test2.cms_projectscontent_projects_id_seq'::regclass);
-
-
---
 -- Name: cms_quote id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15530,13 +13312,6 @@ ALTER TABLE ONLY test2.django_site ALTER COLUMN id SET DEFAULT nextval('test2.dj
 
 
 --
--- Name: donations_donation id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation ALTER COLUMN id SET DEFAULT nextval('test2.donations_donation_id_seq'::regclass);
-
-
---
 -- Name: files_relatedimage id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15642,13 +13417,6 @@ ALTER TABLE ONLY test2.funding_stripe_paymentintent ALTER COLUMN id SET DEFAULT 
 
 
 --
--- Name: fundraisers_fundraiser id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.fundraisers_fundraiser ALTER COLUMN id SET DEFAULT nextval('test2.fundraisers_fundraiser_id_seq'::regclass);
-
-
---
 -- Name: geo_country id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15667,13 +13435,6 @@ ALTER TABLE ONLY test2.geo_country_translation ALTER COLUMN id SET DEFAULT nextv
 --
 
 ALTER TABLE ONLY test2.geo_geolocation ALTER COLUMN id SET DEFAULT nextval('test2.geo_activityplace_id_seq'::regclass);
-
-
---
--- Name: geo_initiativeplace id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.geo_initiativeplace ALTER COLUMN id SET DEFAULT nextval('test2.geo_initiativeplace_id_seq'::regclass);
 
 
 --
@@ -15754,6 +13515,13 @@ ALTER TABLE ONLY test2.initiatives_initiative ALTER COLUMN id SET DEFAULT nextva
 
 
 --
+-- Name: initiatives_initiative_activity_managers id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_initiative_activity_managers ALTER COLUMN id SET DEFAULT nextval('test2.initiatives_initiative_activity_managers_id_seq'::regclass);
+
+
+--
 -- Name: initiatives_initiative_categories id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15765,6 +13533,20 @@ ALTER TABLE ONLY test2.initiatives_initiative_categories ALTER COLUMN id SET DEF
 --
 
 ALTER TABLE ONLY test2.initiatives_initiativeplatformsettings ALTER COLUMN id SET DEFAULT nextval('test2.initiatives_initiativeplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: initiatives_theme id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_theme ALTER COLUMN id SET DEFAULT nextval('test2.initiatives_theme_id_seq'::regclass);
+
+
+--
+-- Name: initiatives_theme_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_theme_translation ALTER COLUMN id SET DEFAULT nextval('test2.initiatives_theme_translation_id_seq'::regclass);
 
 
 --
@@ -15908,6 +13690,20 @@ ALTER TABLE ONLY test2.notifications_notificationplatformsettings ALTER COLUMN i
 
 
 --
+-- Name: offices_officeregion id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.offices_officeregion ALTER COLUMN id SET DEFAULT nextval('test2.offices_officeregion_id_seq'::regclass);
+
+
+--
+-- Name: offices_officesubregion id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.offices_officesubregion ALTER COLUMN id SET DEFAULT nextval('test2.offices_officesubregion_id_seq'::regclass);
+
+
+--
 -- Name: orders_order id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15936,55 +13732,6 @@ ALTER TABLE ONLY test2.pages_page ALTER COLUMN id SET DEFAULT nextval('test2.pag
 
 
 --
--- Name: payments_interswitch_interswitchpaymentstatusupdate id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_interswitch_interswitchpaymentstatusupdate ALTER COLUMN id SET DEFAULT nextval('test2.payments_interswitch_interswitchpaymentstatusupdate_id_seq'::regclass);
-
-
---
--- Name: payments_logger_paymentlogentry id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_logger_paymentlogentry ALTER COLUMN id SET DEFAULT nextval('test2.payments_logger_paymentlogentry_id_seq'::regclass);
-
-
---
--- Name: payments_orderpayment id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment ALTER COLUMN id SET DEFAULT nextval('test2.payments_orderpayment_id_seq'::regclass);
-
-
---
--- Name: payments_orderpaymentaction id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpaymentaction ALTER COLUMN id SET DEFAULT nextval('test2.payments_orderpaymentaction_id_seq'::regclass);
-
-
---
--- Name: payments_payment id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_payment ALTER COLUMN id SET DEFAULT nextval('test2.payments_payment_id_seq'::regclass);
-
-
---
--- Name: payments_transaction id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_transaction ALTER COLUMN id SET DEFAULT nextval('test2.payments_transaction_id_seq'::regclass);
-
-
---
--- Name: payments_voucher_voucher id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucher ALTER COLUMN id SET DEFAULT nextval('test2.payments_voucher_voucher_id_seq'::regclass);
-
-
---
 -- Name: payouts_payoutaccount id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -15999,55 +13746,6 @@ ALTER TABLE ONLY test2.payouts_payoutdocument ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- Name: projects_customprojectfield id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfield ALTER COLUMN id SET DEFAULT nextval('test2.projects_customprojectfield_id_seq'::regclass);
-
-
---
--- Name: projects_customprojectfieldsettings id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfieldsettings ALTER COLUMN id SET DEFAULT nextval('test2.projects_customprojectfieldsettings_id_seq'::regclass);
-
-
---
--- Name: projects_project id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project ALTER COLUMN id SET DEFAULT nextval('test2.projects_project_id_seq'::regclass);
-
-
---
--- Name: projects_project_categories id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project_categories ALTER COLUMN id SET DEFAULT nextval('test2.projects_project_categories_id_seq'::regclass);
-
-
---
--- Name: projects_projectaddon id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectaddon ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectaddon_id_seq'::regclass);
-
-
---
--- Name: projects_projectbudgetline id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectbudgetline ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectbudgetline_id_seq'::regclass);
-
-
---
--- Name: projects_projectcreatetemplate id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectcreatetemplate ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectcreatetemplate_id_seq'::regclass);
-
-
---
 -- Name: projects_projectimage id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -16055,38 +13753,10 @@ ALTER TABLE ONLY test2.projects_projectimage ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- Name: projects_projectphaselog id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectphaselog ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectphaselog_id_seq'::regclass);
-
-
---
--- Name: projects_projectplatformsettings id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectplatformsettings ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectplatformsettings_id_seq'::regclass);
-
-
---
--- Name: projects_projectsearchfilter id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectsearchfilter ALTER COLUMN id SET DEFAULT nextval('test2.projects_projectsearchfilter_id_seq'::regclass);
-
-
---
 -- Name: quotes_quote id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.quotes_quote ALTER COLUMN id SET DEFAULT nextval('test2.quotes_quote_id_seq'::regclass);
-
-
---
--- Name: rewards_reward id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.rewards_reward ALTER COLUMN id SET DEFAULT nextval('test2.rewards_reward_id_seq'::regclass);
 
 
 --
@@ -16188,13 +13858,6 @@ ALTER TABLE ONLY test2.statistics_statistic ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- Name: suggestions_suggestion id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.suggestions_suggestion ALTER COLUMN id SET DEFAULT nextval('test2.suggestions_suggestion_id_seq'::regclass);
-
-
---
 -- Name: taggit_tag id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -16209,20 +13872,6 @@ ALTER TABLE ONLY test2.taggit_taggeditem ALTER COLUMN id SET DEFAULT nextval('te
 
 
 --
--- Name: tasks_skill id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.tasks_skill ALTER COLUMN id SET DEFAULT nextval('test2.tasks_skill_id_seq'::regclass);
-
-
---
--- Name: tasks_skill_translation id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.tasks_skill_translation ALTER COLUMN id SET DEFAULT nextval('test2.tasks_skill_translation_id_seq'::regclass);
-
-
---
 -- Name: terms_terms id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -16234,6 +13883,41 @@ ALTER TABLE ONLY test2.terms_terms ALTER COLUMN id SET DEFAULT nextval('test2.te
 --
 
 ALTER TABLE ONLY test2.terms_termsagreement ALTER COLUMN id SET DEFAULT nextval('test2.terms_termsagreement_id_seq'::regclass);
+
+
+--
+-- Name: time_based_dateactivityslot id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivityslot ALTER COLUMN id SET DEFAULT nextval('test2.time_based_dateactivityslot_id_seq'::regclass);
+
+
+--
+-- Name: time_based_periodactivityslot id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivityslot ALTER COLUMN id SET DEFAULT nextval('test2.time_based_periodactivityslot_id_seq'::regclass);
+
+
+--
+-- Name: time_based_skill id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_skill ALTER COLUMN id SET DEFAULT nextval('test2.time_based_skill_id_seq'::regclass);
+
+
+--
+-- Name: time_based_skill_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_skill_translation ALTER COLUMN id SET DEFAULT nextval('test2.time_based_skill_translation_id_seq'::regclass);
+
+
+--
+-- Name: time_based_slotparticipant id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_slotparticipant ALTER COLUMN id SET DEFAULT nextval('test2.time_based_slotparticipant_id_seq'::regclass);
 
 
 --
@@ -16269,13 +13953,6 @@ ALTER TABLE ONLY test2.utils_translationplatformsettings ALTER COLUMN id SET DEF
 --
 
 ALTER TABLE ONLY test2.utils_translationplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test2.utils_translationplatformsettings_translation_id_seq'::regclass);
-
-
---
--- Name: votes_vote id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.votes_vote ALTER COLUMN id SET DEFAULT nextval('test2.votes_vote_id_seq'::regclass);
 
 
 --
@@ -17275,6 +14952,201 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 943	social_django	0005_auto_20160727_2333	2020-10-12 14:22:24.979285+02
 944	social_django	0003_alter_email_max_length	2020-10-12 14:22:24.980062+02
 945	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-10-12 14:22:24.980836+02
+946	geo	0017_auto_20201014_1155	2021-06-01 12:50:46.281903+02
+947	activities	0026_auto_20201021_1420	2021-06-01 12:50:46.672482+02
+948	time_based	0001_initial	2021-06-01 12:50:47.106998+02
+949	time_based	0002_auto_20201014_1242	2021-06-01 12:50:47.188606+02
+950	time_based	0003_auto_20201014_1242	2021-06-01 12:50:47.197791+02
+951	time_based	0004_auto_20201014_1444	2021-06-01 12:50:47.325026+02
+952	files	0007_auto_20201021_1315	2021-06-01 12:50:47.525301+02
+953	time_based	0005_application	2021-06-01 12:50:47.59688+02
+954	time_based	0006_auto_20201021_1315	2021-06-01 12:50:47.60816+02
+955	time_based	0007_auto_20201023_1433	2021-06-01 12:50:47.798818+02
+956	time_based	0008_auto_20201023_1443	2021-06-01 12:50:47.86546+02
+957	activities	0027_contributionvalue	2021-06-01 12:50:47.928563+02
+958	time_based	0009_auto_20201026_1435	2021-06-01 12:50:48.009042+02
+959	time_based	0010_auto_20201027_1652	2021-06-01 12:50:48.18934+02
+960	time_based	0011_auto_20201028_0926	2021-06-01 12:50:48.226488+02
+961	time_based	0012_auto_20201028_0928	2021-06-01 12:50:48.3403+02
+962	time_based	0013_auto_20201028_1117	2021-06-01 12:50:48.372345+02
+963	time_based	0014_auto_20201028_1544	2021-06-01 12:50:48.388663+02
+964	time_based	0015_auto_20201028_1546	2021-06-01 12:50:48.404863+02
+965	time_based	0016_auto_20201028_1550	2021-06-01 12:50:48.43063+02
+966	time_based	0017_auto_20201029_1228	2021-06-01 12:50:48.477053+02
+967	time_based	0018_auto_20201030_1029	2021-06-01 12:50:48.499973+02
+968	time_based	0019_auto_20201030_1317	2021-06-01 12:50:48.545122+02
+969	time_based	0020_auto_20201102_1230	2021-06-01 12:50:48.688129+02
+970	time_based	0021_auto_20201102_1357	2021-06-01 12:50:48.716684+02
+971	time_based	0022_auto_20201102_1559	2021-06-01 12:50:48.963165+02
+972	time_based	0023_auto_20201103_1510	2021-06-01 12:50:48.97147+02
+973	time_based	0024_auto_20201103_1524	2021-06-01 12:50:49.137783+02
+974	impact	0017_auto_20201110_1526	2021-06-01 12:50:49.163039+02
+975	cms	0064_auto_20201110_1526	2021-06-01 12:50:49.64691+02
+976	time_based	0025_auto_20201110_1526	2021-06-01 12:50:49.729733+02
+977	time_based	0026_auto_20201110_1558	2021-06-01 12:50:49.821103+02
+978	time_based	0027_auto_20201110_1613	2021-06-01 12:50:49.829141+02
+979	activities	0028_auto_20201112_1439	2021-06-01 12:50:49.899518+02
+980	time_based	0028_auto_20201112_1509	2021-06-01 12:50:50.012054+02
+981	time_based	0029_auto_20201112_1519	2021-06-01 12:50:50.255751+02
+982	time_based	0028_dateactivity_online_meeting_url	2021-06-01 12:50:50.279726+02
+983	time_based	0030_merge_20201113_1124	2021-06-01 12:50:50.281914+02
+984	files	0008_auto_20201117_1137	2021-06-01 12:50:50.327767+02
+985	activities	0029_auto_20201112_1519	2021-06-01 12:50:50.878353+02
+986	activities	0030_auto_20201117_1137	2021-06-01 12:50:50.954349+02
+987	time_based	0031_auto_20201117_1137	2021-06-01 12:50:50.993986+02
+988	time_based	0032_auto_20201117_1143	2021-06-01 12:50:51.031578+02
+989	time_based	0033_auto_20201117_1244	2021-06-01 12:50:51.123784+02
+990	activities	0031_auto_20201120_1303	2021-06-01 12:50:51.159126+02
+991	activities	0032_auto_20201120_1304	2021-06-01 12:50:51.210549+02
+992	time_based	0034_auto_20201120_1306	2021-06-01 12:50:51.388887+02
+993	time_based	0035_auto_20201120_1318	2021-06-01 12:50:51.434226+02
+994	events	0017_event_online_meeting_url	2021-06-01 12:50:51.459265+02
+995	events	0018_auto_20201013_1217	2021-06-01 12:50:51.483003+02
+996	events	0019_auto_20201112_1508	2021-06-01 12:50:51.536712+02
+997	events	0020_auto_20201112_1519	2021-06-01 12:50:51.595658+02
+998	assignments	0021_auto_20201012_1501	2021-06-01 12:50:51.740696+02
+999	assignments	0022_auto_20201013_1217	2021-06-01 12:50:51.773288+02
+1000	assignments	0023_auto_20201112_1449	2021-06-01 12:50:51.831901+02
+1001	assignments	0024_auto_20201112_1519	2021-06-01 12:50:52.057626+02
+1002	time_based	0036_auto_20201125_1258	2021-06-01 12:50:52.072851+02
+1003	time_based	0037_auto_20201126_1042	2021-06-01 12:50:52.082395+02
+1004	time_based	0038_timebasedactivity_preparation	2021-06-01 12:50:52.12033+02
+1005	time_based	0039_auto_20201130_1313	2021-06-01 12:50:52.178998+02
+1006	activities	0033_auto_20201123_1418	2021-06-01 12:50:52.286137+02
+1007	activities	0034_auto_20201130_1316	2021-06-01 12:50:52.33436+02
+1008	time_based	0040_auto_20201130_1330	2021-06-01 12:50:52.342863+02
+1009	activities	0035_auto_20201130_1337	2021-06-01 12:50:52.345141+02
+1010	time_based	0041_auto_20201130_1400	2021-06-01 12:50:52.374616+02
+1011	time_based	0042_merge_20201201_1259	2021-06-01 12:50:52.376377+02
+1012	time_based	0043_auto_20201217_0743	2021-06-01 12:50:52.563544+02
+1013	time_based	0044_auto_20201224_1120	2021-06-01 12:50:52.572394+02
+1014	funding	0055_auto_20201002_1321	2021-06-01 12:50:52.842261+02
+1015	funding	0056_auto_20201112_1509	2021-06-01 12:50:52.906315+02
+1016	funding	0057_auto_20201112_1519	2021-06-01 12:50:53.59968+02
+1017	funding	0058_auto_20201118_0954	2021-06-01 12:50:53.727012+02
+1018	funding	0059_auto_20201120_1306	2021-06-01 12:50:53.825212+02
+1019	funding	0060_auto_20201127_0922	2021-06-01 12:50:53.863978+02
+1020	activities	0036_auto_20201130_1355	2021-06-01 12:50:53.871481+02
+1021	activities	0037_auto_20201202_1124	2021-06-01 12:50:53.878799+02
+1022	activities	0038_auto_20210127_1358	2021-06-01 12:50:53.885398+02
+1023	activities	0039_auto_20210218_1111	2021-06-01 12:50:53.989584+02
+1024	deeds	0001_initial	2021-06-01 12:50:54.047446+02
+1025	deeds	0002_auto_20210218_1248	2021-06-01 12:50:54.076831+02
+1026	deeds	0003_auto_20210218_1248	2021-06-01 12:50:54.085023+02
+1027	deeds	0004_auto_20210218_1520	2021-06-01 12:50:54.13994+02
+1028	deeds	0005_auto_20210222_1101	2021-06-01 12:50:54.435552+02
+1029	deeds	0006_auto_20210222_1643	2021-06-01 12:50:54.45762+02
+1030	deeds	0007_auto_20210222_1644	2021-06-01 12:50:54.469739+02
+1031	activities	0040_auto_20210224_1508	2021-06-01 12:50:54.500301+02
+1032	activities	0041_auto_20210226_1059	2021-06-01 12:50:54.509104+02
+1033	activities	0042_effortcontribution_contribution_type	2021-06-01 12:50:54.527449+02
+1034	activities	0043_auto_20210420_0847	2021-06-01 12:50:54.535512+02
+1035	analytics	0007_auto_20201012_1642	2021-06-01 12:50:54.569556+02
+1036	assignments	0025_auto_20210301_1546	2021-06-01 12:50:54.878417+02
+1037	suggestions	0005_auto_20210302_1417	2021-06-01 12:50:55.43398+02
+1038	votes	0003_auto_20210302_1417	2021-06-01 12:50:55.770575+02
+1039	time_based	0044_auto_20201223_1240	2021-06-01 12:50:56.366665+02
+1040	time_based	0045_merge_20201224_1436	2021-06-01 12:50:56.368443+02
+1041	time_based	0046_auto_20210106_1507	2021-06-01 12:50:56.392523+02
+1042	time_based	0047_migrate_to_slots	2021-06-01 12:50:56.400836+02
+1043	time_based	0048_auto_20210111_1133	2021-06-01 12:50:56.869135+02
+1044	time_based	0049_auto_20210112_1210	2021-06-01 12:50:56.916655+02
+1045	time_based	0050_auto_20210112_1515	2021-06-01 12:50:57.180013+02
+1046	time_based	0051_auto_20210114_1055	2021-06-01 12:50:57.358566+02
+1047	time_based	0052_slot_permissions_20210114_1056	2021-06-01 12:50:57.366575+02
+1048	time_based	0053_auto_20210120_1716	2021-06-01 12:50:57.373914+02
+1049	time_based	0054_auto_20210129_0951	2021-06-01 12:50:57.985652+02
+1050	offices	0001_initial	2021-06-01 12:50:58.033676+02
+1051	geo	0018_auto_20201229_1038	2021-06-01 12:50:58.229561+02
+1052	geo	0019_auto_20201229_1051	2021-06-01 12:50:58.245335+02
+1053	geo	0020_auto_20210105_1041	2021-06-01 12:50:58.562178+02
+1054	geo	0021_auto_20210105_1050	2021-06-01 12:50:58.862112+02
+1055	geo	0022_auto_20210129_0951	2021-06-01 12:50:59.086762+02
+1056	time_based	0055_auto_20210129_0951	2021-06-01 12:50:59.284211+02
+1057	time_based	0056_auto_20210129_0951	2021-06-01 12:50:59.295338+02
+1058	time_based	0057_add_contribution_type_20210202_1131	2021-06-01 12:50:59.319913+02
+1059	time_based	0058_auto_20210224_1027	2021-06-01 12:50:59.331046+02
+1060	tasks	0043_auto_20210302_0827	2021-06-01 12:50:59.397385+02
+1061	time_based	0059_auto_20210302_0836	2021-06-01 12:50:59.420792+02
+1062	time_based	0060_auto_20210302_0905	2021-06-01 12:50:59.498095+02
+1063	tasks	0044_auto_20210302_0936	2021-06-01 12:50:59.499971+02
+1064	surveys	0035_auto_20210302_1020	2021-06-01 12:51:00.556484+02
+1065	members	0040_auto_20210302_0836	2021-06-01 12:51:00.64356+02
+1066	tasks	0045_auto_20210302_0940	2021-06-01 12:51:00.656504+02
+1067	donations	0012_auto_20210302_1417	2021-06-01 12:51:01.138935+02
+1068	rewards	0010_auto_20210302_1417	2021-06-01 12:51:01.247264+02
+1069	payments_logger	0002_auto_20210302_1417	2021-06-01 12:51:01.354991+02
+1070	payments	0007_auto_20210302_1417	2021-06-01 12:51:02.283682+02
+1071	payments_lipisha	0003_auto_20210302_1417	2021-06-01 12:51:02.595994+02
+1072	fundraisers	0008_auto_20210302_1417	2021-06-01 12:51:03.513328+02
+1073	projects	0095_auto_20210302_1417	2021-06-01 12:51:06.584517+02
+1074	initiatives	0025_auto_20201016_1342	2021-06-01 12:51:06.82078+02
+1075	initiatives	0026_auto_20201112_1519	2021-06-01 12:51:06.834474+02
+1076	initiatives	0027_auto_20201229_1302	2021-06-01 12:51:06.856658+02
+1077	initiatives	0028_auto_20210209_0939	2021-06-01 12:51:06.868288+02
+1078	initiatives	0029_auto_20210216_0916	2021-06-01 12:51:06.880494+02
+1079	bb_projects	0016_auto_20210302_1338	2021-06-01 12:51:06.921237+02
+1080	initiatives	0030_auto_20210302_1405	2021-06-01 12:51:07.273205+02
+1081	members	0041_auto_20210302_1416	2021-06-01 12:51:07.417547+02
+1082	bb_projects	0017_auto_20210302_1417	2021-06-01 12:51:07.441275+02
+1083	bb_projects	0018_auto_20210302_1417	2021-06-01 12:51:07.462759+02
+1084	clients	0003_auto_20201118_1535	2021-06-01 12:51:07.642608+02
+1085	events	0021_auto_20210301_1546	2021-06-01 12:51:08.055729+02
+1086	funding	0061_auto_20201202_1044	2021-06-01 12:51:08.064743+02
+1087	funding	0062_auto_20201222_1241	2021-06-01 12:51:08.072538+02
+1088	funding_stripe	0005_auto_20201118_0954	2021-06-01 12:51:08.463393+02
+1089	funding_telesom	0005_auto_20201207_1539	2021-06-01 12:51:08.604801+02
+1090	initiatives	0031_auto_20210302_1547	2021-06-01 12:51:08.613508+02
+1091	initiatives	0032_auto_20210303_0820	2021-06-01 12:51:09.152083+02
+1092	initiatives	0033_auto_20210303_0832	2021-06-01 12:51:09.165423+02
+1093	initiatives	0034_auto_20210324_1227	2021-06-01 12:51:09.185675+02
+1094	initiatives	0034_auto_20210315_1310	2021-06-01 12:51:09.492124+02
+1095	initiatives	0035_merge_20210420_1158	2021-06-01 12:51:09.49505+02
+1096	members	0042_auto_20210519_1619	2021-06-01 12:51:09.51067+02
+1097	notifications	0006_auto_20210423_1202	2021-06-01 12:51:09.625157+02
+1098	notifications	0007_auto_20210423_1203	2021-06-01 12:51:09.63388+02
+1099	notifications	0008_remove_notificationplatformsettings_match_options	2021-06-01 12:51:09.64508+02
+1100	notifications	0009_auto_20210423_1208	2021-06-01 12:51:09.656879+02
+1101	offices	0002_auto_20210203_1714	2021-06-01 12:51:09.664543+02
+1102	payments_voucher	0002_auto_20210302_1417	2021-06-01 12:51:10.054053+02
+1103	payments_vitepay	0002_auto_20210302_1417	2021-06-01 12:51:10.085932+02
+1104	payments_telesom	0002_auto_20210302_1417	2021-06-01 12:51:10.112962+02
+1105	payments_stripe	0004_auto_20210302_1417	2021-06-01 12:51:10.139066+02
+1106	payments_pledge	0002_auto_20210302_1417	2021-06-01 12:51:10.165932+02
+1107	payments_interswitch	0004_auto_20210302_1417	2021-06-01 12:51:10.210348+02
+1108	payments_flutterwave	0009_auto_20210302_1417	2021-06-01 12:51:10.264299+02
+1109	payments_external	0002_auto_20210302_1417	2021-06-01 12:51:10.290471+02
+1110	payments_docdata	0005_auto_20210302_1417	2021-06-01 12:51:10.351668+02
+1111	payments_beyonic	0002_auto_20210302_1417	2021-06-01 12:51:10.374134+02
+1112	payments	0008_auto_20210302_1417	2021-06-01 12:51:10.387416+02
+1113	statistics	0013_auto_20201207_1137	2021-06-01 12:51:10.394418+02
+1114	time_based	0061_auto_20210302_1553	2021-06-01 12:51:10.401133+02
+1115	time_based	0062_auto_20210303_0820	2021-06-01 12:51:10.773503+02
+1116	time_based	0063_auto_20210303_0836	2021-06-01 12:51:10.78657+02
+1117	time_based	0059_auto_20210302_1703	2021-06-01 12:51:10.7936+02
+1118	time_based	0064_merge_20210303_0918	2021-06-01 12:51:10.795112+02
+1119	time_based	0065_auto_20210331_1206	2021-06-01 12:51:10.895533+02
+1120	time_based	0066_auto_20210331_1207	2021-06-01 12:51:10.903956+02
+1121	wallposts	0021_auto_20201118_0954	2021-06-01 12:51:11.046751+02
+1122	admin	0003_logentry_add_action_flag_choices	2021-06-01 15:14:14.60638+02
+1123	auth	0009_alter_user_last_name_max_length	2021-06-01 15:14:14.622272+02
+1124	auth	0010_alter_group_name_max_length	2021-06-01 15:14:14.636624+02
+1125	auth	0011_update_proxy_permissions	2021-06-01 15:14:14.64443+02
+1126	authtoken	0003_tokenproxy	2021-06-01 15:14:14.651349+02
+1127	axes	0006_remove_accesslog_trusted	2021-06-01 15:14:14.660007+02
+1128	django_summernote	0002_update-help_text	2021-06-01 15:14:14.668935+02
+1129	funding_stripe	0006_auto_20210409_1731	2021-06-01 15:14:14.685895+02
+1130	offices	0003_auto_20210414_1507	2021-06-01 15:14:14.711685+02
+1131	geo	0023_auto_20210414_1507	2021-06-01 15:14:15.472266+02
+1132	geo	0024_auto_20210414_1508	2021-06-01 15:14:15.54143+02
+1133	geo	0025_auto_20210414_1508	2021-06-01 15:14:15.547549+02
+1134	geo	0026_auto_20210415_0854	2021-06-01 15:14:15.602457+02
+1135	initiatives	0035_auto_20210505_1425	2021-06-01 15:14:15.814927+02
+1136	initiatives	0036_auto_20210505_1521	2021-06-01 15:14:15.821759+02
+1137	initiatives	0037_merge_20210525_1459	2021-06-01 15:14:15.823388+02
+1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:15.908372+02
+1139	social_django	0010_uid_db_index	2021-06-01 15:14:15.951872+02
+1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:15.979256+02
 \.
 
 
@@ -17366,6 +15238,14 @@ COPY public.exchange_rate (id, currency, value, backend_id) FROM stdin;
 
 
 --
+-- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM stdin;
+\.
+
+
+--
 -- Data for Name: activities_activity; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -17385,7 +15265,23 @@ COPY test.activities_activity_segments (id, activity_id, segment_id) FROM stdin;
 -- Data for Name: activities_contribution; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contribution_date) FROM stdin;
+COPY test.activities_contribution (id, status, created, contributor_id, polymorphic_ctype_id, "end", start) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_contributor; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.activities_contributor (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contributor_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_effortcontribution; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.activities_effortcontribution (contribution_ptr_id, contribution_type) FROM stdin;
 \.
 
 
@@ -17393,7 +15289,7 @@ COPY test.activities_contribution (id, status, created, updated, activity_id, po
 -- Data for Name: activities_organizer; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.activities_organizer (contribution_ptr_id) FROM stdin;
+COPY test.activities_organizer (contributor_ptr_id) FROM stdin;
 \.
 
 
@@ -17401,24 +15297,8 @@ COPY test.activities_organizer (contribution_ptr_id) FROM stdin;
 -- Data for Name: analytics_analyticsplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base) FROM stdin;
-1	2020-10-12 14:25:16.740421+02	0	\N
-\.
-
-
---
--- Data for Name: assignments_applicant; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.assignments_applicant (contribution_ptr_id, motivation, time_spent, document_id) FROM stdin;
-\.
-
-
---
--- Data for Name: assignments_assignment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type, preparation, start_time, date) FROM stdin;
+COPY test.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type) FROM stdin;
+1	2020-10-12 14:25:16.740421+02	0	\N	corporate
 \.
 
 
@@ -17428,9 +15308,9 @@ COPY test.assignments_assignment (activity_ptr_id, registration_deadline, end_da
 
 COPY test.auth_group (id, name) FROM stdin;
 4	Financial
-3	Authenticated
 1	Staff
 2	Anonymous
+3	Authenticated
 \.
 
 
@@ -17808,6 +15688,150 @@ COPY test.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 389	1	447
 390	1	448
 391	2	952
+392	1	984
+393	1	985
+394	1	986
+395	1	1006
+396	1	1007
+397	1	1008
+398	1	995
+399	1	996
+400	1	997
+401	2	987
+402	2	1009
+403	2	998
+404	3	987
+405	3	992
+406	3	993
+407	3	994
+408	3	1009
+409	3	1014
+410	3	1015
+411	3	1016
+412	3	998
+413	3	1003
+414	3	1004
+415	3	1005
+416	1	1017
+417	1	1018
+418	1	1019
+419	2	1020
+420	3	1020
+421	3	1021
+422	3	1026
+423	3	1027
+424	1	1034
+425	1	1035
+426	1	1036
+427	1	1045
+428	1	1046
+429	1	1047
+430	2	1037
+431	2	1048
+432	3	1037
+433	3	1038
+434	3	1043
+435	3	1044
+436	3	1048
+437	3	1049
+438	3	1054
+439	3	1055
+440	1	1056
+441	1	1057
+442	1	1058
+443	1	1067
+444	1	1068
+445	1	1069
+446	2	1059
+447	2	1070
+448	3	1059
+449	3	1064
+450	3	1065
+451	3	1066
+452	3	1070
+453	3	1075
+454	3	1076
+455	3	1077
+456	1	1081
+457	1	1082
+458	1	1083
+459	1	1092
+460	1	1093
+461	1	1094
+462	2	1084
+463	2	1095
+464	3	1084
+465	3	1085
+466	3	1090
+467	3	1091
+468	3	1095
+469	3	1096
+470	3	1101
+471	3	1102
+472	1	1106
+473	1	1107
+474	1	1108
+475	1	1078
+476	1	1079
+477	1	1080
+478	1	1115
+479	1	1116
+480	1	1117
+481	1	1118
+482	1	1119
+483	1	1120
+484	2	1121
+485	3	1121
+486	3	1126
+487	3	1127
+488	3	1128
+489	1	1129
+490	1	1130
+491	1	1131
+492	2	1132
+493	3	1132
+494	3	1133
+495	3	1138
+496	3	1139
+497	1	1140
+498	1	1141
+499	1	1142
+500	1	1143
+501	1	1144
+502	1	1145
+503	1	1154
+504	1	1155
+505	1	1156
+506	2	1146
+507	2	1157
+508	3	1146
+509	3	1151
+510	3	1152
+511	3	1153
+512	3	1157
+513	3	1162
+514	3	1163
+515	3	1164
+516	1	1165
+517	1	1166
+518	1	1167
+519	1	1110
+520	1	1182
+521	1	1183
+522	1	1184
+523	2	1185
+524	3	1185
+525	1	1179
+526	1	1180
+527	1	1181
+528	1	1176
+529	1	1177
+530	1	1178
+531	1	1186
+532	1	1187
+533	1	1188
+534	2	1189
+535	3	1189
 \.
 
 
@@ -18538,6 +16562,7 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 720	Can add Platform Statistics	199	add_homepagestatisticscontent
 721	Can change Platform Statistics	199	change_homepagestatisticscontent
 722	Can delete Platform Statistics	199	delete_homepagestatisticscontent
+1249	Can view Deed	292	view_deed
 723	Can add contact message	200	add_contactmessage
 724	Can change contact message	200	change_contactmessage
 725	Can delete contact message	200	delete_contactmessage
@@ -18721,6 +16746,7 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 903	Can delete Payment Log	255	delete_paymentlogentry
 904	Can add pledge standard payment	256	add_pledgestandardpayment
 905	Can change pledge standard payment	256	change_pledgestandardpayment
+1250	Can view Participant	293	view_deedparticipant
 906	Can delete pledge standard payment	256	delete_pledgestandardpayment
 907	Can add stripe payment	257	add_stripepayment
 908	Can change stripe payment	257	change_stripepayment
@@ -18784,6 +16810,414 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 966	Can add vote	276	add_vote
 967	Can change vote	276	change_vote
 968	Can delete vote	276	delete_vote
+969	Can add answer	277	add_answer
+970	Can change answer	277	change_answer
+971	Can delete answer	277	delete_answer
+972	Can add response	278	add_response
+973	Can change response	278	change_response
+974	Can delete response	278	delete_response
+975	Can add aggregate answer	279	add_aggregateanswer
+976	Can change aggregate answer	279	change_aggregateanswer
+977	Can delete aggregate answer	279	delete_aggregateanswer
+978	Can add sub question	280	add_subquestion
+979	Can change sub question	280	change_subquestion
+980	Can delete sub question	280	delete_subquestion
+981	Can add time based activity	281	add_timebasedactivity
+982	Can change time based activity	281	change_timebasedactivity
+983	Can delete time based activity	281	delete_timebasedactivity
+984	Can add On a date activity	282	add_onadateactivity
+985	Can change On a date activity	282	change_onadateactivity
+986	Can delete On a date activity	282	delete_onadateactivity
+987	Can view on a date activities through the API	282	api_read_onadateactivity
+988	Can add on a date activities through the API	282	api_add_onadateactivity
+989	Can change on a date activities through the API	282	api_change_onadateactivity
+990	Can delete on a date activities through the API	282	api_delete_onadateactivity
+991	Can view own on a date activities through the API	282	api_read_own_onadateactivity
+992	Can add own on a date activities through the API	282	api_add_own_onadateactivity
+993	Can change own on a date activities through the API	282	api_change_own_onadateactivity
+994	Can delete own on a date activities through the API	282	api_delete_own_onadateactivity
+995	Can add Ongoing activity	283	add_ongoingactivity
+996	Can change Ongoing activity	283	change_ongoingactivity
+997	Can delete Ongoing activity	283	delete_ongoingactivity
+998	Can view ongoing activities through the API	283	api_read_ongoingactivity
+999	Can add ongoing activities through the API	283	api_add_ongoingactivity
+1000	Can change ongoing activities through the API	283	api_change_ongoingactivity
+1001	Can delete ongoing activities through the API	283	api_delete_ongoingactivity
+1002	Can view own ongoing activities through the API	283	api_read_own_ongoingactivity
+1003	Can add own ongoing activities through the API	283	api_add_own_ongoingactivity
+1004	Can change own ongoing activities through the API	283	api_change_own_ongoingactivity
+1005	Can delete own ongoing activities through the API	283	api_delete_own_ongoingactivity
+1006	Can add Activity with a deadline	284	add_withadeadlineactivity
+1007	Can change Activity with a deadline	284	change_withadeadlineactivity
+1008	Can delete Activity with a deadline	284	delete_withadeadlineactivity
+1009	Can view activities with a deadline through the API	284	api_read_withadeadlineactivity
+1010	Can add activities with a deadline through the API	284	api_add_withadeadlineactivity
+1011	Can change activities with a deadline through the API	284	api_change_withadeadlineactivity
+1012	Can delete activities with a deadline through the API	284	api_delete_withadeadlineactivity
+1013	Can view own activities with a deadline through the API	284	api_read_own_withadeadlineactivity
+1014	Can add own activities with a deadline through the API	284	api_add_own_withadeadlineactivity
+1015	Can change own activities with a deadline through the API	284	api_change_own_withadeadlineactivity
+1016	Can delete own activities with a deadline through the API	284	api_delete_own_withadeadlineactivity
+1017	Can add Application	285	add_application
+1018	Can change Application	285	change_application
+1019	Can delete Application	285	delete_application
+1020	Can view application through the API	285	api_read_application
+1021	Can add application through the API	285	api_add_application
+1022	Can change application through the API	285	api_change_application
+1023	Can delete application through the API	285	api_delete_application
+1024	Can view own application through the API	285	api_read_own_application
+1025	Can add own application through the API	285	api_add_own_application
+1026	Can change own application through the API	285	api_change_own_application
+1027	Can delete own application through the API	285	api_delete_own_application
+1028	Can add contribution value	286	add_contributionvalue
+1029	Can change contribution value	286	change_contributionvalue
+1030	Can delete contribution value	286	delete_contributionvalue
+1031	Can add duration	287	add_duration
+1032	Can change duration	287	change_duration
+1033	Can delete duration	287	delete_duration
+1034	Can add On a date application	288	add_onadateapplication
+1035	Can change On a date application	288	change_onadateapplication
+1036	Can delete On a date application	288	delete_onadateapplication
+1037	Can view application through the API	288	api_read_onadateapplication
+1038	Can add application through the API	288	api_add_onadateapplication
+1039	Can change application through the API	288	api_change_onadateapplication
+1040	Can delete application through the API	288	api_delete_onadateapplication
+1041	Can view own application through the API	288	api_read_own_onadateapplication
+1042	Can add own application through the API	288	api_add_own_onadateapplication
+1043	Can change own application through the API	288	api_change_own_onadateapplication
+1044	Can delete own application through the API	288	api_delete_own_onadateapplication
+1045	Can add Period application	289	add_periodapplication
+1046	Can change Period application	289	change_periodapplication
+1047	Can delete Period application	289	delete_periodapplication
+1048	Can view application through the API	289	api_read_periodapplication
+1049	Can add application through the API	289	api_add_periodapplication
+1050	Can change application through the API	289	api_change_periodapplication
+1051	Can delete application through the API	289	api_delete_periodapplication
+1052	Can view own application through the API	289	api_read_own_periodapplication
+1053	Can add own application through the API	289	api_add_own_periodapplication
+1054	Can change own application through the API	289	api_change_own_periodapplication
+1055	Can delete own application through the API	289	api_delete_own_periodapplication
+1056	Can add On a date activity	282	add_dateactivity
+1057	Can change On a date activity	282	change_dateactivity
+1058	Can delete On a date activity	282	delete_dateactivity
+1059	Can view on a date activities through the API	282	api_read_dateactivity
+1060	Can add on a date activities through the API	282	api_add_dateactivity
+1061	Can change on a date activities through the API	282	api_change_dateactivity
+1062	Can delete on a date activities through the API	282	api_delete_dateactivity
+1063	Can view own on a date activities through the API	282	api_read_own_dateactivity
+1064	Can add own on a date activities through the API	282	api_add_own_dateactivity
+1065	Can change own on a date activities through the API	282	api_change_own_dateactivity
+1066	Can delete own on a date activities through the API	282	api_delete_own_dateactivity
+1067	Can add During a period activity	284	add_periodactivity
+1068	Can change During a period activity	284	change_periodactivity
+1069	Can delete During a period activity	284	delete_periodactivity
+1070	Can view during a period activities through the API	284	api_read_periodactivity
+1071	Can add during a period activities through the API	284	api_add_periodactivity
+1072	Can change during a period activities through the API	284	api_change_periodactivity
+1073	Can delete during a period activities through the API	284	api_delete_periodactivity
+1251	Can view Funding	25	view_funding
+1074	Can view own during a period activities through the API	284	api_read_own_periodactivity
+1075	Can add own during a period activities through the API	284	api_add_own_periodactivity
+1076	Can change own during a period activities through the API	284	api_change_own_periodactivity
+1077	Can delete own during a period activities through the API	284	api_delete_own_periodactivity
+1078	Can add Contributor	2	add_contributor
+1079	Can change Contributor	2	change_contributor
+1080	Can delete Contributor	2	delete_contributor
+1081	Can add Participant on a date	288	add_dateparticipant
+1082	Can change Participant on a date	288	change_dateparticipant
+1083	Can delete Participant on a date	288	delete_dateparticipant
+1084	Can view application through the API	288	api_read_dateparticipant
+1085	Can add application through the API	288	api_add_dateparticipant
+1086	Can change application through the API	288	api_change_dateparticipant
+1087	Can delete application through the API	288	api_delete_dateparticipant
+1088	Can view own application through the API	288	api_read_own_dateparticipant
+1089	Can add own application through the API	288	api_add_own_dateparticipant
+1090	Can change own application through the API	288	api_change_own_dateparticipant
+1091	Can delete own application through the API	288	api_delete_own_dateparticipant
+1092	Can add Participant during a period	289	add_periodparticipant
+1093	Can change Participant during a period	289	change_periodparticipant
+1094	Can delete Participant during a period	289	delete_periodparticipant
+1095	Can view period participant through the API	289	api_read_periodparticipant
+1096	Can add period participant through the API	289	api_add_periodparticipant
+1097	Can change period participant through the API	289	api_change_periodparticipant
+1098	Can delete period participant through the API	289	api_delete_periodparticipant
+1099	Can view own period participant through the API	289	api_read_own_periodparticipant
+1100	Can add own participant through the API	289	api_add_own_periodparticipant
+1101	Can change own period participant through the API	289	api_change_own_periodparticipant
+1102	Can delete own period participant through the API	289	api_delete_own_periodparticipant
+1103	Can add contribution	286	add_contribution
+1104	Can change contribution	286	change_contribution
+1105	Can delete contribution	286	delete_contribution
+1106	Can add Contribution	290	add_organizercontribution
+1107	Can change Contribution	290	change_organizercontribution
+1108	Can delete Contribution	290	delete_organizercontribution
+1109	Can add Donor	24	add_donor
+1110	Can change Donor	24	change_donor
+1111	Can delete Donor	24	delete_donor
+1112	Can add Contribution	291	add_moneycontribution
+1113	Can change Contribution	291	change_moneycontribution
+1114	Can delete Contribution	291	delete_moneycontribution
+1115	Can add Time contribution	287	add_timecontribution
+1116	Can change Time contribution	287	change_timecontribution
+1117	Can delete Time contribution	287	delete_timecontribution
+1118	Can add Deed	292	add_deed
+1119	Can change Deed	292	change_deed
+1120	Can delete Deed	292	delete_deed
+1121	Can view deed through the API	292	api_read_deed
+1122	Can add deed through the API	292	api_add_deed
+1123	Can change deed through the API	292	api_change_deed
+1124	Can delete deed through the API	292	api_delete_deed
+1125	Can view own deed through the API	292	api_read_own_deed
+1126	Can add own deed through the API	292	api_add_own_deed
+1127	Can change own deed through the API	292	api_change_own_deed
+1128	Can delete own deed through the API	292	api_delete_own_deed
+1129	Can add Participant	293	add_deedparticipant
+1130	Can change Participant	293	change_deedparticipant
+1131	Can delete Participant	293	delete_deedparticipant
+1132	Can view deed through the API	293	api_read_deedparticipant
+1133	Can add deed through the API	293	api_add_deedparticipant
+1134	Can change deed through the API	293	api_change_deedparticipant
+1135	Can delete deed through the API	293	api_delete_deedparticipant
+1136	Can view own deed through the API	293	api_read_own_deedparticipant
+1137	Can add own deed through the API	293	api_add_own_deedparticipant
+1138	Can change own deed through the API	293	api_change_own_deedparticipant
+1139	Can delete own deed through the API	293	api_delete_own_deedparticipant
+1140	Can add Effort	290	add_effortcontribution
+1141	Can change Effort	290	change_effortcontribution
+1142	Can delete Effort	290	delete_effortcontribution
+1143	Can add slot	294	add_dateactivityslot
+1144	Can change slot	294	change_dateactivityslot
+1145	Can delete slot	294	delete_dateactivityslot
+1146	Can view on date activity slots through the API	294	api_read_dateactivityslot
+1147	Can add on a date activity slots through the API	294	api_add_dateactivityslot
+1148	Can change on a date activity slots through the API	294	api_change_dateactivityslot
+1149	Can delete on a date activity slots through the API	294	api_delete_dateactivityslot
+1150	Can view own on a date activity slots through the API	294	api_read_own_dateactivityslot
+1151	Can add own on a date activity slots through the API	294	api_add_own_dateactivityslot
+1152	Can change own on a date activity slots through the API	294	api_change_own_dateactivityslot
+1153	Can delete own on a date activity slots through the API	294	api_delete_own_dateactivityslot
+1154	Can add slot	295	add_periodactivityslot
+1155	Can change slot	295	change_periodactivityslot
+1156	Can delete slot	295	delete_periodactivityslot
+1157	Can view over a period activity slots through the API	295	api_read_periodactivityslot
+1158	Can add over a period activity slots through the API	295	api_add_periodactivityslot
+1159	Can change over a period activity slots through the API	295	api_change_periodactivityslot
+1160	Can delete over a period activity slots through the API	295	api_delete_periodactivityslot
+1161	Can view own over a period activity slots through the API	295	api_read_own_periodactivityslot
+1162	Can add own over a period activity slots through the API	295	api_add_own_periodactivityslot
+1163	Can change own over a period activity slots through the API	295	api_change_own_periodactivityslot
+1164	Can delete own over a period activity slots through the API	295	api_delete_own_periodactivityslot
+1165	Can add Slot participant	296	add_slotparticipant
+1166	Can change Slot participant	296	change_slotparticipant
+1167	Can delete Slot participant	296	delete_slotparticipant
+1168	Can view slot participant through the API	296	api_read_slotparticipant
+1169	Can add slot participant through the API	296	api_add_slotparticipant
+1170	Can change slot participant through the API	296	api_change_slotparticipant
+1171	Can delete slot participant through the API	296	api_delete_slotparticipant
+1172	Can view own slot participant through the API	296	api_read_own_slotparticipant
+1173	Can add own slot participant through the API	296	api_add_own_slotparticipant
+1174	Can change own slot participant through the API	296	api_change_own_slotparticipant
+1175	Can delete own slot participant through the API	296	api_delete_own_slotparticipant
+1176	Can add office region	297	add_officeregion
+1177	Can change office region	297	change_officeregion
+1178	Can delete office region	297	delete_officeregion
+1179	Can add office subregion	298	add_officesubregion
+1180	Can change office subregion	298	change_officesubregion
+1181	Can delete office subregion	298	delete_officesubregion
+1182	Can add Theme	299	add_theme
+1183	Can change Theme	299	change_theme
+1184	Can delete Theme	299	delete_theme
+1185	Can view theme through API	299	api_read_theme
+1186	Can add Skill	301	add_skill
+1187	Can change Skill	301	change_skill
+1188	Can delete Skill	301	delete_skill
+1189	Can view skills through the API	301	api_read_skill
+1190	Can view client	31	view_client
+1191	Can view session	266	view_session
+1192	Can view attachment	205	view_attachment
+1193	Can view exchange backend	214	view_exchangebackend
+1194	Can view rate	215	view_rate
+1195	Can view association	225	view_association
+1196	Can view code	226	view_code
+1197	Can view nonce	227	view_nonce
+1198	Can view user social auth	228	view_usersocialauth
+1199	Can view partial	268	view_partial
+1200	Can view content type	21	view_contenttype
+1201	Can view checked token	272	view_checkedtoken
+1202	Can view bookmark	221	view_bookmark
+1203	Can view pinned application	222	view_pinnedapplication
+1204	Can view user dashboard module	111	view_userdashboardmodule
+1205	Can view kv store	273	view_kvstore
+1206	Can view log entry	96	view_logentry
+1207	Can view site	62	view_site
+1208	Can view permission	3	view_permission
+1209	Can view group	4	view_group
+1210	Can view Token	36	view_token
+1211	Can add token	303	add_tokenproxy
+1212	Can change token	303	change_tokenproxy
+1213	Can delete token	303	delete_tokenproxy
+1214	Can view token	303	view_tokenproxy
+1215	Can view looker embed	223	view_lookerembed
+1216	Can view member	30	view_member
+1217	Can view custom member field	229	view_custommemberfield
+1218	Can view custom member field settings	230	view_custommemberfieldsettings
+1219	Can view member platform settings	231	view_memberplatformsettings
+1220	Can view User activity	232	view_useractivity
+1221	Can view project image	63	view_projectimage
+1222	Can view partner organization	44	view_organization
+1223	Can view Partner Organization Contact	66	view_organizationcontact
+1224	Can view impact goal	114	view_impactgoal
+1225	Can view impact type	115	view_impacttype
+1226	Can view document	22	view_document
+1227	Can view image	23	view_image
+1228	Can view related image	95	view_relatedimage
+1229	Can view private document	102	view_privatedocument
+1230	Can view follow	216	view_follow
+1231	Can view Activity	1	view_activity
+1232	Can view Contribution	2	view_contributor
+1233	Can view Contribution amount	286	view_contribution
+1234	Can view Effort	290	view_effortcontribution
+1235	Can view Activity owner	35	view_organizer
+1236	Can view Initiative	34	view_initiative
+1237	Can view initiative settings	149	view_initiativeplatformsettings
+1238	Can view theme	299	view_theme
+1239	Can view time based activity	281	view_timebasedactivity
+1240	Can view Activity on a date	282	view_dateactivity
+1241	Can view Activity during a period	284	view_periodactivity
+1242	Can view Participant on a date	288	view_dateparticipant
+1243	Can view Participant during a period	289	view_periodparticipant
+1244	Can view Time contribution	287	view_timecontribution
+1245	Can view slot	294	view_dateactivityslot
+1246	Can view slot	295	view_periodactivityslot
+1247	Can view Slot participant	296	view_slotparticipant
+1248	Can view Skill	301	view_skill
+1252	Can view payment	76	view_payment
+1253	Can view budget line	77	view_budgetline
+1254	Can view fundraiser	78	view_fundraiser
+1255	Can view Gift	79	view_reward
+1256	Can view payment provider	80	view_paymentprovider
+1257	Can view payout account	81	view_payoutaccount
+1258	Can view legacy payment	84	view_legacypayment
+1259	Can view bank account	85	view_bankaccount
+1260	Can view Plain KYC account	86	view_plainpayoutaccount
+1261	Can view Payment currency	87	view_paymentcurrency
+1262	Can view payout	88	view_payout
+1263	Can view funding settings	89	view_fundingplatformsettings
+1264	Can view Donor	24	view_donor
+1265	Can view Contribution	291	view_moneycontribution
+1266	Can view pledge payment	143	view_pledgepayment
+1267	Can view Pledge payment provider	144	view_pledgepaymentprovider
+1268	Can view Pledge bank account	140	view_pledgebankaccount
+1269	Can view Stripe external account	135	view_externalaccount
+1270	Can view payment intent	145	view_paymentintent
+1271	Can view stripe payment	146	view_stripepayment
+1272	Can view Stripe payment provider	134	view_stripepaymentprovider
+1273	Can view stripe payout account	136	view_stripepayoutaccount
+1274	Can view stripe source payment	147	view_stripesourcepayment
+1275	Can view vitepay payment	148	view_vitepaypayment
+1276	Can view Vitepay payment provider	131	view_vitepaypaymentprovider
+1277	Can view vitepay bank account	139	view_vitepaybankaccount
+1278	Can view flutterwave payment	141	view_flutterwavepayment
+1279	Can view Flutterwave payment provider	132	view_flutterwavepaymentprovider
+1280	Can view Flutterwave bank account	137	view_flutterwavebankaccount
+1281	Can view lipisha payment	142	view_lipishapayment
+1282	Can view Lipisha payment provider	133	view_lipishapaymentprovider
+1283	Can view Lipisha bank account	138	view_lipishabankaccount
+1284	Can view Telesom bank account	217	view_telesombankaccount
+1285	Can view telesom payment	218	view_telesompayment
+1286	Can view Telesom payment provider	219	view_telesompaymentprovider
+1287	Can view segment	106	view_segment
+1288	Can view segment type	107	view_segmenttype
+1289	Can view payout account	73	view_payoutaccount
+1290	Can view bank details	72	view_plainpayoutaccount
+1291	Can view stripe payout account	74	view_stripepayoutaccount
+1292	Can view payout document	75	view_payoutdocument
+1293	Can view flutterwave payout account	262	view_flutterwavepayoutaccount
+1294	Can view media wallpost photo	125	view_mediawallpostphoto
+1295	Can view Reaction	126	view_reaction
+1296	Can view wallpost	127	view_wallpost
+1297	Can view media wallpost	128	view_mediawallpost
+1298	Can view system wallpost	129	view_systemwallpost
+1299	Can view text wallpost	130	view_textwallpost
+1300	Can view language	60	view_language
+1301	Can view mail log	151	view_maillog
+1302	Can view translation settings	274	view_translationplatformsettings
+1303	Can view reporting platform settings	97	view_analyticsplatformsettings
+1304	Can view category	19	view_category
+1305	Can view content block	20	view_categorycontent
+1306	Can view Picture	201	view_pictureitem
+1307	Can view country	26	view_country
+1308	Can view office	27	view_location
+1309	Can view region	28	view_region
+1310	Can view sub region	29	view_subregion
+1311	Can view location group	37	view_locationgroup
+1312	Can view place	41	view_place
+1313	Can view geolocation	43	view_geolocation
+1314	Can view office region	297	view_officeregion
+1315	Can view office group	298	view_officesubregion
+1316	Can view page	150	view_page
+1317	Can view Picture + Text	153	view_imagetextitem
+1318	Can view Document	154	view_documentitem
+1319	Can view Call to action	241	view_actionitem
+1320	Can view Text in columns	242	view_columnsitem
+1321	Can view Text + Round Image	243	view_imagetextrounditem
+1322	Can view mail platform settings	224	view_mailplatformsettings
+1323	Can view message	233	view_message
+1324	Can view notification settings	234	view_notificationplatformsettings
+1325	Can view message template	235	view_messagetemplate
+1326	Can view news item	152	view_newsitem
+1327	Can view slide	267	view_slide
+1328	Can view quote	263	view_quote
+1329	Can view redirect	264	view_redirect
+1330	Can view statistic	117	view_statistic
+1331	Can view base statistic	118	view_basestatistic
+1332	Can view database statistic	122	view_databasestatistic
+1333	Can view impact statistic	123	view_impactstatistic
+1334	Can view manual statistic	124	view_manualstatistic
+1335	Can view Term	270	view_terms
+1336	Can view Term agreements	271	view_termsagreement
+1337	Can view scim platform settings	265	view_scimplatformsettings
+1338	Can view user address	100	view_useraddress
+1339	Can view follow	108	view_follow
+1340	Can view order	104	view_order
+1341	Can view Contentitem link	112	view_contentitem
+1342	Can view Placeholder	113	view_placeholder
+1343	Can view Text	204	view_textitem
+1344	Can view Online media	202	view_oembeditem
+1345	Can view HTML code	203	view_rawhtmlitem
+1346	Can view tag	52	view_tag
+1347	Can view tagged item	53	view_taggeditem
+1348	Can view Projects	157	view_projectscontent
+1349	Can view quote	163	view_quote
+1350	Can view Quotes	165	view_quotescontent
+1351	Can view result page	155	view_resultpage
+1352	Can view stat	166	view_stat
+1353	Can view Platform Statistics	156	view_statscontent
+1354	Can view Share Results	159	view_shareresultscontent
+1355	Can view Projects Map	160	view_projectsmapcontent
+1356	Can view Supporter total	161	view_supportertotalcontent
+1357	Can view home page	178	view_homepage
+1358	Can view Categories	180	view_categoriescontent
+1359	Can view Locations	181	view_locationscontent
+1360	Can view slide	182	view_slide
+1361	Can view Slides	183	view_slidescontent
+1362	Can view step	184	view_step
+1363	Can view Steps	185	view_stepscontent
+1364	Can view logo	186	view_logo
+1365	Can view Logos	187	view_logoscontent
+1366	Can view content link	188	view_contentlink
+1367	Can view Links	189	view_linkscontent
+1368	Can view link	190	view_link
+1369	Can view link group	191	view_linkgroup
+1370	Can view link permission	192	view_linkpermission
+1371	Can view site links	193	view_sitelinks
+1372	Can view site platform settings	194	view_siteplatformsettings
+1373	Can view greeting	195	view_greeting
+1374	Can view Welcome	196	view_welcomecontent
+1375	Can view Activities	197	view_activitiescontent
+1376	Can view Statistics	199	view_homepagestatisticscontent
+1377	Can view access attempt	98	view_accessattempt
+1378	Can view access log	99	view_accesslog
 \.
 
 
@@ -18808,7 +17242,7 @@ COPY test.axes_accessattempt (id, user_agent, ip_address, username, http_accept,
 -- Data for Name: axes_accesslog; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.axes_accesslog (id, user_agent, ip_address, username, trusted, http_accept, path_info, attempt_time, logout_time) FROM stdin;
+COPY test.axes_accesslog (id, user_agent, ip_address, username, http_accept, path_info, attempt_time, logout_time) FROM stdin;
 \.
 
 
@@ -18817,89 +17251,6 @@ COPY test.axes_accesslog (id, user_agent, ip_address, username, trusted, http_ac
 --
 
 COPY test.bb_follow_follow (id, object_id, content_type_id, user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projectphase; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.bb_projects_projectphase (id, slug, sequence, active, editable, viewable, owner_editable) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projectphase_translation; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.bb_projects_projectphase_translation (id, language_code, name, description, master_id) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projecttheme; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.bb_projects_projecttheme (id, slug, disabled) FROM stdin;
-1	agriculture	f
-2	animal-welfare	f
-3	arts-culture	f
-5	climate	f
-6	community-building	f
-7	education	f
-8	emergency-relief	f
-9	food	f
-10	health	f
-11	human-rights	f
-12	ict	f
-13	media-journalism	f
-14	social-entrepreneurship	f
-15	sport	f
-16	tourism	f
-17	water	f
-18	mobility	f
-\.
-
-
---
--- Data for Name: bb_projects_projecttheme_translation; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.bb_projects_projecttheme_translation (id, language_code, name, description, master_id) FROM stdin;
-0	nl	Natuur & Milieu		1
-1	en	Agriculture		1
-2	nl	Dierenwelzijn		2
-3	en	Animal welfare		2
-4	nl	Kunst & Cultuur		3
-5	en	Arts & Culture		3
-6	nl	Klimaat		5
-7	en	Climate		5
-8	nl	Leefbaarheid		6
-9	en	Community building		6
-10	nl	Onderwijs		7
-11	en	Education		7
-12	nl	Noodhulp		8
-13	en	Emergency relief		8
-14	nl	Voedsel		9
-15	en	Food		9
-16	nl	Gezondheid & Zorg		10
-17	en	Health		10
-18	nl	Mensenrechten		11
-19	en	Human rights		11
-20	nl	ICT		12
-21	en	ICT		12
-22	nl	Media & Journalistiek		13
-23	en	Media & Journalism		13
-24	nl	Sociaal Ondernemerschap		14
-25	en	Social entrepreneurship		14
-26	nl	Sport & Recreatie		15
-27	en	Sport		15
-28	nl	Toerisme		16
-29	en	Tourism		16
-30	nl	Water		17
-31	en	Water		17
-32	nl	Mobiliteit		18
-33	en	Mobility		18
 \.
 
 
@@ -19032,14 +17383,6 @@ COPY test.cms_locationscontent_locations (id, locationscontent_id, location_id) 
 --
 
 COPY test.cms_logo (id, image, block_id, link, sequence) FROM stdin;
-\.
-
-
---
--- Data for Name: cms_projectscontent_projects; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.cms_projectscontent_projects (id, projectscontent_id, project_id) FROM stdin;
 \.
 
 
@@ -19184,16 +17527,6 @@ COPY test.contentitem_cms_locationscontent (contentitem_ptr_id, title, sub_title
 --
 
 COPY test.contentitem_cms_logoscontent (contentitem_ptr_id, title, sub_title, action_text, action_link) FROM stdin;
-\.
-
-
---
--- Data for Name: contentitem_cms_projectimagescontent; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.contentitem_cms_projectimagescontent (contentitem_ptr_id, title, sub_title, description, action_text, action_link) FROM stdin;
-5	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
-6	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
 \.
 
 
@@ -19358,6 +17691,22 @@ COPY test.dashboard_userdashboardmodule (id, title, module, app_label, "user", "
 
 
 --
+-- Data for Name: deeds_deed; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.deeds_deed (activity_ptr_id, start, "end") FROM stdin;
+\.
+
+
+--
+-- Data for Name: deeds_deedparticipant; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.deeds_deedparticipant (contributor_ptr_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: django_admin_log; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -19371,7 +17720,6 @@ COPY test.django_admin_log (id, action_time, object_id, object_repr, action_flag
 
 COPY test.django_content_type (id, app_label, model) FROM stdin;
 1	activities	activity
-2	activities	contribution
 3	auth	permission
 4	auth	group
 5	bb_projects	projectphase
@@ -19393,7 +17741,6 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 21	contenttypes	contenttype
 22	files	document
 23	files	image
-24	funding	donation
 25	funding	funding
 26	geo	country
 27	geo	location
@@ -19507,6 +17854,7 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 135	funding_stripe	externalaccount
 136	funding_stripe	stripepayoutaccount
 137	funding_flutterwave	flutterwavebankaccount
+24	funding	donor
 138	funding_lipisha	lipishabankaccount
 139	funding_vitepay	vitepaybankaccount
 140	funding_pledge	pledgebankaccount
@@ -19646,6 +17994,34 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 274	utils	translationplatformsettings
 275	utils	translationplatformsettingstranslation
 276	votes	vote
+277	surveys	answer
+278	surveys	response
+279	surveys	aggregateanswer
+280	surveys	subquestion
+281	time_based	timebasedactivity
+283	time_based	ongoingactivity
+285	time_based	application
+282	time_based	dateactivity
+284	time_based	periodactivity
+2	activities	contributor
+288	time_based	dateparticipant
+289	time_based	periodparticipant
+286	activities	contribution
+287	time_based	timecontribution
+291	funding	moneycontribution
+292	deeds	deed
+293	deeds	deedparticipant
+290	activities	effortcontribution
+294	time_based	dateactivityslot
+295	time_based	periodactivityslot
+296	time_based	slotparticipant
+297	offices	officeregion
+298	offices	officesubregion
+299	initiatives	theme
+300	initiatives	themetranslation
+301	time_based	skill
+302	time_based	skilltranslation
+303	authtoken	tokenproxy
 \.
 
 
@@ -20599,6 +18975,201 @@ COPY test.django_migrations (id, app, name, applied) FROM stdin;
 943	social_django	0005_auto_20160727_2333	2020-10-12 14:27:03.838767+02
 944	social_django	0003_alter_email_max_length	2020-10-12 14:27:03.840512+02
 945	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-10-12 14:27:03.842379+02
+946	geo	0017_auto_20201014_1155	2021-06-01 12:52:00.471763+02
+947	activities	0026_auto_20201021_1420	2021-06-01 12:52:00.794885+02
+948	time_based	0001_initial	2021-06-01 12:52:01.241964+02
+949	time_based	0002_auto_20201014_1242	2021-06-01 12:52:01.310175+02
+950	time_based	0003_auto_20201014_1242	2021-06-01 12:52:02.169968+02
+951	time_based	0004_auto_20201014_1444	2021-06-01 12:52:02.275849+02
+952	files	0007_auto_20201021_1315	2021-06-01 12:52:02.330124+02
+953	time_based	0005_application	2021-06-01 12:52:02.396582+02
+954	time_based	0006_auto_20201021_1315	2021-06-01 12:52:03.063788+02
+955	time_based	0007_auto_20201023_1433	2021-06-01 12:52:03.341436+02
+956	time_based	0008_auto_20201023_1443	2021-06-01 12:52:03.407547+02
+957	activities	0027_contributionvalue	2021-06-01 12:52:03.471541+02
+958	time_based	0009_auto_20201026_1435	2021-06-01 12:52:03.568452+02
+959	time_based	0010_auto_20201027_1652	2021-06-01 12:52:03.630953+02
+960	time_based	0011_auto_20201028_0926	2021-06-01 12:52:03.664024+02
+961	time_based	0012_auto_20201028_0928	2021-06-01 12:52:03.918018+02
+962	time_based	0013_auto_20201028_1117	2021-06-01 12:52:03.953202+02
+963	time_based	0014_auto_20201028_1544	2021-06-01 12:52:03.97122+02
+964	time_based	0015_auto_20201028_1546	2021-06-01 12:52:04.169787+02
+965	time_based	0016_auto_20201028_1550	2021-06-01 12:52:04.198734+02
+966	time_based	0017_auto_20201029_1228	2021-06-01 12:52:04.261392+02
+967	time_based	0018_auto_20201030_1029	2021-06-01 12:52:04.293907+02
+968	time_based	0019_auto_20201030_1317	2021-06-01 12:52:04.35188+02
+969	time_based	0020_auto_20201102_1230	2021-06-01 12:52:04.503313+02
+970	time_based	0021_auto_20201102_1357	2021-06-01 12:52:04.686553+02
+971	time_based	0022_auto_20201102_1559	2021-06-01 12:52:04.865651+02
+972	time_based	0023_auto_20201103_1510	2021-06-01 12:52:05.565649+02
+973	time_based	0024_auto_20201103_1524	2021-06-01 12:52:05.742667+02
+974	impact	0017_auto_20201110_1526	2021-06-01 12:52:05.902649+02
+975	cms	0064_auto_20201110_1526	2021-06-01 12:52:06.289874+02
+976	time_based	0025_auto_20201110_1526	2021-06-01 12:52:06.398205+02
+977	time_based	0026_auto_20201110_1558	2021-06-01 12:52:07.030336+02
+978	time_based	0027_auto_20201110_1613	2021-06-01 12:52:07.871305+02
+979	activities	0028_auto_20201112_1439	2021-06-01 12:52:08.111475+02
+980	time_based	0028_auto_20201112_1509	2021-06-01 12:52:08.237623+02
+981	time_based	0029_auto_20201112_1519	2021-06-01 12:52:08.52086+02
+982	time_based	0028_dateactivity_online_meeting_url	2021-06-01 12:52:08.55528+02
+983	time_based	0030_merge_20201113_1124	2021-06-01 12:52:08.557153+02
+984	files	0008_auto_20201117_1137	2021-06-01 12:52:08.612086+02
+985	activities	0029_auto_20201112_1519	2021-06-01 12:52:09.244599+02
+986	activities	0030_auto_20201117_1137	2021-06-01 12:52:09.328895+02
+987	time_based	0031_auto_20201117_1137	2021-06-01 12:52:09.86136+02
+988	time_based	0032_auto_20201117_1143	2021-06-01 12:52:09.905446+02
+989	time_based	0033_auto_20201117_1244	2021-06-01 12:52:10.678845+02
+990	activities	0031_auto_20201120_1303	2021-06-01 12:52:11.046291+02
+991	activities	0032_auto_20201120_1304	2021-06-01 12:52:11.113899+02
+992	time_based	0034_auto_20201120_1306	2021-06-01 12:52:11.174527+02
+993	time_based	0035_auto_20201120_1318	2021-06-01 12:52:11.388193+02
+994	events	0017_event_online_meeting_url	2021-06-01 12:52:11.420703+02
+995	events	0018_auto_20201013_1217	2021-06-01 12:52:11.449527+02
+996	events	0019_auto_20201112_1508	2021-06-01 12:52:11.514074+02
+997	events	0020_auto_20201112_1519	2021-06-01 12:52:11.744215+02
+998	assignments	0021_auto_20201012_1501	2021-06-01 12:52:11.923165+02
+999	assignments	0022_auto_20201013_1217	2021-06-01 12:52:11.955979+02
+1000	assignments	0023_auto_20201112_1449	2021-06-01 12:52:12.022705+02
+1001	assignments	0024_auto_20201112_1519	2021-06-01 12:52:12.088448+02
+1002	time_based	0036_auto_20201125_1258	2021-06-01 12:52:12.571428+02
+1003	time_based	0037_auto_20201126_1042	2021-06-01 12:52:12.742313+02
+1004	time_based	0038_timebasedactivity_preparation	2021-06-01 12:52:12.773728+02
+1005	time_based	0039_auto_20201130_1313	2021-06-01 12:52:12.832834+02
+1006	activities	0033_auto_20201123_1418	2021-06-01 12:52:13.099872+02
+1007	activities	0034_auto_20201130_1316	2021-06-01 12:52:13.15601+02
+1008	time_based	0040_auto_20201130_1330	2021-06-01 12:52:13.322666+02
+1009	activities	0035_auto_20201130_1337	2021-06-01 12:52:13.324731+02
+1010	time_based	0041_auto_20201130_1400	2021-06-01 12:52:13.353505+02
+1011	time_based	0042_merge_20201201_1259	2021-06-01 12:52:13.355416+02
+1012	time_based	0043_auto_20201217_0743	2021-06-01 12:52:13.559578+02
+1013	time_based	0044_auto_20201224_1120	2021-06-01 12:52:13.878948+02
+1014	funding	0055_auto_20201002_1321	2021-06-01 12:52:14.150396+02
+1015	funding	0056_auto_20201112_1509	2021-06-01 12:52:14.21334+02
+1016	funding	0057_auto_20201112_1519	2021-06-01 12:52:14.925779+02
+1017	funding	0058_auto_20201118_0954	2021-06-01 12:52:15.434592+02
+1018	funding	0059_auto_20201120_1306	2021-06-01 12:52:15.533369+02
+1019	funding	0060_auto_20201127_0922	2021-06-01 12:52:15.576944+02
+1020	activities	0036_auto_20201130_1355	2021-06-01 12:52:15.748052+02
+1021	activities	0037_auto_20201202_1124	2021-06-01 12:52:15.922728+02
+1022	activities	0038_auto_20210127_1358	2021-06-01 12:52:17.201548+02
+1023	activities	0039_auto_20210218_1111	2021-06-01 12:52:17.328525+02
+1024	deeds	0001_initial	2021-06-01 12:52:17.394421+02
+1025	deeds	0002_auto_20210218_1248	2021-06-01 12:52:17.42533+02
+1026	deeds	0003_auto_20210218_1248	2021-06-01 12:52:18.124849+02
+1027	deeds	0004_auto_20210218_1520	2021-06-01 12:52:18.181487+02
+1028	deeds	0005_auto_20210222_1101	2021-06-01 12:52:18.497383+02
+1029	deeds	0006_auto_20210222_1643	2021-06-01 12:52:18.519228+02
+1030	deeds	0007_auto_20210222_1644	2021-06-01 12:52:19.199369+02
+1031	activities	0040_auto_20210224_1508	2021-06-01 12:52:19.429661+02
+1032	activities	0041_auto_20210226_1059	2021-06-01 12:52:20.347129+02
+1033	activities	0042_effortcontribution_contribution_type	2021-06-01 12:52:20.364642+02
+1034	activities	0043_auto_20210420_0847	2021-06-01 12:52:20.551611+02
+1035	analytics	0007_auto_20201012_1642	2021-06-01 12:52:20.592751+02
+1036	assignments	0025_auto_20210301_1546	2021-06-01 12:52:20.942163+02
+1037	suggestions	0005_auto_20210302_1417	2021-06-01 12:52:21.509339+02
+1038	votes	0003_auto_20210302_1417	2021-06-01 12:52:21.884035+02
+1039	time_based	0044_auto_20201223_1240	2021-06-01 12:52:22.608925+02
+1040	time_based	0045_merge_20201224_1436	2021-06-01 12:52:22.611305+02
+1041	time_based	0046_auto_20210106_1507	2021-06-01 12:52:22.642287+02
+1042	time_based	0047_migrate_to_slots	2021-06-01 12:52:22.812265+02
+1043	time_based	0048_auto_20210111_1133	2021-06-01 12:52:23.29805+02
+1044	time_based	0049_auto_20210112_1210	2021-06-01 12:52:23.341813+02
+1045	time_based	0050_auto_20210112_1515	2021-06-01 12:52:23.628656+02
+1046	time_based	0051_auto_20210114_1055	2021-06-01 12:52:24.032987+02
+1047	time_based	0052_slot_permissions_20210114_1056	2021-06-01 12:52:24.721871+02
+1048	time_based	0053_auto_20210120_1716	2021-06-01 12:52:24.891965+02
+1049	time_based	0054_auto_20210129_0951	2021-06-01 12:52:25.521749+02
+1050	offices	0001_initial	2021-06-01 12:52:25.554987+02
+1051	geo	0018_auto_20201229_1038	2021-06-01 12:52:25.704889+02
+1052	geo	0019_auto_20201229_1051	2021-06-01 12:52:25.885688+02
+1053	geo	0020_auto_20210105_1041	2021-06-01 12:52:26.140396+02
+1054	geo	0021_auto_20210105_1050	2021-06-01 12:52:26.198268+02
+1055	geo	0022_auto_20210129_0951	2021-06-01 12:52:26.594033+02
+1056	time_based	0055_auto_20210129_0951	2021-06-01 12:52:26.711502+02
+1057	time_based	0056_auto_20210129_0951	2021-06-01 12:52:26.89816+02
+1058	time_based	0057_add_contribution_type_20210202_1131	2021-06-01 12:52:26.917403+02
+1059	time_based	0058_auto_20210224_1027	2021-06-01 12:52:27.580063+02
+1060	tasks	0043_auto_20210302_0827	2021-06-01 12:52:27.62075+02
+1061	time_based	0059_auto_20210302_0836	2021-06-01 12:52:27.632484+02
+1062	time_based	0060_auto_20210302_0905	2021-06-01 12:52:27.693994+02
+1063	tasks	0044_auto_20210302_0936	2021-06-01 12:52:27.696348+02
+1064	surveys	0035_auto_20210302_1020	2021-06-01 12:52:28.52269+02
+1065	members	0040_auto_20210302_0836	2021-06-01 12:52:28.613288+02
+1066	tasks	0045_auto_20210302_0940	2021-06-01 12:52:28.625166+02
+1067	donations	0012_auto_20210302_1417	2021-06-01 12:52:29.195283+02
+1068	rewards	0010_auto_20210302_1417	2021-06-01 12:52:29.281614+02
+1069	payments_logger	0002_auto_20210302_1417	2021-06-01 12:52:29.365133+02
+1070	payments	0007_auto_20210302_1417	2021-06-01 12:52:29.873989+02
+1071	payments_lipisha	0003_auto_20210302_1417	2021-06-01 12:52:30.416759+02
+1072	fundraisers	0008_auto_20210302_1417	2021-06-01 12:52:30.876817+02
+1073	projects	0095_auto_20210302_1417	2021-06-01 12:52:33.986327+02
+1074	initiatives	0025_auto_20201016_1342	2021-06-01 12:52:34.19099+02
+1075	initiatives	0026_auto_20201112_1519	2021-06-01 12:52:34.203597+02
+1076	initiatives	0027_auto_20201229_1302	2021-06-01 12:52:34.442779+02
+1077	initiatives	0028_auto_20210209_0939	2021-06-01 12:52:34.459426+02
+1078	initiatives	0029_auto_20210216_0916	2021-06-01 12:52:34.474757+02
+1079	bb_projects	0016_auto_20210302_1338	2021-06-01 12:52:34.519791+02
+1080	initiatives	0030_auto_20210302_1405	2021-06-01 12:52:34.650133+02
+1081	members	0041_auto_20210302_1416	2021-06-01 12:52:34.777422+02
+1082	bb_projects	0017_auto_20210302_1417	2021-06-01 12:52:34.812259+02
+1083	bb_projects	0018_auto_20210302_1417	2021-06-01 12:52:34.83587+02
+1084	clients	0003_auto_20201118_1535	2021-06-01 12:52:34.843964+02
+1085	events	0021_auto_20210301_1546	2021-06-01 12:52:35.213417+02
+1086	funding	0061_auto_20201202_1044	2021-06-01 12:52:35.591142+02
+1087	funding	0062_auto_20201222_1241	2021-06-01 12:52:36.218385+02
+1088	funding_stripe	0005_auto_20201118_0954	2021-06-01 12:52:36.346379+02
+1089	funding_telesom	0005_auto_20201207_1539	2021-06-01 12:52:36.489573+02
+1090	initiatives	0031_auto_20210302_1547	2021-06-01 12:52:37.13412+02
+1091	initiatives	0032_auto_20210303_0820	2021-06-01 12:52:37.869944+02
+1092	initiatives	0033_auto_20210303_0832	2021-06-01 12:52:37.884842+02
+1093	initiatives	0034_auto_20210324_1227	2021-06-01 12:52:37.911285+02
+1094	initiatives	0034_auto_20210315_1310	2021-06-01 12:52:37.99439+02
+1095	initiatives	0035_merge_20210420_1158	2021-06-01 12:52:37.996442+02
+1096	members	0042_auto_20210519_1619	2021-06-01 12:52:38.012071+02
+1097	notifications	0006_auto_20210423_1202	2021-06-01 12:52:38.127868+02
+1098	notifications	0007_auto_20210423_1203	2021-06-01 12:52:38.282347+02
+1099	notifications	0008_remove_notificationplatformsettings_match_options	2021-06-01 12:52:38.29663+02
+1100	notifications	0009_auto_20210423_1208	2021-06-01 12:52:38.309992+02
+1101	offices	0002_auto_20210203_1714	2021-06-01 12:52:39.197111+02
+1102	payments_voucher	0002_auto_20210302_1417	2021-06-01 12:52:39.584245+02
+1103	payments_vitepay	0002_auto_20210302_1417	2021-06-01 12:52:39.624268+02
+1104	payments_telesom	0002_auto_20210302_1417	2021-06-01 12:52:39.664403+02
+1105	payments_stripe	0004_auto_20210302_1417	2021-06-01 12:52:39.703212+02
+1106	payments_pledge	0002_auto_20210302_1417	2021-06-01 12:52:39.739213+02
+1107	payments_interswitch	0004_auto_20210302_1417	2021-06-01 12:52:39.805611+02
+1108	payments_flutterwave	0009_auto_20210302_1417	2021-06-01 12:52:39.879283+02
+1109	payments_external	0002_auto_20210302_1417	2021-06-01 12:52:39.912363+02
+1110	payments_docdata	0005_auto_20210302_1417	2021-06-01 12:52:39.997604+02
+1111	payments_beyonic	0002_auto_20210302_1417	2021-06-01 12:52:40.029668+02
+1112	payments	0008_auto_20210302_1417	2021-06-01 12:52:40.052108+02
+1113	statistics	0013_auto_20201207_1137	2021-06-01 12:52:40.435902+02
+1114	time_based	0061_auto_20210302_1553	2021-06-01 12:52:41.021879+02
+1115	time_based	0062_auto_20210303_0820	2021-06-01 12:52:41.185335+02
+1116	time_based	0063_auto_20210303_0836	2021-06-01 12:52:41.204144+02
+1117	time_based	0059_auto_20210302_1703	2021-06-01 12:52:41.342231+02
+1118	time_based	0064_merge_20210303_0918	2021-06-01 12:52:41.344026+02
+1119	time_based	0065_auto_20210331_1206	2021-06-01 12:52:41.446372+02
+1120	time_based	0066_auto_20210331_1207	2021-06-01 12:52:41.832259+02
+1121	wallposts	0021_auto_20201118_0954	2021-06-01 12:52:41.939869+02
+1122	admin	0003_logentry_add_action_flag_choices	2021-06-01 15:14:24.289352+02
+1123	auth	0009_alter_user_last_name_max_length	2021-06-01 15:14:24.310656+02
+1124	auth	0010_alter_group_name_max_length	2021-06-01 15:14:24.335552+02
+1125	auth	0011_update_proxy_permissions	2021-06-01 15:14:24.487684+02
+1126	authtoken	0003_tokenproxy	2021-06-01 15:14:24.505924+02
+1127	axes	0006_remove_accesslog_trusted	2021-06-01 15:14:24.524637+02
+1128	django_summernote	0002_update-help_text	2021-06-01 15:14:24.548453+02
+1129	funding_stripe	0006_auto_20210409_1731	2021-06-01 15:14:24.588429+02
+1130	offices	0003_auto_20210414_1507	2021-06-01 15:14:24.647154+02
+1131	geo	0023_auto_20210414_1507	2021-06-01 15:14:25.827462+02
+1132	geo	0024_auto_20210414_1508	2021-06-01 15:14:26.513342+02
+1133	geo	0025_auto_20210414_1508	2021-06-01 15:14:26.703243+02
+1134	geo	0026_auto_20210415_0854	2021-06-01 15:14:26.788165+02
+1135	initiatives	0035_auto_20210505_1425	2021-06-01 15:14:27.069324+02
+1136	initiatives	0036_auto_20210505_1521	2021-06-01 15:14:27.780273+02
+1137	initiatives	0037_merge_20210525_1459	2021-06-01 15:14:27.782364+02
+1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:27.884084+02
+1139	social_django	0010_uid_db_index	2021-06-01 15:14:27.946425+02
+1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:28.013057+02
 \.
 
 
@@ -20616,30 +19187,6 @@ COPY test.django_redirect (id, old_path, new_path, regular_expression, fallback_
 
 COPY test.django_site (id, domain, name) FROM stdin;
 1	example.com	example.com
-\.
-
-
---
--- Data for Name: donations_donation; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.donations_donation (id, amount, created, updated, completed, anonymous, fundraiser_id, order_id, project_id, reward_id, amount_currency, name, payout_amount, payout_amount_currency, new_donation_id) FROM stdin;
-\.
-
-
---
--- Data for Name: events_event; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.events_event (activity_ptr_id, capacity, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end", start) FROM stdin;
-\.
-
-
---
--- Data for Name: events_participant; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.events_participant (contribution_ptr_id, time_spent) FROM stdin;
 \.
 
 
@@ -20717,7 +19264,7 @@ COPY test.follow_follow (id, instance_id, created, content_type_id, user_id) FRO
 -- Data for Name: funding_bankaccount; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_bankaccount (id, polymorphic_ctype_id, created, reviewed, updated, connect_account_id) FROM stdin;
+COPY test.funding_bankaccount (id, polymorphic_ctype_id, created, reviewed, updated, connect_account_id, status) FROM stdin;
 \.
 
 
@@ -20730,10 +19277,10 @@ COPY test.funding_budgetline (id, description, amount_currency, amount, created,
 
 
 --
--- Data for Name: funding_donation; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: funding_donor; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_donation (contribution_ptr_id, amount_currency, amount, fundraiser_id, reward_id, client_secret, name, anonymous, payout_id, payout_amount, payout_amount_currency) FROM stdin;
+COPY test.funding_donor (contributor_ptr_id, amount_currency, amount, fundraiser_id, reward_id, client_secret, name, anonymous, payout_id, payout_amount, payout_amount_currency) FROM stdin;
 \.
 
 
@@ -20817,6 +19364,14 @@ COPY test.funding_lipisha_lipishapayment (payment_ptr_id, mobile_number, unique_
 
 COPY test.funding_lipisha_lipishapaymentprovider (paymentprovider_ptr_id, api_key, api_signature, prefix, paybill) FROM stdin;
 3	5a3ba3fef3c58f9a9150fe8b3c2fc6ef	yPcnztZ56J0dvcyGvDViPR5kwqLxMAqwn7uECkEseTC3pyNMy1sf4XiVXosnKnqbJnYL3U1SuDG+YPqcuF8Sg00zvTPbwCVUJ+SHKIKoBgb4aHDlYFvD9SUcVRrkdS6sC8R1/11j2WAz8SC+z6uM1uOeduG3ZB0rgCGZ/ACgGOc=	new	961700
+\.
+
+
+--
+-- Data for Name: funding_moneycontribution; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.funding_moneycontribution (contribution_ptr_id, value_currency, value) FROM stdin;
 \.
 
 
@@ -21003,14 +19558,6 @@ COPY test.funding_vitepay_vitepaypaymentprovider (paymentprovider_ptr_id, api_se
 
 
 --
--- Data for Name: fundraisers_fundraiser; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.fundraisers_fundraiser (id, title, description, image, video_url, amount, deadline, created, updated, deleted, location_id, owner_id, project_id, amount_currency) FROM stdin;
-\.
-
-
---
 -- Data for Name: geo_country; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -21030,15 +19577,7 @@ COPY test.geo_country_translation (id, language_code, name, master_id) FROM stdi
 -- Data for Name: geo_geolocation; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.geo_geolocation (id, street_number, street, postal_code, locality, province, formatted_address, "position", country_id) FROM stdin;
-\.
-
-
---
--- Data for Name: geo_initiativeplace; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.geo_initiativeplace (id, street_number, street, postal_code, locality, province, formatted_address, "position", country_id) FROM stdin;
+COPY test.geo_geolocation (id, street_number, street, postal_code, locality, province, formatted_address, country_id, "position") FROM stdin;
 \.
 
 
@@ -21046,7 +19585,7 @@ COPY test.geo_initiativeplace (id, street_number, street, postal_code, locality,
 -- Data for Name: geo_location; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.geo_location (id, name, "position", city, description, image, country_id, group_id, slug) FROM stdin;
+COPY test.geo_location (id, name, city, description, image, country_id, group_id, slug, subregion_id, "position") FROM stdin;
 \.
 
 
@@ -21062,7 +19601,7 @@ COPY test.geo_locationgroup (id, name, description) FROM stdin;
 -- Data for Name: geo_place; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, "position", object_id, content_type_id, country_id) FROM stdin;
+COPY test.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, object_id, content_type_id, country_id, "position") FROM stdin;
 \.
 
 
@@ -21154,7 +19693,15 @@ COPY test.impact_impacttype_translation (id, language_code, master_id, text, tex
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id) FROM stdin;
+COPY test.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open) FROM stdin;
+\.
+
+
+--
+-- Data for Name: initiatives_initiative_activity_managers; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.initiatives_initiative_activity_managers (id, initiative_id, member_id) FROM stdin;
 \.
 
 
@@ -21170,8 +19717,75 @@ COPY test.initiatives_initiative_categories (id, initiative_id, category_id) FRO
 -- Data for Name: initiatives_initiativeplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact) FROM stdin;
-1	2020-10-12 14:26:47.496466+02	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f
+COPY test.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact, enable_office_regions, enable_multiple_dates, enable_participant_exports, enable_matching_emails, enable_open_initiatives) FROM stdin;
+1	2021-06-01 12:52:12.740347+02	funding,dateactivity,periodactivity	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f	f	f	f	f	f
+\.
+
+
+--
+-- Data for Name: initiatives_theme; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.initiatives_theme (id, slug, disabled) FROM stdin;
+1	agriculture	f
+2	animal-welfare	f
+3	arts-culture	f
+5	climate	f
+6	community-building	f
+7	education	f
+8	emergency-relief	f
+9	food	f
+10	health	f
+11	human-rights	f
+12	ict	f
+13	media-journalism	f
+14	social-entrepreneurship	f
+15	sport	f
+16	tourism	f
+17	water	f
+18	mobility	f
+\.
+
+
+--
+-- Data for Name: initiatives_theme_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.initiatives_theme_translation (id, language_code, name, description, master_id) FROM stdin;
+0	nl	Natuur & Milieu		1
+1	en	Agriculture		1
+2	nl	Dierenwelzijn		2
+3	en	Animal welfare		2
+4	nl	Kunst & Cultuur		3
+5	en	Arts & Culture		3
+6	nl	Klimaat		5
+7	en	Climate		5
+8	nl	Leefbaarheid		6
+9	en	Community building		6
+10	nl	Onderwijs		7
+11	en	Education		7
+12	nl	Noodhulp		8
+13	en	Emergency relief		8
+14	nl	Voedsel		9
+15	en	Food		9
+16	nl	Gezondheid & Zorg		10
+17	en	Health		10
+18	nl	Mensenrechten		11
+19	en	Human rights		11
+20	nl	ICT		12
+21	en	ICT		12
+22	nl	Media & Journalistiek		13
+23	en	Media & Journalism		13
+24	nl	Sociaal Ondernemerschap		14
+25	en	Social entrepreneurship		14
+26	nl	Sport & Recreatie		15
+27	en	Sport		15
+28	nl	Toerisme		16
+29	en	Tourism		16
+30	nl	Water		17
+31	en	Water		17
+32	nl	Mobiliteit		18
+33	en	Mobility		18
 \.
 
 
@@ -21240,7 +19854,7 @@ COPY test.members_member (id, password, last_login, is_superuser, email, usernam
 -- Data for Name: members_member_favourite_themes; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.members_member_favourite_themes (id, member_id, projecttheme_id) FROM stdin;
+COPY test.members_member_favourite_themes (id, member_id, theme_id) FROM stdin;
 \.
 
 
@@ -21282,8 +19896,8 @@ COPY test.members_member_user_permissions (id, member_id, permission_id) FROM st
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments) FROM stdin;
-1	2020-10-12 14:26:30.714573+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f
+COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only) FROM stdin;
+1	2020-10-12 14:26:30.714573+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f
 \.
 
 
@@ -21340,7 +19954,23 @@ COPY test.notifications_messagetemplate_translation (id, language_code, subject,
 --
 
 COPY test.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2020-10-12 14:26:47.495948+02	twitter,facebook	\N	
+1	2020-10-12 14:26:47.495948+02	twitter,facebook	\N	f
+\.
+
+
+--
+-- Data for Name: offices_officeregion; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.offices_officeregion (id, name, description) FROM stdin;
+\.
+
+
+--
+-- Data for Name: offices_officesubregion; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.offices_officesubregion (id, name, description, region_id) FROM stdin;
 \.
 
 
@@ -21373,182 +20003,6 @@ COPY test.organizations_organizationcontact (id, name, email, phone, created, up
 --
 
 COPY test.pages_page (id, title, slug, full_page, language, status, publication_date, publication_end_date, creation_date, modification_date, author_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_beyonic_beyonicpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_beyonic_beyonicpayment (payment_ptr_id, amount, currency, mobile, description, metadata, transaction_reference, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatadirectdebitpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_docdata_docdatadirectdebitpayment (payment_ptr_id, merchant_order_id, payment_cluster_id, payment_cluster_key, language, ideal_issuer_id, default_pm, total_gross_amount, currency, country, total_registered, total_shopper_pending, total_acquirer_pending, total_acquirer_approved, total_captured, total_refunded, total_charged_back, customer_id, email, first_name, last_name, address, postal_code, city, ip_address, account_name, account_city, iban, bic, agree) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatapayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_docdata_docdatapayment (payment_ptr_id, merchant_order_id, payment_cluster_id, payment_cluster_key, language, ideal_issuer_id, default_pm, total_gross_amount, currency, country, total_registered, total_shopper_pending, total_acquirer_pending, total_acquirer_approved, total_captured, total_refunded, total_charged_back, customer_id, email, first_name, last_name, address, postal_code, city, ip_address) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatatransaction; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_docdata_docdatatransaction (transaction_ptr_id, status, docdata_id, payment_method, authorization_status, authorization_amount, authorization_currency, capture_status, capture_amount, chargeback_amount, refund_amount, capture_currency, raw_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_external_externalpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_external_externalpayment (payment_ptr_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_flutterwave_flutterwavempesapayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_flutterwave_flutterwavempesapayment (payment_ptr_id, amount, currency, business_number, account_number, kyc_info, remote_id, msisdn, third_party_transaction_id, transaction_time, transaction_reference, invoice_number, response, update_response, transaction_amount) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_flutterwave_flutterwavepayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_flutterwave_flutterwavepayment (payment_ptr_id, amount, currency, auth_model, card_number, customer_id, narration, response_url, country, response, update_response, transaction_reference) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_interswitch_interswitchpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_interswitch_interswitchpayment (payment_ptr_id, product_id, amount, currency, site_redirect_url, txn_ref, hash, pay_item_id, site_name, cust_id, cust_id_desc, cust_name, cust_name_desc, pay_item_name, local_date_time, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_interswitch_interswitchpaymentstatusupdate; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_interswitch_interswitchpaymentstatusupdate (id, created, result, payment_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_lipisha_lipishapayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_lipisha_lipishapayment (payment_ptr_id, reference, transaction_status, transaction_type, transaction_amount, transaction_currency, transaction_reference, transaction_reversal_status, transaction_account_name, transaction_account_number, transaction_date, transaction_email, transaction_method, transaction_mobile_number, transaction_name, transaction_fee, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_lipisha_lipishaproject; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_lipisha_lipishaproject (projectaddon_ptr_id, account_number) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_logger_paymentlogentry; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_logger_paymentlogentry (id, message, level, "timestamp", payment_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_orderpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_orderpayment (id, status, created, updated, closed, amount, transaction_fee, payment_method, integration_data, authorization_action_id, order_id, user_id, amount_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_orderpaymentaction; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_orderpaymentaction (id, type, method, url, payload) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_payment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_payment (id, status, created, updated, order_payment_id, polymorphic_ctype_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_pledge_pledgestandardpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_pledge_pledgestandardpayment (payment_ptr_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_stripe_stripepayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_stripe_stripepayment (payment_ptr_id, source_token, charge_token, amount, description, data, currency, payout_amount, payout_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_telesom_telesompayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_telesom_telesompayment (payment_ptr_id, amount, currency, mobile, transaction_reference, description, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_transaction; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_transaction (id, created, updated, payment_id, polymorphic_ctype_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_vitepay_vitepaypayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_vitepay_vitepaypayment (payment_ptr_id, language_code, currency_code, country_code, order_id, description, amount_100, buyer_ip_adress, return_url, decline_url, cancel_url, callback_url, email, p_type, payment_url) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_voucher_voucher; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_voucher_voucher (id, amount, currency, language, message, code, status, created, updated, sender_email, sender_name, receiver_email, receiver_name, order_id, receiver_id, sender_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_voucher_voucherpayment; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.payments_voucher_voucherpayment (payment_ptr_id, voucher_id) FROM stdin;
 \.
 
 
@@ -21593,102 +20047,10 @@ COPY test.payouts_stripepayoutaccount (payoutaccount_ptr_id, account_id, documen
 
 
 --
--- Data for Name: projects_customprojectfield; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_customprojectfield (id, value, field_id, project_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_customprojectfieldsettings; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_customprojectfieldsettings (id, name, description, sequence, project_settings_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_project; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_project (id, project_type, created, updated, title, slug, pitch, favorite, deadline, place, description, image, amount_asked, amount_donated, amount_needed, amount_extra, reach, video_url, popularity, is_campaign, skip_monthly, allow_overfunding, story, effects, for_who, future, date_submitted, campaign_started, campaign_ended, campaign_funded, voting_deadline, country_id, language_id, location_id, organization_id, owner_id, status_id, theme_id, celebrate_results, amount_asked_currency, amount_donated_currency, amount_extra_currency, amount_needed_currency, currencies, payout_status, campaign_paid_out, reviewer_id, promoter_id, task_manager_id, campaign_edited, campaign_duration, payout_account_id, funding_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_project_categories; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_project_categories (id, project_id, category_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectaddon; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectaddon (id, polymorphic_ctype_id, project_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectbudgetline; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectbudgetline (id, description, amount, created, updated, project_id, amount_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectcreatetemplate; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectcreatetemplate (id, name, default_amount_asked_currency, project_settings_id, description, image, default_amount_asked, default_description, default_image, default_title, default_pitch, sub_name) FROM stdin;
-\.
-
-
---
 -- Data for Name: projects_projectimage; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.projects_projectimage (id, project_id, file, name, uploaded) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectlocation; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectlocation (project_id, place, street, neighborhood, city, postal_code, country, latitude, longitude) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectphaselog; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectphaselog (id, start, project_id, status_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectplatformsettings (id, update, create_types, create_flow, contact_method, contact_types, allow_anonymous_rewards, facebook_at_work_url, share_options, match_options) FROM stdin;
-1	2020-10-12 14:24:56.473725+02	funding	combined	mail	organization	t	\N	twitter,facebook	
-\.
-
-
---
--- Data for Name: projects_projectsearchfilter; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.projects_projectsearchfilter (id, name, "default", "values", project_settings_id, sequence) FROM stdin;
-1	status	\N	\N	1	0
-2	location	\N	\N	1	0
-3	theme	\N	\N	1	0
+COPY test.projects_projectimage (id, file, name, uploaded) FROM stdin;
 \.
 
 
@@ -21697,14 +20059,6 @@ COPY test.projects_projectsearchfilter (id, name, "default", "values", project_s
 --
 
 COPY test.quotes_quote (id, language, quote, status, publication_date, publication_end_date, creation_date, modification_date, author_id, user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: rewards_reward; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.rewards_reward (id, amount, title, description, "limit", created, updated, project_id, amount_currency, new_reward_id) FROM stdin;
 \.
 
 
@@ -21777,7 +20131,7 @@ COPY test.social_auth_partial (id, token, next_step, backend, data, "timestamp")
 -- Data for Name: social_auth_usersocialauth; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.social_auth_usersocialauth (id, provider, uid, extra_data, user_id) FROM stdin;
+COPY test.social_auth_usersocialauth (id, provider, uid, extra_data, user_id, created, modified) FROM stdin;
 \.
 
 
@@ -21846,14 +20200,6 @@ COPY test.statistics_statistic (id, title, type, sequence, value, active, creati
 
 
 --
--- Data for Name: suggestions_suggestion; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.suggestions_suggestion (id, created, updated, title, pitch, deadline, destination, org_name, org_contactname, org_email, org_phone, org_website, status, token, project_id, theme_id, language) FROM stdin;
-\.
-
-
---
 -- Data for Name: taggit_tag; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -21870,10 +20216,82 @@ COPY test.taggit_taggeditem (id, object_id, content_type_id, tag_id) FROM stdin;
 
 
 --
--- Data for Name: tasks_skill; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: terms_terms; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.tasks_skill (id, disabled, expertise) FROM stdin;
+COPY test.terms_terms (id, created, updated, date, contents, version, author_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: terms_termsagreement; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.terms_termsagreement (id, created, terms_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: thumbnail_kvstore; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.thumbnail_kvstore (key, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateactivity; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_dateactivity (timebasedactivity_ptr_id, online_meeting_url, slot_selection) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateactivityslot; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_dateactivityslot (id, created, updated, status, title, capacity, start, duration, is_online, online_meeting_url, location_hint, activity_id, location_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateparticipant; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_dateparticipant (contributor_ptr_id, document_id, motivation) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodactivity; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_periodactivity (timebasedactivity_ptr_id, deadline, duration_period, start, duration, online_meeting_url, is_online, location_id, location_hint) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodactivityslot; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_periodactivityslot (id, created, updated, status, title, capacity, start, "end", activity_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodparticipant; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_periodparticipant (contributor_ptr_id, current_period, document_id, motivation) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_skill; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.time_based_skill (id, disabled, expertise) FROM stdin;
 1	f	t
 2	f	t
 3	f	t
@@ -21908,10 +20326,10 @@ COPY test.tasks_skill (id, disabled, expertise) FROM stdin;
 
 
 --
--- Data for Name: tasks_skill_translation; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: time_based_skill_translation; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.tasks_skill_translation (id, language_code, name, description, master_id) FROM stdin;
+COPY test.time_based_skill_translation (id, language_code, name, description, master_id) FROM stdin;
 0	nl	- Geen specifieke vaardigheid nodig -		1
 1	en	- No specific skill needed -		1
 2	nl	Natuur & Milieu		2
@@ -21976,26 +20394,26 @@ COPY test.tasks_skill_translation (id, language_code, name, description, master_
 
 
 --
--- Data for Name: terms_terms; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: time_based_slotparticipant; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.terms_terms (id, created, updated, date, contents, version, author_id) FROM stdin;
+COPY test.time_based_slotparticipant (id, participant_id, slot_id, status) FROM stdin;
 \.
 
 
 --
--- Data for Name: terms_termsagreement; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: time_based_timebasedactivity; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.terms_termsagreement (id, created, terms_id, user_id) FROM stdin;
+COPY test.time_based_timebasedactivity (activity_ptr_id, capacity, is_online, location_hint, registration_deadline, review, expertise_id, location_id, preparation) FROM stdin;
 \.
 
 
 --
--- Data for Name: thumbnail_kvstore; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: time_based_timecontribution; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.thumbnail_kvstore (key, value) FROM stdin;
+COPY test.time_based_timecontribution (contribution_ptr_id, value, slot_participant_id, contribution_type) FROM stdin;
 \.
 
 
@@ -22012,8 +20430,8 @@ COPY test.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 --
 
 COPY test.utils_language (id, code, language_name, native_name) FROM stdin;
-6	en	English	English
-7	nl	Dutch	Nederlands
+94	en	English	English
+95	nl	Dutch	Nederlands
 \.
 
 
@@ -22038,14 +20456,6 @@ COPY test.utils_translationplatformsettings (id, update) FROM stdin;
 --
 
 COPY test.utils_translationplatformsettings_translation (id, language_code, master_id, office, office_location, select_an_office_location, whats_the_location_of_your_office) FROM stdin;
-\.
-
-
---
--- Data for Name: votes_vote; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.votes_vote (id, created, ip_address, project_id, voter_id) FROM stdin;
 \.
 
 
@@ -22117,7 +20527,23 @@ COPY test2.activities_activity_segments (id, activity_id, segment_id) FROM stdin
 -- Data for Name: activities_contribution; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contribution_date) FROM stdin;
+COPY test2.activities_contribution (id, status, created, contributor_id, polymorphic_ctype_id, "end", start) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_contributor; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.activities_contributor (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contributor_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_effortcontribution; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.activities_effortcontribution (contribution_ptr_id, contribution_type) FROM stdin;
 \.
 
 
@@ -22125,7 +20551,7 @@ COPY test2.activities_contribution (id, status, created, updated, activity_id, p
 -- Data for Name: activities_organizer; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.activities_organizer (contribution_ptr_id) FROM stdin;
+COPY test2.activities_organizer (contributor_ptr_id) FROM stdin;
 \.
 
 
@@ -22133,24 +20559,8 @@ COPY test2.activities_organizer (contribution_ptr_id) FROM stdin;
 -- Data for Name: analytics_analyticsplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base) FROM stdin;
-1	2020-10-12 14:22:57.946752+02	0	\N
-\.
-
-
---
--- Data for Name: assignments_applicant; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.assignments_applicant (contribution_ptr_id, motivation, time_spent, document_id) FROM stdin;
-\.
-
-
---
--- Data for Name: assignments_assignment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type, preparation, start_time, date) FROM stdin;
+COPY test2.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type) FROM stdin;
+1	2020-10-12 14:22:57.946752+02	0	\N	corporate
 \.
 
 
@@ -22160,9 +20570,9 @@ COPY test2.assignments_assignment (activity_ptr_id, registration_deadline, end_d
 
 COPY test2.auth_group (id, name) FROM stdin;
 4	Financial
-3	Authenticated
 1	Staff
 2	Anonymous
+3	Authenticated
 \.
 
 
@@ -22540,6 +20950,150 @@ COPY test2.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 389	1	447
 390	1	448
 391	2	952
+392	1	984
+393	1	985
+394	1	986
+395	1	1006
+396	1	1007
+397	1	1008
+398	1	995
+399	1	996
+400	1	997
+401	2	987
+402	2	1009
+403	2	998
+404	3	987
+405	3	992
+406	3	993
+407	3	994
+408	3	1009
+409	3	1014
+410	3	1015
+411	3	1016
+412	3	998
+413	3	1003
+414	3	1004
+415	3	1005
+416	1	1017
+417	1	1018
+418	1	1019
+419	2	1020
+420	3	1020
+421	3	1021
+422	3	1026
+423	3	1027
+424	1	1034
+425	1	1035
+426	1	1036
+427	1	1045
+428	1	1046
+429	1	1047
+430	2	1037
+431	2	1048
+432	3	1037
+433	3	1038
+434	3	1043
+435	3	1044
+436	3	1048
+437	3	1049
+438	3	1054
+439	3	1055
+440	1	1056
+441	1	1057
+442	1	1058
+443	1	1067
+444	1	1068
+445	1	1069
+446	2	1059
+447	2	1070
+448	3	1059
+449	3	1064
+450	3	1065
+451	3	1066
+452	3	1070
+453	3	1075
+454	3	1076
+455	3	1077
+456	1	1081
+457	1	1082
+458	1	1083
+459	1	1092
+460	1	1093
+461	1	1094
+462	2	1084
+463	2	1095
+464	3	1084
+465	3	1085
+466	3	1090
+467	3	1091
+468	3	1095
+469	3	1096
+470	3	1101
+471	3	1102
+472	1	1106
+473	1	1107
+474	1	1108
+475	1	1078
+476	1	1079
+477	1	1080
+478	1	1115
+479	1	1116
+480	1	1117
+481	1	1118
+482	1	1119
+483	1	1120
+484	2	1121
+485	3	1121
+486	3	1126
+487	3	1127
+488	3	1128
+489	1	1129
+490	1	1130
+491	1	1131
+492	2	1132
+493	3	1132
+494	3	1133
+495	3	1138
+496	3	1139
+497	1	1140
+498	1	1141
+499	1	1142
+500	1	1143
+501	1	1144
+502	1	1145
+503	1	1154
+504	1	1155
+505	1	1156
+506	2	1146
+507	2	1157
+508	3	1146
+509	3	1151
+510	3	1152
+511	3	1153
+512	3	1157
+513	3	1162
+514	3	1163
+515	3	1164
+516	1	1165
+517	1	1166
+518	1	1167
+519	1	1110
+520	1	1182
+521	1	1183
+522	1	1184
+523	2	1185
+524	3	1185
+525	1	1179
+526	1	1180
+527	1	1181
+528	1	1176
+529	1	1177
+530	1	1178
+531	1	1186
+532	1	1187
+533	1	1188
+534	2	1189
+535	3	1189
 \.
 
 
@@ -23270,6 +21824,7 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 720	Can add Platform Statistics	199	add_homepagestatisticscontent
 721	Can change Platform Statistics	199	change_homepagestatisticscontent
 722	Can delete Platform Statistics	199	delete_homepagestatisticscontent
+1249	Can view Deed	292	view_deed
 723	Can add contact message	200	add_contactmessage
 724	Can change contact message	200	change_contactmessage
 725	Can delete contact message	200	delete_contactmessage
@@ -23453,6 +22008,7 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 903	Can delete Payment Log	255	delete_paymentlogentry
 904	Can add pledge standard payment	256	add_pledgestandardpayment
 905	Can change pledge standard payment	256	change_pledgestandardpayment
+1250	Can view Participant	293	view_deedparticipant
 906	Can delete pledge standard payment	256	delete_pledgestandardpayment
 907	Can add stripe payment	257	add_stripepayment
 908	Can change stripe payment	257	change_stripepayment
@@ -23516,6 +22072,414 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 966	Can add vote	276	add_vote
 967	Can change vote	276	change_vote
 968	Can delete vote	276	delete_vote
+969	Can add answer	277	add_answer
+970	Can change answer	277	change_answer
+971	Can delete answer	277	delete_answer
+972	Can add response	278	add_response
+973	Can change response	278	change_response
+974	Can delete response	278	delete_response
+975	Can add aggregate answer	279	add_aggregateanswer
+976	Can change aggregate answer	279	change_aggregateanswer
+977	Can delete aggregate answer	279	delete_aggregateanswer
+978	Can add sub question	280	add_subquestion
+979	Can change sub question	280	change_subquestion
+980	Can delete sub question	280	delete_subquestion
+981	Can add time based activity	281	add_timebasedactivity
+982	Can change time based activity	281	change_timebasedactivity
+983	Can delete time based activity	281	delete_timebasedactivity
+984	Can add On a date activity	282	add_onadateactivity
+985	Can change On a date activity	282	change_onadateactivity
+986	Can delete On a date activity	282	delete_onadateactivity
+987	Can view on a date activities through the API	282	api_read_onadateactivity
+988	Can add on a date activities through the API	282	api_add_onadateactivity
+989	Can change on a date activities through the API	282	api_change_onadateactivity
+990	Can delete on a date activities through the API	282	api_delete_onadateactivity
+991	Can view own on a date activities through the API	282	api_read_own_onadateactivity
+992	Can add own on a date activities through the API	282	api_add_own_onadateactivity
+993	Can change own on a date activities through the API	282	api_change_own_onadateactivity
+994	Can delete own on a date activities through the API	282	api_delete_own_onadateactivity
+995	Can add Ongoing activity	283	add_ongoingactivity
+996	Can change Ongoing activity	283	change_ongoingactivity
+997	Can delete Ongoing activity	283	delete_ongoingactivity
+998	Can view ongoing activities through the API	283	api_read_ongoingactivity
+999	Can add ongoing activities through the API	283	api_add_ongoingactivity
+1000	Can change ongoing activities through the API	283	api_change_ongoingactivity
+1001	Can delete ongoing activities through the API	283	api_delete_ongoingactivity
+1002	Can view own ongoing activities through the API	283	api_read_own_ongoingactivity
+1003	Can add own ongoing activities through the API	283	api_add_own_ongoingactivity
+1004	Can change own ongoing activities through the API	283	api_change_own_ongoingactivity
+1005	Can delete own ongoing activities through the API	283	api_delete_own_ongoingactivity
+1006	Can add Activity with a deadline	284	add_withadeadlineactivity
+1007	Can change Activity with a deadline	284	change_withadeadlineactivity
+1008	Can delete Activity with a deadline	284	delete_withadeadlineactivity
+1009	Can view activities with a deadline through the API	284	api_read_withadeadlineactivity
+1010	Can add activities with a deadline through the API	284	api_add_withadeadlineactivity
+1011	Can change activities with a deadline through the API	284	api_change_withadeadlineactivity
+1012	Can delete activities with a deadline through the API	284	api_delete_withadeadlineactivity
+1013	Can view own activities with a deadline through the API	284	api_read_own_withadeadlineactivity
+1014	Can add own activities with a deadline through the API	284	api_add_own_withadeadlineactivity
+1015	Can change own activities with a deadline through the API	284	api_change_own_withadeadlineactivity
+1016	Can delete own activities with a deadline through the API	284	api_delete_own_withadeadlineactivity
+1017	Can add Application	285	add_application
+1018	Can change Application	285	change_application
+1019	Can delete Application	285	delete_application
+1020	Can view application through the API	285	api_read_application
+1021	Can add application through the API	285	api_add_application
+1022	Can change application through the API	285	api_change_application
+1023	Can delete application through the API	285	api_delete_application
+1024	Can view own application through the API	285	api_read_own_application
+1025	Can add own application through the API	285	api_add_own_application
+1026	Can change own application through the API	285	api_change_own_application
+1027	Can delete own application through the API	285	api_delete_own_application
+1028	Can add contribution value	286	add_contributionvalue
+1029	Can change contribution value	286	change_contributionvalue
+1030	Can delete contribution value	286	delete_contributionvalue
+1031	Can add duration	287	add_duration
+1032	Can change duration	287	change_duration
+1033	Can delete duration	287	delete_duration
+1034	Can add On a date application	288	add_onadateapplication
+1035	Can change On a date application	288	change_onadateapplication
+1036	Can delete On a date application	288	delete_onadateapplication
+1037	Can view application through the API	288	api_read_onadateapplication
+1038	Can add application through the API	288	api_add_onadateapplication
+1039	Can change application through the API	288	api_change_onadateapplication
+1040	Can delete application through the API	288	api_delete_onadateapplication
+1041	Can view own application through the API	288	api_read_own_onadateapplication
+1042	Can add own application through the API	288	api_add_own_onadateapplication
+1043	Can change own application through the API	288	api_change_own_onadateapplication
+1044	Can delete own application through the API	288	api_delete_own_onadateapplication
+1045	Can add Period application	289	add_periodapplication
+1046	Can change Period application	289	change_periodapplication
+1047	Can delete Period application	289	delete_periodapplication
+1048	Can view application through the API	289	api_read_periodapplication
+1049	Can add application through the API	289	api_add_periodapplication
+1050	Can change application through the API	289	api_change_periodapplication
+1051	Can delete application through the API	289	api_delete_periodapplication
+1052	Can view own application through the API	289	api_read_own_periodapplication
+1053	Can add own application through the API	289	api_add_own_periodapplication
+1054	Can change own application through the API	289	api_change_own_periodapplication
+1055	Can delete own application through the API	289	api_delete_own_periodapplication
+1056	Can add On a date activity	282	add_dateactivity
+1057	Can change On a date activity	282	change_dateactivity
+1058	Can delete On a date activity	282	delete_dateactivity
+1059	Can view on a date activities through the API	282	api_read_dateactivity
+1060	Can add on a date activities through the API	282	api_add_dateactivity
+1061	Can change on a date activities through the API	282	api_change_dateactivity
+1062	Can delete on a date activities through the API	282	api_delete_dateactivity
+1063	Can view own on a date activities through the API	282	api_read_own_dateactivity
+1064	Can add own on a date activities through the API	282	api_add_own_dateactivity
+1065	Can change own on a date activities through the API	282	api_change_own_dateactivity
+1066	Can delete own on a date activities through the API	282	api_delete_own_dateactivity
+1067	Can add During a period activity	284	add_periodactivity
+1068	Can change During a period activity	284	change_periodactivity
+1069	Can delete During a period activity	284	delete_periodactivity
+1070	Can view during a period activities through the API	284	api_read_periodactivity
+1071	Can add during a period activities through the API	284	api_add_periodactivity
+1072	Can change during a period activities through the API	284	api_change_periodactivity
+1073	Can delete during a period activities through the API	284	api_delete_periodactivity
+1251	Can view Funding	25	view_funding
+1074	Can view own during a period activities through the API	284	api_read_own_periodactivity
+1075	Can add own during a period activities through the API	284	api_add_own_periodactivity
+1076	Can change own during a period activities through the API	284	api_change_own_periodactivity
+1077	Can delete own during a period activities through the API	284	api_delete_own_periodactivity
+1078	Can add Contributor	2	add_contributor
+1079	Can change Contributor	2	change_contributor
+1080	Can delete Contributor	2	delete_contributor
+1081	Can add Participant on a date	288	add_dateparticipant
+1082	Can change Participant on a date	288	change_dateparticipant
+1083	Can delete Participant on a date	288	delete_dateparticipant
+1084	Can view application through the API	288	api_read_dateparticipant
+1085	Can add application through the API	288	api_add_dateparticipant
+1086	Can change application through the API	288	api_change_dateparticipant
+1087	Can delete application through the API	288	api_delete_dateparticipant
+1088	Can view own application through the API	288	api_read_own_dateparticipant
+1089	Can add own application through the API	288	api_add_own_dateparticipant
+1090	Can change own application through the API	288	api_change_own_dateparticipant
+1091	Can delete own application through the API	288	api_delete_own_dateparticipant
+1092	Can add Participant during a period	289	add_periodparticipant
+1093	Can change Participant during a period	289	change_periodparticipant
+1094	Can delete Participant during a period	289	delete_periodparticipant
+1095	Can view period participant through the API	289	api_read_periodparticipant
+1096	Can add period participant through the API	289	api_add_periodparticipant
+1097	Can change period participant through the API	289	api_change_periodparticipant
+1098	Can delete period participant through the API	289	api_delete_periodparticipant
+1099	Can view own period participant through the API	289	api_read_own_periodparticipant
+1100	Can add own participant through the API	289	api_add_own_periodparticipant
+1101	Can change own period participant through the API	289	api_change_own_periodparticipant
+1102	Can delete own period participant through the API	289	api_delete_own_periodparticipant
+1103	Can add contribution	286	add_contribution
+1104	Can change contribution	286	change_contribution
+1105	Can delete contribution	286	delete_contribution
+1106	Can add Contribution	290	add_organizercontribution
+1107	Can change Contribution	290	change_organizercontribution
+1108	Can delete Contribution	290	delete_organizercontribution
+1109	Can add Donor	24	add_donor
+1110	Can change Donor	24	change_donor
+1111	Can delete Donor	24	delete_donor
+1112	Can add Contribution	291	add_moneycontribution
+1113	Can change Contribution	291	change_moneycontribution
+1114	Can delete Contribution	291	delete_moneycontribution
+1115	Can add Time contribution	287	add_timecontribution
+1116	Can change Time contribution	287	change_timecontribution
+1117	Can delete Time contribution	287	delete_timecontribution
+1118	Can add Deed	292	add_deed
+1119	Can change Deed	292	change_deed
+1120	Can delete Deed	292	delete_deed
+1121	Can view deed through the API	292	api_read_deed
+1122	Can add deed through the API	292	api_add_deed
+1123	Can change deed through the API	292	api_change_deed
+1124	Can delete deed through the API	292	api_delete_deed
+1125	Can view own deed through the API	292	api_read_own_deed
+1126	Can add own deed through the API	292	api_add_own_deed
+1127	Can change own deed through the API	292	api_change_own_deed
+1128	Can delete own deed through the API	292	api_delete_own_deed
+1129	Can add Participant	293	add_deedparticipant
+1130	Can change Participant	293	change_deedparticipant
+1131	Can delete Participant	293	delete_deedparticipant
+1132	Can view deed through the API	293	api_read_deedparticipant
+1133	Can add deed through the API	293	api_add_deedparticipant
+1134	Can change deed through the API	293	api_change_deedparticipant
+1135	Can delete deed through the API	293	api_delete_deedparticipant
+1136	Can view own deed through the API	293	api_read_own_deedparticipant
+1137	Can add own deed through the API	293	api_add_own_deedparticipant
+1138	Can change own deed through the API	293	api_change_own_deedparticipant
+1139	Can delete own deed through the API	293	api_delete_own_deedparticipant
+1140	Can add Effort	290	add_effortcontribution
+1141	Can change Effort	290	change_effortcontribution
+1142	Can delete Effort	290	delete_effortcontribution
+1143	Can add slot	294	add_dateactivityslot
+1144	Can change slot	294	change_dateactivityslot
+1145	Can delete slot	294	delete_dateactivityslot
+1146	Can view on date activity slots through the API	294	api_read_dateactivityslot
+1147	Can add on a date activity slots through the API	294	api_add_dateactivityslot
+1148	Can change on a date activity slots through the API	294	api_change_dateactivityslot
+1149	Can delete on a date activity slots through the API	294	api_delete_dateactivityslot
+1150	Can view own on a date activity slots through the API	294	api_read_own_dateactivityslot
+1151	Can add own on a date activity slots through the API	294	api_add_own_dateactivityslot
+1152	Can change own on a date activity slots through the API	294	api_change_own_dateactivityslot
+1153	Can delete own on a date activity slots through the API	294	api_delete_own_dateactivityslot
+1154	Can add slot	295	add_periodactivityslot
+1155	Can change slot	295	change_periodactivityslot
+1156	Can delete slot	295	delete_periodactivityslot
+1157	Can view over a period activity slots through the API	295	api_read_periodactivityslot
+1158	Can add over a period activity slots through the API	295	api_add_periodactivityslot
+1159	Can change over a period activity slots through the API	295	api_change_periodactivityslot
+1160	Can delete over a period activity slots through the API	295	api_delete_periodactivityslot
+1161	Can view own over a period activity slots through the API	295	api_read_own_periodactivityslot
+1162	Can add own over a period activity slots through the API	295	api_add_own_periodactivityslot
+1163	Can change own over a period activity slots through the API	295	api_change_own_periodactivityslot
+1164	Can delete own over a period activity slots through the API	295	api_delete_own_periodactivityslot
+1165	Can add Slot participant	296	add_slotparticipant
+1166	Can change Slot participant	296	change_slotparticipant
+1167	Can delete Slot participant	296	delete_slotparticipant
+1168	Can view slot participant through the API	296	api_read_slotparticipant
+1169	Can add slot participant through the API	296	api_add_slotparticipant
+1170	Can change slot participant through the API	296	api_change_slotparticipant
+1171	Can delete slot participant through the API	296	api_delete_slotparticipant
+1172	Can view own slot participant through the API	296	api_read_own_slotparticipant
+1173	Can add own slot participant through the API	296	api_add_own_slotparticipant
+1174	Can change own slot participant through the API	296	api_change_own_slotparticipant
+1175	Can delete own slot participant through the API	296	api_delete_own_slotparticipant
+1176	Can add office region	297	add_officeregion
+1177	Can change office region	297	change_officeregion
+1178	Can delete office region	297	delete_officeregion
+1179	Can add office subregion	298	add_officesubregion
+1180	Can change office subregion	298	change_officesubregion
+1181	Can delete office subregion	298	delete_officesubregion
+1182	Can add Theme	299	add_theme
+1183	Can change Theme	299	change_theme
+1184	Can delete Theme	299	delete_theme
+1185	Can view theme through API	299	api_read_theme
+1186	Can add Skill	301	add_skill
+1187	Can change Skill	301	change_skill
+1188	Can delete Skill	301	delete_skill
+1189	Can view skills through the API	301	api_read_skill
+1190	Can view client	31	view_client
+1191	Can view session	266	view_session
+1192	Can view attachment	205	view_attachment
+1193	Can view exchange backend	214	view_exchangebackend
+1194	Can view rate	215	view_rate
+1195	Can view association	225	view_association
+1196	Can view code	226	view_code
+1197	Can view nonce	227	view_nonce
+1198	Can view user social auth	228	view_usersocialauth
+1199	Can view partial	268	view_partial
+1200	Can view content type	21	view_contenttype
+1201	Can view checked token	272	view_checkedtoken
+1202	Can view bookmark	221	view_bookmark
+1203	Can view pinned application	222	view_pinnedapplication
+1204	Can view user dashboard module	111	view_userdashboardmodule
+1205	Can view kv store	273	view_kvstore
+1206	Can view log entry	96	view_logentry
+1207	Can view site	62	view_site
+1208	Can view permission	3	view_permission
+1209	Can view group	4	view_group
+1210	Can view Token	36	view_token
+1211	Can add token	303	add_tokenproxy
+1212	Can change token	303	change_tokenproxy
+1213	Can delete token	303	delete_tokenproxy
+1214	Can view token	303	view_tokenproxy
+1215	Can view looker embed	223	view_lookerembed
+1216	Can view member	30	view_member
+1217	Can view custom member field	229	view_custommemberfield
+1218	Can view custom member field settings	230	view_custommemberfieldsettings
+1219	Can view member platform settings	231	view_memberplatformsettings
+1220	Can view User activity	232	view_useractivity
+1221	Can view project image	63	view_projectimage
+1222	Can view partner organization	44	view_organization
+1223	Can view Partner Organization Contact	66	view_organizationcontact
+1224	Can view impact goal	114	view_impactgoal
+1225	Can view impact type	115	view_impacttype
+1226	Can view document	22	view_document
+1227	Can view image	23	view_image
+1228	Can view related image	95	view_relatedimage
+1229	Can view private document	102	view_privatedocument
+1230	Can view follow	216	view_follow
+1231	Can view Activity	1	view_activity
+1232	Can view Contribution	2	view_contributor
+1233	Can view Contribution amount	286	view_contribution
+1234	Can view Effort	290	view_effortcontribution
+1235	Can view Activity owner	35	view_organizer
+1236	Can view Initiative	34	view_initiative
+1237	Can view initiative settings	149	view_initiativeplatformsettings
+1238	Can view theme	299	view_theme
+1239	Can view time based activity	281	view_timebasedactivity
+1240	Can view Activity on a date	282	view_dateactivity
+1241	Can view Activity during a period	284	view_periodactivity
+1242	Can view Participant on a date	288	view_dateparticipant
+1243	Can view Participant during a period	289	view_periodparticipant
+1244	Can view Time contribution	287	view_timecontribution
+1245	Can view slot	294	view_dateactivityslot
+1246	Can view slot	295	view_periodactivityslot
+1247	Can view Slot participant	296	view_slotparticipant
+1248	Can view Skill	301	view_skill
+1252	Can view payment	76	view_payment
+1253	Can view budget line	77	view_budgetline
+1254	Can view fundraiser	78	view_fundraiser
+1255	Can view Gift	79	view_reward
+1256	Can view payment provider	80	view_paymentprovider
+1257	Can view payout account	81	view_payoutaccount
+1258	Can view legacy payment	84	view_legacypayment
+1259	Can view bank account	85	view_bankaccount
+1260	Can view Plain KYC account	86	view_plainpayoutaccount
+1261	Can view Payment currency	87	view_paymentcurrency
+1262	Can view payout	88	view_payout
+1263	Can view funding settings	89	view_fundingplatformsettings
+1264	Can view Donor	24	view_donor
+1265	Can view Contribution	291	view_moneycontribution
+1266	Can view pledge payment	143	view_pledgepayment
+1267	Can view Pledge payment provider	144	view_pledgepaymentprovider
+1268	Can view Pledge bank account	140	view_pledgebankaccount
+1269	Can view Stripe external account	135	view_externalaccount
+1270	Can view payment intent	145	view_paymentintent
+1271	Can view stripe payment	146	view_stripepayment
+1272	Can view Stripe payment provider	134	view_stripepaymentprovider
+1273	Can view stripe payout account	136	view_stripepayoutaccount
+1274	Can view stripe source payment	147	view_stripesourcepayment
+1275	Can view vitepay payment	148	view_vitepaypayment
+1276	Can view Vitepay payment provider	131	view_vitepaypaymentprovider
+1277	Can view vitepay bank account	139	view_vitepaybankaccount
+1278	Can view flutterwave payment	141	view_flutterwavepayment
+1279	Can view Flutterwave payment provider	132	view_flutterwavepaymentprovider
+1280	Can view Flutterwave bank account	137	view_flutterwavebankaccount
+1281	Can view lipisha payment	142	view_lipishapayment
+1282	Can view Lipisha payment provider	133	view_lipishapaymentprovider
+1283	Can view Lipisha bank account	138	view_lipishabankaccount
+1284	Can view Telesom bank account	217	view_telesombankaccount
+1285	Can view telesom payment	218	view_telesompayment
+1286	Can view Telesom payment provider	219	view_telesompaymentprovider
+1287	Can view segment	106	view_segment
+1288	Can view segment type	107	view_segmenttype
+1289	Can view payout account	73	view_payoutaccount
+1290	Can view bank details	72	view_plainpayoutaccount
+1291	Can view stripe payout account	74	view_stripepayoutaccount
+1292	Can view payout document	75	view_payoutdocument
+1293	Can view flutterwave payout account	262	view_flutterwavepayoutaccount
+1294	Can view media wallpost photo	125	view_mediawallpostphoto
+1295	Can view Reaction	126	view_reaction
+1296	Can view wallpost	127	view_wallpost
+1297	Can view media wallpost	128	view_mediawallpost
+1298	Can view system wallpost	129	view_systemwallpost
+1299	Can view text wallpost	130	view_textwallpost
+1300	Can view language	60	view_language
+1301	Can view mail log	151	view_maillog
+1302	Can view translation settings	274	view_translationplatformsettings
+1303	Can view reporting platform settings	97	view_analyticsplatformsettings
+1304	Can view category	19	view_category
+1305	Can view content block	20	view_categorycontent
+1306	Can view Picture	201	view_pictureitem
+1307	Can view country	26	view_country
+1308	Can view office	27	view_location
+1309	Can view region	28	view_region
+1310	Can view sub region	29	view_subregion
+1311	Can view location group	37	view_locationgroup
+1312	Can view place	41	view_place
+1313	Can view geolocation	43	view_geolocation
+1314	Can view office region	297	view_officeregion
+1315	Can view office group	298	view_officesubregion
+1316	Can view page	150	view_page
+1317	Can view Picture + Text	153	view_imagetextitem
+1318	Can view Document	154	view_documentitem
+1319	Can view Call to action	241	view_actionitem
+1320	Can view Text in columns	242	view_columnsitem
+1321	Can view Text + Round Image	243	view_imagetextrounditem
+1322	Can view mail platform settings	224	view_mailplatformsettings
+1323	Can view message	233	view_message
+1324	Can view notification settings	234	view_notificationplatformsettings
+1325	Can view message template	235	view_messagetemplate
+1326	Can view news item	152	view_newsitem
+1327	Can view slide	267	view_slide
+1328	Can view quote	263	view_quote
+1329	Can view redirect	264	view_redirect
+1330	Can view statistic	117	view_statistic
+1331	Can view base statistic	118	view_basestatistic
+1332	Can view database statistic	122	view_databasestatistic
+1333	Can view impact statistic	123	view_impactstatistic
+1334	Can view manual statistic	124	view_manualstatistic
+1335	Can view Term	270	view_terms
+1336	Can view Term agreements	271	view_termsagreement
+1337	Can view scim platform settings	265	view_scimplatformsettings
+1338	Can view user address	100	view_useraddress
+1339	Can view follow	108	view_follow
+1340	Can view order	104	view_order
+1341	Can view Contentitem link	112	view_contentitem
+1342	Can view Placeholder	113	view_placeholder
+1343	Can view Text	204	view_textitem
+1344	Can view Online media	202	view_oembeditem
+1345	Can view HTML code	203	view_rawhtmlitem
+1346	Can view tag	52	view_tag
+1347	Can view tagged item	53	view_taggeditem
+1348	Can view Projects	157	view_projectscontent
+1349	Can view quote	163	view_quote
+1350	Can view Quotes	165	view_quotescontent
+1351	Can view result page	155	view_resultpage
+1352	Can view stat	166	view_stat
+1353	Can view Platform Statistics	156	view_statscontent
+1354	Can view Share Results	159	view_shareresultscontent
+1355	Can view Projects Map	160	view_projectsmapcontent
+1356	Can view Supporter total	161	view_supportertotalcontent
+1357	Can view home page	178	view_homepage
+1358	Can view Categories	180	view_categoriescontent
+1359	Can view Locations	181	view_locationscontent
+1360	Can view slide	182	view_slide
+1361	Can view Slides	183	view_slidescontent
+1362	Can view step	184	view_step
+1363	Can view Steps	185	view_stepscontent
+1364	Can view logo	186	view_logo
+1365	Can view Logos	187	view_logoscontent
+1366	Can view content link	188	view_contentlink
+1367	Can view Links	189	view_linkscontent
+1368	Can view link	190	view_link
+1369	Can view link group	191	view_linkgroup
+1370	Can view link permission	192	view_linkpermission
+1371	Can view site links	193	view_sitelinks
+1372	Can view site platform settings	194	view_siteplatformsettings
+1373	Can view greeting	195	view_greeting
+1374	Can view Welcome	196	view_welcomecontent
+1375	Can view Activities	197	view_activitiescontent
+1376	Can view Statistics	199	view_homepagestatisticscontent
+1377	Can view access attempt	98	view_accessattempt
+1378	Can view access log	99	view_accesslog
 \.
 
 
@@ -23540,7 +22504,7 @@ COPY test2.axes_accessattempt (id, user_agent, ip_address, username, http_accept
 -- Data for Name: axes_accesslog; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.axes_accesslog (id, user_agent, ip_address, username, trusted, http_accept, path_info, attempt_time, logout_time) FROM stdin;
+COPY test2.axes_accesslog (id, user_agent, ip_address, username, http_accept, path_info, attempt_time, logout_time) FROM stdin;
 \.
 
 
@@ -23549,89 +22513,6 @@ COPY test2.axes_accesslog (id, user_agent, ip_address, username, trusted, http_a
 --
 
 COPY test2.bb_follow_follow (id, object_id, content_type_id, user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projectphase; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.bb_projects_projectphase (id, slug, sequence, active, editable, viewable, owner_editable) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projectphase_translation; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.bb_projects_projectphase_translation (id, language_code, name, description, master_id) FROM stdin;
-\.
-
-
---
--- Data for Name: bb_projects_projecttheme; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.bb_projects_projecttheme (id, slug, disabled) FROM stdin;
-1	agriculture	f
-2	animal-welfare	f
-3	arts-culture	f
-5	climate	f
-6	community-building	f
-7	education	f
-8	emergency-relief	f
-9	food	f
-10	health	f
-11	human-rights	f
-12	ict	f
-13	media-journalism	f
-14	social-entrepreneurship	f
-15	sport	f
-16	tourism	f
-17	water	f
-18	mobility	f
-\.
-
-
---
--- Data for Name: bb_projects_projecttheme_translation; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.bb_projects_projecttheme_translation (id, language_code, name, description, master_id) FROM stdin;
-0	nl	Natuur & Milieu		1
-1	en	Agriculture		1
-2	nl	Dierenwelzijn		2
-3	en	Animal welfare		2
-4	nl	Kunst & Cultuur		3
-5	en	Arts & Culture		3
-6	nl	Klimaat		5
-7	en	Climate		5
-8	nl	Leefbaarheid		6
-9	en	Community building		6
-10	nl	Onderwijs		7
-11	en	Education		7
-12	nl	Noodhulp		8
-13	en	Emergency relief		8
-14	nl	Voedsel		9
-15	en	Food		9
-16	nl	Gezondheid & Zorg		10
-17	en	Health		10
-18	nl	Mensenrechten		11
-19	en	Human rights		11
-20	nl	ICT		12
-21	en	ICT		12
-22	nl	Media & Journalistiek		13
-23	en	Media & Journalism		13
-24	nl	Sociaal Ondernemerschap		14
-25	en	Social entrepreneurship		14
-26	nl	Sport & Recreatie		15
-27	en	Sport		15
-28	nl	Toerisme		16
-29	en	Tourism		16
-30	nl	Water		17
-31	en	Water		17
-32	nl	Mobiliteit		18
-33	en	Mobility		18
 \.
 
 
@@ -23764,14 +22645,6 @@ COPY test2.cms_locationscontent_locations (id, locationscontent_id, location_id)
 --
 
 COPY test2.cms_logo (id, image, block_id, link, sequence) FROM stdin;
-\.
-
-
---
--- Data for Name: cms_projectscontent_projects; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.cms_projectscontent_projects (id, projectscontent_id, project_id) FROM stdin;
 \.
 
 
@@ -23916,16 +22789,6 @@ COPY test2.contentitem_cms_locationscontent (contentitem_ptr_id, title, sub_titl
 --
 
 COPY test2.contentitem_cms_logoscontent (contentitem_ptr_id, title, sub_title, action_text, action_link) FROM stdin;
-\.
-
-
---
--- Data for Name: contentitem_cms_projectimagescontent; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.contentitem_cms_projectimagescontent (contentitem_ptr_id, title, sub_title, description, action_text, action_link) FROM stdin;
-5	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
-6	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
 \.
 
 
@@ -24090,6 +22953,22 @@ COPY test2.dashboard_userdashboardmodule (id, title, module, app_label, "user", 
 
 
 --
+-- Data for Name: deeds_deed; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.deeds_deed (activity_ptr_id, start, "end") FROM stdin;
+\.
+
+
+--
+-- Data for Name: deeds_deedparticipant; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.deeds_deedparticipant (contributor_ptr_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: django_admin_log; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -24103,7 +22982,6 @@ COPY test2.django_admin_log (id, action_time, object_id, object_repr, action_fla
 
 COPY test2.django_content_type (id, app_label, model) FROM stdin;
 1	activities	activity
-2	activities	contribution
 3	auth	permission
 4	auth	group
 5	bb_projects	projectphase
@@ -24125,7 +23003,6 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 21	contenttypes	contenttype
 22	files	document
 23	files	image
-24	funding	donation
 25	funding	funding
 26	geo	country
 27	geo	location
@@ -24239,6 +23116,7 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 135	funding_stripe	externalaccount
 136	funding_stripe	stripepayoutaccount
 137	funding_flutterwave	flutterwavebankaccount
+24	funding	donor
 138	funding_lipisha	lipishabankaccount
 139	funding_vitepay	vitepaybankaccount
 140	funding_pledge	pledgebankaccount
@@ -24378,6 +23256,34 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 274	utils	translationplatformsettings
 275	utils	translationplatformsettingstranslation
 276	votes	vote
+277	surveys	answer
+278	surveys	response
+279	surveys	aggregateanswer
+280	surveys	subquestion
+281	time_based	timebasedactivity
+283	time_based	ongoingactivity
+285	time_based	application
+282	time_based	dateactivity
+284	time_based	periodactivity
+2	activities	contributor
+288	time_based	dateparticipant
+289	time_based	periodparticipant
+286	activities	contribution
+287	time_based	timecontribution
+291	funding	moneycontribution
+292	deeds	deed
+293	deeds	deedparticipant
+290	activities	effortcontribution
+294	time_based	dateactivityslot
+295	time_based	periodactivityslot
+296	time_based	slotparticipant
+297	offices	officeregion
+298	offices	officesubregion
+299	initiatives	theme
+300	initiatives	themetranslation
+301	time_based	skill
+302	time_based	skilltranslation
+303	authtoken	tokenproxy
 \.
 
 
@@ -25331,6 +24237,201 @@ COPY test2.django_migrations (id, app, name, applied) FROM stdin;
 943	social_django	0005_auto_20160727_2333	2020-10-12 14:24:39.531838+02
 944	social_django	0003_alter_email_max_length	2020-10-12 14:24:39.533355+02
 945	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-10-12 14:24:39.53484+02
+946	geo	0017_auto_20201014_1155	2021-06-01 12:51:12.756743+02
+947	activities	0026_auto_20201021_1420	2021-06-01 12:51:13.137476+02
+948	time_based	0001_initial	2021-06-01 12:51:13.611036+02
+949	time_based	0002_auto_20201014_1242	2021-06-01 12:51:13.689122+02
+950	time_based	0003_auto_20201014_1242	2021-06-01 12:51:14.800649+02
+951	time_based	0004_auto_20201014_1444	2021-06-01 12:51:15.124865+02
+952	files	0007_auto_20201021_1315	2021-06-01 12:51:15.208201+02
+953	time_based	0005_application	2021-06-01 12:51:15.535472+02
+954	time_based	0006_auto_20201021_1315	2021-06-01 12:51:16.386974+02
+955	time_based	0007_auto_20201023_1433	2021-06-01 12:51:16.706809+02
+956	time_based	0008_auto_20201023_1443	2021-06-01 12:51:16.923981+02
+957	activities	0027_contributionvalue	2021-06-01 12:51:17.142247+02
+958	time_based	0009_auto_20201026_1435	2021-06-01 12:51:17.286298+02
+959	time_based	0010_auto_20201027_1652	2021-06-01 12:51:17.34884+02
+960	time_based	0011_auto_20201028_0926	2021-06-01 12:51:17.377108+02
+961	time_based	0012_auto_20201028_0928	2021-06-01 12:51:17.638652+02
+962	time_based	0013_auto_20201028_1117	2021-06-01 12:51:17.681534+02
+963	time_based	0014_auto_20201028_1544	2021-06-01 12:51:17.708908+02
+964	time_based	0015_auto_20201028_1546	2021-06-01 12:51:17.917364+02
+965	time_based	0016_auto_20201028_1550	2021-06-01 12:51:17.946911+02
+966	time_based	0017_auto_20201029_1228	2021-06-01 12:51:18.009759+02
+967	time_based	0018_auto_20201030_1029	2021-06-01 12:51:18.043148+02
+968	time_based	0019_auto_20201030_1317	2021-06-01 12:51:18.099324+02
+969	time_based	0020_auto_20201102_1230	2021-06-01 12:51:18.254328+02
+970	time_based	0021_auto_20201102_1357	2021-06-01 12:51:18.292242+02
+971	time_based	0022_auto_20201102_1559	2021-06-01 12:51:18.574831+02
+972	time_based	0023_auto_20201103_1510	2021-06-01 12:51:19.434584+02
+973	time_based	0024_auto_20201103_1524	2021-06-01 12:51:19.749792+02
+974	impact	0017_auto_20201110_1526	2021-06-01 12:51:19.780195+02
+975	cms	0064_auto_20201110_1526	2021-06-01 12:51:20.216707+02
+976	time_based	0025_auto_20201110_1526	2021-06-01 12:51:20.325837+02
+977	time_based	0026_auto_20201110_1558	2021-06-01 12:51:21.027645+02
+978	time_based	0027_auto_20201110_1613	2021-06-01 12:51:21.936108+02
+979	activities	0028_auto_20201112_1439	2021-06-01 12:51:22.220188+02
+980	time_based	0028_auto_20201112_1509	2021-06-01 12:51:22.371478+02
+981	time_based	0029_auto_20201112_1519	2021-06-01 12:51:22.695811+02
+982	time_based	0028_dateactivity_online_meeting_url	2021-06-01 12:51:22.730428+02
+983	time_based	0030_merge_20201113_1124	2021-06-01 12:51:22.732358+02
+984	files	0008_auto_20201117_1137	2021-06-01 12:51:22.790696+02
+985	activities	0029_auto_20201112_1519	2021-06-01 12:51:23.510877+02
+986	activities	0030_auto_20201117_1137	2021-06-01 12:51:23.61072+02
+987	time_based	0031_auto_20201117_1137	2021-06-01 12:51:24.268295+02
+988	time_based	0032_auto_20201117_1143	2021-06-01 12:51:24.330602+02
+989	time_based	0033_auto_20201117_1244	2021-06-01 12:51:25.22077+02
+990	activities	0031_auto_20201120_1303	2021-06-01 12:51:25.62296+02
+991	activities	0032_auto_20201120_1304	2021-06-01 12:51:25.695861+02
+992	time_based	0034_auto_20201120_1306	2021-06-01 12:51:25.766719+02
+993	time_based	0035_auto_20201120_1318	2021-06-01 12:51:26.017885+02
+994	events	0017_event_online_meeting_url	2021-06-01 12:51:26.053526+02
+995	events	0018_auto_20201013_1217	2021-06-01 12:51:26.08647+02
+996	events	0019_auto_20201112_1508	2021-06-01 12:51:26.325882+02
+997	events	0020_auto_20201112_1519	2021-06-01 12:51:26.404518+02
+998	assignments	0021_auto_20201012_1501	2021-06-01 12:51:26.605173+02
+999	assignments	0022_auto_20201013_1217	2021-06-01 12:51:26.639867+02
+1000	assignments	0023_auto_20201112_1449	2021-06-01 12:51:26.714005+02
+1001	assignments	0024_auto_20201112_1519	2021-06-01 12:51:26.810397+02
+1002	time_based	0036_auto_20201125_1258	2021-06-01 12:51:27.484512+02
+1003	time_based	0037_auto_20201126_1042	2021-06-01 12:51:27.722465+02
+1004	time_based	0038_timebasedactivity_preparation	2021-06-01 12:51:27.758226+02
+1005	time_based	0039_auto_20201130_1313	2021-06-01 12:51:27.824671+02
+1006	activities	0033_auto_20201123_1418	2021-06-01 12:51:28.126078+02
+1007	activities	0034_auto_20201130_1316	2021-06-01 12:51:28.185545+02
+1008	time_based	0040_auto_20201130_1330	2021-06-01 12:51:28.365792+02
+1009	activities	0035_auto_20201130_1337	2021-06-01 12:51:28.367753+02
+1010	time_based	0041_auto_20201130_1400	2021-06-01 12:51:28.401545+02
+1011	time_based	0042_merge_20201201_1259	2021-06-01 12:51:28.403495+02
+1012	time_based	0043_auto_20201217_0743	2021-06-01 12:51:28.637372+02
+1013	time_based	0044_auto_20201224_1120	2021-06-01 12:51:28.97997+02
+1014	funding	0055_auto_20201002_1321	2021-06-01 12:51:29.311959+02
+1015	funding	0056_auto_20201112_1509	2021-06-01 12:51:29.38122+02
+1016	funding	0057_auto_20201112_1519	2021-06-01 12:51:30.103314+02
+1017	funding	0058_auto_20201118_0954	2021-06-01 12:51:30.600631+02
+1018	funding	0059_auto_20201120_1306	2021-06-01 12:51:30.701357+02
+1019	funding	0060_auto_20201127_0922	2021-06-01 12:51:30.74758+02
+1020	activities	0036_auto_20201130_1355	2021-06-01 12:51:30.926248+02
+1021	activities	0037_auto_20201202_1124	2021-06-01 12:51:31.103463+02
+1022	activities	0038_auto_20210127_1358	2021-06-01 12:51:32.35373+02
+1023	activities	0039_auto_20210218_1111	2021-06-01 12:51:32.478556+02
+1024	deeds	0001_initial	2021-06-01 12:51:32.543428+02
+1025	deeds	0002_auto_20210218_1248	2021-06-01 12:51:32.571833+02
+1026	deeds	0003_auto_20210218_1248	2021-06-01 12:51:33.256771+02
+1027	deeds	0004_auto_20210218_1520	2021-06-01 12:51:33.503335+02
+1028	deeds	0005_auto_20210222_1101	2021-06-01 12:51:33.703612+02
+1029	deeds	0006_auto_20210222_1643	2021-06-01 12:51:33.726193+02
+1030	deeds	0007_auto_20210222_1644	2021-06-01 12:51:34.420019+02
+1031	activities	0040_auto_20210224_1508	2021-06-01 12:51:34.622095+02
+1032	activities	0041_auto_20210226_1059	2021-06-01 12:51:35.507239+02
+1033	activities	0042_effortcontribution_contribution_type	2021-06-01 12:51:35.524908+02
+1034	activities	0043_auto_20210420_0847	2021-06-01 12:51:35.702756+02
+1035	analytics	0007_auto_20201012_1642	2021-06-01 12:51:35.743766+02
+1036	assignments	0025_auto_20210301_1546	2021-06-01 12:51:36.124094+02
+1037	suggestions	0005_auto_20210302_1417	2021-06-01 12:51:36.716646+02
+1038	votes	0003_auto_20210302_1417	2021-06-01 12:51:37.108452+02
+1039	time_based	0044_auto_20201223_1240	2021-06-01 12:51:37.835456+02
+1040	time_based	0045_merge_20201224_1436	2021-06-01 12:51:37.837298+02
+1041	time_based	0046_auto_20210106_1507	2021-06-01 12:51:37.868487+02
+1042	time_based	0047_migrate_to_slots	2021-06-01 12:51:38.046512+02
+1043	time_based	0048_auto_20210111_1133	2021-06-01 12:51:38.567703+02
+1044	time_based	0049_auto_20210112_1210	2021-06-01 12:51:38.623156+02
+1045	time_based	0050_auto_20210112_1515	2021-06-01 12:51:38.914718+02
+1046	time_based	0051_auto_20210114_1055	2021-06-01 12:51:39.343094+02
+1047	time_based	0052_slot_permissions_20210114_1056	2021-06-01 12:51:40.066841+02
+1048	time_based	0053_auto_20210120_1716	2021-06-01 12:51:40.245177+02
+1049	time_based	0054_auto_20210129_0951	2021-06-01 12:51:40.924304+02
+1050	offices	0001_initial	2021-06-01 12:51:40.958034+02
+1051	geo	0018_auto_20201229_1038	2021-06-01 12:51:41.119988+02
+1052	geo	0019_auto_20201229_1051	2021-06-01 12:51:41.301742+02
+1053	geo	0020_auto_20210105_1041	2021-06-01 12:51:41.573483+02
+1054	geo	0021_auto_20210105_1050	2021-06-01 12:51:41.632992+02
+1055	geo	0022_auto_20210129_0951	2021-06-01 12:51:42.053007+02
+1056	time_based	0055_auto_20210129_0951	2021-06-01 12:51:42.178281+02
+1057	time_based	0056_auto_20210129_0951	2021-06-01 12:51:42.366156+02
+1058	time_based	0057_add_contribution_type_20210202_1131	2021-06-01 12:51:42.386595+02
+1059	time_based	0058_auto_20210224_1027	2021-06-01 12:51:43.057473+02
+1060	tasks	0043_auto_20210302_0827	2021-06-01 12:51:43.104409+02
+1061	time_based	0059_auto_20210302_0836	2021-06-01 12:51:43.119298+02
+1062	time_based	0060_auto_20210302_0905	2021-06-01 12:51:43.186177+02
+1063	tasks	0044_auto_20210302_0936	2021-06-01 12:51:43.18824+02
+1064	surveys	0035_auto_20210302_1020	2021-06-01 12:51:44.061363+02
+1065	members	0040_auto_20210302_0836	2021-06-01 12:51:44.169273+02
+1066	tasks	0045_auto_20210302_0940	2021-06-01 12:51:44.181848+02
+1067	donations	0012_auto_20210302_1417	2021-06-01 12:51:44.820011+02
+1068	rewards	0010_auto_20210302_1417	2021-06-01 12:51:44.921916+02
+1069	payments_logger	0002_auto_20210302_1417	2021-06-01 12:51:45.01784+02
+1070	payments	0007_auto_20210302_1417	2021-06-01 12:51:45.604474+02
+1071	payments_lipisha	0003_auto_20210302_1417	2021-06-01 12:51:46.194363+02
+1072	fundraisers	0008_auto_20210302_1417	2021-06-01 12:51:46.809321+02
+1073	projects	0095_auto_20210302_1417	2021-06-01 12:51:50.268952+02
+1074	initiatives	0025_auto_20201016_1342	2021-06-01 12:51:50.766627+02
+1075	initiatives	0026_auto_20201112_1519	2021-06-01 12:51:50.781488+02
+1076	initiatives	0027_auto_20201229_1302	2021-06-01 12:51:50.813181+02
+1077	initiatives	0028_auto_20210209_0939	2021-06-01 12:51:50.829167+02
+1078	initiatives	0029_auto_20210216_0916	2021-06-01 12:51:50.844675+02
+1079	bb_projects	0016_auto_20210302_1338	2021-06-01 12:51:50.896007+02
+1080	initiatives	0030_auto_20210302_1405	2021-06-01 12:51:51.062006+02
+1081	members	0041_auto_20210302_1416	2021-06-01 12:51:51.212128+02
+1082	bb_projects	0017_auto_20210302_1417	2021-06-01 12:51:51.250858+02
+1083	bb_projects	0018_auto_20210302_1417	2021-06-01 12:51:51.281881+02
+1084	clients	0003_auto_20201118_1535	2021-06-01 12:51:51.293138+02
+1085	events	0021_auto_20210301_1546	2021-06-01 12:51:51.901488+02
+1086	funding	0061_auto_20201202_1044	2021-06-01 12:51:52.064051+02
+1087	funding	0062_auto_20201222_1241	2021-06-01 12:51:52.650126+02
+1088	funding_stripe	0005_auto_20201118_0954	2021-06-01 12:51:52.780042+02
+1089	funding_telesom	0005_auto_20201207_1539	2021-06-01 12:51:52.937276+02
+1090	initiatives	0031_auto_20210302_1547	2021-06-01 12:51:53.533287+02
+1091	initiatives	0032_auto_20210303_0820	2021-06-01 12:51:54.308061+02
+1092	initiatives	0033_auto_20210303_0832	2021-06-01 12:51:54.326946+02
+1093	initiatives	0034_auto_20210324_1227	2021-06-01 12:51:54.354931+02
+1094	initiatives	0034_auto_20210315_1310	2021-06-01 12:51:54.43622+02
+1095	initiatives	0035_merge_20210420_1158	2021-06-01 12:51:54.438097+02
+1096	members	0042_auto_20210519_1619	2021-06-01 12:51:54.45342+02
+1097	notifications	0006_auto_20210423_1202	2021-06-01 12:51:54.57111+02
+1098	notifications	0007_auto_20210423_1203	2021-06-01 12:51:54.724266+02
+1099	notifications	0008_remove_notificationplatformsettings_match_options	2021-06-01 12:51:54.739333+02
+1100	notifications	0009_auto_20210423_1208	2021-06-01 12:51:54.7532+02
+1101	offices	0002_auto_20210203_1714	2021-06-01 12:51:55.610371+02
+1102	payments_voucher	0002_auto_20210302_1417	2021-06-01 12:51:56.030268+02
+1103	payments_vitepay	0002_auto_20210302_1417	2021-06-01 12:51:56.075311+02
+1104	payments_telesom	0002_auto_20210302_1417	2021-06-01 12:51:56.116113+02
+1105	payments_stripe	0004_auto_20210302_1417	2021-06-01 12:51:56.157561+02
+1106	payments_pledge	0002_auto_20210302_1417	2021-06-01 12:51:56.1964+02
+1107	payments_interswitch	0004_auto_20210302_1417	2021-06-01 12:51:56.267624+02
+1108	payments_flutterwave	0009_auto_20210302_1417	2021-06-01 12:51:56.33367+02
+1109	payments_external	0002_auto_20210302_1417	2021-06-01 12:51:56.367392+02
+1110	payments_docdata	0005_auto_20210302_1417	2021-06-01 12:51:56.457573+02
+1111	payments_beyonic	0002_auto_20210302_1417	2021-06-01 12:51:56.487901+02
+1112	payments	0008_auto_20210302_1417	2021-06-01 12:51:56.508355+02
+1113	statistics	0013_auto_20201207_1137	2021-06-01 12:51:56.899778+02
+1114	time_based	0061_auto_20210302_1553	2021-06-01 12:51:57.455115+02
+1115	time_based	0062_auto_20210303_0820	2021-06-01 12:51:57.640543+02
+1116	time_based	0063_auto_20210303_0836	2021-06-01 12:51:57.658847+02
+1117	time_based	0059_auto_20210302_1703	2021-06-01 12:51:57.809089+02
+1118	time_based	0064_merge_20210303_0918	2021-06-01 12:51:57.811597+02
+1119	time_based	0065_auto_20210331_1206	2021-06-01 12:51:57.917899+02
+1120	time_based	0066_auto_20210331_1207	2021-06-01 12:51:58.325928+02
+1121	wallposts	0021_auto_20201118_0954	2021-06-01 12:51:58.435907+02
+1122	admin	0003_logentry_add_action_flag_choices	2021-06-01 15:14:16.913069+02
+1123	auth	0009_alter_user_last_name_max_length	2021-06-01 15:14:16.934127+02
+1124	auth	0010_alter_group_name_max_length	2021-06-01 15:14:16.95675+02
+1125	auth	0011_update_proxy_permissions	2021-06-01 15:14:17.115938+02
+1126	authtoken	0003_tokenproxy	2021-06-01 15:14:17.294093+02
+1127	axes	0006_remove_accesslog_trusted	2021-06-01 15:14:17.312393+02
+1128	django_summernote	0002_update-help_text	2021-06-01 15:14:17.327098+02
+1129	funding_stripe	0006_auto_20210409_1731	2021-06-01 15:14:17.351302+02
+1130	offices	0003_auto_20210414_1507	2021-06-01 15:14:17.398045+02
+1131	geo	0023_auto_20210414_1507	2021-06-01 15:14:18.072675+02
+1132	geo	0024_auto_20210414_1508	2021-06-01 15:14:18.236436+02
+1133	geo	0025_auto_20210414_1508	2021-06-01 15:14:18.54562+02
+1134	geo	0026_auto_20210415_0854	2021-06-01 15:14:18.742525+02
+1135	initiatives	0035_auto_20210505_1425	2021-06-01 15:14:19.677923+02
+1136	initiatives	0036_auto_20210505_1521	2021-06-01 15:14:19.981992+02
+1137	initiatives	0037_merge_20210525_1459	2021-06-01 15:14:19.985348+02
+1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:20.701096+02
+1139	social_django	0010_uid_db_index	2021-06-01 15:14:20.987354+02
+1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:21.08849+02
 \.
 
 
@@ -25348,30 +24449,6 @@ COPY test2.django_redirect (id, old_path, new_path, regular_expression, fallback
 
 COPY test2.django_site (id, domain, name) FROM stdin;
 1	example.com	example.com
-\.
-
-
---
--- Data for Name: donations_donation; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.donations_donation (id, amount, created, updated, completed, anonymous, fundraiser_id, order_id, project_id, reward_id, amount_currency, name, payout_amount, payout_amount_currency, new_donation_id) FROM stdin;
-\.
-
-
---
--- Data for Name: events_event; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.events_event (activity_ptr_id, capacity, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end", start) FROM stdin;
-\.
-
-
---
--- Data for Name: events_participant; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.events_participant (contribution_ptr_id, time_spent) FROM stdin;
 \.
 
 
@@ -25449,7 +24526,7 @@ COPY test2.follow_follow (id, instance_id, created, content_type_id, user_id) FR
 -- Data for Name: funding_bankaccount; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_bankaccount (id, polymorphic_ctype_id, created, reviewed, updated, connect_account_id) FROM stdin;
+COPY test2.funding_bankaccount (id, polymorphic_ctype_id, created, reviewed, updated, connect_account_id, status) FROM stdin;
 \.
 
 
@@ -25462,10 +24539,10 @@ COPY test2.funding_budgetline (id, description, amount_currency, amount, created
 
 
 --
--- Data for Name: funding_donation; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: funding_donor; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_donation (contribution_ptr_id, amount_currency, amount, fundraiser_id, reward_id, client_secret, name, anonymous, payout_id, payout_amount, payout_amount_currency) FROM stdin;
+COPY test2.funding_donor (contributor_ptr_id, amount_currency, amount, fundraiser_id, reward_id, client_secret, name, anonymous, payout_id, payout_amount, payout_amount_currency) FROM stdin;
 \.
 
 
@@ -25549,6 +24626,14 @@ COPY test2.funding_lipisha_lipishapayment (payment_ptr_id, mobile_number, unique
 
 COPY test2.funding_lipisha_lipishapaymentprovider (paymentprovider_ptr_id, api_key, api_signature, prefix, paybill) FROM stdin;
 3	5a3ba3fef3c58f9a9150fe8b3c2fc6ef	yPcnztZ56J0dvcyGvDViPR5kwqLxMAqwn7uECkEseTC3pyNMy1sf4XiVXosnKnqbJnYL3U1SuDG+YPqcuF8Sg00zvTPbwCVUJ+SHKIKoBgb4aHDlYFvD9SUcVRrkdS6sC8R1/11j2WAz8SC+z6uM1uOeduG3ZB0rgCGZ/ACgGOc=	new	961700
+\.
+
+
+--
+-- Data for Name: funding_moneycontribution; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.funding_moneycontribution (contribution_ptr_id, value_currency, value) FROM stdin;
 \.
 
 
@@ -25735,14 +24820,6 @@ COPY test2.funding_vitepay_vitepaypaymentprovider (paymentprovider_ptr_id, api_s
 
 
 --
--- Data for Name: fundraisers_fundraiser; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.fundraisers_fundraiser (id, title, description, image, video_url, amount, deadline, created, updated, deleted, location_id, owner_id, project_id, amount_currency) FROM stdin;
-\.
-
-
---
 -- Data for Name: geo_country; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -25762,15 +24839,7 @@ COPY test2.geo_country_translation (id, language_code, name, master_id) FROM std
 -- Data for Name: geo_geolocation; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.geo_geolocation (id, street_number, street, postal_code, locality, province, formatted_address, "position", country_id) FROM stdin;
-\.
-
-
---
--- Data for Name: geo_initiativeplace; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.geo_initiativeplace (id, street_number, street, postal_code, locality, province, formatted_address, "position", country_id) FROM stdin;
+COPY test2.geo_geolocation (id, street_number, street, postal_code, locality, province, formatted_address, country_id, "position") FROM stdin;
 \.
 
 
@@ -25778,7 +24847,7 @@ COPY test2.geo_initiativeplace (id, street_number, street, postal_code, locality
 -- Data for Name: geo_location; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.geo_location (id, name, "position", city, description, image, country_id, group_id, slug) FROM stdin;
+COPY test2.geo_location (id, name, city, description, image, country_id, group_id, slug, subregion_id, "position") FROM stdin;
 \.
 
 
@@ -25794,7 +24863,7 @@ COPY test2.geo_locationgroup (id, name, description) FROM stdin;
 -- Data for Name: geo_place; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, "position", object_id, content_type_id, country_id) FROM stdin;
+COPY test2.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, object_id, content_type_id, country_id, "position") FROM stdin;
 \.
 
 
@@ -25886,7 +24955,15 @@ COPY test2.impact_impacttype_translation (id, language_code, master_id, text, te
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id) FROM stdin;
+COPY test2.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open) FROM stdin;
+\.
+
+
+--
+-- Data for Name: initiatives_initiative_activity_managers; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.initiatives_initiative_activity_managers (id, initiative_id, member_id) FROM stdin;
 \.
 
 
@@ -25902,8 +24979,75 @@ COPY test2.initiatives_initiative_categories (id, initiative_id, category_id) FR
 -- Data for Name: initiatives_initiativeplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact) FROM stdin;
-1	2020-10-12 14:24:23.289698+02	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f
+COPY test2.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact, enable_office_regions, enable_multiple_dates, enable_participant_exports, enable_matching_emails, enable_open_initiatives) FROM stdin;
+1	2021-06-01 12:51:27.720328+02	funding,dateactivity,periodactivity	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f	f	f	f	f	f
+\.
+
+
+--
+-- Data for Name: initiatives_theme; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.initiatives_theme (id, slug, disabled) FROM stdin;
+1	agriculture	f
+2	animal-welfare	f
+3	arts-culture	f
+5	climate	f
+6	community-building	f
+7	education	f
+8	emergency-relief	f
+9	food	f
+10	health	f
+11	human-rights	f
+12	ict	f
+13	media-journalism	f
+14	social-entrepreneurship	f
+15	sport	f
+16	tourism	f
+17	water	f
+18	mobility	f
+\.
+
+
+--
+-- Data for Name: initiatives_theme_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.initiatives_theme_translation (id, language_code, name, description, master_id) FROM stdin;
+0	nl	Natuur & Milieu		1
+1	en	Agriculture		1
+2	nl	Dierenwelzijn		2
+3	en	Animal welfare		2
+4	nl	Kunst & Cultuur		3
+5	en	Arts & Culture		3
+6	nl	Klimaat		5
+7	en	Climate		5
+8	nl	Leefbaarheid		6
+9	en	Community building		6
+10	nl	Onderwijs		7
+11	en	Education		7
+12	nl	Noodhulp		8
+13	en	Emergency relief		8
+14	nl	Voedsel		9
+15	en	Food		9
+16	nl	Gezondheid & Zorg		10
+17	en	Health		10
+18	nl	Mensenrechten		11
+19	en	Human rights		11
+20	nl	ICT		12
+21	en	ICT		12
+22	nl	Media & Journalistiek		13
+23	en	Media & Journalism		13
+24	nl	Sociaal Ondernemerschap		14
+25	en	Social entrepreneurship		14
+26	nl	Sport & Recreatie		15
+27	en	Sport		15
+28	nl	Toerisme		16
+29	en	Tourism		16
+30	nl	Water		17
+31	en	Water		17
+32	nl	Mobiliteit		18
+33	en	Mobility		18
 \.
 
 
@@ -25972,7 +25116,7 @@ COPY test2.members_member (id, password, last_login, is_superuser, email, userna
 -- Data for Name: members_member_favourite_themes; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.members_member_favourite_themes (id, member_id, projecttheme_id) FROM stdin;
+COPY test2.members_member_favourite_themes (id, member_id, theme_id) FROM stdin;
 \.
 
 
@@ -26014,8 +25158,8 @@ COPY test2.members_member_user_permissions (id, member_id, permission_id) FROM s
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments) FROM stdin;
-1	2020-10-12 14:24:06.526667+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f
+COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only) FROM stdin;
+1	2020-10-12 14:24:06.526667+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f
 \.
 
 
@@ -26072,7 +25216,23 @@ COPY test2.notifications_messagetemplate_translation (id, language_code, subject
 --
 
 COPY test2.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2020-10-12 14:24:23.289132+02	twitter,facebook	\N	
+1	2020-10-12 14:24:23.289132+02	twitter,facebook	\N	f
+\.
+
+
+--
+-- Data for Name: offices_officeregion; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.offices_officeregion (id, name, description) FROM stdin;
+\.
+
+
+--
+-- Data for Name: offices_officesubregion; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.offices_officesubregion (id, name, description, region_id) FROM stdin;
 \.
 
 
@@ -26105,182 +25265,6 @@ COPY test2.organizations_organizationcontact (id, name, email, phone, created, u
 --
 
 COPY test2.pages_page (id, title, slug, full_page, language, status, publication_date, publication_end_date, creation_date, modification_date, author_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_beyonic_beyonicpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_beyonic_beyonicpayment (payment_ptr_id, amount, currency, mobile, description, metadata, transaction_reference, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatadirectdebitpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_docdata_docdatadirectdebitpayment (payment_ptr_id, merchant_order_id, payment_cluster_id, payment_cluster_key, language, ideal_issuer_id, default_pm, total_gross_amount, currency, country, total_registered, total_shopper_pending, total_acquirer_pending, total_acquirer_approved, total_captured, total_refunded, total_charged_back, customer_id, email, first_name, last_name, address, postal_code, city, ip_address, account_name, account_city, iban, bic, agree) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatapayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_docdata_docdatapayment (payment_ptr_id, merchant_order_id, payment_cluster_id, payment_cluster_key, language, ideal_issuer_id, default_pm, total_gross_amount, currency, country, total_registered, total_shopper_pending, total_acquirer_pending, total_acquirer_approved, total_captured, total_refunded, total_charged_back, customer_id, email, first_name, last_name, address, postal_code, city, ip_address) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_docdata_docdatatransaction; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_docdata_docdatatransaction (transaction_ptr_id, status, docdata_id, payment_method, authorization_status, authorization_amount, authorization_currency, capture_status, capture_amount, chargeback_amount, refund_amount, capture_currency, raw_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_external_externalpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_external_externalpayment (payment_ptr_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_flutterwave_flutterwavempesapayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_flutterwave_flutterwavempesapayment (payment_ptr_id, amount, currency, business_number, account_number, kyc_info, remote_id, msisdn, third_party_transaction_id, transaction_time, transaction_reference, invoice_number, response, update_response, transaction_amount) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_flutterwave_flutterwavepayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_flutterwave_flutterwavepayment (payment_ptr_id, amount, currency, auth_model, card_number, customer_id, narration, response_url, country, response, update_response, transaction_reference) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_interswitch_interswitchpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_interswitch_interswitchpayment (payment_ptr_id, product_id, amount, currency, site_redirect_url, txn_ref, hash, pay_item_id, site_name, cust_id, cust_id_desc, cust_name, cust_name_desc, pay_item_name, local_date_time, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_interswitch_interswitchpaymentstatusupdate; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_interswitch_interswitchpaymentstatusupdate (id, created, result, payment_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_lipisha_lipishapayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_lipisha_lipishapayment (payment_ptr_id, reference, transaction_status, transaction_type, transaction_amount, transaction_currency, transaction_reference, transaction_reversal_status, transaction_account_name, transaction_account_number, transaction_date, transaction_email, transaction_method, transaction_mobile_number, transaction_name, transaction_fee, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_lipisha_lipishaproject; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_lipisha_lipishaproject (projectaddon_ptr_id, account_number) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_logger_paymentlogentry; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_logger_paymentlogentry (id, message, level, "timestamp", payment_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_orderpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_orderpayment (id, status, created, updated, closed, amount, transaction_fee, payment_method, integration_data, authorization_action_id, order_id, user_id, amount_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_orderpaymentaction; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_orderpaymentaction (id, type, method, url, payload) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_payment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_payment (id, status, created, updated, order_payment_id, polymorphic_ctype_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_pledge_pledgestandardpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_pledge_pledgestandardpayment (payment_ptr_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_stripe_stripepayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_stripe_stripepayment (payment_ptr_id, source_token, charge_token, amount, description, data, currency, payout_amount, payout_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_telesom_telesompayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_telesom_telesompayment (payment_ptr_id, amount, currency, mobile, transaction_reference, description, response, update_response) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_transaction; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_transaction (id, created, updated, payment_id, polymorphic_ctype_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_vitepay_vitepaypayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_vitepay_vitepaypayment (payment_ptr_id, language_code, currency_code, country_code, order_id, description, amount_100, buyer_ip_adress, return_url, decline_url, cancel_url, callback_url, email, p_type, payment_url) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_voucher_voucher; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_voucher_voucher (id, amount, currency, language, message, code, status, created, updated, sender_email, sender_name, receiver_email, receiver_name, order_id, receiver_id, sender_id) FROM stdin;
-\.
-
-
---
--- Data for Name: payments_voucher_voucherpayment; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.payments_voucher_voucherpayment (payment_ptr_id, voucher_id) FROM stdin;
 \.
 
 
@@ -26325,102 +25309,10 @@ COPY test2.payouts_stripepayoutaccount (payoutaccount_ptr_id, account_id, docume
 
 
 --
--- Data for Name: projects_customprojectfield; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_customprojectfield (id, value, field_id, project_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_customprojectfieldsettings; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_customprojectfieldsettings (id, name, description, sequence, project_settings_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_project; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_project (id, project_type, created, updated, title, slug, pitch, favorite, deadline, place, description, image, amount_asked, amount_donated, amount_needed, amount_extra, reach, video_url, popularity, is_campaign, skip_monthly, allow_overfunding, story, effects, for_who, future, date_submitted, campaign_started, campaign_ended, campaign_funded, voting_deadline, country_id, language_id, location_id, organization_id, owner_id, status_id, theme_id, celebrate_results, amount_asked_currency, amount_donated_currency, amount_extra_currency, amount_needed_currency, currencies, payout_status, campaign_paid_out, reviewer_id, promoter_id, task_manager_id, campaign_edited, campaign_duration, payout_account_id, funding_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_project_categories; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_project_categories (id, project_id, category_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectaddon; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectaddon (id, polymorphic_ctype_id, project_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectbudgetline; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectbudgetline (id, description, amount, created, updated, project_id, amount_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectcreatetemplate; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectcreatetemplate (id, name, default_amount_asked_currency, project_settings_id, description, image, default_amount_asked, default_description, default_image, default_title, default_pitch, sub_name) FROM stdin;
-\.
-
-
---
 -- Data for Name: projects_projectimage; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.projects_projectimage (id, project_id, file, name, uploaded) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectlocation; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectlocation (project_id, place, street, neighborhood, city, postal_code, country, latitude, longitude) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectphaselog; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectphaselog (id, start, project_id, status_id) FROM stdin;
-\.
-
-
---
--- Data for Name: projects_projectplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectplatformsettings (id, update, create_types, create_flow, contact_method, contact_types, allow_anonymous_rewards, facebook_at_work_url, share_options, match_options) FROM stdin;
-1	2020-10-12 14:22:39.421606+02	funding	combined	mail	organization	t	\N	twitter,facebook	
-\.
-
-
---
--- Data for Name: projects_projectsearchfilter; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.projects_projectsearchfilter (id, name, "default", "values", project_settings_id, sequence) FROM stdin;
-1	status	\N	\N	1	0
-2	location	\N	\N	1	0
-3	theme	\N	\N	1	0
+COPY test2.projects_projectimage (id, file, name, uploaded) FROM stdin;
 \.
 
 
@@ -26429,14 +25321,6 @@ COPY test2.projects_projectsearchfilter (id, name, "default", "values", project_
 --
 
 COPY test2.quotes_quote (id, language, quote, status, publication_date, publication_end_date, creation_date, modification_date, author_id, user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: rewards_reward; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.rewards_reward (id, amount, title, description, "limit", created, updated, project_id, amount_currency, new_reward_id) FROM stdin;
 \.
 
 
@@ -26509,7 +25393,7 @@ COPY test2.social_auth_partial (id, token, next_step, backend, data, "timestamp"
 -- Data for Name: social_auth_usersocialauth; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.social_auth_usersocialauth (id, provider, uid, extra_data, user_id) FROM stdin;
+COPY test2.social_auth_usersocialauth (id, provider, uid, extra_data, user_id, created, modified) FROM stdin;
 \.
 
 
@@ -26578,14 +25462,6 @@ COPY test2.statistics_statistic (id, title, type, sequence, value, active, creat
 
 
 --
--- Data for Name: suggestions_suggestion; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.suggestions_suggestion (id, created, updated, title, pitch, deadline, destination, org_name, org_contactname, org_email, org_phone, org_website, status, token, project_id, theme_id, language) FROM stdin;
-\.
-
-
---
 -- Data for Name: taggit_tag; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -26602,10 +25478,82 @@ COPY test2.taggit_taggeditem (id, object_id, content_type_id, tag_id) FROM stdin
 
 
 --
--- Data for Name: tasks_skill; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: terms_terms; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.tasks_skill (id, disabled, expertise) FROM stdin;
+COPY test2.terms_terms (id, created, updated, date, contents, version, author_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: terms_termsagreement; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.terms_termsagreement (id, created, terms_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: thumbnail_kvstore; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.thumbnail_kvstore (key, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateactivity; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_dateactivity (timebasedactivity_ptr_id, online_meeting_url, slot_selection) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateactivityslot; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_dateactivityslot (id, created, updated, status, title, capacity, start, duration, is_online, online_meeting_url, location_hint, activity_id, location_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_dateparticipant; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_dateparticipant (contributor_ptr_id, document_id, motivation) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodactivity; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_periodactivity (timebasedactivity_ptr_id, deadline, duration_period, start, duration, online_meeting_url, is_online, location_id, location_hint) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodactivityslot; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_periodactivityslot (id, created, updated, status, title, capacity, start, "end", activity_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_periodparticipant; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_periodparticipant (contributor_ptr_id, current_period, document_id, motivation) FROM stdin;
+\.
+
+
+--
+-- Data for Name: time_based_skill; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.time_based_skill (id, disabled, expertise) FROM stdin;
 1	f	t
 2	f	t
 3	f	t
@@ -26640,12 +25588,10 @@ COPY test2.tasks_skill (id, disabled, expertise) FROM stdin;
 
 
 --
--- Data for Name: tasks_skill_translation; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: time_based_skill_translation; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.tasks_skill_translation (id, language_code, name, description, master_id) FROM stdin;
-0	nl	- Geen specifieke vaardigheid nodig -		1
-1	en	- No specific skill needed -		1
+COPY test2.time_based_skill_translation (id, language_code, name, description, master_id) FROM stdin;
 2	nl	Natuur & Milieu		2
 3	en	Agriculture		2
 4	nl	Architectuur / Bouwkunde		3
@@ -26704,30 +25650,32 @@ COPY test2.tasks_skill_translation (id, language_code, name, description, master
 57	en	Writing proposals		29
 58	nl	Coachen		30
 59	en	Coaching		30
+0	nl	- Geen specifieke vaardigheid nodig -		1
+1	en	- No specific skill needed -		1
 \.
 
 
 --
--- Data for Name: terms_terms; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: time_based_slotparticipant; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.terms_terms (id, created, updated, date, contents, version, author_id) FROM stdin;
+COPY test2.time_based_slotparticipant (id, participant_id, slot_id, status) FROM stdin;
 \.
 
 
 --
--- Data for Name: terms_termsagreement; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: time_based_timebasedactivity; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.terms_termsagreement (id, created, terms_id, user_id) FROM stdin;
+COPY test2.time_based_timebasedactivity (activity_ptr_id, capacity, is_online, location_hint, registration_deadline, review, expertise_id, location_id, preparation) FROM stdin;
 \.
 
 
 --
--- Data for Name: thumbnail_kvstore; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: time_based_timecontribution; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.thumbnail_kvstore (key, value) FROM stdin;
+COPY test2.time_based_timecontribution (contribution_ptr_id, value, slot_participant_id, contribution_type) FROM stdin;
 \.
 
 
@@ -26744,8 +25692,8 @@ COPY test2.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 --
 
 COPY test2.utils_language (id, code, language_name, native_name) FROM stdin;
-6	en	English	English
-7	nl	Dutch	Nederlands
+38	en	English	English
+39	nl	Dutch	Nederlands
 \.
 
 
@@ -26770,14 +25718,6 @@ COPY test2.utils_translationplatformsettings (id, update) FROM stdin;
 --
 
 COPY test2.utils_translationplatformsettings_translation (id, language_code, master_id, office, office_location, select_an_office_location, whats_the_location_of_your_office) FROM stdin;
-\.
-
-
---
--- Data for Name: votes_vote; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.votes_vote (id, created, ip_address, project_id, voter_id) FROM stdin;
 \.
 
 
@@ -26854,7 +25794,7 @@ SELECT pg_catalog.setval('public.clients_client_id_seq', 2, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 945, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 1140, true);
 
 
 --
@@ -26910,7 +25850,7 @@ SELECT pg_catalog.setval('public.exchange_rate_id_seq', 6, true);
 -- Name: activities_activity_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_activity_id_seq', 2, true);
+SELECT pg_catalog.setval('test.activities_activity_id_seq', 281, true);
 
 
 --
@@ -26924,7 +25864,14 @@ SELECT pg_catalog.setval('test.activities_activity_segments_id_seq', 1, false);
 -- Name: activities_contribution_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_contribution_id_seq', 2, true);
+SELECT pg_catalog.setval('test.activities_contribution_id_seq', 309, true);
+
+
+--
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.activities_contributionvalue_id_seq', 152, true);
 
 
 --
@@ -26945,14 +25892,14 @@ SELECT pg_catalog.setval('test.auth_group_id_seq', 4, true);
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 391, true);
+SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 535, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_permission_id_seq', 968, true);
+SELECT pg_catalog.setval('test.auth_permission_id_seq', 1378, true);
 
 
 --
@@ -26966,7 +25913,7 @@ SELECT pg_catalog.setval('test.axes_accessattempt_id_seq', 1, false);
 -- Name: axes_accesslog_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 4, true);
+SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 11, true);
 
 
 --
@@ -26974,34 +25921,6 @@ SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 4, true);
 --
 
 SELECT pg_catalog.setval('test.bb_follow_follow_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.bb_projects_projectphase_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.bb_projects_projectphase_translation_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.bb_projects_projecttheme_id_seq', 19, true);
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.bb_projects_projecttheme_translation_id_seq', 34, true);
 
 
 --
@@ -27117,13 +26036,6 @@ SELECT pg_catalog.setval('test.cms_logo_id_seq', 1, false);
 
 
 --
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.cms_projectscontent_projects_id_seq', 1, false);
-
-
---
 -- Name: cms_quote_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27197,28 +26109,28 @@ SELECT pg_catalog.setval('test.contact_contactmessage_id_seq', 1, false);
 -- Name: dashboard_userdashboardmodule_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.dashboard_userdashboardmodule_id_seq', 1, false);
+SELECT pg_catalog.setval('test.dashboard_userdashboardmodule_id_seq', 8, true);
 
 
 --
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_admin_log_id_seq', 1, false);
+SELECT pg_catalog.setval('test.django_admin_log_id_seq', 3, true);
 
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_content_type_id_seq', 276, true);
+SELECT pg_catalog.setval('test.django_content_type_id_seq', 303, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_migrations_id_seq', 945, true);
+SELECT pg_catalog.setval('test.django_migrations_id_seq', 1140, true);
 
 
 --
@@ -27233,13 +26145,6 @@ SELECT pg_catalog.setval('test.django_redirect_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test.django_site_id_seq', 1, true);
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.donations_donation_id_seq', 1, false);
 
 
 --
@@ -27348,52 +26253,38 @@ SELECT pg_catalog.setval('test.funding_stripe_paymentintent_id_seq', 1, false);
 
 
 --
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.fundraisers_fundraiser_id_seq', 1, false);
-
-
---
 -- Name: geo_activityplace_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 435, true);
 
 
 --
 -- Name: geo_country_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_country_id_seq', 349, true);
 
 
 --
 -- Name: geo_country_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 4, true);
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.geo_initiativeplace_id_seq', 1, false);
+SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 591, true);
 
 
 --
 -- Name: geo_location_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_location_id_seq', 1, false);
+SELECT pg_catalog.setval('test.geo_location_id_seq', 38, true);
 
 
 --
 -- Name: geo_locationgroup_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_locationgroup_id_seq', 1, false);
+SELECT pg_catalog.setval('test.geo_locationgroup_id_seq', 18, true);
 
 
 --
@@ -27407,28 +26298,28 @@ SELECT pg_catalog.setval('test.geo_place_id_seq', 1, false);
 -- Name: geo_region_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_region_id_seq', 119, true);
 
 
 --
 -- Name: geo_region_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 111, true);
 
 
 --
 -- Name: geo_subregion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_subregion_id_seq', 124, true);
 
 
 --
 -- Name: geo_subregion_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 4, true);
+SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 145, true);
 
 
 --
@@ -27453,6 +26344,13 @@ SELECT pg_catalog.setval('test.impact_impacttype_translation_id_seq', 21, true);
 
 
 --
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.initiatives_initiative_activity_managers_id_seq', 200, true);
+
+
+--
 -- Name: initiatives_initiative_categories_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27463,7 +26361,7 @@ SELECT pg_catalog.setval('test.initiatives_initiative_categories_id_seq', 1, fal
 -- Name: initiatives_initiative_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 2, true);
+SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 348, true);
 
 
 --
@@ -27471,6 +26369,20 @@ SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 2, true);
 --
 
 SELECT pg_catalog.setval('test.initiatives_initiativeplatformsettings_id_seq', 1, true);
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.initiatives_theme_id_seq', 118, true);
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.initiatives_theme_translation_id_seq', 133, true);
 
 
 --
@@ -27526,14 +26438,14 @@ SELECT pg_catalog.setval('test.members_member_favourite_themes_id_seq', 1, false
 -- Name: members_member_groups_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_groups_id_seq', 32, true);
+SELECT pg_catalog.setval('test.members_member_groups_id_seq', 1606, true);
 
 
 --
 -- Name: members_member_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_id_seq', 31, true);
+SELECT pg_catalog.setval('test.members_member_id_seq', 1599, true);
 
 
 --
@@ -27589,7 +26501,7 @@ SELECT pg_catalog.setval('test.news_newsitem_id_seq', 1, false);
 -- Name: notifications_message_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.notifications_message_id_seq', 1, false);
+SELECT pg_catalog.setval('test.notifications_message_id_seq', 133, true);
 
 
 --
@@ -27611,6 +26523,20 @@ SELECT pg_catalog.setval('test.notifications_messagetemplate_translation_id_seq'
 --
 
 SELECT pg_catalog.setval('test.notifications_notificationplatformsettings_id_seq', 1, true);
+
+
+--
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.offices_officeregion_id_seq', 1, false);
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.offices_officesubregion_id_seq', 1, false);
 
 
 --
@@ -27642,55 +26568,6 @@ SELECT pg_catalog.setval('test.pages_page_id_seq', 1, false);
 
 
 --
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_interswitch_interswitchpaymentstatusupdate_id_seq', 1, false);
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_logger_paymentlogentry_id_seq', 1, false);
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_orderpayment_id_seq', 1, false);
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_orderpaymentaction_id_seq', 1, false);
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_payment_id_seq', 1, false);
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_transaction_id_seq', 1, false);
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.payments_voucher_voucher_id_seq', 1, false);
-
-
---
 -- Name: payouts_payoutaccount_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27705,55 +26582,6 @@ SELECT pg_catalog.setval('test.payouts_payoutdocument_id_seq', 1, false);
 
 
 --
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_customprojectfield_id_seq', 1, false);
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_customprojectfieldsettings_id_seq', 1, false);
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_project_categories_id_seq', 1, false);
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_project_id_seq', 1, false);
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectaddon_id_seq', 1, false);
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectbudgetline_id_seq', 1, false);
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectcreatetemplate_id_seq', 1, false);
-
-
---
 -- Name: projects_projectimage_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27761,38 +26589,10 @@ SELECT pg_catalog.setval('test.projects_projectimage_id_seq', 1, false);
 
 
 --
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectphaselog_id_seq', 1, false);
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectplatformsettings_id_seq', 1, true);
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.projects_projectsearchfilter_id_seq', 3, true);
-
-
---
 -- Name: quotes_quote_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
 SELECT pg_catalog.setval('test.quotes_quote_id_seq', 1, false);
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.rewards_reward_id_seq', 1, false);
 
 
 --
@@ -27894,13 +26694,6 @@ SELECT pg_catalog.setval('test.statistics_statistic_id_seq', 1, false);
 
 
 --
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.suggestions_suggestion_id_seq', 1, false);
-
-
---
 -- Name: taggit_tag_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27912,20 +26705,6 @@ SELECT pg_catalog.setval('test.taggit_tag_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test.taggit_taggeditem_id_seq', 1, false);
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.tasks_skill_id_seq', 30, true);
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.tasks_skill_translation_id_seq', 59, true);
 
 
 --
@@ -27943,6 +26722,41 @@ SELECT pg_catalog.setval('test.terms_termsagreement_id_seq', 1, false);
 
 
 --
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.time_based_dateactivityslot_id_seq', 78, true);
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.time_based_periodactivityslot_id_seq', 1, false);
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.time_based_skill_id_seq', 30, true);
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.time_based_skill_translation_id_seq', 59, true);
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.time_based_slotparticipant_id_seq', 1, false);
+
+
+--
 -- Name: token_auth_checkedtoken_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -27953,7 +26767,7 @@ SELECT pg_catalog.setval('test.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.utils_language_id_seq', 7, true);
+SELECT pg_catalog.setval('test.utils_language_id_seq', 95, true);
 
 
 --
@@ -27975,13 +26789,6 @@ SELECT pg_catalog.setval('test.utils_translationplatformsettings_id_seq', 1, fal
 --
 
 SELECT pg_catalog.setval('test.utils_translationplatformsettings_translation_id_seq', 1, false);
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.votes_vote_id_seq', 1, false);
 
 
 --
@@ -28027,6 +26834,13 @@ SELECT pg_catalog.setval('test2.activities_contribution_id_seq', 1, false);
 
 
 --
+-- Name: activities_contributionvalue_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.activities_contributionvalue_id_seq', 1, false);
+
+
+--
 -- Name: analytics_analyticsplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28044,14 +26858,14 @@ SELECT pg_catalog.setval('test2.auth_group_id_seq', 4, true);
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 391, true);
+SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 535, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_permission_id_seq', 968, true);
+SELECT pg_catalog.setval('test2.auth_permission_id_seq', 1378, true);
 
 
 --
@@ -28073,34 +26887,6 @@ SELECT pg_catalog.setval('test2.axes_accesslog_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.bb_follow_follow_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projectphase_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.bb_projects_projectphase_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projectphase_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.bb_projects_projectphase_translation_id_seq', 1, false);
-
-
---
--- Name: bb_projects_projecttheme_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.bb_projects_projecttheme_id_seq', 18, true);
-
-
---
--- Name: bb_projects_projecttheme_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.bb_projects_projecttheme_translation_id_seq', 33, true);
 
 
 --
@@ -28216,13 +27002,6 @@ SELECT pg_catalog.setval('test2.cms_logo_id_seq', 1, false);
 
 
 --
--- Name: cms_projectscontent_projects_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.cms_projectscontent_projects_id_seq', 1, false);
-
-
---
 -- Name: cms_quote_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28310,14 +27089,14 @@ SELECT pg_catalog.setval('test2.django_admin_log_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_content_type_id_seq', 276, true);
+SELECT pg_catalog.setval('test2.django_content_type_id_seq', 303, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_migrations_id_seq', 945, true);
+SELECT pg_catalog.setval('test2.django_migrations_id_seq', 1140, true);
 
 
 --
@@ -28332,13 +27111,6 @@ SELECT pg_catalog.setval('test2.django_redirect_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.django_site_id_seq', 1, true);
-
-
---
--- Name: donations_donation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.donations_donation_id_seq', 1, false);
 
 
 --
@@ -28447,13 +27219,6 @@ SELECT pg_catalog.setval('test2.funding_stripe_paymentintent_id_seq', 1, false);
 
 
 --
--- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.fundraisers_fundraiser_id_seq', 1, false);
-
-
---
 -- Name: geo_activityplace_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28472,13 +27237,6 @@ SELECT pg_catalog.setval('test2.geo_country_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.geo_country_translation_id_seq', 1, false);
-
-
---
--- Name: geo_initiativeplace_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.geo_initiativeplace_id_seq', 1, false);
 
 
 --
@@ -28552,6 +27310,13 @@ SELECT pg_catalog.setval('test2.impact_impacttype_translation_id_seq', 21, true)
 
 
 --
+-- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.initiatives_initiative_activity_managers_id_seq', 1, false);
+
+
+--
 -- Name: initiatives_initiative_categories_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28570,6 +27335,20 @@ SELECT pg_catalog.setval('test2.initiatives_initiative_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.initiatives_initiativeplatformsettings_id_seq', 1, true);
+
+
+--
+-- Name: initiatives_theme_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.initiatives_theme_id_seq', 18, true);
+
+
+--
+-- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.initiatives_theme_translation_id_seq', 33, true);
 
 
 --
@@ -28713,6 +27492,20 @@ SELECT pg_catalog.setval('test2.notifications_notificationplatformsettings_id_se
 
 
 --
+-- Name: offices_officeregion_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.offices_officeregion_id_seq', 1, false);
+
+
+--
+-- Name: offices_officesubregion_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.offices_officesubregion_id_seq', 1, false);
+
+
+--
 -- Name: orders_order_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28741,55 +27534,6 @@ SELECT pg_catalog.setval('test2.pages_page_id_seq', 1, false);
 
 
 --
--- Name: payments_interswitch_interswitchpaymentstatusupdate_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_interswitch_interswitchpaymentstatusupdate_id_seq', 1, false);
-
-
---
--- Name: payments_logger_paymentlogentry_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_logger_paymentlogentry_id_seq', 1, false);
-
-
---
--- Name: payments_orderpayment_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_orderpayment_id_seq', 1, false);
-
-
---
--- Name: payments_orderpaymentaction_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_orderpaymentaction_id_seq', 1, false);
-
-
---
--- Name: payments_payment_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_payment_id_seq', 1, false);
-
-
---
--- Name: payments_transaction_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_transaction_id_seq', 1, false);
-
-
---
--- Name: payments_voucher_voucher_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.payments_voucher_voucher_id_seq', 1, false);
-
-
---
 -- Name: payouts_payoutaccount_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28804,55 +27548,6 @@ SELECT pg_catalog.setval('test2.payouts_payoutdocument_id_seq', 1, false);
 
 
 --
--- Name: projects_customprojectfield_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_customprojectfield_id_seq', 1, false);
-
-
---
--- Name: projects_customprojectfieldsettings_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_customprojectfieldsettings_id_seq', 1, false);
-
-
---
--- Name: projects_project_categories_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_project_categories_id_seq', 1, false);
-
-
---
--- Name: projects_project_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_project_id_seq', 1, false);
-
-
---
--- Name: projects_projectaddon_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectaddon_id_seq', 1, false);
-
-
---
--- Name: projects_projectbudgetline_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectbudgetline_id_seq', 1, false);
-
-
---
--- Name: projects_projectcreatetemplate_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectcreatetemplate_id_seq', 1, false);
-
-
---
 -- Name: projects_projectimage_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -28860,38 +27555,10 @@ SELECT pg_catalog.setval('test2.projects_projectimage_id_seq', 1, false);
 
 
 --
--- Name: projects_projectphaselog_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectphaselog_id_seq', 1, false);
-
-
---
--- Name: projects_projectplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectplatformsettings_id_seq', 1, true);
-
-
---
--- Name: projects_projectsearchfilter_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.projects_projectsearchfilter_id_seq', 3, true);
-
-
---
 -- Name: quotes_quote_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
 SELECT pg_catalog.setval('test2.quotes_quote_id_seq', 1, false);
-
-
---
--- Name: rewards_reward_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.rewards_reward_id_seq', 1, false);
 
 
 --
@@ -28993,13 +27660,6 @@ SELECT pg_catalog.setval('test2.statistics_statistic_id_seq', 1, false);
 
 
 --
--- Name: suggestions_suggestion_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.suggestions_suggestion_id_seq', 1, false);
-
-
---
 -- Name: taggit_tag_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -29011,20 +27671,6 @@ SELECT pg_catalog.setval('test2.taggit_tag_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.taggit_taggeditem_id_seq', 1, false);
-
-
---
--- Name: tasks_skill_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.tasks_skill_id_seq', 30, true);
-
-
---
--- Name: tasks_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.tasks_skill_translation_id_seq', 59, true);
 
 
 --
@@ -29042,6 +27688,41 @@ SELECT pg_catalog.setval('test2.terms_termsagreement_id_seq', 1, false);
 
 
 --
+-- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.time_based_dateactivityslot_id_seq', 1, false);
+
+
+--
+-- Name: time_based_periodactivityslot_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.time_based_periodactivityslot_id_seq', 1, false);
+
+
+--
+-- Name: time_based_skill_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.time_based_skill_id_seq', 30, true);
+
+
+--
+-- Name: time_based_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.time_based_skill_translation_id_seq', 59, true);
+
+
+--
+-- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.time_based_slotparticipant_id_seq', 1, false);
+
+
+--
 -- Name: token_auth_checkedtoken_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -29052,7 +27733,7 @@ SELECT pg_catalog.setval('test2.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.utils_language_id_seq', 7, true);
+SELECT pg_catalog.setval('test2.utils_language_id_seq', 39, true);
 
 
 --
@@ -29074,13 +27755,6 @@ SELECT pg_catalog.setval('test2.utils_translationplatformsettings_id_seq', 1, fa
 --
 
 SELECT pg_catalog.setval('test2.utils_translationplatformsettings_translation_id_seq', 1, false);
-
-
---
--- Name: votes_vote_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.votes_vote_id_seq', 1, false);
 
 
 --
@@ -29313,11 +27987,19 @@ ALTER TABLE ONLY test.activities_activity_segments
 
 
 --
--- Name: activities_contribution activities_contribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: activities_contributor activities_contribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_contributor
+    ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: activities_contribution activities_contributionvalue_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.activities_contribution
-    ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT activities_contributionvalue_pkey PRIMARY KEY (id);
 
 
 --
@@ -29325,7 +28007,15 @@ ALTER TABLE ONLY test.activities_contribution
 --
 
 ALTER TABLE ONLY test.activities_organizer
-    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contribution_ptr_id);
+    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: activities_effortcontribution activities_organizercontribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_effortcontribution
+    ADD CONSTRAINT activities_organizercontribution_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -29334,22 +28024,6 @@ ALTER TABLE ONLY test.activities_organizer
 
 ALTER TABLE ONLY test.analytics_analyticsplatformsettings
     ADD CONSTRAINT analytics_analyticsplatformsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: assignments_applicant assignments_applicant_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_applicant
-    ADD CONSTRAINT assignments_applicant_pkey PRIMARY KEY (contribution_ptr_id);
-
-
---
--- Name: assignments_assignment assignments_assignment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_assignment
-    ADD CONSTRAINT assignments_assignment_pkey PRIMARY KEY (activity_ptr_id);
 
 
 --
@@ -29441,74 +28115,34 @@ ALTER TABLE ONLY test.bb_follow_follow
 
 
 --
--- Name: bb_projects_projectphase_translation bb_projects_projectphase_language_code_master_id_7641be0e_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projecttheme_language_code_master_id_43a14274_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectphase_language_code_master_id_7641be0e_uniq UNIQUE (language_code, master_id);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_pkey PRIMARY KEY (id);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_sequence_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_sequence_key UNIQUE (sequence);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_slug_key UNIQUE (slug);
-
-
---
--- Name: bb_projects_projectphase_translation bb_projects_projectphase_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectphase_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: bb_projects_projecttheme_translation bb_projects_projecttheme_language_code_master_id_43a14274_uniq; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projecttheme_translation
+ALTER TABLE ONLY test.initiatives_theme_translation
     ADD CONSTRAINT bb_projects_projecttheme_language_code_master_id_43a14274_uniq UNIQUE (language_code, master_id);
 
 
 --
--- Name: bb_projects_projecttheme bb_projects_projecttheme_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_theme bb_projects_projecttheme_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.bb_projects_projecttheme
+ALTER TABLE ONLY test.initiatives_theme
     ADD CONSTRAINT bb_projects_projecttheme_pkey PRIMARY KEY (id);
 
 
 --
--- Name: bb_projects_projecttheme bb_projects_projecttheme_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_theme bb_projects_projecttheme_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.bb_projects_projecttheme
+ALTER TABLE ONLY test.initiatives_theme
     ADD CONSTRAINT bb_projects_projecttheme_slug_key UNIQUE (slug);
 
 
 --
--- Name: bb_projects_projecttheme_translation bb_projects_projecttheme_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projecttheme_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.bb_projects_projecttheme_translation
+ALTER TABLE ONLY test.initiatives_theme_translation
     ADD CONSTRAINT bb_projects_projecttheme_translation_pkey PRIMARY KEY (id);
 
 
@@ -29705,22 +28339,6 @@ ALTER TABLE ONLY test.cms_logo
 
 
 --
--- Name: cms_projectscontent_projects cms_projectscontent_proj_projectscontent_id_proje_04b80421_uniq; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent_proj_projectscontent_id_proje_04b80421_uniq UNIQUE (projectscontent_id, project_id);
-
-
---
--- Name: cms_projectscontent_projects cms_projectscontent_projects_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent_projects_pkey PRIMARY KEY (id);
-
-
---
 -- Name: cms_quote cms_quote_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -29870,14 +28488,6 @@ ALTER TABLE ONLY test.contentitem_cms_locationscontent
 
 ALTER TABLE ONLY test.contentitem_cms_logoscontent
     ADD CONSTRAINT contentitem_cms_logoscontent_pkey PRIMARY KEY (contentitem_ptr_id);
-
-
---
--- Name: contentitem_cms_projectimagescontent contentitem_cms_projectimagescontent_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.contentitem_cms_projectimagescontent
-    ADD CONSTRAINT contentitem_cms_projectimagescontent_pkey PRIMARY KEY (contentitem_ptr_id);
 
 
 --
@@ -30033,6 +28643,22 @@ ALTER TABLE ONLY test.dashboard_userdashboardmodule
 
 
 --
+-- Name: deeds_deed deeds_deed_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.deeds_deed
+    ADD CONSTRAINT deeds_deed_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: deeds_deedparticipant deeds_deedparticipant_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.deeds_deedparticipant
+    ADD CONSTRAINT deeds_deedparticipant_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
 -- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -30094,30 +28720,6 @@ ALTER TABLE ONLY test.django_site
 
 ALTER TABLE ONLY test.django_site
     ADD CONSTRAINT django_site_pkey PRIMARY KEY (id);
-
-
---
--- Name: donations_donation donations_donation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation
-    ADD CONSTRAINT donations_donation_pkey PRIMARY KEY (id);
-
-
---
--- Name: events_event events_event_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.events_event
-    ADD CONSTRAINT events_event_pkey PRIMARY KEY (activity_ptr_id);
-
-
---
--- Name: events_participant events_participant_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.events_participant
-    ADD CONSTRAINT events_participant_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -30201,11 +28803,11 @@ ALTER TABLE ONLY test.funding_budgetline
 
 
 --
--- Name: funding_donation funding_donation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_donor funding_donation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.funding_donation
-    ADD CONSTRAINT funding_donation_pkey PRIMARY KEY (contribution_ptr_id);
+ALTER TABLE ONLY test.funding_donor
+    ADD CONSTRAINT funding_donation_pkey PRIMARY KEY (contributor_ptr_id);
 
 
 --
@@ -30302,6 +28904,14 @@ ALTER TABLE ONLY test.funding_lipisha_lipishapayment
 
 ALTER TABLE ONLY test.funding_lipisha_lipishapaymentprovider
     ADD CONSTRAINT funding_lipisha_lipishapaymentprovider_pkey PRIMARY KEY (paymentprovider_ptr_id);
+
+
+--
+-- Name: funding_moneycontribution funding_moneycontribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_moneycontribution
+    ADD CONSTRAINT funding_moneycontribution_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -30497,14 +29107,6 @@ ALTER TABLE ONLY test.funding_vitepay_vitepaypaymentprovider
 
 
 --
--- Name: fundraisers_fundraiser fundraisers_fundraiser_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_pkey PRIMARY KEY (id);
-
-
---
 -- Name: geo_geolocation geo_activityplace_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -30542,14 +29144,6 @@ ALTER TABLE ONLY test.geo_country_translation
 
 ALTER TABLE ONLY test.geo_country_translation
     ADD CONSTRAINT geo_country_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: geo_initiativeplace geo_initiativeplace_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.geo_initiativeplace
-    ADD CONSTRAINT geo_initiativeplace_pkey PRIMARY KEY (id);
 
 
 --
@@ -30681,6 +29275,22 @@ ALTER TABLE ONLY test.impact_impacttype_translation
 
 
 --
+-- Name: initiatives_initiative_activity_managers initiatives_initiative_a_initiative_id_member_id_240728ad_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiative_a_initiative_id_member_id_240728ad_uniq UNIQUE (initiative_id, member_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers initiatives_initiative_activity_managers_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiative_activity_managers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiative_c_initiative_id_category_i_9d73ad46_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -30781,7 +29391,7 @@ ALTER TABLE ONLY test.members_member
 --
 
 ALTER TABLE ONLY test.members_member_favourite_themes
-    ADD CONSTRAINT members_member_favourite_member_id_projecttheme_i_aa3e66bf_uniq UNIQUE (member_id, projecttheme_id);
+    ADD CONSTRAINT members_member_favourite_member_id_projecttheme_i_aa3e66bf_uniq UNIQUE (member_id, theme_id);
 
 
 --
@@ -30961,6 +29571,22 @@ ALTER TABLE ONLY test.notifications_notificationplatformsettings
 
 
 --
+-- Name: offices_officeregion offices_officeregion_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.offices_officeregion
+    ADD CONSTRAINT offices_officeregion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: offices_officesubregion offices_officesubregion_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.offices_officesubregion
+    ADD CONSTRAINT offices_officesubregion_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: orders_order orders_order_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -30998,238 +29624,6 @@ ALTER TABLE ONLY test.pages_page
 
 ALTER TABLE ONLY test.pages_page
     ADD CONSTRAINT pages_page_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_beyonic_beyonicpayment payments_beyonic_beyonicpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_beyonic_beyonicpayment
-    ADD CONSTRAINT payments_beyonic_beyonicpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpaym_payment_cluster_key_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpaym_payment_cluster_key_key UNIQUE (payment_cluster_key);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpayme_payment_cluster_id_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpayme_payment_cluster_id_key UNIQUE (payment_cluster_id);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_payment_cluster_id_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_payment_cluster_id_key UNIQUE (payment_cluster_id);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_payment_cluster_key_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_payment_cluster_key_key UNIQUE (payment_cluster_key);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatatransaction payments_docdata_docdatatransaction_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatatransaction
-    ADD CONSTRAINT payments_docdata_docdatatransaction_pkey PRIMARY KEY (transaction_ptr_id);
-
-
---
--- Name: payments_external_externalpayment payments_external_externalpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_external_externalpayment
-    ADD CONSTRAINT payments_external_externalpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment payments_flutterwave_flutterwavempesapayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_flutterwave_flutterwavempesapayment
-    ADD CONSTRAINT payments_flutterwave_flutterwavempesapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_flutterwave_flutterwavepayment payments_flutterwave_flutterwavepayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_flutterwave_flutterwavepayment
-    ADD CONSTRAINT payments_flutterwave_flutterwavepayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_interswitch_interswitchpayment payments_interswitch_interswitchpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_interswitch_interswitchpayment
-    ADD CONSTRAINT payments_interswitch_interswitchpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate payments_interswitch_interswitchpaymentstatusupdate_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_interswitch_interswitchpaymentstatusupdate
-    ADD CONSTRAINT payments_interswitch_interswitchpaymentstatusupdate_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_lipisha_lipishapayment payments_lipisha_lipishapayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_lipisha_lipishapayment
-    ADD CONSTRAINT payments_lipisha_lipishapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_lipisha_lipishaproject payments_lipisha_lipishaproject_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_lipisha_lipishaproject
-    ADD CONSTRAINT payments_lipisha_lipishaproject_pkey PRIMARY KEY (projectaddon_ptr_id);
-
-
---
--- Name: payments_logger_paymentlogentry payments_logger_paymentlogentry_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_logger_paymentlogentry
-    ADD CONSTRAINT payments_logger_paymentlogentry_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_orderpayment payments_orderpayment_authorization_action_id_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_authorization_action_id_key UNIQUE (authorization_action_id);
-
-
---
--- Name: payments_orderpayment payments_orderpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_orderpaymentaction payments_orderpaymentaction_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpaymentaction
-    ADD CONSTRAINT payments_orderpaymentaction_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_payment payments_payment_order_payment_id_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_payment
-    ADD CONSTRAINT payments_payment_order_payment_id_key UNIQUE (order_payment_id);
-
-
---
--- Name: payments_payment payments_payment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_payment
-    ADD CONSTRAINT payments_payment_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_pledge_pledgestandardpayment payments_pledge_pledgestandardpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_pledge_pledgestandardpayment
-    ADD CONSTRAINT payments_pledge_pledgestandardpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_stripe_stripepayment payments_stripe_stripepayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_stripe_stripepayment
-    ADD CONSTRAINT payments_stripe_stripepayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_telesom_telesompayment payments_telesom_telesompayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_telesom_telesompayment
-    ADD CONSTRAINT payments_telesom_telesompayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_transaction payments_transaction_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_transaction
-    ADD CONSTRAINT payments_transaction_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_vitepay_vitepaypayment payments_vitepay_vitepaypayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_vitepay_vitepaypayment
-    ADD CONSTRAINT payments_vitepay_vitepaypayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_voucher_voucher payments_voucher_voucher_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_voucher_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_voucherpayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_voucherpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_voucherpayment_voucher_id_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_voucherpayment_voucher_id_key UNIQUE (voucher_id);
 
 
 --
@@ -31273,86 +29667,6 @@ ALTER TABLE ONLY test.payouts_stripepayoutaccount
 
 
 --
--- Name: projects_customprojectfield projects_customprojectfield_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfield
-    ADD CONSTRAINT projects_customprojectfield_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_customprojectfieldsettings projects_customprojectfieldsettings_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfieldsettings
-    ADD CONSTRAINT projects_customprojectfieldsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project_categories projects_project_categor_project_id_category_id_fd9d119d_uniq; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project_categories
-    ADD CONSTRAINT projects_project_categor_project_id_category_id_fd9d119d_uniq UNIQUE (project_id, category_id);
-
-
---
--- Name: projects_project_categories projects_project_categories_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project_categories
-    ADD CONSTRAINT projects_project_categories_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project projects_project_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project projects_project_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_slug_key UNIQUE (slug);
-
-
---
--- Name: projects_project projects_project_title_key; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_title_key UNIQUE (title);
-
-
---
--- Name: projects_projectaddon projects_projectaddon_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddon_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectbudgetline projects_projectbudgetline_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectbudgetline
-    ADD CONSTRAINT projects_projectbudgetline_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectcreatetemplate projects_projectcreatetemplate_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectcreatetemplate
-    ADD CONSTRAINT projects_projectcreatetemplate_pkey PRIMARY KEY (id);
-
-
---
 -- Name: projects_projectimage projects_projectimage_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31361,51 +29675,11 @@ ALTER TABLE ONLY test.projects_projectimage
 
 
 --
--- Name: projects_projectlocation projects_projectlocation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectlocation
-    ADD CONSTRAINT projects_projectlocation_pkey PRIMARY KEY (project_id);
-
-
---
--- Name: projects_projectphaselog projects_projectphaselog_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphaselog_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectplatformsettings projects_projectplatformsettings_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectplatformsettings
-    ADD CONSTRAINT projects_projectplatformsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectsearchfilter projects_projectsearchfilter_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectsearchfilter
-    ADD CONSTRAINT projects_projectsearchfilter_pkey PRIMARY KEY (id);
-
-
---
 -- Name: quotes_quote quotes_quote_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.quotes_quote
     ADD CONSTRAINT quotes_quote_pkey PRIMARY KEY (id);
-
-
---
--- Name: rewards_reward rewards_reward_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.rewards_reward
-    ADD CONSTRAINT rewards_reward_pkey PRIMARY KEY (id);
 
 
 --
@@ -31609,14 +29883,6 @@ ALTER TABLE ONLY test.statistics_statistic
 
 
 --
--- Name: suggestions_suggestion suggestions_suggestion_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggestion_pkey PRIMARY KEY (id);
-
-
---
 -- Name: taggit_tag taggit_tag_name_key; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31641,6 +29907,14 @@ ALTER TABLE ONLY test.taggit_tag
 
 
 --
+-- Name: taggit_taggeditem taggit_taggeditem_content_type_id_object_i_4bb97a8e_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.taggit_taggeditem
+    ADD CONSTRAINT taggit_taggeditem_content_type_id_object_i_4bb97a8e_uniq UNIQUE (content_type_id, object_id, tag_id);
+
+
+--
 -- Name: taggit_taggeditem taggit_taggeditem_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31649,26 +29923,26 @@ ALTER TABLE ONLY test.taggit_taggeditem
 
 
 --
--- Name: tasks_skill tasks_skill_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: time_based_skill tasks_skill_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.tasks_skill
+ALTER TABLE ONLY test.time_based_skill
     ADD CONSTRAINT tasks_skill_pkey PRIMARY KEY (id);
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.tasks_skill_translation
+ALTER TABLE ONLY test.time_based_skill_translation
     ADD CONSTRAINT tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq UNIQUE (language_code, master_id);
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.tasks_skill_translation
+ALTER TABLE ONLY test.time_based_skill_translation
     ADD CONSTRAINT tasks_skill_translation_pkey PRIMARY KEY (id);
 
 
@@ -31694,6 +29968,94 @@ ALTER TABLE ONLY test.terms_termsagreement
 
 ALTER TABLE ONLY test.thumbnail_kvstore
     ADD CONSTRAINT thumbnail_kvstore_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: time_based_timecontribution time_based_contributionduration_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timecontribution
+    ADD CONSTRAINT time_based_contributionduration_pkey PRIMARY KEY (contribution_ptr_id);
+
+
+--
+-- Name: time_based_dateactivityslot time_based_dateactivityslot_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactivityslot_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_dateactivity time_based_onadateactivity_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivity
+    ADD CONSTRAINT time_based_onadateactivity_pkey PRIMARY KEY (timebasedactivity_ptr_id);
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateapplication_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateapplication_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: time_based_periodactivityslot time_based_periodactivityslot_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivityslot
+    ADD CONSTRAINT time_based_periodactivityslot_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapplication_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapplication_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: time_based_skill_translation time_based_skill_transla_language_code_master_id_000668d0_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_skill_translation
+    ADD CONSTRAINT time_based_skill_transla_language_code_master_id_000668d0_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparticipant_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparticipant_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparticipant_slot_id_participant_id_932071e9_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparticipant_slot_id_participant_id_932071e9_uniq UNIQUE (slot_id, participant_id);
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebasedactivity_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebasedactivity_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: time_based_periodactivity time_based_withadeadlineactivity_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivity
+    ADD CONSTRAINT time_based_withadeadlineactivity_pkey PRIMARY KEY (timebasedactivity_ptr_id);
 
 
 --
@@ -31742,22 +30104,6 @@ ALTER TABLE ONLY test.utils_translationplatformsettings
 
 ALTER TABLE ONLY test.utils_translationplatformsettings_translation
     ADD CONSTRAINT utils_translationplatformsettings_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: votes_vote votes_vote_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.votes_vote
-    ADD CONSTRAINT votes_vote_pkey PRIMARY KEY (id);
-
-
---
--- Name: votes_vote votes_vote_project_id_voter_id_8a77bbb1_uniq; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.votes_vote
-    ADD CONSTRAINT votes_vote_project_id_voter_id_8a77bbb1_uniq UNIQUE (project_id, voter_id);
 
 
 --
@@ -31833,11 +30179,19 @@ ALTER TABLE ONLY test2.activities_activity_segments
 
 
 --
--- Name: activities_contribution activities_contribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: activities_contributor activities_contribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_contributor
+    ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: activities_contribution activities_contributionvalue_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.activities_contribution
-    ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT activities_contributionvalue_pkey PRIMARY KEY (id);
 
 
 --
@@ -31845,7 +30199,15 @@ ALTER TABLE ONLY test2.activities_contribution
 --
 
 ALTER TABLE ONLY test2.activities_organizer
-    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contribution_ptr_id);
+    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: activities_effortcontribution activities_organizercontribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_effortcontribution
+    ADD CONSTRAINT activities_organizercontribution_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -31854,22 +30216,6 @@ ALTER TABLE ONLY test2.activities_organizer
 
 ALTER TABLE ONLY test2.analytics_analyticsplatformsettings
     ADD CONSTRAINT analytics_analyticsplatformsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: assignments_applicant assignments_applicant_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_applicant
-    ADD CONSTRAINT assignments_applicant_pkey PRIMARY KEY (contribution_ptr_id);
-
-
---
--- Name: assignments_assignment assignments_assignment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_assignment
-    ADD CONSTRAINT assignments_assignment_pkey PRIMARY KEY (activity_ptr_id);
 
 
 --
@@ -31961,74 +30307,34 @@ ALTER TABLE ONLY test2.bb_follow_follow
 
 
 --
--- Name: bb_projects_projectphase_translation bb_projects_projectphase_language_code_master_id_7641be0e_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projecttheme_language_code_master_id_43a14274_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectphase_language_code_master_id_7641be0e_uniq UNIQUE (language_code, master_id);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_pkey PRIMARY KEY (id);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_sequence_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_sequence_key UNIQUE (sequence);
-
-
---
--- Name: bb_projects_projectphase bb_projects_projectphase_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase
-    ADD CONSTRAINT bb_projects_projectphase_slug_key UNIQUE (slug);
-
-
---
--- Name: bb_projects_projectphase_translation bb_projects_projectphase_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectphase_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: bb_projects_projecttheme_translation bb_projects_projecttheme_language_code_master_id_43a14274_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projecttheme_translation
+ALTER TABLE ONLY test2.initiatives_theme_translation
     ADD CONSTRAINT bb_projects_projecttheme_language_code_master_id_43a14274_uniq UNIQUE (language_code, master_id);
 
 
 --
--- Name: bb_projects_projecttheme bb_projects_projecttheme_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_theme bb_projects_projecttheme_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.bb_projects_projecttheme
+ALTER TABLE ONLY test2.initiatives_theme
     ADD CONSTRAINT bb_projects_projecttheme_pkey PRIMARY KEY (id);
 
 
 --
--- Name: bb_projects_projecttheme bb_projects_projecttheme_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_theme bb_projects_projecttheme_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.bb_projects_projecttheme
+ALTER TABLE ONLY test2.initiatives_theme
     ADD CONSTRAINT bb_projects_projecttheme_slug_key UNIQUE (slug);
 
 
 --
--- Name: bb_projects_projecttheme_translation bb_projects_projecttheme_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projecttheme_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.bb_projects_projecttheme_translation
+ALTER TABLE ONLY test2.initiatives_theme_translation
     ADD CONSTRAINT bb_projects_projecttheme_translation_pkey PRIMARY KEY (id);
 
 
@@ -32225,22 +30531,6 @@ ALTER TABLE ONLY test2.cms_logo
 
 
 --
--- Name: cms_projectscontent_projects cms_projectscontent_proj_projectscontent_id_proje_04b80421_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent_proj_projectscontent_id_proje_04b80421_uniq UNIQUE (projectscontent_id, project_id);
-
-
---
--- Name: cms_projectscontent_projects cms_projectscontent_projects_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent_projects_pkey PRIMARY KEY (id);
-
-
---
 -- Name: cms_quote cms_quote_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -32390,14 +30680,6 @@ ALTER TABLE ONLY test2.contentitem_cms_locationscontent
 
 ALTER TABLE ONLY test2.contentitem_cms_logoscontent
     ADD CONSTRAINT contentitem_cms_logoscontent_pkey PRIMARY KEY (contentitem_ptr_id);
-
-
---
--- Name: contentitem_cms_projectimagescontent contentitem_cms_projectimagescontent_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.contentitem_cms_projectimagescontent
-    ADD CONSTRAINT contentitem_cms_projectimagescontent_pkey PRIMARY KEY (contentitem_ptr_id);
 
 
 --
@@ -32553,6 +30835,22 @@ ALTER TABLE ONLY test2.dashboard_userdashboardmodule
 
 
 --
+-- Name: deeds_deed deeds_deed_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.deeds_deed
+    ADD CONSTRAINT deeds_deed_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: deeds_deedparticipant deeds_deedparticipant_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.deeds_deedparticipant
+    ADD CONSTRAINT deeds_deedparticipant_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
 -- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -32614,30 +30912,6 @@ ALTER TABLE ONLY test2.django_site
 
 ALTER TABLE ONLY test2.django_site
     ADD CONSTRAINT django_site_pkey PRIMARY KEY (id);
-
-
---
--- Name: donations_donation donations_donation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation
-    ADD CONSTRAINT donations_donation_pkey PRIMARY KEY (id);
-
-
---
--- Name: events_event events_event_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.events_event
-    ADD CONSTRAINT events_event_pkey PRIMARY KEY (activity_ptr_id);
-
-
---
--- Name: events_participant events_participant_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.events_participant
-    ADD CONSTRAINT events_participant_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -32721,11 +30995,11 @@ ALTER TABLE ONLY test2.funding_budgetline
 
 
 --
--- Name: funding_donation funding_donation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_donor funding_donation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.funding_donation
-    ADD CONSTRAINT funding_donation_pkey PRIMARY KEY (contribution_ptr_id);
+ALTER TABLE ONLY test2.funding_donor
+    ADD CONSTRAINT funding_donation_pkey PRIMARY KEY (contributor_ptr_id);
 
 
 --
@@ -32822,6 +31096,14 @@ ALTER TABLE ONLY test2.funding_lipisha_lipishapayment
 
 ALTER TABLE ONLY test2.funding_lipisha_lipishapaymentprovider
     ADD CONSTRAINT funding_lipisha_lipishapaymentprovider_pkey PRIMARY KEY (paymentprovider_ptr_id);
+
+
+--
+-- Name: funding_moneycontribution funding_moneycontribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_moneycontribution
+    ADD CONSTRAINT funding_moneycontribution_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -33017,14 +31299,6 @@ ALTER TABLE ONLY test2.funding_vitepay_vitepaypaymentprovider
 
 
 --
--- Name: fundraisers_fundraiser fundraisers_fundraiser_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_pkey PRIMARY KEY (id);
-
-
---
 -- Name: geo_geolocation geo_activityplace_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33062,14 +31336,6 @@ ALTER TABLE ONLY test2.geo_country_translation
 
 ALTER TABLE ONLY test2.geo_country_translation
     ADD CONSTRAINT geo_country_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: geo_initiativeplace geo_initiativeplace_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.geo_initiativeplace
-    ADD CONSTRAINT geo_initiativeplace_pkey PRIMARY KEY (id);
 
 
 --
@@ -33201,6 +31467,22 @@ ALTER TABLE ONLY test2.impact_impacttype_translation
 
 
 --
+-- Name: initiatives_initiative_activity_managers initiatives_initiative_a_initiative_id_member_id_240728ad_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiative_a_initiative_id_member_id_240728ad_uniq UNIQUE (initiative_id, member_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers initiatives_initiative_activity_managers_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiative_activity_managers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiative_c_initiative_id_category_i_9d73ad46_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33301,7 +31583,7 @@ ALTER TABLE ONLY test2.members_member
 --
 
 ALTER TABLE ONLY test2.members_member_favourite_themes
-    ADD CONSTRAINT members_member_favourite_member_id_projecttheme_i_aa3e66bf_uniq UNIQUE (member_id, projecttheme_id);
+    ADD CONSTRAINT members_member_favourite_member_id_projecttheme_i_aa3e66bf_uniq UNIQUE (member_id, theme_id);
 
 
 --
@@ -33481,6 +31763,22 @@ ALTER TABLE ONLY test2.notifications_notificationplatformsettings
 
 
 --
+-- Name: offices_officeregion offices_officeregion_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.offices_officeregion
+    ADD CONSTRAINT offices_officeregion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: offices_officesubregion offices_officesubregion_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.offices_officesubregion
+    ADD CONSTRAINT offices_officesubregion_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: orders_order orders_order_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33518,238 +31816,6 @@ ALTER TABLE ONLY test2.pages_page
 
 ALTER TABLE ONLY test2.pages_page
     ADD CONSTRAINT pages_page_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_beyonic_beyonicpayment payments_beyonic_beyonicpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_beyonic_beyonicpayment
-    ADD CONSTRAINT payments_beyonic_beyonicpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpaym_payment_cluster_key_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpaym_payment_cluster_key_key UNIQUE (payment_cluster_key);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpayme_payment_cluster_id_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpayme_payment_cluster_id_key UNIQUE (payment_cluster_id);
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_docdatadirectdebitpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_docdatadirectdebitpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_payment_cluster_id_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_payment_cluster_id_key UNIQUE (payment_cluster_id);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_payment_cluster_key_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_payment_cluster_key_key UNIQUE (payment_cluster_key);
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_docdatapayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_docdatapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_docdata_docdatatransaction payments_docdata_docdatatransaction_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatatransaction
-    ADD CONSTRAINT payments_docdata_docdatatransaction_pkey PRIMARY KEY (transaction_ptr_id);
-
-
---
--- Name: payments_external_externalpayment payments_external_externalpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_external_externalpayment
-    ADD CONSTRAINT payments_external_externalpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment payments_flutterwave_flutterwavempesapayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_flutterwave_flutterwavempesapayment
-    ADD CONSTRAINT payments_flutterwave_flutterwavempesapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_flutterwave_flutterwavepayment payments_flutterwave_flutterwavepayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_flutterwave_flutterwavepayment
-    ADD CONSTRAINT payments_flutterwave_flutterwavepayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_interswitch_interswitchpayment payments_interswitch_interswitchpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_interswitch_interswitchpayment
-    ADD CONSTRAINT payments_interswitch_interswitchpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate payments_interswitch_interswitchpaymentstatusupdate_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_interswitch_interswitchpaymentstatusupdate
-    ADD CONSTRAINT payments_interswitch_interswitchpaymentstatusupdate_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_lipisha_lipishapayment payments_lipisha_lipishapayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_lipisha_lipishapayment
-    ADD CONSTRAINT payments_lipisha_lipishapayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_lipisha_lipishaproject payments_lipisha_lipishaproject_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_lipisha_lipishaproject
-    ADD CONSTRAINT payments_lipisha_lipishaproject_pkey PRIMARY KEY (projectaddon_ptr_id);
-
-
---
--- Name: payments_logger_paymentlogentry payments_logger_paymentlogentry_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_logger_paymentlogentry
-    ADD CONSTRAINT payments_logger_paymentlogentry_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_orderpayment payments_orderpayment_authorization_action_id_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_authorization_action_id_key UNIQUE (authorization_action_id);
-
-
---
--- Name: payments_orderpayment payments_orderpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_orderpaymentaction payments_orderpaymentaction_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpaymentaction
-    ADD CONSTRAINT payments_orderpaymentaction_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_payment payments_payment_order_payment_id_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_payment
-    ADD CONSTRAINT payments_payment_order_payment_id_key UNIQUE (order_payment_id);
-
-
---
--- Name: payments_payment payments_payment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_payment
-    ADD CONSTRAINT payments_payment_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_pledge_pledgestandardpayment payments_pledge_pledgestandardpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_pledge_pledgestandardpayment
-    ADD CONSTRAINT payments_pledge_pledgestandardpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_stripe_stripepayment payments_stripe_stripepayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_stripe_stripepayment
-    ADD CONSTRAINT payments_stripe_stripepayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_telesom_telesompayment payments_telesom_telesompayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_telesom_telesompayment
-    ADD CONSTRAINT payments_telesom_telesompayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_transaction payments_transaction_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_transaction
-    ADD CONSTRAINT payments_transaction_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_vitepay_vitepaypayment payments_vitepay_vitepaypayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_vitepay_vitepaypayment
-    ADD CONSTRAINT payments_vitepay_vitepaypayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_voucher_voucher payments_voucher_voucher_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_voucher_pkey PRIMARY KEY (id);
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_voucherpayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_voucherpayment_pkey PRIMARY KEY (payment_ptr_id);
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_voucherpayment_voucher_id_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_voucherpayment_voucher_id_key UNIQUE (voucher_id);
 
 
 --
@@ -33793,86 +31859,6 @@ ALTER TABLE ONLY test2.payouts_stripepayoutaccount
 
 
 --
--- Name: projects_customprojectfield projects_customprojectfield_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfield
-    ADD CONSTRAINT projects_customprojectfield_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_customprojectfieldsettings projects_customprojectfieldsettings_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfieldsettings
-    ADD CONSTRAINT projects_customprojectfieldsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project_categories projects_project_categor_project_id_category_id_fd9d119d_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project_categories
-    ADD CONSTRAINT projects_project_categor_project_id_category_id_fd9d119d_uniq UNIQUE (project_id, category_id);
-
-
---
--- Name: projects_project_categories projects_project_categories_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project_categories
-    ADD CONSTRAINT projects_project_categories_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project projects_project_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_project projects_project_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_slug_key UNIQUE (slug);
-
-
---
--- Name: projects_project projects_project_title_key; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_title_key UNIQUE (title);
-
-
---
--- Name: projects_projectaddon projects_projectaddon_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddon_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectbudgetline projects_projectbudgetline_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectbudgetline
-    ADD CONSTRAINT projects_projectbudgetline_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectcreatetemplate projects_projectcreatetemplate_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectcreatetemplate
-    ADD CONSTRAINT projects_projectcreatetemplate_pkey PRIMARY KEY (id);
-
-
---
 -- Name: projects_projectimage projects_projectimage_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33881,51 +31867,11 @@ ALTER TABLE ONLY test2.projects_projectimage
 
 
 --
--- Name: projects_projectlocation projects_projectlocation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectlocation
-    ADD CONSTRAINT projects_projectlocation_pkey PRIMARY KEY (project_id);
-
-
---
--- Name: projects_projectphaselog projects_projectphaselog_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphaselog_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectplatformsettings projects_projectplatformsettings_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectplatformsettings
-    ADD CONSTRAINT projects_projectplatformsettings_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_projectsearchfilter projects_projectsearchfilter_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectsearchfilter
-    ADD CONSTRAINT projects_projectsearchfilter_pkey PRIMARY KEY (id);
-
-
---
 -- Name: quotes_quote quotes_quote_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.quotes_quote
     ADD CONSTRAINT quotes_quote_pkey PRIMARY KEY (id);
-
-
---
--- Name: rewards_reward rewards_reward_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.rewards_reward
-    ADD CONSTRAINT rewards_reward_pkey PRIMARY KEY (id);
 
 
 --
@@ -34129,14 +32075,6 @@ ALTER TABLE ONLY test2.statistics_statistic
 
 
 --
--- Name: suggestions_suggestion suggestions_suggestion_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggestion_pkey PRIMARY KEY (id);
-
-
---
 -- Name: taggit_tag taggit_tag_name_key; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -34161,6 +32099,14 @@ ALTER TABLE ONLY test2.taggit_tag
 
 
 --
+-- Name: taggit_taggeditem taggit_taggeditem_content_type_id_object_i_4bb97a8e_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.taggit_taggeditem
+    ADD CONSTRAINT taggit_taggeditem_content_type_id_object_i_4bb97a8e_uniq UNIQUE (content_type_id, object_id, tag_id);
+
+
+--
 -- Name: taggit_taggeditem taggit_taggeditem_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -34169,26 +32115,26 @@ ALTER TABLE ONLY test2.taggit_taggeditem
 
 
 --
--- Name: tasks_skill tasks_skill_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: time_based_skill tasks_skill_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.tasks_skill
+ALTER TABLE ONLY test2.time_based_skill
     ADD CONSTRAINT tasks_skill_pkey PRIMARY KEY (id);
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.tasks_skill_translation
+ALTER TABLE ONLY test2.time_based_skill_translation
     ADD CONSTRAINT tasks_skill_translation_language_code_master_id_ee5d6bfd_uniq UNIQUE (language_code, master_id);
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.tasks_skill_translation
+ALTER TABLE ONLY test2.time_based_skill_translation
     ADD CONSTRAINT tasks_skill_translation_pkey PRIMARY KEY (id);
 
 
@@ -34214,6 +32160,94 @@ ALTER TABLE ONLY test2.terms_termsagreement
 
 ALTER TABLE ONLY test2.thumbnail_kvstore
     ADD CONSTRAINT thumbnail_kvstore_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: time_based_timecontribution time_based_contributionduration_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timecontribution
+    ADD CONSTRAINT time_based_contributionduration_pkey PRIMARY KEY (contribution_ptr_id);
+
+
+--
+-- Name: time_based_dateactivityslot time_based_dateactivityslot_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactivityslot_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_dateactivity time_based_onadateactivity_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivity
+    ADD CONSTRAINT time_based_onadateactivity_pkey PRIMARY KEY (timebasedactivity_ptr_id);
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateapplication_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateapplication_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: time_based_periodactivityslot time_based_periodactivityslot_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivityslot
+    ADD CONSTRAINT time_based_periodactivityslot_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapplication_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapplication_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: time_based_skill_translation time_based_skill_transla_language_code_master_id_000668d0_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_skill_translation
+    ADD CONSTRAINT time_based_skill_transla_language_code_master_id_000668d0_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparticipant_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparticipant_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparticipant_slot_id_participant_id_932071e9_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparticipant_slot_id_participant_id_932071e9_uniq UNIQUE (slot_id, participant_id);
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebasedactivity_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebasedactivity_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: time_based_periodactivity time_based_withadeadlineactivity_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivity
+    ADD CONSTRAINT time_based_withadeadlineactivity_pkey PRIMARY KEY (timebasedactivity_ptr_id);
 
 
 --
@@ -34262,22 +32296,6 @@ ALTER TABLE ONLY test2.utils_translationplatformsettings
 
 ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
     ADD CONSTRAINT utils_translationplatformsettings_translation_pkey PRIMARY KEY (id);
-
-
---
--- Name: votes_vote votes_vote_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.votes_vote
-    ADD CONSTRAINT votes_vote_pkey PRIMARY KEY (id);
-
-
---
--- Name: votes_vote votes_vote_project_id_voter_id_8a77bbb1_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.votes_vote
-    ADD CONSTRAINT votes_vote_project_id_voter_id_8a77bbb1_uniq UNIQUE (project_id, voter_id);
 
 
 --
@@ -34563,42 +32581,35 @@ CREATE INDEX activities_activity_slug_15d2d0ee_like ON test.activities_activity 
 -- Name: activities_contribution_activity_id_10103e48; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX activities_contribution_activity_id_10103e48 ON test.activities_contribution USING btree (activity_id);
+CREATE INDEX activities_contribution_activity_id_10103e48 ON test.activities_contributor USING btree (activity_id);
 
 
 --
 -- Name: activities_contribution_polymorphic_ctype_id_a5769f80; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX activities_contribution_polymorphic_ctype_id_a5769f80 ON test.activities_contribution USING btree (polymorphic_ctype_id);
+CREATE INDEX activities_contribution_polymorphic_ctype_id_a5769f80 ON test.activities_contributor USING btree (polymorphic_ctype_id);
 
 
 --
 -- Name: activities_contribution_user_id_01d3cf7f; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX activities_contribution_user_id_01d3cf7f ON test.activities_contribution USING btree (user_id);
+CREATE INDEX activities_contribution_user_id_01d3cf7f ON test.activities_contributor USING btree (user_id);
 
 
 --
--- Name: assignments_applicant_private_document_id_23065006; Type: INDEX; Schema: test; Owner: -
+-- Name: activities_contributionvalue_contribution_id_bd5527cf; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX assignments_applicant_private_document_id_23065006 ON test.assignments_applicant USING btree (document_id);
-
-
---
--- Name: assignments_assignment_expertise_id_18e0dc8f; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX assignments_assignment_expertise_id_18e0dc8f ON test.assignments_assignment USING btree (expertise_id);
+CREATE INDEX activities_contributionvalue_contribution_id_bd5527cf ON test.activities_contribution USING btree (contributor_id);
 
 
 --
--- Name: assignments_assignment_place_id_60db3b65; Type: INDEX; Schema: test; Owner: -
+-- Name: activities_contributionvalue_polymorphic_ctype_id_388138e3; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX assignments_assignment_place_id_60db3b65 ON test.assignments_assignment USING btree (location_id);
+CREATE INDEX activities_contributionvalue_polymorphic_ctype_id_388138e3 ON test.activities_contribution USING btree (polymorphic_ctype_id);
 
 
 --
@@ -34679,13 +32690,6 @@ CREATE INDEX axes_accesslog_ip_address_86b417e5 ON test.axes_accesslog USING btr
 
 
 --
--- Name: axes_accesslog_trusted_496c5681; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX axes_accesslog_trusted_496c5681 ON test.axes_accesslog USING btree (trusted);
-
-
---
 -- Name: axes_accesslog_user_agent_0e659004; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -34728,59 +32732,31 @@ CREATE INDEX bb_follow_follow_user_id_21a2d5b1 ON test.bb_follow_follow USING bt
 
 
 --
--- Name: bb_projects_projectphase_language_code_040855a3_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_language_code_040855a3_like ON test.bb_projects_projectphase_translation USING btree (language_code varchar_pattern_ops);
-
-
---
--- Name: bb_projects_projectphase_slug_7a907234_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_slug_7a907234_like ON test.bb_projects_projectphase USING btree (slug varchar_pattern_ops);
-
-
---
--- Name: bb_projects_projectphase_translation_language_code_040855a3; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_translation_language_code_040855a3 ON test.bb_projects_projectphase_translation USING btree (language_code);
-
-
---
--- Name: bb_projects_projectphase_translation_master_id_8a27be99; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_translation_master_id_8a27be99 ON test.bb_projects_projectphase_translation USING btree (master_id);
-
-
---
 -- Name: bb_projects_projecttheme_language_code_b2bc23d6_like; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_language_code_b2bc23d6_like ON test.bb_projects_projecttheme_translation USING btree (language_code varchar_pattern_ops);
+CREATE INDEX bb_projects_projecttheme_language_code_b2bc23d6_like ON test.initiatives_theme_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
 -- Name: bb_projects_projecttheme_slug_ed472f8e_like; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_slug_ed472f8e_like ON test.bb_projects_projecttheme USING btree (slug varchar_pattern_ops);
+CREATE INDEX bb_projects_projecttheme_slug_ed472f8e_like ON test.initiatives_theme USING btree (slug varchar_pattern_ops);
 
 
 --
 -- Name: bb_projects_projecttheme_translation_language_code_b2bc23d6; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_translation_language_code_b2bc23d6 ON test.bb_projects_projecttheme_translation USING btree (language_code);
+CREATE INDEX bb_projects_projecttheme_translation_language_code_b2bc23d6 ON test.initiatives_theme_translation USING btree (language_code);
 
 
 --
 -- Name: bb_projects_projecttheme_translation_master_id_91b2025f; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_translation_master_id_91b2025f ON test.bb_projects_projecttheme_translation USING btree (master_id);
+CREATE INDEX bb_projects_projecttheme_translation_master_id_91b2025f ON test.initiatives_theme_translation USING btree (master_id);
 
 
 --
@@ -34994,20 +32970,6 @@ CREATE INDEX cms_logo_sequence_bca5fcc6 ON test.cms_logo USING btree (sequence);
 
 
 --
--- Name: cms_projectscontent_projects_project_id_61b9a320; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX cms_projectscontent_projects_project_id_61b9a320 ON test.cms_projectscontent_projects USING btree (project_id);
-
-
---
--- Name: cms_projectscontent_projects_projectscontent_id_d90b02d7; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX cms_projectscontent_projects_projectscontent_id_d90b02d7 ON test.cms_projectscontent_projects USING btree (projectscontent_id);
-
-
---
 -- Name: cms_quote_block_id_a68420ea; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35148,55 +33110,6 @@ CREATE INDEX django_site_domain_a2e37b91_like ON test.django_site USING btree (d
 
 
 --
--- Name: donations_donation_fundraiser_id_a3d05f18; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_fundraiser_id_a3d05f18 ON test.donations_donation USING btree (fundraiser_id);
-
-
---
--- Name: donations_donation_name_51e11c01; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_name_51e11c01 ON test.donations_donation USING btree (name);
-
-
---
--- Name: donations_donation_name_51e11c01_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_name_51e11c01_like ON test.donations_donation USING btree (name varchar_pattern_ops);
-
-
---
--- Name: donations_donation_order_id_7aa4ca67; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_order_id_7aa4ca67 ON test.donations_donation USING btree (order_id);
-
-
---
--- Name: donations_donation_project_id_5afb2670; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_project_id_5afb2670 ON test.donations_donation USING btree (project_id);
-
-
---
--- Name: donations_donation_reward_id_683436b3; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX donations_donation_reward_id_683436b3 ON test.donations_donation USING btree (reward_id);
-
-
---
--- Name: events_event_location_id_2fb4171f; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX events_event_location_id_2fb4171f ON test.events_event USING btree (location_id);
-
-
---
 -- Name: files_document_owner_id_ff5cb015; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35333,21 +33246,21 @@ CREATE INDEX funding_budgetline_activity_id_58b73d1f ON test.funding_budgetline 
 -- Name: funding_donation_fundraiser_id_82fdef53; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX funding_donation_fundraiser_id_82fdef53 ON test.funding_donation USING btree (fundraiser_id);
+CREATE INDEX funding_donation_fundraiser_id_82fdef53 ON test.funding_donor USING btree (fundraiser_id);
 
 
 --
 -- Name: funding_donation_payout_id_38cefb65; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX funding_donation_payout_id_38cefb65 ON test.funding_donation USING btree (payout_id);
+CREATE INDEX funding_donation_payout_id_38cefb65 ON test.funding_donor USING btree (payout_id);
 
 
 --
 -- Name: funding_donation_reward_id_068a0ab7; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX funding_donation_reward_id_068a0ab7 ON test.funding_donation USING btree (reward_id);
+CREATE INDEX funding_donation_reward_id_068a0ab7 ON test.funding_donor USING btree (reward_id);
 
 
 --
@@ -35477,27 +33390,6 @@ CREATE INDEX funding_stripe_paymentintent_donation_id_0bafda29 ON test.funding_s
 
 
 --
--- Name: fundraisers_fundraiser_location_id_9f00382a; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_location_id_9f00382a ON test.fundraisers_fundraiser USING btree (location_id);
-
-
---
--- Name: fundraisers_fundraiser_owner_id_224218ee; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_owner_id_224218ee ON test.fundraisers_fundraiser USING btree (owner_id);
-
-
---
--- Name: fundraisers_fundraiser_project_id_3f1b1d1e; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_project_id_3f1b1d1e ON test.fundraisers_fundraiser USING btree (project_id);
-
-
---
 -- Name: geo_activityplace_country_id_104046da; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35540,10 +33432,10 @@ CREATE INDEX geo_country_translation_master_id_0fae303b ON test.geo_country_tran
 
 
 --
--- Name: geo_initiativeplace_country_id_92ce882b; Type: INDEX; Schema: test; Owner: -
+-- Name: geo_geolocation_position_id; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX geo_initiativeplace_country_id_92ce882b ON test.geo_initiativeplace USING btree (country_id);
+CREATE INDEX geo_geolocation_position_id ON test.geo_geolocation USING gist ("position");
 
 
 --
@@ -35561,6 +33453,13 @@ CREATE INDEX geo_location_group_id_70137a39 ON test.geo_location USING btree (gr
 
 
 --
+-- Name: geo_location_position_id; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX geo_location_position_id ON test.geo_location USING gist ("position");
+
+
+--
 -- Name: geo_location_slug_4f8f8fbd; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35575,6 +33474,13 @@ CREATE INDEX geo_location_slug_4f8f8fbd_like ON test.geo_location USING btree (s
 
 
 --
+-- Name: geo_location_subregion_id_9e5a8036; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX geo_location_subregion_id_9e5a8036 ON test.geo_location USING btree (subregion_id);
+
+
+--
 -- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35586,6 +33492,13 @@ CREATE INDEX geo_place_content_type_id_462feeb6 ON test.geo_place USING btree (c
 --
 
 CREATE INDEX geo_place_country_id_25fc5388 ON test.geo_place USING btree (country_id);
+
+
+--
+-- Name: geo_place_position_id; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX geo_place_position_id ON test.geo_place USING gist ("position");
 
 
 --
@@ -35698,6 +33611,20 @@ CREATE INDEX impact_impacttype_translation_master_id_15f98377 ON test.impact_imp
 --
 
 CREATE INDEX initiatives_initiative_activity_manager_id_e58f82f7 ON test.initiatives_initiative USING btree (activity_manager_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_initiative_id_c3f8c52d; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX initiatives_initiative_activity_managers_initiative_id_c3f8c52d ON test.initiatives_initiative_activity_managers USING btree (initiative_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_member_id_b56362e0; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX initiatives_initiative_activity_managers_member_id_b56362e0 ON test.initiatives_initiative_activity_managers USING btree (member_id);
 
 
 --
@@ -35844,7 +33771,7 @@ CREATE INDEX members_member_favourite_themes_member_id_043fee3c ON test.members_
 -- Name: members_member_favourite_themes_projecttheme_id_657d4efb; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX members_member_favourite_themes_projecttheme_id_657d4efb ON test.members_member_favourite_themes USING btree (projecttheme_id);
+CREATE INDEX members_member_favourite_themes_projecttheme_id_657d4efb ON test.members_member_favourite_themes USING btree (theme_id);
 
 
 --
@@ -36030,6 +33957,13 @@ CREATE INDEX notifications_messagetemplate_translation_master_id_dd86b449 ON tes
 
 
 --
+-- Name: offices_officesubregion_region_id_6343ac41; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX offices_officesubregion_region_id_6343ac41 ON test.offices_officesubregion USING btree (region_id);
+
+
+--
 -- Name: orders_order_user_id_e9b59eb1; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36114,118 +34048,6 @@ CREATE INDEX pages_page_status_d84d82a3_like ON test.pages_page USING btree (sta
 
 
 --
--- Name: payments_docdata_docdata_payment_cluster_id_d8206068_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_id_d8206068_like ON test.payments_docdata_docdatapayment USING btree (payment_cluster_id varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_id_dd5c83d9_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_id_dd5c83d9_like ON test.payments_docdata_docdatadirectdebitpayment USING btree (payment_cluster_id varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_key_2d295947_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_key_2d295947_like ON test.payments_docdata_docdatapayment USING btree (payment_cluster_key varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_key_afb18596_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_key_afb18596_like ON test.payments_docdata_docdatadirectdebitpayment USING btree (payment_cluster_key varchar_pattern_ops);
-
-
---
--- Name: payments_interswitch_inter_payment_id_88fbd40a; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_interswitch_inter_payment_id_88fbd40a ON test.payments_interswitch_interswitchpaymentstatusupdate USING btree (payment_id);
-
-
---
--- Name: payments_logger_paymentlogentry_payment_id_f3ad89dc; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_logger_paymentlogentry_payment_id_f3ad89dc ON test.payments_logger_paymentlogentry USING btree (payment_id);
-
-
---
--- Name: payments_orderpayment_order_id_9394e5f3; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_orderpayment_order_id_9394e5f3 ON test.payments_orderpayment USING btree (order_id);
-
-
---
--- Name: payments_orderpayment_user_id_5aba2902; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_orderpayment_user_id_5aba2902 ON test.payments_orderpayment USING btree (user_id);
-
-
---
--- Name: payments_payment_polymorphic_ctype_id_f341c36a; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_payment_polymorphic_ctype_id_f341c36a ON test.payments_payment USING btree (polymorphic_ctype_id);
-
-
---
--- Name: payments_transaction_payment_id_2f6b2801; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_transaction_payment_id_2f6b2801 ON test.payments_transaction USING btree (payment_id);
-
-
---
--- Name: payments_transaction_polymorphic_ctype_id_320cd77f; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_transaction_polymorphic_ctype_id_320cd77f ON test.payments_transaction USING btree (polymorphic_ctype_id);
-
-
---
--- Name: payments_voucher_voucher_order_id_65973376; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_order_id_65973376 ON test.payments_voucher_voucher USING btree (order_id);
-
-
---
--- Name: payments_voucher_voucher_receiver_id_45eff5ae; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_receiver_id_45eff5ae ON test.payments_voucher_voucher USING btree (receiver_id);
-
-
---
--- Name: payments_voucher_voucher_sender_id_8e80931b; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_sender_id_8e80931b ON test.payments_voucher_voucher USING btree (sender_id);
-
-
---
--- Name: payments_voucher_voucher_status_1bdc244b; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_status_1bdc244b ON test.payments_voucher_voucher USING btree (status);
-
-
---
--- Name: payments_voucher_voucher_status_1bdc244b_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_status_1bdc244b_like ON test.payments_voucher_voucher USING btree (status varchar_pattern_ops);
-
-
---
 -- Name: payouts_payoutaccount_polymorphic_ctype_id_b240d073; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36268,202 +34090,6 @@ CREATE INDEX payouts_plainpayoutaccount_document_id_e1500b67 ON test.payouts_pla
 
 
 --
--- Name: projects_customprojectfiel_project_settings_id_5c89ee42; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_customprojectfiel_project_settings_id_5c89ee42 ON test.projects_customprojectfieldsettings USING btree (project_settings_id);
-
-
---
--- Name: projects_customprojectfield_field_id_367edebf; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_customprojectfield_field_id_367edebf ON test.projects_customprojectfield USING btree (field_id);
-
-
---
--- Name: projects_customprojectfield_project_id_426e051c; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_customprojectfield_project_id_426e051c ON test.projects_customprojectfield USING btree (project_id);
-
-
---
--- Name: projects_customprojectfieldsettings_sequence_07910da5; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_customprojectfieldsettings_sequence_07910da5 ON test.projects_customprojectfieldsettings USING btree (sequence);
-
-
---
--- Name: projects_project_categories_category_id_a492e896; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_categories_category_id_a492e896 ON test.projects_project_categories USING btree (category_id);
-
-
---
--- Name: projects_project_categories_project_id_757f4325; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_categories_project_id_757f4325 ON test.projects_project_categories USING btree (project_id);
-
-
---
--- Name: projects_project_country_id_bf55f4e3; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_country_id_bf55f4e3 ON test.projects_project USING btree (country_id);
-
-
---
--- Name: projects_project_language_id_04a3cfaa; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_language_id_04a3cfaa ON test.projects_project USING btree (language_id);
-
-
---
--- Name: projects_project_location_id_8947d645; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_location_id_8947d645 ON test.projects_project USING btree (location_id);
-
-
---
--- Name: projects_project_organization_id_c93e5ca2; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_organization_id_c93e5ca2 ON test.projects_project USING btree (organization_id);
-
-
---
--- Name: projects_project_owner_id_b940de39; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_owner_id_b940de39 ON test.projects_project USING btree (owner_id);
-
-
---
--- Name: projects_project_payout_account_id_0e25b464; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_payout_account_id_0e25b464 ON test.projects_project USING btree (payout_account_id);
-
-
---
--- Name: projects_project_promoter_id_012193b5; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_promoter_id_012193b5 ON test.projects_project USING btree (promoter_id);
-
-
---
--- Name: projects_project_reviewer_id_cf52b239; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_reviewer_id_cf52b239 ON test.projects_project USING btree (reviewer_id);
-
-
---
--- Name: projects_project_slug_2d50067a_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_slug_2d50067a_like ON test.projects_project USING btree (slug varchar_pattern_ops);
-
-
---
--- Name: projects_project_status_id_9f58ac46; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_status_id_9f58ac46 ON test.projects_project USING btree (status_id);
-
-
---
--- Name: projects_project_task_manager_id_d0848ddf; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_task_manager_id_d0848ddf ON test.projects_project USING btree (task_manager_id);
-
-
---
--- Name: projects_project_theme_id_8442c910; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_theme_id_8442c910 ON test.projects_project USING btree (theme_id);
-
-
---
--- Name: projects_project_title_3d294c09_like; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_project_title_3d294c09_like ON test.projects_project USING btree (title varchar_pattern_ops);
-
-
---
--- Name: projects_projectaddon_polymorphic_ctype_id_c8b33f55; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectaddon_polymorphic_ctype_id_c8b33f55 ON test.projects_projectaddon USING btree (polymorphic_ctype_id);
-
-
---
--- Name: projects_projectaddon_project_id_a18f3893; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectaddon_project_id_a18f3893 ON test.projects_projectaddon USING btree (project_id);
-
-
---
--- Name: projects_projectbudgetline_project_id_24f42a3d; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectbudgetline_project_id_24f42a3d ON test.projects_projectbudgetline USING btree (project_id);
-
-
---
--- Name: projects_projectcreatetemplate_project_settings_id_8eec671f; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectcreatetemplate_project_settings_id_8eec671f ON test.projects_projectcreatetemplate USING btree (project_settings_id);
-
-
---
--- Name: projects_projectimage_project_id_618ded0e; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectimage_project_id_618ded0e ON test.projects_projectimage USING btree (project_id);
-
-
---
--- Name: projects_projectphaselog_project_id_9c7364ea; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectphaselog_project_id_9c7364ea ON test.projects_projectphaselog USING btree (project_id);
-
-
---
--- Name: projects_projectphaselog_status_id_489d62c7; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectphaselog_status_id_489d62c7 ON test.projects_projectphaselog USING btree (status_id);
-
-
---
--- Name: projects_projectsearchfilter_project_settings_id_c2e31f86; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectsearchfilter_project_settings_id_c2e31f86 ON test.projects_projectsearchfilter USING btree (project_settings_id);
-
-
---
--- Name: projects_projectsearchfilter_sequence_7d5fa5d7; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX projects_projectsearchfilter_sequence_7d5fa5d7 ON test.projects_projectsearchfilter USING btree (sequence);
-
-
---
 -- Name: quotes_quote_author_id_201a84c4; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36503,13 +34129,6 @@ CREATE INDEX quotes_quote_status_bfa5ea1d_like ON test.quotes_quote USING btree 
 --
 
 CREATE INDEX quotes_quote_user_id_ca72ed0b ON test.quotes_quote USING btree (user_id);
-
-
---
--- Name: rewards_reward_project_id_ae73b643; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX rewards_reward_project_id_ae73b643 ON test.rewards_reward USING btree (project_id);
 
 
 --
@@ -36615,6 +34234,20 @@ CREATE INDEX social_auth_partial_token_3017fea3 ON test.social_auth_partial USIN
 --
 
 CREATE INDEX social_auth_partial_token_3017fea3_like ON test.social_auth_partial USING btree (token varchar_pattern_ops);
+
+
+--
+-- Name: social_auth_usersocialauth_uid_796e51dc; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX social_auth_usersocialauth_uid_796e51dc ON test.social_auth_usersocialauth USING btree (uid);
+
+
+--
+-- Name: social_auth_usersocialauth_uid_796e51dc_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX social_auth_usersocialauth_uid_796e51dc_like ON test.social_auth_usersocialauth USING btree (uid varchar_pattern_ops);
 
 
 --
@@ -36737,20 +34370,6 @@ CREATE INDEX statistics_statistic_type_0e93ed92_like ON test.statistics_statisti
 
 
 --
--- Name: suggestions_suggestion_project_id_fbfdfde8; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX suggestions_suggestion_project_id_fbfdfde8 ON test.suggestions_suggestion USING btree (project_id);
-
-
---
--- Name: suggestions_suggestion_theme_id_3e8273ef; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX suggestions_suggestion_theme_id_3e8273ef ON test.suggestions_suggestion USING btree (theme_id);
-
-
---
 -- Name: taggit_tag_name_58eb2ed9_like; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36796,21 +34415,21 @@ CREATE INDEX taggit_taggeditem_tag_id_f4f5b767 ON test.taggit_taggeditem USING b
 -- Name: tasks_skill_translation_language_code_18946ed2; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_language_code_18946ed2 ON test.tasks_skill_translation USING btree (language_code);
+CREATE INDEX tasks_skill_translation_language_code_18946ed2 ON test.time_based_skill_translation USING btree (language_code);
 
 
 --
 -- Name: tasks_skill_translation_language_code_18946ed2_like; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_language_code_18946ed2_like ON test.tasks_skill_translation USING btree (language_code varchar_pattern_ops);
+CREATE INDEX tasks_skill_translation_language_code_18946ed2_like ON test.time_based_skill_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
 -- Name: tasks_skill_translation_master_id_d2978b9f; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_master_id_d2978b9f ON test.tasks_skill_translation USING btree (master_id);
+CREATE INDEX tasks_skill_translation_master_id_d2978b9f ON test.time_based_skill_translation USING btree (master_id);
 
 
 --
@@ -36839,6 +34458,83 @@ CREATE INDEX terms_termsagreement_user_id_3c1bbd49 ON test.terms_termsagreement 
 --
 
 CREATE INDEX thumbnail_kvstore_key_3f850178_like ON test.thumbnail_kvstore USING btree (key varchar_pattern_ops);
+
+
+--
+-- Name: time_based_dateactivityslot_activity_id_f2f6e335; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_dateactivityslot_activity_id_f2f6e335 ON test.time_based_dateactivityslot USING btree (activity_id);
+
+
+--
+-- Name: time_based_dateactivityslot_location_id_39a15a21; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_dateactivityslot_location_id_39a15a21 ON test.time_based_dateactivityslot USING btree (location_id);
+
+
+--
+-- Name: time_based_onadateapplication_document_id_98da3668; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_onadateapplication_document_id_98da3668 ON test.time_based_dateparticipant USING btree (document_id);
+
+
+--
+-- Name: time_based_periodactivity_location_id_02365c52; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_periodactivity_location_id_02365c52 ON test.time_based_periodactivity USING btree (location_id);
+
+
+--
+-- Name: time_based_periodactivityslot_activity_id_113888fe; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_periodactivityslot_activity_id_113888fe ON test.time_based_periodactivityslot USING btree (activity_id);
+
+
+--
+-- Name: time_based_periodapplication_document_id_d32c82d8; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_periodapplication_document_id_d32c82d8 ON test.time_based_periodparticipant USING btree (document_id);
+
+
+--
+-- Name: time_based_slotparticipant_participant_id_44d5b2f9; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_slotparticipant_participant_id_44d5b2f9 ON test.time_based_slotparticipant USING btree (participant_id);
+
+
+--
+-- Name: time_based_slotparticipant_slot_id_90fe4ba5; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_slotparticipant_slot_id_90fe4ba5 ON test.time_based_slotparticipant USING btree (slot_id);
+
+
+--
+-- Name: time_based_timebasedactivity_expertise_id_4d051b7c; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_timebasedactivity_expertise_id_4d051b7c ON test.time_based_timebasedactivity USING btree (expertise_id);
+
+
+--
+-- Name: time_based_timebasedactivity_location_id_3a3e4382; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_timebasedactivity_location_id_3a3e4382 ON test.time_based_timebasedactivity USING btree (location_id);
+
+
+--
+-- Name: time_based_timecontribution_slot_participant_id_cc119aed; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX time_based_timecontribution_slot_participant_id_cc119aed ON test.time_based_timecontribution USING btree (slot_participant_id);
 
 
 --
@@ -36874,27 +34570,6 @@ CREATE INDEX utils_translationplatforms_language_code_fd9ccfa3 ON test.utils_tra
 --
 
 CREATE INDEX utils_translationplatforms_master_id_5ae457be ON test.utils_translationplatformsettings_translation USING btree (master_id);
-
-
---
--- Name: votes_vote_created_d2bd31ac; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX votes_vote_created_d2bd31ac ON test.votes_vote USING btree (created);
-
-
---
--- Name: votes_vote_project_id_7d68c734; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX votes_vote_project_id_7d68c734 ON test.votes_vote USING btree (project_id);
-
-
---
--- Name: votes_vote_voter_id_5a5a77f0; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX votes_vote_voter_id_5a5a77f0 ON test.votes_vote USING btree (voter_id);
 
 
 --
@@ -37041,42 +34716,35 @@ CREATE INDEX activities_activity_slug_15d2d0ee_like ON test2.activities_activity
 -- Name: activities_contribution_activity_id_10103e48; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX activities_contribution_activity_id_10103e48 ON test2.activities_contribution USING btree (activity_id);
+CREATE INDEX activities_contribution_activity_id_10103e48 ON test2.activities_contributor USING btree (activity_id);
 
 
 --
 -- Name: activities_contribution_polymorphic_ctype_id_a5769f80; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX activities_contribution_polymorphic_ctype_id_a5769f80 ON test2.activities_contribution USING btree (polymorphic_ctype_id);
+CREATE INDEX activities_contribution_polymorphic_ctype_id_a5769f80 ON test2.activities_contributor USING btree (polymorphic_ctype_id);
 
 
 --
 -- Name: activities_contribution_user_id_01d3cf7f; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX activities_contribution_user_id_01d3cf7f ON test2.activities_contribution USING btree (user_id);
+CREATE INDEX activities_contribution_user_id_01d3cf7f ON test2.activities_contributor USING btree (user_id);
 
 
 --
--- Name: assignments_applicant_private_document_id_23065006; Type: INDEX; Schema: test2; Owner: -
+-- Name: activities_contributionvalue_contribution_id_bd5527cf; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX assignments_applicant_private_document_id_23065006 ON test2.assignments_applicant USING btree (document_id);
-
-
---
--- Name: assignments_assignment_expertise_id_18e0dc8f; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX assignments_assignment_expertise_id_18e0dc8f ON test2.assignments_assignment USING btree (expertise_id);
+CREATE INDEX activities_contributionvalue_contribution_id_bd5527cf ON test2.activities_contribution USING btree (contributor_id);
 
 
 --
--- Name: assignments_assignment_place_id_60db3b65; Type: INDEX; Schema: test2; Owner: -
+-- Name: activities_contributionvalue_polymorphic_ctype_id_388138e3; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX assignments_assignment_place_id_60db3b65 ON test2.assignments_assignment USING btree (location_id);
+CREATE INDEX activities_contributionvalue_polymorphic_ctype_id_388138e3 ON test2.activities_contribution USING btree (polymorphic_ctype_id);
 
 
 --
@@ -37157,13 +34825,6 @@ CREATE INDEX axes_accesslog_ip_address_86b417e5 ON test2.axes_accesslog USING bt
 
 
 --
--- Name: axes_accesslog_trusted_496c5681; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX axes_accesslog_trusted_496c5681 ON test2.axes_accesslog USING btree (trusted);
-
-
---
 -- Name: axes_accesslog_user_agent_0e659004; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -37206,59 +34867,31 @@ CREATE INDEX bb_follow_follow_user_id_21a2d5b1 ON test2.bb_follow_follow USING b
 
 
 --
--- Name: bb_projects_projectphase_language_code_040855a3_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_language_code_040855a3_like ON test2.bb_projects_projectphase_translation USING btree (language_code varchar_pattern_ops);
-
-
---
--- Name: bb_projects_projectphase_slug_7a907234_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_slug_7a907234_like ON test2.bb_projects_projectphase USING btree (slug varchar_pattern_ops);
-
-
---
--- Name: bb_projects_projectphase_translation_language_code_040855a3; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_translation_language_code_040855a3 ON test2.bb_projects_projectphase_translation USING btree (language_code);
-
-
---
--- Name: bb_projects_projectphase_translation_master_id_8a27be99; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX bb_projects_projectphase_translation_master_id_8a27be99 ON test2.bb_projects_projectphase_translation USING btree (master_id);
-
-
---
 -- Name: bb_projects_projecttheme_language_code_b2bc23d6_like; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_language_code_b2bc23d6_like ON test2.bb_projects_projecttheme_translation USING btree (language_code varchar_pattern_ops);
+CREATE INDEX bb_projects_projecttheme_language_code_b2bc23d6_like ON test2.initiatives_theme_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
 -- Name: bb_projects_projecttheme_slug_ed472f8e_like; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_slug_ed472f8e_like ON test2.bb_projects_projecttheme USING btree (slug varchar_pattern_ops);
+CREATE INDEX bb_projects_projecttheme_slug_ed472f8e_like ON test2.initiatives_theme USING btree (slug varchar_pattern_ops);
 
 
 --
 -- Name: bb_projects_projecttheme_translation_language_code_b2bc23d6; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_translation_language_code_b2bc23d6 ON test2.bb_projects_projecttheme_translation USING btree (language_code);
+CREATE INDEX bb_projects_projecttheme_translation_language_code_b2bc23d6 ON test2.initiatives_theme_translation USING btree (language_code);
 
 
 --
 -- Name: bb_projects_projecttheme_translation_master_id_91b2025f; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX bb_projects_projecttheme_translation_master_id_91b2025f ON test2.bb_projects_projecttheme_translation USING btree (master_id);
+CREATE INDEX bb_projects_projecttheme_translation_master_id_91b2025f ON test2.initiatives_theme_translation USING btree (master_id);
 
 
 --
@@ -37472,20 +35105,6 @@ CREATE INDEX cms_logo_sequence_bca5fcc6 ON test2.cms_logo USING btree (sequence)
 
 
 --
--- Name: cms_projectscontent_projects_project_id_61b9a320; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX cms_projectscontent_projects_project_id_61b9a320 ON test2.cms_projectscontent_projects USING btree (project_id);
-
-
---
--- Name: cms_projectscontent_projects_projectscontent_id_d90b02d7; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX cms_projectscontent_projects_projectscontent_id_d90b02d7 ON test2.cms_projectscontent_projects USING btree (projectscontent_id);
-
-
---
 -- Name: cms_quote_block_id_a68420ea; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -37626,55 +35245,6 @@ CREATE INDEX django_site_domain_a2e37b91_like ON test2.django_site USING btree (
 
 
 --
--- Name: donations_donation_fundraiser_id_a3d05f18; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_fundraiser_id_a3d05f18 ON test2.donations_donation USING btree (fundraiser_id);
-
-
---
--- Name: donations_donation_name_51e11c01; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_name_51e11c01 ON test2.donations_donation USING btree (name);
-
-
---
--- Name: donations_donation_name_51e11c01_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_name_51e11c01_like ON test2.donations_donation USING btree (name varchar_pattern_ops);
-
-
---
--- Name: donations_donation_order_id_7aa4ca67; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_order_id_7aa4ca67 ON test2.donations_donation USING btree (order_id);
-
-
---
--- Name: donations_donation_project_id_5afb2670; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_project_id_5afb2670 ON test2.donations_donation USING btree (project_id);
-
-
---
--- Name: donations_donation_reward_id_683436b3; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX donations_donation_reward_id_683436b3 ON test2.donations_donation USING btree (reward_id);
-
-
---
--- Name: events_event_location_id_2fb4171f; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX events_event_location_id_2fb4171f ON test2.events_event USING btree (location_id);
-
-
---
 -- Name: files_document_owner_id_ff5cb015; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -37811,21 +35381,21 @@ CREATE INDEX funding_budgetline_activity_id_58b73d1f ON test2.funding_budgetline
 -- Name: funding_donation_fundraiser_id_82fdef53; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX funding_donation_fundraiser_id_82fdef53 ON test2.funding_donation USING btree (fundraiser_id);
+CREATE INDEX funding_donation_fundraiser_id_82fdef53 ON test2.funding_donor USING btree (fundraiser_id);
 
 
 --
 -- Name: funding_donation_payout_id_38cefb65; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX funding_donation_payout_id_38cefb65 ON test2.funding_donation USING btree (payout_id);
+CREATE INDEX funding_donation_payout_id_38cefb65 ON test2.funding_donor USING btree (payout_id);
 
 
 --
 -- Name: funding_donation_reward_id_068a0ab7; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX funding_donation_reward_id_068a0ab7 ON test2.funding_donation USING btree (reward_id);
+CREATE INDEX funding_donation_reward_id_068a0ab7 ON test2.funding_donor USING btree (reward_id);
 
 
 --
@@ -37955,27 +35525,6 @@ CREATE INDEX funding_stripe_paymentintent_donation_id_0bafda29 ON test2.funding_
 
 
 --
--- Name: fundraisers_fundraiser_location_id_9f00382a; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_location_id_9f00382a ON test2.fundraisers_fundraiser USING btree (location_id);
-
-
---
--- Name: fundraisers_fundraiser_owner_id_224218ee; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_owner_id_224218ee ON test2.fundraisers_fundraiser USING btree (owner_id);
-
-
---
--- Name: fundraisers_fundraiser_project_id_3f1b1d1e; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX fundraisers_fundraiser_project_id_3f1b1d1e ON test2.fundraisers_fundraiser USING btree (project_id);
-
-
---
 -- Name: geo_activityplace_country_id_104046da; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38018,10 +35567,10 @@ CREATE INDEX geo_country_translation_master_id_0fae303b ON test2.geo_country_tra
 
 
 --
--- Name: geo_initiativeplace_country_id_92ce882b; Type: INDEX; Schema: test2; Owner: -
+-- Name: geo_geolocation_position_id; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX geo_initiativeplace_country_id_92ce882b ON test2.geo_initiativeplace USING btree (country_id);
+CREATE INDEX geo_geolocation_position_id ON test2.geo_geolocation USING gist ("position");
 
 
 --
@@ -38039,6 +35588,13 @@ CREATE INDEX geo_location_group_id_70137a39 ON test2.geo_location USING btree (g
 
 
 --
+-- Name: geo_location_position_id; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX geo_location_position_id ON test2.geo_location USING gist ("position");
+
+
+--
 -- Name: geo_location_slug_4f8f8fbd; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38053,6 +35609,13 @@ CREATE INDEX geo_location_slug_4f8f8fbd_like ON test2.geo_location USING btree (
 
 
 --
+-- Name: geo_location_subregion_id_9e5a8036; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX geo_location_subregion_id_9e5a8036 ON test2.geo_location USING btree (subregion_id);
+
+
+--
 -- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38064,6 +35627,13 @@ CREATE INDEX geo_place_content_type_id_462feeb6 ON test2.geo_place USING btree (
 --
 
 CREATE INDEX geo_place_country_id_25fc5388 ON test2.geo_place USING btree (country_id);
+
+
+--
+-- Name: geo_place_position_id; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX geo_place_position_id ON test2.geo_place USING gist ("position");
 
 
 --
@@ -38176,6 +35746,20 @@ CREATE INDEX impact_impacttype_translation_master_id_15f98377 ON test2.impact_im
 --
 
 CREATE INDEX initiatives_initiative_activity_manager_id_e58f82f7 ON test2.initiatives_initiative USING btree (activity_manager_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_initiative_id_c3f8c52d; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX initiatives_initiative_activity_managers_initiative_id_c3f8c52d ON test2.initiatives_initiative_activity_managers USING btree (initiative_id);
+
+
+--
+-- Name: initiatives_initiative_activity_managers_member_id_b56362e0; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX initiatives_initiative_activity_managers_member_id_b56362e0 ON test2.initiatives_initiative_activity_managers USING btree (member_id);
 
 
 --
@@ -38322,7 +35906,7 @@ CREATE INDEX members_member_favourite_themes_member_id_043fee3c ON test2.members
 -- Name: members_member_favourite_themes_projecttheme_id_657d4efb; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX members_member_favourite_themes_projecttheme_id_657d4efb ON test2.members_member_favourite_themes USING btree (projecttheme_id);
+CREATE INDEX members_member_favourite_themes_projecttheme_id_657d4efb ON test2.members_member_favourite_themes USING btree (theme_id);
 
 
 --
@@ -38508,6 +36092,13 @@ CREATE INDEX notifications_messagetemplate_translation_master_id_dd86b449 ON tes
 
 
 --
+-- Name: offices_officesubregion_region_id_6343ac41; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX offices_officesubregion_region_id_6343ac41 ON test2.offices_officesubregion USING btree (region_id);
+
+
+--
 -- Name: orders_order_user_id_e9b59eb1; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38592,118 +36183,6 @@ CREATE INDEX pages_page_status_d84d82a3_like ON test2.pages_page USING btree (st
 
 
 --
--- Name: payments_docdata_docdata_payment_cluster_id_d8206068_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_id_d8206068_like ON test2.payments_docdata_docdatapayment USING btree (payment_cluster_id varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_id_dd5c83d9_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_id_dd5c83d9_like ON test2.payments_docdata_docdatadirectdebitpayment USING btree (payment_cluster_id varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_key_2d295947_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_key_2d295947_like ON test2.payments_docdata_docdatapayment USING btree (payment_cluster_key varchar_pattern_ops);
-
-
---
--- Name: payments_docdata_docdata_payment_cluster_key_afb18596_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_docdata_docdata_payment_cluster_key_afb18596_like ON test2.payments_docdata_docdatadirectdebitpayment USING btree (payment_cluster_key varchar_pattern_ops);
-
-
---
--- Name: payments_interswitch_inter_payment_id_88fbd40a; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_interswitch_inter_payment_id_88fbd40a ON test2.payments_interswitch_interswitchpaymentstatusupdate USING btree (payment_id);
-
-
---
--- Name: payments_logger_paymentlogentry_payment_id_f3ad89dc; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_logger_paymentlogentry_payment_id_f3ad89dc ON test2.payments_logger_paymentlogentry USING btree (payment_id);
-
-
---
--- Name: payments_orderpayment_order_id_9394e5f3; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_orderpayment_order_id_9394e5f3 ON test2.payments_orderpayment USING btree (order_id);
-
-
---
--- Name: payments_orderpayment_user_id_5aba2902; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_orderpayment_user_id_5aba2902 ON test2.payments_orderpayment USING btree (user_id);
-
-
---
--- Name: payments_payment_polymorphic_ctype_id_f341c36a; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_payment_polymorphic_ctype_id_f341c36a ON test2.payments_payment USING btree (polymorphic_ctype_id);
-
-
---
--- Name: payments_transaction_payment_id_2f6b2801; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_transaction_payment_id_2f6b2801 ON test2.payments_transaction USING btree (payment_id);
-
-
---
--- Name: payments_transaction_polymorphic_ctype_id_320cd77f; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_transaction_polymorphic_ctype_id_320cd77f ON test2.payments_transaction USING btree (polymorphic_ctype_id);
-
-
---
--- Name: payments_voucher_voucher_order_id_65973376; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_order_id_65973376 ON test2.payments_voucher_voucher USING btree (order_id);
-
-
---
--- Name: payments_voucher_voucher_receiver_id_45eff5ae; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_receiver_id_45eff5ae ON test2.payments_voucher_voucher USING btree (receiver_id);
-
-
---
--- Name: payments_voucher_voucher_sender_id_8e80931b; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_sender_id_8e80931b ON test2.payments_voucher_voucher USING btree (sender_id);
-
-
---
--- Name: payments_voucher_voucher_status_1bdc244b; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_status_1bdc244b ON test2.payments_voucher_voucher USING btree (status);
-
-
---
--- Name: payments_voucher_voucher_status_1bdc244b_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX payments_voucher_voucher_status_1bdc244b_like ON test2.payments_voucher_voucher USING btree (status varchar_pattern_ops);
-
-
---
 -- Name: payouts_payoutaccount_polymorphic_ctype_id_b240d073; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38746,202 +36225,6 @@ CREATE INDEX payouts_plainpayoutaccount_document_id_e1500b67 ON test2.payouts_pl
 
 
 --
--- Name: projects_customprojectfiel_project_settings_id_5c89ee42; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_customprojectfiel_project_settings_id_5c89ee42 ON test2.projects_customprojectfieldsettings USING btree (project_settings_id);
-
-
---
--- Name: projects_customprojectfield_field_id_367edebf; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_customprojectfield_field_id_367edebf ON test2.projects_customprojectfield USING btree (field_id);
-
-
---
--- Name: projects_customprojectfield_project_id_426e051c; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_customprojectfield_project_id_426e051c ON test2.projects_customprojectfield USING btree (project_id);
-
-
---
--- Name: projects_customprojectfieldsettings_sequence_07910da5; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_customprojectfieldsettings_sequence_07910da5 ON test2.projects_customprojectfieldsettings USING btree (sequence);
-
-
---
--- Name: projects_project_categories_category_id_a492e896; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_categories_category_id_a492e896 ON test2.projects_project_categories USING btree (category_id);
-
-
---
--- Name: projects_project_categories_project_id_757f4325; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_categories_project_id_757f4325 ON test2.projects_project_categories USING btree (project_id);
-
-
---
--- Name: projects_project_country_id_bf55f4e3; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_country_id_bf55f4e3 ON test2.projects_project USING btree (country_id);
-
-
---
--- Name: projects_project_language_id_04a3cfaa; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_language_id_04a3cfaa ON test2.projects_project USING btree (language_id);
-
-
---
--- Name: projects_project_location_id_8947d645; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_location_id_8947d645 ON test2.projects_project USING btree (location_id);
-
-
---
--- Name: projects_project_organization_id_c93e5ca2; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_organization_id_c93e5ca2 ON test2.projects_project USING btree (organization_id);
-
-
---
--- Name: projects_project_owner_id_b940de39; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_owner_id_b940de39 ON test2.projects_project USING btree (owner_id);
-
-
---
--- Name: projects_project_payout_account_id_0e25b464; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_payout_account_id_0e25b464 ON test2.projects_project USING btree (payout_account_id);
-
-
---
--- Name: projects_project_promoter_id_012193b5; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_promoter_id_012193b5 ON test2.projects_project USING btree (promoter_id);
-
-
---
--- Name: projects_project_reviewer_id_cf52b239; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_reviewer_id_cf52b239 ON test2.projects_project USING btree (reviewer_id);
-
-
---
--- Name: projects_project_slug_2d50067a_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_slug_2d50067a_like ON test2.projects_project USING btree (slug varchar_pattern_ops);
-
-
---
--- Name: projects_project_status_id_9f58ac46; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_status_id_9f58ac46 ON test2.projects_project USING btree (status_id);
-
-
---
--- Name: projects_project_task_manager_id_d0848ddf; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_task_manager_id_d0848ddf ON test2.projects_project USING btree (task_manager_id);
-
-
---
--- Name: projects_project_theme_id_8442c910; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_theme_id_8442c910 ON test2.projects_project USING btree (theme_id);
-
-
---
--- Name: projects_project_title_3d294c09_like; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_project_title_3d294c09_like ON test2.projects_project USING btree (title varchar_pattern_ops);
-
-
---
--- Name: projects_projectaddon_polymorphic_ctype_id_c8b33f55; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectaddon_polymorphic_ctype_id_c8b33f55 ON test2.projects_projectaddon USING btree (polymorphic_ctype_id);
-
-
---
--- Name: projects_projectaddon_project_id_a18f3893; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectaddon_project_id_a18f3893 ON test2.projects_projectaddon USING btree (project_id);
-
-
---
--- Name: projects_projectbudgetline_project_id_24f42a3d; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectbudgetline_project_id_24f42a3d ON test2.projects_projectbudgetline USING btree (project_id);
-
-
---
--- Name: projects_projectcreatetemplate_project_settings_id_8eec671f; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectcreatetemplate_project_settings_id_8eec671f ON test2.projects_projectcreatetemplate USING btree (project_settings_id);
-
-
---
--- Name: projects_projectimage_project_id_618ded0e; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectimage_project_id_618ded0e ON test2.projects_projectimage USING btree (project_id);
-
-
---
--- Name: projects_projectphaselog_project_id_9c7364ea; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectphaselog_project_id_9c7364ea ON test2.projects_projectphaselog USING btree (project_id);
-
-
---
--- Name: projects_projectphaselog_status_id_489d62c7; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectphaselog_status_id_489d62c7 ON test2.projects_projectphaselog USING btree (status_id);
-
-
---
--- Name: projects_projectsearchfilter_project_settings_id_c2e31f86; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectsearchfilter_project_settings_id_c2e31f86 ON test2.projects_projectsearchfilter USING btree (project_settings_id);
-
-
---
--- Name: projects_projectsearchfilter_sequence_7d5fa5d7; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX projects_projectsearchfilter_sequence_7d5fa5d7 ON test2.projects_projectsearchfilter USING btree (sequence);
-
-
---
 -- Name: quotes_quote_author_id_201a84c4; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38981,13 +36264,6 @@ CREATE INDEX quotes_quote_status_bfa5ea1d_like ON test2.quotes_quote USING btree
 --
 
 CREATE INDEX quotes_quote_user_id_ca72ed0b ON test2.quotes_quote USING btree (user_id);
-
-
---
--- Name: rewards_reward_project_id_ae73b643; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX rewards_reward_project_id_ae73b643 ON test2.rewards_reward USING btree (project_id);
 
 
 --
@@ -39093,6 +36369,20 @@ CREATE INDEX social_auth_partial_token_3017fea3 ON test2.social_auth_partial USI
 --
 
 CREATE INDEX social_auth_partial_token_3017fea3_like ON test2.social_auth_partial USING btree (token varchar_pattern_ops);
+
+
+--
+-- Name: social_auth_usersocialauth_uid_796e51dc; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX social_auth_usersocialauth_uid_796e51dc ON test2.social_auth_usersocialauth USING btree (uid);
+
+
+--
+-- Name: social_auth_usersocialauth_uid_796e51dc_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX social_auth_usersocialauth_uid_796e51dc_like ON test2.social_auth_usersocialauth USING btree (uid varchar_pattern_ops);
 
 
 --
@@ -39215,20 +36505,6 @@ CREATE INDEX statistics_statistic_type_0e93ed92_like ON test2.statistics_statist
 
 
 --
--- Name: suggestions_suggestion_project_id_fbfdfde8; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX suggestions_suggestion_project_id_fbfdfde8 ON test2.suggestions_suggestion USING btree (project_id);
-
-
---
--- Name: suggestions_suggestion_theme_id_3e8273ef; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX suggestions_suggestion_theme_id_3e8273ef ON test2.suggestions_suggestion USING btree (theme_id);
-
-
---
 -- Name: taggit_tag_name_58eb2ed9_like; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -39274,21 +36550,21 @@ CREATE INDEX taggit_taggeditem_tag_id_f4f5b767 ON test2.taggit_taggeditem USING 
 -- Name: tasks_skill_translation_language_code_18946ed2; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_language_code_18946ed2 ON test2.tasks_skill_translation USING btree (language_code);
+CREATE INDEX tasks_skill_translation_language_code_18946ed2 ON test2.time_based_skill_translation USING btree (language_code);
 
 
 --
 -- Name: tasks_skill_translation_language_code_18946ed2_like; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_language_code_18946ed2_like ON test2.tasks_skill_translation USING btree (language_code varchar_pattern_ops);
+CREATE INDEX tasks_skill_translation_language_code_18946ed2_like ON test2.time_based_skill_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
 -- Name: tasks_skill_translation_master_id_d2978b9f; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX tasks_skill_translation_master_id_d2978b9f ON test2.tasks_skill_translation USING btree (master_id);
+CREATE INDEX tasks_skill_translation_master_id_d2978b9f ON test2.time_based_skill_translation USING btree (master_id);
 
 
 --
@@ -39317,6 +36593,83 @@ CREATE INDEX terms_termsagreement_user_id_3c1bbd49 ON test2.terms_termsagreement
 --
 
 CREATE INDEX thumbnail_kvstore_key_3f850178_like ON test2.thumbnail_kvstore USING btree (key varchar_pattern_ops);
+
+
+--
+-- Name: time_based_dateactivityslot_activity_id_f2f6e335; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_dateactivityslot_activity_id_f2f6e335 ON test2.time_based_dateactivityslot USING btree (activity_id);
+
+
+--
+-- Name: time_based_dateactivityslot_location_id_39a15a21; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_dateactivityslot_location_id_39a15a21 ON test2.time_based_dateactivityslot USING btree (location_id);
+
+
+--
+-- Name: time_based_onadateapplication_document_id_98da3668; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_onadateapplication_document_id_98da3668 ON test2.time_based_dateparticipant USING btree (document_id);
+
+
+--
+-- Name: time_based_periodactivity_location_id_02365c52; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_periodactivity_location_id_02365c52 ON test2.time_based_periodactivity USING btree (location_id);
+
+
+--
+-- Name: time_based_periodactivityslot_activity_id_113888fe; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_periodactivityslot_activity_id_113888fe ON test2.time_based_periodactivityslot USING btree (activity_id);
+
+
+--
+-- Name: time_based_periodapplication_document_id_d32c82d8; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_periodapplication_document_id_d32c82d8 ON test2.time_based_periodparticipant USING btree (document_id);
+
+
+--
+-- Name: time_based_slotparticipant_participant_id_44d5b2f9; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_slotparticipant_participant_id_44d5b2f9 ON test2.time_based_slotparticipant USING btree (participant_id);
+
+
+--
+-- Name: time_based_slotparticipant_slot_id_90fe4ba5; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_slotparticipant_slot_id_90fe4ba5 ON test2.time_based_slotparticipant USING btree (slot_id);
+
+
+--
+-- Name: time_based_timebasedactivity_expertise_id_4d051b7c; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_timebasedactivity_expertise_id_4d051b7c ON test2.time_based_timebasedactivity USING btree (expertise_id);
+
+
+--
+-- Name: time_based_timebasedactivity_location_id_3a3e4382; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_timebasedactivity_location_id_3a3e4382 ON test2.time_based_timebasedactivity USING btree (location_id);
+
+
+--
+-- Name: time_based_timecontribution_slot_participant_id_cc119aed; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX time_based_timecontribution_slot_participant_id_cc119aed ON test2.time_based_timecontribution USING btree (slot_participant_id);
 
 
 --
@@ -39352,27 +36705,6 @@ CREATE INDEX utils_translationplatforms_language_code_fd9ccfa3 ON test2.utils_tr
 --
 
 CREATE INDEX utils_translationplatforms_master_id_5ae457be ON test2.utils_translationplatformsettings_translation USING btree (master_id);
-
-
---
--- Name: votes_vote_created_d2bd31ac; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX votes_vote_created_d2bd31ac ON test2.votes_vote USING btree (created);
-
-
---
--- Name: votes_vote_project_id_7d68c734; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX votes_vote_project_id_7d68c734 ON test2.votes_vote USING btree (project_id);
-
-
---
--- Name: votes_vote_voter_id_5a5a77f0; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX votes_vote_voter_id_5a5a77f0 ON test2.votes_vote USING btree (voter_id);
 
 
 --
@@ -39540,11 +36872,27 @@ ALTER TABLE ONLY test.activities_activity
 
 
 --
--- Name: activities_contribution activities_contribut_activity_id_10103e48_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: activities_contributor activities_contribut_activity_id_e8d6c284_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_contributor
+    ADD CONSTRAINT activities_contribut_activity_id_e8d6c284_fk_activitie FOREIGN KEY (activity_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_contribution activities_contribut_contributor_id_e12e3008_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.activities_contribution
-    ADD CONSTRAINT activities_contribut_activity_id_10103e48_fk_activitie FOREIGN KEY (activity_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activities_contribut_contributor_id_e12e3008_fk_activitie FOREIGN KEY (contributor_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_contributor activities_contribut_polymorphic_ctype_id_6d1420b7_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_contributor
+    ADD CONSTRAINT activities_contribut_polymorphic_ctype_id_6d1420b7_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -39556,59 +36904,27 @@ ALTER TABLE ONLY test.activities_contribution
 
 
 --
--- Name: activities_contribution activities_contribution_user_id_01d3cf7f_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: activities_contributor activities_contribution_user_id_01d3cf7f_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.activities_contribution
+ALTER TABLE ONLY test.activities_contributor
     ADD CONSTRAINT activities_contribution_user_id_01d3cf7f_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: activities_organizer activities_organizer_contribution_ptr_id_7ffef135_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: activities_effortcontribution activities_organizer_contribution_ptr_id_c7826b7e_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_effortcontribution
+    ADD CONSTRAINT activities_organizer_contribution_ptr_id_c7826b7e_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_organizer activities_organizer_contributor_ptr_id_8701975e_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.activities_organizer
-    ADD CONSTRAINT activities_organizer_contribution_ptr_id_7ffef135_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_applicant assignments_applican_contribution_ptr_id_d53144b1_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_applicant
-    ADD CONSTRAINT assignments_applican_contribution_ptr_id_d53144b1_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_applicant assignments_applican_document_id_52766ded_fk_files_pri; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_applicant
-    ADD CONSTRAINT assignments_applican_document_id_52766ded_fk_files_pri FOREIGN KEY (document_id) REFERENCES test.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignme_activity_ptr_id_ebf7fe76_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_assignment
-    ADD CONSTRAINT assignments_assignme_activity_ptr_id_ebf7fe76_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignme_location_id_f70541c1_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_assignment
-    ADD CONSTRAINT assignments_assignme_location_id_f70541c1_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignment_expertise_id_18e0dc8f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.assignments_assignment
-    ADD CONSTRAINT assignments_assignment_expertise_id_18e0dc8f_fk_tasks_skill_id FOREIGN KEY (expertise_id) REFERENCES test.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activities_organizer_contributor_ptr_id_8701975e_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -39660,19 +36976,11 @@ ALTER TABLE ONLY test.bb_follow_follow
 
 
 --
--- Name: bb_projects_projectphase_translation bb_projects_projectp_master_id_8a27be99_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projectt_master_id_91b2025f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectp_master_id_8a27be99_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: bb_projects_projecttheme_translation bb_projects_projectt_master_id_91b2025f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.bb_projects_projecttheme_translation
-    ADD CONSTRAINT bb_projects_projectt_master_id_91b2025f_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test.initiatives_theme_translation
+    ADD CONSTRAINT bb_projects_projectt_master_id_91b2025f_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -39812,22 +37120,6 @@ ALTER TABLE ONLY test.cms_logo
 
 
 --
--- Name: cms_projectscontent_projects cms_projectscontent__project_id_61b9a320_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent__project_id_61b9a320_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: cms_projectscontent_projects cms_projectscontent__projectscontent_id_d90b02d7_fk_contentit; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent__projectscontent_id_d90b02d7_fk_contentit FOREIGN KEY (projectscontent_id) REFERENCES test.contentitem_cms_projectscontent(contentitem_ptr_id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: cms_quote cms_quote_block_id_a68420ea_fk_contentit; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -39953,14 +37245,6 @@ ALTER TABLE ONLY test.contentitem_cms_projectsmapcontent
 
 ALTER TABLE ONLY test.contentitem_cms_projectscontent
     ADD CONSTRAINT contentitem_cms_proj_contentitem_ptr_id_1385581d_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: contentitem_cms_projectimagescontent contentitem_cms_proj_contentitem_ptr_id_5e62fae7_fk_fluent_co; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.contentitem_cms_projectimagescontent
-    ADD CONSTRAINT contentitem_cms_proj_contentitem_ptr_id_5e62fae7_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40092,6 +37376,22 @@ ALTER TABLE ONLY test.contentitem_text_textitem
 
 
 --
+-- Name: deeds_deed deeds_deed_activity_ptr_id_d4add097_fk_activities_activity_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.deeds_deed
+    ADD CONSTRAINT deeds_deed_activity_ptr_id_d4add097_fk_activities_activity_id FOREIGN KEY (activity_ptr_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: deeds_deedparticipant deeds_deedparticipan_contributor_ptr_id_7c91587f_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.deeds_deedparticipant
+    ADD CONSTRAINT deeds_deedparticipan_contributor_ptr_id_7c91587f_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40105,62 +37405,6 @@ ALTER TABLE ONLY test.django_admin_log
 
 ALTER TABLE ONLY test.django_admin_log
     ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_fundraiser_id_a3d05f18_fk_fundraise; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation
-    ADD CONSTRAINT donations_donation_fundraiser_id_a3d05f18_fk_fundraise FOREIGN KEY (fundraiser_id) REFERENCES test.fundraisers_fundraiser(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_order_id_7aa4ca67_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation
-    ADD CONSTRAINT donations_donation_order_id_7aa4ca67_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_project_id_5afb2670_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation
-    ADD CONSTRAINT donations_donation_project_id_5afb2670_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_reward_id_683436b3_fk_rewards_reward_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.donations_donation
-    ADD CONSTRAINT donations_donation_reward_id_683436b3_fk_rewards_reward_id FOREIGN KEY (reward_id) REFERENCES test.rewards_reward(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_event events_event_activity_ptr_id_ad9f1492_fk_activities_activity_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.events_event
-    ADD CONSTRAINT events_event_activity_ptr_id_ad9f1492_fk_activities_activity_id FOREIGN KEY (activity_ptr_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_event events_event_location_id_2fb4171f_fk_geo_geolocation_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.events_event
-    ADD CONSTRAINT events_event_location_id_2fb4171f_fk_geo_geolocation_id FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_participant events_participant_contribution_ptr_id_a8cea6fa_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.events_participant
-    ADD CONSTRAINT events_participant_contribution_ptr_id_a8cea6fa_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40276,34 +37520,34 @@ ALTER TABLE ONLY test.funding_budgetline
 
 
 --
--- Name: funding_donation funding_donation_contribution_ptr_id_6fc75af7_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_donor funding_donation_contributor_ptr_id_17606ac6_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.funding_donation
-    ADD CONSTRAINT funding_donation_contribution_ptr_id_6fc75af7_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test.funding_donor
+    ADD CONSTRAINT funding_donation_contributor_ptr_id_17606ac6_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_fundraiser_id_82fdef53_fk_funding_f; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_donor funding_donation_fundraiser_id_82fdef53_fk_funding_f; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.funding_donation
+ALTER TABLE ONLY test.funding_donor
     ADD CONSTRAINT funding_donation_fundraiser_id_82fdef53_fk_funding_f FOREIGN KEY (fundraiser_id) REFERENCES test.funding_fundraiser(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_payout_id_38cefb65_fk_funding_payout_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_donor funding_donation_payout_id_38cefb65_fk_funding_payout_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.funding_donation
+ALTER TABLE ONLY test.funding_donor
     ADD CONSTRAINT funding_donation_payout_id_38cefb65_fk_funding_payout_id FOREIGN KEY (payout_id) REFERENCES test.funding_payout(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_reward_id_068a0ab7_fk_funding_reward_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_donor funding_donation_reward_id_068a0ab7_fk_funding_reward_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.funding_donation
+ALTER TABLE ONLY test.funding_donor
     ADD CONSTRAINT funding_donation_reward_id_068a0ab7_fk_funding_reward_id FOREIGN KEY (reward_id) REFERENCES test.funding_reward(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -40412,11 +37656,19 @@ ALTER TABLE ONLY test.funding_lipisha_lipishapaymentprovider
 
 
 --
+-- Name: funding_moneycontribution funding_moneycontrib_contribution_ptr_id_e21940e8_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_moneycontribution
+    ADD CONSTRAINT funding_moneycontrib_contribution_ptr_id_e21940e8_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: funding_payment funding_payment_donation_id_e35881d2_fk_funding_d; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.funding_payment
-    ADD CONSTRAINT funding_payment_donation_id_e35881d2_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_payment_donation_id_e35881d2_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40544,7 +37796,7 @@ ALTER TABLE ONLY test.funding_stripe_externalaccount
 --
 
 ALTER TABLE ONLY test.funding_stripe_paymentintent
-    ADD CONSTRAINT funding_stripe_payme_donation_id_0bafda29_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_stripe_payme_donation_id_0bafda29_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40636,30 +37888,6 @@ ALTER TABLE ONLY test.funding_vitepay_vitepaypaymentprovider
 
 
 --
--- Name: fundraisers_fundraiser fundraisers_fundrais_project_id_3f1b1d1e_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundrais_project_id_3f1b1d1e_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fundraisers_fundraiser fundraisers_fundraiser_location_id_9f00382a_fk_geo_location_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_location_id_9f00382a_fk_geo_location_id FOREIGN KEY (location_id) REFERENCES test.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fundraisers_fundraiser fundraisers_fundraiser_owner_id_224218ee_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_owner_id_224218ee_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_geolocation geo_activityplace_country_id_104046da_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40684,14 +37912,6 @@ ALTER TABLE ONLY test.geo_country_translation
 
 
 --
--- Name: geo_initiativeplace geo_initiativeplace_country_id_92ce882b_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.geo_initiativeplace
-    ADD CONSTRAINT geo_initiativeplace_country_id_92ce882b_fk_geo_country_id FOREIGN KEY (country_id) REFERENCES test.geo_country(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_location geo_location_country_id_592737d1_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40705,6 +37925,14 @@ ALTER TABLE ONLY test.geo_location
 
 ALTER TABLE ONLY test.geo_location
     ADD CONSTRAINT geo_location_group_id_70137a39_fk_geo_locationgroup_id FOREIGN KEY (group_id) REFERENCES test.geo_locationgroup(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: geo_location geo_location_subregion_id_9e5a8036_fk_offices_o; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.geo_location
+    ADD CONSTRAINT geo_location_subregion_id_9e5a8036_fk_offices_o FOREIGN KEY (subregion_id) REFERENCES test.offices_officesubregion(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40788,11 +38016,27 @@ ALTER TABLE ONLY test.initiatives_initiative_categories
 
 
 --
+-- Name: initiatives_initiative_activity_managers initiatives_initiati_initiative_id_c3f8c52d_fk_initiativ; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiati_initiative_id_c3f8c52d_fk_initiativ FOREIGN KEY (initiative_id) REFERENCES test.initiatives_initiative(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiati_initiative_id_d38256d4_fk_initiativ; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.initiatives_initiative_categories
     ADD CONSTRAINT initiatives_initiati_initiative_id_d38256d4_fk_initiativ FOREIGN KEY (initiative_id) REFERENCES test.initiatives_initiative(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: initiatives_initiative_activity_managers initiatives_initiati_member_id_b56362e0_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiati_member_id_b56362e0_fk_members_m FOREIGN KEY (member_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40828,11 +38072,11 @@ ALTER TABLE ONLY test.initiatives_initiative
 
 
 --
--- Name: initiatives_initiative initiatives_initiati_theme_id_f0dc1d3f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: initiatives_initiative initiatives_initiati_theme_id_f0dc1d3f_fk_initiativ; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.initiatives_initiative
-    ADD CONSTRAINT initiatives_initiati_theme_id_f0dc1d3f_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT initiatives_initiati_theme_id_f0dc1d3f_fk_initiativ FOREIGN KEY (theme_id) REFERENCES test.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40900,11 +38144,11 @@ ALTER TABLE ONLY test.members_member_favourite_themes
 
 
 --
--- Name: members_member_favourite_themes members_member_favou_projecttheme_id_657d4efb_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: members_member_favourite_themes members_member_favou_theme_id_dbf1c4fc_fk_initiativ; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.members_member_favourite_themes
-    ADD CONSTRAINT members_member_favou_projecttheme_id_657d4efb_fk_bb_projec FOREIGN KEY (projecttheme_id) REFERENCES test.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT members_member_favou_theme_id_dbf1c4fc_fk_initiativ FOREIGN KEY (theme_id) REFERENCES test.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40964,11 +38208,11 @@ ALTER TABLE ONLY test.members_member_skills
 
 
 --
--- Name: members_member_skills members_member_skills_skill_id_8ab08971_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: members_member_skills members_member_skills_skill_id_8ab08971_fk_time_based_skill_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.members_member_skills
-    ADD CONSTRAINT members_member_skills_skill_id_8ab08971_fk_tasks_skill_id FOREIGN KEY (skill_id) REFERENCES test.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT members_member_skills_skill_id_8ab08971_fk_time_based_skill_id FOREIGN KEY (skill_id) REFERENCES test.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41044,6 +38288,14 @@ ALTER TABLE ONLY test.notifications_message
 
 
 --
+-- Name: offices_officesubregion offices_officesubreg_region_id_6343ac41_fk_offices_o; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.offices_officesubregion
+    ADD CONSTRAINT offices_officesubreg_region_id_6343ac41_fk_offices_o FOREIGN KEY (region_id) REFERENCES test.offices_officeregion(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: orders_order orders_order_user_id_e9b59eb1_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -41073,230 +38325,6 @@ ALTER TABLE ONLY test.organizations_organization
 
 ALTER TABLE ONLY test.pages_page
     ADD CONSTRAINT pages_page_author_id_fed45c98_fk_members_member_id FOREIGN KEY (author_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_beyonic_beyonicpayment payments_beyonic_bey_payment_ptr_id_0756211d_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_beyonic_beyonicpayment
-    ADD CONSTRAINT payments_beyonic_bey_payment_ptr_id_0756211d_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_doc_payment_ptr_id_11932fb8_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_doc_payment_ptr_id_11932fb8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_doc_payment_ptr_id_ae0348a4_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_doc_payment_ptr_id_ae0348a4_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatatransaction payments_docdata_doc_transaction_ptr_id_e2409254_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_docdata_docdatatransaction
-    ADD CONSTRAINT payments_docdata_doc_transaction_ptr_id_e2409254_fk_payments_ FOREIGN KEY (transaction_ptr_id) REFERENCES test.payments_transaction(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_external_externalpayment payments_external_ex_payment_ptr_id_45f2fcb6_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_external_externalpayment
-    ADD CONSTRAINT payments_external_ex_payment_ptr_id_45f2fcb6_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_flutterwave_flutterwavepayment payments_flutterwave_payment_ptr_id_8e445e76_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_flutterwave_flutterwavepayment
-    ADD CONSTRAINT payments_flutterwave_payment_ptr_id_8e445e76_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment payments_flutterwave_payment_ptr_id_b06a089e_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_flutterwave_flutterwavempesapayment
-    ADD CONSTRAINT payments_flutterwave_payment_ptr_id_b06a089e_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate payments_interswitch_payment_id_88fbd40a_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_interswitch_interswitchpaymentstatusupdate
-    ADD CONSTRAINT payments_interswitch_payment_id_88fbd40a_fk_payments_ FOREIGN KEY (payment_id) REFERENCES test.payments_interswitch_interswitchpayment(payment_ptr_id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_interswitch_interswitchpayment payments_interswitch_payment_ptr_id_7abd16b8_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_interswitch_interswitchpayment
-    ADD CONSTRAINT payments_interswitch_payment_ptr_id_7abd16b8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_lipisha_lipishapayment payments_lipisha_lip_payment_ptr_id_2ae8425f_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_lipisha_lipishapayment
-    ADD CONSTRAINT payments_lipisha_lip_payment_ptr_id_2ae8425f_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_lipisha_lipishaproject payments_lipisha_lip_projectaddon_ptr_id_0e1fde8d_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_lipisha_lipishaproject
-    ADD CONSTRAINT payments_lipisha_lip_projectaddon_ptr_id_0e1fde8d_fk_projects_ FOREIGN KEY (projectaddon_ptr_id) REFERENCES test.projects_projectaddon(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_logger_paymentlogentry payments_logger_paym_payment_id_f3ad89dc_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_logger_paymentlogentry
-    ADD CONSTRAINT payments_logger_paym_payment_id_f3ad89dc_fk_payments_ FOREIGN KEY (payment_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpaymen_authorization_action_edc429e3_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment
-    ADD CONSTRAINT payments_orderpaymen_authorization_action_edc429e3_fk_payments_ FOREIGN KEY (authorization_action_id) REFERENCES test.payments_orderpaymentaction(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpayment_order_id_9394e5f3_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_order_id_9394e5f3_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpayment_user_id_5aba2902_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_user_id_5aba2902_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_payment payments_payment_order_payment_id_6e6feb07_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_payment
-    ADD CONSTRAINT payments_payment_order_payment_id_6e6feb07_fk_payments_ FOREIGN KEY (order_payment_id) REFERENCES test.payments_orderpayment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_payment payments_payment_polymorphic_ctype_id_f341c36a_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_payment
-    ADD CONSTRAINT payments_payment_polymorphic_ctype_id_f341c36a_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_pledge_pledgestandardpayment payments_pledge_pled_payment_ptr_id_55ef24a5_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_pledge_pledgestandardpayment
-    ADD CONSTRAINT payments_pledge_pled_payment_ptr_id_55ef24a5_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_stripe_stripepayment payments_stripe_stri_payment_ptr_id_64fb6d49_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_stripe_stripepayment
-    ADD CONSTRAINT payments_stripe_stri_payment_ptr_id_64fb6d49_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_telesom_telesompayment payments_telesom_tel_payment_ptr_id_a17e23cf_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_telesom_telesompayment
-    ADD CONSTRAINT payments_telesom_tel_payment_ptr_id_a17e23cf_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_transaction payments_transaction_payment_id_2f6b2801_fk_payments_payment_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_transaction
-    ADD CONSTRAINT payments_transaction_payment_id_2f6b2801_fk_payments_payment_id FOREIGN KEY (payment_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_transaction payments_transaction_polymorphic_ctype_id_320cd77f_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_transaction
-    ADD CONSTRAINT payments_transaction_polymorphic_ctype_id_320cd77f_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_vitepay_vitepaypayment payments_vitepay_vit_payment_ptr_id_3b91ffd8_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_vitepay_vitepaypayment
-    ADD CONSTRAINT payments_vitepay_vit_payment_ptr_id_3b91ffd8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_vou_payment_ptr_id_1ab366b3_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_vou_payment_ptr_id_1ab366b3_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_vou_receiver_id_45eff5ae_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_vou_receiver_id_45eff5ae_fk_members_m FOREIGN KEY (receiver_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_vou_sender_id_8e80931b_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_vou_sender_id_8e80931b_fk_members_m FOREIGN KEY (sender_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_vou_voucher_id_2fbe8284_fk_payments_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_vou_voucher_id_2fbe8284_fk_payments_ FOREIGN KEY (voucher_id) REFERENCES test.payments_voucher_voucher(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_voucher_order_id_65973376_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_voucher_order_id_65973376_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41372,206 +38400,6 @@ ALTER TABLE ONLY test.payouts_stripepayoutaccount
 
 
 --
--- Name: projects_customprojectfield projects_customproje_field_id_367edebf_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfield
-    ADD CONSTRAINT projects_customproje_field_id_367edebf_fk_projects_ FOREIGN KEY (field_id) REFERENCES test.projects_customprojectfieldsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_customprojectfield projects_customproje_project_id_426e051c_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfield
-    ADD CONSTRAINT projects_customproje_project_id_426e051c_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_customprojectfieldsettings projects_customproje_project_settings_id_5c89ee42_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_customprojectfieldsettings
-    ADD CONSTRAINT projects_customproje_project_settings_id_5c89ee42_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project_categories projects_project_cat_category_id_a492e896_fk_categorie; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project_categories
-    ADD CONSTRAINT projects_project_cat_category_id_a492e896_fk_categorie FOREIGN KEY (category_id) REFERENCES test.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project_categories projects_project_cat_project_id_757f4325_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project_categories
-    ADD CONSTRAINT projects_project_cat_project_id_757f4325_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_country_id_bf55f4e3_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_country_id_bf55f4e3_fk_geo_country_id FOREIGN KEY (country_id) REFERENCES test.geo_country(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_language_id_04a3cfaa_fk_utils_language_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_language_id_04a3cfaa_fk_utils_language_id FOREIGN KEY (language_id) REFERENCES test.utils_language(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_location_id_8947d645_fk_geo_location_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_location_id_8947d645_fk_geo_location_id FOREIGN KEY (location_id) REFERENCES test.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_organization_id_c93e5ca2_fk_organizat; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_organization_id_c93e5ca2_fk_organizat FOREIGN KEY (organization_id) REFERENCES test.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_owner_id_b940de39_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_owner_id_b940de39_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_payout_account_id_0e25b464_fk_payouts_p; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_payout_account_id_0e25b464_fk_payouts_p FOREIGN KEY (payout_account_id) REFERENCES test.payouts_payoutaccount(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_promoter_id_012193b5_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_promoter_id_012193b5_fk_members_member_id FOREIGN KEY (promoter_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_reviewer_id_cf52b239_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_reviewer_id_cf52b239_fk_members_member_id FOREIGN KEY (reviewer_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_status_id_9f58ac46_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_status_id_9f58ac46_fk_bb_projec FOREIGN KEY (status_id) REFERENCES test.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_task_manager_id_d0848ddf_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_task_manager_id_d0848ddf_fk_members_member_id FOREIGN KEY (task_manager_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_theme_id_8442c910_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_project
-    ADD CONSTRAINT projects_project_theme_id_8442c910_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectaddon projects_projectaddo_polymorphic_ctype_id_c8b33f55_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddo_polymorphic_ctype_id_c8b33f55_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectaddon projects_projectaddo_project_id_a18f3893_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddo_project_id_a18f3893_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectbudgetline projects_projectbudg_project_id_24f42a3d_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectbudgetline
-    ADD CONSTRAINT projects_projectbudg_project_id_24f42a3d_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectcreatetemplate projects_projectcrea_project_settings_id_8eec671f_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectcreatetemplate
-    ADD CONSTRAINT projects_projectcrea_project_settings_id_8eec671f_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectimage projects_projectimag_project_id_618ded0e_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectimage
-    ADD CONSTRAINT projects_projectimag_project_id_618ded0e_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectlocation projects_projectloca_project_id_4365a245_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectlocation
-    ADD CONSTRAINT projects_projectloca_project_id_4365a245_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectphaselog projects_projectphas_project_id_9c7364ea_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphas_project_id_9c7364ea_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectphaselog projects_projectphas_status_id_489d62c7_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphas_status_id_489d62c7_fk_bb_projec FOREIGN KEY (status_id) REFERENCES test.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectsearchfilter projects_projectsear_project_settings_id_c2e31f86_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.projects_projectsearchfilter
-    ADD CONSTRAINT projects_projectsear_project_settings_id_c2e31f86_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: quotes_quote quotes_quote_author_id_201a84c4_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -41585,14 +38413,6 @@ ALTER TABLE ONLY test.quotes_quote
 
 ALTER TABLE ONLY test.quotes_quote
     ADD CONSTRAINT quotes_quote_user_id_ca72ed0b_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: rewards_reward rewards_reward_project_id_ae73b643_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.rewards_reward
-    ADD CONSTRAINT rewards_reward_project_id_ae73b643_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41684,22 +38504,6 @@ ALTER TABLE ONLY test.statistics_manualstatistic_translation
 
 
 --
--- Name: suggestions_suggestion suggestions_suggesti_project_id_fbfdfde8_fk_projects_; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggesti_project_id_fbfdfde8_fk_projects_ FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: suggestions_suggestion suggestions_suggesti_theme_id_3e8273ef_fk_bb_projec; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggesti_theme_id_3e8273ef_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: taggit_taggeditem taggit_taggeditem_content_type_id_9957a03c_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -41716,11 +38520,11 @@ ALTER TABLE ONLY test.taggit_taggeditem
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.tasks_skill_translation
-    ADD CONSTRAINT tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id FOREIGN KEY (master_id) REFERENCES test.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test.time_based_skill_translation
+    ADD CONSTRAINT tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id FOREIGN KEY (master_id) REFERENCES test.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41748,6 +38552,142 @@ ALTER TABLE ONLY test.terms_termsagreement
 
 
 --
+-- Name: time_based_dateactivityslot time_based_dateactiv_activity_id_f2f6e335_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactiv_activity_id_f2f6e335_fk_time_base FOREIGN KEY (activity_id) REFERENCES test.time_based_dateactivity(timebasedactivity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateactivityslot time_based_dateactiv_location_id_39a15a21_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactiv_location_id_39a15a21_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timecontribution time_based_duration_contribution_ptr_id_fe14ad75_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timecontribution
+    ADD CONSTRAINT time_based_duration_contribution_ptr_id_fe14ad75_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateactivity time_based_onadateac_timebasedactivity_pt_32fbbfde_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateactivity
+    ADD CONSTRAINT time_based_onadateac_timebasedactivity_pt_32fbbfde_fk_time_base FOREIGN KEY (timebasedactivity_ptr_id) REFERENCES test.time_based_timebasedactivity(activity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateap_contributor_ptr_id_98f7beb4_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateap_contributor_ptr_id_98f7beb4_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateap_document_id_98da3668_fk_files_pri; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateap_document_id_98da3668_fk_files_pri FOREIGN KEY (document_id) REFERENCES test.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivityslot time_based_periodact_activity_id_113888fe_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivityslot
+    ADD CONSTRAINT time_based_periodact_activity_id_113888fe_fk_time_base FOREIGN KEY (activity_id) REFERENCES test.time_based_periodactivity(timebasedactivity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivity time_based_periodact_location_id_02365c52_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivity
+    ADD CONSTRAINT time_based_periodact_location_id_02365c52_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapp_contributor_ptr_id_fbc4a5dd_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapp_contributor_ptr_id_fbc4a5dd_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapp_document_id_d32c82d8_fk_files_pri; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapp_document_id_d32c82d8_fk_files_pri FOREIGN KEY (document_id) REFERENCES test.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparti_participant_id_44d5b2f9_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparti_participant_id_44d5b2f9_fk_time_base FOREIGN KEY (participant_id) REFERENCES test.time_based_dateparticipant(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparti_slot_id_90fe4ba5_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparti_slot_id_90fe4ba5_fk_time_base FOREIGN KEY (slot_id) REFERENCES test.time_based_dateactivityslot(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_activity_ptr_id_31e3e12f_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_activity_ptr_id_31e3e12f_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_expertise_id_4d051b7c_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_expertise_id_4d051b7c_fk_time_base FOREIGN KEY (expertise_id) REFERENCES test.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_location_id_3a3e4382_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_location_id_3a3e4382_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timecontribution time_based_timecontr_slot_participant_id_cc119aed_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_timecontribution
+    ADD CONSTRAINT time_based_timecontr_slot_participant_id_cc119aed_fk_time_base FOREIGN KEY (slot_participant_id) REFERENCES test.time_based_slotparticipant(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivity time_based_withadead_timebasedactivity_pt_3ea0db43_fk_time_base; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.time_based_periodactivity
+    ADD CONSTRAINT time_based_withadead_timebasedactivity_pt_3ea0db43_fk_time_base FOREIGN KEY (timebasedactivity_ptr_id) REFERENCES test.time_based_timebasedactivity(activity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: token_auth_checkedtoken token_auth_checkedtoken_user_id_857cdf20_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -41769,22 +38709,6 @@ ALTER TABLE ONLY test.utils_maillog
 
 ALTER TABLE ONLY test.utils_translationplatformsettings_translation
     ADD CONSTRAINT utils_translationpla_master_id_5ae457be_fk_utils_tra FOREIGN KEY (master_id) REFERENCES test.utils_translationplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: votes_vote votes_vote_project_id_7d68c734_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.votes_vote
-    ADD CONSTRAINT votes_vote_project_id_7d68c734_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: votes_vote votes_vote_voter_id_5a5a77f0_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.votes_vote
-    ADD CONSTRAINT votes_vote_voter_id_5a5a77f0_fk_members_member_id FOREIGN KEY (voter_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41888,7 +38812,7 @@ ALTER TABLE ONLY test.wallposts_wallpost
 --
 
 ALTER TABLE ONLY test.wallposts_wallpost
-    ADD CONSTRAINT wallposts_wallpost_donation_id_706e6b74_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT wallposts_wallpost_donation_id_706e6b74_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41956,11 +38880,27 @@ ALTER TABLE ONLY test2.activities_activity
 
 
 --
--- Name: activities_contribution activities_contribut_activity_id_10103e48_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: activities_contributor activities_contribut_activity_id_e8d6c284_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_contributor
+    ADD CONSTRAINT activities_contribut_activity_id_e8d6c284_fk_activitie FOREIGN KEY (activity_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_contribution activities_contribut_contributor_id_e12e3008_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.activities_contribution
-    ADD CONSTRAINT activities_contribut_activity_id_10103e48_fk_activitie FOREIGN KEY (activity_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activities_contribut_contributor_id_e12e3008_fk_activitie FOREIGN KEY (contributor_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_contributor activities_contribut_polymorphic_ctype_id_6d1420b7_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_contributor
+    ADD CONSTRAINT activities_contribut_polymorphic_ctype_id_6d1420b7_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41972,59 +38912,27 @@ ALTER TABLE ONLY test2.activities_contribution
 
 
 --
--- Name: activities_contribution activities_contribution_user_id_01d3cf7f_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: activities_contributor activities_contribution_user_id_01d3cf7f_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.activities_contribution
+ALTER TABLE ONLY test2.activities_contributor
     ADD CONSTRAINT activities_contribution_user_id_01d3cf7f_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: activities_organizer activities_organizer_contribution_ptr_id_7ffef135_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: activities_effortcontribution activities_organizer_contribution_ptr_id_c7826b7e_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_effortcontribution
+    ADD CONSTRAINT activities_organizer_contribution_ptr_id_c7826b7e_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_organizer activities_organizer_contributor_ptr_id_8701975e_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.activities_organizer
-    ADD CONSTRAINT activities_organizer_contribution_ptr_id_7ffef135_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_applicant assignments_applican_contribution_ptr_id_d53144b1_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_applicant
-    ADD CONSTRAINT assignments_applican_contribution_ptr_id_d53144b1_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_applicant assignments_applican_document_id_52766ded_fk_files_pri; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_applicant
-    ADD CONSTRAINT assignments_applican_document_id_52766ded_fk_files_pri FOREIGN KEY (document_id) REFERENCES test2.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignme_activity_ptr_id_ebf7fe76_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_assignment
-    ADD CONSTRAINT assignments_assignme_activity_ptr_id_ebf7fe76_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignme_location_id_f70541c1_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_assignment
-    ADD CONSTRAINT assignments_assignme_location_id_f70541c1_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: assignments_assignment assignments_assignment_expertise_id_18e0dc8f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.assignments_assignment
-    ADD CONSTRAINT assignments_assignment_expertise_id_18e0dc8f_fk_tasks_skill_id FOREIGN KEY (expertise_id) REFERENCES test2.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activities_organizer_contributor_ptr_id_8701975e_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42076,19 +38984,11 @@ ALTER TABLE ONLY test2.bb_follow_follow
 
 
 --
--- Name: bb_projects_projectphase_translation bb_projects_projectp_master_id_8a27be99_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_theme_translation bb_projects_projectt_master_id_91b2025f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.bb_projects_projectphase_translation
-    ADD CONSTRAINT bb_projects_projectp_master_id_8a27be99_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test2.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: bb_projects_projecttheme_translation bb_projects_projectt_master_id_91b2025f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.bb_projects_projecttheme_translation
-    ADD CONSTRAINT bb_projects_projectt_master_id_91b2025f_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test2.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test2.initiatives_theme_translation
+    ADD CONSTRAINT bb_projects_projectt_master_id_91b2025f_fk_bb_projec FOREIGN KEY (master_id) REFERENCES test2.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42228,22 +39128,6 @@ ALTER TABLE ONLY test2.cms_logo
 
 
 --
--- Name: cms_projectscontent_projects cms_projectscontent__project_id_61b9a320_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent__project_id_61b9a320_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: cms_projectscontent_projects cms_projectscontent__projectscontent_id_d90b02d7_fk_contentit; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.cms_projectscontent_projects
-    ADD CONSTRAINT cms_projectscontent__projectscontent_id_d90b02d7_fk_contentit FOREIGN KEY (projectscontent_id) REFERENCES test2.contentitem_cms_projectscontent(contentitem_ptr_id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: cms_quote cms_quote_block_id_a68420ea_fk_contentit; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -42369,14 +39253,6 @@ ALTER TABLE ONLY test2.contentitem_cms_projectsmapcontent
 
 ALTER TABLE ONLY test2.contentitem_cms_projectscontent
     ADD CONSTRAINT contentitem_cms_proj_contentitem_ptr_id_1385581d_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test2.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: contentitem_cms_projectimagescontent contentitem_cms_proj_contentitem_ptr_id_5e62fae7_fk_fluent_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.contentitem_cms_projectimagescontent
-    ADD CONSTRAINT contentitem_cms_proj_contentitem_ptr_id_5e62fae7_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test2.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42508,6 +39384,22 @@ ALTER TABLE ONLY test2.contentitem_text_textitem
 
 
 --
+-- Name: deeds_deed deeds_deed_activity_ptr_id_d4add097_fk_activities_activity_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.deeds_deed
+    ADD CONSTRAINT deeds_deed_activity_ptr_id_d4add097_fk_activities_activity_id FOREIGN KEY (activity_ptr_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: deeds_deedparticipant deeds_deedparticipan_contributor_ptr_id_7c91587f_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.deeds_deedparticipant
+    ADD CONSTRAINT deeds_deedparticipan_contributor_ptr_id_7c91587f_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -42521,62 +39413,6 @@ ALTER TABLE ONLY test2.django_admin_log
 
 ALTER TABLE ONLY test2.django_admin_log
     ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_fundraiser_id_a3d05f18_fk_fundraise; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation
-    ADD CONSTRAINT donations_donation_fundraiser_id_a3d05f18_fk_fundraise FOREIGN KEY (fundraiser_id) REFERENCES test2.fundraisers_fundraiser(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_order_id_7aa4ca67_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation
-    ADD CONSTRAINT donations_donation_order_id_7aa4ca67_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test2.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_project_id_5afb2670_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation
-    ADD CONSTRAINT donations_donation_project_id_5afb2670_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: donations_donation donations_donation_reward_id_683436b3_fk_rewards_reward_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.donations_donation
-    ADD CONSTRAINT donations_donation_reward_id_683436b3_fk_rewards_reward_id FOREIGN KEY (reward_id) REFERENCES test2.rewards_reward(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_event events_event_activity_ptr_id_ad9f1492_fk_activities_activity_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.events_event
-    ADD CONSTRAINT events_event_activity_ptr_id_ad9f1492_fk_activities_activity_id FOREIGN KEY (activity_ptr_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_event events_event_location_id_2fb4171f_fk_geo_geolocation_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.events_event
-    ADD CONSTRAINT events_event_location_id_2fb4171f_fk_geo_geolocation_id FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: events_participant events_participant_contribution_ptr_id_a8cea6fa_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.events_participant
-    ADD CONSTRAINT events_participant_contribution_ptr_id_a8cea6fa_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42692,34 +39528,34 @@ ALTER TABLE ONLY test2.funding_budgetline
 
 
 --
--- Name: funding_donation funding_donation_contribution_ptr_id_6fc75af7_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_donor funding_donation_contributor_ptr_id_17606ac6_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.funding_donation
-    ADD CONSTRAINT funding_donation_contribution_ptr_id_6fc75af7_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test2.funding_donor
+    ADD CONSTRAINT funding_donation_contributor_ptr_id_17606ac6_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_fundraiser_id_82fdef53_fk_funding_f; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_donor funding_donation_fundraiser_id_82fdef53_fk_funding_f; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.funding_donation
+ALTER TABLE ONLY test2.funding_donor
     ADD CONSTRAINT funding_donation_fundraiser_id_82fdef53_fk_funding_f FOREIGN KEY (fundraiser_id) REFERENCES test2.funding_fundraiser(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_payout_id_38cefb65_fk_funding_payout_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_donor funding_donation_payout_id_38cefb65_fk_funding_payout_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.funding_donation
+ALTER TABLE ONLY test2.funding_donor
     ADD CONSTRAINT funding_donation_payout_id_38cefb65_fk_funding_payout_id FOREIGN KEY (payout_id) REFERENCES test2.funding_payout(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: funding_donation funding_donation_reward_id_068a0ab7_fk_funding_reward_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_donor funding_donation_reward_id_068a0ab7_fk_funding_reward_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.funding_donation
+ALTER TABLE ONLY test2.funding_donor
     ADD CONSTRAINT funding_donation_reward_id_068a0ab7_fk_funding_reward_id FOREIGN KEY (reward_id) REFERENCES test2.funding_reward(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -42828,11 +39664,19 @@ ALTER TABLE ONLY test2.funding_lipisha_lipishapaymentprovider
 
 
 --
+-- Name: funding_moneycontribution funding_moneycontrib_contribution_ptr_id_e21940e8_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_moneycontribution
+    ADD CONSTRAINT funding_moneycontrib_contribution_ptr_id_e21940e8_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: funding_payment funding_payment_donation_id_e35881d2_fk_funding_d; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.funding_payment
-    ADD CONSTRAINT funding_payment_donation_id_e35881d2_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_payment_donation_id_e35881d2_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42960,7 +39804,7 @@ ALTER TABLE ONLY test2.funding_stripe_externalaccount
 --
 
 ALTER TABLE ONLY test2.funding_stripe_paymentintent
-    ADD CONSTRAINT funding_stripe_payme_donation_id_0bafda29_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_stripe_payme_donation_id_0bafda29_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43052,30 +39896,6 @@ ALTER TABLE ONLY test2.funding_vitepay_vitepaypaymentprovider
 
 
 --
--- Name: fundraisers_fundraiser fundraisers_fundrais_project_id_3f1b1d1e_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundrais_project_id_3f1b1d1e_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fundraisers_fundraiser fundraisers_fundraiser_location_id_9f00382a_fk_geo_location_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_location_id_9f00382a_fk_geo_location_id FOREIGN KEY (location_id) REFERENCES test2.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fundraisers_fundraiser fundraisers_fundraiser_owner_id_224218ee_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.fundraisers_fundraiser
-    ADD CONSTRAINT fundraisers_fundraiser_owner_id_224218ee_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_geolocation geo_activityplace_country_id_104046da_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -43100,14 +39920,6 @@ ALTER TABLE ONLY test2.geo_country_translation
 
 
 --
--- Name: geo_initiativeplace geo_initiativeplace_country_id_92ce882b_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.geo_initiativeplace
-    ADD CONSTRAINT geo_initiativeplace_country_id_92ce882b_fk_geo_country_id FOREIGN KEY (country_id) REFERENCES test2.geo_country(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_location geo_location_country_id_592737d1_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -43121,6 +39933,14 @@ ALTER TABLE ONLY test2.geo_location
 
 ALTER TABLE ONLY test2.geo_location
     ADD CONSTRAINT geo_location_group_id_70137a39_fk_geo_locationgroup_id FOREIGN KEY (group_id) REFERENCES test2.geo_locationgroup(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: geo_location geo_location_subregion_id_9e5a8036_fk_offices_o; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.geo_location
+    ADD CONSTRAINT geo_location_subregion_id_9e5a8036_fk_offices_o FOREIGN KEY (subregion_id) REFERENCES test2.offices_officesubregion(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43204,11 +40024,27 @@ ALTER TABLE ONLY test2.initiatives_initiative_categories
 
 
 --
+-- Name: initiatives_initiative_activity_managers initiatives_initiati_initiative_id_c3f8c52d_fk_initiativ; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiati_initiative_id_c3f8c52d_fk_initiativ FOREIGN KEY (initiative_id) REFERENCES test2.initiatives_initiative(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiati_initiative_id_d38256d4_fk_initiativ; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.initiatives_initiative_categories
     ADD CONSTRAINT initiatives_initiati_initiative_id_d38256d4_fk_initiativ FOREIGN KEY (initiative_id) REFERENCES test2.initiatives_initiative(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: initiatives_initiative_activity_managers initiatives_initiati_member_id_b56362e0_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.initiatives_initiative_activity_managers
+    ADD CONSTRAINT initiatives_initiati_member_id_b56362e0_fk_members_m FOREIGN KEY (member_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43244,11 +40080,11 @@ ALTER TABLE ONLY test2.initiatives_initiative
 
 
 --
--- Name: initiatives_initiative initiatives_initiati_theme_id_f0dc1d3f_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: initiatives_initiative initiatives_initiati_theme_id_f0dc1d3f_fk_initiativ; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.initiatives_initiative
-    ADD CONSTRAINT initiatives_initiati_theme_id_f0dc1d3f_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test2.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT initiatives_initiati_theme_id_f0dc1d3f_fk_initiativ FOREIGN KEY (theme_id) REFERENCES test2.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43316,11 +40152,11 @@ ALTER TABLE ONLY test2.members_member_favourite_themes
 
 
 --
--- Name: members_member_favourite_themes members_member_favou_projecttheme_id_657d4efb_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: members_member_favourite_themes members_member_favou_theme_id_dbf1c4fc_fk_initiativ; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.members_member_favourite_themes
-    ADD CONSTRAINT members_member_favou_projecttheme_id_657d4efb_fk_bb_projec FOREIGN KEY (projecttheme_id) REFERENCES test2.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT members_member_favou_theme_id_dbf1c4fc_fk_initiativ FOREIGN KEY (theme_id) REFERENCES test2.initiatives_theme(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43380,11 +40216,11 @@ ALTER TABLE ONLY test2.members_member_skills
 
 
 --
--- Name: members_member_skills members_member_skills_skill_id_8ab08971_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: members_member_skills members_member_skills_skill_id_8ab08971_fk_time_based_skill_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.members_member_skills
-    ADD CONSTRAINT members_member_skills_skill_id_8ab08971_fk_tasks_skill_id FOREIGN KEY (skill_id) REFERENCES test2.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT members_member_skills_skill_id_8ab08971_fk_time_based_skill_id FOREIGN KEY (skill_id) REFERENCES test2.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43460,6 +40296,14 @@ ALTER TABLE ONLY test2.notifications_message
 
 
 --
+-- Name: offices_officesubregion offices_officesubreg_region_id_6343ac41_fk_offices_o; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.offices_officesubregion
+    ADD CONSTRAINT offices_officesubreg_region_id_6343ac41_fk_offices_o FOREIGN KEY (region_id) REFERENCES test2.offices_officeregion(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: orders_order orders_order_user_id_e9b59eb1_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -43489,230 +40333,6 @@ ALTER TABLE ONLY test2.organizations_organization
 
 ALTER TABLE ONLY test2.pages_page
     ADD CONSTRAINT pages_page_author_id_fed45c98_fk_members_member_id FOREIGN KEY (author_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_beyonic_beyonicpayment payments_beyonic_bey_payment_ptr_id_0756211d_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_beyonic_beyonicpayment
-    ADD CONSTRAINT payments_beyonic_bey_payment_ptr_id_0756211d_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatapayment payments_docdata_doc_payment_ptr_id_11932fb8_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatapayment
-    ADD CONSTRAINT payments_docdata_doc_payment_ptr_id_11932fb8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatadirectdebitpayment payments_docdata_doc_payment_ptr_id_ae0348a4_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatadirectdebitpayment
-    ADD CONSTRAINT payments_docdata_doc_payment_ptr_id_ae0348a4_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_docdata_docdatatransaction payments_docdata_doc_transaction_ptr_id_e2409254_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_docdata_docdatatransaction
-    ADD CONSTRAINT payments_docdata_doc_transaction_ptr_id_e2409254_fk_payments_ FOREIGN KEY (transaction_ptr_id) REFERENCES test2.payments_transaction(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_external_externalpayment payments_external_ex_payment_ptr_id_45f2fcb6_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_external_externalpayment
-    ADD CONSTRAINT payments_external_ex_payment_ptr_id_45f2fcb6_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_flutterwave_flutterwavepayment payments_flutterwave_payment_ptr_id_8e445e76_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_flutterwave_flutterwavepayment
-    ADD CONSTRAINT payments_flutterwave_payment_ptr_id_8e445e76_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_flutterwave_flutterwavempesapayment payments_flutterwave_payment_ptr_id_b06a089e_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_flutterwave_flutterwavempesapayment
-    ADD CONSTRAINT payments_flutterwave_payment_ptr_id_b06a089e_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_interswitch_interswitchpaymentstatusupdate payments_interswitch_payment_id_88fbd40a_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_interswitch_interswitchpaymentstatusupdate
-    ADD CONSTRAINT payments_interswitch_payment_id_88fbd40a_fk_payments_ FOREIGN KEY (payment_id) REFERENCES test2.payments_interswitch_interswitchpayment(payment_ptr_id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_interswitch_interswitchpayment payments_interswitch_payment_ptr_id_7abd16b8_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_interswitch_interswitchpayment
-    ADD CONSTRAINT payments_interswitch_payment_ptr_id_7abd16b8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_lipisha_lipishapayment payments_lipisha_lip_payment_ptr_id_2ae8425f_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_lipisha_lipishapayment
-    ADD CONSTRAINT payments_lipisha_lip_payment_ptr_id_2ae8425f_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_lipisha_lipishaproject payments_lipisha_lip_projectaddon_ptr_id_0e1fde8d_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_lipisha_lipishaproject
-    ADD CONSTRAINT payments_lipisha_lip_projectaddon_ptr_id_0e1fde8d_fk_projects_ FOREIGN KEY (projectaddon_ptr_id) REFERENCES test2.projects_projectaddon(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_logger_paymentlogentry payments_logger_paym_payment_id_f3ad89dc_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_logger_paymentlogentry
-    ADD CONSTRAINT payments_logger_paym_payment_id_f3ad89dc_fk_payments_ FOREIGN KEY (payment_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpaymen_authorization_action_edc429e3_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment
-    ADD CONSTRAINT payments_orderpaymen_authorization_action_edc429e3_fk_payments_ FOREIGN KEY (authorization_action_id) REFERENCES test2.payments_orderpaymentaction(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpayment_order_id_9394e5f3_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_order_id_9394e5f3_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test2.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_orderpayment payments_orderpayment_user_id_5aba2902_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_orderpayment
-    ADD CONSTRAINT payments_orderpayment_user_id_5aba2902_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_payment payments_payment_order_payment_id_6e6feb07_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_payment
-    ADD CONSTRAINT payments_payment_order_payment_id_6e6feb07_fk_payments_ FOREIGN KEY (order_payment_id) REFERENCES test2.payments_orderpayment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_payment payments_payment_polymorphic_ctype_id_f341c36a_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_payment
-    ADD CONSTRAINT payments_payment_polymorphic_ctype_id_f341c36a_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_pledge_pledgestandardpayment payments_pledge_pled_payment_ptr_id_55ef24a5_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_pledge_pledgestandardpayment
-    ADD CONSTRAINT payments_pledge_pled_payment_ptr_id_55ef24a5_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_stripe_stripepayment payments_stripe_stri_payment_ptr_id_64fb6d49_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_stripe_stripepayment
-    ADD CONSTRAINT payments_stripe_stri_payment_ptr_id_64fb6d49_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_telesom_telesompayment payments_telesom_tel_payment_ptr_id_a17e23cf_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_telesom_telesompayment
-    ADD CONSTRAINT payments_telesom_tel_payment_ptr_id_a17e23cf_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_transaction payments_transaction_payment_id_2f6b2801_fk_payments_payment_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_transaction
-    ADD CONSTRAINT payments_transaction_payment_id_2f6b2801_fk_payments_payment_id FOREIGN KEY (payment_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_transaction payments_transaction_polymorphic_ctype_id_320cd77f_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_transaction
-    ADD CONSTRAINT payments_transaction_polymorphic_ctype_id_320cd77f_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_vitepay_vitepaypayment payments_vitepay_vit_payment_ptr_id_3b91ffd8_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_vitepay_vitepaypayment
-    ADD CONSTRAINT payments_vitepay_vit_payment_ptr_id_3b91ffd8_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_vou_payment_ptr_id_1ab366b3_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_vou_payment_ptr_id_1ab366b3_fk_payments_ FOREIGN KEY (payment_ptr_id) REFERENCES test2.payments_payment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_vou_receiver_id_45eff5ae_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_vou_receiver_id_45eff5ae_fk_members_m FOREIGN KEY (receiver_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_vou_sender_id_8e80931b_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_vou_sender_id_8e80931b_fk_members_m FOREIGN KEY (sender_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucherpayment payments_voucher_vou_voucher_id_2fbe8284_fk_payments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucherpayment
-    ADD CONSTRAINT payments_voucher_vou_voucher_id_2fbe8284_fk_payments_ FOREIGN KEY (voucher_id) REFERENCES test2.payments_voucher_voucher(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: payments_voucher_voucher payments_voucher_voucher_order_id_65973376_fk_orders_order_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.payments_voucher_voucher
-    ADD CONSTRAINT payments_voucher_voucher_order_id_65973376_fk_orders_order_id FOREIGN KEY (order_id) REFERENCES test2.orders_order(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43788,206 +40408,6 @@ ALTER TABLE ONLY test2.payouts_stripepayoutaccount
 
 
 --
--- Name: projects_customprojectfield projects_customproje_field_id_367edebf_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfield
-    ADD CONSTRAINT projects_customproje_field_id_367edebf_fk_projects_ FOREIGN KEY (field_id) REFERENCES test2.projects_customprojectfieldsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_customprojectfield projects_customproje_project_id_426e051c_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfield
-    ADD CONSTRAINT projects_customproje_project_id_426e051c_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_customprojectfieldsettings projects_customproje_project_settings_id_5c89ee42_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_customprojectfieldsettings
-    ADD CONSTRAINT projects_customproje_project_settings_id_5c89ee42_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test2.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project_categories projects_project_cat_category_id_a492e896_fk_categorie; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project_categories
-    ADD CONSTRAINT projects_project_cat_category_id_a492e896_fk_categorie FOREIGN KEY (category_id) REFERENCES test2.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project_categories projects_project_cat_project_id_757f4325_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project_categories
-    ADD CONSTRAINT projects_project_cat_project_id_757f4325_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_country_id_bf55f4e3_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_country_id_bf55f4e3_fk_geo_country_id FOREIGN KEY (country_id) REFERENCES test2.geo_country(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_language_id_04a3cfaa_fk_utils_language_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_language_id_04a3cfaa_fk_utils_language_id FOREIGN KEY (language_id) REFERENCES test2.utils_language(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_location_id_8947d645_fk_geo_location_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_location_id_8947d645_fk_geo_location_id FOREIGN KEY (location_id) REFERENCES test2.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_organization_id_c93e5ca2_fk_organizat; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_organization_id_c93e5ca2_fk_organizat FOREIGN KEY (organization_id) REFERENCES test2.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_owner_id_b940de39_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_owner_id_b940de39_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_payout_account_id_0e25b464_fk_payouts_p; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_payout_account_id_0e25b464_fk_payouts_p FOREIGN KEY (payout_account_id) REFERENCES test2.payouts_payoutaccount(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_promoter_id_012193b5_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_promoter_id_012193b5_fk_members_member_id FOREIGN KEY (promoter_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_reviewer_id_cf52b239_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_reviewer_id_cf52b239_fk_members_member_id FOREIGN KEY (reviewer_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_status_id_9f58ac46_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_status_id_9f58ac46_fk_bb_projec FOREIGN KEY (status_id) REFERENCES test2.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_task_manager_id_d0848ddf_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_task_manager_id_d0848ddf_fk_members_member_id FOREIGN KEY (task_manager_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_project projects_project_theme_id_8442c910_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_project
-    ADD CONSTRAINT projects_project_theme_id_8442c910_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test2.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectaddon projects_projectaddo_polymorphic_ctype_id_c8b33f55_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddo_polymorphic_ctype_id_c8b33f55_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectaddon projects_projectaddo_project_id_a18f3893_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectaddon
-    ADD CONSTRAINT projects_projectaddo_project_id_a18f3893_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectbudgetline projects_projectbudg_project_id_24f42a3d_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectbudgetline
-    ADD CONSTRAINT projects_projectbudg_project_id_24f42a3d_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectcreatetemplate projects_projectcrea_project_settings_id_8eec671f_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectcreatetemplate
-    ADD CONSTRAINT projects_projectcrea_project_settings_id_8eec671f_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test2.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectimage projects_projectimag_project_id_618ded0e_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectimage
-    ADD CONSTRAINT projects_projectimag_project_id_618ded0e_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectlocation projects_projectloca_project_id_4365a245_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectlocation
-    ADD CONSTRAINT projects_projectloca_project_id_4365a245_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectphaselog projects_projectphas_project_id_9c7364ea_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphas_project_id_9c7364ea_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectphaselog projects_projectphas_status_id_489d62c7_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectphaselog
-    ADD CONSTRAINT projects_projectphas_status_id_489d62c7_fk_bb_projec FOREIGN KEY (status_id) REFERENCES test2.bb_projects_projectphase(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_projectsearchfilter projects_projectsear_project_settings_id_c2e31f86_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.projects_projectsearchfilter
-    ADD CONSTRAINT projects_projectsear_project_settings_id_c2e31f86_fk_projects_ FOREIGN KEY (project_settings_id) REFERENCES test2.projects_projectplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: quotes_quote quotes_quote_author_id_201a84c4_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -44001,14 +40421,6 @@ ALTER TABLE ONLY test2.quotes_quote
 
 ALTER TABLE ONLY test2.quotes_quote
     ADD CONSTRAINT quotes_quote_user_id_ca72ed0b_fk_members_member_id FOREIGN KEY (user_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: rewards_reward rewards_reward_project_id_ae73b643_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.rewards_reward
-    ADD CONSTRAINT rewards_reward_project_id_ae73b643_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -44100,22 +40512,6 @@ ALTER TABLE ONLY test2.statistics_manualstatistic_translation
 
 
 --
--- Name: suggestions_suggestion suggestions_suggesti_project_id_fbfdfde8_fk_projects_; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggesti_project_id_fbfdfde8_fk_projects_ FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: suggestions_suggestion suggestions_suggesti_theme_id_3e8273ef_fk_bb_projec; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.suggestions_suggestion
-    ADD CONSTRAINT suggestions_suggesti_theme_id_3e8273ef_fk_bb_projec FOREIGN KEY (theme_id) REFERENCES test2.bb_projects_projecttheme(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: taggit_taggeditem taggit_taggeditem_content_type_id_9957a03c_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -44132,11 +40528,11 @@ ALTER TABLE ONLY test2.taggit_taggeditem
 
 
 --
--- Name: tasks_skill_translation tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: time_based_skill_translation tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.tasks_skill_translation
-    ADD CONSTRAINT tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id FOREIGN KEY (master_id) REFERENCES test2.tasks_skill(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY test2.time_based_skill_translation
+    ADD CONSTRAINT tasks_skill_translation_master_id_d2978b9f_fk_tasks_skill_id FOREIGN KEY (master_id) REFERENCES test2.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -44164,6 +40560,142 @@ ALTER TABLE ONLY test2.terms_termsagreement
 
 
 --
+-- Name: time_based_dateactivityslot time_based_dateactiv_activity_id_f2f6e335_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactiv_activity_id_f2f6e335_fk_time_base FOREIGN KEY (activity_id) REFERENCES test2.time_based_dateactivity(timebasedactivity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateactivityslot time_based_dateactiv_location_id_39a15a21_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivityslot
+    ADD CONSTRAINT time_based_dateactiv_location_id_39a15a21_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timecontribution time_based_duration_contribution_ptr_id_fe14ad75_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timecontribution
+    ADD CONSTRAINT time_based_duration_contribution_ptr_id_fe14ad75_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateactivity time_based_onadateac_timebasedactivity_pt_32fbbfde_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateactivity
+    ADD CONSTRAINT time_based_onadateac_timebasedactivity_pt_32fbbfde_fk_time_base FOREIGN KEY (timebasedactivity_ptr_id) REFERENCES test2.time_based_timebasedactivity(activity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateap_contributor_ptr_id_98f7beb4_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateap_contributor_ptr_id_98f7beb4_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_dateparticipant time_based_onadateap_document_id_98da3668_fk_files_pri; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_dateparticipant
+    ADD CONSTRAINT time_based_onadateap_document_id_98da3668_fk_files_pri FOREIGN KEY (document_id) REFERENCES test2.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivityslot time_based_periodact_activity_id_113888fe_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivityslot
+    ADD CONSTRAINT time_based_periodact_activity_id_113888fe_fk_time_base FOREIGN KEY (activity_id) REFERENCES test2.time_based_periodactivity(timebasedactivity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivity time_based_periodact_location_id_02365c52_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivity
+    ADD CONSTRAINT time_based_periodact_location_id_02365c52_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapp_contributor_ptr_id_fbc4a5dd_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapp_contributor_ptr_id_fbc4a5dd_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodparticipant time_based_periodapp_document_id_d32c82d8_fk_files_pri; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodparticipant
+    ADD CONSTRAINT time_based_periodapp_document_id_d32c82d8_fk_files_pri FOREIGN KEY (document_id) REFERENCES test2.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparti_participant_id_44d5b2f9_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparti_participant_id_44d5b2f9_fk_time_base FOREIGN KEY (participant_id) REFERENCES test2.time_based_dateparticipant(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_slotparticipant time_based_slotparti_slot_id_90fe4ba5_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_slotparticipant
+    ADD CONSTRAINT time_based_slotparti_slot_id_90fe4ba5_fk_time_base FOREIGN KEY (slot_id) REFERENCES test2.time_based_dateactivityslot(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_activity_ptr_id_31e3e12f_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_activity_ptr_id_31e3e12f_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_expertise_id_4d051b7c_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_expertise_id_4d051b7c_fk_time_base FOREIGN KEY (expertise_id) REFERENCES test2.time_based_skill(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timebasedactivity time_based_timebased_location_id_3a3e4382_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timebasedactivity
+    ADD CONSTRAINT time_based_timebased_location_id_3a3e4382_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_timecontribution time_based_timecontr_slot_participant_id_cc119aed_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_timecontribution
+    ADD CONSTRAINT time_based_timecontr_slot_participant_id_cc119aed_fk_time_base FOREIGN KEY (slot_participant_id) REFERENCES test2.time_based_slotparticipant(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: time_based_periodactivity time_based_withadead_timebasedactivity_pt_3ea0db43_fk_time_base; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.time_based_periodactivity
+    ADD CONSTRAINT time_based_withadead_timebasedactivity_pt_3ea0db43_fk_time_base FOREIGN KEY (timebasedactivity_ptr_id) REFERENCES test2.time_based_timebasedactivity(activity_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: token_auth_checkedtoken token_auth_checkedtoken_user_id_857cdf20_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -44185,22 +40717,6 @@ ALTER TABLE ONLY test2.utils_maillog
 
 ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
     ADD CONSTRAINT utils_translationpla_master_id_5ae457be_fk_utils_tra FOREIGN KEY (master_id) REFERENCES test2.utils_translationplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: votes_vote votes_vote_project_id_7d68c734_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.votes_vote
-    ADD CONSTRAINT votes_vote_project_id_7d68c734_fk_projects_project_id FOREIGN KEY (project_id) REFERENCES test2.projects_project(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: votes_vote votes_vote_voter_id_5a5a77f0_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.votes_vote
-    ADD CONSTRAINT votes_vote_voter_id_5a5a77f0_fk_members_member_id FOREIGN KEY (voter_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -44304,7 +40820,7 @@ ALTER TABLE ONLY test2.wallposts_wallpost
 --
 
 ALTER TABLE ONLY test2.wallposts_wallpost
-    ADD CONSTRAINT wallposts_wallpost_donation_id_706e6b74_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donation(contribution_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT wallposts_wallpost_donation_id_706e6b74_fk_funding_d FOREIGN KEY (donation_id) REFERENCES test2.funding_donor(contributor_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

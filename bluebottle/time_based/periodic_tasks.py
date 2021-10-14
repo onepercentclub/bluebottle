@@ -1,15 +1,14 @@
 from datetime import date, timedelta
 
-from django.db.models import DateTimeField, ExpressionWrapper, F
-from django.db.models import Q
+from django.db.models import DateTimeField, ExpressionWrapper, F, Q, Count
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
-from bluebottle.time_based.messages import ReminderSingleDateNotification, ReminderMultipleDatesNotification
+from bluebottle.time_based.messages import ReminderSingleDateNotification
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
@@ -137,15 +136,16 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
 class DateActivityReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
-        return DateActivity.objects.filter(slots__start__lte=timezone.now() + timedelta(days=5),
-                                           status__in=['open', 'full']
-                                           )
+        return DateActivity.objects.annotate(
+            slot_count=Count('slots')
+        ).filter(
+            slot_count=1,
+            slots__start__lte=timezone.now() + timedelta(days=5),
+            status__in=['open', 'full']
+        ).distinct()
 
     def has_one_slot(effect):
         return effect.instance.slots.count() == 1
-
-    def has_multiple_slots(effect):
-        return effect.instance.slots.count() > 1
 
     effects = [
         NotificationEffect(
@@ -154,12 +154,6 @@ class DateActivityReminderTask(ModelPeriodicTask):
                 has_one_slot
             ]
         ),
-        NotificationEffect(
-            ReminderMultipleDatesNotification,
-            conditions=[
-                has_multiple_slots
-            ]
-        )
     ]
 
     def __str__(self):

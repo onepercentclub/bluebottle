@@ -1,22 +1,19 @@
 from __future__ import absolute_import
 
-from future.utils import python_2_unicode_compatible
-
 from builtins import object
+
 from adminsortable.models import SortableMixin
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-
+from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
-
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -146,7 +143,7 @@ class Member(BlueBottleBaseUser):
         null=True
     )
 
-    places = GenericRelation(Place)
+    place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')
@@ -166,13 +163,6 @@ class Member(BlueBottleBaseUser):
             self._previous_last_seen = self.last_seen
         except ObjectDoesNotExist:
             self._previous_last_seen = None
-
-    @property
-    def place(self):
-        try:
-            return self.places.last()
-        except Place.DoesNotExist:
-            return None
 
     class Analytics(object):
         type = 'member'

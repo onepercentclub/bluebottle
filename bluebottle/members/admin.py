@@ -4,24 +4,21 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from bluebottle.deeds.models import DeedParticipant
-from django.db.models import Q
-
-from bluebottle.funding_pledge.models import PledgePaymentProvider
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
-from django.urls import reverse
 from django.db import connection
 from django.db import models
+from django.db.models import Q
 from django.forms import BaseInlineFormSet
 from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
@@ -33,8 +30,9 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Donor, PaymentProvider
-from bluebottle.geo.admin import PlaceInline
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.forms import (
@@ -219,7 +217,8 @@ class SortedUnionFieldListFilter(UnionFieldListFilter):
 
 
 class MemberAdmin(UserAdmin):
-    raw_id_fields = ('partner_organization', )
+    raw_id_fields = ('partner_organization', 'place')
+    date_hierarchy = 'date_joined'
 
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
@@ -267,7 +266,8 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        ['picture', 'about_me', 'matching_options_set', 'favourite_themes', 'skills']
+                        ['picture', 'about_me', 'matching_options_set',
+                         'favourite_themes', 'skills', 'place']
                     }
                 ],
                 [
@@ -304,6 +304,13 @@ class MemberAdmin(UserAdmin):
 
             if SegmentType.objects.filter(is_active=True).count():
                 fieldsets[1][1]['fields'].append('segments')
+
+            member_settings = MemberPlatformSettings.load()
+
+            if member_settings.enable_gender:
+                fieldsets[0][1]['fields'].append('gender')
+            if member_settings.enable_birthdate:
+                fieldsets[0][1]['fields'].append('birthdate')
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
@@ -352,8 +359,9 @@ class MemberAdmin(UserAdmin):
     export_fields = (
         ('username', 'username'),
         ('email', 'email'),
-        ('remote_id', 'remote_id'),
-        ('first_name', 'first_name'),
+        ('phone_number', 'phone number'),
+        ('remote_id', 'remote id'),
+        ('first_name', 'first name'),
         ('last_name', 'last name'),
         ('date_joined', 'date joined'),
 
@@ -365,7 +373,25 @@ class MemberAdmin(UserAdmin):
         ('subscribed', 'subscribed to matching projects'),
     )
 
-    actions = (export_as_csv_action(fields=export_fields),)
+    def get_export_fields(self):
+        fields = self.export_fields
+        member_settings = MemberPlatformSettings.load()
+        if member_settings.enable_gender:
+            fields += (('gender', 'gender'),)
+        if member_settings.enable_birthdate:
+            fields += (('birthdate', 'birthdate'),)
+        if member_settings.enable_address:
+            fields += (('place__street', 'street'),)
+            fields += (('place__street_number', 'street_number'),)
+            fields += (('place__locality', 'city'),)
+            fields += (('place__postal_code', 'postal_code'),)
+            fields += (('place__country__name', 'country'),)
+        return fields
+
+    def get_actions(self, request):
+        self.actions = (export_as_csv_action(fields=self.get_export_fields()),)
+
+        return super(MemberAdmin, self).get_actions(request)
 
     form = MemberChangeForm
     add_form = MemberCreationForm
@@ -381,7 +407,7 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (PlaceInline, UserActivityInline,)
+    inlines = (UserActivityInline,)
 
     def initiatives(self, obj):
         initiatives = []

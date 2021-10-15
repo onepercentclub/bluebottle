@@ -497,7 +497,6 @@ class SlotParticipantStateMachine(ModelStateMachine):
         return self.instance.slot.status in (
             DateActivitySlotStateMachine.open.value,
             DateActivitySlotStateMachine.running.value,
-            DateActivitySlotStateMachine.full.value
         )
 
     initiate = Transition(

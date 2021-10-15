@@ -5,7 +5,6 @@ import dkim
 import mock
 import unittest
 import uuid
-
 from bluebottle.time_based.models import DateActivity
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -440,6 +439,10 @@ class TestTenantAwareParlerAppsettings(BluebottleTestCase):
 
     def test_default(self):
         self.assertEqual(appsettings.PARLER_SHOW_EXCLUDED_LANGUAGE_TABS, False)
+
+    def test_create_unknown(self):
+        with self.assertRaisesMessage(ValidationError, 'Unknown language code: du'):
+            LanguageFactory.create(code='du', default=True, language_name='Unknown')
 
 
 class TestResourcePermission(BluebottleTestCase):

@@ -50,7 +50,7 @@ class TestExportAdmin(BluebottleTestCase):
         book = xlrd.open_workbook(result)
         self.assertEqual(
             book.sheet_by_name('Users').ncols,
-            11
+            16
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
@@ -151,13 +151,13 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Users').ncols,
-            12
+            17
         )
         t = 1
         while t < book.sheet_by_name('Users').nrows:
             if book.sheet_by_name('Users').cell(t, 5).value == 'markies@decanteclaer.nl':
                 self.assertEqual(
-                    book.sheet_by_name('Users').cell(t, 11).value,
+                    book.sheet_by_name('Users').cell(t, 16).value,
                     'Parblue Yellow'
                 )
             t += 1
@@ -216,10 +216,10 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Users').ncols,
-            12
+            17
         )
         self.assertEqual(
-            book.sheet_by_name('Users').cell(0, 11).value,
+            book.sheet_by_name('Users').cell(0, 16).value,
             'Department'
         )
 
@@ -227,7 +227,7 @@ class TestExportAdmin(BluebottleTestCase):
         while t < book.sheet_by_name('Users').nrows:
             if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
                 self.assertEqual(
-                    book.sheet_by_name('Users').cell(t, 11).value,
+                    book.sheet_by_name('Users').cell(t, 16).value,
                     'Engineering'
                 )
             t += 1

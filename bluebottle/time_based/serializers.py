@@ -4,6 +4,7 @@ import dateutil
 from django.db.models.functions import Trunc
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField,
@@ -698,6 +699,12 @@ def activity_matches_participant_and_slot(value):
 class SlotParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
+
+    def validate(self, data):
+        if data['slot'].status != 'open':
+            raise ValidationError('Participants cannot sign up for full slots')
+
+        return data
 
     class Meta:
         model = SlotParticipant

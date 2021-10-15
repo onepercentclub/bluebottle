@@ -179,7 +179,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
-    homepage = PermissionField('homepage', view_args=('primary_language', ))
+    homepage = PermissionField('home-page-detail')
 
     class Meta(object):
         fields = [
@@ -312,10 +312,10 @@ class ManageProfileSerializer(UserProfileSerializer):
                     setattr(current_place, key, value)
                 current_place.save()
             else:
-                Place.objects.create(content_object=instance, **place)
+                instance.place = Place.objects.create(**place)
         else:
             if instance.place:
-                instance.place.delete()
+                instance.place = None
 
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 

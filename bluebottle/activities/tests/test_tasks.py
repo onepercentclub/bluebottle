@@ -36,8 +36,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.user = BlueBottleUserFactory.create(
             subscribed=True
         )
-        PlaceFactory.create(
-            content_object=self.user,
+        self.user.place = PlaceFactory.create(
             position=self.amsterdam
         )
 
@@ -46,6 +45,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         for skill in SkillFactory.create_batch(3):
             self.user.skills.add(skill)
+        self.user.save()
 
         self.matches = []
 
@@ -212,7 +212,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 self.assertFalse(activity.get_absolute_url() in body)
 
     def test_including_partial_location(self):
-        self.user.place.delete()
+        self.user.place = None
         self.user.location = LocationFactory.create(position=self.amsterdam)
         self.user.save()
 

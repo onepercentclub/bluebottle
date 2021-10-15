@@ -357,7 +357,6 @@ TENANT_APPS = (
     'bluebottle.funding_telesom',
     'bluebottle.segments',
     'bluebottle.tasks',
-    'bluebottle.homepage',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
@@ -654,7 +653,12 @@ EXPORTDB_EXPORT_CONF = {
                 ('last_name', 'Last Name'),
                 ('email', 'Email'),
                 ('location__name', _('Office location')),
-                ('place__locality', 'Location'),
+                ('birthdate', 'Birthdate'),
+                ('gender', 'Gender'),
+                ('place__street', 'Street'),
+                ('place__street_number', 'Number'),
+                ('place__locality', 'City'),
+                ('place__postal_code', 'Postal code'),
                 ('place__country__name', 'Country'),
                 ('date_joined', 'Date joined'),
                 ('updated', 'Last update'),
@@ -951,7 +955,7 @@ EXPORTDB_USE_CELERY = True
 EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'private/exports')
 
 # maximum delta between from/to date for exports
-EXPORT_MAX_DAYS = 366 * 3
+EXPORT_MAX_DAYS = 365 * 20
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 

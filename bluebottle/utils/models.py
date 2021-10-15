@@ -3,13 +3,15 @@ from datetime import timedelta
 
 from memoize import memoize
 
+from django.conf import settings
 from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, ProgrammingError, OperationalError
 from django.db.models.manager import Manager
 from django.utils.timezone import now
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
@@ -35,22 +37,35 @@ def get_languages():
 def get_default_language():
     try:
         return Language.objects.filter(default=True).first().full_code
-    except AttributeError:
+    except (AttributeError, ProgrammingError):
         return 'en'
 
 
 def get_language_choices():
     try:
-        cache_key = 'LANUAGE_CHOICES'
+        cache_key = 'LANGUAGE_CHOICES'
         result = cache.get(cache_key)
 
         if not result:
-            result = [(lang.code, lang.language_name) for lang in Language.objects.all()]
+            result = [(lang.full_code, lang.language_name) for lang in Language.objects.all()]
             cache.set(cache_key, result)
     except (ProgrammingError, OperationalError, AttributeError):
         result = [('en', 'English')]
 
     return result
+
+
+def get_current_language():
+    language = get_language()
+
+    try:
+        try:
+            code, sub_code = language.split('-')
+            return Language.objects.get(code=code, sub_code=sub_code)
+        except ValueError:
+            return Language.objects.filter(code=language).first()
+    except Language.DoesNotExist:
+        return Language.objects.filter(default=True).first().full_code
 
 
 @python_2_unicode_compatible
@@ -66,6 +81,11 @@ class Language(models.Model):
 
     class Meta(object):
         ordering = ['language_name']
+
+    def save(self, *args, **kwargs):
+        if self.code and self.code not in (code for (code, _) in settings.LANGUAGES):
+            raise ValidationError(f'Unknown language code: {self.code}')
+        super().save(*args, **kwargs)
 
     @property
     def full_code(self):

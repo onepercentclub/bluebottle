@@ -1,8 +1,0 @@
-{% extends "mails/messages/participant_base.txt" %}
-{% load i18n %}
-
-{% block message%}{% blocktrans with applicant_name=obj.user.full_name context 'email' %}
-{{ applicant_name }} applied to your activity "{{ title}}".
-
-Review the application and decide if this person is the right fit.
-{% endblocktrans %}{% endblock %}

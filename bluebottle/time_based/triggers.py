@@ -36,7 +36,8 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
     ChangedSingleDateNotification, ActivitySucceededManuallyNotification,
-    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification
+    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification,
+    ParticipantJoinedNotification, ParticipantAppliedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -902,6 +903,13 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 NotificationEffect(
+                    ParticipantAppliedNotification,
+                    conditions=[
+                        needs_review,
+                        is_user
+                    ]
+                ),
+                NotificationEffect(
                     ParticipantCreatedNotification,
                     conditions=[
                         needs_review,
@@ -927,9 +935,25 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.reapply,
             effects=[
+                NotificationEffect(
+                    ParticipantAppliedNotification,
+                    conditions=[
+                        needs_review,
+                        is_user
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantCreatedNotification,
+                    conditions=[
+                        needs_review,
+                        is_user
+                    ]
+                ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
-                    conditions=[automatically_accept]
+                    conditions=[
+                        automatically_accept
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'contributions',
@@ -982,6 +1006,10 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     NewParticipantNotification,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    ParticipantJoinedNotification,
                     conditions=[automatically_accept]
                 ),
                 NotificationEffect(

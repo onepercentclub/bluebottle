@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from pytz import timezone
-
 from django.template import defaultfilters
-from django.utils.translation import pgettext_lazy as pgettext
 from django.utils.timezone import get_current_timezone
+from django.utils.translation import pgettext_lazy as pgettext
+from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 
 
 def get_slot_info(slot):
@@ -29,6 +29,25 @@ def get_slot_info(slot):
         'end_time': defaultfilters.time(end),
         'timezone': start.strftime('%Z')
     }
+
+
+class TimeBasedInfoMixin(object):
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj.activity, DateParticipant):
+            slots = []
+            for slot in self.obj.activity.slots.filter(slot_participants__participant__user=recipient).all():
+                slots.append(get_slot_info(slot))
+            context.update({slots: slots})
+        elif isinstance(self.obj, PeriodParticipant):
+            context.update({
+                'duration': self.obj.activity.duration_human_readable,
+                'duration_period': self.obj.activity.duration_period_human_readable,
+                'start': self.obj.activity.start,
+                'end': self.obj.activity.deadline,
+            })
+        return context
 
 
 class DeadlineChangedNotification(TransitionMessage):
@@ -73,7 +92,7 @@ class DeadlineChangedNotification(TransitionMessage):
         return context
 
 
-class ReminderSingleDateNotification(TransitionMessage):
+class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a single date activity
     """
@@ -83,14 +102,6 @@ class ReminderSingleDateNotification(TransitionMessage):
     context = {
         'title': 'title',
     }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
-        if slot:
-            context.update(get_slot_info(slot))
-        context['title'] = self.obj.title
-        return context
 
     @property
     def action_link(self):
@@ -105,7 +116,7 @@ class ReminderSingleDateNotification(TransitionMessage):
         ]
 
 
-class ChangedSingleDateNotification(TransitionMessage):
+class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
     """
@@ -114,12 +125,6 @@ class ChangedSingleDateNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
     }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context.update(get_slot_info(self.obj))
-        context['title'] = self.obj.activity.title
-        return context
 
     @property
     def action_link(self):
@@ -221,7 +226,7 @@ class NewParticipantNotification(TransitionMessage):
         return [self.obj.activity.owner]
 
 
-class ParticipantNotification(TransitionMessage):
+class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     A participant was added manually (through back-office)
     """
@@ -240,7 +245,49 @@ class ParticipantNotification(TransitionMessage):
         return [self.obj.user]
 
 
-class ParticipantAcceptedNotification(TransitionMessage):
+class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/participant_joined'
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/participant_applied'
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant got accepted after review
     """

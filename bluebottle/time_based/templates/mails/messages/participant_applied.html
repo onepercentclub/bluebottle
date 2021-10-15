@@ -1,0 +1,23 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You applied to the activity "{{ title }}"!
+        {% endblocktrans %}
+    </p>
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                You will receive a notification by email when the activity manager accepts you.
+            {% endblocktrans %}
+        </i>
+    </p>
+
+    {% if duration %}
+        {% include 'mails/messages/partial/period.html' %}
+    {% else %}
+        {% include 'mails/messages/partial/slots.html' %}
+    {% endif %}
+{% endblock %}

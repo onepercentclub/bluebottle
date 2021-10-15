@@ -1,0 +1,34 @@
+{% load i18n %}
+<p>
+    {% if start %}
+        {% blocktrans context 'email' %}
+            Start: {{ start }}.
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans context 'email' %}
+            You can start right away.
+        {% endblocktrans %}
+    {% endif %}
+    <br />
+    {% if end %}
+        {% blocktrans context 'email' %}
+            End: {{ end }}.
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans context 'email' %}
+            This activity runs indefinitely.
+        {% endblocktrans %}
+    {% endif %}
+</p>
+<p>
+    {% if obj.duration_period == 'overall' %}
+        {% blocktrans context 'email' %}
+            You are expected to spend {{ duration }}
+        {% endblocktrans %}
+
+    {% else %}
+        {% blocktrans context 'email' %}
+            You are expected to spend {{ duration }} {{ duration_period }}.
+        {% endblocktrans %}
+    {% endif %}
+</p>

@@ -914,9 +914,9 @@ class ParticipantTriggerTestCase():
         participant.save()
 
         self.assertEqual(participant.status, 'new')
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
-            mail.outbox[0].subject,
+            mail.outbox[1].subject,
             'You have a new participant for your activity "{}" 🎉'.format(
                 self.review_activity.title
             )
@@ -947,7 +947,7 @@ class ParticipantTriggerTestCase():
         participant.save()
 
         self.assertEqual(participant.status, 'accepted')
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
             'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
@@ -1143,6 +1143,54 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_join(self):
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.activity
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A new participant has joined your activity "{self.activity.title}" 🎉'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have joined the activity "{self.activity.title}"'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
+        )
+
+    def test_apply(self):
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.review_activity
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have a new participant for your activity "{self.review_activity.title}" 🎉'
+        )
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have applied to the activity "{self.review_activity.title}"'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'new'
+        )
 
     def test_no_review_succeed(self):
         self.activity.deadline = date.today() - timedelta(days=1)

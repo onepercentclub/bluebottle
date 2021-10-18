@@ -129,8 +129,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
-                self.activity.title,
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
@@ -168,8 +167,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         )
         with TenantLanguage('en'):
             tz = pytz.timezone(self.slot.location.timezone)
-            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
-                self.activity.title,
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
                 defaultfilters.time(self.slot.start.astimezone(tz)),
                 defaultfilters.time(self.slot.end.astimezone(tz)),
@@ -193,13 +191,13 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
         )
         with TenantLanguage('nl'):
-            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
-                self.activity.title,
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
+
         self.assertTrue(expected in mail.outbox[0].body)
         self.assertTrue(
             "13:30 - 16:30" in mail.outbox[0].body,

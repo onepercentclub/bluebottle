@@ -745,8 +745,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = 'The activity "{}" takes place on {} {} - {} ({})'.format(
-                self.activity.title,
+            expected = '{} {} - {} ({})'.format(
                 defaultfilters.date(self.slot.start),
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),

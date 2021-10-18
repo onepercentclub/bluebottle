@@ -6,7 +6,7 @@ from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant, DateActivitySlot
 
 
 def get_slot_info(slot):
@@ -35,17 +35,25 @@ class TimeBasedInfoMixin(object):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        if isinstance(self.obj.activity, DateParticipant):
+        if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
+            participant = self.obj
+        elif isinstance(self.obj, DateActivitySlot):
+            participant = self.obj.activity.participants.get(user=recipient)
+        else:
+            participant = self.obj.participants.get(user=recipient)
+
+        if isinstance(participant, DateParticipant):
             slots = []
-            for slot in self.obj.activity.slots.filter(slot_participants__participant__user=recipient).all():
-                slots.append(get_slot_info(slot))
-            context.update({slots: slots})
-        elif isinstance(self.obj, PeriodParticipant):
+            for slot_participant in participant.slot_participants.all():
+                slots.append(get_slot_info(slot_participant.slot))
+
+            context.update({'slots': slots})
+        elif isinstance(participant, PeriodParticipant):
             context.update({
-                'duration': self.obj.activity.duration_human_readable,
-                'duration_period': self.obj.activity.duration_period_human_readable,
-                'start': self.obj.activity.start,
-                'end': self.obj.activity.deadline,
+                'duration': participant.activity.duration_human_readable,
+                'duration_period': participant.activity.duration_period_human_readable,
+                'start': participant.activity.start,
+                'end': participant.activity.deadline,
             })
         return context
 

@@ -5,16 +5,16 @@ msgstr ""
 "POT-Creation-Date: 2021-09-15 14:14+0200\n"
 "PO-Revision-Date: 2021-10-20 07:52\n"
 "Last-Translator: \n"
-"Language-Team: French\n"
-"Language: fr\n"
+"Language-Team: Portuguese\n"
+"Language: pt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.0.7\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
-"X-Crowdin-Language: fr\n"
+"X-Crowdin-Language: pt-PT\n"
 "X-Crowdin-File: /release.target-impact-activity-translate/locale/en/LC_MESSAGES/django.po\n"
 "X-Crowdin-File-ID: 343\n"
 
@@ -2757,7 +2757,7 @@ msgstr ""
 
 #: bluebottle/funding/messages.py:18
 msgid "Thanks for your donation!"
-msgstr "Merci pour votre don!"
+msgstr ""
 
 #: bluebottle/funding/messages.py:34 bluebottle/funding/messages.py:50
 #, python-brace-format
@@ -3531,10 +3531,7 @@ msgid "\n"
 "        Hi %(recipient_name)s,<br />\n"
 "        Thanks for your donation! \n"
 "        "
-msgstr "\n"
-"        Hi %(recipient_name)s,<br />\n"
-"        merci pour votre don! \n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:17
 #, python-format
@@ -3545,7 +3542,7 @@ msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:24
 msgid "Give some extra support and share this campaign with your network."
-msgstr "Offrez un soutien supplémentaire et partagez cette campagne avec votre réseau. "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:29
 msgid "Share on facebook"
@@ -3577,8 +3574,7 @@ msgstr ""
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.txt:18
 msgid "\n"
 "Give some extra support and share this campaign with your network.\n"
-msgstr "\n"
-"Offrez un soutien supplémentaire et partagez cette campagne avec votre réseau.\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_owner.html:5
 #, python-format

@@ -287,15 +287,16 @@ class Funding(Activity):
         return stats
 
     def save(self, *args, **kwargs):
-        for reward in self.rewards.all():
-            if not reward.amount.currency == self.target.currency:
-                reward.amount = Money(reward.amount.amount, self.target.currency)
-                reward.save()
+        if self.target:
+            for reward in self.rewards.all():
+                if reward.amount and not reward.amount.currency == self.target.currency:
+                    reward.amount = Money(reward.amount.amount, self.target.currency)
+                    reward.save()
 
-        for line in self.budget_lines.all():
-            if self.target and not line.amount.currency == self.target.currency:
-                line.amount = Money(line.amount.amount, self.target.currency)
-                line.save()
+            for line in self.budget_lines.all():
+                if self.target and not line.amount.currency == self.target.currency:
+                    line.amount = Money(line.amount.amount, self.target.currency)
+                    line.save()
 
         super(Funding, self).save(*args, **kwargs)
 

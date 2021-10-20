@@ -143,6 +143,7 @@ class EffortContributionTriggers(TriggerManager):
         TransitionTrigger(
             EffortContributionStateMachine.initiate,
             effects=[
+                UpdateImpactGoalEffect,
                 TransitionEffect(
                     EffortContributionStateMachine.succeed,
                     conditions=[contributor_is_succeeded]

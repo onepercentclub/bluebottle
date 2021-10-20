@@ -64,6 +64,7 @@ class DeedAdmin(ActivityChildAdmin):
     detail_fields = ActivityChildAdmin.detail_fields + (
         'start',
         'end',
+        'enable_impact',
         'target'
     )
 

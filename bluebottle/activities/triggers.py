@@ -1,5 +1,7 @@
 from bluebottle.activities.models import Organizer, EffortContribution
-from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
+from bluebottle.fsm.triggers import (
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+)
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
@@ -157,6 +159,12 @@ class EffortContributionTriggers(TriggerManager):
 
         TransitionTrigger(
             EffortContributionStateMachine.fail,
+            effects=[
+                UpdateImpactGoalEffect
+            ]
+        ),
+
+        ModelDeletedTrigger(
             effects=[
                 UpdateImpactGoalEffect
             ]

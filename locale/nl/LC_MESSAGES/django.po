@@ -1000,6 +1000,7 @@ msgid "\n"
 msgstr "\n"
 "            Er zijn veel leuke activiteiten op %(site_name)s die een positieve impact hebben. \n\n"
 "            We hebben %(count)s activiteiten geselecteerd die overeenkomen met je profiel. Doe mee!\n"
+"        "
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:16
 msgid "Complete your profile"
@@ -1555,13 +1556,13 @@ msgstr "Zoek"
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
 #, python-format
 msgid "\n"
-"            %(counter)s result"
-msgid_plural "%(counter)s results\n"
-"        "
+"            %(counter)s result\n"
+msgid_plural "\n"
+"      %(counter)s results\n"
 msgstr[0] "\n"
-"            %(counter)s resultaat"
-msgstr[1] "%(counter)s resultaat\n"
-"        "
+"            %(counter)s resultaat\n"
+msgstr[1] "\n"
+"     %(counter)s resultaat\n"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
 #, python-format
@@ -2181,7 +2182,6 @@ msgstr ""
 #: bluebottle/contentplugins/models.py:25
 msgid "Float left"
 msgstr "Zweven links"
-r
 
 #: bluebottle/contentplugins/models.py:26
 msgid "Center"
@@ -3907,6 +3907,7 @@ msgid "\n"
 msgstr "\n"
 "            Hi %(recipient_name)s,<br/>\n"
 "            De deadline voor je crowdfunding campagne  <i>%(title)s\"</i>  is voorbij. Helaas heb je je doel niet gehaald binnen de deadline.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding_partially_funded.txt:6
 #, python-format
@@ -5087,6 +5088,7 @@ msgstr "\n"
 "        Goed nieuws, je initiatief <i>%(title)s</i> is goedgekeurd!\n"
 "        Via je activiteiten kunnen mensen je initiatief steunen. Heb je nog geen activiteiten? Dan is dit het moment\n"
 "        om er een (of twee) aan te maken, zodat mensen je kunnen helpen met het behalen van je doel.\n"
+"    "
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.txt:5
 #, python-format
@@ -7228,6 +7230,7 @@ msgid "\n"
 "    "
 msgstr "\n"
 "    Locatie: %(location)s\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/deadline_changed.html:5
 #, python-format

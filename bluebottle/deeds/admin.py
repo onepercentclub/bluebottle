@@ -52,6 +52,8 @@ class DeedAdmin(ActivityChildAdmin):
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
+        'enable_impact',
+        'target',
         'participant_count',
     ]
 
@@ -62,6 +64,8 @@ class DeedAdmin(ActivityChildAdmin):
     detail_fields = ActivityChildAdmin.detail_fields + (
         'start',
         'end',
+        'enable_impact',
+        'target'
     )
 
     export_as_csv_fields = (

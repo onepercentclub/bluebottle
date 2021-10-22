@@ -1,9 +1,12 @@
 from bluebottle.activities.models import Organizer, EffortContribution
-from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
+from bluebottle.fsm.triggers import (
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+)
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
+from bluebottle.impact.effects import UpdateImpactGoalEffect
 
 
 def initiative_is_approved(effect):
@@ -140,6 +143,7 @@ class EffortContributionTriggers(TriggerManager):
         TransitionTrigger(
             EffortContributionStateMachine.initiate,
             effects=[
+                UpdateImpactGoalEffect,
                 TransitionEffect(
                     EffortContributionStateMachine.succeed,
                     conditions=[contributor_is_succeeded]
@@ -149,7 +153,21 @@ class EffortContributionTriggers(TriggerManager):
         TransitionTrigger(
             EffortContributionStateMachine.succeed,
             effects=[
-                SetContributionDateEffect
+                SetContributionDateEffect,
+                UpdateImpactGoalEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            EffortContributionStateMachine.fail,
+            effects=[
+                UpdateImpactGoalEffect
+            ]
+        ),
+
+        ModelDeletedTrigger(
+            effects=[
+                UpdateImpactGoalEffect
             ]
         ),
     ]

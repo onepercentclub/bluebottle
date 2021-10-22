@@ -11,6 +11,13 @@ class Deed(Activity):
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
+    enable_impact = models.BooleanField(default=False)
+
+    target = models.IntegerField(
+        blank=True, null=True,
+        help_text=_('The number of users you want to participate.')
+    )
+
     auto_approve = True
 
     @property
@@ -39,7 +46,12 @@ class Deed(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description']
+        fields = super().required_fields + ['title', 'description']
+
+        if self.enable_impact:
+            fields = fields + ['goals', 'target']
+
+        return fields
 
     @property
     def participants(self):

@@ -9,8 +9,8 @@ from bluebottle.impact.models import ImpactType, ImpactGoal
 class ImpactGoalInline(admin.TabularInline):
     model = ImpactGoal
     extra = 0
-    readonly_fields = ('unit', )
-    fields = ('type', 'target', 'unit', 'realized')
+    readonly_fields = ('unit', 'realized_from_contributions', )
+    fields = ('type', 'target', 'unit', 'realized', 'realized_from_contributions', )
 
     def unit(self, obj):
         return obj.type.unit

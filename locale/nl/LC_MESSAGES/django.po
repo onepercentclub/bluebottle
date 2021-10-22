@@ -1464,6 +1464,7 @@ msgid "\n\n"
 msgstr "\n\n"
 "Hallo %(first_name)s,\n\n"
 "%(author)s heeft een nieuw bericht geplaatst op een %(follow_object)s die jij volgt:\n\n"
+"'%(wallpost_text)s...'\n\n"
 
 #: bluebottle/bb_follow/templates/bb_follow/mails/wallpost_mail.mail.txt:19
 #, python-format

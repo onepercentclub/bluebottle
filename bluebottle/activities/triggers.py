@@ -159,6 +159,13 @@ class EffortContributionTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            EffortContributionStateMachine.reset,
+            effects=[
+                UpdateImpactGoalEffect
+            ]
+        ),
+
+        TransitionTrigger(
             EffortContributionStateMachine.fail,
             effects=[
                 UpdateImpactGoalEffect

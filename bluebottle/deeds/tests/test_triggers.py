@@ -403,7 +403,10 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.states.reapply()
 
         with self.execute():
-            self.assertEqual(self.effects, [])
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset,
+                self.model.contributions.first()
+            )
 
     def test_remove(self):
         self.create()

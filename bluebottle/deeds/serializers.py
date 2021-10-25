@@ -67,19 +67,22 @@ class DeedSerializer(BaseActivitySerializer):
             'contributors',
             'start',
             'end',
+            'enable_impact',
+            'target',
             'participants_export_url',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/deeds'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
-            'my_contributor',
+            'my_contributor', 'my_contributor.user',
         ]
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
             'my_contributor': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
+            'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 
@@ -129,12 +132,13 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
-            'user', 'activity',
+            'user', 'activity', 'activity.goals',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.deeds.serializers.DeedSerializer',
+        'activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
 
@@ -148,10 +152,12 @@ class DeedParticipantTransitionSerializer(TransitionSerializer):
 
     included_serializers = {
         'resource': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
+        'resource.activity': 'bluebottle.deeds.serializers.DeedSerializer',
+        'resource.activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/deeds/participant-transitions'
         included_resources = [
-            'resource',
+            'resource', 'resource.activity', 'resource.activity.goals'
         ]

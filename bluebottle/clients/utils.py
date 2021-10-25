@@ -12,13 +12,12 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection, ProgrammingError
-from django.utils.translation import get_language
 from djmoney.contrib.exchange.exceptions import MissingRate
 from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
-from bluebottle.utils.models import Language
+from bluebottle.utils.models import Language, get_current_language
 from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
@@ -123,7 +122,7 @@ def get_user_site_links(user):
     from bluebottle.cms.models import SiteLinks
 
     try:
-        site_links = SiteLinks.objects.get(language__code=get_language())
+        site_links = SiteLinks.objects.get(language=get_current_language())
     except SiteLinks.DoesNotExist:
         site_links = SiteLinks.objects.first()
 
@@ -240,7 +239,7 @@ def get_public_properties(request):
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
             'languages': [{'code': lang.full_code, 'name': lang.language_name} for lang in Language.objects.all()],
-            'languageCode': get_language(),
+            'languageCode': get_current_language().full_code,
             'siteLinks': get_user_site_links(request.user),
             'platform': {
                 'content': get_platform_settings('cms.SitePlatformSettings'),

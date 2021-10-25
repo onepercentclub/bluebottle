@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.cms import (
     SiteLinksFactory, LinkFactory, LinkGroupFactory, LinkPermissionFactory
 )
 from bluebottle.clients.utils import get_user_site_links
+from bluebottle.utils.models import Language
 
 
 def _group_by_name(results, name):
@@ -102,7 +103,7 @@ class TestSiteLinks(BluebottleTestCase):
         results = get_user_site_links(self.user1)
         self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
 
-    @patch('bluebottle.clients.utils.get_language')
+    @patch('bluebottle.utils.models.get_language')
     def test_language_language_fallback(self, mock_get_language):
         mock_get_language.return_value = 'nl'
 
@@ -111,7 +112,7 @@ class TestSiteLinks(BluebottleTestCase):
         self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
 
         # Now create NL site links
-        language_nl = LanguageFactory.create(code='nl')
+        language_nl = Language.objects.get(code='nl')
         site_links = SiteLinksFactory.create(language=language_nl)
         link_group = LinkGroupFactory.create(title='NL Group', name='main-nl',
                                              site_links=site_links)

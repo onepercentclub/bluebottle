@@ -248,10 +248,19 @@ class DateActivitySlotInfoMixin():
                 'formattedAddress': slot.location.formatted_address if slot.location else None,
             }
 
+        user = self.context['request'].user
+        if (
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+        ):
+            meeting_url = slot.online_meeting_url or None
+        else:
+            meeting_url = None
+
         return {
             'has_multiple': False,
             'is_online': is_online,
-            'online_meeting_url': slot.online_meeting_url or None,
+            'online_meeting_url': meeting_url,
             'location': location,
             'location_hint': slot.location_hint,
         }

@@ -237,13 +237,13 @@ class DateActivitySlotInfoMixin():
             }
         slot = slots.first()
 
-        if is_online:
+        if is_online or not slot.location:
             location = None
         else:
             location = {
                 'locality': slot.location.locality if slot.location else None,
                 'country': {
-                    'code': slot.location.country.alpha2_code if slot.location else None,
+                    'code': slot.location.country.alpha2_code if slot.location.country else None,
                 },
                 'formattedAddress': slot.location.formatted_address if slot.location else None,
             }

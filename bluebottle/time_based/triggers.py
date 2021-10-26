@@ -27,7 +27,7 @@ from bluebottle.time_based.effects import (
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
     ResetSlotSelectionEffect, UnsetCapacityEffect,
-    RescheduleOverallPeriodActivityDurationsEffect
+    RescheduleOverallPeriodActivityDurationsEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -35,9 +35,11 @@ from bluebottle.time_based.messages import (
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
-    ChangedSingleDateNotification, ActivitySucceededManuallyNotification,
-    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification, ParticipantRemovedOwnerNotification,
-    ParticipantJoinedNotification, ParticipantAppliedNotification
+    ChangedSingleDateNotification, ChangedMultipleDateNotification,
+    ActivitySucceededManuallyNotification, ParticipantChangedNotification,
+    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
+    ParticipantAppliedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -421,6 +423,14 @@ class ActivitySlotTriggers(TriggerManager):
                         has_accepted_participants,
                         is_not_finished,
                         has_one_slot
+                    ]
+                ),
+                NotificationEffect(
+                    ChangedMultipleDateNotification,
+                    conditions=[
+                        has_accepted_participants,
+                        is_not_finished,
+                        has_multiple_slots
                     ]
                 ),
             ]
@@ -1181,6 +1191,7 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
+                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
 
@@ -1201,6 +1212,7 @@ class SlotParticipantTriggers(TriggerManager):
                     ParticipantStateMachine.remove,
                     conditions=[participant_will_not_be_attending]
                 ),
+                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
 
@@ -1221,6 +1233,7 @@ class SlotParticipantTriggers(TriggerManager):
                     'participant',
                     ParticipantStateMachine.accept,
                 ),
+                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
 
@@ -1241,6 +1254,7 @@ class SlotParticipantTriggers(TriggerManager):
                     ParticipantStateMachine.withdraw,
                     conditions=[participant_will_not_be_attending]
                 ),
+                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
 
@@ -1260,16 +1274,12 @@ class SlotParticipantTriggers(TriggerManager):
                     'participant',
                     ParticipantStateMachine.reapply,
                 ),
-            ]
-        ),
-        TransitionTrigger(
-            SlotParticipantStateMachine.reapply,
-            effects=[
                 RelatedTransitionEffect(
                     'slot',
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
+                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
     ]

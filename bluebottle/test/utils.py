@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
-from django.test import TestCase, Client
+from django.test import TestCase, SimpleTestCase, Client
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
@@ -22,6 +22,10 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
+from celery.contrib.testing.tasks import ping  # noqa
+from celery.contrib.testing.worker import start_worker
+
+from bluebottle.celery import app
 from bluebottle.clients import properties
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.state import TransitionNotPossible
@@ -166,6 +170,8 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
 
 class APITestCase(BluebottleTestCase):
+    factories = [BlueBottleUserFactory]
+
     def setUp(self):
         super().setUp()
         self.user = BlueBottleUserFactory.create()
@@ -528,6 +534,34 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 name = field[0].replace('__prefix__', str(number))
                 new = Text(form, 'input', name, None)
                 form.fields[name] = [new]
+
+
+@override_settings(
+    CELERY_ALWAYS_EAGER=True,
+    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
+)
+class CeleryTestCase(SimpleTestCase):
+    databases = '__all__'
+
+    factories = [BlueBottleUserFactory]
+
+    def tearDown(self):
+        for factory in self.factories:
+            factory._meta.model.objects.all().delete()
+
+    @classmethod
+    def setUpClass(cls):
+        app.conf.task_always_eager = False
+        cls.celery_worker = start_worker(app)
+        cls.celery_worker.__enter__()
+
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.celery_worker.__exit__(None, None, None)
+        app.conf.task_always_eager = True
+        super().tearDownClass()
 
 
 class SessionTestMixin(object):

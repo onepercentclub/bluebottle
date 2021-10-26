@@ -1,14 +1,21 @@
+import time
+import mock
 from datetime import timedelta, date
 
 from django.core import mail
 from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
+
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase
+from bluebottle.time_based.messages import (
+    ParticipantJoinedNotification, ParticipantChangedNotification,
+    ParticipantAppliedNotification
+)
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
@@ -1137,6 +1144,157 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
             exclude(timecontribution__contribution_type='preparation').get().contribution_type,
             'date'
         )
+
+
+@mock.patch.object(
+    ParticipantJoinedNotification, 'delay', 1
+)
+@mock.patch.object(
+    ParticipantChangedNotification, 'delay', 1
+)
+@mock.patch.object(
+    ParticipantAppliedNotification, 'delay', 1
+)
+class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+    factories = CeleryTestCase.factories + [
+        DateParticipantFactory, DateActivityFactory, InitiativeFactory
+    ]
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+
+        self.user = BlueBottleUserFactory()
+        self.admin_user = BlueBottleUserFactory(is_staff=True)
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = self.factory.create(
+            preparation=timedelta(hours=1),
+            initiative=self.initiative,
+            slot_selection='free',
+            review=False
+        )
+        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
+
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+        self.participant = None
+
+    def test_join_all(self):
+        mail.outbox = []
+        self.activity.slot_selection = 'all'
+        self.activity.save()
+
+        self.participant = self.participant_factory.create(
+            activity=self.activity
+        )
+
+        time.sleep(2)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A new participant has joined your activity "{self.activity.title}" 🎉'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have joined the activity "{self.activity.title}"'
+        )
+        for slot in self.slots:
+            expected = '{} {} - {} ({})'.format(
+                defaultfilters.date(slot.start),
+                defaultfilters.time(slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(slot.end.astimezone(get_current_timezone())),
+                slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+            )
+
+            self.assertTrue(expected in mail.outbox[1].body)
+
+    def test_join_free(self):
+        mail.outbox = []
+
+        participant = self.participant_factory.create(
+            activity=self.activity
+        )
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(slot=slot, participant=participant)
+            for slot in self.slots
+        ]
+
+        time.sleep(2)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A new participant has joined your activity "{self.activity.title}" 🎉'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have joined the activity "{self.activity.title}"'
+        )
+
+        for slot in self.slots:
+            self.assertTrue(slot.title in mail.outbox[1].body)
+
+    def test_join_free_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        mail.outbox = []
+
+        participant = self.participant_factory.create(
+            activity=self.activity
+        )
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(slot=slot, participant=participant)
+            for slot in self.slots
+        ]
+
+        time.sleep(2)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have a new participant for your activity "{self.activity.title}" 🎉'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have applied to the activity "{self.activity.title}"'
+        )
+
+        for slot in self.slots:
+            self.assertTrue(slot.title in mail.outbox[1].body)
+
+    def test_change_free(self):
+        self.test_join_free()
+
+        time.sleep(2)
+        mail.outbox = []
+
+        for slot_participant in self.slot_participants[:-1]:
+            slot_participant.states.withdraw(save=True)
+
+        time.sleep(2)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have changed your application on the activity "{self.activity.title}"'
+        )
+
+        for slot in self.slots[:-1]:
+            self.assertTrue(slot.title not in mail.outbox[0].body)
+
+        self.assertTrue(self.slots[2].title in mail.outbox[0].body)
 
 
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):

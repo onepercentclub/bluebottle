@@ -1,4 +1,5 @@
 from collections import Iterable
+from functools import partial
 
 from builtins import str
 from builtins import object
@@ -31,6 +32,9 @@ class Effect(object):
     def __init__(self, instance, **kwargs):
         self.instance = instance
         self.options = kwargs
+
+    def __reduce__(self):
+        return (partial(Effect, self.instance, **self.options), ())
 
     def __eq__(self, other):
         return self.instance == other.instance and type(self) == type(other)

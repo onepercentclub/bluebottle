@@ -6,7 +6,10 @@ from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant, DateActivitySlot
+from bluebottle.time_based.models import (
+    DateParticipant, SlotParticipant,
+    PeriodParticipant, DateActivitySlot
+)
 
 
 def get_slot_info(slot):
@@ -39,12 +42,16 @@ class TimeBasedInfoMixin(object):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.get(user=recipient)
+        elif isinstance(self.obj, SlotParticipant):
+            participant = self.obj.participant
         else:
             participant = self.obj.participants.get(user=recipient)
 
         if isinstance(participant, DateParticipant):
             slots = []
-            for slot_participant in participant.slot_participants.all():
+            for slot_participant in participant.slot_participants.filter(
+                status='registered'
+            ):
                 slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
@@ -130,6 +137,29 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     subject = pgettext('email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_single_date'
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.activity.accepted_participants
+        ]
+
+
+class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    Notification when slot details (date, time or location) changed for a single date activity
+    """
+    subject = pgettext('email', 'The details of activity "{title}" have changed')
+    template = 'messages/changed_multiple_date'
     context = {
         'title': 'activity.title',
     }
@@ -263,6 +293,8 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
 
+    delay = 60
+
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
@@ -274,6 +306,40 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
+class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant withdrew or applied to a slot when already applied to other slots
+    """
+    subject = pgettext('email', 'You have changed your application on the activity "{title}"')
+    template = 'messages/participant_changed'
+    context = {
+        'title': 'activity.title',
+    }
+
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    @property
+    def task_id(self):
+        return f'{self.__class__.__name__}-{self.obj.participant.id}'
+
+    def get_recipients(self):
+        """participant"""
+        joined_message = ParticipantJoinedNotification(self.obj.participant)
+        applied_message = ParticipantAppliedNotification(self.obj.participant)
+        changed_message = ParticipantChangedNotification(self.obj)
+
+        if joined_message.is_delayed or changed_message.is_delayed or applied_message.is_delayed:
+            return []
+
+        return [self.obj.participant.user]
+
+
 class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined
@@ -283,6 +349,7 @@ class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     context = {
         'title': 'activity.title',
     }
+    delay = 60
 
     @property
     def action_link(self):

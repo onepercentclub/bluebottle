@@ -426,7 +426,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 220px;
+    width: $popup-sidebar-width;
     color: $sidebar-popup-text-color;
     background-color: $sidebar-popup-background-color;
     overflow-y: auto;
@@ -563,4 +563,3 @@
     }
   }
 }
-

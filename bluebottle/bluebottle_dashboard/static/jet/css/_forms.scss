@@ -4,16 +4,20 @@
 
 .button, input[type="submit"], input[type="button"], .object-tools a {
   &, &:visited, &:hover {
+    font-family: $font;
     display: inline-block;
     background-color: $button-background-color;
+    border-width: 0;
+    border-bottom: darken($button-background-color, 10) 2px solid;
     color: $button-text-color;
-    border: 0;
+    cursor: pointer;
     border-radius: 4px;
     height: 32px;
+    min-width: 100px;
     line-height: 32px;
     outline: 0;
-    font-size: 12px;
-    font-weight: normal;
+    font-size: 0.9rem;
+    font-weight: 500;
     text-align: center;
     padding: 0 10px;
     white-space: nowrap;
@@ -21,32 +25,44 @@
     overflow: hidden;
     max-width: 100%;
     box-sizing: border-box;
-    appearance: none;
     transition: background $transitions-duration;
+
+    &:hover, &:active, &:focus{
+      background-color: $button-hover-background-color;
+    }
+  }
+
+  &.danger {
+      background-color: $danger-button-background-color;
+      color: $danger-button-text-color;
+      border-bottom: darken($danger-button-background-color, 10) 2px solid;
+      &:hover, &:active {
+        background-color: darken($danger-button-background-color, 10);
+        color: $danger-button-text-color;
+      }
   }
 
   &.default {
-    font-weight: lighter;
+    font-weight: 500;
     background-color: $primary-button-background-color;
     color: $primary-button-text-color;
-    text-transform: uppercase;
+    border-bottom: darken($primary-button-background-color, 10) 2px solid;
+    &:hover, &:active, &:focus{
+      background-color: darken($primary-button-background-color, 10)
+    }
     margin: 0 8px 0 0;
     padding: 0 20px;
+    cursor: pointer;
   }
 
   &.transparent {
     background-color: transparent;
   }
 
-  &:hover, &:focus {
-    background-color: $button-hover-background-color;
-    color: $button-hover-text-color;
-  }
+}
 
-  &:active {
-    background-color: $button-active-background-color;
-    color: $button-active-text-color;
-  }
+.button.button_select_option {
+  vertical-align: middle;
 }
 
 .button[disabled], input[type=submit][disabled], input[type=button][disabled] {
@@ -55,7 +71,7 @@
 
 input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, select, .vTextField {
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 0.9rem;
   height: $input-height;
   white-space: nowrap;
   outline: 0;
@@ -65,7 +81,6 @@ input[type="text"], input[type="email"], input[type="password"], input[type="url
   color: $input-text-color;
   border: 1px solid $input-border-color;
   padding: 0 12px;
-  appearance: none;
   transition: background $transitions-duration, box-shadow $transitions-duration, border $transitions-duration;
 
   //noinspection CssInvalidPseudoSelector
@@ -81,7 +96,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="url
 
   &:focus, fieldset.module &:focus {
     box-shadow: 0 0 4px 0 $input-shadow-color;
-    border-color: $input-background-color;
+    //border-color: $input-background-color;
   }
 }
 
@@ -95,33 +110,39 @@ textarea {
 
 .segmented-button {
   &, &:visited, &:hover {
+    background-color: transparent;
+    color: $top-link-color;
+    font-weight: 700;
     border: 0;
     height: 32px;
     line-height: 32px;
-    font-size: 12px;
+    font-size: 1rem;
     text-align: center;
-    background-color: $button-background-color;
-    color: $button-text-color;
-    padding: 0 10px;
     display: inline-block;
     text-transform: none;
     border-radius: 0;
+    padding: 0;
     transition: background $transitions-duration;
+  }
+  &.left {
+    margin: 0;
+    padding-right: 8px;
+  }
+  &.right {
+    padding-left: 8px;
+    margin: 0;
   }
 
   &:hover, &:focus {
-    background-color: $button-hover-background-color;
-    color: $button-hover-text-color;
+    color: $top-text-color;
   }
 
   &:active {
-    background-color: $button-active-background-color;
-    color: $button-active-text-color;
+    color: $top-text-color;
   }
 
   &.disabled {
-    background-color: $button-background-color !important;
-    color: $button-text-color;
+    color: $top-text-color;
     opacity: 0.5;
   }
 
@@ -144,7 +165,7 @@ input[type=checkbox] {
   + label:before {
     @include font-icon;
     color: $input-icon-color;
-    font-size: 12px;
+    font-size: 0.9rem;
     content: $icon-checkbox-outline;
     letter-spacing: 5px;
 
@@ -156,6 +177,36 @@ input[type=checkbox] {
   &:checked + label:before {
     content: $icon-checkbox;
   }
+}
+
+
+input[type=checkbox] {
+  display: none;
+
+  &#action-toggle {
+    display: none !important;
+  }
+
+  + label:before {
+    @include font-icon;
+    color: $input-icon-color;
+    font-size: 0.9rem;
+    content: $icon-checkbox-outline;
+    letter-spacing: 5px;
+
+    .action-checkbox-column & {
+      color: $content-contrast2-text-color;
+    }
+  }
+
+  &:checked + label:before {
+    content: $icon-checkbox;
+  }
+}
+
+form .aligned ul.validation-error-list li {
+  list-style: disc;
+
 }
 
 /* SELECTOR */

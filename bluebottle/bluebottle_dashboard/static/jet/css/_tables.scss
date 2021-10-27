@@ -40,11 +40,21 @@ table {
       }
     }
   }
+  tbody th a,
+  tbody th a:visited {
+    font-weight: 700;
+    color: $top-link-color;
+  }
+
+  tbody th a:hover,
+  tbody th a:active {
+    font-weight: 700;
+    color: $top-text-color;
+  }
 
   thead th {
     background: $content-contrast2-background-color;
     color: $content-contrast2-text-color;
-    text-transform: uppercase;
     transition: background-color $fast-transitions-duration;
 
     a:link, a:visited {
@@ -61,8 +71,8 @@ table {
 }
 
 td, th {
-  padding: 8px;
-  font-size: 13px;
+  padding: 14px;
+  font-size: 1rem;
 }
 
 th {
@@ -75,7 +85,7 @@ tfoot td {
   text-align: left;
   white-space: nowrap;
   vertical-align: middle;
-  font-size: 12px;
+  font-size: 1rem;
 
   &:first-child {
     border-radius: 4px 0 0 0;
@@ -113,9 +123,9 @@ table {
   thead th {
     &.sortable {
       cursor: pointer;
-
       &:hover {
-        background: $button-hover-background-color;
+        background: red;
+        background: $sidebar-hover-background-color;
       }
     }
 
@@ -155,7 +165,7 @@ table {
             &:after {
               @include font-icon;
               content: $icon-arrow-down;
-              font-weight: bold;
+              font-weight: 700;
             }
           }
 
@@ -168,15 +178,16 @@ table {
             &:after {
               @include font-icon;
               content: $icon-arrow-up;
-              font-weight: bold;
+              font-weight: 700;
             }
           }
         }
       }
 
       .sortpriority {
-        background: $content-background-color;
-        color: $text-color;
+        background-color: $content-contrast2-text-color;
+        opacity: 0.7;
+        color: $content-contrast2-background-color;
         padding: 1px 5px;
         margin-right: 2px;
         border-radius: 5px;

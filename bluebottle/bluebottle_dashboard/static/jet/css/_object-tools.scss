@@ -55,7 +55,7 @@
     &:before {
       @include font-icon;
       color: $button-text-color;
-      font-size: 13px;
+      font-size: 1rem;
       content: $icon-add;
       vertical-align: middle;
       margin-top: -3px;

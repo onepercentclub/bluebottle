@@ -85,8 +85,9 @@ span.help + p.help {
   margin-left: 180px;
   padding-left: 0;
   padding-top: 4px;
-}
 
-#branding {
-  background-color: transparent;
+  @include for-mobile {
+    margin-left: 0;
+    padding-left: 0;
+  }
 }

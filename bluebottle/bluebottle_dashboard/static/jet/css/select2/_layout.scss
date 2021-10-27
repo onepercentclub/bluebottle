@@ -1,5 +1,9 @@
 @import "../globals";
 
+.field-image .select2 {
+  display: none;
+}
+
 .select2-container--jet {
   @import "single";
   @import "multiple";
@@ -20,7 +24,7 @@
     .select2-selection__rendered {
       color: $input-text-color;
       line-height: $input-height;
-      font-size: 13px;
+      font-size: 0.9rem;
     }
 
     .select2-selection__placeholder {
@@ -51,7 +55,7 @@
   }
 
   .select2-dropdown {
-    border: 0;
+    border-width: 1px;
     border-radius: 4px;
     box-shadow: 0 0 4px 0 $input-shadow-color;
     overflow: hidden;
@@ -75,12 +79,12 @@
 
     .select2-search__field {
       outline: 0;
-      border: 0;
-      background-color: $input-background-color;
+      border-width: 1px 0 0 0;
       color: $input-text-color;
       height: $input-height;
       -webkit-appearance: textfield;
       box-shadow: none;
+      background: $input-background-color url(/static/assets/admin/img/search.svg) no-repeat 136px 50%;
     }
   }
 
@@ -101,7 +105,7 @@
   }
 
   .select2-results__option {
-    font-size: 13px;
+    font-size: 0.9rem;
 
     &[role=group] {
       padding: 0;

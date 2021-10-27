@@ -10,7 +10,7 @@
   .select2-selection__clear {
     cursor: pointer;
     float: right;
-    font-weight: bold;
+    font-weight: 700;
   }
 
   .select2-selection__arrow {
@@ -26,6 +26,11 @@
       font-size: 20px;
       content: $icon-arrow-down;
       line-height: 32px;
+    }
+
+    @media screen and (-ms-high-contrast: active),
+      screen and (-ms-high-contrast: none) {
+      top: 1rem;
     }
   }
 }

@@ -1,0 +1,12 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+{% block message %}
+<p>
+    {% blocktrans context 'email' %}You joined the activity "{{ title }}"{% endblocktrans %}
+</p>
+<p>
+{% if end %}
+    {% blocktrans context 'email' %}The activity ends on {{ end }}{% endblocktrans %}
+{% endif %}
+</p>
+{% endblock %}

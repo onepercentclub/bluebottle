@@ -289,7 +289,7 @@ class Funding(Activity):
     def save(self, *args, **kwargs):
         if self.target:
             for reward in self.rewards.all():
-                if reward.amount and reward.amount.currency == self.target.currency:
+                if reward.amount and not reward.amount.currency == self.target.currency:
                     reward.amount = Money(reward.amount.amount, self.target.currency)
                     reward.save()
 

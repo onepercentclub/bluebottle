@@ -203,6 +203,19 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
             str(self.goal.activity.pk)
         )
 
+    def test_get_incomplete(self):
+        self.goal.target = None
+        self.goal.save()
+
+        response = self.client.get(
+            self.url,
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+        self.assertEqual(data['meta']['required'], [])
+
     def test_get_non_owner(self):
         response = self.client.get(
             self.url,

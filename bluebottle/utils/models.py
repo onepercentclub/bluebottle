@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, ProgrammingError, OperationalError
+from django.db.models.manager import Manager
 from django.utils.timezone import now
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -228,6 +229,10 @@ class ValidatedModelMixin(object):
         for field in self.required_fields:
             try:
                 value = attrgetter(field)(self)
+
+                if isinstance(value, Manager) and not len(value.all()):
+                    yield field
+
                 if value in (None, '', timedelta(0)):
                     yield field
             except ObjectDoesNotExist:

@@ -14,15 +14,18 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import SetContributionDateEffect
 
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     NewParticipantNotification, ParticipantAddedNotification,
     ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
+from bluebottle.impact.tests.factories import ImpactGoalFactory
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -233,6 +236,58 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
 
+    def test_enable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = True
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+            self.assertEqual(goal.realized_from_contributions, 2)
+
+    def test_disable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = False
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, None)
+
+    def test_change_target(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.target = 4
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, 2.5)
+
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):
     factory = DeedParticipantFactory
@@ -360,7 +415,10 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.states.reapply()
 
         with self.execute():
-            self.assertEqual(self.effects, [])
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset,
+                self.model.contributions.first()
+            )
 
     def test_remove(self):
         self.create()
@@ -480,3 +538,31 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)
             self.assertNotificationEffect(ParticipantFinishedNotification)
+
+
+class EffortContributionTriggersTestCase(TriggerTestCase):
+    factory = EffortContributionFactory
+
+    def setUp(self):
+        self.defaults = {
+            'contributor': DeedParticipantFactory(
+                activity=DeedFactory(enable_impact=True)
+            )
+        }
+
+        self.impact_goal = ImpactGoalFactory.create(
+            activity=self.defaults['contributor'].activity,
+            target=100
+        )
+
+    def test_succeed_update_impact(self):
+        self.create()
+        self.model.states.succeed()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)
+
+    def test_fail_update_impact(self):
+        self.create()
+        self.model.states.fail()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)

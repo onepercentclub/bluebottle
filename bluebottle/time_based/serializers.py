@@ -248,10 +248,19 @@ class DateActivitySlotInfoMixin():
                 'formattedAddress': slot.location.formatted_address if slot.location else None,
             }
 
+        user = self.context['request'].user
+        if (
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+        ):
+            meeting_url = slot.online_meeting_url or None
+        else:
+            meeting_url = None
+
         return {
             'has_multiple': False,
             'is_online': is_online,
-            'online_meeting_url': slot.online_meeting_url or None,
+            'online_meeting_url': meeting_url,
             'location': location,
             'location_hint': slot.location_hint,
         }
@@ -651,11 +660,6 @@ class DateParticipantSerializer(ParticipantSerializer):
         model = DateParticipant
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
         fields = ParticipantSerializer.Meta.fields + ('slots', )
-        included_resources = [
-            'user',
-            'document',
-            'slots'
-        ]
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
@@ -664,6 +668,11 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        included_resources = [
+            'user',
+            'document',
+            'activity'
+        ]
         resource_name = 'contributors/time-based/date-participants'
 
     included_serializers = dict(
@@ -672,6 +681,7 @@ class DateParticipantSerializer(ParticipantSerializer):
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
 
@@ -795,9 +805,14 @@ class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        included_resources = [
+            'resource',
+            'resource.activity'
+        ]
         resource_name = 'contributors/time-based/date-participant-transitions'
 
 

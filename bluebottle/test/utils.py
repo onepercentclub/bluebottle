@@ -22,7 +22,6 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
-from celery.contrib.testing.tasks import ping  # noqa
 from celery.contrib.testing.worker import start_worker
 
 from bluebottle.celery import app
@@ -559,6 +558,9 @@ class CeleryTestCase(SimpleTestCase):
 
     @classmethod
     def setUpClass(cls):
+        from celery.contrib.testing.tasks import ping  # noqa
+        print('!!!!!!!!!')
+
         app.conf.task_always_eager = False
         cls.celery_worker = start_worker(app)
         cls.celery_worker.__enter__()

@@ -481,12 +481,20 @@ class NotificationTestCase(BluebottleTestCase):
         self.assertTextBodyContains(text)
 
     def assertTextBodyContains(self, text):
-        if text not in self.message.get_content_text(self.message.get_recipients()[0]):
+        if text not in self.text_content:
             self.fail("Text body does not contain '{}'".format(text))
 
     def assertHtmlBodyContains(self, text):
-        if text not in self.message.get_content_html(self.message.get_recipients()[0]):
+        if text not in self.html_content:
             self.fail("HTML body does not contain '{}'".format(text))
+
+    @property
+    def text_content(self):
+        return self.message.get_content_text(self.message.get_recipients()[0])
+
+    @property
+    def html_content(self):
+        return self.message.get_content_html(self.message.get_recipients()[0])
 
     def assertActionLink(self, url):
         link = self._html.find_all('a', {'class': 'action-email'})[0]

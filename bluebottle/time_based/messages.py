@@ -159,7 +159,7 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     Notification when slot details (date, time or location) changed for a single date activity
     """
     subject = pgettext('email', 'The details of activity "{title}" have changed')
-    template = 'messages/changed_multiple_date'
+    template = 'messages/changed_multiple_dates'
     context = {
         'title': 'activity.title',
     }
@@ -334,7 +334,13 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
         applied_message = ParticipantAppliedNotification(self.obj.participant)
         changed_message = ParticipantChangedNotification(self.obj)
 
-        if joined_message.is_delayed or changed_message.is_delayed or applied_message.is_delayed:
+        participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
+
+        if (
+            participant.status == 'withdrawn' or
+            joined_message.is_delayed or
+            changed_message.is_delayed or applied_message.is_delayed
+        ):
             return []
 
         return [self.obj.participant.user]

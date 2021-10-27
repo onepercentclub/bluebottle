@@ -1,7 +1,10 @@
 from datetime import date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification
+)
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
@@ -323,6 +326,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
+                NotificationEffect(ParticipantWithdrewConfirmationNotification),
             ]
         ),
 

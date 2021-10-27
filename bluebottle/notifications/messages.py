@@ -206,5 +206,5 @@ def compose_and_send(message, tenant):
         try:
             message.compose_and_send()
         except Exception as e:
-            print(e)
+            print('!!!!!', e)
             logger.error(e)

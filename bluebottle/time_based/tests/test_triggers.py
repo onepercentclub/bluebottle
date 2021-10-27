@@ -771,7 +771,23 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.execute_triggers(user=self.user, send_messages=True)
         self.slot.save()
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 1)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The details of activity "{}" have changed'.format(self.activity.title)
+        )
+
+        with TenantLanguage('en'):
+            for slot in [self.slot, self.slot2]:
+                expected = '{} {} - {} ({})'.format(
+                    defaultfilters.date(slot.start),
+                    defaultfilters.time(slot.start.astimezone(get_current_timezone())),
+                    defaultfilters.time(slot.end.astimezone(get_current_timezone())),
+                    self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                )
+
+                self.assertTrue(expected in mail.outbox[0].body)
 
     def test_reschedule_contributions(self):
         DateParticipantFactory.create_batch(5, activity=self.activity)
@@ -1101,6 +1117,7 @@ class ParticipantTriggerTestCase():
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+        mail.outbox = []
 
         self.participants[0].states.withdraw(save=True)
 
@@ -1114,6 +1131,14 @@ class ParticipantTriggerTestCase():
         )
 
         self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
+
+        subjects = [mail.subject for mail in mail.outbox]
+        self.assertTrue(
+            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
+        )
+        self.assertTrue(
+            f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
+        )
 
     def test_reapply(self):
         self.test_withdraw()
@@ -1295,6 +1320,28 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             self.assertTrue(slot.title not in mail.outbox[0].body)
 
         self.assertTrue(self.slots[2].title in mail.outbox[0].body)
+
+    def test_withdraw_free(self):
+        self.test_join_free()
+
+        time.sleep(2)
+        mail.outbox = []
+
+        for slot_participant in self.slot_participants:
+            slot_participant.states.withdraw(save=True)
+
+        time.sleep(2)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A participant has withdrawn from your activity "{self.activity.title}"'
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have withdrawn from the activity "{self.activity.title}"'
+        )
 
 
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):

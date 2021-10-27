@@ -1,7 +1,10 @@
 from datetime import timedelta, date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ParticipantWithdrewConfirmationNotification
+)
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
@@ -18,7 +21,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     NewParticipantNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification
+    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
 
@@ -306,6 +309,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
+
+            self.assertNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None

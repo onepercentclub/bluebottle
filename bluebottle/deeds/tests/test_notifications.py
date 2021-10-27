@@ -3,6 +3,10 @@ from datetime import timedelta, date
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
+
+from bluebottle.activities.messages import (
+    ParticipantWithdrewConfirmationNotification
+)
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
@@ -63,3 +67,14 @@ class ParticipantNotificationTestCase(NotificationTestCase):
 
         self.assertBodyContains('You joined the activity "Save the world!"')
         self.assertBodyContains(f"The activity ends on {self.next_month.strftime('%x')}")
+
+    def test_withdrew_confirmation(self):
+        self.message_class = ParticipantWithdrewConfirmationNotification
+
+        self.create()
+
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have withdrawn from the activity "Save the world!"')
+
+        self.assertBodyContains('You have withdrawn from the activity "Save the world!"')
+        self.assertBodyContains('Reapply when this was a mistake')

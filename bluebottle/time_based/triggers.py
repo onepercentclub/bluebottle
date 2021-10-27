@@ -6,6 +6,7 @@ from bluebottle.activities.messages import (
     ActivitySucceededNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
+    ParticipantWithdrewConfirmationNotification
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
@@ -1108,7 +1109,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 UnFollowActivityEffect,
                 NotificationEffect(ParticipantWithdrewNotification),
-
+                NotificationEffect(ParticipantWithdrewConfirmationNotification),
             ]
         ),
     ]

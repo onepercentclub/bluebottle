@@ -671,7 +671,6 @@ class DateParticipantSerializer(ParticipantSerializer):
         included_resources = [
             'user',
             'document',
-            'slots',
             'activity'
         ]
         resource_name = 'contributors/time-based/date-participants'

@@ -189,9 +189,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             FundingStateMachine.partially_funded.value,
         ]
 
-        if user not in (
-            instance.owner, instance.activity_manager
-        ):
+        if user != instance.owner and user not in instance.activity_managers.all():
             return [
                 activity for activity in activities if (
                     activity.status in public_statuses or

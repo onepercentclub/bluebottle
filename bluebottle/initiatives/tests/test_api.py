@@ -522,6 +522,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
+    def test_get_activities_managers(self):
+        DateActivityFactory.create(
+            status='draft',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='cancelled',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='deleted',
+            initiative=self.initiative,
+        )
+
+        FundingFactory.create(
+            status='partially_funded',
+            initiative=self.initiative
+        )
+        manager = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(manager)
+        response = self.client.get(self.url, user=manager)
+
+        data = response.json()['data']
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 3)
+
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')
         response = self.client.get(

@@ -562,7 +562,7 @@ class CeleryTestCase(SimpleTestCase):
         print('!!!!!!!!!')
 
         app.conf.task_always_eager = False
-        cls.celery_worker = start_worker(app)
+        cls.celery_worker = start_worker(app, perform_ping_check=False)
         cls.celery_worker.__enter__()
 
         super().setUpClass()

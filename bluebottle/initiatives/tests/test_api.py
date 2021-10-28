@@ -565,10 +565,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             deadline=now() - datetime.timedelta(weeks=1),
             status='succeeded'
         )
-
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'EUR')):
+        donor_user = BlueBottleUserFactory.create()
+        for donor in DonorFactory.create_batch(3, activity=funding, user=donor_user, amount=Money(10, 'EUR')):
             donor.contributions.get().states.succeed(save=True)
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
             donor.contributions.get().states.succeed(save=True)
 
         deed_activity = DeedFactory.create(
@@ -609,7 +609,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['activities'], 4)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
-        self.assertEqual(stats['contributors'], 15)
+        # 3 period participants
+        # 3 date participants
+        # 1 donor (3 donations by same user)
+        # 3 anonymous donations
+        # 3 deed participants
+        # 13 total contributors
+        # organizers are not counted here
+        self.assertEqual(stats['contributors'], 13)
         self.assertEqual(stats['effort'], 3)
 
     def test_get_other(self):

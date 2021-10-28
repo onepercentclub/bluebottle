@@ -1,6 +1,6 @@
 from builtins import object
 
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
@@ -10,7 +10,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
-from bluebottle.activities.models import EffortContribution, Activity
+from bluebottle.activities.models import EffortContribution, Activity, Contributor, Organizer
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
@@ -239,14 +239,23 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             amount=Sum('value')
         ).order_by()
 
-        stats = {
-            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
-            'effort': effort['count'],
-            'activities': sum(stat['activities'] for stat in [effort, time, money]),
-            'contributors': sum(stat['count'] for stat in [effort, time, money]),
-        }
+        contributor_count = Contributor.objects.filter(
+            user__isnull=False,
+            activity__initiative=obj,
+            contributions__status='succeeded',
+        ).exclude(
+            Q(instance_of=Organizer)
+        ).values('user_id').distinct().count()
 
-        stats['amount'] = {
+        anonymous_donations = MoneyContribution.objects.filter(
+            contributor__user__isnull=True,
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).count()
+
+        contributor_count += anonymous_donations
+
+        amount = {
             'amount': sum(
                 convert(
                     Money(c['amount'], c['value_currency']),
@@ -257,7 +266,13 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'currency': default_currency
         }
 
-        return stats
+        return {
+            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
+            'effort': effort['count'],
+            'activities': sum(stat['activities'] for stat in [effort, time, money]),
+            'contributors': contributor_count,
+            'amount': amount
+        }
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',

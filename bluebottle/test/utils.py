@@ -559,7 +559,6 @@ class CeleryTestCase(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         from celery.contrib.testing.tasks import ping  # noqa
-        print('!!!!!!!!!')
 
         app.conf.task_always_eager = False
         cls.celery_worker = start_worker(app, perform_ping_check=False)

@@ -344,19 +344,18 @@ class StateMachineTestCase(BluebottleTestCase):
         super().setUp()
 
     def create(self):
-        return self.factory.create(**self.defaults)
+        self.model = self.factory.create(**self.defaults)
 
     def assertTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
 
         if transition:
@@ -367,20 +366,21 @@ class StateMachineTestCase(BluebottleTestCase):
                     name, user, e
                 )
 
+        self.model.status = status
+
         if error:
             self.fail(error)
 
     def assertNoTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
         if transition:
             try:
@@ -391,6 +391,8 @@ class StateMachineTestCase(BluebottleTestCase):
                 )
             except TransitionNotPossible:
                 pass
+
+        self.model.status = status
 
         if error:
             self.fail(error)

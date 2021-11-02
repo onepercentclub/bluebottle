@@ -170,7 +170,7 @@ class CollectTypeSerializer(ModelSerializer):
 
     class Meta(object):
         model = CollectType
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'unit', 'unit_plural')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collect-types'

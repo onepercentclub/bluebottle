@@ -15,8 +15,8 @@ class CollectType(SortableTranslatableModel):
 
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100),
-        unit=models.TextField(_('unit'), blank=True),
-        unit_plural=models.TextField(_('unit_plural'), blank=True)
+        unit=models.CharField(_('unit'), blank=True, max_length=100),
+        unit_plural=models.CharField(_('unit plural'), blank=True, max_length=100)
     )
 
     def __str__(self):

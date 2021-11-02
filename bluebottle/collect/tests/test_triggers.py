@@ -164,6 +164,21 @@ class CollectTriggersTestCase(TriggerTestCase):
                 self.model.active_contributors.get().contributions.get(), self.model.realized
             )
 
+    def test_set_realized_again(self):
+        self.test_set_realized()
+
+        self.model.realized = 200
+
+        with self.execute():
+            self.assertEffect(SetOverallContributor)
+            self.model.save()
+
+            self.assertTrue(len(self.model.active_contributors), 1)
+            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
+            self.assertTrue(
+                self.model.active_contributors.get().contributions.get(), self.model.realized
+            )
+
 
 class CollectContributorTriggerTestCase(TriggerTestCase):
     factory = CollectContributorFactory

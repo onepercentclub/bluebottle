@@ -32,16 +32,12 @@ class SetOverallContributor(Effect):
     display = False
 
     def pre_save(self, effects):
-
-        self.contribution, _ = CollectContributor.objects.get_or_create(
+        contribution, _ = CollectContributor.objects.get_or_create(
             user=None,
             activity=self.instance,
-            value=self.instance.realized
+            defaults={'value': self.instance.realized}
         )
-        effects.extend(self.contribution.execute_triggers())
-
-    def post_save(self, **kwargs):
-        self.contribution.save()
+        effects.extend(contribution.execute_triggers())
 
     def __str__(self):
         return str(_('Create overall contributor'))

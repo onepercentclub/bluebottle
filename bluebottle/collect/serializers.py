@@ -71,6 +71,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'contributors',
             'start',
             'end',
+            'realized',
             'contributors_export_url',
             'location',
             'collect_type',
@@ -104,6 +105,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         fields = BaseActivityListSerializer.Meta.fields + (
             'start',
             'end',
+            'realized',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):

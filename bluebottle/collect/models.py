@@ -15,7 +15,8 @@ class CollectType(SortableTranslatableModel):
 
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100),
-        description=models.TextField(_('description'), blank=True)
+        unit=models.TextField(_('unit'), blank=True),
+        unit_plural=models.TextField(_('unit_plural'), blank=True)
     )
 
     def __str__(self):
@@ -37,7 +38,10 @@ class CollectActivity(Activity):
     type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
+    realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
     auto_approve = True
 
@@ -84,9 +88,6 @@ class CollectActivity(Activity):
 
 
 class CollectContributor(Contributor):
-
-    value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
-
     class Meta(object):
         verbose_name = _("Collect contributor")
         verbose_name_plural = _("Collect contributors")

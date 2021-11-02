@@ -130,7 +130,7 @@ class CollectContributorSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = CollectContributor
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
-        fields = BaseContributorSerializer.Meta.fields + ('value',)
+        fields = BaseContributorSerializer.Meta.fields
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/collect/contributors'

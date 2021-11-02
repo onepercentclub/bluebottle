@@ -6,7 +6,7 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.collect.effects import CreateCollectContribution
+from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
 from bluebottle.collect.messages import CollectActivityDateChangedNotification
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.collect.states import (
@@ -38,7 +38,7 @@ def is_not_finished(effect):
 
 def has_contributors(effect):
     """ has contributors"""
-    return len(effect.instance.accepted_contributors) > 0
+    return len(effect.instance.active_contributors) > 0
 
 
 def has_no_contributors(effect):
@@ -57,9 +57,15 @@ class CollectActivityTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'end',
             effects=[
-                TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
-                TransitionEffect(CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]),
-                TransitionEffect(CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]),
+                TransitionEffect(
+                    CollectActivityStateMachine.reopen, conditions=[is_not_finished]
+                ),
+                TransitionEffect(
+                    CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]
+                ),
+                TransitionEffect(
+                    CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]
+                ),
                 NotificationEffect(
                     CollectActivityDateChangedNotification,
                     conditions=[
@@ -73,8 +79,12 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.auto_approve,
             effects=[
                 TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
-                TransitionEffect(CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]),
-                TransitionEffect(CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]),
+                TransitionEffect(
+                    CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]
+                ),
+                TransitionEffect(
+                    CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]
+                ),
             ]
         ),
 
@@ -117,6 +127,10 @@ class CollectActivityTriggers(ActivityTriggers):
             ]
         ),
 
+        ModelChangedTrigger(
+            'realized',
+            effects=[SetOverallContributor]
+        )
     ]
 
 

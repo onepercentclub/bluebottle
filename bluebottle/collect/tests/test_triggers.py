@@ -13,7 +13,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
 )
-from bluebottle.collect.effects import CreateCollectContribution
+from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -148,6 +148,21 @@ class CollectTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(CollectActivityStateMachine.succeed)
             self.assertNotificationEffect(ActivitySucceededNotification)
+
+    def test_set_realized(self):
+        self.create()
+
+        self.model.realized = 100
+
+        with self.execute():
+            self.assertEffect(SetOverallContributor)
+            self.model.save()
+
+            self.assertTrue(len(self.model.active_contributors), 1)
+            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
+            self.assertTrue(
+                self.model.active_contributors.get().contributions.get(), self.model.realized
+            )
 
 
 class CollectContributorTriggerTestCase(TriggerTestCase):

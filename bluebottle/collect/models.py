@@ -70,9 +70,9 @@ class CollectActivity(Activity):
         resource_name = 'activities/collects'
 
     @property
-    def accepted_contributors(self):
+    def active_contributors(self):
         return self.contributors.instance_of(CollectContributor).filter(
-            status__in=('accepted', 'succeeded', )
+            status='succeeded'
         )
 
     @property
@@ -105,6 +105,11 @@ class CollectContributor(Contributor):
 
 class CollectContribution(Contribution):
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+
+    def save(self, *args, **kwargs):
+        self.value = self.contributor.value
+
+        super().save(*args, **kwargs)
 
     class Meta(object):
         verbose_name = _("Collect contribution")

@@ -16,7 +16,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
         return self.instance.end is None
 
     def can_succeed(self):
-        return len(self.instance.accepted_contributors) > 0
+        return len(self.instance.active_contributors) > 0
 
     succeed = Transition(
         [ActivityStateMachine.open, ActivityStateMachine.expired],

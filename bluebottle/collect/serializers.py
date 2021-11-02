@@ -47,7 +47,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
     def get_contributors(self, instance):
         user = self.context['request'].user
         return [
-            contributor for contributor in instance.contributors.all() if (
+            contributor for contributor in instance.contributors.exclude(user=None) if (
                 isinstance(contributor, CollectContributor) and (
                     contributor.status in [
                         CollectContributorStateMachine.new.value,

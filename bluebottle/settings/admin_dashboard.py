@@ -87,6 +87,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'collect.collectcontributor',
             },
+
+            {
+                'name': 'collect.collecttype',
+            },
         ]
     },
     {

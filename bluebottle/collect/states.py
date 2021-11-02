@@ -1,7 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
-from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.activities.states import (
+    ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
+)
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 
@@ -184,3 +186,8 @@ class CollectContributorStateMachine(ContributorStateMachine):
         automatic=False,
         permission=is_owner,
     )
+
+
+@register(CollectContribution)
+class CollectContributionStateMachine(ContributionStateMachine):
+    pass

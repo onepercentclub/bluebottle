@@ -4,7 +4,7 @@ from django.db.models import SET_NULL
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
-from bluebottle.activities.models import Activity, Contributor, EffortContribution
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
@@ -79,15 +79,10 @@ class CollectActivity(Activity):
     def required_fields(self):
         return super().required_fields + ['title', 'description']
 
-    @property
-    def efforts(self):
-        return EffortContribution.objects.filter(
-            contributor__activity=self,
-            contribution_type='collect'
-        )
-
 
 class CollectContributor(Contributor):
+    value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+
     class Meta(object):
         verbose_name = _("Collect contributor")
         verbose_name_plural = _("Collect contributors")
@@ -106,3 +101,14 @@ class CollectContributor(Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributors'
+
+
+class CollectContribution(Contribution):
+    value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+
+    class Meta(object):
+        verbose_name = _("Collect contribution")
+        verbose_name_plural = _("Collect contributions")
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/collect/contributions'

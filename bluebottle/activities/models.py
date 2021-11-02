@@ -230,6 +230,7 @@ class EffortContribution(Contribution):
     class ContributionTypeChoices(DjangoChoices):
         organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
         deed = ChoiceItem('deed', label=_("Deed particpant"))
+        collect = ChoiceItem('collect', label=_("Collect contributor"))
 
     contribution_type = models.CharField(
         _('Contribution type'),

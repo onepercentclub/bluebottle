@@ -24,15 +24,15 @@ class CollectAdminForm(StateMachineModelForm):
 class CollectContributorAdmin(ContributorChildAdmin):
     readonly_fields = ['created']
     raw_id_fields = ['user', 'activity']
-    fields = ['activity', 'user', 'value', 'status', 'states'] + readonly_fields
-    list_display = ['__str__', 'activity_link', 'status', 'value']
+    fields = ['activity', 'user', 'status', 'states'] + readonly_fields
+    list_display = ['__str__', 'activity_link', 'status']
 
 
 class CollectContributorInline(admin.TabularInline):
     model = CollectContributor
     raw_id_fields = ['user']
     readonly_fields = ['edit', 'created', 'transition_date', 'contributor_date', 'status']
-    fields = ['edit', 'user', 'value', 'created', 'status']
+    fields = ['edit', 'user', 'created', 'status']
     extra = 0
 
     def edit(self, obj):

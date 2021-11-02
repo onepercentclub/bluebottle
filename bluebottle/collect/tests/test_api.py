@@ -114,7 +114,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         }
         self.model = self.factory.create(**self.defaults)
 
-        self.accepted_contributors = CollectContributorFactory.create_batch(
+        self.active_contributors = CollectContributorFactory.create_batch(
             5, activity=self.model
         )
         self.withdrawn_contributors = CollectContributorFactory.create_batch(
@@ -144,7 +144,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertTransition('delete')
         self.assertRelationship(
             'contributors',
-            self.accepted_contributors + self.withdrawn_contributors
+            self.active_contributors + self.withdrawn_contributors
         )
 
     def test_get_with_contributor(self):
@@ -162,7 +162,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertRelationship(
             'contributors',
-            self.accepted_contributors + [contributor]
+            self.active_contributors + [contributor]
         )
 
     def test_get_anonymous(self):
@@ -177,7 +177,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
 
-        self.assertRelationship('contributors', self.accepted_contributors)
+        self.assertRelationship('contributors', self.active_contributors)
 
     def test_get_closed_site(self):
         with self.closed_site():

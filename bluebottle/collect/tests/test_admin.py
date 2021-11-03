@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 from bluebottle.collect.models import CollectActivity
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -43,3 +44,21 @@ class CollectActivityAdminTestCase(BluebottleAdminTestCase):
         form['owner'] = self.owner.id
         form.submit()
         self.assertEqual(CollectActivity.objects.count(), 1)
+
+    def test_admin_contributors(self):
+        activity = CollectActivityFactory.create(
+            target=10,
+            realized=5,
+            status='open'
+        )
+        CollectContributorFactory.create_batch(
+            3,
+            activity=activity
+        )
+
+        url = reverse('admin:collect_collectactivity_change', args=(activity.id,))
+        page = self.app.get(url)
+        self.assertTrue("contributors-0" in page.text)
+        self.assertTrue("contributors-1" in page.text)
+        self.assertTrue("contributors-2" in page.text)
+        self.assertFalse("contributors-3" in page.text, "Only real contributors shoudl show")

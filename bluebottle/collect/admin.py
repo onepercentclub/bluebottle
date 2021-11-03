@@ -35,6 +35,10 @@ class CollectContributorInline(admin.TabularInline):
     fields = ['edit', 'user', 'created', 'status']
     extra = 0
 
+    def get_queryset(self, request):
+        qs = super(CollectContributorInline, self).get_queryset(request)
+        return qs.filter(user__isnull=False)
+
     def edit(self, obj):
         url = reverse('admin:collect_collectcontributor_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit contributor'))
@@ -69,6 +73,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     description_fields = ActivityChildAdmin.description_fields + (
         'type',
         'target',
+        'realized',
         'location'
     )
 
@@ -81,6 +86,8 @@ class CollectActivityAdmin(ActivityChildAdmin):
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
         ('type', 'Type'),
+        ('target', 'Target'),
+        ('realized', 'Realized'),
         ('start', 'Start'),
         ('end', 'End'),
     )

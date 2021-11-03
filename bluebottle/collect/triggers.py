@@ -17,6 +17,7 @@ from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
 def is_finished(effect):
@@ -73,6 +74,21 @@ class CollectActivityTriggers(ActivityTriggers):
                     ]
                 )
             ]
+        ),
+
+        ModelChangedTrigger(
+            'enable_impact',
+            effects=[UpdateImpactGoalsForActivityEffect]
+        ),
+
+        ModelChangedTrigger(
+            'target',
+            effects=[UpdateImpactGoalsForActivityEffect]
+        ),
+
+        ModelChangedTrigger(
+            'realized',
+            effects=[UpdateImpactGoalsForActivityEffect]
         ),
 
         TransitionTrigger(

@@ -11,14 +11,3 @@
 {% block action %}
     <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
 {% endblock %}`
-
-{% block action %}
-    {{block.super}}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw via the activity page so that others can take your place.
-            {% endblocktrans %}
-        </i>
-    </p>
-{% endblock %}

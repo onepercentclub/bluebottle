@@ -5,13 +5,15 @@ from bluebottle.activities.messages import ActivityExpiredNotification, Activity
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.effects import SetContributionDateEffect
 
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 
-from bluebottle.collect.states import CollectActivityStateMachine, CollectContributorStateMachine
-from bluebottle.collect.effects import CreateEffortContribution
+from bluebottle.collect.states import (
+    CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
+)
+from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -102,7 +104,7 @@ class CollectTriggersTestCase(TriggerTestCase):
                 participant
             )
             self.assertNoTransitionEffect(
-                EffortContributionStateMachine.succeed,
+                CollectContributionStateMachine.succeed,
                 participant.contributions.first()
             )
 
@@ -130,7 +132,7 @@ class CollectTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(CollectActivityStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
             self.assertTransitionEffect(
-                EffortContributionStateMachine.fail,
+                CollectContributionStateMachine.fail,
                 self.model.organizer.contributions.first()
             )
             self.assertNotificationEffect(ActivityExpiredNotification),
@@ -146,6 +148,36 @@ class CollectTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(CollectActivityStateMachine.succeed)
             self.assertNotificationEffect(ActivitySucceededNotification)
+
+    def test_set_realized(self):
+        self.create()
+
+        self.model.realized = 100
+
+        with self.execute():
+            self.assertEffect(SetOverallContributor)
+            self.model.save()
+
+            self.assertTrue(len(self.model.active_contributors), 1)
+            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
+            self.assertTrue(
+                self.model.active_contributors.get().contributions.get(), self.model.realized
+            )
+
+    def test_set_realized_again(self):
+        self.test_set_realized()
+
+        self.model.realized = 200
+
+        with self.execute():
+            self.assertEffect(SetOverallContributor)
+            self.model.save()
+
+            self.assertTrue(len(self.model.active_contributors), 1)
+            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
+            self.assertTrue(
+                self.model.active_contributors.get().contributions.get(), self.model.realized
+            )
 
 
 class CollectContributorTriggerTestCase(TriggerTestCase):
@@ -173,13 +205,12 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
     def test_initiate(self):
         self.model = self.factory.build(**self.defaults)
         with self.execute():
-            effect = self.assertEffect(CreateEffortContribution)
-            self.assertEqual(effect.contribution.contribution_type, 'collect')
+            self.assertEffect(CreateCollectContribution)
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
             self.assertTransitionEffect(
-                EffortContributionStateMachine.succeed, self.model.contributions.first()
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
 
     def test_withdraw(self):
@@ -188,7 +219,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.model.states.withdraw()
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.fail, self.model.contributions.first()
+                CollectContributionStateMachine.fail, self.model.contributions.first()
             )
 
     def test_reapply(self):
@@ -199,7 +230,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.succeed, self.model.contributions.first()
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
 
             self.assertTransitionEffect(
@@ -217,7 +248,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.succeed, self.model.contributions.first()
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
 
             self.assertTransitionEffect(
@@ -234,7 +265,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.model.states.remove()
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.fail, self.model.contributions.first()
+                CollectContributionStateMachine.fail, self.model.contributions.first()
             )
 
     def test_remove_finished(self):

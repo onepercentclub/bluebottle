@@ -92,7 +92,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
 class CollectTypeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('activity_link',)
     readonly_fields = ('activity_link',)
-    fields = ('name', 'description') + readonly_fields
+    fields = ('name', 'unit', 'unit_plural') + readonly_fields
 
     def activity_link(self, obj):
         url = "{}?type__id__exact={}".format(reverse('admin:collect_collectactivity_changelist'), obj.id)

@@ -1,7 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
-from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.activities.states import (
+    ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
+)
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 
@@ -14,7 +16,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
         return self.instance.end is None
 
     def can_succeed(self):
-        return len(self.instance.accepted_contributors) > 0
+        return len(self.instance.active_contributors) > 0
 
     succeed = Transition(
         [ActivityStateMachine.open, ActivityStateMachine.expired],
@@ -184,3 +186,8 @@ class CollectContributorStateMachine(ContributorStateMachine):
         automatic=False,
         permission=is_owner,
     )
+
+
+@register(CollectContribution)
+class CollectContributionStateMachine(ContributionStateMachine):
+    pass

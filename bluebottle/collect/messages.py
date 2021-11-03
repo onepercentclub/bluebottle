@@ -35,7 +35,7 @@ class CollectActivityDateChangedNotification(TransitionMessage):
     def get_recipients(self):
         """contributors that signed up"""
         return [
-            contributor.user for contributor in self.obj.accepted_contributors.all()
+            contributor.user for contributor in self.obj.active_contributors.all()
         ]
 
 

@@ -114,8 +114,8 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         }
         self.model = self.factory.create(**self.defaults)
 
-        self.accepted_contributors = CollectContributorFactory.create_batch(
-            5, activity=self.model, status='accepted'
+        self.active_contributors = CollectContributorFactory.create_batch(
+            5, activity=self.model
         )
         self.withdrawn_contributors = CollectContributorFactory.create_batch(
             5, activity=self.model, status='withdrawn'
@@ -144,7 +144,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertTransition('delete')
         self.assertRelationship(
             'contributors',
-            self.accepted_contributors + self.withdrawn_contributors
+            self.active_contributors + self.withdrawn_contributors
         )
 
     def test_get_with_contributor(self):
@@ -162,7 +162,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertRelationship(
             'contributors',
-            self.accepted_contributors + [contributor]
+            self.active_contributors + [contributor]
         )
 
     def test_get_anonymous(self):
@@ -177,7 +177,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
 
-        self.assertRelationship('contributors', self.accepted_contributors)
+        self.assertRelationship('contributors', self.active_contributors)
 
     def test_get_closed_site(self):
         with self.closed_site():
@@ -282,7 +282,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
 
-        CollectContributorFactory.create_batch(5, activity=self.activity, status='accepted')
+        CollectContributorFactory.create_batch(5, activity=self.activity)
         CollectContributorFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
         self.url = reverse('related-collect-contributors', args=(self.activity.pk, ))
@@ -295,7 +295,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] in ('accepted', 'withdrawn')
+                contributor['attributes']['status'] in ('succeeded', 'withdrawn')
                 for contributor in self.response.json()['data']
             )
         )
@@ -308,7 +308,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'accepted'
+                contributor['attributes']['status'] == 'succeeded'
                 for contributor in self.response.json()['data']
             )
         )
@@ -338,7 +338,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'accepted'
+                contributor['attributes']['status'] == 'succeeded'
                 for contributor in self.response.json()['data']
             )
         )
@@ -422,14 +422,14 @@ class CollectActivityContributorTranistionListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.contributor.refresh_from_db()
-        self.assertEqual(self.contributor.status, 'accepted')
+        self.assertEqual(self.contributor.status, 'succeeded')
 
     def test_create_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.contributor.refresh_from_db()
-        self.assertEqual(self.contributor.status, 'accepted')
+        self.assertEqual(self.contributor.status, 'succeeded')
 
 
 class ContributorExportViewAPITestCase(APITestCase):

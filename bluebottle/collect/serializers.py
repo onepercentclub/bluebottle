@@ -47,7 +47,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
     def get_contributors(self, instance):
         user = self.context['request'].user
         return [
-            contributor for contributor in instance.contributors.all() if (
+            contributor for contributor in instance.contributors.exclude(user=None) if (
                 isinstance(contributor, CollectContributor) and (
                     contributor.status in [
                         CollectContributorStateMachine.new.value,
@@ -71,6 +71,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'contributors',
             'start',
             'end',
+            'realized',
             'contributors_export_url',
             'location',
             'collect_type',
@@ -104,6 +105,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         fields = BaseActivityListSerializer.Meta.fields + (
             'start',
             'end',
+            'realized',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
@@ -168,7 +170,7 @@ class CollectTypeSerializer(ModelSerializer):
 
     class Meta(object):
         model = CollectType
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'unit', 'unit_plural')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collect-types'

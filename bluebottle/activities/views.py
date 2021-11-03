@@ -139,6 +139,7 @@ class RelatedActivityImageContent(ImageContentView):
                 ContentType.objects.get_by_natural_key('assignments', 'assignment'),
                 ContentType.objects.get_by_natural_key('events', 'event'),
                 ContentType.objects.get_by_natural_key('deeds', 'deed'),
+                ContentType.objects.get_by_natural_key('collect', 'collectactivity'),
             ]
         )
 

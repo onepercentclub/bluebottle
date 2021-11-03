@@ -1316,8 +1316,6 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         for slot in self.slots[:-1]:
             self.assertTrue(slot.title not in mail.outbox[0].body)
 
-        print(mail.outbox[0].body)
-
         self.assertTrue(self.slots[2].title in mail.outbox[0].body)
 
     def test_withdraw_free(self):

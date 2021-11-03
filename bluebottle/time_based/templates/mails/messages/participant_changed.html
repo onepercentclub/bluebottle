@@ -2,8 +2,22 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans context 'email' %}
-        <p>You changed your application to the activity the activity "{{ title }}"!</p>
-    {% endblocktrans %}
+    <p>
+        {% blocktrans context 'email' %}
+            You adjusted your participation for an activity on <b>{{ site_name }}</b>.
+        {% endblocktrans %}
+    </p>
+    <h4>{{title}}</h4>
     {% include 'mails/messages/partial/slots.html' %}
+{% endblock %}
+
+{% block action %}
+    {{block.super}}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
 {% endblock %}

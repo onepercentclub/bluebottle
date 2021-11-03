@@ -65,8 +65,8 @@ class ParticipantNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.supporter])
         self.assertSubject('You have joined the activity "Save the world!"')
 
-        self.assertBodyContains('You joined the activity "Save the world!"')
-        self.assertBodyContains(f"The activity ends on {self.next_month.strftime('%x')}")
+        self.assertHtmlBodyContains('You joined an activity on <b>Test</b>')
+        self.assertHtmlBodyContains(f"Ends on {self.next_month.strftime('%x')}")
 
     def test_withdrew_confirmation(self):
         self.message_class = ParticipantWithdrewConfirmationNotification
@@ -76,5 +76,5 @@ class ParticipantNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.supporter])
         self.assertSubject('You have withdrawn from the activity "Save the world!"')
 
-        self.assertBodyContains('You have withdrawn from the activity "Save the world!"')
-        self.assertBodyContains('Reapply when this was a mistake')
+        self.assertHtmlBodyContains('You have withdrawn from an activity on <b>Test</b>')
+        self.assertHtmlBodyContains('Reapply when this was a mistake')

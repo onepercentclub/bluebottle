@@ -2,5 +2,7 @@
 {% load i18n %}
 
 {% block message %}{% blocktrans context 'email' %}
-<p>You have withdrawn from the activity "{{ title }}"!</p>
+<p>You have withdrawn from an activity on <b>{{ site_name }}</b></p>
+
+<h4>{{ title }}</h4>
 {% endblocktrans %}{% endblock %}

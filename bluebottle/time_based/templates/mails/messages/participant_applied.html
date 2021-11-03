@@ -4,9 +4,12 @@
 {% block message %}
     <p>
         {% blocktrans context 'email' %}
-            You applied to the activity "{{ title }}"!
+            You applied to an activity on <b>{{ site_name }}!</b>
         {% endblocktrans %}
     </p>
+
+    <h4>{{ title }}</h4>
+
     <p>
         <i>
             {% blocktrans context 'email' %}
@@ -14,10 +17,15 @@
             {% endblocktrans %}
         </i>
     </p>
+{% endblock %}
 
-    {% if duration %}
-        {% include 'mails/messages/partial/period.html' %}
-    {% else %}
-        {% include 'mails/messages/partial/slots.html' %}
-    {% endif %}
+{% block action %}
+    {{block.super}}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
 {% endblock %}

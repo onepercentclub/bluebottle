@@ -20,12 +20,15 @@ These are all the time slots that you participate in:
 Read the latest updates on the activity page.
 {% endblocktrans %}
 </p>
-<p>
-<i>
-{% blocktrans context 'email' %}
-If you are unable to participate, please withdraw via the activity page so that others can take your place.
-{% endblocktrans %}
-</i>
-</p>
+{% endblock %}
 
+{% block action %}
+    {{block.super}}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
 {% endblock %}

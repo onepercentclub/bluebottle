@@ -1296,9 +1296,6 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             f'You have applied to the activity "{self.activity.title}"'
         )
 
-        for slot in self.slots:
-            self.assertTrue(slot.title in mail.outbox[1].body)
-
     def test_change_free(self):
         self.test_join_free()
 
@@ -1318,6 +1315,8 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 
         for slot in self.slots[:-1]:
             self.assertTrue(slot.title not in mail.outbox[0].body)
+
+        print(mail.outbox[0].body)
 
         self.assertTrue(self.slots[2].title in mail.outbox[0].body)
 

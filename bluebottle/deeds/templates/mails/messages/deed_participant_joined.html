@@ -2,11 +2,27 @@
 {% load i18n %}
 {% block message %}
 <p>
-    {% blocktrans context 'email' %}You joined the activity "{{ title }}"{% endblocktrans %}
+    {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
 </p>
 <p>
+<h4>{{title}}</h4>
+
+{% if start %}
+    {% blocktrans context 'email' %}Starts on {{ start }}{% endblocktrans %}
+{% endif %}
 {% if end %}
-    {% blocktrans context 'email' %}The activity ends on {{ end }}{% endblocktrans %}
+    {% blocktrans context 'email' %}Ends on {{ end }}{% endblocktrans %}
 {% endif %}
 </p>
+{% endblock %}
+
+{% block action %}
+    {{block.super}}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
 {% endblock %}

@@ -1,6 +1,8 @@
 from django.db import models
 
 from django.utils.translation import gettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+from bluebottle.activities.models import Organizer
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.deeds.validators import EndDateValidator
@@ -64,6 +66,17 @@ class Deed(Activity):
         return EffortContribution.objects.filter(
             contributor__activity=self,
             contribution_type='deed'
+        )
+
+    @property
+    def realized(self):
+        len(
+            EffortContribution.objects.exclude(
+                contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
+            ).filter(
+                contributor__activity=self.activity,
+                status__in=['succeeded', 'new', ]
+            )
         )
 
 

@@ -3,9 +3,16 @@ from builtins import object
 import factory.fuzzy
 from pytz import UTC
 
-from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
+
+class CollectTypeFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = CollectType
+
+    name = factory.Sequence(lambda n: 'CollectType_{0}'.format(n))
 
 
 class CollectActivityFactory(factory.DjangoModelFactory):
@@ -18,6 +25,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
+    type = factory.SubFactory(CollectTypeFactory)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
 

@@ -79,7 +79,7 @@ class CollectActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description']
+        return super().required_fields + ['title', 'description', 'type']
 
 
 class CollectContributor(Contributor):

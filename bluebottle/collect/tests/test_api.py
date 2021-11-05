@@ -6,7 +6,7 @@ from rest_framework import status
 
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectActivityTransitionSerializer, CollectContributorSerializer, CollectContributorTransitionSerializer
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.test.utils import APITestCase
@@ -23,14 +23,16 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.url = reverse('collect-activity-list')
         self.serializer = CollectActivityListSerializer
         self.factory = CollectActivityFactory
+        self.collect_type = CollectTypeFactory.create()
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'collect_type': self.collect_type
         }
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append('collect')
@@ -39,7 +41,6 @@ class CollectActivityListViewAPITestCase(APITestCase):
     def test_create_complete(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
-
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
 
@@ -49,7 +50,6 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertPermission('PUT', True)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
-
         self.assertTransition('submit')
         self.assertTransition('delete')
 
@@ -106,11 +106,13 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.serializer = CollectActivitySerializer
         self.factory = CollectActivityFactory
+        self.collect_type = CollectTypeFactory.create()
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'type': self.collect_type
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -123,7 +125,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'type']
 
     def test_get(self):
         self.perform_get(user=self.model.owner)

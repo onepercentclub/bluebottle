@@ -100,16 +100,34 @@ class CollectActivitySerializer(BaseActivitySerializer):
 class CollectActivityListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
 
+    collect_type = ResourceRelatedField(
+        queryset=CollectType.objects,
+        required=False,
+        source='type'
+    )
+
     class Meta(BaseActivityListSerializer.Meta):
         model = CollectActivity
         fields = BaseActivityListSerializer.Meta.fields + (
             'start',
             'end',
             'realized',
+            'collect_type'
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/collects'
+        included_resources = BaseActivityListSerializer.JSONAPIMeta.included_resources + [
+            'collect_type',
+        ]
+
+    included_serializers = dict(
+        BaseActivityListSerializer.included_serializers,
+        **{
+            'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
+
+        }
+    )
 
 
 class CollectActivityTransitionSerializer(TransitionSerializer):

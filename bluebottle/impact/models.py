@@ -146,7 +146,8 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         if (
             self.target and
             self.activity.enable_impact and
-            self.activity.target
+            self.activity.target and
+            self.activity.realized
         ):
             amount = self.target / float(self.activity.target)
 

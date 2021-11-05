@@ -74,8 +74,11 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'realized',
             'contributors_export_url',
             'location',
+            'location_hint',
             'collect_type',
-            'target'
+            'target',
+            'realized',
+            'enable_impact'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

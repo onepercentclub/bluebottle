@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-05 13:26+0100\n"
-"PO-Revision-Date: 2021-11-05 12:27\n"
+"POT-Creation-Date: 2021-11-05 14:06+0100\n"
+"PO-Revision-Date: 2021-11-05 13:07\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -210,7 +210,7 @@ msgstr "Je activiteit \"{title}\" is afgewezen"
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been cancelled"
-msgstr ""
+msgstr "Je activiteit \"{title}\" is geannuleerd"
 
 #: bluebottle/activities/messages.py:148
 #, python-brace-format
@@ -936,7 +936,9 @@ msgctxt "email"
 msgid "\n"
 "<p>You have withdrawn from an activity on <b>%(site_name)s</b></p>\n\n"
 "<h4>%(title)s</h4>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je hebt je afgemeld voor een activiteit op <b>%(site_name)s</b></p>\n\n"
+"<h4>%(title)s</h4>\n"
 
 #: bluebottle/activities/utils.py:270 bluebottle/activities/utils.py:271
 msgid "Description is required"
@@ -2089,7 +2091,7 @@ msgstr "Je activiteit \"{title}\" start morgen!"
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
-msgstr ""
+msgstr "Je neemt deel aan de activiteit \"{title}\""
 
 #: bluebottle/deeds/models.py:18
 msgid "The number of users you want to participate."
@@ -2229,19 +2231,19 @@ msgstr "Kan je niet meer deelnemen? Meld je dan af via het platform, zodat ieman
 #, python-format
 msgctxt "email"
 msgid "You joined an activity on <b>%(site_name)s</b>"
-msgstr ""
+msgstr "Je neemt deel aan een activiteit op <b>%(site_name)s</b>"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:11
 #, python-format
 msgctxt "email"
 msgid "Starts on %(start)s"
-msgstr ""
+msgstr "Begint op %(start)s"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:14
 #, python-format
 msgctxt "email"
 msgid "Ends on %(end)s"
-msgstr ""
+msgstr "Eindigt op %(end)s"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
@@ -4752,7 +4754,7 @@ msgstr "\n"
 #: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.html:13
 msgctxt "email"
 msgid "View the initiative"
-msgstr ""
+msgstr "Bekijk het initiatief"
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:21
 #, python-format
@@ -6035,13 +6037,13 @@ msgstr "Je hebt een nieuwe aanmelding voor jouw activiteit \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "email"
 msgid "You have changed your application on the activity \"{title}\""
-msgstr ""
+msgstr "Je hebt je aanmelding aangepast voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages.py:353
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
-msgstr ""
+msgstr "Je hebt je aangemeld voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages.py:375
 #, python-brace-format
@@ -6719,7 +6721,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The activity \"%(title)s\" has changed:\n"
-msgstr ""
+msgstr "\n"
+"De activiteit \"%(title)s\" is gewijzigd:\n"
 
 #: bluebottle/time_based/templates/mails/messages/changed_single_date.html:23
 #: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:23
@@ -6757,14 +6760,18 @@ msgctxt "email"
 msgid "\n"
 "            Start: %(start)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Start: %(start)s.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:8
 msgctxt "email"
 msgid "\n"
 "            You can start right away.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Je kunt meteen beginnen.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:14
 #, python-format
@@ -6772,14 +6779,18 @@ msgctxt "email"
 msgid "\n"
 "            End: %(end)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Einde: %(end)s.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:18
 msgctxt "email"
 msgid "\n"
 "            This activity runs indefinitely.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Deze activiteit loopt voor onbepaalde tijd.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:25
 #, python-format
@@ -6787,7 +6798,8 @@ msgctxt "email"
 msgid "\n"
 "            You are expected to spend %(duration)s\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je wordt verwacht hier %(duration)s aan te besteden        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:30
 #, python-format
@@ -6810,7 +6822,7 @@ msgid "Anywhere/Online"
 msgstr "Overal/Online"
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:34
-msgid "Go to the activity page to see the times in your own timezone and add them to your calendar"
+msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
@@ -6853,14 +6865,16 @@ msgctxt "email"
 msgid "\n"
 "            You applied to an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je hebt je aangemeld voor een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_applied.html:15
 msgctxt "email"
 msgid "\n"
 "                You will receive a notification by email when the activity manager accepts your application.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"Je ontvangt een bericht per e-mail wanneer de manager van de activiteit je aanmelding goedkeurt.            "
 
 #: bluebottle/time_based/templates/mails/messages/participant_base.html:5
 #, python-format
@@ -6878,7 +6892,9 @@ msgctxt "email"
 msgid "\n"
 "            You adjusted your participation for an activity on <b>%(site_name)s</b>.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Je hebt je deelname aangepast voor een activiteit op <b>%(site_name)s</b>.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_created.html:4
 #, python-format
@@ -6917,7 +6933,8 @@ msgctxt "email"
 msgid "\n"
 "            You joined an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je neemt deel aan een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_rejected.html:4
 #, python-format
@@ -6957,7 +6974,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The activity  is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"De activiteit vindt plaats over een paar dagen!\n"
 
 #: bluebottle/time_based/templates/mails/messages/slot_date_changed.html:5
 #, python-format

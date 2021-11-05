@@ -15,6 +15,7 @@ from bluebottle.activities.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
+from bluebottle.collect.models import CollectContributor
 from bluebottle.funding.models import Donor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
@@ -87,7 +88,8 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             Donor,
             DateParticipant,
             PeriodParticipant,
-            DeedParticipant
+            DeedParticipant,
+            CollectContributor,
         ).filter(
             user=self.request.user
         ).exclude(

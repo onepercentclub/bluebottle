@@ -164,8 +164,6 @@ class ParticipantWithdrewConfirmationNotification(ActivityNotification):
     subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participant_withdrew_confirmation'
 
-    action_title = pgettext('email', 'Reapply when this was a mistake')
-
     def get_recipients(self):
         """wallpost author"""
         return [self.obj.user]

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-03 11:20+0100\n"
+"POT-Creation-Date: 2021-11-05 13:26+0100\n"
 "PO-Revision-Date: 2021-10-20 07:51\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
@@ -224,12 +224,7 @@ msgctxt "email"
 msgid "You have withdrawn from the activity \"{title}\""
 msgstr ""
 
-#: bluebottle/activities/messages.py:167
-msgctxt "email"
-msgid "Reapply when this was a mistake"
-msgstr ""
-
-#: bluebottle/activities/messages.py:180
+#: bluebottle/activities/messages.py:178
 #, python-brace-format
 msgctxt "email"
 msgid ""
@@ -237,32 +232,32 @@ msgid ""
 "profile"
 msgstr ""
 
-#: bluebottle/activities/messages.py:192
+#: bluebottle/activities/messages.py:190
 msgctxt "email"
 msgid "View more activities"
 msgstr ""
 
-#: bluebottle/activities/messages.py:222
+#: bluebottle/activities/messages.py:220
 msgctxt "email"
 msgid "Multiple locations"
 msgstr ""
 
-#: bluebottle/activities/messages.py:225
+#: bluebottle/activities/messages.py:223
 msgctxt "email"
 msgid "Mutliple time slots"
 msgstr ""
 
-#: bluebottle/activities/messages.py:236
+#: bluebottle/activities/messages.py:234
 msgctxt "email"
 msgid "Starts immediately"
 msgstr ""
 
-#: bluebottle/activities/messages.py:239 bluebottle/activities/messages.py:255
+#: bluebottle/activities/messages.py:237 bluebottle/activities/messages.py:253
 msgctxt "email"
 msgid "runs indefinitely"
 msgstr ""
 
-#: bluebottle/activities/messages.py:254
+#: bluebottle/activities/messages.py:252
 msgctxt "email"
 msgid "starts immediately"
 msgstr ""
@@ -746,20 +741,6 @@ msgstr ""
 #, python-format
 msgctxt "email"
 msgid "Hi %(recipient_name)s,"
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/activity_base.html:19
-#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
-#: bluebottle/time_based/templates/mails/messages/participant_applied.html:26
-#: bluebottle/time_based/templates/mails/messages/participant_changed.html:18
-#: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
-msgctxt "email"
-msgid ""
-"\n"
-"                If you are unable to participate, please withdraw via the "
-"activity page so that others can take your place.\n"
-"            "
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_cancelled.html:6
@@ -2314,6 +2295,19 @@ msgstr ""
 #, python-format
 msgctxt "email"
 msgid "Ends on %(end)s"
+msgstr ""
+
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
+#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
+#: bluebottle/time_based/templates/mails/messages/participant_applied.html:26
+#: bluebottle/time_based/templates/mails/messages/participant_changed.html:18
+#: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
+msgctxt "email"
+msgid ""
+"\n"
+"                If you are unable to participate, please withdraw via the "
+"activity page so that others can take your place.\n"
+"            "
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_reminder.html:5
@@ -6994,7 +6988,7 @@ msgctxt "email"
 msgid ""
 "\n"
 "                You will receive a notification by email when the activity "
-"manager accepts you.\n"
+"manager accepts your application.\n"
 "            "
 msgstr ""
 

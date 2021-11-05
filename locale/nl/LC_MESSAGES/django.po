@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-03 11:20+0100\n"
+"POT-Creation-Date: 2021-11-05 13:26+0100\n"
 "PO-Revision-Date: 2021-10-20 07:51\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
@@ -228,12 +228,7 @@ msgctxt "email"
 msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Je bent niet geselecteerd voor de activiteit \"{title}\""
 
-#: bluebottle/activities/messages.py:167
-msgctxt "email"
-msgid "Reapply when this was a mistake"
-msgstr ""
-
-#: bluebottle/activities/messages.py:180
+#: bluebottle/activities/messages.py:178
 #, python-brace-format
 msgctxt "email"
 msgid ""
@@ -243,32 +238,32 @@ msgstr ""
 "{first_name}, er zijn {count} activiteiten op {site_name} die overeenkomen "
 "met jou profiel"
 
-#: bluebottle/activities/messages.py:192
+#: bluebottle/activities/messages.py:190
 msgctxt "email"
 msgid "View more activities"
 msgstr "Bekijk meer activiteiten"
 
-#: bluebottle/activities/messages.py:222
+#: bluebottle/activities/messages.py:220
 msgctxt "email"
 msgid "Multiple locations"
 msgstr "Meerdere locaties"
 
-#: bluebottle/activities/messages.py:225
+#: bluebottle/activities/messages.py:223
 msgctxt "email"
 msgid "Mutliple time slots"
 msgstr "Meerdere tijdslots"
 
-#: bluebottle/activities/messages.py:236
+#: bluebottle/activities/messages.py:234
 msgctxt "email"
 msgid "Starts immediately"
 msgstr "Begint onmiddellijk"
 
-#: bluebottle/activities/messages.py:239 bluebottle/activities/messages.py:255
+#: bluebottle/activities/messages.py:237 bluebottle/activities/messages.py:253
 msgctxt "email"
 msgid "runs indefinitely"
 msgstr "zonder einddatum"
 
-#: bluebottle/activities/messages.py:254
+#: bluebottle/activities/messages.py:252
 msgctxt "email"
 msgid "starts immediately"
 msgstr "begint onmiddellijk"
@@ -798,29 +793,6 @@ msgstr ""
 msgctxt "email"
 msgid "Hi %(recipient_name)s,"
 msgstr "Hi %(recipient_name)s"
-
-#: bluebottle/activities/templates/mails/messages/activity_base.html:19
-#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
-#: bluebottle/time_based/templates/mails/messages/participant_applied.html:26
-#: bluebottle/time_based/templates/mails/messages/participant_changed.html:18
-#: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
-#, fuzzy
-#| msgctxt "email"
-#| msgid ""
-#| "\n"
-#| "If you are unable to participate, please withdraw via the activity page "
-#| "so that others can take your place.\n"
-msgctxt "email"
-msgid ""
-"\n"
-"                If you are unable to participate, please withdraw via the "
-"activity page so that others can take your place.\n"
-"            "
-msgstr ""
-"\n"
-"Kan je niet meer deelnemen? Meld je dan af via het platform, zodat iemand "
-"anders je plek kan innemen.\n"
 
 #: bluebottle/activities/templates/mails/messages/activity_cancelled.html:6
 #, python-format
@@ -2537,6 +2509,28 @@ msgstr "Begin: %(start)s"
 msgctxt "email"
 msgid "Ends on %(end)s"
 msgstr "Enid: %(end)s"
+
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
+#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
+#: bluebottle/time_based/templates/mails/messages/participant_applied.html:26
+#: bluebottle/time_based/templates/mails/messages/participant_changed.html:18
+#: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
+#, fuzzy
+#| msgctxt "email"
+#| msgid ""
+#| "\n"
+#| "If you are unable to participate, please withdraw via the activity page "
+#| "so that others can take your place.\n"
+msgctxt "email"
+msgid ""
+"\n"
+"                If you are unable to participate, please withdraw via the "
+"activity page so that others can take your place.\n"
+"            "
+msgstr ""
+"\n"
+"Kan je niet meer deelnemen? Meld je dan af via het platform, zodat iemand "
+"anders je plek kan innemen.\n"
 
 #: bluebottle/deeds/templates/mails/messages/deed_reminder.html:5
 #, python-format
@@ -7782,13 +7776,22 @@ msgstr ""
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/participant_applied.html:15
+#, fuzzy
+#| msgctxt "email"
+#| msgid ""
+#| "\n"
+#| "If you are unable to participate, please withdraw via the activity page "
+#| "so that others can take your place.\n"
 msgctxt "email"
 msgid ""
 "\n"
 "                You will receive a notification by email when the activity "
-"manager accepts you.\n"
+"manager accepts your application.\n"
 "            "
 msgstr ""
+"\n"
+"Kan je niet meer deelnemen? Meld je dan af via het platform, zodat iemand "
+"anders je plek kan innemen.\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_base.html:5
 #, python-format

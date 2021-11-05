@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-05 14:06+0100\n"
-"PO-Revision-Date: 2021-11-05 13:07\n"
+"POT-Creation-Date: 2021-11-05 14:14+0100\n"
+"PO-Revision-Date: 2021-11-05 13:15\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -175,9 +175,9 @@ msgid "Update from '{title}'"
 msgstr "Update van '{title}'"
 
 #: bluebottle/activities/messages.py:88 bluebottle/deeds/messages.py:56
-#: bluebottle/time_based/messages.py:217 bluebottle/time_based/messages.py:238
-#: bluebottle/time_based/messages.py:260 bluebottle/time_based/messages.py:470
-#: bluebottle/time_based/messages.py:492 bluebottle/time_based/messages.py:514
+#: bluebottle/time_based/messages.py:215 bluebottle/time_based/messages.py:236
+#: bluebottle/time_based/messages.py:258 bluebottle/time_based/messages.py:468
+#: bluebottle/time_based/messages.py:490 bluebottle/time_based/messages.py:512
 msgctxt "email"
 msgid "Open your activity"
 msgstr "Open je activiteit"
@@ -2071,12 +2071,12 @@ msgid "Runs indefinitely"
 msgstr "Zonder einddatum"
 
 #: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
-#: bluebottle/time_based/messages.py:82 bluebottle/time_based/messages.py:125
-#: bluebottle/time_based/messages.py:148 bluebottle/time_based/messages.py:171
-#: bluebottle/time_based/messages.py:194 bluebottle/time_based/messages.py:279
-#: bluebottle/time_based/messages.py:302 bluebottle/time_based/messages.py:325
-#: bluebottle/time_based/messages.py:364 bluebottle/time_based/messages.py:385
-#: bluebottle/time_based/messages.py:448
+#: bluebottle/time_based/messages.py:80 bluebottle/time_based/messages.py:123
+#: bluebottle/time_based/messages.py:146 bluebottle/time_based/messages.py:169
+#: bluebottle/time_based/messages.py:192 bluebottle/time_based/messages.py:277
+#: bluebottle/time_based/messages.py:300 bluebottle/time_based/messages.py:323
+#: bluebottle/time_based/messages.py:362 bluebottle/time_based/messages.py:383
+#: bluebottle/time_based/messages.py:446
 msgctxt "email"
 msgid "View activity"
 msgstr "Activiteit bewerken"
@@ -2087,7 +2087,7 @@ msgctxt "email"
 msgid "Your activity \"{title}\" will start tomorrow!"
 msgstr "Je activiteit \"{title}\" start morgen!"
 
-#: bluebottle/deeds/messages.py:67 bluebottle/time_based/messages.py:290
+#: bluebottle/deeds/messages.py:67 bluebottle/time_based/messages.py:288
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
@@ -5969,124 +5969,124 @@ msgstr "Vergrendel gevulde tijdsblokken voor {activity}"
 msgid "Reset slot selection to \"all\" for {activity}"
 msgstr "Reset tijdsblok voorkeur naar “allemaal” voor {activity}"
 
-#: bluebottle/time_based/messages.py:72
+#: bluebottle/time_based/messages.py:70
 #, python-brace-format
 msgctxt "email"
 msgid "The deadline for your activity \"{title}\" changed"
 msgstr "De deadline van jouw activiteit \"{title}\" is veranderd"
 
-#: bluebottle/time_based/messages.py:95
+#: bluebottle/time_based/messages.py:93
 #, python-brace-format
 msgctxt "emai"
 msgid "on {start}"
 msgstr "op {start}"
 
-#: bluebottle/time_based/messages.py:98
+#: bluebottle/time_based/messages.py:96
 msgctxt "emai"
 msgid "immediately"
 msgstr "onmiddellijk"
 
-#: bluebottle/time_based/messages.py:102
+#: bluebottle/time_based/messages.py:100
 #, python-brace-format
 msgctxt "emai"
 msgid "ends on {end}"
 msgstr "eindigt op {end}"
 
-#: bluebottle/time_based/messages.py:105
+#: bluebottle/time_based/messages.py:103
 msgctxt "emai"
 msgid "runs indefinitely"
 msgstr "zonder einddatum"
 
-#: bluebottle/time_based/messages.py:114
+#: bluebottle/time_based/messages.py:112
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" will take place in a few days!"
 msgstr "Je evenement \"{title}\" vindt over een aantal dagen plaats!"
 
-#: bluebottle/time_based/messages.py:138 bluebottle/time_based/messages.py:161
+#: bluebottle/time_based/messages.py:136 bluebottle/time_based/messages.py:159
 #, python-brace-format
 msgctxt "email"
 msgid "The details of activity \"{title}\" have changed"
 msgstr "De details van activiteit \"{title}\" zijn veranderd"
 
-#: bluebottle/time_based/messages.py:184
+#: bluebottle/time_based/messages.py:182
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has succeeded 🎉"
 msgstr "De activiteit \"{title}\" is succesvol afgerond! 🎉"
 
-#: bluebottle/time_based/messages.py:207
+#: bluebottle/time_based/messages.py:205
 #, python-brace-format
 msgctxt "email"
 msgid "You have been added to the activity \"{title}\" 🎉"
 msgstr "Je bent toegevoegd aan de activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:228
+#: bluebottle/time_based/messages.py:226
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new participant for your activity \"{title}\" 🎉"
 msgstr "Je hebt een nieuwe deelnemer voor jouw activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:249
+#: bluebottle/time_based/messages.py:247
 #, python-brace-format
 msgctxt "email"
 msgid "A new participant has joined your activity \"{title}\" 🎉"
 msgstr "Je hebt een nieuwe aanmelding voor jouw activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:313
+#: bluebottle/time_based/messages.py:311
 #, python-brace-format
 msgctxt "email"
 msgid "You have changed your application on the activity \"{title}\""
 msgstr "Je hebt je aanmelding aangepast voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:353
+#: bluebottle/time_based/messages.py:351
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
 msgstr "Je hebt je aangemeld voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:375
+#: bluebottle/time_based/messages.py:373
 #, python-brace-format
 msgctxt "email"
 msgid "You have been selected for the activity \"{title}\" 🎉"
 msgstr "Je bent geselecteerd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:396
+#: bluebottle/time_based/messages.py:394
 #, python-brace-format
 msgctxt "email"
 msgid "You have not been selected for the activity \"{title}\""
 msgstr "Je bent niet geselecteerd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:406 bluebottle/time_based/messages.py:427
+#: bluebottle/time_based/messages.py:404 bluebottle/time_based/messages.py:425
 msgctxt "email"
 msgid "View all activities"
 msgstr "Bekijk alle activiteiten"
 
-#: bluebottle/time_based/messages.py:417
+#: bluebottle/time_based/messages.py:415
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed as participant for the activity \"{title}\""
 msgstr "Je bent verwijderd als deelnemer aan de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:438
+#: bluebottle/time_based/messages.py:436
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" is successful 🎉"
 msgstr "Jouw bijdrage aan de activiteit \"{title}\" is succesvol 🎉"
 
-#: bluebottle/time_based/messages.py:459
+#: bluebottle/time_based/messages.py:457
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your activity \"{title}\""
 msgstr "Een deelnemer heeft zich afgemeld voor jouw activiteit \"{title}\""
 
-#: bluebottle/time_based/messages.py:481
+#: bluebottle/time_based/messages.py:479
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr "Een deelnemer is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:503
+#: bluebottle/time_based/messages.py:501
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your activity \"{title}\""
@@ -6792,23 +6792,6 @@ msgstr "\n"
 "            Deze activiteit loopt voor onbepaalde tijd.\n"
 "        "
 
-#: bluebottle/time_based/templates/mails/messages/partial/period.html:25
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            You are expected to spend %(duration)s\n"
-"        "
-msgstr "\n"
-"Je wordt verwacht hier %(duration)s aan te besteden        "
-
-#: bluebottle/time_based/templates/mails/messages/partial/period.html:30
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            You are expected to spend %(duration)s %(duration_period)s.\n"
-"        "
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:8
 msgid "Changed"
 msgstr "Veranderd"
@@ -6823,7 +6806,7 @@ msgstr "Overal/Online"
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:34
 msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
-msgstr ""
+msgstr "Ga naar de pagina van de activiteit om de tijden in je eigen tijdzone te bekijken en deze aan je kalender toe te voegen."
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
 #, python-format

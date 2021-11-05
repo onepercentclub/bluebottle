@@ -20,15 +20,3 @@
         {% endblocktrans %}
     {% endif %}
 </p>
-<p>
-    {% if obj.duration_period == 'overall' %}
-        {% blocktrans context 'email' %}
-            You are expected to spend {{ duration }}
-        {% endblocktrans %}
-
-    {% else %}
-        {% blocktrans context 'email' %}
-            You are expected to spend {{ duration }} {{ duration_period }}.
-        {% endblocktrans %}
-    {% endif %}
-</p>

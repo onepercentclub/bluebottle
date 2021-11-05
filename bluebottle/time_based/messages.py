@@ -57,8 +57,6 @@ class TimeBasedInfoMixin(object):
             context.update({'slots': slots})
         elif isinstance(participant, PeriodParticipant):
             context.update({
-                'duration': participant.activity.duration_human_readable,
-                'duration_period': participant.activity.duration_period_human_readable,
                 'start': participant.activity.start,
                 'end': participant.activity.deadline,
             })

@@ -12,7 +12,10 @@ class CollectTypeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = CollectType
 
+    disabled = False
     name = factory.Sequence(lambda n: 'CollectType_{0}'.format(n))
+    unit = factory.Faker('word')
+    unit_plural = factory.Faker('word')
 
 
 class CollectActivityFactory(factory.DjangoModelFactory):

@@ -271,7 +271,13 @@ class APITestCase(BluebottleTestCase):
                 )
 
     def assertAttribute(self, attr, value=None):
-        self.assertTrue(attr in self.response.json()['data']['attributes'])
+        data = self.response.json()['data']
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertTrue(attr in resource['attributes'])
+
+        else:
+            self.assertTrue(attr in data['attributes'])
 
         if value:
             self.assertEqual(getattr(self.model, attr), value)
@@ -321,7 +327,11 @@ class APITestCase(BluebottleTestCase):
             if field in self.defaults:
                 value = self.defaults[field]
             else:
-                value = getattr(self.factory, field).generate()
+                factory_field = getattr(self.factory, field)
+                try:
+                    value = factory_field.generate()
+                except AttributeError:
+                    value = factory_field.function(len(self.factory._meta.model.objects.all()))
 
             if isinstance(self.serializer().get_fields()[field], RelatedField):
                 serializer_name = self.serializer.included_serializers[field]

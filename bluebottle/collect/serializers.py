@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
@@ -13,10 +14,12 @@ from bluebottle.collect.states import CollectContributorStateMachine
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.utils import reverse_signed
 
 
 class CollectActivitySerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
+    links = serializers.SerializerMethodField()
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
@@ -43,6 +46,15 @@ class CollectActivitySerializer(BaseActivitySerializer):
         permission=CanExportParticipantsPermission,
         read_only=True
     )
+
+    def get_links(self, instance):
+        if instance.start and instance.end:
+            return {
+                'ical': reverse_signed('collect-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+            }
+        else:
+            return {}
 
     def get_contributors(self, instance):
         user = self.context['request'].user
@@ -78,7 +90,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'collect_type',
             'target',
             'realized',
-            'enable_impact'
+            'enable_impact',
+            'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

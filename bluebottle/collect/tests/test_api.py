@@ -166,6 +166,13 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             'contributors',
             self.active_contributors + [contributor]
         )
+        links = self.response.data['links']
+
+        self.assertTrue(f'/api/collect/ical/{self.model.id}' in links['ical'])
+        start = self.model.start.strftime('%Y%m%d')
+        end = self.model.end + timedelta(days=1)
+        end = end.strftime('%Y%m%d')
+        self.assertTrue(f'dates={start}%2F{end}' in links['google'])
 
     def test_get_anonymous(self):
         self.perform_get()

@@ -149,6 +149,26 @@ class ActivityExpiredNotification(ActivityNotification):
     template = 'messages/activity_expired'
 
 
+class ParticipantWithdrewConfirmationNotification(ActivityNotification):
+    """
+    The participant withdrew from the activity
+    """
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    template = 'messages/participant_withdrew_confirmation'
+
+    def get_recipients(self):
+        """wallpost author"""
+        return [self.obj.user]
+
+
 class MatchingActivitiesNotification(TransitionMessage):
     """
     Send a list of matching initiaives to user

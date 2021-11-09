@@ -18,10 +18,11 @@ from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
@@ -52,6 +53,7 @@ from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdm
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
+from ..notifications.models import Message
 
 
 class MemberForm(forms.ModelForm):
@@ -214,6 +216,28 @@ class SortedUnionFieldListFilter(UnionFieldListFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lookup_choices = sorted(self.lookup_choices, key=lambda a: a[1].lower())
+
+
+class MemberMessagesInline(TabularInlinePaginated):
+    model = Message
+    per_page = 20
+    ordering = ('-sent',)
+    readonly_fields = [
+        'sent', 'template', 'subject', 'content_type', 'related'
+    ]
+    fields = readonly_fields
+
+    def related(self, obj):
+        url = f"admin:{obj.content_type.app_label}_{obj.content_type.model}_change"
+        if not obj.content_object:
+            return format_html('{}<br><i>{}</i>', obj.content_type, _('Deleted'))
+        try:
+            return format_html(
+                u"<a href='{}'>{}</a>",
+                str(reverse(url, args=(obj.object_id,))), obj.content_object or obj.content_type or 'Related object'
+            )
+        except NoReverseMatch:
+            return obj.content_object or 'Related object'
 
 
 class MemberAdmin(UserAdmin):
@@ -407,7 +431,7 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (UserActivityInline,)
+    inlines = (UserActivityInline, MemberMessagesInline)
 
     def initiatives(self, obj):
         initiatives = []

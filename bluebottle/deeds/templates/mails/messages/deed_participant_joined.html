@@ -2,23 +2,17 @@
 {% load i18n %}
 {% block message %}
 <p>
-{% blocktrans context 'email' %}
-Some details of activity "{{ title }}" have changed.
-{% endblocktrans %}
+    {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
 </p>
 <p>
+<h4>{{title}}</h4>
 
-{% blocktrans context 'email' %}
-These are all the time slots that you participate in:
-{% endblocktrans %}
-<br/>
-{% include 'mails/messages/partial/slots.html' %}
-</p>
-
-<p>
-{% blocktrans context 'email' %}
-Read the latest updates on the activity page.
-{% endblocktrans %}
+{% if start %}
+    {% blocktrans context 'email' %}Starts on {{ start }}{% endblocktrans %}
+{% endif %}
+{% if end %}
+    {% blocktrans context 'email' %}Ends on {{ end }}{% endblocktrans %}
+{% endif %}
 </p>
 {% endblock %}
 

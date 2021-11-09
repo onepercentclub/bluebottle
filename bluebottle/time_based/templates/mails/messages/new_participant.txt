@@ -1,8 +1,0 @@
-{% extends "mails/messages/participant_base.txt" %}
-{% load i18n %}
-
-{% block message %}{% blocktrans context 'email' %}
-{{ applicant_name }} applied to your activity "{{ title }}".!
-
-Give the new participant a warm welcome.
-{% endblocktrans %}{% endblock %}

@@ -19,6 +19,7 @@ from bluebottle.time_based.validators import (
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
 
@@ -426,6 +427,18 @@ class PeriodActivity(TimeBasedActivity):
         null=True,
         choices=DurationPeriodChoices.choices,
     )
+
+    @property
+    def duration_human_readable(self):
+        if self.duration:
+            return get_human_readable_duration(str(self.duration)).lower()
+        return None
+
+    @property
+    def duration_period_human_readable(self):
+        if self.duration_period:
+            return DurationPeriodChoices.get_choice(self.duration_period).label
+        return None
 
     online_meeting_url = models.TextField(
         _('Online Meeting URL'),

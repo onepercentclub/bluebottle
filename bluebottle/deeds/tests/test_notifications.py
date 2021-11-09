@@ -77,4 +77,3 @@ class ParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have withdrawn from the activity "Save the world!"')
 
         self.assertHtmlBodyContains('You have withdrawn from an activity on <b>Test</b>')
-        self.assertHtmlBodyContains('Reapply when this was a mistake')

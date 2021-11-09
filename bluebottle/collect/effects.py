@@ -15,6 +15,7 @@ class CreateCollectContribution(Effect):
         self.contribution = CollectContribution(
             contributor=self.instance,
             start=now(),
+            type=self.instance.activity.type
         )
         effects.extend(self.contribution.execute_triggers())
 
@@ -31,13 +32,18 @@ class SetOverallContributor(Effect):
 
     display = False
 
-    def pre_save(self, effects):
-        contribution, _ = CollectContributor.objects.get_or_create(
+    def post_save(self):
+        contributor, _ = CollectContributor.objects.get_or_create(
             user=None,
             activity=self.instance,
             defaults={'value': self.instance.realized}
         )
-        effects.extend(contribution.execute_triggers())
+        contributor.value = self.instance.realized
+        contributor.save()
+        contribution = contributor.contributions.get()
+
+        contribution.value = self.instance.realized
+        contribution.save()
 
     def __str__(self):
         return str(_('Create overall contributor'))

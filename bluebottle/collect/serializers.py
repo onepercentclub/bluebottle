@@ -128,7 +128,6 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         BaseActivityListSerializer.included_serializers,
         **{
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
-
         }
     )
 

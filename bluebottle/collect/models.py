@@ -129,6 +129,7 @@ class CollectContributor(Contributor):
 
 class CollectContribution(Contribution):
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+    type = models.ForeignKey(CollectType, null=True, on_delete=SET_NULL)
 
     def save(self, *args, **kwargs):
         self.value = self.contributor.value

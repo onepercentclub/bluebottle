@@ -688,7 +688,16 @@ class DateParticipantSerializer(ParticipantSerializer):
 
 class PeriodParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('period-participant-detail', view_args=('pk',))
-    contributions = ResourceRelatedField(read_only=True, many=True)
+
+    contributions = SerializerMethodResourceRelatedField(
+        model=TimeContribution,
+        many=True,
+        read_only=True,
+    )
+
+    def get_contributions(self, obj):
+        if obj.activity.duration_period == 'overall':
+            return obj.contributions.all()
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant

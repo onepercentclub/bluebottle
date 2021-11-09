@@ -1,4 +1,7 @@
-from django.db import models
+from datetime import timedelta
+from urllib.parse import urlencode
+
+from django.db import models, connection
 from django.db.models import SET_NULL
 
 from django.utils.translation import gettext_lazy as _
@@ -70,6 +73,33 @@ class CollectActivity(Activity):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
+
+    @property
+    def uid(self):
+        return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
+
+    @property
+    def google_calendar_link(self):
+
+        details = self.description
+        details += _('\nCollecting {type}').format(type=self.type)
+
+        end = self.end + timedelta(days=1)
+        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': dates,
+            'details': details,
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def active_contributors(self):

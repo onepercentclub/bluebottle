@@ -166,3 +166,17 @@ class EffortContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResourc
         'contributor__user',
         'contributor__activity__initiative',
     )
+
+
+class CollectActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'initiative', 'owner'
+    )
+
+
+class CollectContributorResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
+    select_related = (
+        'activity', 'user', 'activity__initiative',
+    )

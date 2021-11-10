@@ -128,7 +128,6 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         BaseActivityListSerializer.included_serializers,
         **{
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
-
         }
     )
 
@@ -141,7 +140,7 @@ class CollectActivityTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         included_resources = ['resource', ]
-        resource_name = 'activities/collect-activity-transitions'
+        resource_name = 'activities/collect-transitions'
 
 
 class CollectContributorSerializer(BaseContributorSerializer):

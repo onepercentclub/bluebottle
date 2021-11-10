@@ -169,10 +169,13 @@ class CollectTriggersTestCase(TriggerTestCase):
             goal.refresh_from_db()
 
             self.assertEqual(goal.realized_from_contributions, 200)
-            self.assertTrue(len(self.model.active_contributors), 1)
-            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
-            self.assertTrue(
-                self.model.active_contributors.get().contributions.get(), self.model.realized
+            self.assertEqual(len(self.model.active_contributors), 1)
+            self.assertEqual(self.model.active_contributors.get().value, self.model.realized)
+            self.assertEqual(
+                self.model.active_contributors.get().contributions.get().value, self.model.realized
+            )
+            self.assertEqual(
+                self.model.active_contributors.get().contributions.get().type, self.model.type
             )
 
     def test_set_realized_again(self):
@@ -184,10 +187,10 @@ class CollectTriggersTestCase(TriggerTestCase):
             self.assertEffect(SetOverallContributor)
             self.model.save()
 
-            self.assertTrue(len(self.model.active_contributors), 1)
-            self.assertTrue(self.model.active_contributors.get().value, self.model.realized)
-            self.assertTrue(
-                self.model.active_contributors.get().contributions.get(), self.model.realized
+            self.assertEqual(len(self.model.active_contributors), 1)
+            self.assertEqual(self.model.active_contributors.get().value, self.model.realized)
+            self.assertEqual(
+                self.model.active_contributors.get().contributions.get().value, self.model.realized
             )
 
     def test_enable_impact(self):

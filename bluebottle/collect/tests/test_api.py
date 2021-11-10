@@ -4,6 +4,7 @@ import io
 
 from rest_framework import status
 
+from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer, CollectActivitySerializer,
     CollectActivityTransitionSerializer, CollectContributorSerializer,
@@ -496,16 +497,14 @@ class CollectTypeListViewAPITestCase(APITestCase):
 
     def setUp(self):
         super().setUp()
-
+        CollectType.objects.all().delete()
         self.enabled = self.factory.create_batch(4)
         self.disabled = self.factory.create_batch(4, disabled=True)
-
         self.url = reverse('collect-type-list')
 
     def test_get(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-
         self.assertTotal(4)
         self.assertAttribute('name')
         self.assertAttribute('unit')
@@ -523,5 +522,4 @@ class CollectTypeListViewAPITestCase(APITestCase):
 
     def test_post(self):
         self.perform_create()
-
         self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)

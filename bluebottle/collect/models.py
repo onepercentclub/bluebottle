@@ -14,12 +14,34 @@ from bluebottle.utils.models import SortableTranslatableModel
 
 
 class CollectType(SortableTranslatableModel):
-    disabled = models.BooleanField(default=False)
+    disabled = models.BooleanField(
+        _('disabled'),
+        default=False,
+        help_text=_('Disable this item so it cannot be selected when creating an activity.')
+    )
 
     translations = TranslatedFields(
-        name=models.CharField(_('name'), max_length=100),
-        unit=models.CharField(_('unit'), blank=True, max_length=100),
-        unit_plural=models.CharField(_('unit plural'), blank=True, max_length=100)
+        name=models.CharField(
+            _('name'),
+            help_text=_('The item to be collected (E.g. Bicycles, Clothing, Groceries, …)'),
+            max_length=100
+        ),
+        unit=models.CharField(
+            _('unit'),
+            help_text=_(
+                'The unit in which you want to count the item '
+                '(E.g. Bicycle, Bag of clothing, Crate of groceries, …)'
+            ),
+            max_length=100
+        ),
+        unit_plural=models.CharField(
+            _('unit plural'),
+            help_text=_(
+                'The unit in which you want to count the item '
+                '(E.g. Bicycles, Bags of clothing, Crates of groceries, …)'
+            ),
+            max_length=100
+        )
     )
 
     def __str__(self):
@@ -137,6 +159,7 @@ class CollectContributor(Contributor):
 
 class CollectContribution(Contribution):
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+    type = models.ForeignKey(CollectType, null=True, on_delete=SET_NULL)
 
     def save(self, *args, **kwargs):
         self.value = self.contributor.value

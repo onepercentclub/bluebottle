@@ -4,9 +4,12 @@
 <p>
     {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
 </p>
-<p>
-<h4>{{title}}</h4>
 
+<p>
+    <b>{{ title }}</b>
+</p>
+
+<p>
 {% if start %}
     {% blocktrans context 'email' %}Starts on {{ start }}{% endblocktrans %}
 {% endif %}

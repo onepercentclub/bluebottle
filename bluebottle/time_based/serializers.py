@@ -201,10 +201,14 @@ class DateActivitySlotInfoMixin():
             count = len(starts)
             first = min(starts)[0].date() if starts else None
             duration = None
-        else:
-            first = slots.first().start
-            duration = slots.first().duration
+        elif total == 1:
+            slot = self.get_filtered_slots(obj).first()
+            first = slot.start
+            duration = slot.duration
             count = 1
+        else:
+            first = None
+            duration = None
 
         return {
             'total': total,

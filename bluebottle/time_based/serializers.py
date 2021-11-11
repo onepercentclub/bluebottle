@@ -175,7 +175,7 @@ class DateActivitySlotInfoMixin():
         end = self.context['request'].GET.get('filter[end]')
         tz = get_current_timezone()
 
-        slots = obj.slots.all()
+        slots = obj.slots.exclude(status__in=['draft', 'cancelled']).all()
         try:
             if start:
                 slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
@@ -192,17 +192,26 @@ class DateActivitySlotInfoMixin():
         return slots
 
     def get_date_info(self, obj):
+        total = self.get_filtered_slots(obj).count()
         slots = self.get_filtered_slots(obj, only_upcoming=True)
-        starts = set(
-            slots.annotate(date=Trunc('start', kind='day')).values_list('date')
-        )
-        total = self.get_filtered_slots(obj)
+        if total > 1:
+            starts = set(
+                slots.annotate(date=Trunc('start', kind='day')).values_list('date')
+            )
+            count = len(starts)
+            first = min(starts)[0].date() if starts else None
+            duration = None
+        else:
+            first = slots.first().start
+            duration = slots.first().duration
+            count = 1
 
         return {
-            'total': total.count(),
-            'has_multiple': total.count() > 1,
-            'count': len(starts),
-            'first': min(starts)[0].date() if starts else None,
+            'total': total,
+            'has_multiple': total > 1,
+            'count': count,
+            'first': first,
+            'duration': duration
         }
 
     def get_location_info(self, obj):
@@ -269,7 +278,6 @@ class DateActivitySlotInfoMixin():
 class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer):
     date_info = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
-    slot_count = serializers.SerializerMethodField()
 
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
@@ -284,9 +292,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
     )
-
-    def get_slot_count(self, instance):
-        return len(instance.slots.all())
 
     def get_contributors(self, instance):
         user = self.context['request'].user
@@ -328,7 +333,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
-        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',

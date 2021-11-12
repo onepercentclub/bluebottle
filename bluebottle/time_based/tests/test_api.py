@@ -674,7 +674,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['slot-count'], 1)
         self.assertEqual(data['meta']['matching-properties']['skill'], True)
         self.assertEqual(data['meta']['matching-properties']['theme'], True)
         self.assertEqual(data['meta']['matching-properties']['location'], True)

@@ -209,6 +209,7 @@ class DateActivitySlotInfoMixin():
         else:
             first = None
             duration = None
+            count = 0
 
         return {
             'total': total,

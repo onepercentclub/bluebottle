@@ -229,6 +229,15 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             activities=Count('contributor__activity', distinct=True)
         )
 
+        collect = CollectContribution.objects.filter(
+            status='succeeded',
+            contributor__user__isnull=False,
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True)
+        )
+
         amounts = MoneyContribution.objects.filter(
             status='succeeded',
             contributor__activity__initiative=obj
@@ -278,7 +287,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
             'effort': effort['count'],
             'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
-            'activities': sum(stat['activities'] for stat in [effort, time, money]),
+            'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
             'contributors': contributor_count,
             'amount': amount
         }

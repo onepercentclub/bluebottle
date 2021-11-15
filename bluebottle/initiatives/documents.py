@@ -13,6 +13,16 @@ from bluebottle.deeds.models import Deed
 from bluebottle.members.models import Member
 
 
+SCORE_MAP = {
+    'open': 1,
+    'running': 0.7,
+    'full': 0.6,
+    'succeeded': 0.5,
+    'partially_funded': 0.5,
+    'refundend': 0.3,
+}
+
+
 # The name of your index
 initiative = MultiTenantIndex('initiatives')
 # See Elasticsearch Indices API reference for available settings
@@ -66,6 +76,7 @@ class InitiativeDocument(Document):
         'id': fields.LongField(),
         'title': fields.KeywordField(),
         'activity_date': fields.DateField(),
+        'status_score': fields.FloatField()
     })
 
     place = fields.NestedField(properties={
@@ -114,7 +125,8 @@ class InitiativeDocument(Document):
             {
                 'id': activity.pk,
                 'title': activity.title,
-                'activity_date': activity.activity_date
+                'activity_date': activity.activity_date,
+                'status_score': SCORE_MAP[activity.status],
             } for activity in instance.activities.filter(
                 status__in=(
                     'succeeded',

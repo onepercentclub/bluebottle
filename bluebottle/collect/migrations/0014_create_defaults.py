@@ -2,6 +2,8 @@
 
 from django.db import migrations, connection
 
+from bluebottle.clients.utils import LocalTenant
+
 DEFAULT_COLLECT_TYPES = [
     {
         'en': {
@@ -41,14 +43,14 @@ DEFAULT_COLLECT_TYPES = [
 
 
 def create_defaults(apps, schema_editor):
-
-    if connection.tenant:
+    Client = apps.get_model('clients', 'Client')
+    tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
+    with LocalTenant(tenant):
         CollectType = apps.get_model('collect', 'CollectType')
         CollectTypeTranslation = apps.get_model('collect', 'CollectTypeTranslation')
 
         for collect_type in DEFAULT_COLLECT_TYPES:
             model = CollectType.objects.create(disabled=False)
-
 
             for lang, translation in collect_type.items():
                 CollectTypeTranslation.objects.create(

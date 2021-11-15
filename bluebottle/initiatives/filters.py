@@ -11,6 +11,13 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     sort_fields = {
         'date': ('-created', ),
         'activity_date': ({
+            'activities.status_score': {
+                'order': 'desc',
+                'mode': 'max',
+                'nested': {
+                    'path': 'activities'
+                }
+            },
             'activities.activity_date': {
                 'order': 'desc',
                 'mode': 'max',

@@ -1047,6 +1047,20 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
             deadline=(now() + datetime.timedelta(days=9)).date()
         )
 
+        fourth = InitiativeFactory.create(status='approved')
+        PeriodActivityFactory.create(
+            initiative=fourth,
+            status='succeeded',
+            deadline=(now() + datetime.timedelta(days=7)).date()
+        )
+
+        fifth = InitiativeFactory.create(status='approved')
+        PeriodActivityFactory.create(
+            initiative=fourth,
+            status='succeeded',
+            deadline=(now() + datetime.timedelta(days=8)).date()
+        )
+
         response = self.client.get(
             self.url + '?sort=activity_date',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
@@ -1054,10 +1068,12 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['meta']['pagination']['count'], 5)
         self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
         self.assertEqual(data['data'][2]['id'], str(second.pk))
+        self.assertEqual(data['data'][3]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][4]['id'], str(fifth.pk))
 
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):

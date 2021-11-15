@@ -1,4 +1,7 @@
-from django.db import models
+from datetime import timedelta
+from urllib.parse import urlencode
+
+from django.db import models, connection
 from django.db.models import SET_NULL
 
 from django.utils.translation import gettext_lazy as _
@@ -11,12 +14,34 @@ from bluebottle.utils.models import SortableTranslatableModel
 
 
 class CollectType(SortableTranslatableModel):
-    disabled = models.BooleanField(default=False)
+    disabled = models.BooleanField(
+        _('disabled'),
+        default=False,
+        help_text=_('Disable this item so it cannot be selected when creating an activity.')
+    )
 
     translations = TranslatedFields(
-        name=models.CharField(_('name'), max_length=100),
-        unit=models.CharField(_('unit'), blank=True, max_length=100),
-        unit_plural=models.CharField(_('unit plural'), blank=True, max_length=100)
+        name=models.CharField(
+            _('name'),
+            help_text=_('The item to be collected (E.g. Bicycles, Clothing, Groceries, …)'),
+            max_length=100
+        ),
+        unit=models.CharField(
+            _('unit'),
+            help_text=_(
+                'The unit in which you want to count the item '
+                '(E.g. Bicycle, Bag of clothing, Crate of groceries, …)'
+            ),
+            max_length=100
+        ),
+        unit_plural=models.CharField(
+            _('unit plural'),
+            help_text=_(
+                'The unit in which you want to count the item '
+                '(E.g. Bicycles, Bags of clothing, Crates of groceries, …)'
+            ),
+            max_length=100
+        )
     )
 
     def __str__(self):
@@ -72,6 +97,33 @@ class CollectActivity(Activity):
         resource_name = 'activities/collects'
 
     @property
+    def uid(self):
+        return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
+
+    @property
+    def google_calendar_link(self):
+
+        details = self.description
+        details += _('\nCollecting {type}').format(type=self.type)
+
+        end = self.end + timedelta(days=1)
+        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': dates,
+            'details': details,
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
+
+    @property
     def active_contributors(self):
         return self.contributors.instance_of(CollectContributor).filter(
             status='succeeded'
@@ -107,6 +159,7 @@ class CollectContributor(Contributor):
 
 class CollectContribution(Contribution):
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
+    type = models.ForeignKey(CollectType, null=True, on_delete=SET_NULL)
 
     def save(self, *args, **kwargs):
         self.value = self.contributor.value

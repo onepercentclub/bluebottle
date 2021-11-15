@@ -5,7 +5,7 @@ from bluebottle.collect.views import (
     CollectContributorDetail, CollectContributorList,
     CollectActivityRelatedCollectContributorList,
     CollectActivityTransitionList, CollectActivityDetailView, CollectActivityListView, CollectTypeList,
-    CollectTypeDetail,
+    CollectTypeDetail, CollectIcalView,
 )
 
 
@@ -50,4 +50,9 @@ urlpatterns = [
         CollectTypeDetail.as_view(),
         name='collect-type-detail'
     ),
+
+    url(r'^/ical/(?P<pk>\d+)$',
+        CollectIcalView.as_view(),
+        name='collect-ical'),
+
 ]

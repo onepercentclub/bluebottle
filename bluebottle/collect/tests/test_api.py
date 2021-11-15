@@ -4,8 +4,12 @@ import io
 
 from rest_framework import status
 
-from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
-    CollectActivityTransitionSerializer, CollectContributorSerializer, CollectContributorTransitionSerializer
+from bluebottle.collect.models import CollectType
+from bluebottle.collect.serializers import (
+    CollectActivityListSerializer, CollectActivitySerializer,
+    CollectActivityTransitionSerializer, CollectContributorSerializer,
+    CollectContributorTransitionSerializer, CollectTypeSerializer
+)
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
@@ -166,6 +170,13 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             'contributors',
             self.active_contributors + [contributor]
         )
+        links = self.response.data['links']
+
+        self.assertTrue(f'/api/collect/ical/{self.model.id}' in links['ical'])
+        start = self.model.start.strftime('%Y%m%d')
+        end = self.model.end + timedelta(days=1)
+        end = end.strftime('%Y%m%d')
+        self.assertTrue(f'dates={start}%2F{end}' in links['google'])
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -482,3 +493,40 @@ class ContributorExportViewAPITestCase(APITestCase):
     def test_get_no_user(self):
         self.perform_get()
         self.assertIsNone(self.export_url)
+
+
+class CollectTypeListViewAPITestCase(APITestCase):
+    serializer = CollectTypeSerializer
+    factory = CollectTypeFactory
+    fields = ['name', 'unit', 'unit_plural']
+
+    defaults = {}
+
+    def setUp(self):
+        super().setUp()
+        CollectType.objects.all().delete()
+        self.enabled = self.factory.create_batch(4)
+        self.disabled = self.factory.create_batch(4, disabled=True)
+        self.url = reverse('collect-type-list')
+
+    def test_get(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('name')
+        self.assertAttribute('unit')
+        self.assertAttribute('unit-plural')
+
+    def test_get_closed(self):
+        with self.closed_site():
+            self.perform_get()
+            self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_user(self):
+        with self.closed_site():
+            self.perform_get(user=self.user)
+            self.assertStatus(status.HTTP_200_OK)
+
+    def test_post(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)

@@ -25,6 +25,7 @@ from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 
+from bluebottle.collect.models import CollectContribution
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.funding.states import FundingStateMachine
 
@@ -230,6 +231,15 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             activities=Count('contributor__activity', distinct=True)
         )
 
+        collect = CollectContribution.objects.filter(
+            status='succeeded',
+            contributor__user__isnull=False,
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True)
+        )
+
         amounts = MoneyContribution.objects.filter(
             status='succeeded',
             contributor__activity__initiative=obj
@@ -239,11 +249,22 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             amount=Sum('value')
         ).order_by()
 
+        collected = CollectContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).values(
+            'type_id'
+        ).annotate(
+            amount=Sum('value')
+        ).order_by()
+
         stats = {
             'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
             'effort': effort['count'],
-            'activities': sum(stat['activities'] for stat in [effort, time, money]),
-            'contributors': sum(stat['count'] for stat in [effort, time, money]),
+            'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
+            'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
+            'contributors': sum(stat['count'] for stat in [effort, time, money, collect]),
+
         }
 
         stats['amount'] = {
@@ -278,6 +299,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activities.slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'activities.slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activities.collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
     }
 
     class Meta(object):
@@ -305,6 +327,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'activities.image', 'activities.location',
             'activities.goals', 'activities.goals.type',
             'activities.slots', 'activities.slots.location',
+            'activities.collect_type',
         ]
         resource_name = 'initiatives'
 

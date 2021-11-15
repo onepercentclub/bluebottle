@@ -114,6 +114,18 @@ class TestExportAdmin(BluebottleTestCase):
             book.sheet_by_name('Deed activities').cell(0, 10).value,
             'End'
         )
+        self.assertEqual(
+            book.sheet_by_name('Collection campaigns').cell(0, 8).value,
+            'Status'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Collection campaigns').cell(0, 9).value,
+            'Start'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Collection campaigns').cell(0, 10).value,
+            'End'
+        )
 
     def test_export_custom_user_fields(self):
         from_date = now() - timedelta(weeks=2)

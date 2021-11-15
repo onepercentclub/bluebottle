@@ -42,4 +42,4 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         self.contribution.states.fail(save=True)
         self.impact_goal.refresh_from_db()
 
-        self.assertEqual(self.impact_goal.realized_from_contributions, 0.0)
+        self.assertEqual(self.impact_goal.realized_from_contributions, None)

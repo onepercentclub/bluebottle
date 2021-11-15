@@ -13,11 +13,15 @@ class BaseNotificationEffect(Effect):
 
     def post_save(self, **kwargs):
         if self.options.get('send_messages', True) and self.is_valid:
-            self.message(
+            message = self.message(
                 self.instance,
                 custom_message=self.options.get('message'),
                 **self.options
-            ).compose_and_send()
+            )
+            if self.message.delay and self.message.task_id:
+                message.send_delayed()
+            else:
+                message.compose_and_send()
 
     def __repr__(self):
         return '<Effect: Send {}>'.format(self.message)

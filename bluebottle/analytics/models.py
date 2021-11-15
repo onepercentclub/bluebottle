@@ -23,6 +23,12 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         null=True,
         blank=True
     )
+    engagement_target = models.PositiveIntegerField(
+        _("Engagement target"),
+        help_text=_('Target number of engaged users per year.'),
+        null=True,
+        blank=True
+    )
 
     platform_type = models.CharField(
         _("platform type"),

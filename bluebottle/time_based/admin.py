@@ -34,6 +34,7 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
                        'created', 'transition_date', 'status', 'disabled')
     raw_id_fields = ('user', 'document')
     extra = 0
+    ordering = ['-created']
 
     def get_fields(self, request, obj=None):
         if self.can_edit(obj):
@@ -168,7 +169,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
                 show_seconds=False)
         },
     }
-
+    ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
 
     fields = [

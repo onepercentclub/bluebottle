@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
-from django.test import TestCase, Client
+from django.test import TestCase, SimpleTestCase, Client
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
@@ -22,6 +22,9 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
+from celery.contrib.testing.worker import start_worker
+
+from bluebottle.celery import app
 from bluebottle.clients import properties
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.state import TransitionNotPossible
@@ -166,6 +169,8 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
 
 class APITestCase(BluebottleTestCase):
+    factories = [BlueBottleUserFactory]
+
     def setUp(self):
         super().setUp()
         self.user = BlueBottleUserFactory.create()
@@ -354,19 +359,18 @@ class StateMachineTestCase(BluebottleTestCase):
         super().setUp()
 
     def create(self):
-        return self.factory.create(**self.defaults)
+        self.model = self.factory.create(**self.defaults)
 
     def assertTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
 
         if transition:
@@ -377,20 +381,21 @@ class StateMachineTestCase(BluebottleTestCase):
                     name, user, e
                 )
 
+        self.model.status = status
+
         if error:
             self.fail(error)
 
     def assertNoTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
         if transition:
             try:
@@ -401,6 +406,8 @@ class StateMachineTestCase(BluebottleTestCase):
                 )
             except TransitionNotPossible:
                 pass
+
+        self.model.status = status
 
         if error:
             self.fail(error)
@@ -485,12 +492,20 @@ class NotificationTestCase(BluebottleTestCase):
         self.assertTextBodyContains(text)
 
     def assertTextBodyContains(self, text):
-        if text not in self.message.get_content_text(self.message.get_recipients()[0]):
+        if text not in self.text_content:
             self.fail("Text body does not contain '{}'".format(text))
 
     def assertHtmlBodyContains(self, text):
-        if text not in self.message.get_content_html(self.message.get_recipients()[0]):
+        if text not in self.html_content:
             self.fail("HTML body does not contain '{}'".format(text))
+
+    @property
+    def text_content(self):
+        return self.message.get_content_text(self.message.get_recipients()[0])
+
+    @property
+    def html_content(self):
+        return self.message.get_content_html(self.message.get_recipients()[0])
 
     def assertActionLink(self, url):
         link = self._html.find_all('a', {'class': 'action-email'})[0]
@@ -538,6 +553,36 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 name = field[0].replace('__prefix__', str(number))
                 new = Text(form, 'input', name, None)
                 form.fields[name] = [new]
+
+
+@override_settings(
+    CELERY_ALWAYS_EAGER=True,
+    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
+)
+class CeleryTestCase(SimpleTestCase):
+    databases = '__all__'
+
+    factories = [BlueBottleUserFactory]
+
+    def tearDown(self):
+        for factory in self.factories:
+            factory._meta.model.objects.all().delete()
+
+    @classmethod
+    def setUpClass(cls):
+        from celery.contrib.testing.tasks import ping  # noqa
+
+        app.conf.task_always_eager = False
+        cls.celery_worker = start_worker(app, perform_ping_check=False)
+        cls.celery_worker.__enter__()
+
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.celery_worker.__exit__(None, None, None)
+        app.conf.task_always_eager = True
+        super().tearDownClass()
 
 
 class SessionTestMixin(object):

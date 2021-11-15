@@ -175,7 +175,7 @@ class DateActivitySlotInfoMixin():
         end = self.context['request'].GET.get('filter[end]')
         tz = get_current_timezone()
 
-        slots = obj.slots.all()
+        slots = obj.slots.exclude(status__in=['draft', 'cancelled']).all()
         try:
             if start:
                 slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
@@ -192,17 +192,31 @@ class DateActivitySlotInfoMixin():
         return slots
 
     def get_date_info(self, obj):
+        total = self.get_filtered_slots(obj).count()
         slots = self.get_filtered_slots(obj, only_upcoming=True)
-        starts = set(
-            slots.annotate(date=Trunc('start', kind='day')).values_list('date')
-        )
-        total = self.get_filtered_slots(obj)
+        if total > 1:
+            starts = set(
+                slots.annotate(date=Trunc('start', kind='day')).values_list('date')
+            )
+            count = len(starts)
+            first = min(starts)[0].date() if starts else None
+            duration = None
+        elif total == 1:
+            slot = self.get_filtered_slots(obj).first()
+            first = slot.start
+            duration = slot.duration
+            count = 1
+        else:
+            first = None
+            duration = None
+            count = 0
 
         return {
-            'total': total.count(),
-            'has_multiple': total.count() > 1,
-            'count': len(starts),
-            'first': min(starts)[0].date() if starts else None,
+            'total': total,
+            'has_multiple': total > 1,
+            'count': count,
+            'first': first,
+            'duration': duration
         }
 
     def get_location_info(self, obj):
@@ -248,10 +262,19 @@ class DateActivitySlotInfoMixin():
                 'formattedAddress': slot.location.formatted_address if slot.location else None,
             }
 
+        user = self.context['request'].user
+        if (
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+        ):
+            meeting_url = slot.online_meeting_url or None
+        else:
+            meeting_url = None
+
         return {
             'has_multiple': False,
             'is_online': is_online,
-            'online_meeting_url': slot.online_meeting_url or None,
+            'online_meeting_url': meeting_url,
             'location': location,
             'location_hint': slot.location_hint,
         }
@@ -260,7 +283,6 @@ class DateActivitySlotInfoMixin():
 class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer):
     date_info = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
-    slot_count = serializers.SerializerMethodField()
 
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
@@ -275,9 +297,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
     )
-
-    def get_slot_count(self, instance):
-        return len(instance.slots.all())
 
     def get_contributors(self, instance):
         user = self.context['request'].user
@@ -319,7 +338,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
-        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
@@ -651,11 +669,6 @@ class DateParticipantSerializer(ParticipantSerializer):
         model = DateParticipant
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
         fields = ParticipantSerializer.Meta.fields + ('slots', )
-        included_resources = [
-            'user',
-            'document',
-            'slots'
-        ]
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
@@ -664,6 +677,11 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        included_resources = [
+            'user',
+            'document',
+            'activity'
+        ]
         resource_name = 'contributors/time-based/date-participants'
 
     included_serializers = dict(
@@ -672,13 +690,23 @@ class DateParticipantSerializer(ParticipantSerializer):
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
 
 
 class PeriodParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('period-participant-detail', view_args=('pk',))
-    contributions = ResourceRelatedField(read_only=True, many=True)
+
+    contributions = SerializerMethodResourceRelatedField(
+        model=TimeContribution,
+        many=True,
+        read_only=True,
+    )
+
+    def get_contributions(self, obj):
+        if obj.activity.duration_period == 'overall':
+            return obj.contributions.all()
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant
@@ -795,9 +823,14 @@ class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        included_resources = [
+            'resource',
+            'resource.activity'
+        ]
         resource_name = 'contributors/time-based/date-participant-transitions'
 
 

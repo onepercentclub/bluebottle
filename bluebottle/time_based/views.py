@@ -450,8 +450,9 @@ class DateParticipantExportView(PrivateFileView):
         filename = 'participants for {}.xlsx'.format(activity.title)
         row = [field[1] for field in self.fields]
         for slot in slots:
-            start = slot.start.replace(tzinfo=None)
-            row.append("{}\n{}".format(slot.title or str(slot), start.strftime('%d-%m-%y %H:%M')))
+            row.append(
+                "{}\n{}".format(slot.title or str(slot), slot.start.strftime('%d-%m-%y %H:%M %Z'))
+            )
         rows = [row]
         for participant in activity.contributors.instance_of(DateParticipant):
             row = [prep_field(request, participant, field[0]) for field in self.fields]

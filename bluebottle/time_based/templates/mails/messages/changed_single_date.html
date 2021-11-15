@@ -3,24 +3,15 @@
 {% block message %}
 <p>
 {% blocktrans context 'email' %}
-The activity "{{ title }}" takes place on {{ start_date }} {{ start_time }} - {{ end_time }} ({{timezone}}).
+The activity "{{ title }}" has changed:
 {% endblocktrans %}
 </p>
 <p>
-{% if is_online %}
-{% if online_meeting_url %}
-{% blocktrans context 'email' %}
-Online meeting link: {{online_meeting_url}}
-{% endblocktrans %}
-{% endif %}
+{% if duration %}
+    {% include 'mails/messages/partial/period.html' %}
 {% else %}
-{% blocktrans context 'email' %}
-Location: {{location}}
-{% endblocktrans %}
-{% if location_hint %}
-{{location_hint}}
-{% endif %}
-{% endif %}
+    {% include 'mails/messages/partial/slots.html' %}
+{%  endif %}
 </p>
 <p>
 {% blocktrans context 'email' %}

@@ -283,6 +283,7 @@ class DateActivitySlotInfoMixin():
 class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer):
     date_info = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
+    slot_count = serializers.SerializerMethodField()
 
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
@@ -313,6 +314,9 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
             )
         ]
 
+    def get_slot_count(self, instance):
+        return len(instance.slots.all())
+
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
         url_args=('pk', ),
@@ -338,6 +342,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
+        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',

@@ -523,6 +523,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
+    def test_get_activities_managers(self):
+        DateActivityFactory.create(
+            status='draft',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='cancelled',
+            initiative=self.initiative,
+        )
+
+        DateActivityFactory.create(
+            status='deleted',
+            initiative=self.initiative,
+        )
+
+        FundingFactory.create(
+            status='partially_funded',
+            initiative=self.initiative
+        )
+        manager = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(manager)
+        response = self.client.get(self.url, user=manager)
+
+        data = response.json()['data']
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 3)
+
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')
         response = self.client.get(
@@ -566,10 +595,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             deadline=now() - datetime.timedelta(weeks=1),
             status='succeeded'
         )
-
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'EUR')):
+        donor_user = BlueBottleUserFactory.create()
+        for donor in DonorFactory.create_batch(3, activity=funding, user=donor_user, amount=Money(10, 'EUR')):
             donor.contributions.get().states.succeed(save=True)
-        for donor in DonorFactory.create_batch(3, activity=funding, amount=Money(10, 'USD')):
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
             donor.contributions.get().states.succeed(save=True)
 
         deed_activity = DeedFactory.create(
@@ -629,7 +658,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['activities'], 6)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
-        self.assertEqual(stats['contributors'], 21)
+        # 3 period participants
+        # 3 date participants
+        # 1 donor (3 donations by same user)
+        # 3 anonymous donations
+        # 3 deed participants
+        # 13 total contributors
+        # organizers are not counted here
+        self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
 
         self.assertEqual(

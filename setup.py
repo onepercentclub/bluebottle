@@ -78,6 +78,7 @@ install_requires = [
     'elasticsearch==6.8.2',
     'geocoder==1.37.0',
     'geopy==2.1.0',
+    'html2text==2020.1.16',
     'gunicorn==19.10.0',
     'html5lib==1.0b10',
     'icalendar==4.0.4',
@@ -89,6 +90,7 @@ install_requires = [
     'munch==2.5.0',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',
+    'premailer==3.9.0',
     'psycopg2-binary==2.8.6',
     'py-moneyed==0.8',
     'pyasn1==0.4.2',
@@ -124,8 +126,8 @@ install_requires = [
 ]
 
 tests_requires = [
-    'coverage==5.5',
-    'coveralls==1.1',
+    'coverage==6.0.2',
+    'coveralls==3.2.0',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',

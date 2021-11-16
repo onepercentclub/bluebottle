@@ -1,9 +1,0 @@
-{% extends "mails/messages/participant_base.txt" %}
-{% load i18n %}
-
-{% block message%}{% blocktrans context 'email' %}
-
-Congratulations! Your contribution to the activity "{{title}}" is finished. Thank you for your participation. Together we have made the world a bit more beautiful.
-
-Craving for more? Then be sure to check out the activity overview page.
-{% endblocktrans %}{% endblock %}

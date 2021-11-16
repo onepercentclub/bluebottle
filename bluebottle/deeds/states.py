@@ -13,6 +13,9 @@ class DeedStateMachine(ActivityStateMachine):
         """
         return self.instance.end is None
 
+    def can_succeed(self):
+        return len(self.instance.participants) > 0
+
     succeed = Transition(
         [ActivityStateMachine.open, ActivityStateMachine.expired],
         ActivityStateMachine.succeeded,
@@ -38,7 +41,7 @@ class DeedStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         automatic=False,
         name=_("succeed"),
-        conditions=[has_no_end_date],
+        conditions=[has_no_end_date, can_succeed],
         permission=ActivityStateMachine.is_owner,
         description=_("Succeed the activity.")
     )

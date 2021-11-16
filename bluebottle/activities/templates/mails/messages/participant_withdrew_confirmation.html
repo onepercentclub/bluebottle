@@ -2,7 +2,9 @@
 {% load i18n %}
 
 {% block message %}{% blocktrans context 'email' %}
-<p>{{ applicant_name }} applied to your activity "{{ title }}"!</p>
+<p>You have withdrawn from an activity on <b>{{ site_name }}</b></p>
 
-<p>Give the new participant a warm welcome.</p>
+<p>
+    <b>{{ title }}</b>
+</p>
 {% endblocktrans %}{% endblock %}

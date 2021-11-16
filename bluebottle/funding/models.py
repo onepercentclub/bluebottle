@@ -31,6 +31,11 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class PaymentCurrency(models.Model):
 
@@ -701,10 +706,11 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     @property
     def payment_methods(self):
         try:
-            currencies = [f.target.currency for f in self.funding_set.all()]
+            currencies = [f.target.currency for f in self.funding_set.all() if f.target]
             provider = self.provider_class.objects.filter(paymentcurrency__code__in=currencies).first()
             return provider.payment_methods
-        except (AttributeError, self.provider_class.DoesNotExist):
+        except (AttributeError, self.provider_class.DoesNotExist) as e:
+            logging.error(e)
             return []
 
     class JSONAPIMeta(object):

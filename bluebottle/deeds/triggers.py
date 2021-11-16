@@ -1,13 +1,19 @@
 from datetime import date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification
+)
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
-from bluebottle.deeds.messages import DeedDateChangedNotification
+from bluebottle.deeds.messages import (
+    DeedDateChangedNotification,
+    ParticipantJoinedNotification
+)
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
@@ -17,9 +23,11 @@ from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
+from bluebottle.time_based.messages import (
+    ParticipantRemovedNotification, ParticipantFinishedNotification,
+    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
+)
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
@@ -264,8 +272,11 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
+                ),
+                NotificationEffect(
+                    ParticipantJoinedNotification,
+                    conditions=[is_user]
                 )
-
             ]
         ),
         TransitionTrigger(
@@ -326,6 +337,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
+                NotificationEffect(ParticipantWithdrewConfirmationNotification),
             ]
         ),
 

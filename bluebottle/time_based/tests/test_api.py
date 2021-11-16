@@ -674,7 +674,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 
         data = response.json()['data']
 
-        self.assertEqual(data['meta']['slot-count'], 1)
         self.assertEqual(data['meta']['matching-properties']['skill'], True)
         self.assertEqual(data['meta']['matching-properties']['theme'], True)
         self.assertEqual(data['meta']['matching-properties']['location'], True)
@@ -1806,11 +1805,11 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(
-            data['included'][0]['type'],
-            '{}s'.format(self.participant_type)
-        )
-        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+        participant = [
+            include for include in data['included'] if include['type'] == '{}s'.format(self.participant_type)
+        ]
+        self.assertEqual(len(participant), 1)
+        self.assertEqual(participant[0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
         # Owner can delete the event
@@ -1835,11 +1834,11 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(
-            data['included'][0]['type'],
-            '{}s'.format(self.participant_type)
-        )
-        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        participant = [
+            include for include in data['included'] if include['type'] == '{}s'.format(self.participant_type)
+        ]
+        self.assertEqual(len(participant), 1)
+        self.assertEqual(participant[0]['attributes']['status'], 'rejected')
 
     def test_remove_by_user(self):
         self.data['data']['attributes']['transition'] = 'remove'
@@ -1908,11 +1907,11 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(
-            data['included'][0]['type'],
-            '{}s'.format(self.participant_type)
-        )
-        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
+        participant = [
+            include for include in data['included'] if include['type'] == '{}s'.format(self.participant_type)
+        ]
+        self.assertEqual(len(participant), 1)
+        self.assertEqual(participant[0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
         # Owner can delete the event
@@ -1937,11 +1936,11 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(
-            data['included'][0]['type'],
-            '{}s'.format(self.participant_type)
-        )
-        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        participant = [
+            include for include in data['included'] if include['type'] == '{}s'.format(self.participant_type)
+        ]
+        self.assertEqual(len(participant), 1)
+        self.assertEqual(participant[0]['attributes']['status'], 'rejected')
 
     def test_reject_by_user(self):
         # Owner can delete the event

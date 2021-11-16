@@ -1,0 +1,33 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You joined an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    {% if duration %}
+        {% include 'mails/messages/partial/period.html' %}
+    {% else %}
+        {% include 'mails/messages/partial/slots.html' %}
+
+    {%  endif %}
+{% endblock %}
+
+
+{% block action %}
+    {{block.super}}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}

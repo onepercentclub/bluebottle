@@ -1,8 +1,13 @@
 from datetime import timedelta, date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
-from bluebottle.deeds.messages import DeedDateChangedNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ParticipantWithdrewConfirmationNotification
+)
+from bluebottle.deeds.messages import (
+    DeedDateChangedNotification, ParticipantJoinedNotification
+)
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -14,9 +19,12 @@ from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachin
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.time_based.messages import (
+    ParticipantRemovedNotification, ParticipantFinishedNotification,
+    NewParticipantNotification, ParticipantAddedNotification,
+    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+)
 from bluebottle.impact.tests.factories import ImpactGoalFactory
-from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    NewParticipantNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
@@ -306,6 +314,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute(user=self.user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(NewParticipantNotification)
+            self.assertNotificationEffect(ParticipantJoinedNotification)
 
     def test_added_by_admin(self):
         self.model = self.factory.build(**self.defaults)
@@ -355,6 +364,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
+
+            self.assertNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None

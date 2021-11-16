@@ -3,7 +3,9 @@ from datetime import timedelta
 from django.utils.timezone import now
 from django.contrib.auth.models import AnonymousUser
 
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
+    DateParticipantFactory, SlotParticipantFactory
 from bluebottle.time_based.serializers import DateActivityListSerializer
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -17,9 +19,9 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.serializer = DateActivityListSerializer()
         self.request_factory = RequestFactory()
 
-    def assertAttribute(self, attr, value, params=None):
+    def assertAttribute(self, attr, value, params=None, user=None):
         request = self.request_factory.get('/', params or None)
-        request.user = AnonymousUser()
+        request.user = user or AnonymousUser()
         request.query_params = {}
         serializer = DateActivityListSerializer(context={'request': request})
         data = serializer.to_representation(instance=self.activity)
@@ -30,6 +32,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute('date_info', {
             'count': 0,
             'first': None,
+            'duration': None,
             'has_multiple': False,
             'total': 0
         })
@@ -38,7 +41,8 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertAttribute('date_info', {
             'count': 1,
-            'first': slot.start.date(),
+            'first': slot.start,
+            'duration': timedelta(hours=2),
             'has_multiple': False,
             'total': 1
         })
@@ -53,6 +57,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute('date_info', {
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
+            'duration': None,
             'has_multiple': True,
             'total': 3
         })
@@ -67,6 +72,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute('date_info', {
             'count': 2,
             'first': min(slot.start.date() for slot in slots),
+            'duration': None,
             'has_multiple': True,
             'total': 3
         })
@@ -82,6 +88,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             'date_info',
             {
                 'count': 2,
+                'duration': None,
                 'first': min(slot.start.date() for slot in slots),
                 'has_multiple': True,
                 'total': 2
@@ -125,9 +132,11 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         )
 
     def test_location_info_all_online(self):
-        DateActivitySlotFactory.create(activity=self.activity, is_online=True, location=None),
-        DateActivitySlotFactory.create(activity=self.activity, is_online=True, location=None),
-        DateActivitySlotFactory.create(activity=self.activity, is_online=True, location=None),
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.activity, is_online=True,
+            location=None, online_meeting_url='http://meet.up'
+        )
 
         self.assertAttribute(
             'location_info',
@@ -138,6 +147,28 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
                 'online_meeting_url': None,
                 'location_hint': None,
             }
+        )
+
+    def test_location_info_all_online_participant(self):
+        slots = DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.activity, is_online=True,
+            location=None, online_meeting_url='http://meet.up'
+        )
+
+        user = BlueBottleUserFactory.create()
+        participant = DateParticipantFactory.create(user=user, activity=self.activity, status='accepted')
+        SlotParticipantFactory.create(participant=participant, slot=slots[0])
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': False,
+                'is_online': True,
+                'location': None,
+                'online_meeting_url': 'http://meet.up',
+                'location_hint': None,
+            },
+            user=user
         )
 
     def test_location_info_multiple_locations(self):

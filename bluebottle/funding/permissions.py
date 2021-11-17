@@ -1,12 +1,18 @@
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import IsOwner
 
 
-class DonorOwnerPermission(IsOwner):
+class DonorOwnerOrSucceededPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
+        settings = MemberPlatformSettings.objects.get()
+        if (not settings.closed or request.user.is_authenticated) \
+                and obj.status == 'succeeded' and request.method == 'GET':
+            return True
+
         if not request.user.is_authenticated and request.auth and obj.client_secret:
             return obj.client_secret == request.auth
 
-        return super(DonorOwnerPermission, self).has_object_permission(request, view, obj)
+        return super(DonorOwnerOrSucceededPermission, self).has_object_permission(request, view, obj)
 
 
 class PaymentPermission(IsOwner):

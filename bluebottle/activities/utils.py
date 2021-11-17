@@ -8,7 +8,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
 
-from bluebottle.activities.models import Activity, Contributor, Contribution
+from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -131,7 +131,9 @@ class BaseActivitySerializer(ModelSerializer):
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
     def get_contributor_count(self, instance):
-        return instance.contributors.filter(status__in=['accepted', 'succeeded', 'activity_refunded']).count()
+        return instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'succeeded', 'activity_refunded']
+        ).count()
 
     class Meta(object):
         model = Activity

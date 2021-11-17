@@ -449,17 +449,12 @@ class FundingDetailTestCase(BluebottleTestCase):
             {u'currency': u'EUR', u'amount': 1500.0}
         )
 
-        # Should only see the three successful donations
         self.assertEqual(
-            len(data['data']['relationships']['contributors']['data']),
+            response.json()['data']['meta']['contributor-count'],
             5
         )
 
-        # There should be a co-financer in the includes
-        included = response.json()['included']
-        co_financers = [
-            inc for inc in included if inc['type'] == 'members' and inc['attributes']['is-co-financer']
-        ]
+        co_financers = response.json()['data']['relationships']['co-financers']
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
@@ -756,10 +751,8 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = self.included_by_type(response, 'contributors/donations')[0]
-        self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
-
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
+        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
 
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
@@ -778,9 +771,7 @@ class DonationTestCase(BluebottleTestCase):
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
-
-        donation = self.included_by_type(response, 'contributors/donations')[0]
-        self.assertFalse('user' in donation['relationships'])
+        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
 
     def test_update(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

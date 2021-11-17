@@ -863,25 +863,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             in self.data['meta']['transitions']
         )
 
-    def test_get_contributors(self):
-        super().test_get_contributors()
-
-        contributor_ids = [
-            resource['id'] for resource in self.response_data['relationships']['contributors']['data']
-        ]
-
-        contributor_response = self.client.get(
-            self.response_data['relationships']['contributors']['links']['related'],
-            user=self.activity.owner
-        )
-        contributor_data = contributor_response.json()
-        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
-
-        for contributor in contributor_data['data']:
-            self.assertTrue(
-                contributor['id'] in contributor_ids
-            )
-
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()

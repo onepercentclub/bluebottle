@@ -102,6 +102,7 @@ class BaseActivitySerializer(ModelSerializer):
     owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
+    contributor_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -128,6 +129,9 @@ class BaseActivitySerializer(ModelSerializer):
     def get_is_follower(self, instance):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
+
+    def get_contributor_count(self, instance):
+        return instance.contributors.filter(status__in=['accepted', 'succeeded', 'activity_refunded']).count()
 
     class Meta(object):
         model = Activity
@@ -159,6 +163,7 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
+            'contributor_count'
         )
 
     class JSONAPIMeta(object):

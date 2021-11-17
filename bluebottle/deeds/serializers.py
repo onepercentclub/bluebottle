@@ -2,7 +2,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    SerializerMethodResourceRelatedField
+    SerializerMethodResourceRelatedField, SerializerMethodHyperlinkedRelatedField
 )
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
@@ -25,7 +25,7 @@ class DeedSerializer(BaseActivitySerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=DeedParticipant,
         many=True,
         related_link_view_name='related-deed-participants',

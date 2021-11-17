@@ -1,7 +1,14 @@
 from datetime import timedelta, date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ParticipantWithdrewConfirmationNotification
+)
+from bluebottle.time_based.messages import (
+    ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
+    ParticipantAddedNotification, ParticipantAddedOwnerNotification, NewParticipantNotification
+)
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -14,6 +21,9 @@ from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
 )
 from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.messages import (
+    CollectActivityDateChangedNotification, ParticipantJoinedNotification
+)
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -109,6 +119,17 @@ class CollectTriggersTestCase(TriggerTestCase):
                 CollectContributionStateMachine.succeed,
                 participant.contributions.first()
             )
+
+    def test_change_end(self):
+        self.defaults['status'] = 'open'
+        self.create()
+
+        CollectContributorFactory.create(activity=self.model)
+
+        self.model.end = date.today() + timedelta(days=30)
+
+        with self.execute():
+            self.assertNotificationEffect(CollectActivityDateChangedNotification)
 
     def test_reopen_expired(self):
         self.defaults['status'] = 'expired'
@@ -248,7 +269,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
     def test_initiate(self):
         self.model = self.factory.build(**self.defaults)
-        with self.execute():
+        with self.execute(user=self.model.user):
             self.assertEffect(CreateCollectContribution)
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
@@ -256,6 +277,40 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
+            self.assertNotificationEffect(ParticipantJoinedNotification)
+            self.assertNotificationEffect(NewParticipantNotification)
+
+            self.assertNoNotificationEffect(ParticipantAddedNotification)
+            self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_initiate_other_user(self):
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=BlueBottleUserFactory.create()):
+            self.assertEffect(CreateCollectContribution)
+
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(ParticipantAddedOwnerNotification)
+
+            self.assertNoNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(NewParticipantNotification)
+
+    def test_initiate_other_owner(self):
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.defaults['activity'].owner):
+            self.assertEffect(CreateCollectContribution)
+
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNoNotificationEffect(ParticipantAddedOwnerNotification)
 
     def test_withdraw(self):
         self.create()
@@ -265,6 +320,8 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 CollectContributionStateMachine.fail, self.model.contributions.first()
             )
+            self.assertNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_reapply(self):
         self.create()
@@ -280,6 +337,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 CollectContributorStateMachine.succeed
             )
+            self.assertNotificationEffect(ParticipantJoinedNotification)
 
     def test_reapply_finished(self):
         self.defaults['activity'].end = date.today() - timedelta(days=2)
@@ -311,6 +369,8 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 CollectContributionStateMachine.fail, self.model.contributions.first()
             )
+            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
 
     def test_remove_finished(self):
         self.create()

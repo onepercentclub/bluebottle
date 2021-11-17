@@ -216,7 +216,10 @@ class ParticipantAddedNotification(TransitionMessage):
 
     def get_recipients(self):
         """participant"""
-        return [self.obj.user]
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
 
 
 class ParticipantCreatedNotification(TransitionMessage):
@@ -259,7 +262,10 @@ class NewParticipantNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
@@ -491,7 +497,10 @@ class ParticipantAddedOwnerNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class ParticipantRemovedOwnerNotification(TransitionMessage):

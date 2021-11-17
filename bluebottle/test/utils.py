@@ -463,6 +463,15 @@ class TriggerTestCase(BluebottleTestCase):
                 return effect.message
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
 
+    def assertNoNotificationEffect(self, message_cls, model=None):
+        for effect in self.effects:
+            if hasattr(effect, 'message') and effect.message == message_cls:
+                self.fail(
+                    'Notification effect "{}" triggered but is should not be triggered'.format(
+                        message_cls
+                    )
+                )
+
 
 class NotificationTestCase(BluebottleTestCase):
 

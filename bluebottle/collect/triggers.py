@@ -1,13 +1,23 @@
 from datetime import date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification
+)
+from bluebottle.time_based.messages import (
+    ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
+    NewParticipantNotification, ParticipantAddedOwnerNotification,
+    ParticipantAddedNotification
+)
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
 from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
-from bluebottle.collect.messages import CollectActivityDateChangedNotification
+from bluebottle.collect.messages import (
+    CollectActivityDateChangedNotification, ParticipantJoinedNotification
+)
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine,
@@ -169,6 +179,33 @@ def activity_will_be_empty(effect):
     ) == 1
 
 
+def is_not_user(effect):
+    """
+    User is not the participant
+    """
+    if 'user' in effect.options:
+        return effect.instance.user != effect.options['user']
+    return False
+
+
+def is_user(effect):
+    """
+    User is not the participant
+    """
+    if 'user' in effect.options:
+        return effect.instance.user == effect.options['user']
+    return False
+
+
+def is_not_owner(effect):
+    """
+    User is not the owner
+    """
+    if 'user' in effect.options:
+        return effect.instance.activity.owner != effect.options['user']
+    return True
+
+
 @register(CollectContributor)
 class CollectContributorTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -179,6 +216,22 @@ class CollectContributorTriggers(ContributorTriggers):
                     CollectContributorStateMachine.succeed,
                 ),
                 CreateCollectContribution,
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                    conditions=[is_not_user]
+                ),
+                NotificationEffect(
+                    ParticipantAddedOwnerNotification,
+                    conditions=[is_not_user, is_not_owner]
+                ),
+                NotificationEffect(
+                    ParticipantJoinedNotification,
+                    conditions=[is_user]
+                ),
+                NotificationEffect(
+                    NewParticipantNotification,
+                    conditions=[is_user]
+                ),
             ]
         ),
         TransitionTrigger(
@@ -190,6 +243,8 @@ class CollectContributorTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
+                NotificationEffect(ParticipantRemovedNotification),
+                NotificationEffect(ParticipantRemovedOwnerNotification),
             ]
         ),
 
@@ -208,6 +263,8 @@ class CollectContributorTriggers(ContributorTriggers):
             CollectContributorStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
+                NotificationEffect(ParticipantWithdrewNotification),
+                NotificationEffect(ParticipantWithdrewConfirmationNotification),
             ]
         ),
 
@@ -222,6 +279,7 @@ class CollectContributorTriggers(ContributorTriggers):
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
                 ),
+                NotificationEffect(ParticipantJoinedNotification)
             ]
         ),
 

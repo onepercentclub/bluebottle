@@ -177,6 +177,7 @@ class APITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
     def perform_get(self, user=None):
+        self.user = user
         self.response = self.client.get(
             self.url,
             user=user
@@ -225,6 +226,15 @@ class APITestCase(BluebottleTestCase):
             hasattr(self.serializer.Meta, 'model')
         ):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
+
+    def loadLinkedRelated(self, relationship, user=None):
+        user = user or self.user
+        url = self.response.json()['data']['relationships'][relationship]['links']['related']
+        response = self.client.get(
+            url,
+            user=user
+        )
+        return response.json()['data']
 
     @contextmanager
     def closed_site(self):
@@ -275,6 +285,14 @@ class APITestCase(BluebottleTestCase):
                     str(model.pk) in ids
                 )
 
+    def assertObjectList(self, data, models=None):
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
+
     def assertAttribute(self, attr, value=None):
         data = self.response.json()['data']
         if isinstance(data, (tuple, list)):
@@ -294,6 +312,12 @@ class APITestCase(BluebottleTestCase):
         self.assertIn(
             transition,
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
+    def assertMeta(self, attr, expected):
+        self.assertEqual(
+            self.response.json()['data']['meta'][attr],
+            expected
         )
 
     def assertHasError(self, field, message):

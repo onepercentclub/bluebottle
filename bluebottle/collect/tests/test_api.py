@@ -148,8 +148,9 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.assertTransition('submit')
         self.assertTransition('delete')
-        self.assertRelationship(
-            'contributors',
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
             self.active_contributors + self.withdrawn_contributors
         )
 
@@ -166,8 +167,9 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-        self.assertRelationship(
-            'contributors',
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
             self.active_contributors + [contributor]
         )
         links = self.response.data['links']
@@ -189,8 +191,11 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-
-        self.assertRelationship('contributors', self.active_contributors)
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
+            self.active_contributors
+        )
 
     def test_get_closed_site(self):
         with self.closed_site():

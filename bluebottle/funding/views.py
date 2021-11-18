@@ -1,8 +1,8 @@
 import csv
 
 from django.http.response import HttpResponse
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -15,7 +15,7 @@ from bluebottle.funding.models import (
     BudgetLine, PayoutAccount, PlainPayoutAccount,
     Payout
 )
-from bluebottle.funding.permissions import DonorOwnerPermission, PaymentPermission
+from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
@@ -265,7 +265,9 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
         JSONWebTokenAuthentication, DonorAuthentication,
     )
 
-    permission_classes = (DonorOwnerPermission,)
+    permission_classes = (
+        DonorOwnerOrSucceededPermission,
+    )
 
     prefetch_for_includes = {
         'activity': ['activity'],

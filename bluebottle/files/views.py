@@ -78,7 +78,11 @@ class FileContentView(RetrieveAPIView):
 class ImageContentView(FileContentView):
 
     def get_random_image_url(self):
-        width, height = self.kwargs['size'].split('x')
+        if 'x' in self.kwargs['size']:
+            width, height = self.kwargs['size'].split('x')
+        else:
+            width = self.kwargs['size']
+            height = int(width) / 1.5
         return settings.RANDOM_IMAGE_PROVIDER.format(seed=random(), width=width, height=height)
 
     def retrieve(self, *args, **kwargs):

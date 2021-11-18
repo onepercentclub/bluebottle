@@ -144,13 +144,22 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertTransition('submit')
         self.assertTransition('delete')
-        self.assertRelationship(
-            'contributors',
+        self.assertMeta(
+            'contributor-count',
+            len(self.accepted_participants)
+        )
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
             self.accepted_participants + self.withdrawn_participants
         )
 
     def test_get_with_participant(self):
-        participant = DeedParticipantFactory.create(activity=self.model, user=self.user)
+        participant = DeedParticipantFactory.create(
+            activity=self.model,
+            status='withdrawn',
+            user=self.user
+        )
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -162,8 +171,13 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-        self.assertRelationship(
-            'contributors',
+        self.assertMeta(
+            'contributor-count',
+            len(self.accepted_participants)
+        )
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
             self.accepted_participants + [participant]
         )
 
@@ -178,8 +192,15 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', False)
-
-        self.assertRelationship('contributors', self.accepted_participants)
+        self.assertMeta(
+            'contributor-count',
+            len(self.accepted_participants)
+        )
+        contributors = self.loadLinkedRelated('contributors')
+        self.assertObjectList(
+            contributors,
+            self.accepted_participants
+        )
 
     def test_get_closed_site(self):
         with self.closed_site():

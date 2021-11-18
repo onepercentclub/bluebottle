@@ -1,7 +1,0 @@
-{% extends "mails/messages/activity_base.txt" %}
-{% load i18n %}
-{% block message %}
-    {% blocktrans context 'email' %}Tomorrow is the big day on which your activity "{{ title }}" starts!{% endblocktrans %}
-
-    {% blocktrans context 'email' %}Help your contributors to start tomorrow fully motivated. Send them a message via the 'update wall' on the activity page.{% endblocktrans %}
-{% endblock %}

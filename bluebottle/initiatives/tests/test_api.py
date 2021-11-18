@@ -1396,3 +1396,16 @@ class ThemeApiTestCase(BluebottleTestCase):
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
+
+
+class InitiativeImageTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create()
+
+    def test_get_initiative_image(self):
+        url = reverse('initiative-image', args=(self.initiative.id, '600x300'))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, 'https://loremflickr.com/600/300/volunteering')

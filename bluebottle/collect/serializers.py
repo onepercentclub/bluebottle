@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    SerializerMethodResourceRelatedField
+    SerializerMethodResourceRelatedField, SerializerMethodHyperlinkedRelatedField
 )
 
 from bluebottle.activities.utils import (
@@ -10,7 +10,6 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
-from bluebottle.collect.states import CollectContributorStateMachine
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -32,7 +31,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=CollectContributor,
         many=True,
         related_link_view_name='related-collect-contributors',
@@ -55,21 +54,6 @@ class CollectActivitySerializer(BaseActivitySerializer):
             }
         else:
             return {}
-
-    def get_contributors(self, instance):
-        user = self.context['request'].user
-        return [
-            contributor for contributor in instance.contributors.exclude(user=None) if (
-                isinstance(contributor, CollectContributor) and (
-                    contributor.status in [
-                        CollectContributorStateMachine.new.value,
-                        CollectContributorStateMachine.accepted.value,
-                        CollectContributorStateMachine.succeeded.value
-                    ] or
-                    user in (instance.owner, instance.initiative.owner, contributor.user)
-                )
-            )
-        ]
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user

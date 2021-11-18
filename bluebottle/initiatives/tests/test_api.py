@@ -663,9 +663,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         # 1 donor (3 donations by same user)
         # 3 anonymous donations
         # 3 deed participants
-        # 13 total contributors
+        # 6 collect contributors
+        # 19 total contributors
+        # 3 withdrawn collect contributors not counted
         # organizers are not counted here
-        self.assertEqual(stats['contributors'], 13)
+        self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
 
         self.assertEqual(

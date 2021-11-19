@@ -22,6 +22,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
+        allow_null=True,
         source='type'
     )
 

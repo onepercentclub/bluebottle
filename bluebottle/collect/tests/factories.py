@@ -28,7 +28,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    type = factory.SubFactory(CollectTypeFactory)
+    collect_type = factory.SubFactory(CollectTypeFactory)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
 

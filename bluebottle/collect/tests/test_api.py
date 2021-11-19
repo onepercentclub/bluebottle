@@ -11,6 +11,9 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
+
+from bluebottle.test.factory_models.geo import GeolocationFactory
+
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.test.utils import APITestCase
@@ -116,7 +119,8 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved'),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
-            'type': self.collect_type
+            'location': GeolocationFactory.create(),
+            'collect_type': self.collect_type
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -153,6 +157,15 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             contributors,
             self.active_contributors + self.withdrawn_contributors
         )
+
+    def test_get_with_result(self):
+        self.model.realized = 100
+        self.model.save()
+
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', 5)
 
     def test_get_with_contributor(self):
         contributor = CollectContributorFactory.create(activity=self.model, user=self.user)

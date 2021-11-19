@@ -8,6 +8,7 @@ from rest_framework_json_api.relations import (
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
+from bluebottle.activities.models import Organizer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -59,6 +60,12 @@ class CollectActivitySerializer(BaseActivitySerializer):
         user = self.context['request'].user
         if user.is_authenticated:
             return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
+
+    def get_contributor_count(self, instance):
+        return instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'succeeded', 'activity_refunded'],
+            user__isnull=False
+        ).count()
 
     class Meta(BaseActivitySerializer.Meta):
         model = CollectActivity

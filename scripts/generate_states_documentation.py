@@ -73,13 +73,13 @@ def run(*args):
         models = settings.CONFLUENCE['dev_models']
 
     tenant = Client.objects.get(schema_name=settings.CONFLUENCE['tenant'])
-
     with LocalTenant(tenant):
         for model in models:
             url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
             response = requests.get(url, auth=(api['user'], api['key']))
             data = response.json()
             version = data['version']['number'] + 1
+
             documentation = document_model(import_string(model['model']))
             html = generate_html(documentation)
             messages = document_notifications(import_string(model['model']))

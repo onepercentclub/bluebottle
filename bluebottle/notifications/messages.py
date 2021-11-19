@@ -55,7 +55,7 @@ class TransitionMessage(object):
             'site': 'https://[site domain]',
             'site_name': '[site name]',
             'language': language,
-            'contact_email': '<platform manager email>',
+            'contact_email': '[platform manager email]',
             'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
@@ -84,7 +84,7 @@ class TransitionMessage(object):
 
     @property
     def generic_content_text(self):
-        return to_text.handle(self.generic_content_html())
+        return to_text.handle(self.generic_content_html)
 
     def get_content_html(self, recipient):
         context = self.get_context(recipient)

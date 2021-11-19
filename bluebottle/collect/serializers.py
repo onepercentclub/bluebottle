@@ -110,7 +110,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
-        source='type'
+        allow_null=True,
     )
 
     class Meta(BaseActivityListSerializer.Meta):

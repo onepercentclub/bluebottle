@@ -36,10 +36,11 @@ class CollectActivityListViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'location': GeolocationFactory.create(),
             'collect_type': self.collect_type
         }
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type', 'location']
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append('collect')
@@ -133,7 +134,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'type']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
 
     def test_get(self):
         self.perform_get(user=self.model.owner)

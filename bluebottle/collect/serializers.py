@@ -119,7 +119,8 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
             'start',
             'end',
             'realized',
-            'collect_type'
+            'collect_type',
+            'location',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
@@ -132,6 +133,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         BaseActivityListSerializer.included_serializers,
         **{
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 

@@ -104,7 +104,7 @@ class CollectActivity(Activity):
     def google_calendar_link(self):
 
         details = self.description
-        details += _('\nCollecting {type}').format(type=self.type)
+        details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
         dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))

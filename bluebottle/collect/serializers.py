@@ -112,6 +112,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         fields = BaseActivityListSerializer.Meta.fields + (
             'start',
             'end',
+            'location',
             'realized',
             'collect_type'
         )
@@ -120,12 +121,14 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         resource_name = 'activities/collects'
         included_resources = BaseActivityListSerializer.JSONAPIMeta.included_resources + [
             'collect_type',
+            'location',
         ]
 
     included_serializers = dict(
         BaseActivityListSerializer.included_serializers,
         **{
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 

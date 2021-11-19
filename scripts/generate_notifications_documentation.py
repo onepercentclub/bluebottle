@@ -35,7 +35,7 @@ def generate_notification_html(documentation):
         <table>
         <colgroup>
         <col style='width: 150px;' />
-        <col style='width: 650x;' />
+        <col style='width: 650px;' />
         </colgroup>
         <tr><th>Trigger</th><td>{}</td></tr>
         <tr><th>Description</th><td>{}</td></tr>

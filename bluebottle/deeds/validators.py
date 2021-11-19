@@ -12,5 +12,5 @@ class EndDateValidator(Validator):
         return (
             not self.instance.start or
             not self.instance.end or
-            self.instance.start < self.instance.end
+            self.instance.start <= self.instance.end
         )

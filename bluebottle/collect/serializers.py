@@ -23,7 +23,6 @@ class CollectActivitySerializer(BaseActivitySerializer):
         queryset=CollectType.objects,
         required=False,
         allow_null=True,
-        source='type'
     )
 
     my_contributor = SerializerMethodResourceRelatedField(

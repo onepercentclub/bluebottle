@@ -60,7 +60,7 @@ class CollectActivity(Activity):
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
-    type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
+    collect_type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -131,7 +131,7 @@ class CollectActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description', 'type']
+        return super().required_fields + ['title', 'description', 'collect_type']
 
 
 class CollectContributor(Contributor):

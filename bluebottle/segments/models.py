@@ -35,6 +35,9 @@ class SegmentType(models.Model):
     class Meta:
         ordering = ('name',)
 
+    class JSONAPIMeta(object):
+        resource_name = 'segment-types'
+
 
 @python_2_unicode_compatible
 class Segment(models.Model):
@@ -63,3 +66,6 @@ class Segment(models.Model):
 
     class Meta:
         ordering = ('name',)
+
+    class JSONAPIMeta(object):
+        resource_name = 'segments'

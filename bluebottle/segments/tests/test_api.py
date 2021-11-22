@@ -8,8 +8,10 @@ from rest_framework import status
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
+from bluebottle.segments.serializers import SegmentSerializer
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 class SegmentTypeListAPITestCase(BluebottleTestCase):
@@ -135,3 +137,48 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.assertEqual(
             len(response.json()['data']), 20
         )
+
+
+class SegmentDetailAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = SegmentSerializer
+        self.factory = SegmentFactory
+
+        self.segment_type = SegmentTypeFactory.create()
+        self.model = SegmentFactory.create(type=self.segment_type)
+
+        self.fields = []
+
+        self.url = reverse('segment-detail', args=(self.model.pk, ))
+
+    def test_retrieve(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('type', self.segment_type)
+        self.assertAttribute('name', self.model.name)
+
+    def test_retrieve_closed(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_retrieve_closed_user(self):
+        with self.closed_site():
+            self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_update(self):
+        self.perform_update({'name': 'test'})
+
+        self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_delete(self):
+        self.perform_delete()
+
+        self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)

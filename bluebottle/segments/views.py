@@ -1,6 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 
-from bluebottle.utils.views import ListAPIView, JsonApiViewMixin
+from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.segments.serializers import SegmentSerializer, SegmentTypeSerializer
 
@@ -23,3 +23,10 @@ class SegmentList(JsonApiViewMixin, ListAPIView):
 
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SegmentPagination
+
+
+class SegmentDetail(JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = SegmentSerializer
+    queryset = Segment.objects.filter(type__is_active=True).select_related('type')
+
+    permission_classes = [TenantConditionalOpenClose, ]

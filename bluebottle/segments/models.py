@@ -42,6 +42,7 @@ class SegmentType(models.Model):
 @python_2_unicode_compatible
 class Segment(models.Model):
     name = models.CharField(_('name'), max_length=255)
+    slug = models.CharField(_('slug'), max_length=255)
 
     alternate_names = ArrayField(
         models.CharField(max_length=200),
@@ -59,13 +60,17 @@ class Segment(models.Model):
         if self.name not in self.alternate_names:
             self.alternate_names.append(self.name)
 
-        super(Segment, self).save(*args, **kwargs)
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return u'{}: {}'.format(self.type.name, self.name)
 
     class Meta:
         ordering = ('name',)
+        unique_together = (('slug', 'type'), )
 
     class JSONAPIMeta(object):
         resource_name = 'segments'

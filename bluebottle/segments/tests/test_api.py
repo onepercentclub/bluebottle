@@ -160,6 +160,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertIncluded('type', self.segment_type)
         self.assertAttribute('name', self.model.name)
+        self.assertAttribute('slug', self.model.slug)
 
     def test_retrieve_closed(self):
         with self.closed_site():

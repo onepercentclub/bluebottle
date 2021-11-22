@@ -10,13 +10,13 @@ urlpatterns = [
         name='segment-type-list'
     ),
     url(
-        r'^segments/$',
+        r'^$',
         SegmentList.as_view(),
         name='segment-list'
     ),
 
     url(
-        r'^segments/(?P<pk>\d+)$',
+        r'^(?P<pk>\d+)$',
         SegmentDetail.as_view(),
         name='segment-detail'
     ),

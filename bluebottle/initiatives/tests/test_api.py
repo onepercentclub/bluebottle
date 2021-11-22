@@ -671,10 +671,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['effort'], 3)
 
         self.assertEqual(
-            stats['collected'][str(collect_activity.type_id)], collect_activity.realized
+            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
         )
         self.assertEqual(
-            stats['collected'][str(other_collect_activity.type_id)], other_collect_activity.realized
+            stats['collected'][str(other_collect_activity.collect_type_id)],
+            other_collect_activity.realized
         )
 
     def test_get_other(self):

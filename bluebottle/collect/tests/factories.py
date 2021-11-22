@@ -3,6 +3,8 @@ from builtins import object
 import factory.fuzzy
 from pytz import UTC
 
+from bluebottle.test.factory_models.geo import GeolocationFactory
+
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -28,7 +30,8 @@ class CollectActivityFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    type = factory.SubFactory(CollectTypeFactory)
+    collect_type = factory.SubFactory(CollectTypeFactory)
+    location = factory.SubFactory(GeolocationFactory)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
 

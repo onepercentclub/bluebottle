@@ -50,14 +50,14 @@ class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
     form = CollectAdminForm
     inlines = (CollectContributorInline,) + ActivityChildAdmin.inlines
-    list_filter = ['status', 'type']
+    list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
-        'type',
+        'collect_type',
         'contributor_count',
         'target'
     ]
@@ -71,7 +71,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
         'end',
     )
     description_fields = ActivityChildAdmin.description_fields + (
-        'type',
+        'collect_type',
         'target',
         'realized',
         'enable_impact',
@@ -86,7 +86,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
         ('initiative__title', 'Initiative'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
-        ('type', 'Type'),
+        ('collect_type', 'Type'),
         ('target', 'Target'),
         ('realized', 'Realized'),
         ('start', 'Start'),

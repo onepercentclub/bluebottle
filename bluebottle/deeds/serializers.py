@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
@@ -12,10 +13,13 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.utils import reverse_signed
 
 
 class DeedSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
+    links = serializers.SerializerMethodField()
+
     my_contributor = SerializerMethodResourceRelatedField(
         model=DeedParticipant,
         read_only=True,
@@ -42,6 +46,15 @@ class DeedSerializer(BaseActivitySerializer):
         if user.is_authenticated:
             return instance.contributors.filter(user=user).instance_of(DeedParticipant).first()
 
+    def get_links(self, instance):
+        if instance.start and instance.end:
+            return {
+                'ical': reverse_signed('deed-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+            }
+        else:
+            return {}
+
     class Meta(BaseActivitySerializer.Meta):
         model = Deed
         fields = BaseActivitySerializer.Meta.fields + (
@@ -51,6 +64,7 @@ class DeedSerializer(BaseActivitySerializer):
             'end',
             'enable_impact',
             'target',
+            'links',
             'participants_export_url',
         )
 

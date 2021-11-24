@@ -159,6 +159,17 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             self.active_contributors + self.withdrawn_contributors
         )
 
+    def test_get_calendar_links(self):
+        self.perform_get(user=self.model.owner)
+
+        links = self.response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('collect-ical', args=(self.model.pk, ))
+            )
+        )
+
     def test_get_with_result(self):
         self.model.realized = 100
         self.model.save()

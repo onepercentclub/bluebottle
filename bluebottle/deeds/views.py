@@ -1,5 +1,4 @@
 import csv
-import icalendar
 
 from django.db.models import Q
 from django.http import HttpResponse
@@ -20,7 +19,7 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView
+    JsonApiViewMixin, PrivateFileView, IcalView
 )
 
 
@@ -154,37 +153,7 @@ class ParticipantExportView(PrivateFileView):
         return response
 
 
-class DeedIcalView(PrivateFileView):
+class DeedIcalView(IcalView):
     queryset = Deed.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],
     )
-
-    max_age = 30 * 60  # half an hour
-
-    def get(self, *args, **kwargs):
-        instance = self.get_object()
-        calendar = icalendar.Calendar()
-
-        details = instance.description
-
-        event = icalendar.Event()
-        event.add('summary', instance.title)
-        event.add('description', details)
-        event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
-        event['uid'] = instance.uid
-
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
-
-        event['organizer'] = organizer
-
-        calendar.add_component(event)
-
-        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
-            instance.slug
-        )
-
-        return response

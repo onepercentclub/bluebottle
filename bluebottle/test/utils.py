@@ -310,7 +310,7 @@ class APITestCase(BluebottleTestCase):
             self.assertTrue(attr in data['attributes'])
 
         if value:
-            self.assertEqual(getattr(self.model, attr), value)
+            self.assertEqual(getattr(self.model, attr.replace('-', '_')), value)
 
     def assertPermission(self, permission, value):
         self.assertEqual(self.response.json()['data']['meta']['permissions'][permission], value)

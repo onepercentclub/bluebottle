@@ -168,6 +168,7 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative',
             'goals',
             'goals.type',
+            'initiative.owner',
             'initiative.place',
             'initiative.location',
             'initiative.activity_managers',

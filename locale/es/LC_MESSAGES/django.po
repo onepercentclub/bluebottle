@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-05 14:14+0100\n"
-"PO-Revision-Date: 2021-11-24 12:46\n"
+"PO-Revision-Date: 2021-11-24 13:41\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -907,7 +907,9 @@ msgctxt "email"
 msgid "\n"
 "<p>You have withdrawn from an activity on <b>%(site_name)s</b></p>\n\n"
 "<h4>%(title)s</h4>\n"
-msgstr ""
+msgstr "\n"
+"<p>Te has retirado de una actividad en <b>%(site_name)s</b></p>\n\n"
+"<h4>%(title)s</h4>\n"
 
 #: bluebottle/activities/utils.py:270 bluebottle/activities/utils.py:271
 msgid "Description is required"
@@ -2034,11 +2036,11 @@ msgstr ""
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
-msgstr ""
+msgstr "Has retirado de la actividad \"{title}\""
 
 #: bluebottle/deeds/models.py:18
 msgid "The number of users you want to participate."
-msgstr ""
+msgstr "El número de usuarios que desea participar."
 
 #: bluebottle/deeds/models.py:28 bluebottle/initiatives/models.py:251
 msgid "Deed"
@@ -2174,19 +2176,19 @@ msgstr ""
 #, python-format
 msgctxt "email"
 msgid "You joined an activity on <b>%(site_name)s</b>"
-msgstr ""
+msgstr "Te uniste a una actividad en <b>%(site_name)s</b>"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:11
 #, python-format
 msgctxt "email"
 msgid "Starts on %(start)s"
-msgstr ""
+msgstr "Comienza el %(start)s"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:14
 #, python-format
 msgctxt "email"
 msgid "Ends on %(end)s"
-msgstr ""
+msgstr "Termina el %(end)s"
 
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
@@ -2197,7 +2199,9 @@ msgctxt "email"
 msgid "\n"
 "                If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"                Si no puedes participar, por favor retire a través de la página de actividad para que otros puedan ocupar tu lugar.\n"
+"            "
 
 #: bluebottle/deeds/templates/mails/messages/deed_reminder.html:5
 #, python-format
@@ -3420,7 +3424,12 @@ msgid "\n"
 "            Either you requested this refund or the campaign didn’t reach its funding goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hola %(recipient_name)s,<br/>\n"
+"            Tu donación a \"%(title)s\" se reembolsará completamente en un plazo de 10 días.\n"
+"            O bien has solicitado este reembolso o la campaña no ha alcanzado su objetivo de financiación.\n"
+"            Si tienes alguna pregunta sobre este reembolso, por favor contacta con %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:7
 #| msgid ""
@@ -4065,7 +4074,7 @@ msgstr ""
 
 #: bluebottle/impact/effects.py:8 bluebottle/impact/effects.py:26
 msgid "Update impact goals"
-msgstr ""
+msgstr "Actualizar resultados de impacto"
 
 #: bluebottle/impact/models.py:14
 msgid "People"
@@ -4178,7 +4187,7 @@ msgstr ""
 
 #: bluebottle/impact/models.py:121
 msgid "realized from contributions"
-msgstr ""
+msgstr "realizado a partir de contribuciones"
 
 #: bluebottle/impact/models.py:127
 msgid "realized"
@@ -4632,7 +4641,7 @@ msgstr ""
 
 #: bluebottle/members/admin.py:233
 msgid "Deleted"
-msgstr ""
+msgstr "Eliminar"
 
 #: bluebottle/members/admin.py:290
 msgid "Profile"
@@ -5826,13 +5835,13 @@ msgstr ""
 #, python-brace-format
 msgctxt "email"
 msgid "You have changed your application on the activity \"{title}\""
-msgstr ""
+msgstr "Ha cambiado su solicitud en la actividad \"{title}\""
 
 #: bluebottle/time_based/messages.py:351
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
-msgstr ""
+msgstr "Has retirado de la actividad \"{title}\""
 
 #: bluebottle/time_based/messages.py:373
 #, python-brace-format
@@ -6486,7 +6495,8 @@ msgstr ""
 msgctxt "email"
 msgid "\n"
 "The activity \"%(title)s\" has changed:\n"
-msgstr ""
+msgstr "\n"
+"La actividad \"%(title)s\" ha cambiado:\n"
 
 #: bluebottle/time_based/templates/mails/messages/changed_single_date.html:23
 #: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:23
@@ -6518,14 +6528,18 @@ msgctxt "email"
 msgid "\n"
 "            Start: %(start)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Inicio: %(start)s.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:8
 msgctxt "email"
 msgid "\n"
 "            You can start right away.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Puedes empezar inmediatamente.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:14
 #, python-format
@@ -6533,14 +6547,18 @@ msgctxt "email"
 msgid "\n"
 "            End: %(end)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Inicio: %(end)s.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:18
 msgctxt "email"
 msgid "\n"
 "            This activity runs indefinitely.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Esta actividad se desarrolla indefinidamente.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:8
 msgid "Changed"
@@ -6556,7 +6574,7 @@ msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:34
 msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
-msgstr ""
+msgstr "Vaya a la página de actividad para ver los horarios en su propia zona horaria y añádelos a su calendario."
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
 #, python-format
@@ -6592,14 +6610,18 @@ msgctxt "email"
 msgid "\n"
 "            You applied to an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            ¡Has aplicado una actividad en <b>%(site_name)s!</b>\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_applied.html:15
 msgctxt "email"
 msgid "\n"
 "                You will receive a notification by email when the activity manager accepts your application.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"                Recibirás una notificación por correo electrónico cuando el gestor de actividades acepte tu aplicación.\n"
+"            "
 
 #: bluebottle/time_based/templates/mails/messages/participant_base.html:5
 #, python-format
@@ -6615,7 +6637,9 @@ msgctxt "email"
 msgid "\n"
 "            You adjusted your participation for an activity on <b>%(site_name)s</b>.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            ¡Has aplicado una actividad en <b>%(site_name)s!</b>.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_created.html:4
 #, python-format
@@ -6647,7 +6671,9 @@ msgctxt "email"
 msgid "\n"
 "            You joined an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            ¡Has aplicado una actividad en <b>%(site_name)s!</b>\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_rejected.html:4
 #, python-format
@@ -6682,7 +6708,8 @@ msgstr ""
 msgctxt "email"
 msgid "\n"
 "The activity  is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"¡La actividad está a pocos días!\n"
 
 #: bluebottle/time_based/templates/mails/messages/slot_date_changed.html:5
 #, python-format

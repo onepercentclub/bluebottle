@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-25 09:15+0100\n"
-"PO-Revision-Date: 2021-11-25 08:16\n"
+"PO-Revision-Date: 2021-11-25 09:42\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -942,7 +942,12 @@ msgid "\n"
 "<p>\n"
 "    <b>%(title)s</b>\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je hebt je afgemeld voor een activiteit op <b>%(site_name)s</b>\n\n"
+"</p>\n"
+"<p>\n"
+"<b>%(title)s</b>\n"
+"</p>\n"
 
 #: bluebottle/activities/utils.py:277 bluebottle/activities/utils.py:278
 msgid "Description is required"
@@ -978,7 +983,7 @@ msgstr "Aantal medewerkers of het aantal gebruikers dat toegang heeft tot het pl
 
 #: bluebottle/analytics/models.py:27
 msgid "Engagement target"
-msgstr ""
+msgstr "Engagement doel"
 
 #: bluebottle/analytics/models.py:28
 msgid "Target number of engaged users per year."

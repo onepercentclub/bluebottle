@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-25 09:15+0100\n"
-"PO-Revision-Date: 2021-11-25 09:42\n"
+"PO-Revision-Date: 2021-11-25 11:01\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -987,7 +987,7 @@ msgstr "Engagement doel"
 
 #: bluebottle/analytics/models.py:28
 msgid "Target number of engaged users per year."
-msgstr ""
+msgstr "Doelstelling voor het aantal mensen dat bijdraagt aan een activiteit of een activiteit start per jaar."
 
 #: bluebottle/analytics/models.py:34
 msgid "platform type"
@@ -1932,15 +1932,15 @@ msgstr "Verwijder"
 
 #: bluebottle/collect/admin.py:67
 msgid "Contributors"
-msgstr ""
+msgstr "Bijdragers"
 
 #: bluebottle/collect/effects.py:27
 msgid "Create collect contribution"
-msgstr ""
+msgstr "Maak een inzamelingsactie bijdrage aan"
 
 #: bluebottle/collect/effects.py:49
 msgid "Create overall contributor"
-msgstr ""
+msgstr "Creëer een algemene bijdrager"
 
 #: bluebottle/collect/messages.py:9 bluebottle/deeds/messages.py:9
 #, python-brace-format
@@ -1990,11 +1990,11 @@ msgstr "geblokkeerd"
 
 #: bluebottle/collect/models.py:20
 msgid "Disable this item so it cannot be selected when creating an activity."
-msgstr ""
+msgstr "Schakel dit item uit zodat het niet kan worden geselecteerd bij het maken van een activiteit."
 
 #: bluebottle/collect/models.py:26
 msgid "The item to be collected (E.g. Bicycles, Clothing, Groceries, …)"
-msgstr ""
+msgstr "Het item dat wordt ingezameld (bv. Fietsen, kleding, Groenten, ...)"
 
 #: bluebottle/collect/models.py:30 bluebottle/impact/models.py:52
 msgid "unit"
@@ -2002,23 +2002,23 @@ msgstr "eenheid"
 
 #: bluebottle/collect/models.py:32
 msgid "The unit in which you want to count the item (E.g. Bicycle, Bag of clothing, Crate of groceries, …)"
-msgstr ""
+msgstr "De eenheid in enkelvoud waarin je het item wilt tellen (bijvoorbeeld Fiets, Zak kleding, Krat boodschappen, …)"
 
 #: bluebottle/collect/models.py:38
 msgid "unit plural"
-msgstr ""
+msgstr "Eenheid (meervoud)"
 
 #: bluebottle/collect/models.py:40
 msgid "The unit in which you want to count the item (E.g. Bicycles, Bags of clothing, Crates of groceries, …)"
-msgstr ""
+msgstr "De eenheid in meervoud waarin je het item wilt tellen (bijvoorbeeld Fietsen, Zakken kleding, Kratten boodschappen, …)"
 
 #: bluebottle/collect/models.py:51
 msgid "collect type"
-msgstr ""
+msgstr "Item"
 
 #: bluebottle/collect/models.py:52
 msgid "collect types"
-msgstr ""
+msgstr "Items lijst"
 
 #: bluebottle/collect/models.py:66 bluebottle/time_based/models.py:50
 #: bluebottle/time_based/models.py:320 bluebottle/time_based/models.py:403
@@ -2028,33 +2028,34 @@ msgstr "locatie hint"
 
 #: bluebottle/collect/models.py:80
 msgid "Collect Activity"
-msgstr ""
+msgstr "Inzamelingsactie"
 
 #: bluebottle/collect/models.py:81
 msgid "Collect Activities"
-msgstr ""
+msgstr "Inzamelingsacties"
 
 #: bluebottle/collect/models.py:107 bluebottle/collect/views.py:184
 #, python-brace-format
 msgid "\n"
 "Collecting {type}"
-msgstr ""
+msgstr "\n"
+"{type} inzamelen"
 
 #: bluebottle/collect/models.py:143
 msgid "Collect contributor"
-msgstr ""
+msgstr "Deelnemer inzamelingsactie"
 
 #: bluebottle/collect/models.py:144
 msgid "Collect contributors"
-msgstr ""
+msgstr "Deelnemers inzamelingsactie"
 
 #: bluebottle/collect/models.py:172
 msgid "Collect contribution"
-msgstr ""
+msgstr "Bijdrage inzamelingsactie"
 
 #: bluebottle/collect/models.py:173
 msgid "Collect contributions"
-msgstr ""
+msgstr "Bijdrages inzamelingsactie"
 
 #: bluebottle/collect/periodic_tasks.py:37
 #: bluebottle/deeds/periodic_tasks.py:37
@@ -2073,7 +2074,7 @@ msgstr "Stuur een herinnering een dag voor de activiteit."
 
 #: bluebottle/collect/states.py:36
 msgid "The activity will be cancelled because no one has signed up."
-msgstr ""
+msgstr "De activiteit wordt geannuleerd omdat niemand zich heeft aangemeld."
 
 #: bluebottle/collect/states.py:48 bluebottle/deeds/states.py:46
 msgid "Succeed the activity."
@@ -2091,15 +2092,15 @@ msgstr "Heropen de activiteit"
 
 #: bluebottle/collect/states.py:68
 msgid "Manually reopen the activity. This will unset the end date if the date is in the past. People can contribute again."
-msgstr ""
+msgstr "Heropen de activiteit handmatig. Dit zal de einddatum verwijderen als deze in het verleden ligt. Mensen kunnen zich weer aanmelden voor de activiteit."
 
 #: bluebottle/collect/states.py:96
 msgid "Cancelled"
-msgstr ""
+msgstr "Geannuleerd"
 
 #: bluebottle/collect/states.py:98
 msgid "This person has cancelled."
-msgstr ""
+msgstr "Deze persoon heeft geannuleerd."
 
 #: bluebottle/collect/states.py:101 bluebottle/deeds/states.py:99
 msgid "Removed"
@@ -2111,11 +2112,11 @@ msgstr "Deze deelnemer is verwijderd van de activiteit"
 
 #: bluebottle/collect/states.py:106
 msgid "Contributing"
-msgstr ""
+msgstr "Bijdragen"
 
 #: bluebottle/collect/states.py:108
 msgid "This person has been signed up for the activity."
-msgstr ""
+msgstr "Deze persoon is aangemeld voor de activiteit."
 
 #: bluebottle/collect/states.py:145 bluebottle/deeds/states.py:143
 msgid "Re-accept"
@@ -2128,7 +2129,7 @@ msgstr "Afmelden"
 
 #: bluebottle/collect/states.py:153
 msgid "Cancel your contribution to this activity."
-msgstr ""
+msgstr "Annuleer jouw deelname aan deze activiteit."
 
 #: bluebottle/collect/states.py:162 bluebottle/deeds/states.py:160
 #: bluebottle/time_based/states.py:406 bluebottle/time_based/states.py:540
@@ -2137,11 +2138,11 @@ msgstr "Opnieuw aanmelden"
 
 #: bluebottle/collect/states.py:163
 msgid "User re-applies after previously cancelling."
-msgstr ""
+msgstr "Gebruiker meldt zich weer aan na eerdere afmelding."
 
 #: bluebottle/collect/states.py:176
 msgid "Remove contributor from the activity."
-msgstr ""
+msgstr "Verwijder deze persoon als deelnemer aan de activiteit."
 
 #: bluebottle/collect/states.py:184 bluebottle/deeds/states.py:182
 msgid "Re-Accept"
@@ -2194,7 +2195,7 @@ msgstr "Morgen is de grote dag waarop jouw activiteit \"%(title)s\" start!"
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "email"
 msgid "Help your contributors to start tomorrow fully motivated. Send them a message via the 'update wall' on the activity page."
-msgstr ""
+msgstr "Dit is een goed moment om een motiverend bericht te sturen naar je deelnemers om jouw activiteit tot een succes te maken. Stuur een bericht naar al je deelnemers via de update wall op de pagina van jouw activiteit."
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
@@ -4648,7 +4649,7 @@ msgstr "Activiteit op een specifieke dag"
 
 #: bluebottle/initiatives/models.py:252
 msgid "Collect activity"
-msgstr ""
+msgstr "Inzamelingsactie"
 
 #: bluebottle/initiatives/models.py:256 bluebottle/initiatives/models.py:267
 #: bluebottle/settings/base.py:656 bluebottle/settings/base.py:680
@@ -5727,7 +5728,7 @@ msgstr "Tijdsgebonden"
 
 #: bluebottle/settings/admin_dashboard.py:79
 msgid "Collect"
-msgstr ""
+msgstr "Inzameling"
 
 #: bluebottle/settings/admin_dashboard.py:164
 msgid "Offices"
@@ -5807,11 +5808,11 @@ msgstr "Inzet bijdragen"
 
 #: bluebottle/settings/base.py:969
 msgid "Collection campaigns"
-msgstr ""
+msgstr "Inzamelingsacties"
 
 #: bluebottle/settings/base.py:984
 msgid "Collection contributors"
-msgstr ""
+msgstr "Deelnemers inzamelingsactie"
 
 #: bluebottle/settings/local.py:8
 msgid "Dutch"
@@ -6883,7 +6884,9 @@ msgctxt "email"
 msgid "\n"
 "<p>%(applicant_name)s has joined your activity \"%(title)s\"!</p>\n\n"
 "<p>Give the new participant a warm welcome.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n\n"
+"<p>Geef de nieuwe deelnemer een warm welkom.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:4
 #, python-format

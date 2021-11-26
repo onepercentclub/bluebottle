@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-26 11:55+0100\n"
-"PO-Revision-Date: 2021-11-26 11:20\n"
+"PO-Revision-Date: 2021-11-26 12:31\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -2011,7 +2011,7 @@ msgstr "De eenheid in enkelvoud waarin je het item wilt tellen (bijvoorbeeld Fie
 
 #: bluebottle/collect/models.py:38
 msgid "unit plural"
-msgstr "Eenheid (meervoud)"
+msgstr "eenheid (meervoud)"
 
 #: bluebottle/collect/models.py:40
 msgid "The unit in which you want to count the item (E.g. Bicycles, Bags of clothing, Crates of groceries, …)"

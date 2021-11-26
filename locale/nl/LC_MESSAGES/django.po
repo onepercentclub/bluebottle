@@ -2322,7 +2322,7 @@ msgstr "Zonder einddatum"
 #: bluebottle/time_based/messages.py:446
 msgctxt "email"
 msgid "View activity"
-msgstr "Activiteit bewerken"
+msgstr "Activiteit bekijken"
 
 #: bluebottle/deeds/messages.py:44
 #, python-brace-format

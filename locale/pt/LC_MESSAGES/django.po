@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-25 09:15+0100\n"
-"PO-Revision-Date: 2021-11-25 08:16\n"
+"POT-Creation-Date: 2021-11-26 11:55+0100\n"
+"PO-Revision-Date: 2021-11-26 11:18\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -947,7 +947,7 @@ msgid "\n"
 "</p>\n"
 msgstr ""
 
-#: bluebottle/activities/utils.py:277 bluebottle/activities/utils.py:278
+#: bluebottle/activities/utils.py:278 bluebottle/activities/utils.py:279
 msgid "Description is required"
 msgstr "Descrição obrigatória"
 
@@ -979,19 +979,19 @@ msgstr "Base de usuários"
 msgid "Number of employees or number of users that could access the platform."
 msgstr "Número de funcionários ou o número de usuários que podem acessar a plataforma."
 
-#: bluebottle/analytics/models.py:27
-msgid "Engagement target"
+#: bluebottle/analytics/models.py:27 bluebottle/members/admin.py:311
+msgid "Engagement"
+msgstr "Envolvimento"
+
+#: bluebottle/analytics/models.py:29
+msgid "Target for the number of people contributing to an activity or starting an activity per year."
 msgstr ""
 
-#: bluebottle/analytics/models.py:28
-msgid "Target number of engaged users per year."
-msgstr ""
-
-#: bluebottle/analytics/models.py:34
+#: bluebottle/analytics/models.py:36
 msgid "platform type"
 msgstr "tipo de plataforma"
 
-#: bluebottle/analytics/models.py:41 bluebottle/analytics/models.py:42
+#: bluebottle/analytics/models.py:43 bluebottle/analytics/models.py:44
 msgid "reporting platform settings"
 msgstr "reportando configurações da plataforma"
 
@@ -2016,46 +2016,46 @@ msgid "The unit in which you want to count the item (E.g. Bicycles, Bags of clot
 msgstr ""
 
 #: bluebottle/collect/models.py:51
-msgid "collect type"
+msgid "items"
 msgstr ""
 
 #: bluebottle/collect/models.py:52
-msgid "collect types"
+msgid "item"
 msgstr ""
 
-#: bluebottle/collect/models.py:66 bluebottle/time_based/models.py:50
+#: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:50
 #: bluebottle/time_based/models.py:320 bluebottle/time_based/models.py:403
 #: models.py:33
 msgid "location hint"
 msgstr "dica de localização"
 
-#: bluebottle/collect/models.py:80
-msgid "Collect Activity"
+#: bluebottle/collect/models.py:82
+msgid "Collect Campaign"
 msgstr ""
 
-#: bluebottle/collect/models.py:81
-msgid "Collect Activities"
+#: bluebottle/collect/models.py:83
+msgid "Collect Campaigns"
 msgstr ""
 
-#: bluebottle/collect/models.py:107 bluebottle/collect/views.py:184
+#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:184
 #, python-brace-format
 msgid "\n"
 "Collecting {type}"
 msgstr ""
 
-#: bluebottle/collect/models.py:143
+#: bluebottle/collect/models.py:145
 msgid "Collect contributor"
 msgstr ""
 
-#: bluebottle/collect/models.py:144
+#: bluebottle/collect/models.py:146
 msgid "Collect contributors"
 msgstr ""
 
-#: bluebottle/collect/models.py:172
+#: bluebottle/collect/models.py:174
 msgid "Collect contribution"
 msgstr ""
 
-#: bluebottle/collect/models.py:173
+#: bluebottle/collect/models.py:175
 msgid "Collect contributions"
 msgstr ""
 
@@ -2196,7 +2196,7 @@ msgstr "Amanhã é o grande dia em que a sua atividade\"%(title)scomeça!"
 
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "email"
-msgid "Help your contributors to start tomorrow fully motivated. Send them a message via the 'update wall' on the activity page."
+msgid "This is a good time to send your participants a motivational message to make your activity a success. Send a message to all your participants via the update wall on your activity page."
 msgstr ""
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
@@ -5003,10 +5003,6 @@ msgstr "Perfil"
 #: bluebottle/members/admin.py:298
 msgid "Permissions"
 msgstr "Permissões"
-
-#: bluebottle/members/admin.py:311
-msgid "Engagement"
-msgstr "Envolvimento"
 
 #: bluebottle/members/admin.py:318
 msgid "Notifications"

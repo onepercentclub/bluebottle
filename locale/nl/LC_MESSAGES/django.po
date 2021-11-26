@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-26 11:55+0100\n"
-"PO-Revision-Date: 2021-11-26 11:18\n"
+"PO-Revision-Date: 2021-11-26 11:20\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -990,7 +990,7 @@ msgstr "Engagement"
 
 #: bluebottle/analytics/models.py:29
 msgid "Target for the number of people contributing to an activity or starting an activity per year."
-msgstr ""
+msgstr "Doelstelling voor het aantal mensen dat bijdraagt aan een activiteit of een activiteit start per jaar."
 
 #: bluebottle/analytics/models.py:36
 msgid "platform type"
@@ -2019,11 +2019,11 @@ msgstr "De eenheid in meervoud waarin je het item wilt tellen (bijvoorbeeld Fiet
 
 #: bluebottle/collect/models.py:51
 msgid "items"
-msgstr ""
+msgstr "items"
 
 #: bluebottle/collect/models.py:52
 msgid "item"
-msgstr ""
+msgstr "item"
 
 #: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:50
 #: bluebottle/time_based/models.py:320 bluebottle/time_based/models.py:403
@@ -2033,11 +2033,11 @@ msgstr "locatie hint"
 
 #: bluebottle/collect/models.py:82
 msgid "Collect Campaign"
-msgstr ""
+msgstr "Inzamelingsactie"
 
 #: bluebottle/collect/models.py:83
 msgid "Collect Campaigns"
-msgstr ""
+msgstr "Inzamelingsacties"
 
 #: bluebottle/collect/models.py:109 bluebottle/collect/views.py:184
 #, python-brace-format
@@ -2200,7 +2200,7 @@ msgstr "Morgen is de grote dag waarop jouw activiteit \"%(title)s\" start!"
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "email"
 msgid "This is a good time to send your participants a motivational message to make your activity a success. Send a message to all your participants via the update wall on your activity page."
-msgstr ""
+msgstr "Dit is een goed moment om een motiverend bericht te sturen naar je deelnemers om jouw activiteit tot een succes te maken. Stuur een bericht naar al je deelnemers via de update wall op de pagina van jouw activiteit."
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
@@ -2352,7 +2352,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/models.py:20
 msgid "The number of users you want to participate."
-msgstr ""
+msgstr "Het aantal gebruikers dat jij wilt dat deelnemen."
 
 #: bluebottle/deeds/models.py:30 bluebottle/initiatives/models.py:251
 msgid "Deed"
@@ -4395,7 +4395,7 @@ msgstr "Eenheid"
 
 #: bluebottle/impact/effects.py:8 bluebottle/impact/effects.py:26
 msgid "Update impact goals"
-msgstr ""
+msgstr "Pas impact resultaten aan"
 
 #: bluebottle/impact/models.py:12
 msgid "People"
@@ -4504,7 +4504,7 @@ msgstr "Zet een doel voor de impact die je verwacht te maken"
 
 #: bluebottle/impact/models.py:119
 msgid "realized from contributions"
-msgstr ""
+msgstr "gerealiseerde door bijdragen"
 
 #: bluebottle/impact/models.py:125
 msgid "realized"
@@ -4987,7 +4987,7 @@ msgstr "Is actief"
 
 #: bluebottle/members/admin.py:233
 msgid "Deleted"
-msgstr ""
+msgstr "Verwijderd"
 
 #: bluebottle/members/admin.py:290
 msgid "Profile"

@@ -1,6 +1,6 @@
-from builtins import object
 import mimetypes
 import os
+from builtins import object
 
 import magic
 from django.core.paginator import Paginator

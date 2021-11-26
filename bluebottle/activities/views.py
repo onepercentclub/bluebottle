@@ -1,5 +1,5 @@
-from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -13,11 +13,11 @@ from bluebottle.activities.serializers import (
     ActivityListSerializer,
     ContributorListSerializer
 )
+from bluebottle.collect.models import CollectContributor
+from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.collect.models import CollectContributor
 from bluebottle.funding.models import Donor
-from bluebottle.deeds.models import DeedParticipant
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (

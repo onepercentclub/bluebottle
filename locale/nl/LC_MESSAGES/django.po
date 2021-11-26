@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-25 09:15+0100\n"
+"POT-Creation-Date: 2021-11-26 11:55+0100\n"
 "PO-Revision-Date: 2021-10-20 07:51\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
@@ -1096,7 +1096,7 @@ msgid ""
 "</p>\n"
 msgstr ""
 
-#: bluebottle/activities/utils.py:277 bluebottle/activities/utils.py:278
+#: bluebottle/activities/utils.py:278 bluebottle/activities/utils.py:279
 msgid "Description is required"
 msgstr "Beschrijving is verplicht"
 
@@ -1130,21 +1130,21 @@ msgstr ""
 "Aantal medewerkers of het aantal gebruikers dat toegang heeft tot het "
 "platform."
 
-#: bluebottle/analytics/models.py:27
-#, fuzzy
-#| msgid "Engagement statistic"
-msgid "Engagement target"
-msgstr "Engagement statistiek"
-
-#: bluebottle/analytics/models.py:28
-msgid "Target number of engaged users per year."
+#: bluebottle/analytics/models.py:27 bluebottle/members/admin.py:311
+msgid "Engagement"
 msgstr ""
 
-#: bluebottle/analytics/models.py:34
+#: bluebottle/analytics/models.py:29
+msgid ""
+"Target for the number of people contributing to an activity or starting an "
+"activity per year."
+msgstr ""
+
+#: bluebottle/analytics/models.py:36
 msgid "platform type"
 msgstr ""
 
-#: bluebottle/analytics/models.py:41 bluebottle/analytics/models.py:42
+#: bluebottle/analytics/models.py:43 bluebottle/analytics/models.py:44
 msgid "reporting platform settings"
 msgstr "rapportage instellingen"
 
@@ -2260,60 +2260,62 @@ msgstr ""
 
 #: bluebottle/collect/models.py:51
 #, fuzzy
-#| msgid "content type"
-msgid "collect type"
-msgstr "inhoudstype"
+#| msgid "news items"
+msgid "items"
+msgstr "nieuwsberichten"
 
 #: bluebottle/collect/models.py:52
 #, fuzzy
-#| msgid "content type"
-msgid "collect types"
-msgstr "inhoudstype"
+#| msgid "news item"
+msgid "item"
+msgstr "nieuwsbericht"
 
-#: bluebottle/collect/models.py:66 bluebottle/time_based/models.py:50
+#: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:50
 #: bluebottle/time_based/models.py:320 bluebottle/time_based/models.py:403
 #: models.py:33
 msgid "location hint"
 msgstr "locatie hint"
 
-#: bluebottle/collect/models.py:80
+#: bluebottle/collect/models.py:82
 #, fuzzy
-#| msgid "Follow the activity"
-msgid "Collect Activity"
-msgstr "Volg de activiteit"
+#| msgctxt "email"
+#| msgid "Go to campaign"
+msgid "Collect Campaign"
+msgstr "Naar campagne"
 
-#: bluebottle/collect/models.py:81
+#: bluebottle/collect/models.py:83
 #, fuzzy
-#| msgid "Activities"
-msgid "Collect Activities"
-msgstr "Activiteiten"
+#| msgctxt "email"
+#| msgid "Go to campaign"
+msgid "Collect Campaigns"
+msgstr "Naar campagne"
 
-#: bluebottle/collect/models.py:107 bluebottle/collect/views.py:184
+#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:184
 #, python-brace-format
 msgid ""
 "\n"
 "Collecting {type}"
 msgstr ""
 
-#: bluebottle/collect/models.py:143
+#: bluebottle/collect/models.py:145
 #, fuzzy
 #| msgid "Edit contributor"
 msgid "Collect contributor"
 msgstr "Contributie aanpassen"
 
-#: bluebottle/collect/models.py:144
+#: bluebottle/collect/models.py:146
 #, fuzzy
 #| msgid "Edit contributor"
 msgid "Collect contributors"
 msgstr "Contributie aanpassen"
 
-#: bluebottle/collect/models.py:172
+#: bluebottle/collect/models.py:174
 #, fuzzy
 #| msgid "Create contribution"
 msgid "Collect contribution"
 msgstr "Maak een bijdrage aan"
 
-#: bluebottle/collect/models.py:173
+#: bluebottle/collect/models.py:175
 #, fuzzy
 #| msgid "Create contribution"
 msgid "Collect contributions"
@@ -2498,8 +2500,9 @@ msgstr "Morgen is de grote dag waarop jouw activiteit \"%(title)s\" start!"
 #| "message via the 'update wall' on the activity page."
 msgctxt "email"
 msgid ""
-"Help your contributors to start tomorrow fully motivated. Send them a "
-"message via the 'update wall' on the activity page."
+"This is a good time to send your participants a motivational message to make "
+"your activity a success. Send a message to all your participants via the "
+"update wall on your activity page."
 msgstr ""
 "Help de deelnemers om morgen vol enthousiasme te starten. Stuur hen een "
 "bericht via de 'update wall' op de activiteit-pagina."
@@ -5672,10 +5675,6 @@ msgstr "Profiel"
 msgid "Permissions"
 msgstr "Permissies"
 
-#: bluebottle/members/admin.py:311
-msgid "Engagement"
-msgstr ""
-
 #: bluebottle/members/admin.py:318
 msgid "Notifications"
 msgstr "Meldingen"
@@ -8499,6 +8498,44 @@ msgstr "uiterste aanmelddatum"
 #: models.py:99
 msgid "Events"
 msgstr "Evenementen"
+
+#, fuzzy
+#~| msgid "Engagement statistic"
+#~ msgid "Engagement target"
+#~ msgstr "Engagement statistiek"
+
+#, fuzzy
+#~| msgid "content type"
+#~ msgid "collect type"
+#~ msgstr "inhoudstype"
+
+#, fuzzy
+#~| msgid "content type"
+#~ msgid "collect types"
+#~ msgstr "inhoudstype"
+
+#, fuzzy
+#~| msgid "Follow the activity"
+#~ msgid "Collect Activity"
+#~ msgstr "Volg de activiteit"
+
+#, fuzzy
+#~| msgid "Activities"
+#~ msgid "Collect Activities"
+#~ msgstr "Activiteiten"
+
+#, fuzzy
+#~| msgctxt "email"
+#~| msgid ""
+#~| "Help your participants to start tomorrow fully motivated. Send them a "
+#~| "message via the 'update wall' on the activity page."
+#~ msgctxt "email"
+#~ msgid ""
+#~ "Help your contributors to start tomorrow fully motivated. Send them a "
+#~ "message via the 'update wall' on the activity page."
+#~ msgstr ""
+#~ "Help de deelnemers om morgen vol enthousiasme te starten. Stuur hen een "
+#~ "bericht via de 'update wall' op de activiteit-pagina."
 
 #, fuzzy
 #~| msgid ""

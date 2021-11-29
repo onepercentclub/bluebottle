@@ -2523,8 +2523,8 @@ msgstr "Währung"
 
 #: bluebottle/funding/admin.py:169
 #, python-format
-msgid "% donated"
-msgstr "% gespendet"
+msgid "%% donated"
+msgstr "%% gespendet"
 
 #: bluebottle/funding/admin.py:176
 msgid "% matching"

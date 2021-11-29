@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-05 14:14+0100\n"
-"PO-Revision-Date: 2021-11-26 10:02\n"
+"PO-Revision-Date: 2021-11-29 16:26\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -4270,7 +4270,7 @@ msgstr "Water"
 
 #: bluebottle/impact/models.py:22
 msgid "plastic"
-msgstr "Plastic"
+msgstr "plastic"
 
 #: bluebottle/impact/models.py:25
 msgid "Task completed"
@@ -6868,7 +6868,7 @@ msgid "\n"
 "        <p>Hi %(recipient_name)s,</p>\n"
 "    "
 msgstr "\n"
-"        <p>Hi <b>%(recipient_name)s,</p>\n"
+"        <p>Hi %(recipient_name)s,</p>\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:6

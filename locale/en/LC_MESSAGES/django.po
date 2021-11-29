@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-26 11:55+0100\n"
+"POT-Creation-Date: 2021-11-29 16:32+0100\n"
 "PO-Revision-Date: 2018-06-13 13:52+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1770,7 +1770,7 @@ msgid "People involved"
 msgstr ""
 
 #: bluebottle/cms/models.py:160 bluebottle/deeds/admin.py:62
-#: bluebottle/deeds/models.py:86 bluebottle/statistics/models.py:75
+#: bluebottle/deeds/models.py:111 bluebottle/statistics/models.py:75
 #: bluebottle/statistics/models.py:200 bluebottle/time_based/admin.py:89
 #: bluebottle/time_based/admin.py:97 bluebottle/time_based/admin.py:225
 #: bluebottle/time_based/admin.py:300 bluebottle/time_based/admin.py:316
@@ -2088,7 +2088,7 @@ msgstr ""
 msgid "Collect Campaigns"
 msgstr ""
 
-#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:184
+#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:179
 #, python-brace-format
 msgid ""
 "\n"
@@ -2413,19 +2413,19 @@ msgstr ""
 msgid "Edit participant"
 msgstr ""
 
-#: bluebottle/deeds/models.py:20
+#: bluebottle/deeds/models.py:23
 msgid "The number of users you want to participate."
 msgstr ""
 
-#: bluebottle/deeds/models.py:30 bluebottle/initiatives/models.py:251
+#: bluebottle/deeds/models.py:33 bluebottle/initiatives/models.py:251
 msgid "Deed"
 msgstr ""
 
-#: bluebottle/deeds/models.py:31 bluebottle/settings/admin_dashboard.py:97
+#: bluebottle/deeds/models.py:34 bluebottle/settings/admin_dashboard.py:97
 msgid "Deeds"
 msgstr ""
 
-#: bluebottle/deeds/models.py:85 bluebottle/time_based/admin.py:88
+#: bluebottle/deeds/models.py:110 bluebottle/time_based/admin.py:88
 #: bluebottle/time_based/admin.py:96 bluebottle/time_based/admin.py:315
 #: models.py:203
 msgid "Participant"

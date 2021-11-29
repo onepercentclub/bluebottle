@@ -2991,8 +2991,8 @@ msgstr "Devise"
 
 #: bluebottle/funding/admin.py:169
 #, python-format
-msgid "% donated"
-msgstr "% donné"
+msgid "%% donated"
+msgstr "%% donné"
 
 #: bluebottle/funding/admin.py:176
 msgid "% matching"

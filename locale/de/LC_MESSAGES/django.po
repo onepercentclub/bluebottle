@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-26 11:55+0100\n"
-"PO-Revision-Date: 2021-11-26 11:18\n"
+"POT-Creation-Date: 2021-11-29 16:43+0100\n"
+"PO-Revision-Date: 2021-11-29 16:26\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -1404,16 +1404,12 @@ msgstr "Suchen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
 #, python-format
-msgid "\n"
-"            %(counter)s result"
-msgid_plural "%(counter)s results\n"
-"        "
-msgstr[0] "\n"
-"            %(counter)s Ergebnis"
-msgstr[1] "%(counter)s Ergebnisse\n"
-"        "
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] ""
+msgstr[1] ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:13
 #, python-format
 msgid "\n"
 "                    %(full_result_count)s total\n"
@@ -1422,7 +1418,7 @@ msgstr "\n"
 "                    %(full_result_count)s Gesamt\n"
 "                "
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:20
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:18
 msgid "Show all"
 msgstr "Alle anzeigen"
 
@@ -1704,7 +1700,7 @@ msgid "People involved"
 msgstr "Beteiligte Personen"
 
 #: bluebottle/cms/models.py:160 bluebottle/deeds/admin.py:62
-#: bluebottle/deeds/models.py:86 bluebottle/statistics/models.py:75
+#: bluebottle/deeds/models.py:111 bluebottle/statistics/models.py:75
 #: bluebottle/statistics/models.py:200 bluebottle/time_based/admin.py:89
 #: bluebottle/time_based/admin.py:97 bluebottle/time_based/admin.py:225
 #: bluebottle/time_based/admin.py:300 bluebottle/time_based/admin.py:316
@@ -2018,7 +2014,7 @@ msgstr ""
 msgid "Collect Campaigns"
 msgstr ""
 
-#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:184
+#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:179
 #, python-brace-format
 msgid "\n"
 "Collecting {type}"
@@ -2330,19 +2326,19 @@ msgstr "Bilder"
 msgid "Edit participant"
 msgstr "Teilnehmer bearbeiten"
 
-#: bluebottle/deeds/models.py:20
+#: bluebottle/deeds/models.py:23
 msgid "The number of users you want to participate."
 msgstr "Die Anzahl der Benutzer, an denen Sie teilnehmen möchten."
 
-#: bluebottle/deeds/models.py:30 bluebottle/initiatives/models.py:251
+#: bluebottle/deeds/models.py:33 bluebottle/initiatives/models.py:251
 msgid "Deed"
 msgstr "Urkunde"
 
-#: bluebottle/deeds/models.py:31 bluebottle/settings/admin_dashboard.py:97
+#: bluebottle/deeds/models.py:34 bluebottle/settings/admin_dashboard.py:97
 msgid "Deeds"
 msgstr "Urkunden"
 
-#: bluebottle/deeds/models.py:85 bluebottle/time_based/admin.py:88
+#: bluebottle/deeds/models.py:110 bluebottle/time_based/admin.py:88
 #: bluebottle/time_based/admin.py:96 bluebottle/time_based/admin.py:315
 #: models.py:203
 msgid "Participant"

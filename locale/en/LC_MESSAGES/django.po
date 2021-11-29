@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-29 16:32+0100\n"
+"POT-Creation-Date: 2021-11-29 16:43+0100\n"
 "PO-Revision-Date: 2018-06-13 13:52+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1465,16 +1465,12 @@ msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
 #, python-format
-msgid ""
-"\n"
-"            %(counter)s result"
-msgid_plural ""
-"%(counter)s results\n"
-"        "
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
 msgstr[0] ""
 msgstr[1] ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:13
 #, python-format
 msgid ""
 "\n"
@@ -1482,7 +1478,7 @@ msgid ""
 "                "
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:20
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:18
 msgid "Show all"
 msgstr ""
 

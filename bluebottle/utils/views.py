@@ -2,6 +2,8 @@ from builtins import object
 import mimetypes
 import os
 
+import icalendar
+
 import magic
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
@@ -304,3 +306,39 @@ class JsonApiViewMixin(AutoPrefetchMixin):
 
 class NoPagination(PageNumberPagination):
     page_size = 10000
+
+
+class IcalView(PrivateFileView):
+    max_age = 30 * 60  # half an hour
+
+    @property
+    def details(self):
+        return self.get_object().description
+
+    def get(self, *args, **kwargs):
+        instance = self.get_object()
+        calendar = icalendar.Calendar()
+
+        event = icalendar.Event()
+        event.add('summary', instance.title)
+        event.add('description', self.details)
+        event.add('url', instance.get_absolute_url())
+        event.add('dtstart', instance.start)
+        event.add('dtend', instance.end)
+        event['uid'] = instance.uid
+
+        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
+
+        event['organizer'] = organizer
+        if instance.location:
+            event['location'] = icalendar.vText(instance.location.formatted_address)
+
+        calendar.add_component(event)
+
+        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
+            instance.slug
+        )
+
+        return response

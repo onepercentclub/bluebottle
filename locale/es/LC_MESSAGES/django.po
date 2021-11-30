@@ -1351,15 +1351,6 @@ msgstr ""
 msgid "Search"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
-#, python-format
-msgid "\n"
-"            %(counter)s result"
-msgid_plural "%(counter)s results\n"
-"        "
-msgstr[0] ""
-msgstr[1] ""
-
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
 #, python-format
 msgid "\n"

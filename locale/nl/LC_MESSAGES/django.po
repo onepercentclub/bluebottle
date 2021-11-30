@@ -1630,23 +1630,6 @@ msgstr "Log in met je wachtwoord"
 msgid "Search"
 msgstr "Zoek"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
-#, fuzzy, python-format
-#| msgid ""
-#| "\n"
-#| "            %(counter)s result"
-#| msgid_plural ""
-#| "%(counter)s results\n"
-#| "        "
-msgid "%(counter)s result"
-msgid_plural "%(counter)s results"
-msgstr[0] ""
-"\n"
-"            %(counter)s resultaat"
-msgstr[1] ""
-"%(counter)s resultaat\n"
-"        "
-
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:13
 #, python-format
 msgid ""

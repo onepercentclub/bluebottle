@@ -2524,8 +2524,8 @@ msgstr "Valuta"
 
 #: bluebottle/funding/admin.py:169
 #, python-format
-msgid "% donated"
-msgstr "% gedoneerd"
+msgid "%% donated"
+msgstr "%% gedoneerd"
 
 #: bluebottle/funding/admin.py:176
 msgid "% matching"

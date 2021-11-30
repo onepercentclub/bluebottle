@@ -1407,17 +1407,6 @@ msgstr "Se connecter avec un mot de passe"
 msgid "Search"
 msgstr "Chercher"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
-#, python-format
-msgid "\n"
-"            %(counter)s result"
-msgid_plural "%(counter)s results\n"
-"        "
-msgstr[0] "\n"
-"            %(counter)s résultat"
-msgstr[1] "%(counter)s résultats\n"
-"        "
-
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
 #, python-format
 msgid "\n"

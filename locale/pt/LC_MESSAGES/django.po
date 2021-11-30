@@ -1407,17 +1407,6 @@ msgstr "Fazer login com senha"
 msgid "Search"
 msgstr "Pesquisa"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
-#, python-format
-msgid "\n"
-"            %(counter)s result"
-msgid_plural "%(counter)s results\n"
-"        "
-msgstr[0] "\n"
-"            %(counter)s resultado"
-msgstr[1] "%(counter)s resultados\n"
-"        "
-
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
 #, python-format
 msgid "\n"

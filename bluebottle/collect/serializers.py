@@ -91,6 +91,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'my_contributor',
             'location',
             'collect_type'
+            'goals',
+            'goals.type',
         ]
 
     included_serializers = dict(

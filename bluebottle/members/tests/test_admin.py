@@ -3,6 +3,7 @@ from builtins import object
 import os
 from datetime import timedelta
 
+from bluebottle.collect.tests.factories import CollectContributorFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 from bluebottle.funding_pledge.models import PledgePaymentProvider
@@ -558,6 +559,19 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('Initiatives:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/initiatives/initiative/?owner_id={}">5</a>'.format(user.id)
+            in response.text
+        )
+
+    def test_engagement_shows_collect(self):
+        user = BlueBottleUserFactory.create()
+        CollectContributorFactory.create(user=user)
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')
+        self.assertTrue('Collect contributor:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/collect/collectcontributor/'
+            '?user_id={}&status=succeeded">1</a> succeeded'.format(user.id)
             in response.text
         )
 

@@ -277,7 +277,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds',
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds', 'collect',
             'is_superuser', 'kyc'
         ))
 
@@ -288,7 +288,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds',
+            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds', 'collect',
             'is_superuser', 'kyc'
         ))
 
@@ -571,7 +571,7 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('Collect contributor:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/collect/collectcontributor/'
-            '?user_id={}&status=succeeded">1</a> succeeded'.format(user.id)
+            '?user_id={}&amp;status=succeeded">1</a> succeeded'.format(user.id)
             in response.text
         )
 

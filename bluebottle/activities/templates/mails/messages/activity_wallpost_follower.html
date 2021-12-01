@@ -17,7 +17,7 @@
        class="action-email">{% blocktrans context 'email' %}View update{% endblocktrans %}</a>
 {% endblock %}`
 
-{% block unsubscribe %}
+{% block end_message %}
     {% blocktrans with title=obj.content_object.title context 'email' %}
         <p>
             You received this email because you support {{ title }}.

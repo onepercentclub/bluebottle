@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-15 14:14+0200\n"
-"PO-Revision-Date: 2021-10-20 07:51\n"
+"POT-Creation-Date: 2021-11-05 14:14+0100\n"
+"PO-Revision-Date: 2021-11-26 10:20\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg\n"
@@ -21,7 +21,7 @@ msgstr ""
 #: bluebottle/activities/admin.py:54 bluebottle/activities/admin.py:480
 #: bluebottle/activities/admin.py:566 bluebottle/contact/models.py:24
 #: bluebottle/fsm/admin.py:235 bluebottle/fsm/admin.py:243
-#: bluebottle/utils/models.py:147
+#: bluebottle/utils/models.py:168
 msgid "status"
 msgstr ""
 
@@ -44,7 +44,7 @@ msgid "Super admin"
 msgstr ""
 
 #: bluebottle/activities/admin.py:132 bluebottle/activities/models.py:110
-#: bluebottle/funding/models.py:312 bluebottle/time_based/admin.py:485
+#: bluebottle/funding/models.py:313 bluebottle/time_based/admin.py:485
 msgid "Activity"
 msgstr ""
 
@@ -57,7 +57,7 @@ msgid "Initiative"
 msgstr ""
 
 #: bluebottle/activities/admin.py:362 bluebottle/activities/admin.py:538
-#: bluebottle/activities/models.py:50 bluebottle/geo/models.py:172
+#: bluebottle/activities/models.py:50 bluebottle/geo/models.py:169
 #: bluebottle/initiatives/admin.py:157 bluebottle/initiatives/models.py:112
 msgid "office"
 msgstr ""
@@ -68,7 +68,7 @@ msgid "Detail"
 msgstr ""
 
 #: bluebottle/activities/admin.py:367 bluebottle/activities/models.py:58
-#: bluebottle/cms/models.py:48 bluebottle/funding/models.py:310
+#: bluebottle/cms/models.py:48 bluebottle/funding/models.py:311
 #: bluebottle/initiatives/admin.py:206
 msgid "Description"
 msgstr ""
@@ -161,13 +161,9 @@ msgstr ""
 
 #: bluebottle/activities/messages.py:37
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_owner_reaction.html:14
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_owner_reaction.txt:13
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_reaction.html:14
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_reaction.txt:13
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.html:14
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.txt:13
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.html:14
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.txt:13
 msgctxt "email"
 msgid "View response"
 msgstr ""
@@ -179,9 +175,9 @@ msgid "Update from '{title}'"
 msgstr ""
 
 #: bluebottle/activities/messages.py:88 bluebottle/deeds/messages.py:56
-#: bluebottle/time_based/messages.py:174 bluebottle/time_based/messages.py:195
-#: bluebottle/time_based/messages.py:217 bluebottle/time_based/messages.py:342
-#: bluebottle/time_based/messages.py:364 bluebottle/time_based/messages.py:386
+#: bluebottle/time_based/messages.py:215 bluebottle/time_based/messages.py:236
+#: bluebottle/time_based/messages.py:258 bluebottle/time_based/messages.py:468
+#: bluebottle/time_based/messages.py:490 bluebottle/time_based/messages.py:512
 msgctxt "email"
 msgid "Open your activity"
 msgstr ""
@@ -222,38 +218,44 @@ msgctxt "email"
 msgid "The registration deadline for your activity \"{title}\" has expired"
 msgstr ""
 
-#: bluebottle/activities/messages.py:158
+#: bluebottle/activities/messages.py:164
+#, python-brace-format
+msgctxt "email"
+msgid "You have withdrawn from the activity \"{title}\""
+msgstr ""
+
+#: bluebottle/activities/messages.py:178
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, there are {count} activities on {site_name} matching your profile"
 msgstr ""
 
-#: bluebottle/activities/messages.py:170
+#: bluebottle/activities/messages.py:190
 msgctxt "email"
 msgid "View more activities"
 msgstr ""
 
-#: bluebottle/activities/messages.py:200
+#: bluebottle/activities/messages.py:220
 msgctxt "email"
 msgid "Multiple locations"
 msgstr ""
 
-#: bluebottle/activities/messages.py:203
+#: bluebottle/activities/messages.py:223
 msgctxt "email"
 msgid "Mutliple time slots"
 msgstr ""
 
-#: bluebottle/activities/messages.py:214
+#: bluebottle/activities/messages.py:234
 msgctxt "email"
 msgid "Starts immediately"
 msgstr ""
 
-#: bluebottle/activities/messages.py:217 bluebottle/activities/messages.py:233
+#: bluebottle/activities/messages.py:237 bluebottle/activities/messages.py:253
 msgctxt "email"
 msgid "runs indefinitely"
 msgstr ""
 
-#: bluebottle/activities/messages.py:232
+#: bluebottle/activities/messages.py:252
 msgctxt "email"
 msgid "starts immediately"
 msgstr ""
@@ -280,7 +282,7 @@ msgstr ""
 
 #: bluebottle/activities/models.py:55 bluebottle/cms/models.py:46
 #: bluebottle/cms/models.py:107 bluebottle/cms/models.py:132
-#: bluebottle/cms/models.py:366 bluebottle/funding/models.py:309
+#: bluebottle/cms/models.py:366 bluebottle/funding/models.py:310
 #: bluebottle/news/models.py:21 bluebottle/pages/models.py:202
 #: bluebottle/slides/models.py:36 bluebottle/statistics/models.py:206
 msgid "Title"
@@ -301,7 +303,7 @@ msgstr ""
 msgid "Do you have a video pitch or a short movie that explains your activity? Cool! We can't wait to see it! You can paste the link to YouTube or Vimeo video here"
 msgstr ""
 
-#: bluebottle/activities/models.py:77 bluebottle/members/models.py:157
+#: bluebottle/activities/models.py:77 bluebottle/members/models.py:154
 msgid "Segment"
 msgstr ""
 
@@ -325,7 +327,7 @@ msgid "Contribution"
 msgstr ""
 
 #: bluebottle/activities/models.py:186 bluebottle/activities/models.py:242
-#: bluebottle/funding/models.py:540 bluebottle/time_based/models.py:644
+#: bluebottle/funding/models.py:541 bluebottle/time_based/models.py:657
 msgid "Contributions"
 msgstr ""
 
@@ -365,7 +367,7 @@ msgstr ""
 msgid "Deed particpant"
 msgstr ""
 
-#: bluebottle/activities/models.py:235 bluebottle/time_based/models.py:628
+#: bluebottle/activities/models.py:235 bluebottle/time_based/models.py:641
 msgid "Contribution type"
 msgstr ""
 
@@ -676,7 +678,7 @@ msgid "committed hours"
 msgstr ""
 
 #: bluebottle/activities/templates/admin/activity-stats.html:29
-#: bluebottle/funding/models.py:392
+#: bluebottle/funding/models.py:393
 msgid "amount"
 msgstr ""
 
@@ -692,7 +694,6 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_base.html:6
-#: bluebottle/activities/templates/mails/messages/activity_base.txt:5
 #| msgid ""
 #| "\n"
 #| "\n"
@@ -703,99 +704,81 @@ msgid "Hi %(recipient_name)s,"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_cancelled.html:6
-#: bluebottle/activities/templates/mails/messages/activity_cancelled.txt:5
 #, python-format
 msgctxt "email"
 msgid "Unfortunately your activity \"%(title)s\" has been cancelled."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_cancelled.html:10
-#: bluebottle/activities/templates/mails/messages/activity_cancelled.txt:7
 #: bluebottle/activities/templates/mails/messages/activity_rejected.html:10
-#: bluebottle/activities/templates/mails/messages/activity_rejected.txt:7
 #: bluebottle/activities/templates/mails/messages/activity_restored.html:14
-#: bluebottle/activities/templates/mails/messages/activity_restored.txt:9
 #: bluebottle/time_based/templates/mails/messages/participant_added_owner.html:10
-#: bluebottle/time_based/templates/mails/messages/participant_added_owner.txt:7
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:10
-#: bluebottle/time_based/templates/mails/messages/participant_removed_owner.txt:7
 msgctxt "email"
 msgid "If you have any questions, you can contact the platform manager by replying to this email."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_expired.html:6
-#: bluebottle/activities/templates/mails/messages/activity_expired.txt:5
 #, python-format
 msgctxt "email"
 msgid "Unfortunately, nobody applied to your activity \"%(title)s\" before the deadline to apply. That’s why we have cancelled your activity."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_expired.html:10
-#: bluebottle/activities/templates/mails/messages/activity_expired.txt:7
 msgctxt "email"
 msgid "Don’t worry, you can always create a new activity and try again."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_expired.html:14
-#: bluebottle/activities/templates/mails/messages/activity_expired.txt:9
 msgctxt "email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_impact_reminder.html:6
-#: bluebottle/activities/templates/mails/messages/activity_impact_reminder.txt:5
 msgctxt "email"
 msgid "We are very curious to know what impact you managed to make with your activity. Please share your results via your activity page."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_rejected.html:6
-#: bluebottle/activities/templates/mails/messages/activity_rejected.txt:5
 #, python-format
 msgctxt "email"
 msgid "Unfortunately your activity \"%(title)s\" has been rejected."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_restored.html:6
-#: bluebottle/activities/templates/mails/messages/activity_restored.txt:5
 #, python-format
 msgctxt "email"
 msgid "Your activity \"%(title)s\" has been restored."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_restored.html:10
-#: bluebottle/activities/templates/mails/messages/activity_restored.txt:7
 msgctxt "email"
 msgid "Head over to your activity page to see what you need to do to open up your activity for registrations again."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_succeeded.html:6
-#: bluebottle/activities/templates/mails/messages/activity_succeeded.txt:5
 #, python-format
 msgctxt "email"
 msgid "You did it! Your activity \"%(title)s\" has succeeded, that calls for a celebration!"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_succeeded.html:11
-#: bluebottle/activities/templates/mails/messages/activity_succeeded.txt:8
 msgctxt "email"
 msgid "Head over to your activity page and enter the impact your activity made, so that everybody can see how effective your activity was."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_succeeded.html:17
-#: bluebottle/activities/templates/mails/messages/activity_succeeded.txt:11
 msgctxt "email"
 msgid "And don’t forget to thank your awesome participants for their support."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_succeeded_manually.html:6
-#: bluebottle/activities/templates/mails/messages/activity_succeeded_manually.txt:5
 #, python-format
 msgctxt "email"
 msgid "You did it! The activity \"%(title)s\" has succeeded, that calls for a celebration!"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_succeeded_manually.html:10
-#: bluebottle/activities/templates/mails/messages/activity_succeeded_manually.txt:7
 msgctxt "email"
 msgid "Share your experience on the activity page."
 msgstr ""
@@ -814,9 +797,7 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_follower.html:17
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_follower.txt:14
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:17
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.txt:14
 msgctxt "email"
 msgid "View update"
 msgstr ""
@@ -837,26 +818,6 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_follower.txt:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"%(author_name)s posted an update to %(title)s:\n\n"
-"'%(text)s'\n"
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_follower.txt:18
-#, python-format
-msgctxt "email"
-msgid "\n"
-"You received this email because you support %(title)s.\n"
-"Don't want to receive activity updates anymore?\n"
-"Unsubscribe via your account page:\n"
-"%(site)s/member/profile\n"
-msgstr ""
-
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_owner.html:5
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.html:5
 #, python-format
@@ -868,34 +829,16 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_owner.html:15
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_owner.txt:13
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.html:15
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.txt:13
 #: bluebottle/wallposts/templates/project_wallpost_new.mail.html:16
-#: bluebottle/wallposts/templates/project_wallpost_new.mail.txt:14
 #: bluebottle/wallposts/templates/project_wallpost_reaction_new.mail.html:16
-#: bluebottle/wallposts/templates/project_wallpost_reaction_new.mail.txt:14
 #: bluebottle/wallposts/templates/project_wallpost_reaction_project.mail.html:16
-#: bluebottle/wallposts/templates/project_wallpost_reaction_project.mail.txt:14
 #: bluebottle/wallposts/templates/project_wallpost_reaction_same_wallpost.mail.html:16
-#: bluebottle/wallposts/templates/project_wallpost_reaction_same_wallpost.mail.txt:14
 #: bluebottle/wallposts/templates/task_wallpost_new.mail.html:16
-#: bluebottle/wallposts/templates/task_wallpost_new.mail.txt:14
 #: bluebottle/wallposts/templates/task_wallpost_reaction_new.mail.html:16
-#: bluebottle/wallposts/templates/task_wallpost_reaction_new.mail.txt:14
 #: bluebottle/wallposts/templates/task_wallpost_reaction_task.mail.html:16
-#: bluebottle/wallposts/templates/task_wallpost_reaction_task.mail.txt:14
 msgctxt "email"
 msgid "View comment"
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_owner.txt:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"%(author_name)s posted a comment to '%(title)s'.\n\n"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_owner_reaction.html:5
@@ -909,15 +852,6 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_owner_reaction.txt:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"%(author_name)s responded to a comment on '%(title)s'.\n\n"
-msgstr ""
-
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_reaction.html:5
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.html:5
 #, python-format
@@ -927,15 +861,6 @@ msgid "\n"
 "        <br><br>\n"
 "        %(author_name)s responded to your update on '%(title)s'.\n"
 "    "
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/activity_wallpost_reaction.txt:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"%(author_name)s responded to your update on '%(title)s'.\n\n"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:6
@@ -956,12 +881,10 @@ msgid ", so that we can select even more relevant activities for you."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:43
-#: bluebottle/activities/templates/mails/messages/matching_activities.txt:21
 msgid "Online / Remote"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:72
-#: bluebottle/activities/templates/mails/messages/matching_activities.txt:18
 msgid "No specific skill needed"
 msgstr ""
 
@@ -973,20 +896,12 @@ msgstr ""
 msgid "via your profile page."
 msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/matching_activities.txt:4
+#: bluebottle/activities/templates/mails/messages/participant_withdrew_confirmation.html:4
 #, python-format
 msgctxt "email"
 msgid "\n"
-"There are tons of cool activities on %(site_name)s that are making a positive impact. \n\n"
-"We have selected %(count)s activities that match with your profile. Join us!\n"
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/matching_activities.txt:9
-msgid "Complete your profile, so that we can select even more relevant activities for you"
-msgstr ""
-
-#: bluebottle/activities/templates/mails/messages/matching_activities.txt:31
-msgid "Don't want to receive this monthly update anymore? Unsubscribe via your profile page"
+"<p>You have withdrawn from an activity on <b>%(site_name)s</b></p>\n\n"
+"<h4>%(title)s</h4>\n"
 msgstr ""
 
 #: bluebottle/activities/utils.py:270 bluebottle/activities/utils.py:271
@@ -1135,7 +1050,7 @@ msgstr ""
 msgid "Designates whether the user can log into this admin site."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:113 bluebottle/impact/models.py:40
+#: bluebottle/bb_accounts/models.py:113 bluebottle/impact/models.py:42
 msgid "active"
 msgstr ""
 
@@ -1170,127 +1085,123 @@ msgstr ""
 msgid "last name"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:131
-msgid "Location your at now"
-msgstr ""
-
-#: bluebottle/bb_accounts/models.py:134
+#: bluebottle/bb_accounts/models.py:133
 msgid "Office"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:138
+#: bluebottle/bb_accounts/models.py:137
 msgid "phone number"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:139
+#: bluebottle/bb_accounts/models.py:138
 msgid "gender"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:140
+#: bluebottle/bb_accounts/models.py:139
 msgid "birthdate"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:141
+#: bluebottle/bb_accounts/models.py:140
 msgid "about me"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:144
+#: bluebottle/bb_accounts/models.py:143
 msgid "picture"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:155
+#: bluebottle/bb_accounts/models.py:154
 msgid "Co-financer"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:157
+#: bluebottle/bb_accounts/models.py:156
 msgid "Donations by co-financers are shown in a separate list on the project page. These donation will always be visible."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:160
+#: bluebottle/bb_accounts/models.py:159
 msgid "Can pledge"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:162
+#: bluebottle/bb_accounts/models.py:161
 msgid "User can create a pledge donation."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:166
+#: bluebottle/bb_accounts/models.py:165
 msgid "primary language"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:169
+#: bluebottle/bb_accounts/models.py:168
 msgid "Language used for website and emails."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:171
+#: bluebottle/bb_accounts/models.py:170
 msgid "share time and knowledge"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:172
+#: bluebottle/bb_accounts/models.py:171
 msgid "share money"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:173
+#: bluebottle/bb_accounts/models.py:172
 msgid "newsletter"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:173
+#: bluebottle/bb_accounts/models.py:172
 msgid "Subscribe to newsletter."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:175
+#: bluebottle/bb_accounts/models.py:174
 msgid "Updates"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:176
+#: bluebottle/bb_accounts/models.py:175
 msgid "Updates from initiatives and activities that this person follows"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:180
+#: bluebottle/bb_accounts/models.py:179
 msgid "Submitted initiatives"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:181
+#: bluebottle/bb_accounts/models.py:180
 msgid "Staff member receives a notification when an initiative is submitted an ready to be reviewed."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:185 bluebottle/organizations/models.py:32
+#: bluebottle/bb_accounts/models.py:184 bluebottle/organizations/models.py:32
 msgid "website"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:186
+#: bluebottle/bb_accounts/models.py:185
 msgid "facebook profile"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:187
+#: bluebottle/bb_accounts/models.py:186
 msgid "twitter profile"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:188
+#: bluebottle/bb_accounts/models.py:187
 msgid "skype profile"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:193
+#: bluebottle/bb_accounts/models.py:192
 msgid "Users that are connected to a partner organisation will skip the organisation step in initiative create."
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:196
+#: bluebottle/bb_accounts/models.py:195
 msgid "Partner organisation"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:200
+#: bluebottle/bb_accounts/models.py:199
 msgid "Is anonymized"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:201
+#: bluebottle/bb_accounts/models.py:200
 msgid "Welcome email is sent"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:211
+#: bluebottle/bb_accounts/models.py:210
 msgid "member"
 msgstr ""
 
-#: bluebottle/bb_accounts/models.py:212
+#: bluebottle/bb_accounts/models.py:211
 msgid "members"
 msgstr ""
 
@@ -1308,17 +1219,8 @@ msgid "\n\n"
 msgstr ""
 
 #: bluebottle/bb_accounts/templates/bb_accounts/password_reset_email.html:19
-#: bluebottle/bb_accounts/templates/bb_accounts/password_reset_email.txt:16
 msgctxt "email"
 msgid "Reset password"
-msgstr ""
-
-#: bluebottle/bb_accounts/templates/bb_accounts/password_reset_email.txt:5
-#, python-format
-msgid "\n\n"
-"Hello,\n\n"
-"Seems you've requested a password reset for %(site_name)s\n\n"
-"(If you haven't requested a reset of your password, you can ignore this email)\n"
 msgstr ""
 
 #: bluebottle/bb_accounts/templates/bb_accounts/password_reset_subject.txt:2
@@ -1350,7 +1252,6 @@ msgid "\n\n"
 msgstr ""
 
 #: bluebottle/bb_follow/templates/bb_follow/mails/wallpost_mail.mail.html:18
-#: bluebottle/bb_follow/templates/bb_follow/mails/wallpost_mail.mail.txt:16
 msgctxt "email"
 msgid "View full update"
 msgstr ""
@@ -1368,23 +1269,6 @@ msgid "\n"
 "            </a> via your account page\n"
 "        </p>\n"
 "    "
-msgstr ""
-
-#: bluebottle/bb_follow/templates/bb_follow/mails/wallpost_mail.mail.txt:5
-#, python-format
-msgid "\n\n"
-"Hello %(first_name)s,\n\n"
-"%(author)s added a new post on a %(follow_object)s you follow:\n\n"
-"'%(wallpost_text)s...'\n\n"
-msgstr ""
-
-#: bluebottle/bb_follow/templates/bb_follow/mails/wallpost_mail.mail.txt:19
-#, python-format
-msgid "\n"
-"You received this email because you support %(title)s.\n"
-"Don't want to receive initiative updates anymore?\n"
-"Unsubscribe via your account page:\n"
-"%(site)s%(unsubscribe_link)s\n"
 msgstr ""
 
 #: bluebottle/bb_projects/migrations/0007_auto_20180319_1536.py:41
@@ -1412,14 +1296,14 @@ msgid "Welcome,"
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:40
-#: bluebottle/settings/admin_dashboard.py:122 bluebottle/settings/base.py:663
+#: bluebottle/settings/admin_dashboard.py:122 bluebottle/settings/base.py:667
 msgid "Users"
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:46
 #: bluebottle/initiatives/admin.py:276 bluebottle/initiatives/models.py:145
-#: bluebottle/members/admin.py:407 bluebottle/settings/admin_dashboard.py:11
-#: bluebottle/settings/base.py:688
+#: bluebottle/members/admin.py:457 bluebottle/settings/admin_dashboard.py:11
+#: bluebottle/settings/base.py:692
 msgid "Initiatives"
 msgstr ""
 
@@ -1500,15 +1384,15 @@ msgstr ""
 msgid "initiatives"
 msgstr ""
 
-#: bluebottle/categories/models.py:19 bluebottle/geo/models.py:134
-#: bluebottle/impact/models.py:35 bluebottle/initiatives/models.py:81
+#: bluebottle/categories/models.py:19 bluebottle/geo/models.py:131
+#: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:81
 #: bluebottle/initiatives/models.py:318 bluebottle/organizations/models.py:22
 #: bluebottle/segments/models.py:11
 msgid "slug"
 msgstr ""
 
 #: bluebottle/categories/models.py:22 bluebottle/categories/models.py:119
-#: bluebottle/geo/models.py:160
+#: bluebottle/geo/models.py:157
 msgid "image"
 msgstr ""
 
@@ -1528,23 +1412,23 @@ msgstr ""
 msgid "Category Logo image"
 msgstr ""
 
-#: bluebottle/categories/models.py:62 bluebottle/geo/models.py:62
-#: bluebottle/geo/models.py:75 bluebottle/geo/models.py:90
-#: bluebottle/geo/models.py:119 bluebottle/geo/models.py:133
-#: bluebottle/impact/models.py:47 bluebottle/initiatives/models.py:322
+#: bluebottle/categories/models.py:62 bluebottle/geo/models.py:59
+#: bluebottle/geo/models.py:72 bluebottle/geo/models.py:87
+#: bluebottle/geo/models.py:116 bluebottle/geo/models.py:130
+#: bluebottle/impact/models.py:49 bluebottle/initiatives/models.py:322
 #: bluebottle/looker/models.py:13 bluebottle/offices/models.py:8
 #: bluebottle/offices/models.py:21 bluebottle/organizations/models.py:21
 #: bluebottle/organizations/models.py:69 bluebottle/segments/models.py:10
-#: bluebottle/segments/models.py:41 bluebottle/time_based/models.py:660
+#: bluebottle/segments/models.py:41 bluebottle/time_based/models.py:673
 msgid "name"
 msgstr ""
 
 #: bluebottle/categories/models.py:63 bluebottle/categories/models.py:98
-#: bluebottle/funding/models.py:357 bluebottle/funding/models.py:388
-#: bluebottle/geo/models.py:120 bluebottle/geo/models.py:158
+#: bluebottle/funding/models.py:358 bluebottle/funding/models.py:389
+#: bluebottle/geo/models.py:117 bluebottle/geo/models.py:155
 #: bluebottle/initiatives/models.py:323 bluebottle/offices/models.py:9
 #: bluebottle/offices/models.py:22 bluebottle/organizations/models.py:23
-#: bluebottle/time_based/models.py:661
+#: bluebottle/time_based/models.py:674
 msgid "description"
 msgstr ""
 
@@ -1556,9 +1440,9 @@ msgstr ""
 msgid "categories"
 msgstr ""
 
-#: bluebottle/categories/models.py:93 bluebottle/funding/models.py:387
+#: bluebottle/categories/models.py:93 bluebottle/funding/models.py:388
 #: bluebottle/initiatives/models.py:29 bluebottle/pages/models.py:60
-#: bluebottle/time_based/models.py:225
+#: bluebottle/time_based/models.py:226
 msgid "title"
 msgstr ""
 
@@ -1662,7 +1546,7 @@ msgstr ""
 msgid "Site links"
 msgstr ""
 
-#: bluebottle/cms/models.py:98 bluebottle/members/admin.py:246
+#: bluebottle/cms/models.py:98 bluebottle/members/admin.py:269
 msgid "Main"
 msgstr ""
 
@@ -1670,8 +1554,8 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: bluebottle/cms/models.py:100 bluebottle/geo/admin.py:91
-#: bluebottle/geo/admin.py:128
+#: bluebottle/cms/models.py:100 bluebottle/geo/admin.py:90
+#: bluebottle/geo/admin.py:126
 msgid "Info"
 msgstr ""
 
@@ -1711,7 +1595,7 @@ msgstr ""
 msgid "Project"
 msgstr ""
 
-#: bluebottle/cms/models.py:123 bluebottle/impact/models.py:22
+#: bluebottle/cms/models.py:123 bluebottle/impact/models.py:24
 msgid "Task"
 msgstr ""
 
@@ -1756,8 +1640,8 @@ msgstr ""
 msgid "People involved"
 msgstr ""
 
-#: bluebottle/cms/models.py:160 bluebottle/deeds/admin.py:60
-#: bluebottle/deeds/models.py:61 bluebottle/statistics/models.py:75
+#: bluebottle/cms/models.py:160 bluebottle/deeds/admin.py:62
+#: bluebottle/deeds/models.py:73 bluebottle/statistics/models.py:75
 #: bluebottle/statistics/models.py:200 bluebottle/time_based/admin.py:88
 #: bluebottle/time_based/admin.py:96 bluebottle/time_based/admin.py:224
 #: bluebottle/time_based/admin.py:299 bluebottle/time_based/admin.py:315
@@ -1802,7 +1686,7 @@ msgid "Funding activities online"
 msgstr ""
 
 #: bluebottle/cms/models.py:174 bluebottle/funding/admin.py:210
-#: bluebottle/funding/models.py:527 bluebottle/statistics/models.py:88
+#: bluebottle/funding/models.py:528 bluebottle/statistics/models.py:88
 msgid "Donations"
 msgstr ""
 
@@ -1963,7 +1847,7 @@ msgstr ""
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:88
 #: bluebottle/deeds/states.py:170 bluebottle/time_based/states.py:383
-#: bluebottle/time_based/states.py:522
+#: bluebottle/time_based/states.py:521
 msgid "Remove"
 msgstr ""
 
@@ -2038,7 +1922,7 @@ msgstr ""
 msgid "Closed"
 msgstr ""
 
-#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:162
+#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:183
 #: bluebottle/wallposts/models.py:40 bluebottle/wallposts/models.py:212
 #: bluebottle/wallposts/models.py:285
 msgid "author"
@@ -2060,12 +1944,12 @@ msgid "Message"
 msgstr ""
 
 #: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:219
-#: bluebottle/utils/models.py:166
+#: bluebottle/utils/models.py:187
 msgid "creation date"
 msgstr ""
 
 #: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:220
-#: bluebottle/utils/models.py:167
+#: bluebottle/utils/models.py:188
 msgid "last modification"
 msgstr ""
 
@@ -2124,10 +2008,13 @@ msgctxt "email"
 msgid "Runs indefinitely"
 msgstr ""
 
-#: bluebottle/deeds/messages.py:33 bluebottle/time_based/messages.py:48
-#: bluebottle/time_based/messages.py:99 bluebottle/time_based/messages.py:128
-#: bluebottle/time_based/messages.py:151 bluebottle/time_based/messages.py:236
-#: bluebottle/time_based/messages.py:257 bluebottle/time_based/messages.py:320
+#: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
+#: bluebottle/time_based/messages.py:80 bluebottle/time_based/messages.py:123
+#: bluebottle/time_based/messages.py:146 bluebottle/time_based/messages.py:169
+#: bluebottle/time_based/messages.py:192 bluebottle/time_based/messages.py:277
+#: bluebottle/time_based/messages.py:300 bluebottle/time_based/messages.py:323
+#: bluebottle/time_based/messages.py:362 bluebottle/time_based/messages.py:383
+#: bluebottle/time_based/messages.py:446
 msgctxt "email"
 msgid "View activity"
 msgstr ""
@@ -2138,15 +2025,25 @@ msgctxt "email"
 msgid "Your activity \"{title}\" will start tomorrow!"
 msgstr ""
 
-#: bluebottle/deeds/models.py:21 bluebottle/initiatives/models.py:251
+#: bluebottle/deeds/messages.py:67 bluebottle/time_based/messages.py:288
+#, python-brace-format
+msgctxt "email"
+msgid "You have joined the activity \"{title}\""
+msgstr ""
+
+#: bluebottle/deeds/models.py:18
+msgid "The number of users you want to participate."
+msgstr ""
+
+#: bluebottle/deeds/models.py:28 bluebottle/initiatives/models.py:251
 msgid "Deed"
 msgstr ""
 
-#: bluebottle/deeds/models.py:22 bluebottle/settings/admin_dashboard.py:79
+#: bluebottle/deeds/models.py:29 bluebottle/settings/admin_dashboard.py:79
 msgid "Deeds"
 msgstr ""
 
-#: bluebottle/deeds/models.py:60 bluebottle/time_based/admin.py:87
+#: bluebottle/deeds/models.py:72 bluebottle/time_based/admin.py:87
 #: bluebottle/time_based/admin.py:95 bluebottle/time_based/admin.py:314
 #: models.py:203
 msgid "Participant"
@@ -2211,7 +2108,7 @@ msgid "Re-accept"
 msgstr ""
 
 #: bluebottle/deeds/states.py:147 bluebottle/time_based/states.py:395
-#: bluebottle/time_based/states.py:531
+#: bluebottle/time_based/states.py:530
 msgid "Withdraw"
 msgstr ""
 
@@ -2220,7 +2117,7 @@ msgid "Stop your participation in the activity."
 msgstr ""
 
 #: bluebottle/deeds/states.py:157 bluebottle/time_based/states.py:406
-#: bluebottle/time_based/states.py:541
+#: bluebottle/time_based/states.py:540
 msgid "Reapply"
 msgstr ""
 
@@ -2241,47 +2138,69 @@ msgid "User is re-accepted after previously withdrawing."
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_date_changed.html:5
-#: bluebottle/deeds/templates/mails/messages/deed_date_changed.txt:4
 #, python-format
 msgctxt "email"
 msgid "The start and/or end date of the activity \"%(title)s\", in which you are participating, has changed."
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_date_changed.html:8
-#: bluebottle/deeds/templates/mails/messages/deed_date_changed.txt:6
 #, python-format
 msgctxt "email"
 msgid "Start: %(start)s"
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_date_changed.html:9
-#: bluebottle/deeds/templates/mails/messages/deed_date_changed.txt:7
 #, python-format
 msgctxt "email"
 msgid "End: %(end)s"
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_date_changed.html:12
-#: bluebottle/deeds/templates/mails/messages/deed_date_changed.txt:9
 msgctxt "email"
 msgid "Head over to the activity page for more information."
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_date_changed.html:15
-#: bluebottle/deeds/templates/mails/messages/deed_date_changed.txt:11
 msgctxt "email"
 msgid "If you are unable to participate, please withdraw via the activity page so that others can take your place."
 msgstr ""
 
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
+#, python-format
+msgctxt "email"
+msgid "You joined an activity on <b>%(site_name)s</b>"
+msgstr ""
+
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:11
+#, python-format
+msgctxt "email"
+msgid "Starts on %(start)s"
+msgstr ""
+
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:14
+#, python-format
+msgctxt "email"
+msgid "Ends on %(end)s"
+msgstr ""
+
+#: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:23
+#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:29
+#: bluebottle/time_based/templates/mails/messages/participant_applied.html:26
+#: bluebottle/time_based/templates/mails/messages/participant_changed.html:18
+#: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
+msgctxt "email"
+msgid "\n"
+"                If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
+"            "
+msgstr ""
+
 #: bluebottle/deeds/templates/mails/messages/deed_reminder.html:5
-#: bluebottle/deeds/templates/mails/messages/deed_reminder.txt:4
 #, python-format
 msgctxt "email"
 msgid "Tomorrow is the big day on which your activity \"%(title)s\" starts!"
 msgstr ""
 
 #: bluebottle/deeds/templates/mails/messages/deed_reminder.html:8
-#: bluebottle/deeds/templates/mails/messages/deed_reminder.txt:6
 msgctxt "email"
 msgid "Help your participants to start tomorrow fully motivated. Send them a message via the 'update wall' on the activity page."
 msgstr ""
@@ -2312,7 +2231,7 @@ msgid "The delta between from and to date is limited to %d days"
 msgstr ""
 
 #: bluebottle/exports/templates/exportdb/base.html:33
-#: bluebottle/members/admin.py:313
+#: bluebottle/members/admin.py:344
 msgid "Extra fields"
 msgstr ""
 
@@ -2394,30 +2313,30 @@ msgstr ""
 msgid "Are you sure"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:54
+#: bluebottle/fsm/effects.py:58
 msgid "Change the status"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:92 bluebottle/fsm/effects.py:109
+#: bluebottle/fsm/effects.py:96 bluebottle/fsm/effects.py:113
 #, python-brace-format
 msgid "{transition} {object}"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:100
+#: bluebottle/fsm/effects.py:104
 msgid "{}: {}"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:104
+#: bluebottle/fsm/effects.py:108
 #, python-brace-format
 msgid "{transition} {object} if {conditions}"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:172
+#: bluebottle/fsm/effects.py:176
 #, python-brace-format
 msgid "{transition} related {object}"
 msgstr ""
 
-#: bluebottle/fsm/effects.py:182
+#: bluebottle/fsm/effects.py:186
 #, python-brace-format
 msgid "{transition} related {object} if {conditions}"
 msgstr ""
@@ -2512,23 +2431,23 @@ msgstr[1] ""
 msgid "No transitions possible"
 msgstr ""
 
-#: bluebottle/fsm/triggers.py:47
+#: bluebottle/fsm/triggers.py:49
 msgid "Model has been changed"
 msgstr ""
 
-#: bluebottle/fsm/triggers.py:72
+#: bluebottle/fsm/triggers.py:74
 msgid "{} has been changed"
 msgstr ""
 
-#: bluebottle/fsm/triggers.py:75
+#: bluebottle/fsm/triggers.py:77
 msgid "Object has been changed"
 msgstr ""
 
-#: bluebottle/fsm/triggers.py:81
+#: bluebottle/fsm/triggers.py:83
 msgid "Model has been deleted"
 msgstr ""
 
-#: bluebottle/fsm/triggers.py:91
+#: bluebottle/fsm/triggers.py:109
 msgid "Model has changed status"
 msgstr ""
 
@@ -2562,7 +2481,7 @@ msgstr ""
 msgid "donations"
 msgstr ""
 
-#: bluebottle/funding/admin.py:299 bluebottle/funding/models.py:308
+#: bluebottle/funding/admin.py:299 bluebottle/funding/models.py:309
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
 msgid "Amount"
 msgstr ""
@@ -2584,13 +2503,13 @@ msgstr ""
 msgid "Basic"
 msgstr ""
 
-#: bluebottle/funding/admin.py:528 bluebottle/members/admin.py:406
-#: bluebottle/members/admin.py:421 bluebottle/members/admin.py:436
-#: bluebottle/members/admin.py:449 bluebottle/members/admin.py:464
+#: bluebottle/funding/admin.py:528 bluebottle/members/admin.py:456
+#: bluebottle/members/admin.py:471 bluebottle/members/admin.py:486
+#: bluebottle/members/admin.py:499 bluebottle/members/admin.py:514
 msgid "None"
 msgstr ""
 
-#: bluebottle/funding/admin.py:530 bluebottle/settings/base.py:860
+#: bluebottle/funding/admin.py:530 bluebottle/settings/base.py:864
 msgid "Funding activities"
 msgstr ""
 
@@ -2731,7 +2650,7 @@ msgstr ""
 
 #: bluebottle/funding/filters.py:17 bluebottle/funding/filters.py:44
 #: bluebottle/time_based/admin.py:415 bluebottle/time_based/admin.py:441
-#: bluebottle/time_based/models.py:139
+#: bluebottle/time_based/models.py:140
 msgid "All"
 msgstr ""
 
@@ -2817,7 +2736,7 @@ msgstr ""
 msgid "Payment currencies"
 msgstr ""
 
-#: bluebottle/funding/models.py:123 bluebottle/funding/models.py:393
+#: bluebottle/funding/models.py:123 bluebottle/funding/models.py:394
 msgid "deadline"
 msgstr ""
 
@@ -2825,7 +2744,7 @@ msgstr ""
 msgid "If you enter a deadline, leave the duration field empty. This will override the duration."
 msgstr ""
 
-#: bluebottle/funding/models.py:130 bluebottle/time_based/models.py:300
+#: bluebottle/funding/models.py:130 bluebottle/time_based/models.py:301
 #: models.py:39
 msgid "duration"
 msgstr ""
@@ -2834,12 +2753,12 @@ msgstr ""
 msgid "If you enter a duration, leave the deadline field empty for it to be automatically calculated."
 msgstr ""
 
-#: bluebottle/funding/models.py:141 bluebottle/funding/models.py:439
+#: bluebottle/funding/models.py:141 bluebottle/funding/models.py:440
 #: bluebottle/funding/states.py:397
 msgid "started"
 msgstr ""
 
-#: bluebottle/funding/models.py:165 bluebottle/impact/models.py:26
+#: bluebottle/funding/models.py:165 bluebottle/impact/models.py:28
 #: bluebottle/initiatives/models.py:248
 #: bluebottle/settings/admin_dashboard.py:91
 msgid "Funding"
@@ -2849,102 +2768,102 @@ msgstr ""
 msgid "Funding Activities"
 msgstr ""
 
-#: bluebottle/funding/models.py:315
+#: bluebottle/funding/models.py:316
 msgid "Limit"
 msgstr ""
 
-#: bluebottle/funding/models.py:318
+#: bluebottle/funding/models.py:319
 msgid "How many of this rewards are available"
 msgstr ""
 
-#: bluebottle/funding/models.py:336
+#: bluebottle/funding/models.py:337
 msgid "Gift"
 msgstr ""
 
-#: bluebottle/funding/models.py:337
+#: bluebottle/funding/models.py:338
 msgid "Gifts"
 msgstr ""
 
-#: bluebottle/funding/models.py:344
+#: bluebottle/funding/models.py:345
 msgid "Not allowed to delete a reward with successful donations."
 msgstr ""
 
-#: bluebottle/funding/models.py:368
+#: bluebottle/funding/models.py:369
 msgid "budget line"
 msgstr ""
 
-#: bluebottle/funding/models.py:369
+#: bluebottle/funding/models.py:370
 msgid "budget lines"
 msgstr ""
 
-#: bluebottle/funding/models.py:382 bluebottle/funding/models.py:429
-#: bluebottle/impact/models.py:106
+#: bluebottle/funding/models.py:383 bluebottle/funding/models.py:430
+#: bluebottle/impact/models.py:108
 msgid "activity"
 msgstr ""
 
-#: bluebottle/funding/models.py:421
+#: bluebottle/funding/models.py:422
 msgid "fundraiser"
 msgstr ""
 
-#: bluebottle/funding/models.py:422
+#: bluebottle/funding/models.py:423
 msgid "fundraisers"
 msgstr ""
 
-#: bluebottle/funding/models.py:438 bluebottle/funding/states.py:387
+#: bluebottle/funding/models.py:439 bluebottle/funding/states.py:387
 #: bluebottle/initiatives/states.py:50 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr ""
 
-#: bluebottle/funding/models.py:440
+#: bluebottle/funding/models.py:441
 msgid "completed"
 msgstr ""
 
-#: bluebottle/funding/models.py:480
+#: bluebottle/funding/models.py:481
 msgid "payout"
 msgstr ""
 
-#: bluebottle/funding/models.py:481
+#: bluebottle/funding/models.py:482
 msgid "payouts"
 msgstr ""
 
-#: bluebottle/funding/models.py:484
+#: bluebottle/funding/models.py:485
 msgid "Payout"
 msgstr ""
 
-#: bluebottle/funding/models.py:499
+#: bluebottle/funding/models.py:500
 msgid "Fake name"
 msgstr ""
 
-#: bluebottle/funding/models.py:500
+#: bluebottle/funding/models.py:501
 msgid "Override donor name / Name for guest donation"
 msgstr ""
 
-#: bluebottle/funding/models.py:501
+#: bluebottle/funding/models.py:502
 msgid "anonymous"
 msgstr ""
 
-#: bluebottle/funding/models.py:526 bluebottle/funding/models.py:539
+#: bluebottle/funding/models.py:527 bluebottle/funding/models.py:540
 msgid "Donation"
 msgstr ""
 
-#: bluebottle/funding/models.py:639 bluebottle/wallposts/models.py:59
+#: bluebottle/funding/models.py:640 bluebottle/wallposts/models.py:59
 #: bluebottle/wallposts/models.py:208 bluebottle/wallposts/models.py:305
 msgid "IP address"
 msgstr ""
 
-#: bluebottle/funding/models.py:646
+#: bluebottle/funding/models.py:647
 msgid "Plain KYC account"
 msgstr ""
 
-#: bluebottle/funding/models.py:647
+#: bluebottle/funding/models.py:648
 msgid "Plain KYC accounts"
 msgstr ""
 
-#: bluebottle/funding/models.py:724
+#: bluebottle/funding/models.py:725
 msgid "Allow guests to donate rewards"
 msgstr ""
 
-#: bluebottle/funding/models.py:728 bluebottle/funding/models.py:729
+#: bluebottle/funding/models.py:729 bluebottle/funding/models.py:730
 msgid "funding settings"
 msgstr ""
 
@@ -3127,7 +3046,7 @@ msgstr ""
 #: bluebottle/funding/states.py:330 bluebottle/funding/states.py:415
 #: bluebottle/funding/states.py:496 bluebottle/funding/states.py:567
 #: bluebottle/funding_stripe/states.py:101 bluebottle/time_based/states.py:183
-#: bluebottle/time_based/states.py:341 bluebottle/time_based/states.py:506
+#: bluebottle/time_based/states.py:341 bluebottle/time_based/states.py:505
 msgid "Initiate"
 msgstr ""
 
@@ -3487,35 +3406,15 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/donation_activity_refunded_donor.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n\n"
-"        Unfortunately, the campaign \"%(title)s\" did not reach its goal. Therefore, all donations will be fully refunded within 10 days.\n\n"
-"        If you have any questions, you can contact the platform manager by replying to this email.\n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/donation_refunded_donor.html:7
 #, python-format
 msgctxt "email"
 msgid "\n"
 "            Hi %(recipient_name)s,<br/>\n"
-"            Your donation to %(title)s will be fully refunded within 10 days.\n"
+"            Your donation to \"%(title)s\" will be fully refunded within 10 days.\n"
 "            Either you requested this refund or the campaign didn’t reach its funding goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/donation_refunded_donor.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n\n"
-"        You have requested a refund for your donation to the campaign \"%(title)s\". The full amount will be refunded within 10 days.\n\n"
-"        If you have any questions, you can contact the platform manager by replying to this email.\n"
-"    "
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_donor.html:7
@@ -3552,30 +3451,6 @@ msgstr ""
 msgid "Share on Twitter"
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/donation_success_donor.txt:5
-#| msgid ""
-#| "\n"
-#| "\n"
-#| "Hi %(receiver_name)s,\n"
-#| "\n"
-#| "Thank you for your partnership with %(site)s. \n"
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"Thanks for your donation! \n"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/donation_success_donor.txt:14
-#, python-format
-msgid "\n"
-"Please transfer the amount of %(amount)s to \"%(title)s\".\n"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/donation_success_donor.txt:18
-msgid "\n"
-"Give some extra support and share this campaign with your network.\n"
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/donation_success_owner.html:5
 #, python-format
 msgctxt "email"
@@ -3586,29 +3461,14 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/donation_success_owner.html:17
-#: bluebottle/funding/templates/mails/messages/donation_success_owner.txt:16
 #: bluebottle/funding/templates/mails/messages/funding_approved.html:18
-#: bluebottle/funding/templates/mails/messages/funding_approved.txt:15
 #: bluebottle/funding/templates/mails/messages/funding_cancelled.html:18
-#: bluebottle/funding/templates/mails/messages/funding_cancelled.txt:15
 #: bluebottle/funding/templates/mails/messages/funding_extended.html:19
-#: bluebottle/funding/templates/mails/messages/funding_extended.txt:14
 #: bluebottle/funding/templates/mails/messages/funding_partially_funded.html:17
-#: bluebottle/funding/templates/mails/messages/funding_partially_funded.txt:14
 #: bluebottle/funding/templates/mails/messages/funding_realised_owner.html:31
-#: bluebottle/funding/templates/mails/messages/funding_realised_owner.txt:28
 #: bluebottle/funding/templates/mails/messages/funding_refunded.html:18
-#: bluebottle/funding/templates/mails/messages/funding_refunded.txt:15
 msgctxt "email"
 msgid "Go to campaign"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/donation_success_owner.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"Nice! You just received a new donation. Why not head over to your campaign page and say thanks?\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding_approved.html:7
@@ -3623,16 +3483,6 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_approved.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n\n"
-"        Congratulations! Your campaign “%(title)s” has been approved. This means that your campaign is open for donations.\n\n"
-"        Share your campaign to attract donations!\n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/funding_cancelled.html:7
 #, python-format
 msgctxt "email"
@@ -3645,16 +3495,6 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_cancelled.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n\n"
-"        Unfortunately your campaign “%(title)s” has been cancelled.\n\n"
-"        If you have any questions, you can contact the platform manager by replying to this email.\n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/funding_expired.html:7
 #, python-format
 msgctxt "email"
@@ -3663,16 +3503,6 @@ msgid "\n"
 "            Unfortunately, the platform manager closed your crowdfunding campaign <i>%(title)s</i>.\n"
 "            Didn’t expect this? Reach out to your platform manager to find out why.\n"
 "        "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/funding_expired.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        Unfortunately, the platform manager closed your crowdfunding campaign \"%(title)s\".\n"
-"        Didn’t expect this? Reach out to your platform manager to find out why.\n"
-"    "
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding_extended.html:7
@@ -3687,16 +3517,6 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_extended.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        The deadline for your campaign “%(title)s” has been extended. This means that your campaign is open for new donations.\n\n"
-"        Share your campaign to attract new donations!\n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/funding_partially_funded.html:7
 #, python-format
 msgctxt "email"
@@ -3705,16 +3525,6 @@ msgid "\n"
 "            Your funding deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your funding goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/funding_partially_funded.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        Your funding deadline for \"%(title)s\" passed. Unfortunately, you didn’t reach your funding goal within the deadline.\n"
-"        We will send you a follow-up email with more information soon.\n"
-"    "
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding_realised_owner.html:8
@@ -3741,26 +3551,6 @@ msgid "\n"
 "    Head over to your campaign page and thank your awesome backers for their donations and support.<br>\n"
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_realised_owner.txt:7
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"Congratulations, your funding deadline for \"%(title)s\" has passed and you've successfully reached your funding goal!\n\n"
-"Head over to your campaign page and:\n\n"
-"1. Enter the impact the campaign made, so that everybody can see how effective your campaign was.\n"
-"2. Thank your awesome backers for their donations and support. "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/funding_realised_owner.txt:18
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"Congratulations, your funding deadline for \"%(title)s\" has passed and you've successfully reached your funding goal!\n\n"
-"Head over to your campaign page and thank your awesome backers for their donations and support. "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/funding_refunded.html:7
 #, python-format
 msgctxt "email"
@@ -3773,16 +3563,6 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_refunded.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n\n"
-"        All donations received for your campaign \"%(title)s\" will be refunded to the donors.\n\n"
-"        If you have any questions, you can contact the platform manager by replying to this email.    \n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/funding_rejected.html:7
 #, python-format
 msgctxt "email"
@@ -3793,46 +3573,30 @@ msgid "\n"
 "        "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding_rejected.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        Unfortunately your campaign “%(title)s” has been cancelled.\n"
-"        Didn’t expect this? Reach out to your platform manager to find out why.\n"
-"    "
-msgstr ""
-
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:5
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:2
 #: bluebottle/wallposts/models.py:79
 msgid "Donor"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:16
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:8
 msgid "Anonymous"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:30
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:13
 #: bluebottle/initiatives/models.py:257 bluebottle/terms/models.py:43
 #: bluebottle/time_based/admin.py:410
 msgid "Date"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:34
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:14
 msgid "Order"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:38
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:15
 msgid "Initiator"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:43
-#: bluebottle/funding/templates/mails/messages/partials/donation_receipt.txt:16
 #: bluebottle/initiatives/admin.py:211
 msgid "Organization"
 msgstr ""
@@ -3859,26 +3623,8 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:26
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.txt:21
 msgctxt "email"
 msgid "Update your data"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"We have received some feedback on your identity verification. \n"
-"Please check out the comments and make the appropriate changes. \n"
-"When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.\n\n"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.txt:14
-msgctxt "email"
-msgid "\n"
-"If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.\n"
-"All donations will be returned to your supporters!\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/payout_account_verified.html:7
@@ -3894,19 +3640,8 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/payout_account_verified.html:20
-#: bluebottle/funding/templates/mails/messages/payout_account_verified.txt:17
 msgctxt "email"
 msgid "Go to your activity"
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/payout_account_verified.txt:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n\n"
-"Good news! Your identity is verified and you're all good to go.\n\n"
-"If you filled out the entire creation flow, your crowdfunding campaign will be submitted for review. \n"
-"Didn't complete your campaign yet? Go to %(site_name)s and enter the last details.\n\n"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/support_payout_account_rejected.html:7
@@ -4175,135 +3910,135 @@ msgstr ""
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr ""
 
-#: bluebottle/geo/admin.py:17
+#: bluebottle/geo/admin.py:16
 msgid "Location"
 msgstr ""
 
-#: bluebottle/geo/admin.py:28
+#: bluebottle/geo/admin.py:27
 msgid "My location ({})"
 msgstr ""
 
-#: bluebottle/geo/admin.py:81
+#: bluebottle/geo/admin.py:80
 msgid "Office group"
 msgstr ""
 
-#: bluebottle/geo/admin.py:88
+#: bluebottle/geo/admin.py:87
 msgid "Office region"
 msgstr ""
 
-#: bluebottle/geo/admin.py:92 bluebottle/geo/admin.py:127
+#: bluebottle/geo/admin.py:91 bluebottle/geo/admin.py:125
 msgid "Map"
 msgstr ""
 
-#: bluebottle/geo/models.py:37
+#: bluebottle/geo/models.py:34
 msgid "numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:41
+#: bluebottle/geo/models.py:38
 msgid "ISO 3166-1 or M.49 numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:66 bluebottle/geo/models.py:78
+#: bluebottle/geo/models.py:63 bluebottle/geo/models.py:75
 msgid "region"
 msgstr ""
 
-#: bluebottle/geo/models.py:67
+#: bluebottle/geo/models.py:64
 msgid "regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:81 bluebottle/geo/models.py:93
+#: bluebottle/geo/models.py:78 bluebottle/geo/models.py:90
 msgid "sub region"
 msgstr ""
 
-#: bluebottle/geo/models.py:82
+#: bluebottle/geo/models.py:79
 msgid "sub regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:95
+#: bluebottle/geo/models.py:92
 msgid "alpha2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:97
+#: bluebottle/geo/models.py:94
 msgid "ISO 3166-1 alpha-2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:98
+#: bluebottle/geo/models.py:95
 msgid "alpha3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:100
+#: bluebottle/geo/models.py:97
 msgid "ISO 3166-1 alpha-3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:103
+#: bluebottle/geo/models.py:100
 msgid "ODA recipient"
 msgstr ""
 
-#: bluebottle/geo/models.py:104
+#: bluebottle/geo/models.py:101
 msgid "Whether a country is a recipient of Official DevelopmentAssistance from the OECD's Development Assistance Committee."
 msgstr ""
 
-#: bluebottle/geo/models.py:113
+#: bluebottle/geo/models.py:110
 msgid "country"
 msgstr ""
 
-#: bluebottle/geo/models.py:114
+#: bluebottle/geo/models.py:111
 msgid "countries"
 msgstr ""
 
-#: bluebottle/geo/models.py:124 bluebottle/geo/models.py:140
+#: bluebottle/geo/models.py:121 bluebottle/geo/models.py:137
 msgid "location group"
 msgstr ""
 
-#: bluebottle/geo/models.py:125
+#: bluebottle/geo/models.py:122
 msgid "location groups"
 msgstr ""
 
-#: bluebottle/geo/models.py:146 bluebottle/offices/models.py:31
+#: bluebottle/geo/models.py:143 bluebottle/offices/models.py:31
 msgid "office group"
 msgstr ""
 
-#: bluebottle/geo/models.py:147
+#: bluebottle/geo/models.py:144
 msgid "The organisational group this office belongs too."
 msgstr ""
 
-#: bluebottle/geo/models.py:151
+#: bluebottle/geo/models.py:148
 msgid "city"
 msgstr ""
 
-#: bluebottle/geo/models.py:154
+#: bluebottle/geo/models.py:151
 msgid "The (geographic) country this office is located in."
 msgstr ""
 
-#: bluebottle/geo/models.py:161
+#: bluebottle/geo/models.py:158
 msgid "Office picture"
 msgstr ""
 
-#: bluebottle/geo/models.py:173
+#: bluebottle/geo/models.py:170
 msgid "offices"
 msgstr ""
 
-#: bluebottle/geo/models.py:189 bluebottle/geo/models.py:224
+#: bluebottle/geo/models.py:186 bluebottle/geo/models.py:220
 msgid "Street Number"
 msgstr ""
 
-#: bluebottle/geo/models.py:190 bluebottle/geo/models.py:225
+#: bluebottle/geo/models.py:187 bluebottle/geo/models.py:221
 msgid "Street"
 msgstr ""
 
-#: bluebottle/geo/models.py:191 bluebottle/geo/models.py:226
+#: bluebottle/geo/models.py:188 bluebottle/geo/models.py:222
 msgid "Postal Code"
 msgstr ""
 
-#: bluebottle/geo/models.py:192 bluebottle/geo/models.py:227
+#: bluebottle/geo/models.py:189 bluebottle/geo/models.py:223
 msgid "Locality"
 msgstr ""
 
-#: bluebottle/geo/models.py:193 bluebottle/geo/models.py:228
+#: bluebottle/geo/models.py:190 bluebottle/geo/models.py:224
 msgid "Province"
 msgstr ""
 
-#: bluebottle/geo/models.py:196 bluebottle/geo/models.py:231
+#: bluebottle/geo/models.py:193 bluebottle/geo/models.py:227
 msgid "Address"
 msgstr ""
 
@@ -4323,128 +4058,136 @@ msgstr ""
 msgid "Unit"
 msgstr ""
 
-#: bluebottle/impact/models.py:12
-msgid "People"
-msgstr ""
-
-#: bluebottle/impact/models.py:13
-msgid "Time"
+#: bluebottle/impact/effects.py:8 bluebottle/impact/effects.py:26
+msgid "Update impact goals"
 msgstr ""
 
 #: bluebottle/impact/models.py:14
-msgid "Money"
+msgid "People"
 msgstr ""
 
 #: bluebottle/impact/models.py:15
-msgid "Trees"
+msgid "Time"
 msgstr ""
 
 #: bluebottle/impact/models.py:16
-msgid "Animals"
+msgid "Money"
 msgstr ""
 
 #: bluebottle/impact/models.py:17
-msgid "Jobs"
+msgid "Trees"
 msgstr ""
 
 #: bluebottle/impact/models.py:18
-msgid "C02"
+msgid "Animals"
 msgstr ""
 
 #: bluebottle/impact/models.py:19
-msgid "Water"
+msgid "Jobs"
 msgstr ""
 
 #: bluebottle/impact/models.py:20
+msgid "C02"
+msgstr ""
+
+#: bluebottle/impact/models.py:21
+msgid "Water"
+msgstr ""
+
+#: bluebottle/impact/models.py:22
 msgid "plastic"
 msgstr ""
 
-#: bluebottle/impact/models.py:23
+#: bluebottle/impact/models.py:25
 msgid "Task completed"
 msgstr ""
 
-#: bluebottle/impact/models.py:24 models.py:98
+#: bluebottle/impact/models.py:26 models.py:98
 msgid "Event"
 msgstr ""
 
-#: bluebottle/impact/models.py:25
+#: bluebottle/impact/models.py:27
 msgid "Event completed"
 msgstr ""
 
-#: bluebottle/impact/models.py:27
+#: bluebottle/impact/models.py:29
 msgid "Funding completed"
 msgstr ""
 
-#: bluebottle/impact/models.py:38
+#: bluebottle/impact/models.py:40
 msgid "Do not change this field"
 msgstr ""
 
-#: bluebottle/impact/models.py:42 bluebottle/statistics/models.py:54
+#: bluebottle/impact/models.py:44 bluebottle/statistics/models.py:54
 msgid "icon"
 msgstr ""
 
-#: bluebottle/impact/models.py:52
+#: bluebottle/impact/models.py:54
 msgid "unit"
 msgstr ""
 
-#: bluebottle/impact/models.py:56
+#: bluebottle/impact/models.py:58
 msgid "\"l\" or \"kg\". Leave this field blank if a unit is not applicable."
 msgstr ""
 
-#: bluebottle/impact/models.py:60
+#: bluebottle/impact/models.py:62
 msgid "Formulate the goal \"Our goal is to...\""
 msgstr ""
 
-#: bluebottle/impact/models.py:62
+#: bluebottle/impact/models.py:64
 msgid "E.g. \"Save plastic\" or \"Reduce CO₂ emission\""
 msgstr ""
 
-#: bluebottle/impact/models.py:65
+#: bluebottle/impact/models.py:67
 msgid "Formulate the goal including the target “Our goal is to…”"
 msgstr ""
 
-#: bluebottle/impact/models.py:75
+#: bluebottle/impact/models.py:77
 msgid "Formulate the result in past tense"
 msgstr ""
 
-#: bluebottle/impact/models.py:77
+#: bluebottle/impact/models.py:79
 msgid "E.g. \"Plastic saved\" or \"CO₂ emissions reduced\""
 msgstr ""
 
-#: bluebottle/impact/models.py:92
+#: bluebottle/impact/models.py:94
 msgid "impact type"
 msgstr ""
 
-#: bluebottle/impact/models.py:93
+#: bluebottle/impact/models.py:95
 msgid "impact types"
 msgstr ""
 
-#: bluebottle/impact/models.py:99 bluebottle/looker/models.py:14
+#: bluebottle/impact/models.py:101 bluebottle/looker/models.py:14
 #: bluebottle/segments/models.py:50
 msgid "type"
 msgstr ""
 
-#: bluebottle/impact/models.py:112
+#: bluebottle/impact/models.py:114
 msgid "target"
 msgstr ""
 
-#: bluebottle/impact/models.py:113
+#: bluebottle/impact/models.py:115
 msgid "Set a target for the impact you expect to make"
 msgstr ""
 
-#: bluebottle/impact/models.py:119
-msgid "realized"
-msgstr ""
-
 #: bluebottle/impact/models.py:121
-msgid "Enter your impact results here when the activity is finished"
+msgid "realized from contributions"
 msgstr ""
 
 #: bluebottle/impact/models.py:127
+msgid "realized"
+msgstr ""
+
+#: bluebottle/impact/models.py:129
+msgid "Enter your impact results here when the activity is finished"
+msgstr ""
+
+#: bluebottle/impact/models.py:135
 msgid "impact goal"
 msgstr ""
 
-#: bluebottle/impact/models.py:128
+#: bluebottle/impact/models.py:136
 msgid "impact goals"
 msgstr ""
 
@@ -4592,7 +4335,7 @@ msgstr ""
 msgid "Any authenticated users can start an activity under this initiative."
 msgstr ""
 
-#: bluebottle/initiatives/models.py:249 bluebottle/time_based/models.py:443
+#: bluebottle/initiatives/models.py:249 bluebottle/time_based/models.py:456
 msgid "Activity during a period"
 msgstr ""
 
@@ -4601,13 +4344,13 @@ msgid "Activity on a specific date"
 msgstr ""
 
 #: bluebottle/initiatives/models.py:255 bluebottle/initiatives/models.py:266
-#: bluebottle/settings/base.py:656 bluebottle/settings/base.py:675
-#: bluebottle/settings/base.py:704 bluebottle/settings/base.py:745
-#: bluebottle/settings/base.py:849
+#: bluebottle/settings/base.py:655 bluebottle/settings/base.py:679
+#: bluebottle/settings/base.py:708 bluebottle/settings/base.py:749
+#: bluebottle/settings/base.py:853
 msgid "Office location"
 msgstr ""
 
-#: bluebottle/initiatives/models.py:258 bluebottle/time_based/models.py:671
+#: bluebottle/initiatives/models.py:258 bluebottle/time_based/models.py:684
 msgid "Skill"
 msgstr ""
 
@@ -4664,7 +4407,7 @@ msgstr ""
 msgid "initiative settings"
 msgstr ""
 
-#: bluebottle/initiatives/models.py:319 bluebottle/time_based/models.py:657
+#: bluebottle/initiatives/models.py:319 bluebottle/time_based/models.py:670
 msgid "disabled"
 msgstr ""
 
@@ -4766,24 +4509,11 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/initiatives/templates/mails/messages/assigned_reviewer.html:14
-#: bluebottle/initiatives/templates/mails/messages/assigned_reviewer.txt:13
 #: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.html:15
-#: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.txt:15
 #: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.html:13
-#: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.txt:13
 #: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.html:13
-#: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.txt:13
 msgctxt "email"
 msgid "View initiative"
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/assigned_reviewer.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n"
-"You are assigned as reviewer for \"%(title)s\".\n"
-"If you have any questions please contact %(contact_email)s\n"
 msgstr ""
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.html:5
@@ -4797,16 +4527,6 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n"
-"Good news, your initiative \"%(title)s\" has been approved!\n"
-"People can now join your activities. No activities yet? This is the perfect\n"
-"moment to create one (or two), so people can help you reach your initiative’s goal.\n"
-msgstr ""
-
 #: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.html:5
 #, python-format
 msgctxt "email"
@@ -4816,14 +4536,6 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n"
-"Unfortunately, the initiative \"%(title)s\" has been cancelled.\n"
-msgstr ""
-
 #: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.html:5
 #, python-format
 msgctxt "email"
@@ -4831,14 +4543,6 @@ msgid "\n"
 "        Hi %(recipient_name)s,<br>\n"
 "        Unfortunately, your initiative \"%(title)s\" has been rejected.\n"
 "    "
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Hi %(recipient_name)s,\n"
-"Unfortunately, your initiative \"%(title)s\" has been rejected.\n"
 msgstr ""
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.html:5
@@ -4857,24 +4561,8 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.html:13
-#: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.txt:12
 msgctxt "email"
 msgid "View the initiative"
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.txt:5
-#| msgid ""
-#| "\n"
-#| "\n"
-#| "        Hi %(receiver_name)s,\n"
-#| "\n"
-#| "        Thank you for your partnership with %(site)s. \n"
-#| "    "
-msgctxt "email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        The initiative \"%(title)s\" has been submitted by %(initiator_name)s and is waiting for a review.\n"
-"    "
 msgstr ""
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:21
@@ -4891,16 +4579,6 @@ msgid "\n"
 "            </a> via your account page\n"
 "        </p>\n"
 "    "
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.txt:18
-#, python-format
-msgctxt "email"
-msgid "\n"
-"You received this email because you support %(title)s.\n"
-"Don't want to receive initiative updates anymore?\n"
-"Unsubscribe via your account page:\n"
-"%(site)s/member/profile\n"
 msgstr ""
 
 #: bluebottle/initiatives/validators.py:9
@@ -4947,73 +4625,77 @@ msgstr ""
 msgid "Is active"
 msgstr ""
 
-#: bluebottle/members/admin.py:267
+#: bluebottle/members/admin.py:233
+msgid "Deleted"
+msgstr ""
+
+#: bluebottle/members/admin.py:290
 msgid "Profile"
 msgstr ""
 
-#: bluebottle/members/admin.py:274
+#: bluebottle/members/admin.py:298
 msgid "Permissions"
 msgstr ""
 
-#: bluebottle/members/admin.py:287
+#: bluebottle/members/admin.py:311
 msgid "Engagement"
 msgstr ""
 
-#: bluebottle/members/admin.py:294
+#: bluebottle/members/admin.py:318
 msgid "Notifications"
 msgstr ""
 
-#: bluebottle/members/admin.py:422
+#: bluebottle/members/admin.py:472
 msgid "Activity on a date participation"
 msgstr ""
 
-#: bluebottle/members/admin.py:437
+#: bluebottle/members/admin.py:487
 msgid "Activity during a date participation"
 msgstr ""
 
-#: bluebottle/members/admin.py:450
+#: bluebottle/members/admin.py:500
 msgid "Funding donations"
 msgstr ""
 
-#: bluebottle/members/admin.py:465
+#: bluebottle/members/admin.py:515
 msgid "Deed participation"
 msgstr ""
 
-#: bluebottle/members/admin.py:471
+#: bluebottle/members/admin.py:521
 msgid "Following"
 msgstr ""
 
-#: bluebottle/members/admin.py:479
+#: bluebottle/members/admin.py:529
 msgid "Send reset password mail"
 msgstr ""
 
-#: bluebottle/members/admin.py:486
+#: bluebottle/members/admin.py:536
 msgid "Resend welcome email"
 msgstr ""
 
-#: bluebottle/members/admin.py:497
+#: bluebottle/members/admin.py:547
 msgid "accounts"
 msgstr ""
 
-#: bluebottle/members/admin.py:499
+#: bluebottle/members/admin.py:549
 msgid "KYC accounts"
 msgstr ""
 
-#: bluebottle/members/admin.py:551
+#: bluebottle/members/admin.py:601
 #, python-brace-format
 msgid "User {name} will receive an email to reset password."
 msgstr ""
 
-#: bluebottle/members/admin.py:566
+#: bluebottle/members/admin.py:616
 #, python-brace-format
 msgid "User {name} will receive an welcome email."
 msgstr ""
 
-#: bluebottle/members/admin.py:587
+#: bluebottle/members/admin.py:637
 msgid "Login as user"
 msgstr ""
 
-#: bluebottle/members/admin.py:589 bluebottle/members/forms.py:6
+#: bluebottle/members/admin.py:639 bluebottle/members/forms.py:6
 #: bluebottle/members/templates/admin/members/login_as.html:9
 msgid "Login as"
 msgstr ""
@@ -5040,99 +4722,99 @@ msgstr ""
 msgid "Activate your account for {site_name}"
 msgstr ""
 
-#: bluebottle/members/models.py:51
+#: bluebottle/members/models.py:48
 msgid "Email/password combination"
 msgstr ""
 
-#: bluebottle/members/models.py:52
+#: bluebottle/members/models.py:49
 msgid "Company SSO"
 msgstr ""
 
-#: bluebottle/members/models.py:56
+#: bluebottle/members/models.py:53
 msgid "Require login before accessing the platform"
 msgstr ""
 
-#: bluebottle/members/models.py:60
+#: bluebottle/members/models.py:57
 msgid "Require verifying the user's email before signup"
 msgstr ""
 
-#: bluebottle/members/models.py:64
+#: bluebottle/members/models.py:61
 msgid "Domain that all email should belong to"
 msgstr ""
 
-#: bluebottle/members/models.py:69
+#: bluebottle/members/models.py:66
 msgid "Limit user session to browser session"
 msgstr ""
 
-#: bluebottle/members/models.py:73
+#: bluebottle/members/models.py:70
 msgid "Require users to consent to cookies"
 msgstr ""
 
-#: bluebottle/members/models.py:77
+#: bluebottle/members/models.py:74
 msgid "Link more information about the platforms policy"
 msgstr ""
 
-#: bluebottle/members/models.py:93
+#: bluebottle/members/models.py:90
 msgid "Show gender question in profile form"
 msgstr ""
 
-#: bluebottle/members/models.py:98
+#: bluebottle/members/models.py:95
 msgid "Show birthdate question in profile form"
 msgstr ""
 
-#: bluebottle/members/models.py:103
+#: bluebottle/members/models.py:100
 msgid "Show address question in profile form"
 msgstr ""
 
-#: bluebottle/members/models.py:108
+#: bluebottle/members/models.py:105
 msgid "Enable segments for users e.g. department or job title."
 msgstr ""
 
-#: bluebottle/members/models.py:113
+#: bluebottle/members/models.py:110
 msgid "Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr ""
 
-#: bluebottle/members/models.py:119
+#: bluebottle/members/models.py:116
 msgid "The number of days after which user data should be anonymised. 0 for no anonymisation"
 msgstr ""
 
-#: bluebottle/members/models.py:123 bluebottle/members/models.py:124
+#: bluebottle/members/models.py:120 bluebottle/members/models.py:121
 msgid "member platform settings"
 msgstr ""
 
-#: bluebottle/members/models.py:129
+#: bluebottle/members/models.py:126
 msgid "Was verified for voting by recaptcha."
 msgstr ""
 
-#: bluebottle/members/models.py:131
+#: bluebottle/members/models.py:128
 msgid "Matching"
 msgstr ""
 
-#: bluebottle/members/models.py:133
+#: bluebottle/members/models.py:130
 msgid "Monthly overview of activities that match this person's profile"
 msgstr ""
 
-#: bluebottle/members/models.py:136 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:133 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr ""
 
-#: bluebottle/members/models.py:140
+#: bluebottle/members/models.py:137
 msgid "Last Logout"
 msgstr ""
 
-#: bluebottle/members/models.py:143
+#: bluebottle/members/models.py:140
 msgid "external SCIM id"
 msgstr ""
 
-#: bluebottle/members/models.py:152
+#: bluebottle/members/models.py:149
 msgid "When the user updated their matching preferences."
 msgstr ""
 
-#: bluebottle/members/models.py:234
+#: bluebottle/members/models.py:224
 msgid "User activity"
 msgstr ""
 
-#: bluebottle/members/models.py:235
+#: bluebottle/members/models.py:225
 msgid "User activities"
 msgstr ""
 
@@ -5187,39 +4869,22 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:21
-#: bluebottle/members/templates/mails/messages/account_activation.txt:23
 msgctxt "email"
 msgid "Set password"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:24
-#: bluebottle/members/templates/mails/messages/account_activation.txt:25
 msgctxt "email"
 msgid "Take me there"
 msgstr ""
 
-#: bluebottle/members/templates/mails/messages/account_activation.txt:8
-#, python-format
-msgid "\n"
-"Welcome %(first_name)s\n\n"
-"You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.\n\n"
-msgstr ""
-
-#: bluebottle/members/templates/mails/messages/account_activation.txt:15
-#, python-format
-msgid "\n"
-"If you have any questions please don’t hesitate to contact %(contact_email)s.\n"
-msgstr ""
-
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:5
-#: bluebottle/members/templates/mails/messages/sign_up_token.txt:5
 msgid "\n"
 "Click the link below to create a password and activate your account. <br>\n\n"
 "The link will expire in 2 hours.\n"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:14
-#: bluebottle/members/templates/mails/messages/sign_up_token.txt:13
 msgctxt "email"
 msgid "Create your password"
 msgstr ""
@@ -5331,26 +4996,26 @@ msgstr ""
 msgid "Send email"
 msgstr ""
 
-#: bluebottle/notifications/effects.py:35
+#: bluebottle/notifications/effects.py:39
 #, python-brace-format
 msgid "(and {number} more)"
 msgstr ""
 
-#: bluebottle/notifications/effects.py:41
+#: bluebottle/notifications/effects.py:45
 msgid "related users"
 msgstr ""
 
-#: bluebottle/notifications/effects.py:45
+#: bluebottle/notifications/effects.py:49
 #, python-brace-format
 msgid "Message {subject} to {recipients}"
 msgstr ""
 
-#: bluebottle/notifications/effects.py:55
+#: bluebottle/notifications/effects.py:59
 #, python-brace-format
 msgid "Message <em>{subject}</em> to {recipients}"
 msgstr ""
 
-#: bluebottle/notifications/effects.py:87
+#: bluebottle/notifications/effects.py:91
 msgid "to {}"
 msgstr ""
 
@@ -5590,12 +5255,12 @@ msgid "Text + Round Image"
 msgstr ""
 
 #: bluebottle/pages/models.py:199 bluebottle/quotes/models.py:18
-#: bluebottle/slides/models.py:24 bluebottle/utils/models.py:140
+#: bluebottle/slides/models.py:24 bluebottle/utils/models.py:161
 msgid "Published"
 msgstr ""
 
 #: bluebottle/pages/models.py:200 bluebottle/quotes/models.py:19
-#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:141
+#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:162
 msgid "Draft"
 msgstr ""
 
@@ -5741,7 +5406,7 @@ msgstr ""
 msgid "Reporting"
 msgstr ""
 
-#: bluebottle/settings/admin_dashboard.py:230 bluebottle/utils/models.py:129
+#: bluebottle/settings/admin_dashboard.py:230 bluebottle/utils/models.py:150
 msgid "Settings"
 msgstr ""
 
@@ -5749,47 +5414,47 @@ msgstr ""
 msgid "Manage Reporting"
 msgstr ""
 
-#: bluebottle/settings/base.py:717 bluebottle/time_based/models.py:444
+#: bluebottle/settings/base.py:721 bluebottle/time_based/models.py:457
 msgid "Activities during a period"
 msgstr ""
 
-#: bluebottle/settings/base.py:732
+#: bluebottle/settings/base.py:736
 msgid "Participants over a period"
 msgstr ""
 
-#: bluebottle/settings/base.py:754 bluebottle/time_based/models.py:180
+#: bluebottle/settings/base.py:758 bluebottle/time_based/models.py:181
 msgid "Activities on a date"
 msgstr ""
 
-#: bluebottle/settings/base.py:776
+#: bluebottle/settings/base.py:780
 msgid "Activity slots"
 msgstr ""
 
-#: bluebottle/settings/base.py:791 bluebottle/time_based/models.py:524
+#: bluebottle/settings/base.py:795 bluebottle/time_based/models.py:537
 msgid "Participants on a date"
 msgstr ""
 
-#: bluebottle/settings/base.py:810 bluebottle/time_based/models.py:599
+#: bluebottle/settings/base.py:814 bluebottle/time_based/models.py:612
 msgid "Slot participants"
 msgstr ""
 
-#: bluebottle/settings/base.py:836
+#: bluebottle/settings/base.py:840
 msgid "Time contributions"
 msgstr ""
 
-#: bluebottle/settings/base.py:884
+#: bluebottle/settings/base.py:888
 msgid "Funding contributors"
 msgstr ""
 
-#: bluebottle/settings/base.py:904
+#: bluebottle/settings/base.py:908
 msgid "Deed activities"
 msgstr ""
 
-#: bluebottle/settings/base.py:919
+#: bluebottle/settings/base.py:923
 msgid "Deed participants"
 msgstr ""
 
-#: bluebottle/settings/base.py:943
+#: bluebottle/settings/base.py:947
 msgid "Effort contributions"
 msgstr ""
 
@@ -6025,17 +5690,17 @@ msgstr ""
 msgid "Total contributed"
 msgstr ""
 
-#: bluebottle/time_based/admin.py:605 bluebottle/time_based/models.py:361
+#: bluebottle/time_based/admin.py:605 bluebottle/time_based/models.py:362
 msgid "Slot"
 msgstr ""
 
-#: bluebottle/time_based/admin.py:671 bluebottle/time_based/models.py:364
-#: bluebottle/time_based/models.py:483
+#: bluebottle/time_based/admin.py:671 bluebottle/time_based/models.py:365
+#: bluebottle/time_based/models.py:496
 msgid "slot"
 msgstr ""
 
-#: bluebottle/time_based/admin.py:672 bluebottle/time_based/models.py:365
-#: bluebottle/time_based/models.py:484
+#: bluebottle/time_based/admin.py:672 bluebottle/time_based/models.py:366
+#: bluebottle/time_based/models.py:497
 msgid "slots"
 msgstr ""
 
@@ -6088,275 +5753,287 @@ msgstr ""
 msgid "Reset slot selection to \"all\" for {activity}"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:38
+#: bluebottle/time_based/messages.py:70
 #, python-brace-format
 msgctxt "email"
 msgid "The deadline for your activity \"{title}\" changed"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:61
+#: bluebottle/time_based/messages.py:93
 #, python-brace-format
 msgctxt "emai"
 msgid "on {start}"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:64
+#: bluebottle/time_based/messages.py:96
 msgctxt "emai"
 msgid "immediately"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:68
+#: bluebottle/time_based/messages.py:100
 #, python-brace-format
 msgctxt "emai"
 msgid "ends on {end}"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:71
+#: bluebottle/time_based/messages.py:103
 msgctxt "emai"
 msgid "runs indefinitely"
-msgstr ""
-
-#: bluebottle/time_based/messages.py:80
-#, python-brace-format
-msgctxt "email"
-msgid "The activity \"{title}\" will take place in a few days!"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:112
 #, python-brace-format
 msgctxt "email"
+msgid "The activity \"{title}\" will take place in a few days!"
+msgstr ""
+
+#: bluebottle/time_based/messages.py:136 bluebottle/time_based/messages.py:159
+#, python-brace-format
+msgctxt "email"
 msgid "The details of activity \"{title}\" have changed"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:141
+#: bluebottle/time_based/messages.py:182
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has succeeded 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:164
+#: bluebottle/time_based/messages.py:205
 #, python-brace-format
 msgctxt "email"
 msgid "You have been added to the activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:185
+#: bluebottle/time_based/messages.py:226
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new participant for your activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:206
+#: bluebottle/time_based/messages.py:247
 #, python-brace-format
 msgctxt "email"
 msgid "A new participant has joined your activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:247
+#: bluebottle/time_based/messages.py:311
+#, python-brace-format
+msgctxt "email"
+msgid "You have changed your application on the activity \"{title}\""
+msgstr ""
+
+#: bluebottle/time_based/messages.py:351
+#, python-brace-format
+msgctxt "email"
+msgid "You have applied to the activity \"{title}\""
+msgstr ""
+
+#: bluebottle/time_based/messages.py:373
 #, python-brace-format
 msgctxt "email"
 msgid "You have been selected for the activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:268
+#: bluebottle/time_based/messages.py:394
 #, python-brace-format
 msgctxt "email"
 msgid "You have not been selected for the activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages.py:278 bluebottle/time_based/messages.py:299
+#: bluebottle/time_based/messages.py:404 bluebottle/time_based/messages.py:425
 msgctxt "email"
 msgid "View all activities"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:289
+#: bluebottle/time_based/messages.py:415
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed as participant for the activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages.py:310
+#: bluebottle/time_based/messages.py:436
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" is successful 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:331
+#: bluebottle/time_based/messages.py:457
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages.py:353
+#: bluebottle/time_based/messages.py:479
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:375
+#: bluebottle/time_based/messages.py:501
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your activity \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/models.py:36 bluebottle/time_based/models.py:228
+#: bluebottle/time_based/models.py:37 bluebottle/time_based/models.py:229
 #: models.py:28
 msgid "attendee limit"
 msgstr ""
 
-#: bluebottle/time_based/models.py:39 bluebottle/time_based/models.py:302
-#: bluebottle/time_based/models.py:397 models.py:30
+#: bluebottle/time_based/models.py:40 bluebottle/time_based/models.py:303
+#: bluebottle/time_based/models.py:398 models.py:30
 msgid "is online"
 msgstr ""
 
-#: bluebottle/time_based/models.py:46 bluebottle/time_based/models.py:314
-#: bluebottle/time_based/models.py:399 models.py:31
+#: bluebottle/time_based/models.py:47 bluebottle/time_based/models.py:315
+#: bluebottle/time_based/models.py:400 models.py:31
 msgid "location"
 msgstr ""
 
-#: bluebottle/time_based/models.py:49 bluebottle/time_based/models.py:319
-#: bluebottle/time_based/models.py:402 models.py:33
+#: bluebottle/time_based/models.py:50 bluebottle/time_based/models.py:320
+#: bluebottle/time_based/models.py:403 models.py:33
 msgid "location hint"
 msgstr ""
 
-#: bluebottle/time_based/models.py:54
+#: bluebottle/time_based/models.py:55
 msgid "registration deadline"
 msgstr ""
 
-#: bluebottle/time_based/models.py:61
+#: bluebottle/time_based/models.py:62
 msgid "skill"
 msgstr ""
 
-#: bluebottle/time_based/models.py:67
+#: bluebottle/time_based/models.py:68
 msgid "review participants"
 msgstr ""
 
-#: bluebottle/time_based/models.py:70
+#: bluebottle/time_based/models.py:71
 msgid "Preparation time"
 msgstr ""
 
-#: bluebottle/time_based/models.py:140
+#: bluebottle/time_based/models.py:141
 msgid "Free"
 msgstr ""
 
-#: bluebottle/time_based/models.py:146
+#: bluebottle/time_based/models.py:147
 msgid "Slot selection"
 msgstr ""
 
-#: bluebottle/time_based/models.py:148
+#: bluebottle/time_based/models.py:149
 msgid "All: Participant will join all time slots. Free: Participant can pick any number of slots to join."
 msgstr ""
 
-#: bluebottle/time_based/models.py:158 bluebottle/time_based/models.py:308
+#: bluebottle/time_based/models.py:159 bluebottle/time_based/models.py:309
 msgid "online meeting link"
 msgstr ""
 
-#: bluebottle/time_based/models.py:179
+#: bluebottle/time_based/models.py:180
 msgid "Activity on a date"
 msgstr ""
 
-#: bluebottle/time_based/models.py:257 bluebottle/time_based/views.py:370
+#: bluebottle/time_based/models.py:258 bluebottle/time_based/views.py:370
 #: bluebottle/time_based/views.py:411 models.py:148
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr ""
 
-#: bluebottle/time_based/models.py:299 bluebottle/time_based/models.py:479
+#: bluebottle/time_based/models.py:300 bluebottle/time_based/models.py:492
 #: models.py:38
 msgid "start date and time"
 msgstr ""
 
-#: bluebottle/time_based/models.py:384
+#: bluebottle/time_based/models.py:385
 msgid "in total"
 msgstr ""
 
-#: bluebottle/time_based/models.py:385
+#: bluebottle/time_based/models.py:386
 msgid "per day"
 msgstr ""
 
-#: bluebottle/time_based/models.py:386
+#: bluebottle/time_based/models.py:387
 msgid "per week"
 msgstr ""
 
-#: bluebottle/time_based/models.py:387
+#: bluebottle/time_based/models.py:388
 msgid "per month"
 msgstr ""
 
-#: bluebottle/time_based/models.py:405
+#: bluebottle/time_based/models.py:406
 msgid "Start date"
 msgstr ""
 
-#: bluebottle/time_based/models.py:411
+#: bluebottle/time_based/models.py:412
 msgid "End date"
 msgstr ""
 
-#: bluebottle/time_based/models.py:417
+#: bluebottle/time_based/models.py:418
 msgid "Time per period"
 msgstr ""
 
-#: bluebottle/time_based/models.py:423
+#: bluebottle/time_based/models.py:424
 msgid "period"
 msgstr ""
 
-#: bluebottle/time_based/models.py:431 models.py:34
+#: bluebottle/time_based/models.py:444 models.py:34
 msgid "Online Meeting URL"
 msgstr ""
 
-#: bluebottle/time_based/models.py:480 models.py:40
+#: bluebottle/time_based/models.py:493 models.py:40
 msgid "end date and time"
 msgstr ""
 
-#: bluebottle/time_based/models.py:523
+#: bluebottle/time_based/models.py:536
 msgid "Participant on a date"
 msgstr ""
 
-#: bluebottle/time_based/models.py:548
+#: bluebottle/time_based/models.py:561
 msgid "Participant during a period"
 msgstr ""
 
-#: bluebottle/time_based/models.py:549
+#: bluebottle/time_based/models.py:562
 msgid "Participants during a period"
 msgstr ""
 
-#: bluebottle/time_based/models.py:598
+#: bluebottle/time_based/models.py:611
 msgid "Slot participant"
 msgstr ""
 
-#: bluebottle/time_based/models.py:618
+#: bluebottle/time_based/models.py:631
 msgid "activity on a date"
 msgstr ""
 
-#: bluebottle/time_based/models.py:619
+#: bluebottle/time_based/models.py:632
 msgid "activity over a period"
 msgstr ""
 
-#: bluebottle/time_based/models.py:620
+#: bluebottle/time_based/models.py:633
 msgid "preparation"
 msgstr ""
 
-#: bluebottle/time_based/models.py:625
+#: bluebottle/time_based/models.py:638
 msgid "value"
 msgstr ""
 
-#: bluebottle/time_based/models.py:643
+#: bluebottle/time_based/models.py:656
 msgid "Time contribution"
 msgstr ""
 
-#: bluebottle/time_based/models.py:647
+#: bluebottle/time_based/models.py:660
 #, python-brace-format
 msgid "Contribution {name} {date}"
 msgstr ""
 
-#: bluebottle/time_based/models.py:654
+#: bluebottle/time_based/models.py:667
 msgid "expertise based"
 msgstr ""
 
-#: bluebottle/time_based/models.py:655
+#: bluebottle/time_based/models.py:668
 msgid "Is this skill expertise based, or could anyone do it?"
 msgstr ""
 
-#: bluebottle/time_based/models.py:672
+#: bluebottle/time_based/models.py:685
 msgid "Skills"
 msgstr ""
 
@@ -6542,7 +6219,7 @@ msgstr ""
 msgid "User applied to join the task."
 msgstr ""
 
-#: bluebottle/time_based/states.py:351 bluebottle/time_based/states.py:513
+#: bluebottle/time_based/states.py:351 bluebottle/time_based/states.py:512
 msgid "Accept"
 msgstr ""
 
@@ -6614,23 +6291,23 @@ msgstr ""
 msgid "The slot has been cancelled. This person's contribution is removed and the spent hours are reset to zero."
 msgstr ""
 
-#: bluebottle/time_based/states.py:507
+#: bluebottle/time_based/states.py:506
 msgid "User registered to join the slot."
 msgstr ""
 
-#: bluebottle/time_based/states.py:514
+#: bluebottle/time_based/states.py:513
 msgid "Accept the previously person as a participant to the slot."
 msgstr ""
 
-#: bluebottle/time_based/states.py:523
+#: bluebottle/time_based/states.py:522
 msgid "Remove this person as a participant from the slot."
 msgstr ""
 
-#: bluebottle/time_based/states.py:532
+#: bluebottle/time_based/states.py:531
 msgid "Stop your participation in the slot."
 msgstr ""
 
-#: bluebottle/time_based/states.py:542
+#: bluebottle/time_based/states.py:541
 msgid "User re-applies to the slot after previously withdrawing."
 msgstr ""
 
@@ -6779,7 +6456,6 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:5
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.txt:4
 #, python-format
 msgctxt "email"
 msgid "\n"
@@ -6787,70 +6463,31 @@ msgid "\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:11
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.txt:8
 msgctxt "email"
 msgid "\n"
 "These are all the time slots that you participate in:\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:19
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.txt:13
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:26
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.txt:23
-#: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:11
-#: bluebottle/time_based/templates/mails/messages/reminder_single_date.txt:8
+#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:17
+#: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:17
 msgctxt "email"
 msgid "\n"
 "Read the latest updates on the activity page.\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:25
-#: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.txt:17
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:32
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.txt:27
-#: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:17
-#: bluebottle/time_based/templates/mails/messages/reminder_single_date.txt:12
+#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:5
+#, python-format
+msgctxt "email"
+msgid "\n"
+"The activity \"%(title)s\" has changed:\n"
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:23
+#: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:23
 msgctxt "email"
 msgid "\n"
 "If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:5
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"The activity \"%(title)s\" takes place on %(start_date)s %(start_time)s - %(end_time)s (%(timezone)s).\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:12
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Online meeting link: %(online_meeting_url)s\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.html:17
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Location: %(location)s\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.txt:10
-#, python-format
-msgctxt "email"
-msgid "\n"
-"        Online meeting link: %(online_meeting_url)s\n"
-"        "
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/changed_single_date.txt:15
-#, python-format
-msgctxt "email"
-msgid "\n"
-"    Location: %(location)s\n"
-"    "
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/deadline_changed.html:5
@@ -6862,15 +6499,6 @@ msgid "\n"
 "<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/deadline_changed.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"The date of the activity \"%(title)s\" has changed.\n\n"
-"The activity starts %(start)s and %(end)s.\n\n"
-"If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/new_participant.html:4
 #, python-format
 msgctxt "email"
@@ -6879,12 +6507,34 @@ msgid "\n"
 "<p>Give the new participant a warm welcome.</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/new_participant.txt:4
+#: bluebottle/time_based/templates/mails/messages/partial/period.html:4
 #, python-format
 msgctxt "email"
 msgid "\n"
-"%(applicant_name)s applied to your activity \"%(title)s\".!\n\n"
-"Give the new participant a warm welcome.\n"
+"            Start: %(start)s.\n"
+"        "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/partial/period.html:8
+msgctxt "email"
+msgid "\n"
+"            You can start right away.\n"
+"        "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/partial/period.html:14
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            End: %(end)s.\n"
+"        "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/partial/period.html:18
+msgctxt "email"
+msgid "\n"
+"            This activity runs indefinitely.\n"
+"        "
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:8
@@ -6896,12 +6546,11 @@ msgid "Meeting link"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:19
-#: bluebottle/time_based/templates/mails/messages/partial/slots.txt:5
 msgid "Anywhere/Online"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/partial/slots.txt:6
-msgid "(Changed)"
+#: bluebottle/time_based/templates/mails/messages/partial/slots.html:34
+msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
@@ -6913,14 +6562,6 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_accepted.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Good news, you have been accepted for the activity \"%(title)s\"!\n\n"
-"%(manager)s, the activity manager, will follow-up with more info soon.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/participant_added.html:4
 #, python-format
 msgctxt "email"
@@ -6930,20 +6571,29 @@ msgid "\n"
 "<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_added.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"You have been added to the activity \"%(title)s\" as a participant.\n\n"
-"Head over to the activity page for more information.\n\n"
-"If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/participant_added_owner.html:6
-#: bluebottle/time_based/templates/mails/messages/participant_added_owner.txt:5
 #, python-format
 msgctxt "email"
 msgid "%(participant_name)s has been added to your activity \"%(title)s\"!"
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/participant_applied.html:6
+#| msgid ""
+#| "\n"
+#| "        Hello %(receiver_name)s\n"
+#| "        <br><br>\n"
+#| "    "
+msgctxt "email"
+msgid "\n"
+"            You applied to an activity on <b>%(site_name)s!</b>\n"
+"        "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/participant_applied.html:15
+msgctxt "email"
+msgid "\n"
+"                You will receive a notification by email when the activity manager accepts your application.\n"
+"            "
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_base.html:5
@@ -6954,11 +6604,12 @@ msgid "\n"
 "    "
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_base.txt:5
+#: bluebottle/time_based/templates/mails/messages/participant_changed.html:6
 #, python-format
 msgctxt "email"
 msgid "\n"
-"Hi %(recipient_name)s,\n"
+"            You adjusted your participation for an activity on <b>%(site_name)s</b>.\n"
+"        "
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_created.html:4
@@ -6967,14 +6618,6 @@ msgctxt "email"
 msgid "\n"
 "<p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/participant_created.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"%(applicant_name)s applied to your activity \"%(title)s\".\n\n"
-"Review the application and decide if this person is the right fit.\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_finished.html:4
@@ -6989,12 +6632,16 @@ msgid "\n"
 "</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_finished.txt:4
-#, python-format
+#: bluebottle/time_based/templates/mails/messages/participant_joined.html:6
+#| msgid ""
+#| "\n"
+#| "        Hello %(receiver_name)s\n"
+#| "        <br><br>\n"
+#| "    "
 msgctxt "email"
-msgid "\n\n"
-"Congratulations! Your contribution to the activity \"%(title)s\" is finished. Thank you for your participation. Together we have made the world a bit more beautiful.\n\n"
-"Craving for more? Then be sure to check out the activity overview page.\n"
+msgid "\n"
+"            You joined an activity on <b>%(site_name)s!</b>\n"
+"        "
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_rejected.html:4
@@ -7005,14 +6652,6 @@ msgid "\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_rejected.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Unfortunately, you have not been selected for the activity ‘%(title)s’.\n\n"
-"Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/participant_removed.html:4
 #, python-format
 msgctxt "email"
@@ -7021,16 +6660,7 @@ msgid "\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_removed.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"You have been removed as participant for the activity \"%(title)s\".\n\n"
-"Don't worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:6
-#: bluebottle/time_based/templates/mails/messages/participant_removed_owner.txt:5
 #, python-format
 msgctxt "email"
 msgid "%(participant_name)s has been removed from your activity \"%(title)s\"."
@@ -7043,20 +6673,10 @@ msgid "\n"
 "<p>%(applicant_name)s has withdrawn from you activity \"%(title)s\"!</p>\n"
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/participant_withdrew.txt:4
-#, python-format
-msgctxt "email"
-msgid "\n"
-"%(applicant_name)s has withdrawn from you activity \"%(title)s\".!\n\n"
-"Give the new participant a warm welcome.\n"
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/reminder_single_date.html:5
-#: bluebottle/time_based/templates/mails/messages/reminder_single_date.txt:4
-#, python-format
 msgctxt "email"
 msgid "\n"
-"The activity \"%(title)s\" takes place on %(start_date)s %(start_time)s - %(end_time)s (%(timezone)s). That is just a few days away!\n"
+"The activity  is just a few days away!\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/slot_date_changed.html:5
@@ -7065,14 +6685,6 @@ msgctxt "email"
 msgid "\n"
 "<p>The date and/or time of one of the slots of the activity \"%(title)s\" has changed.</p>\n\n"
 "<p>The new date is %(date)s from %(start)s to %(end)s (%(tz)s).</p>\n\n"
-msgstr ""
-
-#: bluebottle/time_based/templates/mails/messages/slot_date_changed.txt:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"The date and/or time of one of the slots of the activity \"%(title)s\" has changed.\n\n"
-"The new date is %(date)s from %(start)s to %(end)s (%(tz)s).\n\n"
 msgstr ""
 
 #: bluebottle/time_based/validators.py:10
@@ -7095,19 +6707,19 @@ msgstr ""
 msgid "Transition"
 msgstr ""
 
-#: bluebottle/utils/models.py:151
+#: bluebottle/utils/models.py:172
 msgid "publication date"
 msgstr ""
 
-#: bluebottle/utils/models.py:154
+#: bluebottle/utils/models.py:175
 msgid "To go live, status must be 'Published'."
 msgstr ""
 
-#: bluebottle/utils/models.py:156
+#: bluebottle/utils/models.py:177
 msgid "publication end date"
 msgstr ""
 
-#: bluebottle/utils/models.py:254 bluebottle/utils/models.py:255
+#: bluebottle/utils/models.py:279 bluebottle/utils/models.py:280
 msgid "translation settings"
 msgstr ""
 
@@ -7182,17 +6794,6 @@ msgstr ""
 #: bluebottle/utils/templates/utils/mails/share_flyer.mail.html:53
 msgctxt "email"
 msgid "Reply"
-msgstr ""
-
-#: bluebottle/utils/templates/utils/mails/share_flyer.mail.txt:3
-#, python-format
-msgid "\n"
-"Hi %(share_name)s\n\n\n"
-"%(sender_name)s (%(sender_email)s) wants to share a project with you:\n\n"
-"%(share_motivation)s\n\n"
-"----- project flyer ------\n\n"
-"%(project_title)s\n\n"
-"%(project_pitch)s\n\n"
 msgstr ""
 
 #: bluebottle/utils/templatetags/admin_extra.py:78
@@ -7312,14 +6913,6 @@ msgid "\n\n"
 "    "
 msgstr ""
 
-#: bluebottle/wallposts/templates/project_wallpost_new.mail.txt:5
-#: bluebottle/wallposts/templates/project_wallpost_reaction_project.mail.txt:5
-#, python-format
-msgid "\n\n"
-"Hello %(receiver_name)s,\n\n"
-"%(author_name)s just posted a comment on your '%(project_title)s' wall.\n"
-msgstr ""
-
 #: bluebottle/wallposts/templates/project_wallpost_reaction_new.mail.html:5
 #: bluebottle/wallposts/templates/project_wallpost_reaction_same_wallpost.mail.html:5
 #, python-format
@@ -7329,14 +6922,6 @@ msgid "\n\n"
 "        %(author_name)s just posted a comment on your\n"
 "        <i>%(project_title)s</i> wallpost.\n"
 "    "
-msgstr ""
-
-#: bluebottle/wallposts/templates/project_wallpost_reaction_new.mail.txt:5
-#: bluebottle/wallposts/templates/project_wallpost_reaction_same_wallpost.mail.txt:5
-#, python-format
-msgid "\n\n"
-"Hello %(receiver_name)s,\n\n"
-"%(author_name)s just posted a comment on your '%(project_title)s' wallpost.\n"
 msgstr ""
 
 #: bluebottle/wallposts/templates/task_wallpost_new.mail.html:5
@@ -7350,14 +6935,6 @@ msgid "\n\n"
 "    "
 msgstr ""
 
-#: bluebottle/wallposts/templates/task_wallpost_new.mail.txt:5
-#: bluebottle/wallposts/templates/task_wallpost_reaction_new.mail.txt:5
-#, python-format
-msgid "\n\n"
-"Hello %(receiver_name)s,\n\n"
-"%(author_name)s just posted a comment on your '%(task_title)s' wallpost.\n"
-msgstr ""
-
 #: bluebottle/wallposts/templates/task_wallpost_reaction_new.mail.html:5
 #, python-format
 msgid "\n\n"
@@ -7366,13 +6943,6 @@ msgid "\n\n"
 "        %(author_name)s just posted a comment on your <i>%(task_title)s</i>\n"
 "        wallpost.\n"
 "    "
-msgstr ""
-
-#: bluebottle/wallposts/templates/task_wallpost_reaction_task.mail.txt:5
-#, python-format
-msgid "\n\n"
-"Hello %(receiver_name)s,\n\n"
-"%(author_name)s just posted a comment on your '%(task_title)s' wall.\n"
 msgstr ""
 
 #: models.py:36
@@ -7390,3 +6960,1780 @@ msgstr ""
 #: models.py:99
 msgid "Events"
 msgstr ""
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hi %(receiver_name)s,\n"
+#~| "\n"
+#~| "Thank you for your partnership with %(site)s. \n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "Thanks for your donation! \n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "Thank you for your partnership with %(site)s. \n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hi %(receiver_name)s,\n"
+#~| "\n"
+#~| "        Thank you for your partnership with %(site)s. \n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "        The initiative \"%(title)s\" has been submitted by "
+#~ "%(initiator_name)s and is waiting for a review.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "        Thank you for your partnership with %(site)s. \n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(first_name)s,\n"
+#~| "        <br><br>\n"
+#~| "        %(author)s added a new post on a %(follow_object)s you follow:\n"
+#~| "        <br><br>\n"
+#~| "        <i>%(wallpost_text)s...</i>\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s added a new post on an activity you follow:\n"
+#~ "        <br>\n"
+#~ "        '%(text)s'\n"
+#~ "\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author)s added a new post on a %(follow_object)s you follow:\n"
+#~ "        <br><br>\n"
+#~ "        <i>%(wallpost_text)s...</i>\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(first_name)s,\n"
+#~| "\n"
+#~| "%(author)s added a new post on a %(follow_object)s you follow:\n"
+#~| "\n"
+#~| "'%(wallpost_text)s...'\n"
+#~| "\n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s added a new post on an activity you follow:\n"
+#~ "\n"
+#~ "'%(text)s'\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(first_name)s,\n"
+#~ "\n"
+#~ "%(author)s added a new post on a %(follow_object)s you follow:\n"
+#~ "\n"
+#~ "'%(wallpost_text)s...'\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(receiver_name)s,\n"
+#~| "\n"
+#~| "%(author_name)s just posted a comment on your '%(task_title)s' "
+#~| "wallpost.\n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "        %(author_name)s just posted a comment on your '%(title)s' "
+#~ "wallpost.\n"
+#~ "\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s just posted a comment on your '%(task_title)s' wallpost.\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(receiver_name)s,\n"
+#~| "\n"
+#~| "%(author_name)s just posted a comment on your '%(task_title)s' "
+#~| "wallpost.\n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s just posted a comment on your '%(title)s' wallpost.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s just posted a comment on your '%(task_title)s' wallpost.\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(receiver_name)s,\n"
+#~| "        <br><br>\n"
+#~| "        %(author_name)s just posted a comment on your <i>%(task_title)s</"
+#~| "i>\n"
+#~| "        wallpost.\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s just posted a comment on your '%(title)s' "
+#~ "wallpost.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s just posted a comment on your <i>%(task_title)s</"
+#~ "i>\n"
+#~ "        wallpost.\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(receiver_name)s,\n"
+#~| "        <br><br>\n"
+#~| "        %(author_name)s just posted a comment on your <i>%(task_title)s</"
+#~| "i>\n"
+#~| "        wall.\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s just posted a comment on your '%(title)s' wall.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s just posted a comment on your <i>%(task_title)s</"
+#~ "i>\n"
+#~ "        wall.\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(receiver_name)s,\n"
+#~| "\n"
+#~| "%(author_name)s just posted a comment on your '%(task_title)s' "
+#~| "wallpost.\n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s just posted a comment on your '%(title)s' post.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s just posted a comment on your '%(task_title)s' wallpost.\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(first_name)s,\n"
+#~| "        <br><br>\n"
+#~| "        %(author)s added a new post on a %(follow_object)s you follow:\n"
+#~| "        <br><br>\n"
+#~| "        <i>%(wallpost_text)s...</i>\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(recipient_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author_name)s added a new post on an initiative you follow:\n"
+#~ "        <br>\n"
+#~ "        '%(text)s'\n"
+#~ "\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        %(author)s added a new post on a %(follow_object)s you follow:\n"
+#~ "        <br><br>\n"
+#~ "        <i>%(wallpost_text)s...</i>\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(first_name)s,\n"
+#~| "\n"
+#~| "%(author)s added a new post on a %(follow_object)s you follow:\n"
+#~| "\n"
+#~| "'%(wallpost_text)s...'\n"
+#~| "\n"
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(recipient_name)s,\n"
+#~ "\n"
+#~ "%(author_name)s added a new post on a initiative you follow:\n"
+#~ "\n"
+#~ "'%(text)s'\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(first_name)s,\n"
+#~ "\n"
+#~ "%(author)s added a new post on a %(follow_object)s you follow:\n"
+#~ "\n"
+#~ "'%(wallpost_text)s...'\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "<p>If you have any questions please don’t hesitate to contact "
+#~ "%(contact_email)s.</p>\n"
+#~ msgstr ""
+#~ "\n"
+#~ "<p>If you have any questions please don’t hesitate to contact "
+#~ "%(contact_email)s.</p>\n"
+
+#~ msgid ""
+#~ "When a partner is selected with the drop down or a new one is added, that "
+#~ "member profile is shown whenever that member does something on the "
+#~ "platform."
+#~ msgstr ""
+#~ "When a partner is selected with the drop down or a new one is added, that "
+#~ "member profile is shown whenever that member does something on the "
+#~ "platform."
+
+#~ msgid ""
+#~ "\n"
+#~ "<h1>Welcome %(first_name)s</h1>\n"
+#~ "<p class=\"lead\">You’re now officially part of the %(site_name)s "
+#~ "community. Connect, share and work with others on projects that you care "
+#~ "about.</p>\n"
+#~ msgstr ""
+#~ "\n"
+#~ "<h1>Welcome %(first_name)s</h1>\n"
+#~ "<p class=\"lead\">You’re now officially part of the %(site_name)s "
+#~ "community. Connect, share and work with others on projects that you care "
+#~ "about.</p>\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Welcome %(first_name)s\n"
+#~ "\n"
+#~ "You’re now officially part of the %(site_name)s community. Connect, share "
+#~ "and work with others on projects that you care about.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Welcome %(first_name)s\n"
+#~ "\n"
+#~ "You’re now officially part of the %(site_name)s community. Connect, share "
+#~ "and work with others on projects that you care about.\n"
+#~ "\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "<h1>Welcome %(first_name)s</h1>\n"
+#~ "<p class=\"lead\">You are invited to join %(site_name)s. On this platform "
+#~ "you can work together on social projects that you care about.</p>\n"
+#~ "<p>Activate your account by setting your password.</p>\n"
+#~ msgstr ""
+#~ "\n"
+#~ "<h1>Welcome %(first_name)s</h1>\n"
+#~ "<p class=\"lead\">You are invited to join %(site_name)s. On this platform "
+#~ "you can work together on social projects that you care about.</p>\n"
+#~ "<p>Activate your account by setting your password.</p>\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Welcome %(first_name)s\n"
+#~ "\n"
+#~ "You are invited to join %(site_name)s. On this platform you can work "
+#~ "together on social projects that you care about.\n"
+#~ "\n"
+#~ "Activate your account by setting your password.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Welcome %(first_name)s\n"
+#~ "\n"
+#~ "You are invited to join %(site_name)s. On this platform you can work "
+#~ "together on social projects that you care about.\n"
+#~ "\n"
+#~ "Activate your account by setting your password.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello Project Team,\n"
+#~ "<br><br>\n"
+#~ "A project has been funded!\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello Project Team,\n"
+#~ "<br><br>\n"
+#~ "A project has been funded!\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello Project Team,\n"
+#~ "\n"
+#~ "A project has been funded!\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello Project Team,\n"
+#~ "\n"
+#~ "A project has been funded!\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Dear %(receiver_name)s,\n"
+#~ "\n"
+#~ "        Unfortunately the deadline of your task is reached and no "
+#~ "volunteers\n"
+#~ "        have applied.\n"
+#~ "        <br><br>\n"
+#~ "        You can change the status and deadline of the task and keep on "
+#~ "searching\n"
+#~ "        for volunteers.\n"
+#~ "        <br><br>\n"
+#~ "        Thanks again and we hope to see you back on %(site_name)s soon!\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Dear %(receiver_name)s,\n"
+#~ "\n"
+#~ "        Unfortunately the deadline of your task is reached and no "
+#~ "volunteers\n"
+#~ "        have applied.\n"
+#~ "        <br><br>\n"
+#~ "        You can change the status and deadline of the task and keep on "
+#~ "searching\n"
+#~ "        for volunteers.\n"
+#~ "        <br><br>\n"
+#~ "        Thanks again and we hope to see you back on %(site_name)s soon!\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Dear %(receiver_name)s,\n"
+#~ "\n"
+#~ "Unfortunately the deadline of your task is reached and no volunteers have "
+#~ "applied.\n"
+#~ "\n"
+#~ "You can change the status and deadline of the task and keep on searching "
+#~ "for volunteers. \n"
+#~ "\n"
+#~ "Thanks again and we hope to see you back on %(site_name)s soon!\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Dear %(receiver_name)s,\n"
+#~ "\n"
+#~ "Unfortunately the deadline of your task is reached and no volunteers have "
+#~ "applied.\n"
+#~ "\n"
+#~ "You can change the status and deadline of the task and keep on searching "
+#~ "for volunteers. \n"
+#~ "\n"
+#~ "Thanks again and we hope to see you back on %(site_name)s soon!\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "        Great news! The project initiator, %(sender_name)s, assigned the "
+#~ "task\n"
+#~ "        <i>%(task_title)s</i> to you.\n"
+#~ "        <br><br>\n"
+#~ "        Good luck taking on the task and feel free to keep everyone "
+#~ "updated on\n"
+#~ "        the progress.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Great news! The project initiator, %(sender_name)s, assigned the "
+#~ "task\n"
+#~ "        <i>%(task_title)s</i> to you.\n"
+#~ "        <br><br>\n"
+#~ "        Good luck taking on the task and feel free to keep everyone "
+#~ "updated on\n"
+#~ "        the progress.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "Great news! The project initiator, %(sender_name)s, assigned the task "
+#~ "'%(task_title)s' to you.\n"
+#~ "\n"
+#~ "Good luck taking on the task and feel free to keep everyone updated on "
+#~ "the progress.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Great news! The project initiator, %(sender_name)s, assigned the task "
+#~ "'%(task_title)s' to you.\n"
+#~ "\n"
+#~ "Good luck taking on the task and feel free to keep everyone updated on "
+#~ "the progress.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        Good news! %(sender_name)s applied for your task\n"
+#~ "        <i>%(task_title)s</i>.\n"
+#~ "        <br><br>\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        Good news! %(sender_name)s applied for your task\n"
+#~ "        <i>%(task_title)s</i>.\n"
+#~ "        <br><br>\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "            %(sender_name)s replied with the following motivation to your "
+#~ "task:\n"
+#~ "            <br>\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "            %(sender_name)s replied with the following motivation to your "
+#~ "task:\n"
+#~ "            <br>\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "        Please accept or reject this application, he or she will receive "
+#~ "an\n"
+#~ "        email when you have confirmed the status.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Please accept or reject this application, he or she will receive "
+#~ "an\n"
+#~ "        email when you have confirmed the status.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "Good news! %(sender_name)s applied for your task '%(task_title)s'.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "Good news! %(sender_name)s applied for your task '%(task_title)s'.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "%(sender_name)s replied with the following motivation to your task:\n"
+#~ msgstr ""
+#~ "\n"
+#~ "%(sender_name)s replied with the following motivation to your task:\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Please accept or reject this application, he or she will receive an email "
+#~ "when you have confirmed the status.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Please accept or reject this application, he or she will receive an email "
+#~ "when you have confirmed the status.\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "        Great news! The project initiator, %(sender_name)s, assigned the "
+#~| "task\n"
+#~| "        <i>%(task_title)s</i> to you.\n"
+#~| "        <br><br>\n"
+#~| "        Good luck taking on the task and feel free to keep everyone "
+#~| "updated on\n"
+#~| "        the progress.\n"
+#~| "    "
+#~ msgid ""
+#~ "\n"
+#~ "        %(sender_name)s has joined your task\n"
+#~ "        <i>%(task_title)s</i>!\n"
+#~ "        <br><br>\n"
+#~ "        Give your new task member a warm welcome.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Great news! The project initiator, %(sender_name)s, assigned the "
+#~ "task\n"
+#~ "        <i>%(task_title)s</i> to you.\n"
+#~ "        <br><br>\n"
+#~ "        Good luck taking on the task and feel free to keep everyone "
+#~ "updated on\n"
+#~ "        the progress.\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(receiver_name)s,\n"
+#~| "        <br><br>\n"
+#~| "        Oh no, %(sender_name)s withdrew from the task <i>%(task_title)s</"
+#~| "i>\n"
+#~| "        <br><br>\n"
+#~| "        The task is open again for new volunteers to apply.\n"
+#~| "    "
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        The project owner %(sender_name)s marked the task\n"
+#~ "        <i>%(task_title)s</i> as realized.\n"
+#~ "        <br><br>\n"
+#~ "        You've spent %(time_spent)s hours on this project.\n"
+#~ "        <br><br>\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        Oh no, %(sender_name)s withdrew from the task <i>%(task_title)s</"
+#~ "i>\n"
+#~ "        <br><br>\n"
+#~ "        The task is open again for new volunteers to apply.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "        <a href=\"%(link)s\">Please take a moment to fill in a survey "
+#~ "about the impact you created<a/>\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "        <a href=\"%(link)s\">Please take a moment to fill in a survey "
+#~ "about the impact you created<a/>\n"
+#~ "        "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\t\n"
+#~| "Hello %(receiver_name)s,\n"
+#~| "\n"
+#~| "Oh no, %(sender_name)s withdrew from the task '%(task_title)s'\n"
+#~| "\n"
+#~| "The task is open again for new volunteers to apply.\n"
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "The project owner %(sender_name)s marked the task '%(task_title)s' as "
+#~ "realized.\n"
+#~ "\n"
+#~ "You've spent %(time_spent)s hours on this project.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\t\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "Oh no, %(sender_name)s withdrew from the task '%(task_title)s'\n"
+#~ "\n"
+#~ "The task is open again for new volunteers to apply.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Please take a moment to fill in a survey about the impact you created; "
+#~ "%(link)s\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Please take a moment to fill in a survey about the impact you created; "
+#~ "%(link)s\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Unfortunately you weren't selected for the task '%(task_title)s'\n"
+#~ "\n"
+#~ "No worries, have a look at some similar tasks that need your skills.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Unfortunately you weren't selected for the task '%(task_title)s'\n"
+#~ "\n"
+#~ "No worries, have a look at some similar tasks that need your skills.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        Oh no, %(sender_name)s withdrew from the task <i>%(task_title)s</"
+#~ "i>\n"
+#~ "        <br><br>\n"
+#~ "        The task is open again for new volunteers to apply.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        Oh no, %(sender_name)s withdrew from the task <i>%(task_title)s</"
+#~ "i>\n"
+#~ "        <br><br>\n"
+#~ "        The task is open again for new volunteers to apply.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\t\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "Oh no, %(sender_name)s withdrew from the task '%(task_title)s'\n"
+#~ "\n"
+#~ "The task is open again for new volunteers to apply.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\t\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "Oh no, %(sender_name)s withdrew from the task '%(task_title)s'\n"
+#~ "\n"
+#~ "The task is open again for new volunteers to apply.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "        The deadline of your task is reached.\n"
+#~ "        <br><br>\n"
+#~ "        Is your task realised? Please confirm the participants.\n"
+#~ "        <br><br>\n"
+#~ "        <a href=\"%(site)s%(task_link)s\">Confirm participants</a>\n"
+#~ "        <br><br>\n"
+#~ "        Too early to celebrate? By changing the deadline you can extend "
+#~ "the task\n"
+#~ "        period. You can also choose to close the task.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "        The deadline of your task is reached.\n"
+#~ "        <br><br>\n"
+#~ "        Is your task realised? Please confirm the participants.\n"
+#~ "        <br><br>\n"
+#~ "        <a href=\"%(site)s%(task_link)s\">Confirm participants</a>\n"
+#~ "        <br><br>\n"
+#~ "        Too early to celebrate? By changing the deadline you can extend "
+#~ "the task\n"
+#~ "        period. You can also choose to close the task.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "The deadline of your task is reached.\n"
+#~ "\n"
+#~ "Is your task realised? Please confirm the participants.\n"
+#~ "\n"
+#~ "Confirm participants at %(site)s%(task_link)s\n"
+#~ "\n"
+#~ "Too early to celebrate? By changing the deadline you can extend the task "
+#~ "period. You can also choose to close the task. \n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s,\n"
+#~ "\n"
+#~ "The deadline of your task is reached.\n"
+#~ "\n"
+#~ "Is your task realised? Please confirm the participants.\n"
+#~ "\n"
+#~ "Confirm participants at %(site)s%(task_link)s\n"
+#~ "\n"
+#~ "Too early to celebrate? By changing the deadline you can extend the task "
+#~ "period. You can also choose to close the task. \n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for co-financing this project. The project "
+#~ "initiator %(initiator_name)s has received an email with your pledge.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for co-financing this project. The project "
+#~ "initiator %(initiator_name)s has received an email with your pledge.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for your donation! Be sure to follow the "
+#~ "project page for the latest updates on the project.\n"
+#~ "        Give some extra support and share this project with your "
+#~ "network.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for your donation! Be sure to follow the "
+#~ "project page for the latest updates on the project.\n"
+#~ "        Give some extra support and share this project with your "
+#~ "network.\n"
+#~ "        "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Thanks %(first_name)s, for co-financing this project. The "
+#~| "project initiator %(initiator_name)s has received an email with your "
+#~| "pledge.\n"
+#~| "        "
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Thanks %(first_name)s, for co-financing this project. The project "
+#~ "initiator %(initiator_name)s has received an email with your pledge.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for co-financing this project. The project "
+#~ "initiator %(initiator_name)s has received an email with your pledge.\n"
+#~ "        "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Thanks %(first_name)s, for your donation! Be sure to follow the "
+#~| "project page for the latest updates on the project.\n"
+#~| "        Give some extra support and share this project with your "
+#~| "network.\n"
+#~| "        "
+#~ msgid ""
+#~ "\n"
+#~ "Thanks %(first_name)s, for your donation! Be sure to follow the project "
+#~ "page for the latest updates on the project.\n"
+#~ "Give some extra support and share this project with your network.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Thanks %(first_name)s, for your donation! Be sure to follow the "
+#~ "project page for the latest updates on the project.\n"
+#~ "        Give some extra support and share this project with your "
+#~ "network.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you've just received an invoiced donation "
+#~ "by %(donor_name)s. The amount will be transfered directly to your bank "
+#~ "account by %(donor_name)s. If not, please contact the user via "
+#~ "%(admin_email)s.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you've just received an invoiced donation "
+#~ "by %(donor_name)s. The amount will be transfered directly to your bank "
+#~ "account by %(donor_name)s. If not, please contact the user via "
+#~ "%(admin_email)s.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your project page.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your project page.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your <a href=\"%(site)s%(link)s\" class=\"action\">fundraiser "
+#~ "page</a>.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your <a href=\"%(site)s%(link)s\" class=\"action\">fundraiser "
+#~ "page</a>.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your fundraiser page: %(site)s%(link)s.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(first_name)s, you received a donation from "
+#~ "%(donor_name)s. Quickly thank your supporter by posting a personal "
+#~ "message on your fundraiser page: %(site)s%(link)s.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "\n"
+#~ "        You successfully reached the requested number of task members. "
+#~ "The task has been set to 'full'. \n"
+#~ "        <br><br> \n"
+#~ "        This is a good moment to update your project followers. \n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "\n"
+#~ "        You successfully reached the requested number of task members. "
+#~ "The task has been set to 'full'. \n"
+#~ "        <br><br> \n"
+#~ "        This is a good moment to update your project followers. \n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "        To record the impact we have with our projects, your input is "
+#~ "extremely important.\n"
+#~ "        <br><br>\n"
+#~ "        Please help us by filling out our 1 minute <a href=\"%(link)s"
+#~ "\">survey</a>\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "        To record the impact we have with our projects, your input is "
+#~ "extremely important.\n"
+#~ "        <br><br>\n"
+#~ "        Please help us by filling out our 1 minute <a href=\"%(link)s"
+#~ "\">survey</a>\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "To record the impact we have with our projects, your input is extremely "
+#~ "important.\n"
+#~ "\n"
+#~ "Please help us by filling out our 1 minute survey:\n"
+#~ "%(link)s\n"
+#~ msgstr ""
+#~ "\n"
+#~ "To record the impact we have with our projects, your input is extremely "
+#~ "important.\n"
+#~ "\n"
+#~ "Please help us by filling out our 1 minute survey:\n"
+#~ "%(link)s\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        To record the impact we have with our projects, your input is "
+#~ "extremely important.\n"
+#~ "        <br><br>\n"
+#~ "        Please help us by filling out our 1 minute <a href=\"%(link)s"
+#~ "\">survey</a>.\n"
+#~ "        "
+#~ msgstr ""
+#~ "\n"
+#~ "        To record the impact we have with our projects, your input is "
+#~ "extremely important.\n"
+#~ "        <br><br>\n"
+#~ "        Please help us by filling out our 1 minute <a href=\"%(link)s"
+#~ "\">survey</a>.\n"
+#~ "        "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "Congratulations! Your project \"%(title)s\" has been realised! It's time "
+#~ "to\n"
+#~ "celebrate!\n"
+#~ "\n"
+#~ "Why don't you share this success with your supporters.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "Congratulations! Your project \"%(title)s\" has been realised! It's time "
+#~ "to\n"
+#~ "celebrate!\n"
+#~ "\n"
+#~ "Why don't you share this success with your supporters.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "To record the impact we have with our projects, your input is extremely "
+#~ "important.\n"
+#~ "Please help us by filling out our 1 minute survey:\n"
+#~ "%(link)s\n"
+#~ msgstr ""
+#~ "\n"
+#~ "To record the impact we have with our projects, your input is extremely "
+#~ "important.\n"
+#~ "Please help us by filling out our 1 minute survey:\n"
+#~ "%(link)s\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        The deadline of your project \"%(title)s\" has expired!<br>\n"
+#~ "        <br>\n"
+#~ "        Don't wait any longer. Let your supporters know about your next "
+#~ "steps.\n"
+#~ "        <br>\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hi %(receiver_name)s,\n"
+#~ "        <br><br>\n"
+#~ "        The deadline of your project \"%(title)s\" has expired!<br>\n"
+#~ "        <br>\n"
+#~ "        Don't wait any longer. Let your supporters know about your next "
+#~ "steps.\n"
+#~ "        <br>\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "The deadline of your project \"%(title)s\" has expired!\n"
+#~ "\n"
+#~ "Don't wait any longer. Let your supporters know about your next steps.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "The deadline of your project \"%(title)s\" has expired!\n"
+#~ "\n"
+#~ "Don't wait any longer. Let your supporters know about your next steps.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "You are assigned as %(role_name)s for %(title)s.\n"
+#~ "If you have any questions please contact %(admin_email)s\n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hi %(receiver_name)s,\n"
+#~ "\n"
+#~ "You are assigned as %(role_name)s for %(title)s.\n"
+#~ "If you have any questions please contact %(admin_email)s\n"
+#~ "\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        Hi,<br/>\n"
+#~ "        <br/>\n"
+#~ " \n"
+#~ "        Thank you for submitting your project request. You're almost "
+#~ "done. Before we can process your submission, we need you to confirm your "
+#~ "email address by clicking on the link below.    \n"
+#~ "\n"
+#~ "        <a href=\"%(tokenurl)s\">Activation link</a>\n"
+#~ "\n"
+#~ "        <br/><br/>\n"
+#~ "        Thanks,<br/>\n"
+#~ "        <br/>\n"
+#~ "        \n"
+#~ "        The platform team\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Hi,<br/>\n"
+#~ "        <br/>\n"
+#~ " \n"
+#~ "        Thank you for submitting your project request. You're almost "
+#~ "done. Before we can process your submission, we need you to confirm your "
+#~ "email address by clicking on the link below.    \n"
+#~ "\n"
+#~ "        <a href=\"%(tokenurl)s\">Activation link</a>\n"
+#~ "\n"
+#~ "        <br/><br/>\n"
+#~ "        Thanks,<br/>\n"
+#~ "        <br/>\n"
+#~ "        \n"
+#~ "        The platform team\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        The date of task \"%(title)s\" has changed.<br>\n"
+#~ "        Original date: %(original_date)s New date: %(date)s\n"
+#~ "\n"
+#~ "        If you can't make it to the new date, you can withdraw from the "
+#~ "task.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        The date of task \"%(title)s\" has changed.<br>\n"
+#~ "        Original date: %(original_date)s New date: %(date)s\n"
+#~ "\n"
+#~ "        If you can't make it to the new date, you can withdraw from the "
+#~ "task.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "The date of task \"%(title)s\" has changed.<br>\n"
+#~ "Original date: %(original_date)s New date: %(date)s\n"
+#~ "\n"
+#~ "If you can't make it to the new date, you can withdraw from the task.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "The date of task \"%(title)s\" has changed.<br>\n"
+#~ "Original date: %(original_date)s New date: %(date)s\n"
+#~ "\n"
+#~ "If you can't make it to the new date, you can withdraw from the task.\n"
+#~ "\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task '%(title)s' has been "
+#~ "reached.\n"
+#~ "        Unfortunately no candidates have applied and the task is set to "
+#~ "'closed'. \n"
+#~ "        <br><br>\n"
+#~ "        You can change the date to apply if you want to look for more "
+#~ "candidates. \n"
+#~ "        You can also change the date of your task to ensure you get "
+#~ "enough task members on board.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task '%(title)s' has been "
+#~ "reached.\n"
+#~ "        Unfortunately no candidates have applied and the task is set to "
+#~ "'closed'. \n"
+#~ "        <br><br>\n"
+#~ "        You can change the date to apply if you want to look for more "
+#~ "candidates. \n"
+#~ "        You can also change the date of your task to ensure you get "
+#~ "enough task members on board.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task '%(title)s' has been reached.\n"
+#~ "Unfortunately no candidates have applied and the task is set to "
+#~ "'closed'. \n"
+#~ "\n"
+#~ "You can change the date to apply if you want to look for more "
+#~ "candidates. \n"
+#~ "You can also change the date of your task to ensure you get enough task "
+#~ "members on board.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task '%(title)s' has been reached.\n"
+#~ "Unfortunately no candidates have applied and the task is set to "
+#~ "'closed'. \n"
+#~ "\n"
+#~ "You can change the date to apply if you want to look for more "
+#~ "candidates. \n"
+#~ "You can also change the date of your task to ensure you get enough task "
+#~ "members on board.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        %(people_applied)s candidates applied to your task. Your task has "
+#~ "been set to 'full'. \n"
+#~ "        <br><br>\n"
+#~ "        You still have to accept your candidates.\n"
+#~ "        <br><br>\n"
+#~ "        If you didn't find the right candidates for your task you can <a "
+#~ "href=\"%(site)s%(edit_link)s\">change the date to apply</a> and look for "
+#~ "other candidates. \n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        %(people_applied)s candidates applied to your task. Your task has "
+#~ "been set to 'full'. \n"
+#~ "        <br><br>\n"
+#~ "        You still have to accept your candidates.\n"
+#~ "        <br><br>\n"
+#~ "        If you didn't find the right candidates for your task you can <a "
+#~ "href=\"%(site)s%(edit_link)s\">change the date to apply</a> and look for "
+#~ "other candidates. \n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "%(people_applied)s candidates applied to your task. Your task has been "
+#~ "set to 'full'. You still have to accept your candidates.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "%(people_applied)s candidates applied to your task. Your task has been "
+#~ "set to 'full'. You still have to accept your candidates.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        Your task didn’t get all the task members you requested. The task "
+#~ "has been set to 'full' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "        members, you can change the date to apply.\n"
+#~ "        <br><br>\n"
+#~ "        Note: You have to <a href=\"%(site)s%(link)s\">accept</a> "
+#~ "candidates before they become task members\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        Your task didn’t get all the task members you requested. The task "
+#~ "has been set to 'full' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "        members, you can change the date to apply.\n"
+#~ "        <br><br>\n"
+#~ "        Note: You have to <a href=\"%(site)s%(link)s\">accept</a> "
+#~ "candidates before they become task members\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "Your task didn’t get all the task members you requested. The task has "
+#~ "been set to 'full' with the %(people_applied)s candidates that applied. "
+#~ "If your task requires more task \n"
+#~ "members, you can change the date to apply.\n"
+#~ "\n"
+#~ "Note: You have to accept candidates before they become task members\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "Your task didn’t get all the task members you requested. The task has "
+#~ "been set to 'full' with the %(people_applied)s candidates that applied. "
+#~ "If your task requires more task \n"
+#~ "members, you can change the date to apply.\n"
+#~ "\n"
+#~ "Note: You have to accept candidates before they become task members\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "You successfully reached the requested number of task members. The task "
+#~ "has been set to 'full'. This is a good moment to update your project "
+#~ "followers.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "You successfully reached the requested number of task members. The task "
+#~ "has been set to 'full'. This is a good moment to update your project "
+#~ "followers.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        %(people_applied)s candidates applied to your task. Your task has "
+#~ "been set to 'running'. \n"
+#~ "        <br><br>\n"
+#~ "        You still have to accept your candidates.\n"
+#~ "        <br><br>\n"
+#~ "        If you didn't find the right candidates for your task you can <a "
+#~ "href=\"%(site)s%(edit_link)s\">change the date to apply</a> and look for "
+#~ "other candidates. \n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        %(people_applied)s candidates applied to your task. Your task has "
+#~ "been set to 'running'. \n"
+#~ "        <br><br>\n"
+#~ "        You still have to accept your candidates.\n"
+#~ "        <br><br>\n"
+#~ "        If you didn't find the right candidates for your task you can <a "
+#~ "href=\"%(site)s%(edit_link)s\">change the date to apply</a> and look for "
+#~ "other candidates. \n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "%(people_applied)s candidates applied to your task. Your task has been "
+#~ "set to 'running'. You still have to accept your candidates.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "%(people_applied)s candidates applied to your task. Your task has been "
+#~ "set to 'running'. You still have to accept your candidates.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        Your task didn’t get all the task members you requested. The task "
+#~ "has been set to 'running' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "        members, you can change the date to apply.\n"
+#~ "        <br><br>\n"
+#~ "        Note: You have to <a href=\"%(site)s%(link)s\">accept</a> "
+#~ "candidates before they become task members\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "        Your task didn’t get all the task members you requested. The task "
+#~ "has been set to 'running' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "        members, you can change the date to apply.\n"
+#~ "        <br><br>\n"
+#~ "        Note: You have to <a href=\"%(site)s%(link)s\">accept</a> "
+#~ "candidates before they become task members\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "Your task didn’t get all the task members you requested. The task has "
+#~ "been set to 'running' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "members, you can change the date to apply.\n"
+#~ "\n"
+#~ "Note: You have to accept candidates before they become task members\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "Your task didn’t get all the task members you requested. The task has "
+#~ "been set to 'running' with the %(people_applied)s candidates that "
+#~ "applied. If your task requires more task \n"
+#~ "members, you can change the date to apply.\n"
+#~ "\n"
+#~ "Note: You have to accept candidates before they become task members\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "\n"
+#~ "        You successfully reached the requested number of task members. "
+#~ "The task has been set to 'running'. \n"
+#~ "        <br><br> \n"
+#~ "        This is a good moment to update your project followers. \n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        The deadline to apply for your task \"%(title)s\" has been "
+#~ "reached.\n"
+#~ "        <br><br>\n"
+#~ "\n"
+#~ "        You successfully reached the requested number of task members. "
+#~ "The task has been set to 'running'. \n"
+#~ "        <br><br> \n"
+#~ "        This is a good moment to update your project followers. \n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "You successfully reached the requested number of task members. The task "
+#~ "has been set to 'running'. This is a good moment to update your project "
+#~ "followers.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "The deadline to apply for your task \"%(title)s\" has been reached.\n"
+#~ "\n"
+#~ "You successfully reached the requested number of task members. The task "
+#~ "has been set to 'running'. This is a good moment to update your project "
+#~ "followers.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "The scheduled date of your task \"%(title)s\" has been reached.\n"
+#~ "No candidates have been accepted, therefore the task is set to closed.\n"
+#~ "\n"
+#~ "Please confirm the candidates to set your task to realised.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "The scheduled date of your task \"%(title)s\" has been reached.\n"
+#~ "No candidates have been accepted, therefore the task is set to closed.\n"
+#~ "\n"
+#~ "Please confirm the candidates to set your task to realised.\n"
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "        Hello %(receiver_name)s\n"
+#~| "        <br><br>\n"
+#~| "        Hopefully your task \"%(title)s\" was a great success! \n"
+#~| "        Make sure that all participants are marked as confirmed so we "
+#~| "can show the results of your project.\n"
+#~| "    "
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        You've set your task \"%(title)s\" to realised.<br>\n"
+#~ "        Please be sure to confirm all participants.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        Hopefully your task \"%(title)s\" was a great success! \n"
+#~ "        Make sure that all participants are marked as confirmed so we can "
+#~ "show the results of your project.\n"
+#~ "    "
+
+#, fuzzy
+#~| msgid ""
+#~| "\n"
+#~| "\n"
+#~| "Hello %(receiver_name)s\n"
+#~| "\n"
+#~| "You've set your task \"%(title)s\" to realised.\n"
+#~| "Please be sure to confirm all participants.\n"
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "You've set your task \"%(title)s\" to realised.\n"
+#~ "Please be sure to confirm all participants.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "You've set your task \"%(title)s\" to realised.\n"
+#~ "Please be sure to confirm all participants.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        Hopefully your task \"%(title)s\" was a great success! \n"
+#~ "        Make sure that all participants are marked as confirmed so we can "
+#~ "show the results of your project.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        Hopefully your task \"%(title)s\" was a great success! \n"
+#~ "        Make sure that all participants are marked as confirmed so we can "
+#~ "show the results of your project.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "Hopefully your task \"%(title)s\" was a great success! \n"
+#~ "Make sure that all participants are marked as confirmed so we can show "
+#~ "the results of your project.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "Hopefully your task \"%(title)s\" was a great success! \n"
+#~ "Make sure that all participants are marked as confirmed so we can show "
+#~ "the results of your project.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        In case it slipped your mind. Please confirm the participants who "
+#~ "executed \"%(title)s\" so we can show the results of your project.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "        In case it slipped your mind. Please confirm the participants who "
+#~ "executed \"%(title)s\" so we can show the results of your project.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "In case it slipped your mind. Please confirm the participants who "
+#~ "executed \"%(title)s\" so we can show the results of your project.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "\n"
+#~ "Hello %(receiver_name)s\n"
+#~ "\n"
+#~ "In case it slipped your mind. Please confirm the participants who "
+#~ "executed \"%(title)s\" so we can show the results of your project.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(receiver_first_name)s,<br/>\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        Thanks for you monthly do-good donation. You're contribution "
+#~ "makes a\n"
+#~ "        world of difference.\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        On %(date)s you contributed %(amount)s. Below you'll find an\n"
+#~ "        overview of the project(s) you supported. <br/><br/>\n"
+#~ "\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Hi %(receiver_first_name)s,<br/>\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        Thanks for you monthly do-good donation. You're contribution "
+#~ "makes a\n"
+#~ "        world of difference.\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        On %(date)s you contributed %(amount)s. Below you'll find an\n"
+#~ "        overview of the project(s) you supported. <br/><br/>\n"
+#~ "\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "        <br/><br/>\n"
+#~ "        Thanks to your support we were able to realize so many projects.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        <br/><br/>\n"
+#~ "        Thanks to your support we were able to realize so many projects.\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(receiver_first_name)s,\n"
+#~ "\n"
+#~ "Thanks for you monthly do-good donation. You're contribution makes a "
+#~ "world of difference. \n"
+#~ "\n"
+#~ "On %(date)s you contributed %(amount)s. Below you'll find an overview of "
+#~ "the project(s) you supported. \n"
+#~ "\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Hi %(receiver_first_name)s,\n"
+#~ "\n"
+#~ "Thanks for you monthly do-good donation. You're contribution makes a "
+#~ "world of difference. \n"
+#~ "\n"
+#~ "On %(date)s you contributed %(amount)s. Below you'll find an overview of "
+#~ "the project(s) you supported. \n"
+#~ "\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "Thanks to your support we were able to realize so many projects.\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Thanks to your support we were able to realize so many projects.\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "        Hi %(receiver_first_name)s,<br/>\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        Great news! Thanks to your support\n"
+#~ "        <a href=\"%(site)s%(link)s\">%(project)s</a>\n"
+#~ "        is now fully funded and ready for take off.<br/><br/>\n"
+#~ "\n"
+#~ "        Let's do some more good! Choose a new project you'd like to "
+#~ "support or\n"
+#~ "        make it easy on yourself and let us equally divide your monthly "
+#~ "donation\n"
+#~ "        on the three most likely to be fully funded projects.<br/><br/>\n"
+#~ "\n"
+#~ "        Thanks for you loyal support!\n"
+#~ "        <br/><br/>\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Hi %(receiver_first_name)s,<br/>\n"
+#~ "        <br/>\n"
+#~ "\n"
+#~ "        Great news! Thanks to your support\n"
+#~ "        <a href=\"%(site)s%(link)s\">%(project)s</a>\n"
+#~ "        is now fully funded and ready for take off.<br/><br/>\n"
+#~ "\n"
+#~ "        Let's do some more good! Choose a new project you'd like to "
+#~ "support or\n"
+#~ "        make it easy on yourself and let us equally divide your monthly "
+#~ "donation\n"
+#~ "        on the three most likely to be fully funded projects.<br/><br/>\n"
+#~ "\n"
+#~ "        Thanks for you loyal support!\n"
+#~ "        <br/><br/>\n"
+#~ "    "
+
+#~ msgid ""
+#~ "\n"
+#~ "Hi %(receiver_first_name)s,\n"
+#~ "\n"
+#~ "Great news! Thanks to your support %(project)s is now fully funded and "
+#~ "ready for take off.\n"
+#~ "\n"
+#~ "%(site)s%(link)s\n"
+#~ "\n"
+#~ "Let's do some more good! Choose a new project you'd like to support or "
+#~ "make it easy on yourself and let us equally divide your monthly donation "
+#~ "on the three most likely to be fully funded projects.\n"
+#~ "\n"
+#~ "Thanks for you loyal support! \n"
+#~ msgstr ""
+#~ "\n"
+#~ "Hi %(receiver_first_name)s,\n"
+#~ "\n"
+#~ "Great news! Thanks to your support %(project)s is now fully funded and "
+#~ "ready for take off.\n"
+#~ "\n"
+#~ "%(site)s%(link)s\n"
+#~ "\n"
+#~ "Let's do some more good! Choose a new project you'd like to support or "
+#~ "make it easy on yourself and let us equally divide your monthly donation "
+#~ "on the three most likely to be fully funded projects.\n"
+#~ "\n"
+#~ "Thanks for you loyal support! \n"
+
+#~ msgid ""
+#~ "Book date when the bank transaction was confirmed and the payout has been "
+#~ "set to completed."
+#~ msgstr ""
+#~ "Book date when the bank transaction was confirmed and the payout has been "
+#~ "set to completed."
+
+#~ msgid ""
+#~ "If a payout is protected, the amounts can only be updated via journals."
+#~ msgstr ""
+#~ "If a payout is protected, the amounts can only be updated via journals."
+
+#~ msgid ""
+#~ "Status change of '%(payout)s' on %(created)s from %(old_status)s to "
+#~ "%(new_status)s"
+#~ msgstr ""
+#~ "Status change of '%(payout)s' on %(created)s from %(old_status)s to "
+#~ "%(new_status)s"
+
+#~ msgid ""
+#~ "Set either this value or inclusive VAT, make sure recalculate afterwards."
+#~ msgstr ""
+#~ "Set either this value or inclusive VAT, make sure recalculate afterwards."
+
+#~ msgid ""
+#~ "Set either this value or exclusive VAT, make sure recalculate afterwards."
+#~ msgstr ""
+#~ "Set either this value or exclusive VAT, make sure recalculate afterwards."
+
+#~ msgid ""
+#~ "The next payout period should start the day after the end of the previous "
+#~ "period."
+#~ msgstr ""
+#~ "The next payout period should start the day after the end of the previous "
+#~ "period."
+
+#~ msgid ""
+#~ "\n"
+#~ "        Support even more by sharing the project with your network\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Support even more by sharing the project with your network\n"
+#~ "    "
+
+#~ msgid ""
+#~ "Raw passwords are not stored, so there is no way to see this user's "
+#~ "password, but you can change the password using <a href=\"../password/"
+#~ "\">this form</a>."
+#~ msgstr ""
+#~ "Raw passwords are not stored, so there is no way to see this user's "
+#~ "password, but you can change the password using <a href=\"../password/"
+#~ "\">this form</a>."
+
+#~ msgid ""
+#~ "{0} new records have been imported, {1} have been already imported and "
+#~ "have been ignored."
+#~ msgstr ""
+#~ "{0} new records have been imported, {1} have been already imported and "
+#~ "have been ignored."
+

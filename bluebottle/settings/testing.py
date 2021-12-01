@@ -346,6 +346,30 @@ CONFLUENCE = {
             'page_id': ''
         },
 
+        # Deed Activities
+        {
+            'title': '[DEV] States - Deeds - Deed',
+            'model': 'bluebottle.deeds.models.Deed',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Deeds - Deed Participant',
+            'model': 'bluebottle.deeds.models.DeedParticipant',
+            'page_id': ''
+        },
+
+        # Collection Activities
+        {
+            'title': '[DEV] States - Collect - Collection activity',
+            'model': 'bluebottle.collect.models.CollectActivity',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Collect - Collection contributor',
+            'model': 'bluebottle.collect.models.CollectContributor',
+            'page_id': ''
+        },
+
     ]}
 
 RANDOM_IMAGE_PROVIDER = "https://picsum.photos/seed/{seed}/{width}/{height}"

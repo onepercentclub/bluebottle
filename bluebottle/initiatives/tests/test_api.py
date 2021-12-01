@@ -13,6 +13,7 @@ from moneyed import Money
 from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import Initiative
@@ -613,6 +614,25 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         for participant in participants:
             participant.states.withdraw(save=True)
 
+        collect_activity = CollectActivityFactory.create(
+            initiative=self.initiative,
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+        )
+        collect_activity.realized = 100
+        collect_activity.states.submit(save=True)
+
+        CollectContributorFactory.create_batch(3, activity=collect_activity)
+        CollectContributorFactory.create_batch(3, activity=collect_activity, status='withdrawn')
+
+        other_collect_activity = CollectActivityFactory.create(
+            initiative=self.initiative,
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+        )
+        other_collect_activity.realized = 200
+        other_collect_activity.states.submit(save=True)
+
+        CollectContributorFactory.create_batch(3, activity=other_collect_activity)
+
         # make an activity
         unrelated_initiative = InitiativeFactory.create()
         unrelated_initiative.states.submit()
@@ -635,7 +655,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 66.0)
-        self.assertEqual(stats['activities'], 4)
+        self.assertEqual(stats['activities'], 6)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
         # 3 period participants
@@ -643,10 +663,20 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         # 1 donor (3 donations by same user)
         # 3 anonymous donations
         # 3 deed participants
-        # 13 total contributors
+        # 6 collect contributors
+        # 19 total contributors
+        # 3 withdrawn collect contributors not counted
         # organizers are not counted here
-        self.assertEqual(stats['contributors'], 13)
+        self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
+
+        self.assertEqual(
+            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
+        )
+        self.assertEqual(
+            stats['collected'][str(other_collect_activity.collect_type_id)],
+            other_collect_activity.realized
+        )
 
     def test_get_other(self):
         response = self.client.get(

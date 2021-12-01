@@ -458,7 +458,20 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
-            len(self.response_data['relationships']['contributors']['data']),
+            self.response_data['meta']['contributor-count'],
+            4
+        )
+
+        response = self.client.get(
+            self.response_data['relationships']['contributors']['links']['related'],
+            user=self.activity.owner
+        )
+
+        self.response_data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(self.response_data),
             5
         )
 
@@ -472,7 +485,18 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
-            len(self.response_data['relationships']['contributors']['data']),
+            self.response_data['meta']['contributor-count'],
+            4
+        )
+
+        response = self.client.get(
+            self.response_data['relationships']['contributors']['links']['related'],
+        )
+        self.response_data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(self.response_data),
             4
         )
 
@@ -489,7 +513,19 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
-            len(self.response_data['relationships']['contributors']['data']),
+            self.response_data['meta']['contributor-count'],
+            4
+        )
+
+        response = self.client.get(
+            self.response_data['relationships']['contributors']['links']['related'],
+            user=participant.user
+        )
+        self.response_data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(self.response_data),
             5
         )
 
@@ -826,25 +862,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
             in self.data['meta']['transitions']
         )
-
-    def test_get_contributors(self):
-        super().test_get_contributors()
-
-        contributor_ids = [
-            resource['id'] for resource in self.response_data['relationships']['contributors']['data']
-        ]
-
-        contributor_response = self.client.get(
-            self.response_data['relationships']['contributors']['links']['related'],
-            user=self.activity.owner
-        )
-        contributor_data = contributor_response.json()
-        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
-
-        for contributor in contributor_data['data']:
-            self.assertTrue(
-                contributor['id'] in contributor_ids
-            )
 
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'

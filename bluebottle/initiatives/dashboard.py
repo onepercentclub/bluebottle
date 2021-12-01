@@ -47,11 +47,12 @@ class MyOfficeSubRegionInitiatives(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        location = context.request.user.location
-        if location:
-            self.children = Initiative.objects.filter(
-                location__subregion=location.subregion
-            ).order_by('-created')[:self.limit]
+        if getattr(context, 'request', None):
+            location = context.request.user.location
+            if location:
+                self.children = Initiative.objects.filter(
+                    location__subregion=location.subregion
+                ).order_by('-created')[:self.limit]
 
     def load_from_model(self):
         super(MyOfficeSubRegionInitiatives, self).load_from_model()
@@ -93,8 +94,9 @@ class MyReviewingInitiatives(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        user = context.request.user
-        self.children = Initiative.objects.filter(reviewer=user).order_by('-created')[:self.limit]
+        if getattr(context, 'request', None):
+            user = context.request.user
+            self.children = Initiative.objects.filter(reviewer=user).order_by('-created')[:self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
@@ -103,9 +105,10 @@ class AppIndexDashboard(DefaultAppIndexDashboard):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentInitiatives())
         self.children.append(MyReviewingInitiatives())
-        user = context.request.user
-        if user.location:
-            self.children.append(MyOfficeInitiatives())
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
-                self.children.append(MyOfficeSubRegionInitiatives())
-                self.children.append(MyOfficeRegionInitiatives())
+        if getattr(context, 'request', None):
+            user = context.request.user
+            if user.location:
+                self.children.append(MyOfficeInitiatives())
+                if InitiativePlatformSettings.objects.get().enable_office_regions:
+                    self.children.append(MyOfficeSubRegionInitiatives())
+                    self.children.append(MyOfficeRegionInitiatives())

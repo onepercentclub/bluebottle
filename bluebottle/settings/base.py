@@ -345,6 +345,7 @@ TENANT_APPS = (
     'bluebottle.activities',
     'bluebottle.initiatives',
     'bluebottle.time_based',
+    'bluebottle.collect',
     'bluebottle.deeds',
     'bluebottle.events',
     'bluebottle.assignments',
@@ -946,8 +947,45 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.EffortContributionResource',
             'title': _('Effort contributions'),
         }),
+
+        ('collect.CollectActivity', {
+            'fields': (
+                ('id', 'Task ID'),
+                ('initiative__title', 'Initiative Title'),
+                ('initiative__id', 'Initiative ID'),
+                ('owner__id', 'User ID'),
+                ('owner__remote_id', 'Remote ID'),
+                ('owner__email', 'Email'),
+                ('title', 'Title'),
+                ('description', 'Description'),
+                ('status', 'Status'),
+                ('start', 'Start'),
+                ('end', 'End'),
+
+                ('created', 'Date created'),
+                ('updated', 'Last update'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.CollectActivityResource',
+            'title': _('Collection campaigns'),
+        }),
+        ('collect.CollectContributor', {
+            'fields': (
+                ('id', 'Contributor ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
+                ('user__id', 'User ID'),
+                ('user__remote_id', 'Remote ID'),
+                ('user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.CollectContributorResource',
+            'title': _('Collection contributors'),
+        }),
     ])
 }
+
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
 EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'private', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser

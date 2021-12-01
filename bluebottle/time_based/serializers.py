@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField,
-    HyperlinkedRelatedField
+    HyperlinkedRelatedField, SerializerMethodHyperlinkedRelatedField
 
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
@@ -292,12 +292,15 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=DateParticipant,
         many=True,
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
     )
+
+    def get_slot_count(self, instance):
+        return len(instance.slots.all())
 
     def get_contributors(self, instance):
         user = self.context['request'].user
@@ -313,9 +316,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
                 )
             )
         ]
-
-    def get_slot_count(self, instance):
-        return len(instance.slots.all())
 
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
@@ -382,7 +382,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=PeriodParticipant,
         many=True,
         related_link_view_name='period-participants',

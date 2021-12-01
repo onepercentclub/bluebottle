@@ -1,0 +1,12 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+{% block message %}
+<p>
+    {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
+</p>
+
+<p>
+    <b>{{ title }}</b>
+</p>
+
+{% endblock %}

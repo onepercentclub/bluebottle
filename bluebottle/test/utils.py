@@ -177,6 +177,7 @@ class APITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
     def perform_get(self, user=None):
+        self.user = user
         self.response = self.client.get(
             self.url,
             user=user
@@ -225,6 +226,15 @@ class APITestCase(BluebottleTestCase):
             hasattr(self.serializer.Meta, 'model')
         ):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
+
+    def loadLinkedRelated(self, relationship, user=None):
+        user = user or self.user
+        url = self.response.json()['data']['relationships'][relationship]['links']['related']
+        response = self.client.get(
+            url,
+            user=user
+        )
+        return response.json()['data']
 
     @contextmanager
     def closed_site(self):
@@ -275,8 +285,22 @@ class APITestCase(BluebottleTestCase):
                     str(model.pk) in ids
                 )
 
+    def assertObjectList(self, data, models=None):
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
+
     def assertAttribute(self, attr, value=None):
-        self.assertTrue(attr in self.response.json()['data']['attributes'])
+        data = self.response.json()['data']
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertTrue(attr in resource['attributes'])
+
+        else:
+            self.assertTrue(attr in data['attributes'])
 
         if value:
             self.assertEqual(getattr(self.model, attr), value)
@@ -288,6 +312,12 @@ class APITestCase(BluebottleTestCase):
         self.assertIn(
             transition,
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
+    def assertMeta(self, attr, expected):
+        self.assertEqual(
+            self.response.json()['data']['meta'][attr],
+            expected
         )
 
     def assertHasError(self, field, message):
@@ -326,7 +356,11 @@ class APITestCase(BluebottleTestCase):
             if field in self.defaults:
                 value = self.defaults[field]
             else:
-                value = getattr(self.factory, field).generate()
+                factory_field = getattr(self.factory, field)
+                try:
+                    value = factory_field.generate()
+                except AttributeError:
+                    value = factory_field.function(len(self.factory._meta.model.objects.all()))
 
             if isinstance(self.serializer().get_fields()[field], RelatedField):
                 serializer_name = self.serializer.included_serializers[field]
@@ -452,6 +486,15 @@ class TriggerTestCase(BluebottleTestCase):
             if hasattr(effect, 'message') and effect.message == message_cls:
                 return effect.message
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
+
+    def assertNoNotificationEffect(self, message_cls, model=None):
+        for effect in self.effects:
+            if hasattr(effect, 'message') and effect.message == message_cls:
+                self.fail(
+                    'Notification effect "{}" triggered but is should not be triggered'.format(
+                        message_cls
+                    )
+                )
 
 
 class NotificationTestCase(BluebottleTestCase):

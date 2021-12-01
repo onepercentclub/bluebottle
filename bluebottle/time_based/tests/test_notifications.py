@@ -89,7 +89,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
-        self.assertBodyContains('Frans Beckenbauer applied to your activity "Save the world!"')
+        self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
 

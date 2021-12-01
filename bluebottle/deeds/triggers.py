@@ -72,22 +72,22 @@ def has_participants(effect):
 
 
 def has_no_participants(effect):
-    """ has accepted participants"""
+    """ has no participants"""
     return not has_participants(effect)
 
 
 def has_no_start_date(effect):
-    """ has accepted participants"""
+    """ has no start date"""
     return not effect.instance.start
 
 
 def has_start_date(effect):
-    """ has accepted participants"""
+    """ has start date"""
     return effect.instance.start
 
 
 def has_no_end_date(effect):
-    """ has accepted participants"""
+    """ has no end date"""
     return not effect.instance.end
 
 

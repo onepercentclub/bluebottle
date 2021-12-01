@@ -76,21 +76,43 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
     {
+        'label': _('Collect'),
+        'app_label': 'collect',
+        'permissions': ['activities.change_activity'],
+        'enabled': 'initiatives.InitiativePlatformSettings.collect_enabled',
+        'items': [
+            {
+                'name': 'collect.collectactivity',
+            },
+            {
+                'name': 'collect.collectcontributor',
+            },
+
+            {
+                'name': 'collect.collecttype',
+            },
+        ]
+    },
+    {
         'label': _('Deeds'),
         'app_label': 'deeds',
-        'permissions': ['deeds.change_deed'],
+        'permissions': ['activities.change_activity'],
         'enabled': 'initiatives.InitiativePlatformSettings.deeds_enabled',
         'items': [
             {
                 'name': 'deeds.deed',
                 'permissions': ['deeds.change_deed']
             },
+            {
+                'name': 'deeds.deedparticipant',
+                'permissions': ['deeds.change_deedparticipant']
+            },
         ]
     },
     {
         'label': _('Funding'),
         'app_label': 'funding',
-        'permissions': ['activities.change_activity'],
+        'permissions': ['funding.change_funding'],
         'items': [
             {
                 'name': 'funding.funding',

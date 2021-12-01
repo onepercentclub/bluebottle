@@ -29,6 +29,7 @@ from bluebottle.time_based.serializers import (
     PeriodTransitionSerializer,
     PeriodParticipantSerializer,
     DateParticipantSerializer,
+    DateParticipantListSerializer,
     DateParticipantTransitionSerializer,
     PeriodParticipantTransitionSerializer,
     TimeContributionSerializer,
@@ -263,7 +264,12 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
 
 class DateParticipantList(ParticipantList):
     queryset = DateParticipant.objects.all()
-    serializer_class = DateParticipantSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return DateParticipantSerializer
+        else:
+            return DateParticipantListSerializer
 
 
 class PeriodParticipantList(ParticipantList):

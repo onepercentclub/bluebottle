@@ -4,6 +4,7 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from bluebottle.collect.models import CollectContributor
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -311,7 +312,14 @@ class MemberAdmin(UserAdmin):
                     _('Engagement'),
                     {
                         'fields':
-                        ['initiatives', 'date_activities', 'period_activities', 'funding', 'deeds']
+                        [
+                            'initiatives',
+                            'date_activities',
+                            'period_activities',
+                            'funding',
+                            'deeds',
+                            'collect',
+                        ]
                     }
                 ],
                 [
@@ -362,7 +370,7 @@ class MemberAdmin(UserAdmin):
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'kyc'
+            'funding', 'deeds', 'collect', 'kyc'
         ]
 
         user_groups = request.user.groups.all()
@@ -502,17 +510,32 @@ class MemberAdmin(UserAdmin):
     def deeds(self, obj):
         participants = []
         participant_url = reverse('admin:deeds_deedparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
+        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
             if DeedParticipant.objects.filter(status=status, user=obj).count():
                 link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
                 participants.append(format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    DateParticipant.objects.filter(status=status, user=obj).count(),
+                    DeedParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
         return format_html('<br/>'.join(participants)) or _('None')
     deeds.short_description = _('Deed participation')
+
+    def collect(self, obj):
+        participants = []
+        participant_url = reverse('admin:collect_collectcontributor_changelist')
+        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
+            if CollectContributor.objects.filter(status=status, user=obj).count():
+                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
+                participants.append(format_html(
+                    '<a href="{}">{}</a> {}',
+                    link,
+                    CollectContributor.objects.filter(status=status, user=obj).count(),
+                    status,
+                ))
+        return format_html('<br/>'.join(participants)) or _('None')
+    collect.short_description = _('Collect contributor')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')

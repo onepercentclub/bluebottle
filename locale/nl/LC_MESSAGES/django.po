@@ -2652,7 +2652,46 @@ msgstr "Foto's"
 msgid "Edit participant"
 msgstr "Deelnemer bewerken"
 
-#: bluebottle/deeds/models.py:23
+#: bluebottle/deeds/messages.py:9
+#, python-brace-format
+msgctxt "email"
+msgid "The date for the activity \"{title}\" has changed"
+msgstr "De datum van de activiteit \"{title}\" is veranderd"
+
+#: bluebottle/deeds/messages.py:21
+msgctxt "email"
+msgid "Today"
+msgstr "Vandaag"
+
+#: bluebottle/deeds/messages.py:26
+msgctxt "email"
+msgid "Runs indefinitely"
+msgstr "Zonder einddatum"
+
+#: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
+#: bluebottle/time_based/messages.py:80 bluebottle/time_based/messages.py:123
+#: bluebottle/time_based/messages.py:146 bluebottle/time_based/messages.py:169
+#: bluebottle/time_based/messages.py:192 bluebottle/time_based/messages.py:277
+#: bluebottle/time_based/messages.py:300 bluebottle/time_based/messages.py:323
+#: bluebottle/time_based/messages.py:362 bluebottle/time_based/messages.py:383
+#: bluebottle/time_based/messages.py:446
+msgctxt "email"
+msgid "View activity"
+msgstr "Activiteit bekijken"
+
+#: bluebottle/deeds/messages.py:44
+#, python-brace-format
+msgctxt "email"
+msgid "Your activity \"{title}\" will start tomorrow!"
+msgstr "Je activiteit \"{title}\" start morgen!"
+
+#: bluebottle/deeds/messages.py:67 bluebottle/time_based/messages.py:288
+#, python-brace-format
+msgctxt "email"
+msgid "You have joined the activity \"{title}\""
+msgstr "Je neemt deel aan de activiteit \"{title}\""
+
+#: bluebottle/deeds/models.py:18
 msgid "The number of users you want to participate."
 msgstr "Het aantal gebruikers dat jij wilt dat deelnemen."
 

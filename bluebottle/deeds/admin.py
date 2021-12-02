@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.utils.html import format_html
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -28,12 +29,14 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
-class DeedParticipantInline(admin.TabularInline):
+class DeedParticipantInline(TabularInlinePaginated):
     model = DeedParticipant
     raw_id_fields = ['user']
     readonly_fields = ['edit', 'created', 'status']
     fields = ['edit', 'user', 'created', 'status']
+    per_page = 20
     extra = 0
+    ordering = ['-created']
 
     def edit(self, obj):
         url = reverse('admin:deeds_deedparticipant_change', args=(obj.id,))

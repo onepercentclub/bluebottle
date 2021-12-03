@@ -252,7 +252,8 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         return fields
 
     def get_co_financers(self, instance):
-        return instance.contributors.filter(user__is_co_financer=True, status='succeeded').all()
+        return instance.contributors.instance_of(Donor).\
+            filter(user__is_co_financer=True, status='succeeded').all()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Funding

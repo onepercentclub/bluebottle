@@ -39,7 +39,7 @@ from bluebottle.funding_vitepay.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -1704,3 +1704,36 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         response = self.client.get(url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class FundingAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        owner = BlueBottleUserFactory.create(
+            is_co_financer=True
+        )
+        self.initiative = InitiativeFactory.create(status='approved')
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        self.activity = FundingFactory.create(
+            owner=owner,
+            initiative=self.initiative,
+            target=Money(500, 'EUR'),
+            deadline=now() + timedelta(weeks=2),
+            bank_account=bank_account
+        )
+        BudgetLineFactory.create(activity=self.activity)
+        self.activity.bank_account.reviewed = True
+
+        self.activity.states.submit()
+        self.activity.states.approve(save=True)
+
+        self.donors = DonorFactory.create_batch(
+            5, activity=self.activity
+        )
+        self.url = reverse('funding-detail', args=(self.activity.pk, ))
+
+    def test_get_owner(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)

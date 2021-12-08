@@ -169,6 +169,9 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
                 reverse('collect-ical', args=(self.model.pk, ))
             )
         )
+        self.url = links['ical']
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(200)
 
     def test_get_with_result(self):
         self.model.realized = 100

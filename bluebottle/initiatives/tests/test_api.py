@@ -20,6 +20,7 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -787,6 +788,34 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(approved.pk))
+
+    def test_filter_segment(self):
+        segment = SegmentFactory.create()
+
+        first = InitiativeFactory.create(
+            status='approved'
+        )
+        activity = DateActivityFactory.create(
+            status='open',
+            initiative=first,
+        )
+        activity.segments.add(segment)
+
+        InitiativeFactory.create(
+            status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                segment.type.slug, segment.pk
+            ),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_owner(self):
         owned_initiatives = InitiativeFactory.create_batch(

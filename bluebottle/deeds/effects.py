@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db.models import F
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import EffortContribution
@@ -14,10 +14,18 @@ class CreateEffortContribution(Effect):
     display = False
 
     def pre_save(self, effects):
+        start = now()
+        tz = get_current_timezone()
+        if self.instance.activity.start and self.instance.activity.start > start.date():
+            start = tz.localize(
+                datetime.combine(
+                    self.instance.activity.start, datetime.min.replace(hour=12).time()
+                )
+            )
         self.contribution = EffortContribution(
             contributor=self.instance,
             contribution_type=EffortContribution.ContributionTypeChoices.deed,
-            start=datetime.now(),
+            start=start,
         )
         effects.extend(self.contribution.execute_triggers())
 

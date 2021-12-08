@@ -1,10 +1,11 @@
 from datetime import date, timedelta
+
 from django.utils.timezone import get_current_timezone
 
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.deeds.effects import RescheduleEffortsEffect
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class CreateEffortContributionTestCase(BluebottleTestCase):
@@ -18,16 +19,17 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         self.tz = get_current_timezone()
 
     def test_create(self):
-        participant = DeedParticipantFactory.create(activity=self.activity)
-
-        self.assertEqual(
-            participant.contributions.first().start.astimezone(self.tz).date(),
-            self.activity.start
+        participant = DeedParticipantFactory.create(
+            activity=self.activity,
         )
 
         self.assertEqual(
-            participant.contributions.first().end.astimezone(self.tz).date(),
-            self.activity.end
+            participant.contributions.first().start.date(),
+            participant.created.date()
+        )
+
+        self.assertIsNone(
+            participant.contributions.first().end
         )
 
     def test_create_no_end(self):
@@ -37,8 +39,8 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         participant = DeedParticipantFactory.create(activity=self.activity)
 
         self.assertEqual(
-            participant.contributions.first().start.astimezone(self.tz).date(),
-            self.activity.start
+            participant.contributions.first().start.date(),
+            participant.created.date()
         )
 
         self.assertIsNone(
@@ -52,13 +54,27 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
         participant = DeedParticipantFactory.create(activity=self.activity)
 
         self.assertEqual(
-            participant.contributions.first().start.astimezone(self.tz).date(),
-            date.today()
+            participant.contributions.first().start.date(),
+            participant.created.date()
         )
 
+        self.assertIsNone(
+            participant.contributions.first().end
+        )
+
+    def test_create_future_start(self):
+        self.activity.start = date.today() + timedelta(days=10)
+        self.activity.save()
+
+        participant = DeedParticipantFactory.create(activity=self.activity)
+
         self.assertEqual(
-            participant.contributions.first().end.astimezone(self.tz).date(),
-            self.activity.end
+            participant.contributions.first().start.date(),
+            participant.activity.start
+        )
+
+        self.assertIsNone(
+            participant.contributions.first().end
         )
 
 

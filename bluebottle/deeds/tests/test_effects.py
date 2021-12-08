@@ -100,26 +100,11 @@ class RescheduleEffortsEffectsTestCase(BluebottleTestCase):
         )
 
     def test_unset_start(self):
-        current_start = self.activity.start
+        current_start = self.participant.contributions.first().start
         self.activity.start = None
         self.effect.post_save()
 
         self.assertEqual(
-            self.participant.contributions.first().start.astimezone(self.tz).date(),
-            current_start
+            self.participant.contributions.first().start.date(),
+            current_start.date()
         )
-
-    def test_reschedule_end(self):
-        self.activity.end = date.today() + timedelta(days=1)
-        self.effect.post_save()
-
-        self.assertEqual(
-            self.participant.contributions.first().end.astimezone(self.tz).date(),
-            self.activity.end
-        )
-
-    def test_unset_end(self):
-        self.activity.end = None
-        self.effect.post_save()
-
-        self.assertIsNone(self.participant.contributions.first().end)

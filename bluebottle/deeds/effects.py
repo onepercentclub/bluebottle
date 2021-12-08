@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.db.models import F
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 
@@ -43,17 +42,12 @@ class RescheduleEffortsEffect(Effect):
     def post_save(self, **kwargs):
         tz = get_current_timezone()
 
-        if self.instance.start:
-            start = tz.localize(datetime.combine(self.instance.start, datetime.min.time()))
-        else:
-            start = F('start')
-
-        if self.instance.end:
-            end = tz.localize(datetime.combine(self.instance.end, datetime.min.time()))
-        else:
-            end = None
-
-        self.instance.efforts.update(
-            start=start,
-            end=end
-        )
+        if self.instance.start and self.instance.start > now().date():
+            start = tz.localize(
+                datetime.combine(
+                    self.instance.start, datetime.min.replace(hour=12).time()
+                )
+            )
+            self.instance.efforts.update(
+                start=start,
+            )

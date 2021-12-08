@@ -29,7 +29,7 @@ class SegmentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Segment
-        fields = ('id', 'name', 'type')
+        fields = ('id', 'name', 'type', 'slug')
 
     class JSONAPIMeta(object):
         included_resources = ['type', ]

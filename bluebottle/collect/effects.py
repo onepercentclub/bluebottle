@@ -15,7 +15,7 @@ class CreateCollectContribution(Effect):
         self.contribution = CollectContribution(
             contributor=self.instance,
             start=now(),
-            type=self.instance.activity.type
+            type=self.instance.activity.collect_type
         )
         effects.extend(self.contribution.execute_triggers())
 

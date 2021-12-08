@@ -60,7 +60,7 @@ class CollectActivity(Activity):
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
-    type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
+    collect_type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -104,7 +104,7 @@ class CollectActivity(Activity):
     def google_calendar_link(self):
 
         details = self.description
-        details += _('\nCollecting {type}').format(type=self.type)
+        details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
         dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
@@ -131,7 +131,9 @@ class CollectActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description', 'type']
+        return super().required_fields + [
+            'title', 'description', 'location', 'start', 'end', 'collect_type'
+        ]
 
 
 class CollectContributor(Contributor):

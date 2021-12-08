@@ -11,6 +11,9 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
+
+from bluebottle.test.factory_models.geo import GeolocationFactory
+
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.test.utils import APITestCase
@@ -33,10 +36,11 @@ class CollectActivityListViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'location': GeolocationFactory.create(),
             'collect_type': self.collect_type
         }
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type', 'location']
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append('collect')
@@ -116,7 +120,8 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved'),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
-            'type': self.collect_type
+            'location': GeolocationFactory.create(),
+            'collect_type': self.collect_type
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -129,7 +134,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'type']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type']
 
     def test_get(self):
         self.perform_get(user=self.model.owner)
@@ -153,6 +158,26 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             contributors,
             self.active_contributors + self.withdrawn_contributors
         )
+
+    def test_get_calendar_links(self):
+        self.perform_get(user=self.model.owner)
+
+        links = self.response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('collect-ical', args=(self.model.pk, ))
+            )
+        )
+
+    def test_get_with_result(self):
+        self.model.realized = 100
+        self.model.save()
+
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', 5)
 
     def test_get_with_contributor(self):
         contributor = CollectContributorFactory.create(activity=self.model, user=self.user)

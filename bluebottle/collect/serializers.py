@@ -8,6 +8,7 @@ from rest_framework_json_api.relations import (
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
+from bluebottle.activities.models import Organizer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -23,7 +24,6 @@ class CollectActivitySerializer(BaseActivitySerializer):
         queryset=CollectType.objects,
         required=False,
         allow_null=True,
-        source='type'
     )
 
     my_contributor = SerializerMethodResourceRelatedField(
@@ -61,6 +61,12 @@ class CollectActivitySerializer(BaseActivitySerializer):
         if user.is_authenticated:
             return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
 
+    def get_contributor_count(self, instance):
+        return instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'succeeded', 'activity_refunded'],
+            user__isnull=False
+        ).count()
+
     class Meta(BaseActivitySerializer.Meta):
         model = CollectActivity
         fields = BaseActivitySerializer.Meta.fields + (
@@ -85,6 +91,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'my_contributor',
             'location',
             'collect_type'
+            'goals',
+            'goals.type',
         ]
 
     included_serializers = dict(
@@ -104,7 +112,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
-        source='type'
+        allow_null=True,
     )
 
     class Meta(BaseActivityListSerializer.Meta):
@@ -114,7 +122,8 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
             'end',
             'location',
             'realized',
-            'collect_type'
+            'collect_type',
+            'location',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
@@ -178,12 +187,14 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
 
     included_serializers = {
         'resource': 'bluebottle.collect.serializers.CollectContributorSerializer',
+        'resource.activity': 'bluebottle.collect.serializers.CollectActivitySerializer',
+        'resource.activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributor-transitions'
         included_resources = [
-            'resource',
+            'resource', 'resource.activity', 'resource.activity.goals'
         ]
 
 

@@ -37,7 +37,7 @@ class CollectActivityAdminTestCase(BluebottleAdminTestCase):
     def test_admin_create_collect(self):
         url = reverse('admin:collect_collectactivity_changelist')
         page = self.app.get(url)
-        page = page.click('Add Collect Activity')
+        page = page.click('Add Collect Campaign')
         form = page.forms['collectactivity_form']
         form['title'] = 'A small step'
         form['initiative'] = self.initiative.id

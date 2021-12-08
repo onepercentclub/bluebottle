@@ -48,10 +48,10 @@ class CollectType(SortableTranslatableModel):
         return self.name
 
     class Meta(object):
-        verbose_name = _('collect type')
-        verbose_name_plural = _('collect types')
+        verbose_name = _('items')
+        verbose_name_plural = _('item')
         permissions = (
-            ('api_read_collecttype', 'Can view collect type through API'),
+            ('api_read_collecttype', 'Can view collect items through API'),
         )
 
 
@@ -60,7 +60,9 @@ class CollectActivity(Activity):
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
-    type = models.ForeignKey(CollectType, null=True, blank=True, on_delete=SET_NULL)
+    collect_type = models.ForeignKey(
+        CollectType, null=True, blank=True, on_delete=SET_NULL
+    )
 
     location = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -77,18 +79,18 @@ class CollectActivity(Activity):
         return self.start
 
     class Meta(object):
-        verbose_name = _("Collect Activity")
-        verbose_name_plural = _("Collect Activities")
+        verbose_name = _("Collect Campaign")
+        verbose_name_plural = _("Collect Campaigns")
         permissions = (
-            ('api_read_collect', 'Can view collect activity through the API'),
-            ('api_add_collect', 'Can add collect activity through the API'),
-            ('api_change_collect', 'Can change collect activity through the API'),
-            ('api_delete_collect', 'Can delete collect activity through the API'),
+            ('api_read_collect', 'Can view collect campaign through the API'),
+            ('api_add_collect', 'Can add collect campaign through the API'),
+            ('api_change_collect', 'Can change collect campaign through the API'),
+            ('api_delete_collect', 'Can delete collect campaign through the API'),
 
-            ('api_read_own_collect', 'Can view own collect activity through the API'),
-            ('api_add_own_collect', 'Can add own collect activity through the API'),
-            ('api_change_own_collect', 'Can change own collect activity through the API'),
-            ('api_delete_own_collect', 'Can delete own collect activity through the API'),
+            ('api_read_own_collect', 'Can view own collect campaign through the API'),
+            ('api_add_own_collect', 'Can add own collect campaign through the API'),
+            ('api_change_own_collect', 'Can change own collect campaign through the API'),
+            ('api_delete_own_collect', 'Can delete own collect campaign through the API'),
         )
 
     validators = [EndDateValidator]
@@ -104,7 +106,7 @@ class CollectActivity(Activity):
     def google_calendar_link(self):
 
         details = self.description
-        details += _('\nCollecting {type}').format(type=self.type)
+        details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
         dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
@@ -131,7 +133,9 @@ class CollectActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description', 'type']
+        return super().required_fields + [
+            'title', 'description', 'location', 'start', 'end', 'collect_type'
+        ]
 
 
 class CollectContributor(Contributor):

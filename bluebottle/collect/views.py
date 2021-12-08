@@ -1,6 +1,5 @@
 import csv
 
-import icalendar
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
@@ -21,7 +20,8 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination
+    JsonApiViewMixin, PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    IcalView
 )
 
 
@@ -169,40 +169,11 @@ class CollectTypeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIVie
     permission_classes = [TenantConditionalOpenClose, ]
 
 
-class CollectIcalView(PrivateFileView):
+class CollectIcalView(IcalView):
     queryset = CollectActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],
     )
 
-    max_age = 30 * 60  # half an hour
-
-    def get(self, *args, **kwargs):
-        instance = self.get_object()
-        calendar = icalendar.Calendar()
-
-        details = instance.description
-        details += _('\nCollecting {type}').format(type=instance.type)
-
-        event = icalendar.Event()
-        event.add('summary', instance.title)
-        event.add('description', details)
-        event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
-        event['uid'] = instance.uid
-
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
-
-        event['organizer'] = organizer
-        if instance.location:
-            event['location'] = icalendar.vText(instance.location.formatted_address)
-
-        calendar.add_component(event)
-
-        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
-            instance.slug
-        )
-
-        return response
+    @property
+    def details(self):
+        return super().details + _('\nCollecting {type}').format(type=self.get_object().type)

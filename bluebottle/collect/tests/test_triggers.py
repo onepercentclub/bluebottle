@@ -196,7 +196,7 @@ class CollectTriggersTestCase(TriggerTestCase):
                 self.model.active_contributors.get().contributions.get().value, self.model.realized
             )
             self.assertEqual(
-                self.model.active_contributors.get().contributions.get().type, self.model.type
+                self.model.active_contributors.get().contributions.get().type, self.model.collect_type
             )
 
     def test_set_realized_again(self):

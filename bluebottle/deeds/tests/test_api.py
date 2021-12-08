@@ -154,6 +154,17 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.accepted_participants + self.withdrawn_participants
         )
 
+    def test_get_calendar_links(self):
+        self.perform_get(user=self.model.owner)
+
+        links = self.response.json()['data']['attributes']['links']
+
+        self.assertTrue(
+            links['ical'].startswith(
+                reverse('deed-ical', args=(self.model.pk, ))
+            )
+        )
+
     def test_get_with_participant(self):
         participant = DeedParticipantFactory.create(
             activity=self.model,

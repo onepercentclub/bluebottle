@@ -160,6 +160,22 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertIncluded('type', self.segment_type)
         self.assertAttribute('name', self.model.name)
+        self.assertAttribute('slug', self.model.slug)
+        self.assertAttribute('tag-line', self.model.tag_line)
+        self.assertAttribute('story', self.model.story)
+        self.assertAttribute('background-color', self.model.background_color)
+        self.assertAttribute('text-color', self.model.text_color)
+        self.assertAttribute('logo')
+        self.assertAttribute('cover-image')
+
+    def test_story_escaped(self):
+        self.model.story = '<script>test</script><b>test</b>'
+        self.model.save()
+
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('story', '&lt;script&gt;test&lt;/script&gt;<b>test</b>')
 
     def test_retrieve_closed(self):
         with self.closed_site():

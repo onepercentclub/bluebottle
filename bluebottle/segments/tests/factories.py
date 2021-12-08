@@ -18,10 +18,17 @@ class SegmentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Segment
 
-    name = factory.Faker('word')
+    name = factory.Sequence(lambda n: 'Segment - {0}'.format(n))
 
     alternate_names = factory.List([
         factory.Faker('word')
     ])
 
     type = factory.SubFactory(SegmentTypeFactory)
+
+    tag_line = factory.Faker('sentence')
+    story = factory.Faker('paragraph')
+    background_color = factory.Faker('color')
+
+    logo = factory.django.ImageField(color='blue')
+    cover_image = factory.django.ImageField(color='red')

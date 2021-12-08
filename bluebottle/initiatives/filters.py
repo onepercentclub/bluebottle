@@ -1,3 +1,4 @@
+import re
 from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import Term, Nested
 
@@ -38,6 +39,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'categories.id',
         'categories.slug',
         'location.id',
+        'segment',
     )
 
     search_fields = (
@@ -73,6 +75,25 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         else:
             return [Term(status='approved')]
 
+    def get_filters(self, request):
+        filters = super(InitiativeSearchFilter, self).get_filters(request)
+        regex = re.compile('^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        for key, value in list(request.GET.items()):
+            matches = regex.match(key)
+            if matches:
+                filters.append(
+                    Nested(
+                        path='segments',
+                        query=Term(
+                            segments__type=matches.groupdict()['type']
+                        ) & Term(
+                            segments__id=value
+                        )
+                    )
+                )
+
+        return filters
+
     def get_filter(self, request, field):
         # Also return activity_manger.id when filtering on owner.id
         if field == 'owner.id':
@@ -82,6 +103,21 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                 Nested(path='promoter', query=Term(promoter__id=value)) |
                 Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
                 Nested(path='activity_managers', query=Term(activity_managers__id=value))
+            )
+
+        regex = re.compile('^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        matches = regex.match(field)
+
+        if matches:
+            value = request.GET['filter[{}]'.format(field)]
+
+            return Nested(
+                path='segments',
+                query=Term(
+                    segments__type=matches.groupdict()['type']
+                ) & Term(
+                    segments__id=value
+                )
             )
 
         return super(InitiativeSearchFilter, self).get_filter(request, field)

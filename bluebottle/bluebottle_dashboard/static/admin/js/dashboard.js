@@ -32,7 +32,9 @@ function replaceInlineActivityAddButton() {
 }
 
 window.onload = function() {
-    django.jQuery = jQuery;
+    if (!django.jQuery && jQuery) {
+        django.jQuery = jQuery;
+    }
     replaceInlineActivityAddButton();
     removeRedundantTabs();
     addHashToInlinePaginator();

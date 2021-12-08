@@ -176,4 +176,4 @@ class CollectIcalView(IcalView):
 
     @property
     def details(self):
-        return super().details + _('\nCollecting {type}').format(type=self.get_object().type)
+        return super().details + _('\nCollecting {type}').format(type=self.get_object().collect_type)

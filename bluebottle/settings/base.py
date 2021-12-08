@@ -431,6 +431,7 @@ TENANT_APPS = (
     'django.forms',
     'axes',
     'captcha',
+    'colorfield',
 )
 
 

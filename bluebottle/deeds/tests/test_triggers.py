@@ -1,31 +1,28 @@
 from datetime import timedelta, date
 
+from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification
 )
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
-from bluebottle.test.utils import TriggerTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
-from bluebottle.activities.effects import SetContributionDateEffect
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
-from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
 from bluebottle.impact.effects import UpdateImpactGoalEffect
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
+from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, ParticipantFinishedNotification,
-    NewParticipantNotification, ParticipantAddedNotification,
+    ParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedNotification,
     ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
-from bluebottle.impact.tests.factories import ImpactGoalFactory
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -52,7 +49,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_started(self):
+    def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.create()
         self.model.states.submit()
@@ -62,7 +59,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_finished(self):
+    def test_finished(self):
         self.defaults['start'] = date.today() - timedelta(days=2)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
@@ -110,11 +107,11 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.model.start = date.today() - timedelta(days=1)
 
         with self.execute():
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 DeedParticipantStateMachine.succeed,
                 participant
             )
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
@@ -195,7 +192,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ActivityExpiredNotification),
             self.assertEffect(RescheduleEffortsEffect)
 
-    def test_succeed(self):
+    def test_manual_succeed(self):
         self.create()
 
         self.model.states.submit(save=True)
@@ -537,7 +534,6 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)
-            self.assertNotificationEffect(ParticipantFinishedNotification)
 
 
 class EffortContributionTriggersTestCase(TriggerTestCase):

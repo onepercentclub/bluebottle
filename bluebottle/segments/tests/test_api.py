@@ -1,17 +1,25 @@
 # coding=utf-8
-from builtins import str
+import datetime
 from builtins import range
-from django.urls import reverse
+from builtins import str
 
+from django.urls import reverse
+from django.utils.timezone import now
+from moneyed import Money
 from rest_framework import status
 
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.segments.serializers import SegmentSerializer
-
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.time_based.tests.factories import PeriodActivityFactory, \
+    PeriodParticipantFactory, DateActivityFactory, \
+    DateActivitySlotFactory, DateParticipantFactory
 
 
 class SegmentTypeListAPITestCase(BluebottleTestCase):
@@ -198,3 +206,79 @@ class SegmentDetailAPITestCase(APITestCase):
         self.perform_delete()
 
         self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get_stats(self):
+        period_activity = PeriodActivityFactory.create(
+            status='succeeded',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+        period_activity.segments.set([self.model])
+        PeriodParticipantFactory.create_batch(3, activity=period_activity)
+
+        date_activity = DateActivityFactory.create(
+            status='succeeded',
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
+        )
+        date_activity.segments.set([self.model])
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            start=now() - datetime.timedelta(weeks=1),
+        )
+        DateParticipantFactory.create_batch(3, activity=date_activity)
+
+        funding = FundingFactory.create(
+            deadline=now() - datetime.timedelta(weeks=1),
+            status='succeeded'
+        )
+        funding.segments.set([self.model])
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
+            donor.contributions.get().states.succeed(save=True)
+        for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'EUR')):
+            donor.contributions.get().states.succeed(save=True)
+
+        deed_activity = DeedFactory.create(
+            status='succeeded',
+            start=datetime.date.today() - datetime.timedelta(days=10),
+            end=datetime.date.today() - datetime.timedelta(days=5)
+        )
+        deed_activity.segments.set([self.model])
+
+        DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        participants = DeedParticipantFactory.create_batch(3, activity=deed_activity)
+        for participant in participants:
+            participant.states.withdraw(save=True)
+
+        collect_activity = CollectActivityFactory.create(
+            status='succeeded',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+        )
+        collect_activity.segments.set([self.model])
+        collect_activity.realized = 100
+        collect_activity.save()
+        CollectContributorFactory.create_batch(3, activity=collect_activity)
+
+        unrelated_activity = PeriodActivityFactory.create(
+            status='succeeded',
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
+        )
+        PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
+
+        response = self.client.get(
+            self.url,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stats = response.json()['data']['meta']['stats']
+        self.assertEqual(stats['hours'], 66.0)
+        self.assertEqual(stats['activities'], 5)
+        self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
+        self.assertEqual(stats['contributors'], 18)
+        self.assertEqual(stats['effort'], 3)
+
+        self.assertEqual(
+            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
+        )

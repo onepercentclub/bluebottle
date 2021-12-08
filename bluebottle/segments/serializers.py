@@ -1,8 +1,10 @@
 from builtins import object
+
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.activities.models import Activity
+from bluebottle.activities.utils import get_stats_for_activities
+from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.utils.fields import SafeField
@@ -46,14 +48,19 @@ class SegmentSerializer(serializers.ModelSerializer):
     def get_activities_count(self, obj):
         return len(Activity.objects.filter(segments=obj))
 
+    stats = serializers.SerializerMethodField()
+
+    def get_stats(self, obj):
+        return get_stats_for_activities(obj.activities.all())
+
     class Meta(object):
         model = Segment
         fields = (
             'id', 'name', 'type', 'slug', 'tag_line', 'background_color',
             'text_color', 'logo', 'cover_image', 'story',
-            'initiatives_count', 'activities_count',
+            'initiatives_count', 'activities_count', 'stats'
         )
-        meta_fields = ['initiatives_count', 'activities_count']
+        meta_fields = ['initiatives_count', 'activities_count', 'stats']
 
     class JSONAPIMeta(object):
         included_resources = ['type', ]

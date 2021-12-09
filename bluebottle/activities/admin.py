@@ -75,17 +75,17 @@ class ContributionAdminInline(StackedPolymorphicInline):
     can_delete = False
 
     class EffortContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link']
+        readonly_fields = ['contributor_link', 'status', 'start']
         fields = readonly_fields
         model = EffortContribution
 
     class TimeContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'start', 'end', 'value']
+        readonly_fields = ['contributor_link', 'status', 'start', 'end', 'value']
         fields = readonly_fields
         model = TimeContribution
 
     class MoneyContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'amount']
+        readonly_fields = ['contributor_link', 'status', 'value']
         fields = readonly_fields
         model = MoneyContribution
 

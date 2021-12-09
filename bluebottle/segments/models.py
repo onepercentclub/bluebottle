@@ -116,7 +116,8 @@ class Segment(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
 
-        self.story = clean_html(self.story)
+        if self.story:
+            self.story = clean_html(self.story)
 
         super().save(*args, **kwargs)
 

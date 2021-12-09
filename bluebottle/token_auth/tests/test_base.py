@@ -345,7 +345,6 @@ class TestBaseTokenAuthentication(TestCase):
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
-
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertFalse(created)
             self.assertEqual(user.email, 'test@example.com')
@@ -374,8 +373,12 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertEqual(len(user.segments.all()), 2)
 
     @patch.object(
-        BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',
-                                                                       'email': 'test@example.com'}
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com'
+        }
     )
     def test_user_already_exists(self, authenticate_request):
         with self.settings(TOKEN_AUTH={}):

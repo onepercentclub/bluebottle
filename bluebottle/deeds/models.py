@@ -1,4 +1,7 @@
-from django.db import models
+from datetime import timedelta
+from urllib.parse import urlencode
+
+from django.db import models, connection
 
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
@@ -54,6 +57,28 @@ class Deed(Activity):
             fields = fields + ['goals', 'target']
 
         return fields
+
+    @property
+    def uid(self):
+        return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
+
+    @property
+    def google_calendar_link(self):
+        details = self.description
+
+        end = self.end + timedelta(days=1)
+        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': dates,
+            'details': details,
+            'uid': self.uid,
+        }
+
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def participants(self):

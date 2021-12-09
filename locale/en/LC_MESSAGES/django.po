@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-25 09:15+0100\n"
+"POT-Creation-Date: 2021-11-30 11:36+0100\n"
 "PO-Revision-Date: 2018-06-13 13:52+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -991,7 +991,7 @@ msgid ""
 "</p>\n"
 msgstr ""
 
-#: bluebottle/activities/utils.py:277 bluebottle/activities/utils.py:278
+#: bluebottle/activities/utils.py:278 bluebottle/activities/utils.py:279
 msgid "Description is required"
 msgstr ""
 
@@ -1023,19 +1023,21 @@ msgstr ""
 msgid "Number of employees or number of users that could access the platform."
 msgstr ""
 
-#: bluebottle/analytics/models.py:27
-msgid "Engagement target"
+#: bluebottle/analytics/models.py:27 bluebottle/members/admin.py:311
+msgid "Engagement"
 msgstr ""
 
-#: bluebottle/analytics/models.py:28
-msgid "Target number of engaged users per year."
+#: bluebottle/analytics/models.py:29
+msgid ""
+"Target for the number of people contributing to an activity or starting an "
+"activity per year."
 msgstr ""
 
-#: bluebottle/analytics/models.py:34
+#: bluebottle/analytics/models.py:36
 msgid "platform type"
 msgstr ""
 
-#: bluebottle/analytics/models.py:41 bluebottle/analytics/models.py:42
+#: bluebottle/analytics/models.py:43 bluebottle/analytics/models.py:44
 msgid "reporting platform settings"
 msgstr ""
 
@@ -1463,16 +1465,12 @@ msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:10
 #, python-format
-msgid ""
-"\n"
-"            %(counter)s result"
-msgid_plural ""
-"%(counter)s results\n"
-"        "
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
 msgstr[0] ""
 msgstr[1] ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:15
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:13
 #, python-format
 msgid ""
 "\n"
@@ -1480,7 +1478,7 @@ msgid ""
 "                "
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:20
+#: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:18
 msgid "Show all"
 msgstr ""
 
@@ -1768,7 +1766,7 @@ msgid "People involved"
 msgstr ""
 
 #: bluebottle/cms/models.py:160 bluebottle/deeds/admin.py:62
-#: bluebottle/deeds/models.py:86 bluebottle/statistics/models.py:75
+#: bluebottle/deeds/models.py:111 bluebottle/statistics/models.py:75
 #: bluebottle/statistics/models.py:200 bluebottle/time_based/admin.py:89
 #: bluebottle/time_based/admin.py:97 bluebottle/time_based/admin.py:225
 #: bluebottle/time_based/admin.py:300 bluebottle/time_based/admin.py:316
@@ -2065,47 +2063,47 @@ msgid ""
 msgstr ""
 
 #: bluebottle/collect/models.py:51
-msgid "collect type"
+msgid "items"
 msgstr ""
 
 #: bluebottle/collect/models.py:52
-msgid "collect types"
+msgid "item"
 msgstr ""
 
-#: bluebottle/collect/models.py:66 bluebottle/time_based/models.py:50
+#: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:50
 #: bluebottle/time_based/models.py:320 bluebottle/time_based/models.py:403
 #: models.py:33
 msgid "location hint"
 msgstr ""
 
-#: bluebottle/collect/models.py:80
-msgid "Collect Activity"
+#: bluebottle/collect/models.py:82
+msgid "Collect Campaign"
 msgstr ""
 
-#: bluebottle/collect/models.py:81
-msgid "Collect Activities"
+#: bluebottle/collect/models.py:83
+msgid "Collect Campaigns"
 msgstr ""
 
-#: bluebottle/collect/models.py:107 bluebottle/collect/views.py:184
+#: bluebottle/collect/models.py:109 bluebottle/collect/views.py:179
 #, python-brace-format
 msgid ""
 "\n"
 "Collecting {type}"
 msgstr ""
 
-#: bluebottle/collect/models.py:143
+#: bluebottle/collect/models.py:145
 msgid "Collect contributor"
 msgstr ""
 
-#: bluebottle/collect/models.py:144
+#: bluebottle/collect/models.py:146
 msgid "Collect contributors"
 msgstr ""
 
-#: bluebottle/collect/models.py:172
+#: bluebottle/collect/models.py:174
 msgid "Collect contribution"
 msgstr ""
 
-#: bluebottle/collect/models.py:173
+#: bluebottle/collect/models.py:175
 msgid "Collect contributions"
 msgstr ""
 
@@ -2253,8 +2251,9 @@ msgstr ""
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "email"
 msgid ""
-"Help your contributors to start tomorrow fully motivated. Send them a "
-"message via the 'update wall' on the activity page."
+"This is a good time to send your participants a motivational message to make "
+"your activity a success. Send a message to all your participants via the "
+"update wall on your activity page."
 msgstr ""
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
@@ -2410,19 +2409,19 @@ msgstr ""
 msgid "Edit participant"
 msgstr ""
 
-#: bluebottle/deeds/models.py:20
+#: bluebottle/deeds/models.py:23
 msgid "The number of users you want to participate."
 msgstr ""
 
-#: bluebottle/deeds/models.py:30 bluebottle/initiatives/models.py:251
+#: bluebottle/deeds/models.py:33 bluebottle/initiatives/models.py:251
 msgid "Deed"
 msgstr ""
 
-#: bluebottle/deeds/models.py:31 bluebottle/settings/admin_dashboard.py:97
+#: bluebottle/deeds/models.py:34 bluebottle/settings/admin_dashboard.py:97
 msgid "Deeds"
 msgstr ""
 
-#: bluebottle/deeds/models.py:85 bluebottle/time_based/admin.py:88
+#: bluebottle/deeds/models.py:110 bluebottle/time_based/admin.py:88
 #: bluebottle/time_based/admin.py:96 bluebottle/time_based/admin.py:315
 #: models.py:203
 msgid "Participant"
@@ -5107,10 +5106,6 @@ msgstr ""
 
 #: bluebottle/members/admin.py:298
 msgid "Permissions"
-msgstr ""
-
-#: bluebottle/members/admin.py:311
-msgid "Engagement"
 msgstr ""
 
 #: bluebottle/members/admin.py:318

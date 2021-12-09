@@ -200,6 +200,34 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_status(self, self.slot2, 'open')
         api_user_joins_slot(self, self.slot2, self.supporter, status_code=400)
 
+    def test_slot_reopens(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+        self.slot1.capacity = 1
+        self.slot1.save()
+        self.slot2.capacity = 2
+        self.slot2.save()
+        another_supporter = BlueBottleUserFactory.create()
+        api_user_joins_activity(self, self.activity, self.supporter)
+        assert_participant_status(self, self.activity, self.supporter, status='accepted')
+        api_user_joins_activity(self, self.activity, another_supporter)
+        assert_participant_status(self, self.activity, another_supporter, status='accepted')
+        api_user_joins_slot(self, self.slot1, another_supporter)
+        api_user_joins_slot(self, self.slot2, another_supporter)
+        assert_status(self, self.slot1, 'full')
+        assert_slot_participant_status(self, self.slot1, another_supporter, status='registered')
+        api_slot_participant_transition(self, self.slot1, another_supporter, transition='withdraw')
+        assert_status(self, self.slot2, 'open')
+        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot2, self.supporter)
+        assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
+        assert_slot_participant_status(self, self.slot2, self.supporter, status='registered')
+        assert_status(self, self.slot1, 'full')
+        assert_status(self, self.slot2, 'full')
+        api_slot_participant_transition(self, self.slot1, self.supporter, transition='withdraw')
+        assert_slot_participant_status(self, self.slot1, self.supporter, status='withdrawn')
+        assert_status(self, self.slot1, 'open')
+
     def test_accept_more_users_to_slot_review_activity(self):
         self.activity.slot_selection = 'free'
         self.activity.review = True

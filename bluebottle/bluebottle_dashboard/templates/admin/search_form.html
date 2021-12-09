@@ -7,9 +7,7 @@
 <input type="submit" value="{% trans 'Search' %}" />
 {% if show_result_count %}
     <span class="small quiet">
-        {% blocktrans count counter=cl.result_count %}
-            {{ counter }} result{% plural %}{{ counter }} results
-        {% endblocktrans %} 
+        {% blocktrans count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %} 
         {% if cl.show_full_result_count %}
                 (
                 {% blocktrans with full_result_count=cl.full_result_count %}

@@ -1501,10 +1501,10 @@ class ParticipantListViewTestCase():
         }
 
     def test_create(self):
-        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
 
-        data = response.json()['data']
+        data = self.response.json()['data']
         self.assertEqual(
             data['relationships']['user']['data']['id'],
             str(self.user.pk)
@@ -1576,9 +1576,10 @@ class ParticipantListViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def get_participants(self):
-        response = self.client.get(self.url, json.dumps(self.data))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_get_participants(self):
+        self.test_create()
+        self.response = self.client.get(self.url)
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
 
 class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
@@ -1590,6 +1591,16 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
+
+    def test_create(self):
+        super().test_create()
+        types = [included['type'] for included in self.response.json()['included']]
+        self.assertTrue('contributors/time-based/slot-participants' in types)
+
+    def test_get_participants(self):
+        super().test_get_participants()
+        types = [included['type'] for included in self.response.json()['included']]
+        self.assertFalse('contributors/time-based/slot-participants' in types)
 
 
 class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):

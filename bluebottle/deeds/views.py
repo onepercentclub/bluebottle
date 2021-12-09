@@ -19,7 +19,7 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView
+    JsonApiViewMixin, PrivateFileView, IcalView
 )
 
 
@@ -150,3 +150,9 @@ class ParticipantExportView(PrivateFileView):
             writer.writerow(row)
 
         return response
+
+
+class DeedIcalView(IcalView):
+    queryset = Deed.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+    )

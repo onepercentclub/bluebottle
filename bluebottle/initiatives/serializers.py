@@ -3,7 +3,7 @@ from builtins import object
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField
+    ResourceRelatedField, SerializerMethodResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -26,6 +26,7 @@ from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.fields import (
@@ -153,6 +154,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         many=True,
         read_only=True
     )
+    segments = SerializerMethodResourceRelatedField(
+        ActivityListSerializer,
+        model=Segment,
+        many=True,
+        read_only=True
+    )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -189,6 +196,14 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         else:
             return activities
 
+    def get_segments(self, instance):
+        segments = []
+        for activity in self.get_activities(instance):
+            for segment in activity.segments.all():
+                if segment not in segments:
+                    segments.append(segment)
+        return segments
+
     def get_stats(self, obj):
         return get_stats_for_activities(obj.activities)
 
@@ -204,6 +219,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'activities.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
@@ -222,7 +238,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_managers',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
-            'theme', 'place', 'location', 'activities',
+            'theme', 'place', 'location', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
@@ -239,7 +255,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'activities.image', 'activities.location',
             'activities.goals', 'activities.goals.type',
             'activities.slots', 'activities.slots.location',
-            'activities.collect_type',
+            'activities.collect_type', 'segments'
         ]
         resource_name = 'initiatives'
 

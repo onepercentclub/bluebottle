@@ -220,6 +220,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'activities.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
@@ -255,7 +256,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'activities.image', 'activities.location',
             'activities.goals', 'activities.goals.type',
             'activities.slots', 'activities.slots.location',
-            'activities.collect_type', 'segments'
+            'activities.collect_type',
+            'segments', 'segments.segment_type'
         ]
         resource_name = 'initiatives'
 

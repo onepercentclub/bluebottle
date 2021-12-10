@@ -36,7 +36,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
             segment_type = SegmentTypeFactory.create()
             SegmentFactory.create_batch(
                 3,
-                type=segment_type
+                segment_type=segment_type
             )
 
     def test_list(self):
@@ -97,7 +97,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.segment_type = SegmentTypeFactory.create()
         self.segments = SegmentFactory.create_batch(
             20,
-            type=self.segment_type
+            segment_type=self.segment_type
         )
 
     def test_list(self):
@@ -115,7 +115,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.assertEqual(segment.name, result['attributes']['name'])
         self.assertEqual(
             str(segment.type_id),
-            result['relationships']['type']['data']['id']
+            result['relationships']['segment-type']['data']['id']
         )
 
     def test_list_anonymous(self):
@@ -136,7 +136,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
     def test_list_inactive(self):
         inactive_type = SegmentTypeFactory(is_active=False)
-        SegmentFactory.create(type=inactive_type)
+        SegmentFactory.create(segment_type=inactive_type)
 
         response = self.client.get(self.url)
 

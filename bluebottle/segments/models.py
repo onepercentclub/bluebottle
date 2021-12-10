@@ -59,7 +59,7 @@ class Segment(models.Model):
         default=list,
         blank=True
     )
-    type = models.ForeignKey(
+    segment_type = models.ForeignKey(
         SegmentType,
         verbose_name=_('type'),
         related_name='segments',
@@ -139,7 +139,7 @@ class Segment(models.Model):
 
     class Meta:
         ordering = ('name',)
-        unique_together = (('slug', 'type'), )
+        unique_together = (('slug', 'segment_type'), )
 
     class JSONAPIMeta(object):
         resource_name = 'segments'

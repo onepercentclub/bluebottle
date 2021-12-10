@@ -27,13 +27,13 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         response = self.client.get(activity_url)
         self.assertNotContains(response, 'Segment:')
         segment_type = SegmentTypeFactory.create()
-        SegmentFactory.create_batch(5, type=segment_type)
+        SegmentFactory.create_batch(5, segment_type=segment_type)
         response = self.client.get(activity_url)
         self.assertContains(response, 'Segment:')
 
     def test_segment_admin(self):
         segment_type = SegmentTypeFactory.create()
-        SegmentFactory.create_batch(5, type=segment_type)
+        SegmentFactory.create_batch(5, segment_type=segment_type)
 
         segment_url = reverse('admin:segments_segmenttype_change', args=(segment_type.id,))
         response = self.client.get(segment_url)

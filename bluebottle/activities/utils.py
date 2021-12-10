@@ -130,6 +130,8 @@ class BaseActivitySerializer(ModelSerializer):
         'segments': 'bluebottle.segments.serializers.SegmentSerializer',
         'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
+        'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -191,6 +193,8 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative.activity_managers',
             'initiative.promoter',
             'initiative.image',
+            'initiative.categories',
+            'initiative.theme',
             'segments',
             'segments.segment_type'
         ]

@@ -135,7 +135,7 @@ class Segment(models.Model):
         )[0]
 
     def __str__(self):
-        return u'{}: {}'.format(self.type.name, self.name)
+        return u'{}: {}'.format(self.segment_type.name, self.name)
 
     class Meta:
         ordering = ('name',)

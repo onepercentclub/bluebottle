@@ -5,15 +5,14 @@ from django.core import mail
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.deeds.tasks import deed_tasks
+from bluebottle.deeds.tests.factories import (
+    DeedFactory, DeedParticipantFactory
+)
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.deeds.tasks import deed_tasks
-
-from bluebottle.deeds.tests.factories import (
-    DeedFactory, DeedParticipantFactory
-)
 
 
 class DeedPeriodicTasksTestCase(BluebottleTestCase):

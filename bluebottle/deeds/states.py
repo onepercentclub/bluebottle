@@ -17,7 +17,10 @@ class DeedStateMachine(ActivityStateMachine):
         return len(self.instance.participants) > 0
 
     succeed = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.expired],
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.expired
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -25,7 +28,8 @@ class DeedStateMachine(ActivityStateMachine):
 
     expire = Transition(
         [
-            ActivityStateMachine.open, ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.expired,
@@ -57,7 +61,10 @@ class DeedStateMachine(ActivityStateMachine):
     )
 
     reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        [
+            ActivityStateMachine.succeeded,
+            ActivityStateMachine.expired
+        ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
         permission=ActivityStateMachine.is_owner,

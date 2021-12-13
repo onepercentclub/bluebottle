@@ -126,7 +126,8 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         value = ''
                     row.append(value)
                 for segment_type in SegmentType.objects.all():
-                    segments = ", ".join(obj.segments.filter(type=segment_type).values_list('name', flat=True))
+                    segments = ", ".join(obj.segments.filter(
+                        segment_type=segment_type).values_list('name', flat=True))
                     row.append(segments)
             if isinstance(obj, Contributor):
                 for field in CustomMemberFieldSettings.objects.all():

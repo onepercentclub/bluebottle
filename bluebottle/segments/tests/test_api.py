@@ -114,7 +114,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(segment.name, result['attributes']['name'])
         self.assertEqual(
-            str(segment.type_id),
+            str(segment.segment_type_id),
             result['relationships']['segment-type']['data']['id']
         )
 
@@ -156,7 +156,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.factory = SegmentFactory
 
         self.segment_type = SegmentTypeFactory.create()
-        self.model = SegmentFactory.create(type=self.segment_type)
+        self.model = SegmentFactory.create(segment_type=self.segment_type)
 
         self.fields = []
 
@@ -166,7 +166,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertIncluded('type', self.segment_type)
+        self.assertIncluded('segment-type', self.segment_type)
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
         self.assertAttribute('tag-line', self.model.tag_line)

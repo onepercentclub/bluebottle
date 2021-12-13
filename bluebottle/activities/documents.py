@@ -69,7 +69,7 @@ class ActivityDocument(Document):
     segments = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
-            'segment_type': fields.KeywordField(attr='segment_type.slug'),
+            'type': fields.KeywordField(attr='segment_type.slug'),
             'name': fields.TextField()
         }
     )

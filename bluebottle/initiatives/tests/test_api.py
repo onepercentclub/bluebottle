@@ -807,7 +807,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                segment.type.slug, segment.pk
+                segment.segment_type.slug, segment.pk
             ),
             user=self.owner
         )

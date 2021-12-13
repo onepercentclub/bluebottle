@@ -556,7 +556,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                segment.type.slug, segment.pk
+                segment.segment_type.slug, segment.pk
             ),
             user=self.owner
         )
@@ -581,7 +581,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                first_segment.type.slug, second_segment.pk
+                first_segment.segment_type.slug, second_segment.pk
             ),
             user=self.owner
         )

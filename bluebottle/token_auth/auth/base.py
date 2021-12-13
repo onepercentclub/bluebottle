@@ -74,7 +74,7 @@ class BaseTokenAuthentication(object):
 
             try:
                 current_segment = user.segments.get(
-                    type__slug=type_slug
+                    segment_type__slug=type_slug
                 )
                 user.segments.remove(current_segment)
             except Segment.DoesNotExist:
@@ -87,14 +87,14 @@ class BaseTokenAuthentication(object):
                 try:
 
                     segment = Segment.objects.get(
-                        type__slug=type_slug,
+                        segment_type__slug=type_slug,
                         alternate_names__contains=[val]
                     )
                     user.segments.add(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
-                            type=segment_type,
+                            segment_type=segment_type,
                             name=val,
                             alternate_names=[val]
                         )

@@ -487,12 +487,12 @@ class TestSAMLTokenAuthentication(TestCase):
 
         segment_type = SegmentTypeFactory.create(slug='segment')
         SegmentFactory.create(
-            type=segment_type,
+            segment_type=segment_type,
             name='Marketing',
             alternate_names=['MarkCom', 'Propaganda', 'Online Marketing']
         )
         SegmentFactory.create(
-            type=segment_type,
+            segment_type=segment_type,
             name='Sales'
         )
 

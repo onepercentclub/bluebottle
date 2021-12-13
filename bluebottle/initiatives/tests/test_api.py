@@ -42,7 +42,6 @@ class InitiativeAPITestCase(TestCase):
     """
 
     def setUp(self):
-        super(InitiativeAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
@@ -811,7 +810,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
             ),
             user=self.owner
         )
-
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)

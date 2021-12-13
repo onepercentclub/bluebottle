@@ -75,7 +75,7 @@ class InitiativeDocument(Document):
     segments = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
-            'type': fields.KeywordField(attr='segment_type.slug'),
+            'segment_type': fields.KeywordField(attr='segment_type.slug'),
             'name': fields.TextField()
         }
     )
@@ -153,7 +153,11 @@ class InitiativeDocument(Document):
 
         for activity in instance.activities.all():
             segments += [
-                {'id': segment.id, 'name': segment.name, 'segment_type': segment.segment_type.slug}
+                {
+                    'id': segment.id,
+                    'name': segment.name,
+                    'segment_type': segment.segment_type.slug
+                }
                 for segment in activity.segments.all()
             ]
 

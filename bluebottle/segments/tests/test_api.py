@@ -36,7 +36,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
             segment_type = SegmentTypeFactory.create()
             SegmentFactory.create_batch(
                 3,
-                type=segment_type
+                segment_type=segment_type
             )
 
     def test_list(self):
@@ -97,7 +97,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.segment_type = SegmentTypeFactory.create()
         self.segments = SegmentFactory.create_batch(
             20,
-            type=self.segment_type
+            segment_type=self.segment_type
         )
 
     def test_list(self):
@@ -114,8 +114,8 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(segment.name, result['attributes']['name'])
         self.assertEqual(
-            str(segment.type_id),
-            result['relationships']['type']['data']['id']
+            str(segment.segment_type_id),
+            result['relationships']['segment-type']['data']['id']
         )
 
     def test_list_anonymous(self):
@@ -136,7 +136,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
     def test_list_inactive(self):
         inactive_type = SegmentTypeFactory(is_active=False)
-        SegmentFactory.create(type=inactive_type)
+        SegmentFactory.create(segment_type=inactive_type)
 
         response = self.client.get(self.url)
 
@@ -156,7 +156,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.factory = SegmentFactory
 
         self.segment_type = SegmentTypeFactory.create()
-        self.model = SegmentFactory.create(type=self.segment_type)
+        self.model = SegmentFactory.create(segment_type=self.segment_type)
 
         self.fields = []
 
@@ -166,7 +166,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertIncluded('type', self.segment_type)
+        self.assertIncluded('segment-type', self.segment_type)
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
         self.assertAttribute('tag-line', self.model.tag_line)

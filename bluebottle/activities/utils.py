@@ -127,7 +127,11 @@ class BaseActivitySerializer(ModelSerializer):
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
+        'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -162,6 +166,7 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
+            'segments'
         )
 
         meta_fields = (
@@ -188,6 +193,10 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative.activity_managers',
             'initiative.promoter',
             'initiative.image',
+            'initiative.categories',
+            'initiative.theme',
+            'segments',
+            'segments.segment_type'
         ]
         resource_name = 'activities'
 

@@ -12,8 +12,8 @@ from django_elasticsearch_dsl.test import ESTestCase
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import Initiative
@@ -24,7 +24,7 @@ from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
     DateActivitySlotFactory
@@ -42,7 +42,6 @@ class InitiativeAPITestCase(TestCase):
     """
 
     def setUp(self):
-        super(InitiativeAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
@@ -807,11 +806,10 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                segment.type.slug, segment.pk
+                segment.segment_type.slug, segment.pk
             ),
             user=self.owner
         )
-
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
@@ -1455,3 +1453,28 @@ class ThemeApiTestCase(BluebottleTestCase):
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
+
+
+class InitiativeAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.model = InitiativeFactory.create(
+            status='approved'
+        )
+        self.url = reverse('initiative-detail', args=(self.model.id,))
+
+    def test_get_with_segments(self):
+        segment = SegmentFactory.create(
+            name='SDG1'
+        )
+        activity = DateActivityFactory.create(
+            initiative=self.model,
+            status='open',
+        )
+        activity.segments.add(segment)
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('segments', [segment])

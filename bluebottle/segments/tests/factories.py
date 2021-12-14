@@ -24,7 +24,7 @@ class SegmentFactory(factory.DjangoModelFactory):
         factory.Faker('word')
     ])
 
-    type = factory.SubFactory(SegmentTypeFactory)
+    segment_type = factory.SubFactory(SegmentTypeFactory)
 
     tag_line = factory.Faker('sentence')
     story = factory.Faker('paragraph')

@@ -275,7 +275,6 @@ class APITestCase(BluebottleTestCase):
             for inc in self.response.json()['included']
         ]
         relationship = self.response.json()['data']['relationships'][included]['data']
-
         self.assertTrue(
             {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
             in included_resources

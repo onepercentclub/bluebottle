@@ -39,7 +39,7 @@ class SegmentSerializer(serializers.ModelSerializer):
     activities_count = serializers.SerializerMethodField()
 
     included_serializers = {
-        'type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
+        'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
     }
 
     def get_initiatives_count(self, obj):
@@ -56,12 +56,12 @@ class SegmentSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Segment
         fields = (
-            'id', 'name', 'type', 'slug', 'tag_line', 'background_color',
+            'id', 'name', 'segment_type', 'slug', 'tag_line', 'background_color',
             'text_color', 'logo', 'cover_image', 'story',
             'initiatives_count', 'activities_count', 'stats'
         )
         meta_fields = ['initiatives_count', 'activities_count', 'stats']
 
     class JSONAPIMeta(object):
-        included_resources = ['type', ]
+        included_resources = ['segment_type', ]
         resource_name = 'segments'

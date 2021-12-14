@@ -85,7 +85,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                     Nested(
                         path='segments',
                         query=Term(
-                            segments__type=matches.groupdict()['type']
+                            segments__segment_type=matches.groupdict()['type']
                         ) & Term(
                             segments__id=value
                         )

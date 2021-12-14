@@ -15,8 +15,4 @@ class Migration(migrations.Migration):
             name='slug',
             field=models.CharField(max_length=255, verbose_name='slug'),
         ),
-        migrations.AlterUniqueTogether(
-            name='segment',
-            unique_together={('slug', 'type')},
-        ),
     ]

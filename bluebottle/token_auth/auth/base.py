@@ -83,10 +83,12 @@ class BaseTokenAuthentication(object):
 
             for val in value:
                 try:
-                    segment = Segment.objects.get(
+                    segment = Segment.objects.filter(
                         segment_type__slug=type_slug,
-                        alternate_names__icontains=val
-                    )
+                    ).extra(
+                        where=['%s ILIKE ANY (alternate_names)'],
+                        params=[val, ]
+                    ).get()
                     user.segments.add(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:

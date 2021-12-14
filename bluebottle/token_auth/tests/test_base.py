@@ -220,7 +220,10 @@ class TestBaseTokenAuthentication(TestCase):
             name='Online Marketing',
             segment_type=team,
         )
-        SegmentFactory.create(name='Direct Marketing', segment_type=team)
+        SegmentFactory.create(
+            name='Direct Marketing',
+            segment_type=team
+        )
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()

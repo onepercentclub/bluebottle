@@ -6,15 +6,10 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('segments', '0013_auto_20211210_1245'),
+        ('segments', '0014_auto_20211210_1245'),
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='segment',
-            old_name='type',
-            new_name='segment_type',
-        ),
         migrations.AlterUniqueTogether(
             name='segment',
             unique_together={('slug', 'segment_type')},

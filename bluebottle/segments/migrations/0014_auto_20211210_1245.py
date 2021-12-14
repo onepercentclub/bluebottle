@@ -25,7 +25,7 @@ def fix_duplicate_segments(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('segments', '0012_auto_20211209_1001'),
+        ('segments', '0013_auto_20211210_1244'),
     ]
 
     operations = [

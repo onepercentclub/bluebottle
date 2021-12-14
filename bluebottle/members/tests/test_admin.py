@@ -430,7 +430,7 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
         self.assertEqual(user_data[13], 'Bier')

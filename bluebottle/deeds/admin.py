@@ -1,13 +1,13 @@
+from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.fsm.forms import StateMachineModelForm
-from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
-
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -26,10 +26,13 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
+    inlines = [ContributionAdminInline]
 
 
-class DeedParticipantInline(admin.TabularInline):
+class DeedParticipantInline(TabularInlinePaginated):
     model = DeedParticipant
+    per_page = 20
+    ordering = ['-created']
     raw_id_fields = ['user']
     readonly_fields = ['edit', 'created', 'status']
     fields = ['edit', 'user', 'created', 'status']
@@ -52,6 +55,8 @@ class DeedAdmin(ActivityChildAdmin):
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
+        'enable_impact',
+        'target',
         'participant_count',
     ]
 
@@ -62,6 +67,8 @@ class DeedAdmin(ActivityChildAdmin):
     detail_fields = ActivityChildAdmin.detail_fields + (
         'start',
         'end',
+        'enable_impact',
+        'target'
     )
 
     export_as_csv_fields = (
@@ -73,6 +80,7 @@ class DeedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
+        ('fallback_location', 'Office Location'),
         ('start', 'Start'),
         ('end', 'End'),
     )

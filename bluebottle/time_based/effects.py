@@ -46,6 +46,34 @@ class CreatePreparationTimeContributionEffect(Effect):
             contribution.save()
 
 
+class CreateOverallTimeContributionEffect(Effect):
+    title = _('Create contribution')
+    template = 'admin/create_period_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        tz = get_current_timezone()
+        activity = self.instance.activity
+
+        # Just create a contribution for the full period
+        start = activity.start or date.today()
+        end = activity.deadline if hasattr(activity, 'deadline') else None
+
+        TimeContribution.objects.create(
+            contributor=self.instance,
+            contribution_type=ContributionTypeChoices.period,
+            value=activity.duration,
+            start=tz.localize(datetime.combine(start, datetime.min.time())),
+            end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
+        )
+
+    def __str__(self):
+        return _('Create overall contribution')
+
+    @property
+    def is_valid(self):
+        return super().is_valid and self.instance.activity.duration_period == 'overall'
+
+
 class CreatePeriodTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_period_time_contribution.html'
@@ -54,51 +82,40 @@ class CreatePeriodTimeContributionEffect(Effect):
         tz = get_current_timezone()
         activity = self.instance.activity
 
-        if activity.duration_period:
-            if activity.duration_period == 'overall':
-                # Just create a contribution for the full period
-                start = activity.start or date.today()
-                end = activity.deadline if hasattr(activity, 'deadline') else None
+        if self.instance.current_period or not activity.start:
+            # Use today if we already have previous contributions
+            # or when we create a new contribution and now start
+            start = date.today()
+        else:
+            # The first contribution should start on the start
+            start = activity.start
 
-                TimeContribution.objects.create(
-                    contributor=self.instance,
-                    contribution_type=ContributionTypeChoices.period,
-                    value=activity.duration,
-                    start=tz.localize(datetime.combine(start, datetime.min.time())),
-                    end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
-                )
+        # Calculate the next end
+        end = start + relativedelta(**{activity.duration_period: 1})
+        if activity.deadline and end > activity.deadline:
+            # the end is passed the deadline
+            end = activity.deadline
 
-            elif activity.duration_period:
-                if self.instance.current_period or not activity.start:
-                    # Use today if we already have previous contributions
-                    # or when we create a new contribution and now start
-                    start = date.today()
-                else:
-                    # The first contribution should start on the start
-                    start = activity.start
+        # Update the current_period
+        self.instance.current_period = end
+        self.instance.save()
 
-                # Calculate the next end
-                end = start + relativedelta(**{activity.duration_period: 1})
-                if activity.deadline and end > activity.deadline:
-                    # the end is passed the deadline
-                    end = activity.deadline
-
-                # Update the current_period
-                self.instance.current_period = end
-                self.instance.save()
-
-                if not activity.deadline or start < activity.deadline:
-                    # Only when the deadline is not passed, create the new contribution
-                    TimeContribution.objects.create(
-                        contributor=self.instance,
-                        contribution_type=ContributionTypeChoices.period,
-                        value=activity.duration,
-                        start=tz.localize(datetime.combine(start, datetime.min.time())),
-                        end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
-                    )
+        if not activity.deadline or start < activity.deadline:
+            # Only when the deadline is not passed, create the new contribution
+            TimeContribution.objects.create(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.period,
+                value=activity.duration,
+                start=tz.localize(datetime.combine(start, datetime.min.time())),
+                end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
+            )
 
     def __str__(self):
         return _('Create contribution')
+
+    @property
+    def is_valid(self):
+        return super().is_valid and self.instance.activity.duration_period != 'overall'
 
 
 class SetEndDateEffect(Effect):

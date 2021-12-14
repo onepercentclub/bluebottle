@@ -21,10 +21,10 @@ from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.clients import properties
 from bluebottle.initiatives.models import Theme
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -80,16 +80,6 @@ class BlueBottleUserManager(UserManager):
         })
 
 
-def get_language_choices():
-    """ Lazyly get the language choices."""
-    return properties.LANGUAGES
-
-
-def get_default_language():
-    """ Lazyly get the default language."""
-    return properties.LANGUAGE_CODE
-
-
 @python_2_unicode_compatible
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
@@ -135,7 +125,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField(_('first name'), blank=True, max_length=100)
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
-    place = models.CharField(_('Location your at now'), blank=True, max_length=100)
     location = models.ForeignKey(
         'geo.Location', blank=True,
         verbose_name=_('Office'),
@@ -396,7 +385,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         # Magically get extra fields
         if name.startswith('extra_'):
             name = name.replace('extra_', '')
-            return self.extra.get(field__name=name).value
+            return self.extra.filter(field__name=name).first().value
         return super(BlueBottleBaseUser, self).__getattribute__(name)
 
 

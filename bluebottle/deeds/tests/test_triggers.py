@@ -1,20 +1,28 @@
 from datetime import timedelta, date
 
-from bluebottle.activities.messages import ActivityExpiredNotification, ActivitySucceededNotification, \
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification
-from bluebottle.deeds.messages import DeedDateChangedNotification
-from bluebottle.test.utils import TriggerTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.effects import SetContributionDateEffect
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
+from bluebottle.activities.messages import (
+    ActivityExpiredNotification, ActivitySucceededNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ParticipantWithdrewConfirmationNotification
+)
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.deeds.messages import (
+    DeedDateChangedNotification, ParticipantJoinedNotification
+)
+from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
+from bluebottle.impact.effects import UpdateImpactGoalEffect
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
+from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    NewParticipantNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import TriggerTestCase
+from bluebottle.time_based.messages import (
+    ParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedNotification,
+    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+)
 
 
 class DeedTriggersTestCase(TriggerTestCase):
@@ -41,7 +49,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_started(self):
+    def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.create()
         self.model.states.submit()
@@ -51,7 +59,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_finished(self):
+    def test_finished(self):
         self.defaults['start'] = date.today() - timedelta(days=2)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
@@ -99,11 +107,11 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.model.start = date.today() - timedelta(days=1)
 
         with self.execute():
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 DeedParticipantStateMachine.succeed,
                 participant
             )
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 EffortContributionStateMachine.succeed,
                 participant.contributions.first()
             )
@@ -184,7 +192,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ActivityExpiredNotification),
             self.assertEffect(RescheduleEffortsEffect)
 
-    def test_succeed(self):
+    def test_manual_succeed(self):
         self.create()
 
         self.model.states.submit(save=True)
@@ -225,6 +233,58 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
 
+    def test_enable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = True
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+            self.assertEqual(goal.realized_from_contributions, 2)
+
+    def test_disable_impact(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.enable_impact = False
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, None)
+
+    def test_change_target(self):
+        self.defaults['status'] = 'open'
+        self.defaults['target'] = 5
+        self.defaults['enable_impact'] = True
+
+        self.create()
+        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        DeedParticipantFactory.create(activity=self.model)
+
+        self.model.target = 4
+
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalsForActivityEffect)
+            self.model.save()
+            goal.refresh_from_db()
+
+            self.assertEqual(goal.realized_from_contributions, 2.5)
+
 
 class DeedParticipantTriggersTestCase(TriggerTestCase):
     factory = DeedParticipantFactory
@@ -251,6 +311,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute(user=self.user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(NewParticipantNotification)
+            self.assertNotificationEffect(ParticipantJoinedNotification)
 
     def test_added_by_admin(self):
         self.model = self.factory.build(**self.defaults)
@@ -301,6 +362,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
 
+            self.assertNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None
         self.defaults['activity'].end = None
@@ -348,7 +412,10 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.states.reapply()
 
         with self.execute():
-            self.assertEqual(self.effects, [])
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset,
+                self.model.contributions.first()
+            )
 
     def test_remove(self):
         self.create()
@@ -467,4 +534,31 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(DeedStateMachine.succeed, self.model.activity)
-            self.assertNotificationEffect(ParticipantFinishedNotification)
+
+
+class EffortContributionTriggersTestCase(TriggerTestCase):
+    factory = EffortContributionFactory
+
+    def setUp(self):
+        self.defaults = {
+            'contributor': DeedParticipantFactory(
+                activity=DeedFactory(enable_impact=True)
+            )
+        }
+
+        self.impact_goal = ImpactGoalFactory.create(
+            activity=self.defaults['contributor'].activity,
+            target=100
+        )
+
+    def test_succeed_update_impact(self):
+        self.create()
+        self.model.states.succeed()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)
+
+    def test_fail_update_impact(self):
+        self.create()
+        self.model.states.fail()
+        with self.execute():
+            self.assertEffect(UpdateImpactGoalEffect, self.model)

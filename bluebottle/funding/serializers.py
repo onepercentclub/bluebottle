@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -17,15 +18,14 @@ from bluebottle.activities.utils import (
     BaseTinyActivitySerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
+from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
     Payout, FundingPlatformSettings)
 from bluebottle.funding.models import PlainPayoutAccount
 from bluebottle.funding.permissions import CanExportSupportersPermission
-from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.serializers import (
     FlutterwaveBankAccountSerializer, PayoutFlutterwaveBankAccountSerializer
 )
@@ -217,9 +217,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
-    contributors = SerializerMethodResourceRelatedField(
-        model=Donor, many=True
-    )
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
 
     bank_account = PolymorphicResourceRelatedField(
@@ -235,18 +232,11 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         permission=CanExportSupportersPermission,
         read_only=True
     )
-    account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
+    co_financers = SerializerMethodResourceRelatedField(
+        read_only=True, many=True, model=Donor
+    )
 
-    def get_contributors(self, instance):
-        return [
-            contributor for contributor in instance.contributors.all() if (
-                isinstance(contributor, Donor) and
-                contributor.status in (
-                    DonorStateMachine.succeeded.value,
-                    DonorStateMachine.activity_refunded.value
-                )
-            )
-        ]
+    account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
@@ -261,6 +251,10 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             del fields['errors']
         return fields
 
+    def get_co_financers(self, instance):
+        return instance.contributors.instance_of(Donor).\
+            filter(user__is_co_financer=True, status='succeeded').all()
+
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
@@ -272,11 +266,11 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'amount_matching',
             'amount_raised',
             'account_info',
+            'co_financers',
 
             'rewards',
             'payment_methods',
             'budget_lines',
-            'contributors',
             'bank_account',
             'supporters_export_url',
         )
@@ -286,18 +280,18 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'payment_methods',
             'rewards',
             'budget_lines',
-            'contributors',
-            'contributors.user',
             'bank_account',
+            'co_financers',
+            'co_financers.user',
         ]
         resource_name = 'activities/fundings'
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
+            'co_financers': 'bluebottle.funding.serializers.DonorSerializer',
             'rewards': 'bluebottle.funding.serializers.RewardSerializer',
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
-            'contributors': 'bluebottle.funding.serializers.DonorSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
         }
@@ -420,7 +414,7 @@ class DonorSerializer(BaseContributorSerializer):
     )
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.FundingListSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
     }

@@ -1,5 +1,6 @@
 import re
 import dateutil
+from datetime import datetime, time
 
 from django.conf import settings
 
@@ -26,12 +27,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'owner.id',
         'theme.id',
         'country',
-        'categories.slug',
+        'categories.id',
         'expertise.id',
         'type',
         'status',
-        'start',
-        'end',
         'initiative_location.id',
         'segment',
     )
@@ -154,19 +153,27 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return Term(type=value)
 
-    def get_start_filter(self, value, request):
-        try:
-            date = dateutil.parser.parse(value).date()
-        except ValueError:
-            return None
-        return Range(end={'gte': date}) | ~Q('exists', field='end')
+    def get_duration_filter(self, value, request):
+        start = request.GET.get('filter[start]')
+        end = request.GET.get('filter[end]')
 
-    def get_end_filter(self, value, request):
         try:
-            date = dateutil.parser.parse(value).date()
+            return Range(
+                duration={
+                    'gte': dateutil.parser.parse(start) if start else None,
+                    'lte': datetime.combine(dateutil.parser.parse(end), time.max) if end else None,
+                }
+            )
         except ValueError:
             return None
-        return Range(start={'lt': date}) | ~Q('exists', field='start')
+
+    def get_filter_fields(self, request):
+        fields = super().get_filter_fields(request)
+
+        if request.GET.get('filter[start]') or request.GET.get('filter[end]'):
+            fields = fields + ['duration']
+
+        return fields
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)

@@ -8,10 +8,19 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 @register(Deed)
 class DeedStateMachine(ActivityStateMachine):
     def has_no_end_date(self):
+        """
+        Has no end date
+        """
         return self.instance.end is None
 
+    def can_succeed(self):
+        return len(self.instance.participants) > 0
+
     succeed = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.expired],
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.expired
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -19,7 +28,8 @@ class DeedStateMachine(ActivityStateMachine):
 
     expire = Transition(
         [
-            ActivityStateMachine.open, ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.expired,
@@ -35,7 +45,7 @@ class DeedStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         automatic=False,
         name=_("succeed"),
-        conditions=[has_no_end_date],
+        conditions=[has_no_end_date, can_succeed],
         permission=ActivityStateMachine.is_owner,
         description=_("Succeed the activity.")
     )
@@ -51,7 +61,10 @@ class DeedStateMachine(ActivityStateMachine):
     )
 
     reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        [
+            ActivityStateMachine.succeeded,
+            ActivityStateMachine.expired
+        ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
         permission=ActivityStateMachine.is_owner,
@@ -79,7 +92,6 @@ class DeedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
-        hide_from_admin=True,
     )
 
 

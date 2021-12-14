@@ -4,8 +4,9 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
-    ParticipantRemovedOwnerNotification
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory,\
+    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory
 
 
 class DateActivityNotificationTestCase(NotificationTestCase):
@@ -88,7 +89,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
-        self.assertBodyContains('Frans Beckenbauer applied to your activity "Save the world!"')
+        self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -136,3 +137,40 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Frans Beckenbauer has been removed from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
+
+
+class PeriodParticipantNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+        self.owner = BlueBottleUserFactory.create()
+        self.activity = PeriodActivityFactory.create(
+            title="Save the world!",
+            owner=self.owner,
+            duration='1:30:00',
+            duration_period='overall',
+            review=False
+        )
+        self.obj = PeriodParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter
+        )
+
+    def test_participant_joined_notification(self):
+        self.message_class = ParticipantJoinedNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have joined the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_new_participant_notification(self):
+        self.message_class = ParticipantAppliedNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have applied to the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')

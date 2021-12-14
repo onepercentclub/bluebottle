@@ -112,6 +112,15 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         'geo.Location', verbose_name=_('office'),
         null=True, blank=True, on_delete=models.SET_NULL)
 
+    is_global = models.BooleanField(
+        verbose_name=_('is global'),
+        help_text=_(
+            'Global initiatives do not have a location. '
+            'Instead the location is stored on the respective activities.'
+        ),
+        default=False
+    )
+
     has_organization = models.NullBooleanField(null=True, default=None)
 
     organization = models.ForeignKey(
@@ -174,10 +183,11 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             if not self.owner.partner_organization:
                 fields.append('organization_contact')
 
-        if Location.objects.count():
-            fields.append('location')
-        else:
-            fields.append('place')
+        if not self.is_global:
+            if Location.objects.count():
+                fields.append('location')
+            else:
+                fields.append('place')
 
         return fields
 
@@ -239,6 +249,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),
         ('deed', _('Deed')),
+        ('collect', _('Collect activity')),
     )
 
     ACTIVITY_SEARCH_FILTERS = (
@@ -297,6 +308,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
     @property
     def deeds_enabled(self):
         return 'deed' in self.activity_types
+
+    @property
+    def collect_enabled(self):
+        return 'collect' in self.activity_types
+
+    @property
+    def funding_enabled(self):
+        return 'funding' in self.activity_types
 
     class Meta(object):
         verbose_name_plural = _('initiative settings')

@@ -36,3 +36,8 @@ class DeedDocument(ActivityDocument):
 
     def prepare_end(self, instance):
         return instance.end
+
+    def prepare_duration(self, instance):
+        if instance.start and instance.end and instance.start > instance.end:
+            return {}
+        return {'gte': instance.start, 'lte': instance.end}

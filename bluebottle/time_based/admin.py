@@ -1,3 +1,5 @@
+from django.contrib.admin import SimpleListFilter
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from pytz import timezone
 from django.contrib import admin
 from django.db import models
@@ -7,7 +9,7 @@ from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
@@ -25,12 +27,14 @@ from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
-class BaseParticipantAdminInline(admin.TabularInline):
+class BaseParticipantAdminInline(TabularInlinePaginated):
     model = Participant
+    per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
                        'created', 'transition_date', 'status', 'disabled')
     raw_id_fields = ('user', 'document')
     extra = 0
+    ordering = ['-created']
 
     def get_fields(self, request, obj=None):
         if self.can_edit(obj):
@@ -129,6 +133,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
+        ('fallback_location', 'Office Location'),
         ('capacity', 'Capacity'),
         ('review', 'Review participants')
     )
@@ -152,9 +157,9 @@ class TimeBasedActivityAdminForm(StateMachineModelForm):
         }
 
 
-class DateActivityASlotInline(admin.TabularInline):
+class DateActivityASlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-
+    per_page = 20
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -164,7 +169,7 @@ class DateActivityASlotInline(admin.TabularInline):
                 show_seconds=False)
         },
     }
-
+    ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
 
     fields = [
@@ -231,10 +236,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     )
 
-    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
-        ('start', 'Start'),
-        ('duration', 'TimeContribution'),
-    )
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
@@ -405,19 +407,99 @@ class SlotAdmin(StateMachineAdmin):
         return fieldsets
 
 
+class SlotTimeFilter(SimpleListFilter):
+    title = _('Date')
+    parameter_name = 'date'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('all', _('All')),
+            ('upcoming', _('Upcoming')),
+            ('passed', _('Passed')),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'all':
+            return queryset
+        elif self.value() == 'upcoming':
+            return queryset.filter(
+                start__date__gte=now().date()
+            )
+        elif self.value() == 'passed':
+            return queryset.filter(
+                start__date__lte=now().date()
+            )
+        else:
+            return queryset
+
+
+class RequiredSlotFilter(SimpleListFilter):
+    title = _('Slot required')
+    parameter_name = 'required'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('all', _('All')),
+            ('required', _('Required')),
+            ('optional', _('Optional')),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'all':
+            return queryset
+        elif self.value() == 'required':
+            return queryset.filter(
+                activity__slot_selection='all'
+            )
+        elif self.value() == 'optional':
+            return queryset.filter(
+                activity__slot_selection='free'
+            )
+        else:
+            return queryset
+
+
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
 
     raw_id_fields = ['activity', 'location']
 
+    def lookup_allowed(self, lookup, value):
+        if lookup == 'activity__slot_selection__exact':
+            return True
+        return super(DateSlotAdmin, self).lookup_allowed(lookup, value)
+
     date_hierarchy = 'start'
     list_display = [
-        '__str__', 'start', 'duration_string',
+        '__str__', 'start', 'activity_link', 'attendee_limit', 'participants', 'duration_string', 'required',
+    ]
+    list_filter = [
+        'status',
+        SlotTimeFilter,
+        RequiredSlotFilter,
     ]
 
+    def activity_link(self, obj):
+        url = reverse('admin:time_based_dateactivity_change', args=(obj.activity.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.activity)
+    activity_link.short_description = _('Activity')
+
+    def attendee_limit(self, obj):
+        return obj.capacity or obj.activity.capacity
+
+    def participants(self, obj):
+        return obj.accepted_participants.count()
+    participants.short_description = _('Accepted participants')
+
+    def required(self, obj):
+        if obj.activity.slot_selection == 'free':
+            return _('Optional')
+        return _('Required')
+    required.short_description = _('Required')
+
     def get_form(self, request, obj=None, **kwargs):
-        if not obj.is_online and obj.location:
+        if obj and not obj.is_online and obj.location:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()

@@ -5,6 +5,7 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import PaginationFormSetBase
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
@@ -13,7 +14,8 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, EffortContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.deeds.models import Deed
+from bluebottle.collect.models import CollectContributor, CollectActivity
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
@@ -33,7 +35,9 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Donor,
         Organizer,
         DateParticipant,
-        PeriodParticipant
+        PeriodParticipant,
+        DeedParticipant,
+        CollectContributor
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -71,17 +75,17 @@ class ContributionAdminInline(StackedPolymorphicInline):
     can_delete = False
 
     class EffortContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link']
+        readonly_fields = ['contributor_link', 'status', 'start']
         fields = readonly_fields
         model = EffortContribution
 
     class TimeContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'start', 'end', 'value']
+        readonly_fields = ['contributor_link', 'status', 'start', 'end', 'value']
         fields = readonly_fields
         model = TimeContribution
 
     class MoneyContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'amount']
+        readonly_fields = ['contributor_link', 'status', 'value']
         fields = readonly_fields
         model = MoneyContribution
 
@@ -320,7 +324,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fields
 
     def get_detail_fields(self, request, obj):
-        return self.detail_fields
+        fields = self.detail_fields
+        if obj and obj.initiative.is_global:
+            fields = list(fields)
+            fields.insert(3, 'office_location')
+            fields = tuple(fields)
+        return fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields
@@ -334,7 +343,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
                 InitiativePlatformSettings.objects.get().enable_impact
         ):
             fields = fields + ('send_impact_reminder_message_link',)
-
         return fields
 
     list_display = [
@@ -494,7 +502,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Funding,
         PeriodActivity,
         DateActivity,
-        Deed
+        Deed,
+        CollectActivity
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
@@ -570,11 +579,6 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
 
     activity_link.short_description = _('Edit activity')
 
-    def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
-
-    link.short_description = _('View on site')
-
 
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
@@ -583,28 +587,29 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
     can_delete = False
 
+    class CollectActivityInline(ActivityInlineChild):
+        readonly_fields = ['activity_link', 'start', 'end', 'state_name']
+        fields = readonly_fields
+        model = CollectActivity
+
     class DeedInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'end', 'state_name']
+        readonly_fields = ['activity_link', 'start', 'end', 'state_name']
         fields = readonly_fields
         model = Deed
 
     class FundingInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'target', 'deadline', 'state_name']
+        readonly_fields = ['activity_link', 'target', 'deadline', 'state_name']
         fields = readonly_fields
         model = Funding
 
     class DateInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'state_name']
+        readonly_fields = ['activity_link', 'start', 'state_name']
 
         fields = readonly_fields
         model = DateActivity
 
     class PeriodInline(ActivityInlineChild):
-        readonly_fields = ['activity_link',
-                           'link', 'start', 'deadline', 'state_name']
+        readonly_fields = ['activity_link', 'start', 'deadline', 'state_name']
         fields = readonly_fields
         model = PeriodActivity
 
@@ -612,5 +617,21 @@ class ActivityAdminInline(StackedPolymorphicInline):
         FundingInline,
         PeriodInline,
         DateInline,
-        DeedInline
+        DeedInline,
+        CollectActivityInline
     )
+
+    pagination_key = 'page'
+    template = 'admin/activities_paginated.html'
+
+    per_page = 10
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super().get_formset(request, obj, **kwargs)
+
+        class PaginationFormSet(PaginationFormSetBase, formset_class):
+            pagination_key = self.pagination_key
+
+        PaginationFormSet.request = request
+        PaginationFormSet.per_page = self.per_page
+        return PaginationFormSet

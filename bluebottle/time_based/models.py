@@ -19,6 +19,7 @@ from bluebottle.time_based.validators import (
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
 
@@ -88,8 +89,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'review', ]
-        return fields
+        return super().required_fields + ['title', 'description', 'review', ]
 
     @property
     def participants(self):
@@ -321,11 +321,12 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = [
+        fields = super().required_fields + [
             'start',
             'duration',
             'is_online',
         ]
+
         if not self.is_online:
             fields.append('location')
         return fields
@@ -426,6 +427,18 @@ class PeriodActivity(TimeBasedActivity):
         null=True,
         choices=DurationPeriodChoices.choices,
     )
+
+    @property
+    def duration_human_readable(self):
+        if self.duration:
+            return get_human_readable_duration(str(self.duration)).lower()
+        return None
+
+    @property
+    def duration_period_human_readable(self):
+        if self.duration_period:
+            return DurationPeriodChoices.get_choice(self.duration_period).label
+        return None
 
     online_meeting_url = models.TextField(
         _('Online Meeting URL'),
@@ -635,6 +648,9 @@ class TimeContribution(Contribution):
     slot_participant = models.ForeignKey(
         SlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
     )
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-contribution'
 
     class Meta:
         verbose_name = _("Time contribution")

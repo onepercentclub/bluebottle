@@ -1,9 +1,8 @@
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericStackedInline
+from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.contrib.gis.db.models import PointField
 from mapwidgets import GooglePointFieldWidget
 from parler.admin import TranslatableAdmin
 
@@ -93,13 +92,20 @@ class LocationAdmin(admin.ModelAdmin):
     )
 
 
-class PlaceInline(GenericStackedInline):
+@admin.register(Place)
+class PlaceInline(admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": GooglePointFieldWidget},
     }
     model = Place
-    max_num = 1
-    extra = 0
+    fields = [
+        'street',
+        'locality',
+        'postal_code',
+        'country',
+        'formatted_address',
+        'position'
+    ]
 
 
 admin.site.register(Location, LocationAdmin)

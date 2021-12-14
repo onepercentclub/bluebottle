@@ -46,7 +46,7 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
         ]
     )
 
-    required_fields = ['name', 'website']
+    required_fields = ['name']
 
     def __str__(self):
         return self.name
@@ -76,7 +76,7 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
     created = models.DateTimeField(_('created'), auto_now_add=True)
     updated = models.DateTimeField(_('updated'), auto_now=True)
 
-    required_fields = ['name', 'email']
+    required_fields = []
 
     class Meta(object):
         verbose_name = _('Partner Organization Contact')

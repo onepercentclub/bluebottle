@@ -9,7 +9,18 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Funding
+from bluebottle.deeds.models import Deed
 from bluebottle.members.models import Member
+
+
+SCORE_MAP = {
+    'open': 1,
+    'running': 0.7,
+    'full': 0.6,
+    'succeeded': 0.5,
+    'partially_funded': 0.5,
+    'refundend': 0.3,
+}
 
 
 # The name of your index
@@ -48,6 +59,7 @@ class InitiativeDocument(Document):
         'full_name': fields.TextField()
     })
 
+    country = fields.LongField()
     owner_id = fields.KeywordField()
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
@@ -64,10 +76,10 @@ class InitiativeDocument(Document):
         'id': fields.LongField(),
         'title': fields.KeywordField(),
         'activity_date': fields.DateField(),
+        'status_score': fields.FloatField()
     })
 
     place = fields.NestedField(properties={
-        'country': fields.LongField(attr='country.pk'),
         'province': fields.TextField(),
         'locality': fields.TextField(),
         'street': fields.TextField(),
@@ -75,7 +87,6 @@ class InitiativeDocument(Document):
     })
 
     location = fields.NestedField(
-        attr='location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -91,7 +102,8 @@ class InitiativeDocument(Document):
             Theme,
             Funding,
             PeriodActivity,
-            DateActivity
+            DateActivity,
+            Deed
         )
 
     def get_queryset(self):
@@ -113,7 +125,8 @@ class InitiativeDocument(Document):
             {
                 'id': activity.pk,
                 'title': activity.title,
-                'activity_date': activity.activity_date
+                'activity_date': activity.activity_date,
+                'status_score': SCORE_MAP[activity.status],
             } for activity in instance.activities.filter(
                 status__in=(
                     'succeeded',
@@ -125,6 +138,20 @@ class InitiativeDocument(Document):
             )
         ]
 
+    def prepare_location(self, instance):
+        if instance.is_global:
+            return [{
+                'id': activity.office_location.id,
+                'name': activity.office_location.name,
+                'city': activity.office_location.city
+            } for activity in instance.activities.all() if activity.office_location]
+        elif instance.location:
+            return {
+                'id': instance.location.id,
+                'name': instance.location.name,
+                'city': instance.location.city
+            }
+
     def prepare_activity_owners(self, instance):
         return [
             {
@@ -132,3 +159,11 @@ class InitiativeDocument(Document):
                 'full_name': activity.owner.full_name
             } for activity in instance.activities.all()
         ]
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.place and instance.place.country_id:
+            countries += [instance.place.country_id]
+        if instance.location and instance.location.country_id:
+            countries += [instance.location.country_id]
+        return countries

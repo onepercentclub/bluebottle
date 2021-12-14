@@ -196,6 +196,7 @@ class FundingAdmin(ActivityChildAdmin):
         ('owner__email', 'Email'),
         ('amount_matching', 'Amount Matching'),
         ('bank_account', 'Bank Account'),
+        ('fallback_location', 'Office Location'),
         ('amount_donated', 'Amount Donatated'),
         ('amount_raised', 'Amount Raised'),
     )

@@ -11,6 +11,13 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     sort_fields = {
         'date': ('-created', ),
         'activity_date': ({
+            'activities.status_score': {
+                'order': 'desc',
+                'mode': 'max',
+                'nested': {
+                    'path': 'activities'
+                }
+            },
             'activities.activity_date': {
                 'order': 'desc',
                 'mode': 'max',
@@ -24,9 +31,12 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     default_sort_field = 'date'
 
     filters = (
-        'owner.id', 'activity_managers.id',
-        'theme.id', 'place.country',
-        'categories.id', 'categories.slug',
+        'owner.id',
+        'activity_managers.id',
+        'theme.id',
+        'country',
+        'categories.id',
+        'categories.slug',
         'location.id',
     )
 

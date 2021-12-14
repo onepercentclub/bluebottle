@@ -5,15 +5,14 @@ from django.core import mail
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.deeds.tasks import deed_tasks
+from bluebottle.deeds.tests.factories import (
+    DeedFactory, DeedParticipantFactory
+)
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.deeds.tasks import deed_tasks
-
-from bluebottle.deeds.tests.factories import (
-    DeedFactory, DeedParticipantFactory
-)
 
 
 class DeedPeriodicTasksTestCase(BluebottleTestCase):
@@ -111,7 +110,7 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
         DeedParticipantFactory.create(activity=self.activity)
 
         self.run_tasks(self.activity.start - timedelta(days=1))
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
         mail.outbox = []
         self.assertEqual(len(mail.outbox), 0)

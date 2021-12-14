@@ -183,7 +183,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
                              **kwargs)
     except Exception as e:
         msg = None
-        print(e)
+        print("Exception while rendering email template: {0}".format(e))
         logger.error("Exception while rendering email template: {0}".format(e))
         return
 
@@ -203,9 +203,6 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
         try:
             if properties.SEND_MAIL:
                 msg.send()
-            else:
-                logger.info("Tried to send async email, " +
-                            "but mail sending is turned off.")
         except Exception as e:
             logger.error("Exception sending synchronous email: {0}".format(e))
             return

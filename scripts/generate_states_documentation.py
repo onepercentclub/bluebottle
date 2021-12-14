@@ -2,6 +2,8 @@ import requests
 from django.conf import settings
 from django.utils.module_loading import import_string
 
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.fsm.utils import document_model, document_notifications
 from scripts.generate_notifications_documentation import generate_notification_html
 
@@ -70,36 +72,39 @@ def run(*args):
     else:
         models = settings.CONFLUENCE['dev_models']
 
-    for model in models:
-        url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
-        response = requests.get(url, auth=(api['user'], api['key']))
-        data = response.json()
-        version = data['version']['number'] + 1
-        documentation = document_model(import_string(model['model']))
-        html = generate_html(documentation)
-        messages = document_notifications(import_string(model['model']))
-        if len(messages):
-            html += "<h2>Automated messages</h2>"
-            html += "<em>On some triggers automated e-mails are send.</em>"
-            html += generate_notification_html(messages)
-        data = {
-            "id": model['page_id'],
-            "type": "page",
-            "status": "current",
-            "title": model['title'],
-            "version": {
-                "number": version
-            },
-            "body": {
-                "storage": {
-                    "value": html.encode('ascii', 'ignore'),
-                    "representation": "storage"
+    tenant = Client.objects.get(schema_name=settings.CONFLUENCE['tenant'])
+    with LocalTenant(tenant):
+        for model in models:
+            url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
+            response = requests.get(url, auth=(api['user'], api['key']))
+            data = response.json()
+            version = data['version']['number'] + 1
+
+            documentation = document_model(import_string(model['model']))
+            html = generate_html(documentation)
+            messages = document_notifications(import_string(model['model']))
+            if len(messages):
+                html += "<h2>Automated messages</h2>"
+                html += "<em>On some triggers automated e-mails are send.</em>"
+                html += generate_notification_html(messages)
+            data = {
+                "id": model['page_id'],
+                "type": "page",
+                "status": "current",
+                "title": model['title'],
+                "version": {
+                    "number": version
+                },
+                "body": {
+                    "storage": {
+                        "value": html.encode('ascii', 'ignore'),
+                        "representation": "storage"
+                    }
                 }
             }
-        }
-        url += '?expand=body.storage'
-        response = requests.put(url, json=data, auth=(api['user'], api['key']))
-        if response.status_code == 200:
-            print("[OK] {}".format(model['title']))
-        else:
-            print("[ERROR] {}".format(model['title']))
+            url += '?expand=body.storage'
+            response = requests.put(url, json=data, auth=(api['user'], api['key']))
+            if response.status_code == 200:
+                print("[OK] {}".format(model['title']))
+            else:
+                print("[ERROR] {}".format(model['title']))

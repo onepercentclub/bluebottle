@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -11,6 +12,7 @@ from solo.models import SingletonModel
 
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
+from bluebottle.pages.models import Page
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
@@ -136,6 +138,19 @@ class Link(SortableMixin):
 
     class Meta:
         ordering = ['link_order']
+
+    def clean(self):
+        if self.component == 'page':
+            if not self.component_id:
+                raise ValidationError({
+                    'component_id': _("If you use Page you should also set the page slug as the component id.")
+                })
+            language = self.link_group.site_links.language.full_code
+            if not Page.objects.filter(slug=self.component_id, language=language).count():
+                raise ValidationError({
+                    'component_id': _("Page with this slug does not exist for this language.")
+                })
+        return super(Link, self).clean()
 
 
 class Stat(SortableMixin, models.Model):

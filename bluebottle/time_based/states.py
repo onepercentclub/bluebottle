@@ -94,7 +94,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
-        hide_from_admin=True,
     )
 
 
@@ -498,7 +497,6 @@ class SlotParticipantStateMachine(ModelStateMachine):
         return self.instance.slot.status in (
             DateActivitySlotStateMachine.open.value,
             DateActivitySlotStateMachine.running.value,
-            DateActivitySlotStateMachine.full.value
         )
 
     initiate = Transition(

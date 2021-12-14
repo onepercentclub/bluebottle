@@ -37,9 +37,6 @@ urlpatterns = [
     url(r'^api/metadata/',
         include('bluebottle.utils.urls.api')),
 
-    # Homepage API urls
-    url(r'^api/homepage/',
-        include('bluebottle.homepage.urls.api')),
     url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
@@ -53,6 +50,8 @@ urlpatterns = [
         include('bluebottle.time_based.urls.api')),
     url(r'^api/deeds',
         include('bluebottle.deeds.urls.api')),
+    url(r'^api/collect',
+        include('bluebottle.collect.urls.api')),
     url(r'^api/assignments',
         include('bluebottle.time_based.urls.old_assignments')),
     url(r'^api/funding',

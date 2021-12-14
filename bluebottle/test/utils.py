@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
-from django.test import TestCase, Client
+from django.test import TestCase, SimpleTestCase, Client
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
@@ -22,6 +22,9 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
 
+from celery.contrib.testing.worker import start_worker
+
+from bluebottle.celery import app
 from bluebottle.clients import properties
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.state import TransitionNotPossible
@@ -68,6 +71,7 @@ class InitProjectDataMixin(object):
         Language.objects.all().delete()
 
         language_data = [{'code': 'en', 'language_name': 'English',
+                          'default': True,
                           'native_name': 'English'},
                          {'code': 'nl', 'language_name': 'Dutch',
                           'native_name': 'Nederlands'}]
@@ -165,12 +169,15 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
 
 class APITestCase(BluebottleTestCase):
+    factories = [BlueBottleUserFactory]
+
     def setUp(self):
         super().setUp()
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
 
     def perform_get(self, user=None):
+        self.user = user
         self.response = self.client.get(
             self.url,
             user=user
@@ -219,6 +226,15 @@ class APITestCase(BluebottleTestCase):
             hasattr(self.serializer.Meta, 'model')
         ):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
+
+    def loadLinkedRelated(self, relationship, user=None):
+        user = user or self.user
+        url = self.response.json()['data']['relationships'][relationship]['links']['related']
+        response = self.client.get(
+            url,
+            user=user
+        )
+        return response.json()['data']
 
     @contextmanager
     def closed_site(self):
@@ -269,8 +285,22 @@ class APITestCase(BluebottleTestCase):
                     str(model.pk) in ids
                 )
 
+    def assertObjectList(self, data, models=None):
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
+
     def assertAttribute(self, attr, value=None):
-        self.assertTrue(attr in self.response.json()['data']['attributes'])
+        data = self.response.json()['data']
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertTrue(attr in resource['attributes'])
+
+        else:
+            self.assertTrue(attr in data['attributes'])
 
         if value:
             self.assertEqual(getattr(self.model, attr), value)
@@ -282,6 +312,12 @@ class APITestCase(BluebottleTestCase):
         self.assertIn(
             transition,
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
+    def assertMeta(self, attr, expected):
+        self.assertEqual(
+            self.response.json()['data']['meta'][attr],
+            expected
         )
 
     def assertHasError(self, field, message):
@@ -320,7 +356,11 @@ class APITestCase(BluebottleTestCase):
             if field in self.defaults:
                 value = self.defaults[field]
             else:
-                value = getattr(self.factory, field).generate()
+                factory_field = getattr(self.factory, field)
+                try:
+                    value = factory_field.generate()
+                except AttributeError:
+                    value = factory_field.function(len(self.factory._meta.model.objects.all()))
 
             if isinstance(self.serializer().get_fields()[field], RelatedField):
                 serializer_name = self.serializer.included_serializers[field]
@@ -343,19 +383,18 @@ class StateMachineTestCase(BluebottleTestCase):
         super().setUp()
 
     def create(self):
-        return self.factory.create(**self.defaults)
+        self.model = self.factory.create(**self.defaults)
 
     def assertTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
 
         if transition:
@@ -366,20 +405,21 @@ class StateMachineTestCase(BluebottleTestCase):
                     name, user, e
                 )
 
+        self.model.status = status
+
         if error:
             self.fail(error)
 
     def assertNoTransition(self, name, user):
         error = None
         transition = None
-
-        model = self.create()
+        status = self.model.status
 
         try:
-            transition = getattr(model.states, name)
+            transition = getattr(self.model.states, name)
         except AttributeError:
             error = '{} has no transition "{}'.format(
-                model.states, name
+                self.model.states, name
             )
         if transition:
             try:
@@ -390,6 +430,8 @@ class StateMachineTestCase(BluebottleTestCase):
                 )
             except TransitionNotPossible:
                 pass
+
+        self.model.status = status
 
         if error:
             self.fail(error)
@@ -445,6 +487,15 @@ class TriggerTestCase(BluebottleTestCase):
                 return effect.message
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
 
+    def assertNoNotificationEffect(self, message_cls, model=None):
+        for effect in self.effects:
+            if hasattr(effect, 'message') and effect.message == message_cls:
+                self.fail(
+                    'Notification effect "{}" triggered but is should not be triggered'.format(
+                        message_cls
+                    )
+                )
+
 
 class NotificationTestCase(BluebottleTestCase):
 
@@ -474,12 +525,20 @@ class NotificationTestCase(BluebottleTestCase):
         self.assertTextBodyContains(text)
 
     def assertTextBodyContains(self, text):
-        if text not in self.message.get_content_text(self.message.get_recipients()[0]):
+        if text not in self.text_content:
             self.fail("Text body does not contain '{}'".format(text))
 
     def assertHtmlBodyContains(self, text):
-        if text not in self.message.get_content_html(self.message.get_recipients()[0]):
+        if text not in self.html_content:
             self.fail("HTML body does not contain '{}'".format(text))
+
+    @property
+    def text_content(self):
+        return self.message.get_content_text(self.message.get_recipients()[0])
+
+    @property
+    def html_content(self):
+        return self.message.get_content_html(self.message.get_recipients()[0])
 
     def assertActionLink(self, url):
         link = self._html.find_all('a', {'class': 'action-email'})[0]
@@ -527,6 +586,36 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 name = field[0].replace('__prefix__', str(number))
                 new = Text(form, 'input', name, None)
                 form.fields[name] = [new]
+
+
+@override_settings(
+    CELERY_ALWAYS_EAGER=True,
+    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
+)
+class CeleryTestCase(SimpleTestCase):
+    databases = '__all__'
+
+    factories = [BlueBottleUserFactory]
+
+    def tearDown(self):
+        for factory in self.factories:
+            factory._meta.model.objects.all().delete()
+
+    @classmethod
+    def setUpClass(cls):
+        from celery.contrib.testing.tasks import ping  # noqa
+
+        app.conf.task_always_eager = False
+        cls.celery_worker = start_worker(app, perform_ping_check=False)
+        cls.celery_worker.__enter__()
+
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.celery_worker.__exit__(None, None, None)
+        app.conf.task_always_eager = True
+        super().tearDownClass()
 
 
 class SessionTestMixin(object):

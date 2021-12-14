@@ -160,12 +160,7 @@ class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     queryset = USER_MODEL.objects.all()
     serializer_class = MemberSerializer
 
-    permission_classes = (CurrentUserPermission, )
-
-    def get_object(self):
-        if isinstance(self.request.user, AnonymousUser):
-            raise Http404()
-        return self.request.user
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):

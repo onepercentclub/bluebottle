@@ -1,6 +1,11 @@
-from django.db import models
+from datetime import timedelta
+from urllib.parse import urlencode
+
+from django.db import models, connection
 
 from django.utils.translation import gettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+from bluebottle.activities.models import Organizer
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.deeds.validators import EndDateValidator
@@ -10,6 +15,13 @@ class Deed(Activity):
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
+
+    enable_impact = models.BooleanField(default=False)
+
+    target = models.IntegerField(
+        blank=True, null=True,
+        help_text=_('The number of users you want to participate.')
+    )
 
     auto_approve = True
 
@@ -39,8 +51,34 @@ class Deed(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description']
+        fields = super().required_fields + ['title', 'description']
+
+        if self.enable_impact:
+            fields = fields + ['goals', 'target']
+
         return fields
+
+    @property
+    def uid(self):
+        return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
+
+    @property
+    def google_calendar_link(self):
+        details = self.description
+
+        end = self.end + timedelta(days=1)
+        dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': dates,
+            'details': details,
+            'uid': self.uid,
+        }
+
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def participants(self):
@@ -53,6 +91,17 @@ class Deed(Activity):
         return EffortContribution.objects.filter(
             contributor__activity=self,
             contribution_type='deed'
+        )
+
+    @property
+    def realized(self):
+        return len(
+            EffortContribution.objects.exclude(
+                contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
+            ).filter(
+                contributor__activity=self,
+                status__in=['succeeded', 'new', ]
+            )
         )
 
 

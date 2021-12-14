@@ -26,7 +26,7 @@ from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
 )
 from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -265,6 +265,31 @@ class UserApiIntegrationTest(BluebottleTestCase):
         )
         self.assertEqual(
             response.data['place']['country'], country.pk
+        )
+
+    def test_user_set_place_without_country(self):
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'email': 'nijntje27@hetkonijntje.nl',
+            'password': 'test-password',
+            'place': {
+                'country': None,
+                'locality': 'Amsterdam',
+                'position': (52.0, 43.4)
+            }
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['place']['locality'], 'Amsterdam'
+        )
+        self.assertEqual(
+            response.data['place']['country'], None
         )
 
     def test_user_update_place(self):
@@ -709,3 +734,22 @@ class TokenLoginApiTest(BluebottleTestCase):
             data={'user_id': self.user.pk, 'token': token}
         )
         self.assertEqual(response.status_code, 404)
+
+
+class MemberDetailViewAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user1 = BlueBottleUserFactory()
+        self.user2 = BlueBottleUserFactory()
+        self.model = self.user1
+        self.url = reverse('member-detail', args=(self.user1.id,))
+
+    def test_get_current_user(self):
+        self.perform_get(user=self.user1)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(self.response.data['id'], self.user1.id)
+
+    def test_get_other_user(self):
+        self.perform_get(user=self.user2)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(self.response.data['id'], self.user1.id)

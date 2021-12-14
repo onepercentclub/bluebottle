@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 
-from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.models import SortableTranslatableModel, ValidatedModelMixin
 
 ICONS = [
     ('people', _('People')),
@@ -93,7 +93,7 @@ class ImpactType(SortableTranslatableModel):
         verbose_name_plural = _('impact types')
 
 
-class ImpactGoal(models.Model):
+class ImpactGoal(ValidatedModelMixin, models.Model):
     type = models.ForeignKey(
         ImpactType,
         verbose_name=_('type'),
@@ -115,6 +115,12 @@ class ImpactGoal(models.Model):
         null=True
     )
 
+    realized_from_contributions = models.FloatField(
+        _('realized from contributions'),
+        blank=True,
+        null=True
+    )
+
     realized = models.FloatField(
         _('realized'),
         help_text=_(
@@ -126,3 +132,25 @@ class ImpactGoal(models.Model):
     class Meta(object):
         verbose_name = _('impact goal')
         verbose_name_plural = _('impact goals')
+
+    @property
+    def required_fields(self):
+        from bluebottle.deeds.models import Deed
+
+        if isinstance(self.activity, Deed):
+            return ['target']
+
+        return []
+
+    def update(self):
+        if (
+            self.target and
+            self.activity.enable_impact and
+            self.activity.target and
+            self.activity.realized
+        ):
+            amount = self.target / float(self.activity.target)
+
+            self.realized_from_contributions = amount * float(self.activity.realized)
+        else:
+            self.realized_from_contributions = None

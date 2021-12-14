@@ -23,6 +23,8 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
+SUPPORT_EMAIL_ADDRESSES = []
+
 MANAGERS = ADMINS
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -179,7 +181,7 @@ REST_FRAMEWORK = {
         'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'user': '3/hour'
+        'user': '10/hour'
     }
 }
 
@@ -272,6 +274,9 @@ AFOM_ENABLED = False
 SHARED_APPS = (
     'bluebottle.clients',  # you must list the app where your tenant model resides in
     'tenant_schemas',
+    'django_extensions',
+    'django_admin_inline_paginator',
+    'django_better_admin_arrayfield',
 
     # Django apps
     'django.contrib.sessions',
@@ -345,6 +350,7 @@ TENANT_APPS = (
     'bluebottle.activities',
     'bluebottle.initiatives',
     'bluebottle.time_based',
+    'bluebottle.collect',
     'bluebottle.deeds',
     'bluebottle.events',
     'bluebottle.assignments',
@@ -357,7 +363,6 @@ TENANT_APPS = (
     'bluebottle.funding_telesom',
     'bluebottle.segments',
     'bluebottle.tasks',
-    'bluebottle.homepage',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
@@ -654,7 +659,12 @@ EXPORTDB_EXPORT_CONF = {
                 ('last_name', 'Last Name'),
                 ('email', 'Email'),
                 ('location__name', _('Office location')),
-                ('place__locality', 'Location'),
+                ('birthdate', 'Birthdate'),
+                ('gender', 'Gender'),
+                ('place__street', 'Street'),
+                ('place__street_number', 'Number'),
+                ('place__locality', 'City'),
+                ('place__postal_code', 'Postal code'),
                 ('place__country__name', 'Country'),
                 ('date_joined', 'Date joined'),
                 ('updated', 'Last update'),
@@ -701,6 +711,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__locality', 'Location'),
                 ('location__country__name', 'Country'),
                 ('location__country__alpha2_code', 'Country Code'),
+                ('fallback_location', _('Office location')),
 
                 ('expertise', 'Skill'),
                 ('capacity', 'People needed'),
@@ -741,6 +752,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('description', 'Description'),
                 ('status', 'Status'),
+                ('fallback_location', _('Office location')),
 
                 ('expertise', 'Skill'),
 
@@ -844,6 +856,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('description', 'Description'),
                 ('status', 'Status'),
+                ('fallback_location', _('Office location')),
 
                 ('target', 'Target'),
                 ('amount_matching', 'Amount matching'),
@@ -939,8 +952,45 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.EffortContributionResource',
             'title': _('Effort contributions'),
         }),
+
+        ('collect.CollectActivity', {
+            'fields': (
+                ('id', 'Task ID'),
+                ('initiative__title', 'Initiative Title'),
+                ('initiative__id', 'Initiative ID'),
+                ('owner__id', 'User ID'),
+                ('owner__remote_id', 'Remote ID'),
+                ('owner__email', 'Email'),
+                ('title', 'Title'),
+                ('description', 'Description'),
+                ('status', 'Status'),
+                ('start', 'Start'),
+                ('end', 'End'),
+
+                ('created', 'Date created'),
+                ('updated', 'Last update'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.CollectActivityResource',
+            'title': _('Collection campaigns'),
+        }),
+        ('collect.CollectContributor', {
+            'fields': (
+                ('id', 'Contributor ID'),
+                ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
+                ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
+                ('user__id', 'User ID'),
+                ('user__remote_id', 'Remote ID'),
+                ('user__email', 'Email'),
+                ('status', 'Status'),
+            ),
+            'resource_class': 'bluebottle.exports.resources.CollectContributorResource',
+            'title': _('Collection contributors'),
+        }),
     ])
 }
+
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
 EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'private', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
@@ -948,7 +998,7 @@ EXPORTDB_USE_CELERY = True
 EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'private/exports')
 
 # maximum delta between from/to date for exports
-EXPORT_MAX_DAYS = 366 * 3
+EXPORT_MAX_DAYS = 365 * 20
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 

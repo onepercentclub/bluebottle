@@ -191,7 +191,10 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ]
 
         if Location.objects.count():
-            detail_fields.append('location')
+            if obj and obj.is_open:
+                detail_fields.append('is_global')
+            if obj and not obj.is_global:
+                detail_fields.append('location')
         else:
             detail_fields.append('place')
 
@@ -225,7 +228,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 )}),
             )
         return fieldsets
-    inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
+
+    inlines = [
+        ActivityAdminInline,
+        MessageAdminInline,
+        WallpostInline
+    ]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
@@ -249,9 +257,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     valid.short_description = _('Steps to complete initiative')
     autocomplete_fields = ['activity_managers']
 
-    class Media(object):
-        js = ('admin/js/inline-activities-add.js',)
-
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
@@ -263,7 +268,6 @@ class ThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
     readonly_fields = ('initiative_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
-    ordering = ('translations__name',)
 
     def initiative_link(self, obj):
         url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)

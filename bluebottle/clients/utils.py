@@ -12,12 +12,12 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection, ProgrammingError
-from django.utils.translation import get_language
 from djmoney.contrib.exchange.exceptions import MissingRate
 from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
+from bluebottle.utils.models import Language, get_current_language
 from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
@@ -62,9 +62,10 @@ def tenant_url(path=None):
     except AttributeError:
         domain = 'example.com'
 
-    url = "https://{0}".format(domain)
     if domain.endswith("localhost"):
-        url += ":8000"
+        url = "http://{0}:8000".format(domain)
+    else:
+        url = "https://{0}".format(domain)
     if path:
         return url + path
     return url
@@ -103,7 +104,7 @@ def get_currencies():
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
-        'symbol': get_currency_symbol(code).replace('US$', '$')
+        'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
     } for code in currencies]
 
     for currency in currencies:
@@ -121,7 +122,7 @@ def get_user_site_links(user):
     from bluebottle.cms.models import SiteLinks
 
     try:
-        site_links = SiteLinks.objects.get(language__code=get_language())
+        site_links = SiteLinks.objects.get(language=get_current_language())
     except SiteLinks.DoesNotExist:
         site_links = SiteLinks.objects.first()
 
@@ -237,15 +238,19 @@ def get_public_properties(request):
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
-            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
-            'languageCode': get_language(),
+            'languages': [{'code': lang.full_code, 'name': lang.language_name} for lang in Language.objects.all()],
+            'languageCode': get_current_language().full_code,
             'siteLinks': get_user_site_links(request.user),
             'platform': {
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
                 'funding': get_platform_settings('funding.FundingPlatformSettings'),
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
-                'translations': get_platform_settings('utils.TranslationPlatformSettings'),
+                'translations': dict(
+                    (key, value) for key, value
+                    in get_platform_settings('utils.TranslationPlatformSettings').items()
+                    if value
+                ),
                 'currencies': get_currency_settings(),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }

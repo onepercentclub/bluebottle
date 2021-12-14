@@ -2,17 +2,27 @@
 from builtins import object
 from builtins import str
 from operator import attrgetter
+from functools import partial
+import logging
 
+from celery import shared_task
 
+from django.db import connection
+
+from django.core.cache import cache
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import loader
 from django.utils.html import format_html
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
+
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text
+
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -29,6 +39,14 @@ class TransitionMessage(object):
     template = 'messages/base'
     context = {}
     send_once = False
+    delay = None
+
+    def __reduce__(self):
+        return (partial(self.__class__, self.obj, **self.options), ())
+
+    @property
+    def task_id(self):
+        return f'{self.__class__.__name__}-{self.obj.id}'
 
     def get_generic_context(self):
         language = get_current_language()
@@ -37,7 +55,7 @@ class TransitionMessage(object):
             'site': 'https://[site domain]',
             'site_name': '[site name]',
             'language': language,
-            'contact_email': '<platform manager email>',
+            'contact_email': '[platform manager email]',
             'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
@@ -66,7 +84,7 @@ class TransitionMessage(object):
 
     @property
     def generic_content_text(self):
-        return to_text.handle(self.generic_content_html())
+        return to_text.handle(self.generic_content_html)
 
     def get_content_html(self, recipient):
         context = self.get_context(recipient)
@@ -93,6 +111,7 @@ class TransitionMessage(object):
 
         if 'context' in self.options:
             context.update(self.options['context'])
+
         return context
 
     def __init__(self, obj, **options):
@@ -148,6 +167,7 @@ class TransitionMessage(object):
                     recipient=recipient,
                     body_html=body_html,
                     body_txt=body_txt,
+                    bcc=self.get_bcc_addresses(),
                     custom_message=custom_message
                 )
 
@@ -155,8 +175,36 @@ class TransitionMessage(object):
         """the owner"""
         return [self.obj.owner]
 
+    def get_bcc_addresses(self):
+        return []
+
     def compose_and_send(self, **base_context):
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
             message.save()
             message.send(**context)
+
+    @property
+    def is_delayed(self):
+        return cache.get(self.task_id)
+
+    def send_delayed(self):
+        cache.set(self.task_id, True, self.delay)
+
+        compose_and_send.apply_async(
+            [self, connection.tenant],
+            countdown=self.delay,
+            task_id=self.task_id
+        )
+
+
+@shared_task
+def compose_and_send(message, tenant):
+    from bluebottle.clients.utils import LocalTenant
+
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            message.compose_and_send()
+        except Exception as e:
+            print('!!!!!', e)
+            logger.error(e)

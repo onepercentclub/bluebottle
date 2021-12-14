@@ -5,6 +5,11 @@ from bluebottle.funding.models import Donor
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
+from elasticsearch_dsl.field import DateRange
+
+
+class DateRangeField(fields.DEDField, DateRange):
+    pass
 
 
 # The name of your index
@@ -80,7 +85,7 @@ class ActivityDocument(Document):
     )
 
     initiative_location = fields.NestedField(
-        attr='initiative.location',
+        attr='fallback_location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -94,6 +99,8 @@ class ActivityDocument(Document):
 
     start = fields.DateField()
     end = fields.DateField()
+
+    duration = DateRangeField()
     activity_date = fields.DateField()
 
     class Django:

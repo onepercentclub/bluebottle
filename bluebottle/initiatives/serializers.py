@@ -1,6 +1,6 @@
 from builtins import object
 
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
@@ -10,7 +10,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
-from bluebottle.activities.models import EffortContribution, Activity
+from bluebottle.activities.models import EffortContribution, Activity, Contributor, Organizer
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
@@ -25,6 +25,7 @@ from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 
+from bluebottle.collect.models import CollectContribution
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.funding.states import FundingStateMachine
 
@@ -154,7 +155,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    reviewer = ResourceRelatedField(read_only=True)
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
@@ -190,9 +190,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             FundingStateMachine.partially_funded.value,
         ]
 
-        if user not in (
-            instance.owner, instance.activity_manager
-        ):
+        if user != instance.owner and user not in instance.activity_managers.all():
             return [
                 activity for activity in activities if (
                     activity.status in public_statuses or
@@ -231,6 +229,15 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             activities=Count('contributor__activity', distinct=True)
         )
 
+        collect = CollectContribution.objects.filter(
+            status='succeeded',
+            contributor__user__isnull=False,
+            contributor__activity__initiative=obj
+        ).aggregate(
+            count=Count('id', distinct=True),
+            activities=Count('contributor__activity', distinct=True)
+        )
+
         amounts = MoneyContribution.objects.filter(
             status='succeeded',
             contributor__activity__initiative=obj
@@ -240,14 +247,32 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             amount=Sum('value')
         ).order_by()
 
-        stats = {
-            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
-            'effort': effort['count'],
-            'activities': sum(stat['activities'] for stat in [effort, time, money]),
-            'contributors': sum(stat['count'] for stat in [effort, time, money]),
-        }
+        contributor_count = Contributor.objects.filter(
+            user__isnull=False,
+            activity__initiative=obj,
+            contributions__status='succeeded',
+        ).exclude(
+            Q(instance_of=Organizer)
+        ).values('user_id').distinct().count()
 
-        stats['amount'] = {
+        anonymous_donations = MoneyContribution.objects.filter(
+            contributor__user__isnull=True,
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).count()
+
+        contributor_count += anonymous_donations
+
+        collected = CollectContribution.objects.filter(
+            status='succeeded',
+            contributor__activity__initiative=obj
+        ).values(
+            'type_id'
+        ).annotate(
+            amount=Sum('value')
+        ).order_by()
+
+        amount = {
             'amount': sum(
                 convert(
                     Money(c['amount'], c['value_currency']),
@@ -258,7 +283,14 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'currency': default_currency
         }
 
-        return stats
+        return {
+            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
+            'effort': effort['count'],
+            'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
+            'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
+            'contributors': contributor_count,
+            'amount': amount
+        }
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -279,6 +311,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activities.slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'activities.slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activities.collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
     }
 
     class Meta(object):
@@ -290,7 +323,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required', 'stats', 'is_open',
+            'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
         meta_fields = (
@@ -306,6 +339,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'activities.image', 'activities.location',
             'activities.goals', 'activities.goals.type',
             'activities.slots', 'activities.slots.location',
+            'activities.collect_type',
         ]
         resource_name = 'initiatives'
 
@@ -445,6 +479,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_office_regions',
             'enable_multiple_dates',
             'enable_participant_exports',
+            'enable_open_initiatives',
             'has_locations'
         )
 

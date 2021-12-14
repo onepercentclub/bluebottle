@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-from pytz import timezone
-
 from django.template import defaultfilters
-from django.utils.translation import pgettext_lazy as pgettext
 from django.utils.timezone import get_current_timezone
+from django.utils.translation import pgettext_lazy as pgettext
+from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.models import (
+    DateParticipant, SlotParticipant,
+    PeriodParticipant, DateActivitySlot
+)
 
 
 def get_slot_info(slot):
@@ -31,6 +34,35 @@ def get_slot_info(slot):
     }
 
 
+class TimeBasedInfoMixin(object):
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
+            participant = self.obj
+        elif isinstance(self.obj, DateActivitySlot):
+            participant = self.obj.activity.participants.get(user=recipient)
+        elif isinstance(self.obj, SlotParticipant):
+            participant = self.obj.participant
+        else:
+            participant = self.obj.participants.get(user=recipient)
+
+        if isinstance(participant, DateParticipant):
+            slots = []
+            for slot_participant in participant.slot_participants.filter(
+                status='registered'
+            ):
+                slots.append(get_slot_info(slot_participant.slot))
+
+            context.update({'slots': slots})
+        elif isinstance(participant, PeriodParticipant):
+            context.update({
+                'start': participant.activity.start,
+                'end': participant.activity.deadline,
+            })
+        return context
+
+
 class DeadlineChangedNotification(TransitionMessage):
     """
     The deadline of the activity changed
@@ -53,8 +85,27 @@ class DeadlineChangedNotification(TransitionMessage):
             participant.user for participant in self.obj.accepted_participants
         ]
 
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
 
-class ReminderSingleDateNotification(TransitionMessage):
+        if self.obj.start:
+            context['start'] = pgettext(
+                'emai', 'on {start}'
+            ).format(start=defaultfilters.date(self.obj.start))
+        else:
+            context['start'] = pgettext('emai', 'immediately')
+
+        if self.obj.deadline:
+            context['end'] = pgettext(
+                'emai', 'ends on {end}'
+            ).format(end=defaultfilters.date(self.obj.deadline))
+        else:
+            context['end'] = pgettext('emai', 'runs indefinitely')
+
+        return context
+
+
+class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a single date activity
     """
@@ -65,14 +116,6 @@ class ReminderSingleDateNotification(TransitionMessage):
         'title': 'title',
     }
 
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        slot = self.obj.slots.filter(slot_participants__participant__user=recipient).first()
-        if slot:
-            context.update(get_slot_info(slot))
-        context['title'] = self.obj.title
-        return context
-
     @property
     def action_link(self):
         return self.obj.get_absolute_url()
@@ -86,44 +129,7 @@ class ReminderSingleDateNotification(TransitionMessage):
         ]
 
 
-class ReminderMultipleDatesNotification(TransitionMessage):
-    """
-    Reminder notification for an activity over multiple dates
-    """
-    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
-    template = 'messages/reminder_multiple_dates'
-    send_once = True
-    context = {
-        'title': 'title',
-    }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context['slots'] = []
-        slots = self.obj.slots.filter(
-            status__in=['full', 'open', 'running'],
-            slot_participants__participant__user=recipient,
-            slot_participants__status='registered'
-        )
-        for slot in slots:
-            info = get_slot_info(slot)
-            context['slots'].append(info)
-        return context
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    action_title = pgettext('email', 'View activity')
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
-        ]
-
-
-class ChangedSingleDateNotification(TransitionMessage):
+class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
     """
@@ -132,12 +138,6 @@ class ChangedSingleDateNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
     }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context.update(get_slot_info(self.obj))
-        context['title'] = self.obj.activity.title
-        return context
 
     @property
     def action_link(self):
@@ -152,29 +152,15 @@ class ChangedSingleDateNotification(TransitionMessage):
         ]
 
 
-class ChangedMultipleDatesNotification(TransitionMessage):
+class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
-    Notification when slot details (date, time or location) changed for an activity with multiple slots
+    Notification when slot details (date, time or location) changed for a single date activity
     """
     subject = pgettext('email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_multiple_dates'
     context = {
         'title': 'activity.title',
     }
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context['slots'] = []
-        slots = self.obj.activity.slots.filter(
-            status__in=['full', 'open', 'running'],
-            slot_participants__participant__user=recipient,
-            slot_participants__status='registered'
-        ).order_by('start')
-        for slot in slots:
-            info = get_slot_info(slot)
-            info['changed'] = slot.id == self.obj.id
-            context['slots'].append(info)
-        return context
 
     @property
     def action_link(self):
@@ -185,7 +171,7 @@ class ChangedMultipleDatesNotification(TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.accepted_participants
+            participant.user for participant in self.obj.activity.accepted_participants
         ]
 
 
@@ -230,7 +216,10 @@ class ParticipantAddedNotification(TransitionMessage):
 
     def get_recipients(self):
         """participant"""
-        return [self.obj.user]
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
 
 
 class ParticipantCreatedNotification(TransitionMessage):
@@ -273,10 +262,13 @@ class NewParticipantNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
-class ParticipantNotification(TransitionMessage):
+class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     A participant was added manually (through back-office)
     """
@@ -295,7 +287,92 @@ class ParticipantNotification(TransitionMessage):
         return [self.obj.user]
 
 
-class ParticipantAcceptedNotification(TransitionMessage):
+class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/participant_joined'
+    context = {
+        'title': 'activity.title',
+    }
+
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant withdrew or applied to a slot when already applied to other slots
+    """
+    subject = pgettext('email', 'You have changed your application on the activity "{title}"')
+    template = 'messages/participant_changed'
+    context = {
+        'title': 'activity.title',
+    }
+
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    @property
+    def task_id(self):
+        return f'{self.__class__.__name__}-{self.obj.participant.id}'
+
+    def get_recipients(self):
+        """participant"""
+        joined_message = ParticipantJoinedNotification(self.obj.participant)
+        applied_message = ParticipantAppliedNotification(self.obj.participant)
+        changed_message = ParticipantChangedNotification(self.obj)
+
+        participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
+
+        if (
+            participant.status == 'withdrawn' or
+            joined_message.is_delayed or
+            changed_message.is_delayed or applied_message.is_delayed
+        ):
+            return []
+
+        return [self.obj.participant.user]
+
+
+class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/participant_applied'
+    context = {
+        'title': 'activity.title',
+    }
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant got accepted after review
     """
@@ -420,7 +497,10 @@ class ParticipantAddedOwnerNotification(TransitionMessage):
 
     def get_recipients(self):
         """activity owner"""
-        return [self.obj.activity.owner]
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
 
 
 class ParticipantRemovedOwnerNotification(TransitionMessage):

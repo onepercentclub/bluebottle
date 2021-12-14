@@ -31,6 +31,11 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class PaymentCurrency(models.Model):
 
@@ -151,7 +156,7 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'target', 'bank_account']
+        fields = super().required_fields + ['title', 'description', 'target', 'bank_account']
 
         if not self.duration:
             fields.append('deadline')
@@ -287,15 +292,16 @@ class Funding(Activity):
         return stats
 
     def save(self, *args, **kwargs):
-        for reward in self.rewards.all():
-            if not reward.amount.currency == self.target.currency:
-                reward.amount = Money(reward.amount.amount, self.target.currency)
-                reward.save()
+        if self.target:
+            for reward in self.rewards.all():
+                if reward.amount and not reward.amount.currency == self.target.currency:
+                    reward.amount = Money(reward.amount.amount, self.target.currency)
+                    reward.save()
 
-        for line in self.budget_lines.all():
-            if self.target and not line.amount.currency == self.target.currency:
-                line.amount = Money(line.amount.amount, self.target.currency)
-                line.save()
+            for line in self.budget_lines.all():
+                if self.target and not line.amount.currency == self.target.currency:
+                    line.amount = Money(line.amount.amount, self.target.currency)
+                    line.save()
 
         super(Funding, self).save(*args, **kwargs)
 
@@ -700,10 +706,11 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     @property
     def payment_methods(self):
         try:
-            currencies = [f.target.currency for f in self.funding_set.all()]
+            currencies = [f.target.currency for f in self.funding_set.all() if f.target]
             provider = self.provider_class.objects.filter(paymentcurrency__code__in=currencies).first()
             return provider.payment_methods
-        except (AttributeError, self.provider_class.DoesNotExist):
+        except (AttributeError, self.provider_class.DoesNotExist) as e:
+            logging.error(e)
             return []
 
     class JSONAPIMeta(object):

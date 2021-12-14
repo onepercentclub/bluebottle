@@ -1,7 +1,15 @@
+from datetime import datetime, time
+
+import dateutil
+from django.db.models.functions import Trunc
+from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField
+    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField,
+    HyperlinkedRelatedField, SerializerMethodHyperlinkedRelatedField
+
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -18,7 +26,7 @@ from bluebottle.time_based.models import (
     SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
-from bluebottle.time_based.states import SlotParticipantStateMachine, ParticipantStateMachine
+from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -41,6 +49,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'expertise',
             'my_contributor',
+            'my_contributor.user',
             'my_contributor.contributions',
             'my_contributor.document',
         ]
@@ -50,6 +59,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 
@@ -86,8 +96,8 @@ class ActivitySlotSerializer(ModelSerializer):
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
 
-    participants = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
+    participants = HyperlinkedRelatedField(
+        read_only=True,
         many=True,
         related_link_view_name='slot-participants',
         related_link_url_kwarg='slot_id',
@@ -98,9 +108,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
 
-    def get_participants(self, obj):
-        return obj.slot_participants.all()
-
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
@@ -109,6 +116,33 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             }
         else:
             return {}
+
+    def get_root_meta(self, resource, many):
+        if many:
+            try:
+                activity_id = self.context['request'].GET['activity']
+                queryset = self.context['view'].queryset.filter(
+                    activity_id=int(activity_id)
+                ).order_by('start')
+
+                try:
+                    contributor_id = self.context['request'].GET['contributor']
+                    queryset = queryset.filter(
+                        slot_participants__status__in=['registered', 'succeeded'],
+                        slot_participants__participant_id=contributor_id
+                    )
+                except KeyError:
+                    pass
+
+                first = queryset.first()
+                return {
+                    'first': first.start if first else None,
+                    'total': len(queryset),
+                }
+            except (KeyError, ValueError):
+                pass
+
+        return {}
 
     class Meta(ActivitySlotSerializer.Meta):
         model = DateActivitySlot
@@ -134,7 +168,123 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     }
 
 
-class DateActivitySerializer(TimeBasedBaseSerializer):
+class DateActivitySlotInfoMixin():
+    def get_filtered_slots(self, obj, only_upcoming=False):
+
+        start = self.context['request'].GET.get('filter[start]')
+        end = self.context['request'].GET.get('filter[end]')
+        tz = get_current_timezone()
+
+        slots = obj.slots.exclude(status__in=['draft', 'cancelled']).all()
+        try:
+            if start:
+                slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            elif only_upcoming:
+                slots = slots.filter(start__gte=now())
+
+            if end:
+                slots = slots.filter(
+                    start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+                )
+        except ValueError:
+            pass
+
+        return slots
+
+    def get_date_info(self, obj):
+        total = self.get_filtered_slots(obj).count()
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        if total > 1:
+            starts = set(
+                slots.annotate(date=Trunc('start', kind='day')).values_list('date')
+            )
+            count = len(starts)
+            first = min(starts)[0].date() if starts else None
+            duration = None
+        elif total == 1:
+            slot = self.get_filtered_slots(obj).first()
+            first = slot.start
+            duration = slot.duration
+            count = 1
+        else:
+            first = None
+            duration = None
+            count = 0
+
+        return {
+            'total': total,
+            'has_multiple': total > 1,
+            'count': count,
+            'first': first,
+            'duration': duration
+        }
+
+    def get_location_info(self, obj):
+        slots = self.get_filtered_slots(obj, only_upcoming=False)
+        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
+
+        locations = slots.values_list(
+            'location__locality',
+            'location__country__alpha2_code',
+            'location__formatted_address',
+            'online_meeting_url',
+            'location_hint'
+        )
+
+        if not len(slots) or not len(locations):
+            return {
+                'has_multiple': False,
+                'is_online': is_online,
+                'online_meeting_url': None,
+                'location': None,
+                'location_hint': None,
+            }
+
+        has_multiple = len(set(locations)) > 1 and not is_online
+        if has_multiple:
+            return {
+                'has_multiple': True,
+                'is_online': False,
+                'online_meeting_url': None,
+                'location': None,
+                'location_hint': None,
+            }
+        slot = slots.first()
+
+        if is_online or not slot.location:
+            location = None
+        else:
+            location = {
+                'locality': slot.location.locality if slot.location else None,
+                'country': {
+                    'code': slot.location.country.alpha2_code if slot.location.country else None,
+                },
+                'formattedAddress': slot.location.formatted_address if slot.location else None,
+            }
+
+        user = self.context['request'].user
+        if (
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+        ):
+            meeting_url = slot.online_meeting_url or None
+        else:
+            meeting_url = None
+
+        return {
+            'has_multiple': False,
+            'is_online': is_online,
+            'online_meeting_url': meeting_url,
+            'location': location,
+            'location_hint': slot.location_hint,
+        }
+
+
+class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer):
+    date_info = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+    slot_count = serializers.SerializerMethodField()
+
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
         model=DateParticipant,
@@ -142,12 +292,15 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=DateParticipant,
         many=True,
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
     )
+
+    def get_slot_count(self, instance):
+        return len(instance.slots.all())
 
     def get_contributors(self, instance):
         user = self.context['request'].user
@@ -172,7 +325,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True
     )
 
-    slots = ResourceRelatedField(many=True, required=False, queryset=DateActivitySlot.objects)
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
@@ -190,31 +342,33 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
+        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
-            'slots',
             'slot_selection',
             'preparation',
-            'participants_export_url'
+            'participants_export_url',
+            'date_info',
+            'location_info',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
-            'slots',
-            'slots.location',
             'my_contributor',
+            'my_contributor.user',
             'my_contributor.slots',
+            'my_contributor.slots.slot',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
             'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+            'my_contributor.slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+            'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 
@@ -228,7 +382,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodResourceRelatedField(
+    contributors = SerializerMethodHyperlinkedRelatedField(
         model=PeriodParticipant,
         many=True,
         related_link_view_name='period-participants',
@@ -366,14 +520,16 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
     )
 
 
-class DateActivityListSerializer(TimeBasedActivityListSerializer):
+class DateActivityListSerializer(DateActivitySlotInfoMixin, TimeBasedActivityListSerializer):
+    date_info = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
-    slots = ResourceRelatedField(many=True, required=False, read_only=True, model=DateActivitySlot)
 
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = DateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'slots',
+            'location_info', 'date_info',
         )
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
@@ -466,7 +622,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
-    contributions = ResourceRelatedField(read_only=True, many=True)
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
@@ -486,7 +641,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
-            'contributions',
         )
 
         validators = [
@@ -501,48 +655,25 @@ class ParticipantSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'document',
-            'contributions',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
     }
 
 
 class DateParticipantSerializer(ParticipantSerializer):
-
-    slots = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
+    slots = ResourceRelatedField(
+        source='slot_participants',
         many=True,
-        source='slot_participants'
+        read_only=True
     )
     permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
 
-    def get_slots(self, instance):
-        user = self.context['request'].user
-        slots = instance.slot_participants.all()
-        if (
-            not user.is_authenticated or
-            user.pk not in (
-                instance.user_id,
-                instance.activity.owner_id,
-                instance.activity.initiative.activity_manager
-            )
-        ):
-            return [
-                slot for slot in slots if (
-                    slot.status == SlotParticipantStateMachine.registered.value
-                )
-            ]
-        else:
-            return slots
-
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantSerializer.Meta.fields + ('slots', )
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
-
+        fields = ParticipantSerializer.Meta.fields + ('slots', )
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
@@ -551,14 +682,21 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        included_resources = [
+            'user',
+            'document',
+            'slots',
+            'activity'
+        ]
         resource_name = 'contributors/time-based/date-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slots', ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
+            'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
-            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer'
+            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
 
@@ -566,10 +704,23 @@ class DateParticipantSerializer(ParticipantSerializer):
 class PeriodParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('period-participant-detail', view_args=('pk',))
 
+    contributions = SerializerMethodResourceRelatedField(
+        model=TimeContribution,
+        many=True,
+        read_only=True,
+    )
+
+    def get_contributions(self, obj):
+        if obj.activity.duration_period == 'overall':
+            return obj.contributions.all()
+
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant
 
         meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
+        fields = ParticipantSerializer.Meta.fields + (
+            'contributions',
+        )
 
         validators = [
             UniqueTogetherValidator(
@@ -580,10 +731,16 @@ class PeriodParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/period-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            'contributions',
+        ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer'}
+        **{
+            'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
+            'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+        }
     )
 
 
@@ -597,6 +754,12 @@ def activity_matches_participant_and_slot(value):
 class SlotParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
+
+    def validate(self, data):
+        if data['slot'].status != 'open':
+            raise ValidationError('Participants cannot sign up for full slots')
+
+        return data
 
     class Meta:
         model = SlotParticipant
@@ -613,9 +776,14 @@ class SlotParticipantSerializer(ModelSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
-        included_resources = ['participant', 'slot']
+        included_resources = [
+            'participant',
+            'slot',
+            'participant.user'
+        ]
 
     included_serializers = {
+        'participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
@@ -635,8 +803,12 @@ class SlotParticipantTransitionSerializer(TransitionSerializer):
 
 
 class TimeContributionSerializer(BaseContributionSerializer):
+    permissions = ResourcePermissionField('time-contribution-detail', view_args=('pk',))
+
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
+
+        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions', )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-contributions'
@@ -657,9 +829,14 @@ class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        included_resources = [
+            'resource',
+            'resource.activity'
+        ]
         resource_name = 'contributors/time-based/date-participant-transitions'
 
 

@@ -3,10 +3,14 @@ from builtins import object
 import os
 from datetime import timedelta
 
+from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from djmoney.money import Money
 
 from bluebottle.funding.tests.factories import DonorFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
@@ -273,7 +277,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding',
+            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds', 'collect',
             'is_superuser', 'kyc'
         ))
 
@@ -284,7 +288,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = set((
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
-            'initiatives', 'date_activities', 'period_activities', 'funding',
+            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds', 'collect',
             'is_superuser', 'kyc'
         ))
 
@@ -340,6 +344,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.request = self.request_factory.post('/')
         self.request.user = MockUser()
         self.member_admin = MemberAdmin(Member, AdminSite())
+        self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
         member = BlueBottleUserFactory.create()
@@ -365,8 +370,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         DonorFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -377,23 +381,24 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'email', 'remote_id', 'first_name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
         self.assertEqual(user_data[0], member.email)
-        self.assertEqual(user_data[6], 'True')
         self.assertEqual(user_data[7], 'True')
-        self.assertEqual(user_data[8], u'35.00 €')
-        self.assertEqual(user_data[9], '47.0')
-        self.assertEqual(user_data[12], 'Fine')
+        self.assertEqual(user_data[8], 'True')
+
+        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[10], '47.0')
+
+        self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create()
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
         CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
-        export_action = self.member_admin.actions[0]
-        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
@@ -401,9 +406,35 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'email')
-        self.assertEqual(headers[11], 'Best friend')
+        self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], member.email)
-        self.assertEqual(data[11], u'Ren Höek')
+        self.assertEqual(data[12], u'Ren Höek')
+
+    def test_member_segments_export(self):
+        member = BlueBottleUserFactory.create(username='malle-eppie')
+        food = SegmentTypeFactory.create(name='Food')
+        bb = SegmentFactory.create(type=food, name='Bitterballen')
+        drinks = SegmentTypeFactory.create(name='Drinks')
+        br = SegmentFactory.create(type=drinks, name='Bier')
+        member.segments.add(bb)
+        member.segments.add(br)
+        member.save()
+        response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+
+        data = response.content.decode('utf-8').split("\r\n")
+        headers = data[0].split(",")
+        user_data = []
+        for row in data:
+            if row.startswith('malle-eppie'):
+                user_data = row.split(',')
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers, [
+            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'date joined', 'is initiator', 'is supporter', 'is volunteer',
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
+        self.assertEqual(user_data[13], 'Bier')
+        self.assertEqual(user_data[14], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -518,6 +549,31 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('Funding donations:' in response.text)
         self.assertTrue(
             '<a href="/en/admin/funding/donor/?user_id={}">10</a> donations'.format(user.id)
+            in response.text
+        )
+
+    def test_engagement_shows_initiative_owner(self):
+        user = BlueBottleUserFactory.create()
+        InitiativeFactory.create_batch(5, owner=user)
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')
+        self.assertTrue('Initiatives:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/initiatives/initiative/?owner_id={}">5</a>'.format(user.id)
+            in response.text
+        )
+
+    def test_engagement_shows_collect(self):
+        user = BlueBottleUserFactory.create()
+        CollectContributorFactory.create(user=user)
+        url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.app.get(url, user=self.staff_member)
+        self.assertEqual(response.status, '200 OK')
+        self.assertTrue('Collect contributor:' in response.text)
+        self.assertTrue(
+            '<a href="/en/admin/collect/collectcontributor/'
+            '?user_id={}&amp;status=succeeded">1</a> succeeded'.format(user.id)
             in response.text
         )
 

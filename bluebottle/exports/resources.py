@@ -28,6 +28,7 @@ class SegmentMixin(object):
 
 class UserFieldsMixin(object):
     user_field = ''
+    select_related = ['place', 'segments']
 
     def get_extra_fields(self):
         if self.user_field:
@@ -164,4 +165,18 @@ class EffortContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResourc
         'contributor__activity',
         'contributor__user',
         'contributor__activity__initiative',
+    )
+
+
+class CollectActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
+    select_related = (
+        'initiative', 'owner'
+    )
+
+
+class CollectContributorResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+    segment_field = 'user'
+    user_field = 'user'
+    select_related = (
+        'activity', 'user', 'activity__initiative',
     )

@@ -16,6 +16,11 @@ warnings.filterwarnings(
 CSRF_COOKIE_SECURE = False
 ALLOWED_HOSTS = ['*']
 
+SUPPORT_EMAIL_ADDRESSES = [
+    'support@example.com',
+    'helpdesk@example.com',
+]
+
 MERCHANT_ACCOUNTS = [
     {
         'merchant': 'docdata',
@@ -149,7 +154,7 @@ logging.disable(logging.CRITICAL)
 
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-BROKER_BACKEND = 'memory'
+BROKER_URL = 'memory://localhost'
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
@@ -338,6 +343,30 @@ CONFLUENCE = {
         {
             'title': '[DEV] States - Time based - Time contribution',
             'model': 'bluebottle.time_based.models.TimeContribution',
+            'page_id': ''
+        },
+
+        # Deed Activities
+        {
+            'title': '[DEV] States - Deeds - Deed',
+            'model': 'bluebottle.deeds.models.Deed',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Deeds - Deed Participant',
+            'model': 'bluebottle.deeds.models.DeedParticipant',
+            'page_id': ''
+        },
+
+        # Collection Activities
+        {
+            'title': '[DEV] States - Collect - Collection activity',
+            'model': 'bluebottle.collect.models.CollectActivity',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Collect - Collection contributor',
+            'model': 'bluebottle.collect.models.CollectContributor',
             'page_id': ''
         },
 

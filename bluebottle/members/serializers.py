@@ -183,7 +183,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
-    homepage = PermissionField('homepage', view_args=('primary_language', ))
+    homepage = PermissionField('home-page-detail')
 
     class Meta(object):
         fields = [
@@ -254,9 +254,10 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=Theme.objects)
 
-    is_active = serializers.BooleanField(read_only=True)
+    segments = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Segment.objects)
 
-    segments = OldSegmentSerializer(many=True, read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -315,10 +316,10 @@ class ManageProfileSerializer(UserProfileSerializer):
                     setattr(current_place, key, value)
                 current_place.save()
             else:
-                Place.objects.create(content_object=instance, **place)
+                instance.place = Place.objects.create(**place)
         else:
             if instance.place:
-                instance.place.delete()
+                instance.place = None
 
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 
@@ -612,6 +613,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'confirm_signup',
             'login_methods',
             'background',
+            'enable_gender',
+            'enable_address',
+            'enable_birthdate',
         )
 
 

@@ -20,7 +20,7 @@ tf = TimezoneFinder()
 class StaticMapsField(serializers.ReadOnlyField):
     url = (
         "https://maps.googleapis.com/maps/api/staticmap"
-        "?center={latitude},{longitude}&zoom=10&size=220x220"
+        "?center={latitude},{longitude}&zoom=10&size=422x422"
         "&maptype=roadmap&markers={latitude},{longitude}&sensor=false"
         "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
     )
@@ -96,13 +96,12 @@ class SimplePointSerializer(serializers.CharField):
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-
-    position = SimplePointSerializer()
+    position = SimplePointSerializer(required=False, allow_null=True)
 
     class Meta(object):
         model = Place
         fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'id', 'street', 'postal_code', 'street_number', 'locality', 'province', 'country',
             'position', 'formatted_address',
         )
 

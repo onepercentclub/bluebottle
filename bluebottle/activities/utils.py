@@ -8,7 +8,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
 
-from bluebottle.activities.models import Activity, Contributor, Contribution
+from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -81,7 +81,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
                     except AttributeError:
                         pass
 
-                if positions:
+                if positions and self.context['location'].position:
                     dist = min(
                         distance(
                             lonlat(*pos),
@@ -102,6 +102,7 @@ class BaseActivitySerializer(ModelSerializer):
     owner = AnonymizedResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
+    contributor_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -129,6 +130,11 @@ class BaseActivitySerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
+    def get_contributor_count(self, instance):
+        return instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'succeeded', 'activity_refunded']
+        ).count()
+
     class Meta(object):
         model = Activity
         fields = (
@@ -147,7 +153,8 @@ class BaseActivitySerializer(ModelSerializer):
             'stats',
             'errors',
             'required',
-            'goals'
+            'goals',
+            'office_location',
         )
 
         meta_fields = (
@@ -158,6 +165,7 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
+            'contributor_count'
         )
 
     class JSONAPIMeta(object):
@@ -167,6 +175,7 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative',
             'goals',
             'goals.type',
+            'initiative.owner',
             'initiative.place',
             'initiative.location',
             'initiative.activity_managers',

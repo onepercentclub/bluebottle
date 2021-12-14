@@ -39,7 +39,7 @@ from bluebottle.funding_vitepay.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -449,17 +449,12 @@ class FundingDetailTestCase(BluebottleTestCase):
             {u'currency': u'EUR', u'amount': 1500.0}
         )
 
-        # Should only see the three successful donations
         self.assertEqual(
-            len(data['data']['relationships']['contributors']['data']),
+            response.json()['data']['meta']['contributor-count'],
             5
         )
 
-        # There should be a co-financer in the includes
-        included = response.json()['included']
-        co_financers = [
-            inc for inc in included if inc['type'] == 'members' and inc['attributes']['is-co-financer']
-        ]
+        co_financers = response.json()['data']['relationships']['co-financers']
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
@@ -756,10 +751,8 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = self.included_by_type(response, 'contributors/donations')[0]
-        self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
-
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
+        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
 
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
@@ -778,9 +771,7 @@ class DonationTestCase(BluebottleTestCase):
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
-
-        donation = self.included_by_type(response, 'contributors/donations')[0]
-        self.assertFalse('user' in donation['relationships'])
+        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
 
     def test_update(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
@@ -1172,7 +1163,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 'code': 'EUR',
                 'name': 'Euro',
                 'maxAmount': None,
-                'symbol': u'\u20ac',
+                'symbol': '€',
                 'minAmount': 5.00,
                 'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                 'provider': 'stripe',
@@ -1190,7 +1181,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 'code': 'NGN',
                 'name': 'Nigerian Naira',
                 'maxAmount': None,
-                'symbol': u'\u20a6',
+                'symbol': '₦',
                 'minAmount': 1000.00,
                 'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                 'provider': 'flutterwave',
@@ -1713,3 +1704,36 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         response = self.client.get(url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class FundingAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        owner = BlueBottleUserFactory.create(
+            is_co_financer=True
+        )
+        self.initiative = InitiativeFactory.create(status='approved')
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        self.activity = FundingFactory.create(
+            owner=owner,
+            initiative=self.initiative,
+            target=Money(500, 'EUR'),
+            deadline=now() + timedelta(weeks=2),
+            bank_account=bank_account
+        )
+        BudgetLineFactory.create(activity=self.activity)
+        self.activity.bank_account.reviewed = True
+
+        self.activity.states.submit()
+        self.activity.states.approve(save=True)
+
+        self.donors = DonorFactory.create_batch(
+            5, activity=self.activity
+        )
+        self.url = reverse('funding-detail', args=(self.activity.pk, ))
+
+    def test_get_owner(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)

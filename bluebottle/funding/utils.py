@@ -15,7 +15,7 @@ def get_currency_settings():
                 'providerName': provider.title,
                 'code': cur.code,
                 'name': get_currency_name(cur.code),
-                'symbol': get_currency_symbol(cur.code).replace('US$', '$'),
+                'symbol': get_currency_symbol(cur.code).replace('US$', '$').replace('NGN', '₦'),
                 'defaultAmounts': [
                     cur.default1,
                     cur.default2,

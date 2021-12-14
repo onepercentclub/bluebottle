@@ -11,7 +11,8 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MoneySerializer
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
-from ..deeds.models import Deed
+from bluebottle.collect.models import CollectActivity
+from bluebottle.deeds.models import Deed
 
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -48,6 +49,8 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
             data = ContentType.objects.get_for_model(PeriodActivity)
         elif data == 'deed':
             data = ContentType.objects.get_for_model(Deed)
+        elif data == 'collect':
+            data = ContentType.objects.get_for_model(CollectActivity)
 
         return data
 

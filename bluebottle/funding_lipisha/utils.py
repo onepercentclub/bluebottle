@@ -28,8 +28,8 @@ def init_client():
         api_environment=env
     )
     if live_mode:
-        # lip.api_base_url = 'https://api.lypa.io/v2/api/'
-        lip.api_base_url = 'https://lipisha.com/payments/accounts/index.php/v2/api'
+        lip.api_base_url = 'https://api.lypa.io/v2/api/'
+        # lip.api_base_url = 'https://lipisha.com/payments/accounts/index.php/v2/api'
     return lip
 
 

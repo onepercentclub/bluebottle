@@ -51,6 +51,7 @@ bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
 # Misc stuff
+data
 env
 docs/_build
 .idea
@@ -97,9 +98,6 @@ GeoIP.dat
 
 #autoenv
 /.env
-
-#locale
-locale/en/
 
 # Analytics Testing
 analytics/*

@@ -1,7 +1,7 @@
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 
@@ -12,6 +12,10 @@ class SegmentType(models.Model):
 
     is_active = models.BooleanField(
         _('Is active'),
+        default=True
+    )
+    user_editable = models.BooleanField(
+        _('Editable in user profile'),
         default=True
     )
     enable_search = models.BooleanField(
@@ -38,6 +42,7 @@ class Segment(models.Model):
 
     alternate_names = ArrayField(
         models.CharField(max_length=200),
+        default=list,
         blank=True
     )
     type = models.ForeignKey(

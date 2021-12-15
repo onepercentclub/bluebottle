@@ -87,6 +87,35 @@ class LoginTestCase(BluebottleTestCase):
 
             self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_token_renewal(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(token)
+        )
+
+        self.assertFalse('Refresh-Token' in current_user_response)
+
+        with mock.patch('bluebottle.auth.middleware.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(minutes=31)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+            self.assertTrue('Refresh-Token' in current_user_response)
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token=current_user_response['Refresh-Token']
+            )
+            self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
     def test_login_failed(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': 'wrong'}

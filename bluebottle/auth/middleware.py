@@ -3,7 +3,6 @@ import logging
 from calendar import timegm
 
 from datetime import datetime, timedelta
-from django.conf import settings
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import ImproperlyConfigured, RequestDataTooBig
@@ -94,7 +93,7 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
             created_timestamp = exp - int(
                 properties.JWT_EXPIRATION_DELTA.total_seconds())
             renewal_timestamp = created_timestamp + int(
-                settings.JWT_TOKEN_RENEWAL_DELTA.total_seconds())
+                properties.JWT_TOKEN_RENEWAL_DELTA.total_seconds())
             now_timestamp = timegm(datetime.utcnow().utctimetuple())
 
             # If it has been less than JWT_TOKEN_RENEWAL_DELTA time since the
@@ -111,7 +110,7 @@ class SlidingJwtTokenMiddleware(MiddlewareMixin):
             if orig_iat:
                 # verify expiration
                 expiration_timestamp = orig_iat + int(
-                    settings.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
+                    properties.JWT_TOKEN_RENEWAL_LIMIT.total_seconds())
                 if now_timestamp > expiration_timestamp:
                     # Token has passed renew time limit - just return existing
                     # response. We need to test this process because it is
@@ -294,13 +293,21 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
 
     def process_response(self, request, response):
         """ Log a message for each failed login attempt. """
-        if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
+        if (
+            reverse('admin:login') == request.path and
+            request.method == 'POST' and
+            response.status_code not in (302, 429)
+        ):
             error = 'Authorization failed: {username} {ip}'.format(
                 ip=get_client_ip(request), username=request.POST.get('username')
             )
             authorization_logger.error(error)
 
-        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 201:
+        if (
+            reverse('token-auth') == request.path and
+            request.method == 'POST' and
+            response.status_code not in (201, 429)
+        ):
             try:
                 data = json.loads(request.body)
             except ValueError:

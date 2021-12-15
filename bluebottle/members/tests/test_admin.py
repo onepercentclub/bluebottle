@@ -411,7 +411,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(data[12], u'Ren Höek')
 
     def test_member_segments_export(self):
-        member = BlueBottleUserFactory.create(username='malle-eppie')
+        member = BlueBottleUserFactory.create(email='malle@eppie.nl')
         food = SegmentTypeFactory.create(name='Food')
         bb = SegmentFactory.create(type=food, name='Bitterballen')
         drinks = SegmentTypeFactory.create(name='Drinks')
@@ -425,7 +425,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         headers = data[0].split(",")
         user_data = []
         for row in data:
-            if row.startswith('malle-eppie'):
+            if row.startswith('malle@eppie.nl'):
                 user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
@@ -433,8 +433,8 @@ class MemberAdminExportTest(BluebottleTestCase):
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[13], 'Bier')
-        self.assertEqual(user_data[14], 'Bitterballen')
+        self.assertEqual(user_data[12], 'Bier')
+        self.assertEqual(user_data[13], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

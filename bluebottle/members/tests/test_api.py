@@ -16,6 +16,7 @@ from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.auth.middleware import authorization_logger
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -124,17 +125,20 @@ class LoginTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_login_failed_multiple(self):
-        for i in range(0, 11):
+
+        with mock.patch.object(authorization_logger, 'error') as logger:
+            for i in range(0, 14):
+                response = self.client.post(
+                    reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+                )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
             response = self.client.post(
-                reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
             )
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-        response = self.client.post(
-            reverse('token-auth'), {'email': self.email, 'password': self.password}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertTrue(logger.call_count < 11)
 
     def test_login_failed_captcha(self):
         for i in range(0, 11):

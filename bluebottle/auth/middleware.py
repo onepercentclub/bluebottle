@@ -293,13 +293,21 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
 
     def process_response(self, request, response):
         """ Log a message for each failed login attempt. """
-        if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
+        if (
+            reverse('admin:login') == request.path and
+            request.method == 'POST' and
+            response.status_code not in (302, 429)
+        ):
             error = 'Authorization failed: {username} {ip}'.format(
                 ip=get_client_ip(request), username=request.POST.get('username')
             )
             authorization_logger.error(error)
 
-        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 201:
+        if (
+            reverse('token-auth') == request.path and
+            request.method == 'POST' and
+            response.status_code not in (201, 429)
+        ):
             try:
                 data = json.loads(request.body)
             except ValueError:

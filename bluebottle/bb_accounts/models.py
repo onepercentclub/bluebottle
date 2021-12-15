@@ -9,7 +9,7 @@ from builtins import str
 
 from django.conf import settings
 from django.contrib.auth.models import (
-    AbstractBaseUser, PermissionsMixin, BaseUserManager
+    AbstractBaseUser, PermissionsMixin, UserManager
 )
 from django.core.mail.message import EmailMessage
 from django.db import models
@@ -54,33 +54,30 @@ def generate_picture_filename(instance, filename):
     return os.path.normpath(os.path.join(upload_directory, normalized_filename))
 
 
-# Our custom user model is based on option 3 from Two Scoops of Django
-# - Chapter 16: Dealing With the User Model.
-class BlueBottleUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+class BlueBottleUserManager(UserManager):
+    def create_user(self, username, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-        if not email:
-            raise ValueError('The given email address must be set')
-        email = BlueBottleUserManager.normalize_email(email)
-        user = self.model(email=email, is_staff=False, is_active=True,
-                          is_superuser=False,
-                          last_login=now, date_joined=now, **extra_fields)
-        user.set_password(password)
-        user.generate_username()
-        user.reset_disable_token()
-        user.save(using=self._db)
-        return user
 
-    def create_superuser(self, email, password, **extra_fields):
-        u = self.create_user(email, password, **extra_fields)
-        u.is_staff = True
-        u.is_active = True
-        u.is_superuser = True
-        u.save(using=self._db)
-        return u
+        extra_fields['last_login'] = now
+        extra_fields['date_joined'] = now
+
+        return super().create_user(username, password, **extra_fields)
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        now = timezone.now()
+
+        extra_fields['last_login'] = now
+        extra_fields['date_joined'] = now
+
+        return super().create_superuser(username, password, **extra_fields)
+
+    def get_by_natural_key(self, username):
+        return self.get(**{
+            '{}__iexact'.format(self.model.USERNAME_FIELD): username
+        })
 
 
 @python_2_unicode_compatible

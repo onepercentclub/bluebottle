@@ -5,7 +5,8 @@ from bluebottle.bb_accounts.views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
     PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
-    SignUpTokenConfirmation, CaptchaVerification
+    SignUpTokenConfirmation, CaptchaVerification,
+    PasswordStrengthDetail,
 )
 
 # Public User API:
@@ -46,5 +47,6 @@ urlpatterns = [
         name='user-verification'),
     url(r'^export/$', UserDataExport.as_view(),
         name='user-export'),
-
+    url(r'^password-strength$', PasswordStrengthDetail.as_view(),
+        name='password-strength'),
 ]

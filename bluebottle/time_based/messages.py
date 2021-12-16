@@ -129,6 +129,38 @@ class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
         ]
 
 
+class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    Reminder notification for a date activity slot
+    """
+    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
+    template = 'messages/reminder_slot'
+    send_once = True
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        title = self.obj.activity.title
+        if self.obj.title:
+            title += ' - ' + self.obj.title
+        context['title'] = title
+        slot_info = get_slot_info(self.obj)
+        slot_info['title'] = pgettext('email', 'Details')
+        context['slots'] = [slot_info]
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
 class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity

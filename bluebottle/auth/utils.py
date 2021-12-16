@@ -1,5 +1,3 @@
-import time
-from datetime import datetime
 from requests import request, HTTPError
 
 from django.contrib.auth import get_user_model
@@ -71,17 +69,5 @@ def get_extra_facebook_data(strategy, user, response, details,
         user.first_name = response.get('first_name', '')
     if not user.last_name:
         user.last_name = response.get('last_name', '')
-    if not user.gender:
-        user.gender = response.get('gender', '')
-
-    fb_link = response.get('link', None)
-
-    birthday = response.get('birthday', None)
-    if birthday and not user.birthdate:
-        birthdate = time.strptime(birthday, "%m/%d/%Y")
-        user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
-
-    if fb_link and len(fb_link) < 50:
-        user.facebook = fb_link
 
     user.save()

@@ -5,11 +5,14 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from django.core.signing import TimestampSigner
 from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers, exceptions
+from rest_framework import serializers, exceptions, validators
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
+
+import passwordmeter
 
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
@@ -23,6 +26,7 @@ from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+
 
 BB_USER_MODEL = get_user_model()
 
@@ -391,7 +395,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                     settings.email_domain)
             )
 
-        if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
+        if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
             raise serializers.ValidationError('member with this email address already exists.')
 
         return email
@@ -429,12 +433,42 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
         return make_password(password)
 
 
+class PasswordStrengthSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    email = serializers.CharField(write_only=True, allow_blank=True)
+    strength = serializers.SerializerMethodField()
+
+    def validate(self, data):
+        user = BB_USER_MODEL(**data)
+        validate_password(data['password'], user)
+        return data
+
+    def get_strength(self, data):
+        strength, _ = passwordmeter.test(data['password'])
+        return strength
+
+    class Meta(object):
+        model = BB_USER_MODEL
+        fields = ('id', 'password', 'email', 'strength')
+
+    class JSONAPIMeta:
+        resource_name = 'password-strengths'
+
+
 class UserCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            validators.UniqueValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
     email_confirmation = serializers.EmailField(
         label=_('email_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
@@ -447,7 +481,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         errors = super(UserCreateSerializer, self).errors
 
         if 'email' in errors and 'email' in self.data and errors['email'][0].code == 'unique':
-            user = self.Meta.model.objects.get(email=self.data['email'])
+            user = self.Meta.model.objects.get(email__iexact=self.data['email'])
 
             conflict = {
                 'email': user.email,

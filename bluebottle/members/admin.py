@@ -274,7 +274,6 @@ class MemberAdmin(UserAdmin):
                             'remote_id',
                             'first_name',
                             'last_name',
-                            'username',
                             'phone_number',
                             'login_as_link',
                             'reset_password',
@@ -389,7 +388,6 @@ class MemberAdmin(UserAdmin):
         return readonly_fields
 
     export_fields = (
-        ('username', 'username'),
         ('email', 'email'),
         ('phone_number', 'phone number'),
         ('remote_id', 'remote id'),

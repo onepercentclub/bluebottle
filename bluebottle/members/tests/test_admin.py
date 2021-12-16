@@ -347,7 +347,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
-        member = BlueBottleUserFactory.create(username='malle-eppie')
+        member = BlueBottleUserFactory.create()
         CustomMemberFieldSettings.objects.create(name='Extra Info')
         field = CustomMemberFieldSettings.objects.create(name='How are you')
         CustomMemberField.objects.create(member=member, value='Fine', field=field)
@@ -376,23 +376,25 @@ class MemberAdminExportTest(BluebottleTestCase):
         headers = data[0].split(",")
         user_data = []
         for row in data:
-            if row.startswith('malle-eppie'):
+            if row.startswith(member.email):
                 user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
-        self.assertEqual(user_data[0], 'malle-eppie')
+        self.assertEqual(user_data[0], member.email)
+        self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], 'True')
-        self.assertEqual(user_data[10], u'35.00 €')
-        self.assertEqual(user_data[11], '47.0')
-        self.assertEqual(user_data[14], 'Fine')
+
+        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[10], '47.0')
+
+        self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
-        member = BlueBottleUserFactory.create(username='stimpy')
+        member = BlueBottleUserFactory.create()
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
         CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
@@ -403,13 +405,13 @@ class MemberAdminExportTest(BluebottleTestCase):
         data = data[1].split(",")
 
         # Test basic info and extra field are in the csv export
-        self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[13], 'Best friend')
-        self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[13], u'Ren Höek')
+        self.assertEqual(headers[0], 'email')
+        self.assertEqual(headers[12], 'Best friend')
+        self.assertEqual(data[0], member.email)
+        self.assertEqual(data[12], u'Ren Höek')
 
     def test_member_segments_export(self):
-        member = BlueBottleUserFactory.create(username='malle-eppie')
+        member = BlueBottleUserFactory.create(email='malle@eppie.nl')
         food = SegmentTypeFactory.create(name='Food')
         bb = SegmentFactory.create(segment_type=food, name='Bitterballen')
         drinks = SegmentTypeFactory.create(name='Drinks')
@@ -423,16 +425,16 @@ class MemberAdminExportTest(BluebottleTestCase):
         headers = data[0].split(",")
         user_data = []
         for row in data:
-            if row.startswith('malle-eppie'):
+            if row.startswith('malle@eppie.nl'):
                 user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[13], 'Bier')
-        self.assertEqual(user_data[14], 'Bitterballen')
+        self.assertEqual(user_data[12], 'Bier')
+        self.assertEqual(user_data[13], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

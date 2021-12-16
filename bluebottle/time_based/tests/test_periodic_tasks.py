@@ -216,7 +216,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{} - First slot" will take place in a few days!'.format(
+            'The activity "{}" will take place in a few days!'.format(
                 self.activity.title
             )
         )
@@ -255,11 +255,32 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
         DateParticipantFactory.create(activity=self.activity, user=eng)
-        self.slot3.slot_participants.first().states.withdraw(save=True)
-        self.slot4.states.cancel(save=True)
+        other = BlueBottleUserFactory.create(primary_language='eng')
+        DateParticipantFactory.create(activity=self.activity, user=other)
+
+        self.slot4.slot_participants.first().states.withdraw(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 5)
+
+        self.assertTrue('Slot 4' in mail.outbox[0].body)
+
+        # Slot 2 & 3 should be in the same emails
+        self.assertTrue(
+            'Slot 3' in mail.outbox[1].body and
+            'Slot 2' in mail.outbox[1].body
+        )
+        self.assertTrue(
+            'Slot 3' in mail.outbox[2].body and
+            'Slot 2' in mail.outbox[2].body
+        )
+
+        self.assertTrue('First slot' in mail.outbox[3].body)
+        self.assertTrue('First slot' in mail.outbox[4].body)
+
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Should send reminders only once")
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):

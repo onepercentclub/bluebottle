@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
@@ -6,6 +7,7 @@ from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
     DateParticipant, SlotParticipant,
     PeriodParticipant, DateActivitySlot
@@ -137,15 +139,28 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     template = 'messages/reminder_slot'
     send_once = True
 
+    def get_slots(self, recipient):
+        return self.obj.activity.slots.filter(
+            start__date=self.obj.start.date(),
+            slot_participants__participant__user=recipient,
+            slot_participants__status__in=['registered'],
+            status__in=['open', 'full']
+        ).all()
+
+    def already_send(self, recipient):
+        slot_ids = self.get_slots(recipient).values_list('id', flat=True)
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            content_type=get_content_type_for_model(self.obj),
+            object_id__in=slot_ids
+        ).count() > 0
+
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        title = self.obj.activity.title
-        if self.obj.title:
-            title += ' - ' + self.obj.title
-        context['title'] = title
-        slot_info = get_slot_info(self.obj)
-        slot_info['title'] = pgettext('email', 'Details')
-        context['slots'] = [slot_info]
+        context['title'] = self.obj.activity.title
+        slots = self.get_slots(recipient).all()
+        context['slots'] = [get_slot_info(slot) for slot in slots]
         return context
 
     @property

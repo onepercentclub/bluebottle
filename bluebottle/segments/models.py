@@ -12,7 +12,7 @@ from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-from bluebottle.utils.utils import clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
@@ -136,6 +136,16 @@ class Segment(models.Model):
 
     def __str__(self):
         return u'{}: {}'.format(self.segment_type.name, self.name)
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        link = u"{}/{}/initiatives/segments/details/{}/{}/".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+        return link
 
     class Meta:
         ordering = ('name',)

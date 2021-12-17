@@ -138,6 +138,7 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
     def get_queryset(self):
         return DateActivitySlot.objects.filter(
             start__lte=timezone.now() + timedelta(days=5),
+            start__gt=timezone.now(),
             status__in=['open', 'full']
         )
 

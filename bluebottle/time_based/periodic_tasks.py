@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from django.db.models import DateTimeField, ExpressionWrapper, F, Q, Count
+from django.db.models import DateTimeField, ExpressionWrapper, F, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -8,7 +8,7 @@ from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
-from bluebottle.time_based.messages import ReminderSingleDateNotification
+from bluebottle.time_based.messages import ReminderSlotNotification
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot
 )
@@ -133,39 +133,30 @@ class TimeContributionFinishedTask(ModelPeriodicTask):
         return str(_("Finish an activity when end time has passed."))
 
 
-class DateActivityReminderTask(ModelPeriodicTask):
+class DateActivitySlotReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
-        return DateActivity.objects.annotate(
-            slot_count=Count('slots')
-        ).filter(
-            slot_count=1,
-            slots__start__lte=timezone.now() + timedelta(days=5),
+        return DateActivitySlot.objects.filter(
+            start__lte=timezone.now() + timedelta(days=5),
             status__in=['open', 'full']
-        ).distinct()
-
-    def has_one_slot(effect):
-        return effect.instance.slots.count() == 1
+        )
 
     effects = [
         NotificationEffect(
-            ReminderSingleDateNotification,
-            conditions=[
-                has_one_slot
-            ]
+            ReminderSlotNotification,
         ),
     ]
 
     def __str__(self):
-        return str(_("Send a reminder five days before the activity."))
+        return str(_("Send a reminder five days before the activity slot."))
 
 
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
-    DateActivityReminderTask
 ]
 
 DateActivitySlot.periodic_tasks = [
+    DateActivitySlotReminderTask,
     SlotStartedTask,
     SlotFinishedTask,
 ]

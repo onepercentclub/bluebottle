@@ -1,8 +1,7 @@
-import pytz
 from datetime import timedelta, date, datetime, time
 
 import mock
-from bluebottle.notifications.models import Message
+import pytz
 from django.contrib.gis.geos import Point
 from django.core import mail
 from django.db import connection
@@ -16,7 +15,9 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
 )
+from bluebottle.notifications.models import Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tasks import (
     date_activity_tasks, with_a_deadline_tasks,
@@ -26,7 +27,6 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
 )
-from bluebottle.test.factory_models.geo import GeolocationFactory
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -78,6 +78,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.activity.slots.all().delete()
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
+            title=None,
             start=datetime.combine((now() + timedelta(days=10)).date(), time(11, 30, tzinfo=UTC)),
             duration=timedelta(hours=3)
         )
@@ -135,7 +136,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
-
         self.assertTrue(expected in mail.outbox[0].body)
 
         mail.outbox = []
@@ -201,29 +201,86 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         )
 
     def test_reminder_multiple_dates(self):
+        self.slot.title = "First slot"
+        self.slot.save()
         self.slot2 = DateActivitySlotFactory.create(
             activity=self.activity,
+            title='Slot 2',
             start=datetime.combine((now() + timedelta(days=11)).date(), time(14, 0, tzinfo=UTC)),
-            duration=timedelta(hours=3)
-        )
-        self.slot3 = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=datetime.combine((now() + timedelta(days=11)).date(), time(10, 0, tzinfo=UTC)),
-            duration=timedelta(hours=3)
-        )
-        self.slot4 = DateActivitySlotFactory.create(
-            activity=self.activity,
-            start=datetime.combine((now() + timedelta(days=12)).date(), time(10, 0, tzinfo=UTC)),
             duration=timedelta(hours=3)
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
         DateParticipantFactory.create(activity=self.activity, user=eng)
-        self.slot3.slot_participants.first().states.withdraw(save=True)
-        self.slot4.states.cancel(save=True)
         mail.outbox = []
         self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(
+                self.activity.title
+            )
+        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {} ({})'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
 
-        self.assertEqual(len(mail.outbox), 0)
+    def test_reminder_multiple_nigh_dates(self):
+        self.slot.title = "First slot"
+        self.slot.save()
+        self.slot2 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            title='Slot 2',
+            start=datetime.combine((now() + timedelta(days=8)).date(), time(14, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        self.slot3 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            title='Slot 3',
+            start=datetime.combine((now() + timedelta(days=8)).date(), time(10, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        self.slot4 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            title='Slot 4',
+            start=datetime.combine((now() + timedelta(days=6)).date(), time(10, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        eng = BlueBottleUserFactory.create(primary_language='eng')
+        DateParticipantFactory.create(activity=self.activity, user=eng)
+        other = BlueBottleUserFactory.create(primary_language='eng')
+        DateParticipantFactory.create(activity=self.activity, user=other)
+
+        self.slot4.slot_participants.first().states.withdraw(save=True)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 5)
+
+        self.assertTrue('Slot 4' in mail.outbox[0].body)
+
+        # Slot 2 & 3 should be in the same emails
+        self.assertTrue(
+            'Slot 3' in mail.outbox[1].body and
+            'Slot 2' in mail.outbox[1].body
+        )
+        self.assertTrue(
+            'Slot 3' in mail.outbox[2].body and
+            'Slot 2' in mail.outbox[2].body
+        )
+
+        self.assertTrue('First slot' in mail.outbox[3].body)
+        self.assertTrue('First slot' in mail.outbox[4].body)
+
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Should send reminders only once")
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):

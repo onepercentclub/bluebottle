@@ -2,7 +2,6 @@
 {% for slot in slots %}
 
 <p class="{% if slot.changed %}italic{% endif %}">
-
     <b>{{ slot.title }}</b>
     {% if slot.changed %}
         {% trans "Changed" %}

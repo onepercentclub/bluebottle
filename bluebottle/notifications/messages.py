@@ -128,21 +128,22 @@ class TransitionMessage(object):
         path = "{}.{}".format(self.__module__, self.__class__.__name__)
         return MessageTemplate.objects.filter(message=path).first()
 
+    def already_send(self, recipient):
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            content_type=get_content_type_for_model(self.obj),
+            object_id=self.obj.pk
+        ).count() > 0
+
     def get_messages(self, **base_context):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         recipients = list(set(self.get_recipients()))
         for recipient in filter(None, recipients):
             with translation.override(recipient.primary_language):
-                if self.send_once:
-                    count = Message.objects.filter(
-                        template=self.get_template(),
-                        recipient=recipient,
-                        content_type=get_content_type_for_model(self.obj),
-                        object_id=self.obj.pk
-                    ).count()
-                    if count:
-                        continue
+                if self.send_once and self.already_send(recipient):
+                    continue
 
                 context = self.get_context(recipient, **base_context)
                 subject = str(self.subject.format(**context))

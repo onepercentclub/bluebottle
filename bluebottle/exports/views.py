@@ -114,7 +114,7 @@ class ExportPendingView(ExportPermissionMixin, View):
         if not async_result:
             return self.json_response({'status': 'FAILURE', 'progress': 0})
 
-        if async_result.state == 'PROGRESS':
+        if async_result.state in ('PROGRESS', 'PENDING',):
             progress = async_result.info['progress']
             if progress > 0.99:
                 progress = 0.99

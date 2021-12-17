@@ -139,6 +139,10 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     template = 'messages/reminder_slot'
     send_once = True
 
+    context = {
+        'title': 'activity.title',
+    }
+
     def get_slots(self, recipient):
         return self.obj.activity.slots.filter(
             start__date=self.obj.start.date(),
@@ -158,7 +162,6 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        context['title'] = self.obj.activity.title
         slots = self.get_slots(recipient).all()
         context['slots'] = [get_slot_info(slot) for slot in slots]
         return context

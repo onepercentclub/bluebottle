@@ -122,9 +122,14 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def test_reminder_single_date(self):
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(activity=self.activity, user=eng)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=10)
+        )
         mail.outbox = []
         self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
             'The activity "{}" will take place in a few days!'.format(self.activity.title)
@@ -147,6 +152,17 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         message.save()
         self.run_task(self.nigh)
 
+    def test_no_reminder_just_joined(self):
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=2)
+        )
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_reminder_different_timezone(self):
         self.slot.location = GeolocationFactory.create(
             position=Point(-74.2, 40.7)
@@ -154,7 +170,11 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.slot.save()
 
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(activity=self.activity, user=eng)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=10)
+        )
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(
@@ -169,7 +189,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
                 defaultfilters.time(self.slot.end.astimezone(tz)),
                 self.slot.start.astimezone(tz).strftime('%Z'),
             )
-
         self.assertTrue(expected in mail.outbox[0].body)
 
         self.assertTrue(
@@ -179,7 +198,11 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def test_reminder_single_date_dutch(self):
         nld = BlueBottleUserFactory.create(primary_language='nl')
-        DateParticipantFactory.create(activity=self.activity, user=nld)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=nld,
+            created=now() - timedelta(days=10)
+        )
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(
@@ -210,7 +233,11 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             duration=timedelta(hours=3)
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(activity=self.activity, user=eng)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=10)
+        )
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 1)
@@ -254,9 +281,18 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             duration=timedelta(hours=3)
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(activity=self.activity, user=eng)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=10)
+        )
+
         other = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(activity=self.activity, user=other)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=other,
+            created=now() - timedelta(days=10)
+        )
 
         self.slot4.slot_participants.first().states.withdraw(save=True)
         mail.outbox = []

@@ -208,6 +208,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         AllStates(),
         cancelled,
         name=_('Cancel'),
+        automatic=False,
         description=_(
             'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
         ),

@@ -109,6 +109,14 @@ class Segment(models.Model):
         ]
     )
 
+    closed = models.BooleanField(
+        _('Closed'),
+        default=False,
+        help_text=_(
+            'Closed segments will only be accessible to members that belong to this segment'
+        )
+    )
+
     def save(self, *args, **kwargs):
         if self.name not in self.alternate_names:
             self.alternate_names.append(self.name)

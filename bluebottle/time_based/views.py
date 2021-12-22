@@ -10,7 +10,8 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributorPermission, ContributionPermission, DeleteActivityPermission
+    ContributorPermission, ContributionPermission, DeleteActivityPermission,
+    ActivitySegmentPermission
 )
 from bluebottle.clients import properties
 from bluebottle.time_based.models import (
@@ -73,7 +74,8 @@ class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission
+        DeleteActivityPermission,
+        ActivitySegmentPermission,
     )
 
 

@@ -167,6 +167,48 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertRelationship('segments', [segment])
 
+    def test_get_closed_segment(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_segment_logged_in(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_get_closed_segment_logged_in_with_segment(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+
+        SegmentFactory.create(
+            name="SDG2",
+            closed=True
+        )
+
+        self.model.segments.add(segment)
+        self.model.save()
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+        user.save()
+        self.perform_get(user=user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
     def test_get_calendar_links(self):
         self.perform_get(user=self.model.owner)
 

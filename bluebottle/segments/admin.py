@@ -40,7 +40,7 @@ class SegmentAdmin(admin.ModelAdmin):
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image'
+                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image', 'closed',
             ],
         }),
 

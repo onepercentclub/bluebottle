@@ -50,6 +50,22 @@ class ActivityStatusPermission(ResourcePermission):
         return True
 
 
+class ActivitySegmentPermission(ResourcePermission):
+    def has_object_action_permission(self, action, user, obj):
+        segments = obj.segments.filter(closed=True)
+
+        if segments:
+            return (
+                user.is_authenticated and
+                any(segment in segments for segment in user.segments.filter(closed=True))
+            )
+        else:
+            return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
 class ContributorPermission(ResourcePermission):
 
     perms_map = {

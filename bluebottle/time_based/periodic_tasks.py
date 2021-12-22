@@ -139,7 +139,8 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
         return DateActivitySlot.objects.filter(
             start__lte=timezone.now() + timedelta(days=5),
             start__gt=timezone.now(),
-            status__in=['open', 'full']
+            status__in=['open', 'full'],
+            activity__status__in=['open', 'full']
         )
 
     effects = [

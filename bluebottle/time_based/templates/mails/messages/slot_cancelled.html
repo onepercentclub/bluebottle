@@ -5,8 +5,9 @@
     <p>
         {% blocktrans context 'email' %}Unfortunately your activity "{{ title }}" has been cancelled.{% endblocktrans %}
     </p>
-    {% include 'mails/messages/partial/slots.html' %}
-
+    <p>
+        {% include 'mails/messages/partial/slots.html' %}
+    </p>
     <p>
         {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
     </p>

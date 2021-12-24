@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django import forms
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
@@ -30,12 +32,15 @@ class SegmentAdmin(admin.ModelAdmin):
     model = Segment
     form = SegmentAdminForm
 
-    readonly_fields = ('text_color', )
+    readonly_fields = ('text_color', 'activities_link', 'show_in_frontend')
 
-    list_display = ['name', 'slug']
+    list_display = ['name', 'segment_type', 'activities_link', 'show_in_frontend']
+
+    list_filter = ['segment_type']
+    search_fields = ['name']
     fieldsets = (
         (None, {
-            'fields': ['name', 'slug']
+            'fields': ['name', 'slug', 'activities_link']
         }),
 
         (_('Content'), {
@@ -48,6 +53,17 @@ class SegmentAdmin(admin.ModelAdmin):
             'fields': ['alternate_names'],
         }),
     )
+
+    def activities_link(self, obj):
+        url = "{}?segments__id__exact={}".format(reverse('admin:activities_activity_changelist'), obj.id)
+        return format_html("<a href='{}'>{} activities</a>".format(url, obj.activities.count()))
+
+    def show_in_frontend(self, obj):
+        return format_html(
+            "<a href='{}'>{}</a>",
+            obj.get_absolute_url(),
+            _('View on site')
+        )
 
 
 @admin.register(SegmentType)

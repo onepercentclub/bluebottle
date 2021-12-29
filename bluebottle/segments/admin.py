@@ -66,13 +66,17 @@ class SegmentAdmin(admin.ModelAdmin):
     model = Segment
     form = SegmentAdminForm
 
-    readonly_fields = ('text_color', )
     inlines = [SegmentActivityInline, SegmentMemberInline]
 
-    list_display = ['name', 'slug']
+    readonly_fields = ('text_color', 'activities_link', )
+
+    list_display = ['name', 'segment_type', 'activities_link', ]
+
+    list_filter = ['segment_type']
+    search_fields = ['name']
     fieldsets = (
         (None, {
-            'fields': ['name', 'slug']
+            'fields': ['name', 'slug', 'activities_link']
         }),
 
         (_('Content'), {
@@ -85,6 +89,10 @@ class SegmentAdmin(admin.ModelAdmin):
             'fields': ['alternate_names'],
         }),
     )
+
+    def activities_link(self, obj):
+        url = "{}?segments__id__exact={}".format(reverse('admin:activities_activity_changelist'), obj.id)
+        return format_html("<a href='{}'>{} activities</a>".format(url, obj.activities.count()))
 
 
 @admin.register(SegmentType)

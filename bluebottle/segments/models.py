@@ -140,12 +140,11 @@ class Segment(models.Model):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = u"{}/{}/initiatives/segments/details/{}/{}/".format(
+        return u"{}/{}/initiatives/segments/details/{}/{}/".format(
             domain, language,
             self.pk,
             self.slug
         )
-        return link
 
     class Meta:
         ordering = ('name',)

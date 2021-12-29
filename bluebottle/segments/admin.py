@@ -68,7 +68,7 @@ class SegmentAdmin(admin.ModelAdmin):
 
     inlines = [SegmentActivityInline, SegmentMemberInline]
 
-    readonly_fields = ('text_color', 'activities_link', )
+    readonly_fields = ('text_color', 'activities_link', 'type_link')
 
     list_display = ['name', 'segment_type', 'activities_link', ]
 
@@ -76,7 +76,7 @@ class SegmentAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = (
         (None, {
-            'fields': ['name', 'slug', 'activities_link']
+            'fields': ['type_link', 'name', 'slug', 'activities_link']
         }),
 
         (_('Content'), {
@@ -90,9 +90,18 @@ class SegmentAdmin(admin.ModelAdmin):
         }),
     )
 
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
     def activities_link(self, obj):
         url = "{}?segments__id__exact={}".format(reverse('admin:activities_activity_changelist'), obj.id)
-        return format_html("<a href='{}'>{} activities</a>".format(url, obj.activities.count()))
+        return format_html("<a href='{}'>{} activities</a>", url, obj.activities.count())
+
+    def type_link(self, obj):
+        url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
+        return format_html("<a href='{}'>{}</a>", url, obj.segment_type.name)
+
+    type_link.short_description = _('Type')
 
 
 @admin.register(SegmentType)

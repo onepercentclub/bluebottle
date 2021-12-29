@@ -471,7 +471,7 @@ class DateParticipantExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 segments = ", ".join(
                     participant.user.segments.filter(
-                        type=segment_type
+                        segment_type=segment_type
                     ).values_list('name', flat=True)
                 )
                 row.append(segments)
@@ -517,7 +517,7 @@ class PeriodParticipantExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 segments = ", ".join(
                     participant.user.segments.filter(
-                        type=segment_type
+                        segment_type=segment_type
                     ).values_list('name', flat=True)
                 )
                 row.append(segments)

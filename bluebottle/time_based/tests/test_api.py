@@ -436,15 +436,15 @@ class TimeBasedDetailAPIViewTestCase():
         department = SegmentTypeFactory.create(name='Department')
         music = SegmentTypeFactory.create(name='Music')
         workshop = SegmentFactory.create(
-            type=department,
+            segment_type=department,
             name='Workshop'
         )
         metal = SegmentFactory.create(
-            type=music,
+            segment_type=music,
             name='Metal'
         )
         classical = SegmentFactory.create(
-            type=music,
+            segment_type=music,
             name='Classical'
         )
         user = BlueBottleUserFactory.create()

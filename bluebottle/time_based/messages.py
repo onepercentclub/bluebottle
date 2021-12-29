@@ -579,3 +579,26 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     def get_recipients(self):
         """activity owner"""
         return [self.obj.activity.owner]
+
+
+class SlotCancelledNotification(TransitionMessage):
+    """
+    The activity slot got cancelled
+    """
+    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
+    template = 'messages/slot_cancelled'
+
+    context = {
+        'title': 'activity.title',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slots'] = [get_slot_info(self.obj)]
+        return context
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]

@@ -66,6 +66,12 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
+    email_domain = models.CharField(
+        _('Email domain'), blank=True, null=True,
+        max_length=255,
+        help_text=_('Users with email addresses for this domain are automatically added to this segment')
+    )
+
     tag_line = models.CharField(
         _('tag line'), max_length=255, null=True, blank=True,
         help_text=_('Short tag line for your segment')

@@ -56,7 +56,7 @@ class SegmentSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Segment
         fields = (
-            'id', 'name', 'segment_type', 'slug', 'tag_line', 'background_color',
+            'id', 'name', 'segment_type', 'email_domain', 'slug', 'tag_line', 'background_color',
             'text_color', 'logo', 'cover_image', 'story',
             'initiatives_count', 'activities_count', 'stats'
         )

@@ -1,5 +1,6 @@
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.segments.models import Segment
 
 
@@ -24,3 +25,26 @@ class TestSegmentModel(BluebottleTestCase):
         segment.save()
 
         self.assertEqual(segment.alternate_names, ['test'])
+
+
+class MemberSegmentTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.segment_type = SegmentTypeFactory.create()
+
+    def test_new_user_added_to_segment(self):
+        segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            email_domain='leidse-zangers.nl',
+            closed=True
+        )
+
+        mart = BlueBottleUserFactory.create(
+            email='mart.hoogkamer@leidse-zangers.nl'
+        )
+        self.assertTrue(segment in mart.segments.all())
+
+        jan = BlueBottleUserFactory.create(
+            email='jan.keizer@paling-sound.nl'
+        )
+        self.assertFalse(segment in jan.segments.all())

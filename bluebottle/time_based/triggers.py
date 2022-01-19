@@ -40,7 +40,7 @@ from bluebottle.time_based.messages import (
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
-    ParticipantAppliedNotification
+    ParticipantAppliedNotification, SlotCancelledNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -395,6 +395,7 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.cancel,
             effects=[
+                NotificationEffect(SlotCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),

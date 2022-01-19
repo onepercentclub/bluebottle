@@ -12,7 +12,7 @@ from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-from bluebottle.utils.utils import clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
@@ -64,6 +64,12 @@ class Segment(models.Model):
         verbose_name=_('type'),
         related_name='segments',
         on_delete=models.CASCADE
+    )
+
+    email_domain = models.CharField(
+        _('Email domain'), blank=True, null=True,
+        max_length=255,
+        help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 
     tag_line = models.CharField(
@@ -144,6 +150,15 @@ class Segment(models.Model):
 
     def __str__(self):
         return u'{}: {}'.format(self.segment_type.name, self.name)
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/segments/details/{}/{}/".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     class Meta:
         ordering = ('name',)

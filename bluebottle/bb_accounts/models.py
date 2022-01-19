@@ -13,6 +13,8 @@ from django.contrib.auth.models import (
 )
 from django.core.mail.message import EmailMessage
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import gettext_lazy as _
@@ -26,6 +28,8 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from .utils import send_welcome_mail
+from ..segments.models import Segment
 
 
 def generate_picture_filename(instance, filename):
@@ -389,11 +393,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         return super(BlueBottleBaseUser, self).__getattribute__(name)
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils import send_welcome_mail
-
-
 @receiver(post_save)
 def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
@@ -406,3 +405,14 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
             not instance.welcome_email_is_sent:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
+
+
+@receiver(post_save)
+def connect_to_segments(sender, instance, created, **kwargs):
+    from django.contrib.auth import get_user_model
+
+    USER_MODEL = get_user_model()
+    if isinstance(instance, USER_MODEL) and created:
+        for segment in Segment.objects.filter(email_domain__isnull=False).all():
+            if instance.email.endswith('@' + segment.email_domain):
+                instance.segments.add(segment)

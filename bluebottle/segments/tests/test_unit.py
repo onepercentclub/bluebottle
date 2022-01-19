@@ -32,6 +32,17 @@ class MemberSegmentTestCase(BluebottleTestCase):
     def setUp(self):
         self.segment_type = SegmentTypeFactory.create()
 
+    def test_new_user_no_segments(self):
+        SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+
+        mart = BlueBottleUserFactory.create(
+            email='mart.hoogkamer@leidse-zangers.nl'
+        )
+        self.assertEqual(mart.segments.first(), None)
+
     def test_new_user_added_to_segment(self):
         segment = SegmentFactory.create(
             segment_type=self.segment_type,
@@ -42,9 +53,9 @@ class MemberSegmentTestCase(BluebottleTestCase):
         mart = BlueBottleUserFactory.create(
             email='mart.hoogkamer@leidse-zangers.nl'
         )
-        self.assertTrue(segment in mart.segments.all())
+        self.assertEqual(mart.segments.first(), segment)
 
         jan = BlueBottleUserFactory.create(
             email='jan.keizer@paling-sound.nl'
         )
-        self.assertFalse(segment in jan.segments.all())
+        self.assertEqual(jan.segments.first(), None)

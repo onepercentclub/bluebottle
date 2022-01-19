@@ -205,7 +205,11 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
-        read_only=True, source='partner_organization')
+        read_only=True, source='partner_organization'
+    )
+    segments = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Segment.objects
+    )
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -213,7 +217,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization'
+            'organization', 'segments',
         )
 
 
@@ -255,7 +259,8 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
         many=True, source='favourite_themes', queryset=Theme.objects)
 
     segments = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Segment.objects)
+        many=True, queryset=Segment.objects
+    )
 
     is_active = serializers.BooleanField(read_only=True)
 

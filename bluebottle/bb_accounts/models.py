@@ -13,6 +13,8 @@ from django.contrib.auth.models import (
 )
 from django.core.mail.message import EmailMessage
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import gettext_lazy as _
@@ -26,6 +28,7 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from .utils import send_welcome_mail
 from ..segments.models import Segment
 
 
@@ -388,11 +391,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             name = name.replace('extra_', '')
             return self.extra.filter(field__name=name).first().value
         return super(BlueBottleBaseUser, self).__getattribute__(name)
-
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils import send_welcome_mail
 
 
 @receiver(post_save)

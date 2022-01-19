@@ -59,3 +59,18 @@ class MemberSegmentTestCase(BluebottleTestCase):
             email='jan.keizer@paling-sound.nl'
         )
         self.assertEqual(jan.segments.first(), None)
+
+    def test_user_added_to_segment_when_setting_email_domain(self):
+        robbie = BlueBottleUserFactory.create(
+            email='rubberen.robbie@leidse-zangers.nl'
+        )
+        jan = BlueBottleUserFactory.create(
+            email='jan.keizer@paling-sound.nl'
+        )
+        segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            email_domain='leidse-zangers.nl',
+            closed=True
+        )
+        self.assertEqual(robbie.segments.first(), segment)
+        self.assertEqual(jan.segments.first(), None)

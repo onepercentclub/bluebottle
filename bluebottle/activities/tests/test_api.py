@@ -105,6 +105,43 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertTrue('meta' in data['data'][0])
 
+    def setup_closed_segments(self):
+        self.closed_segment = SegmentFactory.create(closed=True)
+        self.open_segment = SegmentFactory.create()
+
+        self.without_segment = DateActivityFactory.create(status='succeeded')
+
+        self.with_open_segment = DateActivityFactory.create(status='succeeded')
+        self.with_open_segment.segments.add(self.open_segment)
+
+        self.with_closed_segment = DateActivityFactory.create(status='open')
+        self.with_closed_segment.segments.add(self.closed_segment)
+
+    def test_closed_segments_anonymous(self):
+        self.setup_closed_segments()
+
+        response = self.client.get(self.url)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
+        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
+
+    def test_closed_segments_user(self):
+        self.setup_closed_segments()
+
+        user = BlueBottleUserFactory.create()
+        user.segments.add(self.closed_segment)
+
+        response = self.client.get(self.url, user=user)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
+        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
+        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
+
     def test_filter_owner(self):
         DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')
@@ -556,7 +593,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                segment.type.slug, segment.pk
+                segment.segment_type.slug, segment.pk
             ),
             user=self.owner
         )
@@ -581,7 +618,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                first_segment.type.slug, second_segment.pk
+                first_segment.segment_type.slug, second_segment.pk
             ),
             user=self.owner
         )

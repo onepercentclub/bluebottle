@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
@@ -51,7 +51,7 @@ class CollectActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission
+        DeleteActivityPermission, ActivitySegmentPermission
     )
 
     queryset = CollectActivity.objects.all()

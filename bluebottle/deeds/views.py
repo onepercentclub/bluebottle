@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
@@ -49,6 +49,7 @@ class DeedDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
+        ActivitySegmentPermission,
         DeleteActivityPermission
     )
 

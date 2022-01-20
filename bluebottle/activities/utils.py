@@ -1,17 +1,24 @@
+from bluebottle.collect.models import CollectContribution
 from django.conf import settings
 from builtins import object
 
+from django.db.models import Count, Sum, Q
 from django.utils.translation import gettext_lazy as _
+from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer
+from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution
+from bluebottle.clients import properties
+from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
+from bluebottle.time_based.models import TimeContribution
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
@@ -120,7 +127,11 @@ class BaseActivitySerializer(ModelSerializer):
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
+        'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -155,6 +166,7 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
+            'segments'
         )
 
         meta_fields = (
@@ -181,6 +193,10 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative.activity_managers',
             'initiative.promoter',
             'initiative.image',
+            'initiative.categories',
+            'initiative.theme',
+            'segments',
+            'segments.segment_type'
         ]
         resource_name = 'activities'
 
@@ -348,3 +364,99 @@ class BaseContributionSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'
+
+
+def get_stats_for_activities(activities):
+
+    ids = activities.values_list('id', flat=True)
+
+    default_currency = properties.DEFAULT_CURRENCY
+
+    effort = EffortContribution.objects.filter(
+        contribution_type='deed',
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).aggregate(
+        count=Count('id', distinct=True),
+        activities=Count('contributor__activity', distinct=True)
+    )
+
+    time = TimeContribution.objects.filter(
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).aggregate(
+        count=Count('id', distinct=True),
+        activities=Count('contributor__activity', distinct=True),
+        value=Sum('value')
+    )
+
+    money = MoneyContribution.objects.filter(
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).aggregate(
+        count=Count('id', distinct=True),
+        activities=Count('contributor__activity', distinct=True)
+    )
+
+    collect = CollectContribution.objects.filter(
+        status='succeeded',
+        contributor__user__isnull=False,
+        contributor__activity__id__in=ids
+    ).aggregate(
+        count=Count('id', distinct=True),
+        activities=Count('contributor__activity', distinct=True)
+    )
+
+    amounts = MoneyContribution.objects.filter(
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).values(
+        'value_currency'
+    ).annotate(
+        amount=Sum('value')
+    ).order_by()
+
+    contributor_count = Contributor.objects.filter(
+        user__isnull=False,
+        activity__id__in=ids,
+        contributions__status='succeeded',
+    ).exclude(
+        Q(instance_of=Organizer)
+    ).values('user_id').distinct().count()
+
+    anonymous_donations = MoneyContribution.objects.filter(
+        contributor__user__isnull=True,
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).count()
+
+    contributor_count += anonymous_donations
+
+    collected = CollectContribution.objects.filter(
+        status='succeeded',
+        contributor__activity__id__in=ids
+    ).values(
+        'type_id'
+    ).annotate(
+        amount=Sum('value')
+    ).order_by()
+
+    amount = {
+        'amount': sum(
+            convert(
+                Money(c['amount'], c['value_currency']),
+                default_currency
+            ).amount
+            for c in amounts if c['amount']
+        ),
+        'currency': default_currency
+    }
+
+    return {
+        'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
+        'effort': effort['count'],
+        'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
+        'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
+        'contributors': contributor_count,
+        'amount': amount
+    }

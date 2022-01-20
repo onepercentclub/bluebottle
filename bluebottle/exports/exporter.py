@@ -50,8 +50,11 @@ class ExportModelResource(resources.ModelResource):
             else:
                 segment_obj = obj
 
-            if segment_obj.segments.filter(type__slug=slug).first():
-                return ', '.join([segment.name for segment in segment_obj.segments.filter(type__slug=slug).all()])
+            if segment_obj.segments.filter(segment_type__slug=slug).first():
+                return ', '.join([
+                    segment.name for segment
+                    in segment_obj.segments.filter(segment_type__slug=slug).all()
+                ])
             else:
                 return None
         method = getattr(self, 'dehydrate_%s' % field_name, None)

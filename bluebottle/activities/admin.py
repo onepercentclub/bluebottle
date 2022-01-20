@@ -334,7 +334,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_description_fields(self, request, obj):
         fields = self.description_fields
 
-        if Segment.objects.filter(type__is_active=True).count():
+        if Segment.objects.filter(segment_type__is_active=True).count():
             fields = fields + ('segments',)
 
         if (

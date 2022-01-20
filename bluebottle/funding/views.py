@@ -7,7 +7,8 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission
+    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
+    ActivitySegmentPermission
 )
 from bluebottle.funding.authentication import DonorAuthentication
 from bluebottle.funding.models import (
@@ -129,6 +130,7 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     serializer_class = FundingSerializer
     permission_classes = (
         ActivityStatusPermission,
+        ActivitySegmentPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 

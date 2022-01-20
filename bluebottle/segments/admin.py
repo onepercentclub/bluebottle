@@ -103,12 +103,17 @@ class SegmentAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = (
         (None, {
-            'fields': ['type_link', 'name', 'slug', 'email_domain', 'activities_link']
+            'fields': [
+                'type_link', 'name', 'slug',
+                'email_domain', 'closed', 'activities_link'
+            ]
         }),
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image', 'closed',
+                'tag_line', 'story',
+                'background_color', 'text_color',
+                'logo', 'cover_image',
             ],
         }),
 

@@ -2,50 +2,8 @@ from django.contrib.auth.password_validation import get_default_password_validat
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.utils import override_properties
-
-
-class TestMemberPlatformSettings(BluebottleTestCase):
-
-    def test_extra_member_fields(self):
-        member = BlueBottleUserFactory.create()
-        custom = CustomMemberFieldSettings.objects.create(name='Extra Info')
-
-        # Check that the slug is set correctly
-        self.assertEqual(custom.slug, 'extra-info')
-
-        # Check that the project doesn't have extra field yet
-        member.refresh_from_db()
-        self.assertEqual(member.extra.count(), 0)
-
-        CustomMemberField.objects.create(member=member, value='This is nice!', field=custom)
-
-        # And now it should be there
-        member.refresh_from_db()
-        self.assertEqual(member.extra.count(), 1)
-
-    def test_extra_member_fields_double(self):
-        member = BlueBottleUserFactory.create()
-        custom = CustomMemberFieldSettings.objects.create(name='custom')
-
-        # Check that the slug is set correctly
-        self.assertEqual(custom.slug, 'custom')
-
-        # Check that the project doesn't have extra field yet
-        member.refresh_from_db()
-        self.assertEqual(member.extra.count(), 0)
-
-        CustomMemberField.objects.create(member=member, value='This is nice!', field=custom)
-        CustomMemberField.objects.create(member=member, value='This is extra nice!', field=custom)
-
-        # And now  we should still be able to get the value
-        self.assertEqual(
-            member.extra_custom,
-            'This is nice!'
-        )
 
 
 class TestMonkeyPatchPasswordValidators(BluebottleTestCase):

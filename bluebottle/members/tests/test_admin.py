@@ -1,36 +1,31 @@
 # coding=utf-8
-from builtins import object
 import os
+from builtins import object
 from datetime import timedelta
 
-from bluebottle.collect.tests.factories import CollectContributorFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-
-from bluebottle.funding_pledge.models import PledgePaymentProvider
-from djmoney.money import Money
-
-from bluebottle.funding.tests.factories import DonorFactory
-from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
-
-from bluebottle.time_based.tests.factories import (
-    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
-)
-
+from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
-from django.conf import settings
-from django.utils import timezone
-
 from django.urls import reverse
+from django.utils import timezone
+from djmoney.money import Money
 
-from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
+from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.funding.tests.factories import DonorFactory
+from bluebottle.funding_pledge.models import PledgePaymentProvider
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.admin import MemberAdmin, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
 from bluebottle.notifications.models import MessageTemplate
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.time_based.tests.factories import (
+    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+)
 from bluebottle.utils.models import Language
 
 factory = RequestFactory()
@@ -160,40 +155,6 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEqual(response.status_code, 403)
-
-
-class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
-    """
-    Test extra fields in Member Admin
-    """
-
-    def setUp(self):
-        super(MemberCustomFieldAdminTest, self).setUp()
-        self.client.force_login(self.superuser)
-
-    def test_load_custom_fields(self):
-        member = BlueBottleUserFactory.create()
-        field = CustomMemberFieldSettings.objects.create(name='Department')
-        member.extra.create(value='Engineering', field=field)
-        member.save()
-
-        member_url = reverse('admin:members_member_change', args=(member.id, ))
-        response = self.client.get(member_url)
-        self.assertEqual(response.status_code, 200)
-        # Test the extra field and it's value show up
-        self.assertContains(response, 'Department')
-        self.assertContains(response, 'Engineering')
-
-    def test_save_custom_fields(self):
-        member = BlueBottleUserFactory.create(password='testing')
-        staff = BlueBottleUserFactory.create(is_staff=True)
-        CustomMemberFieldSettings.objects.create(name='Department')
-        data = member.__dict__
-        data['department'] = 'Engineering'
-        form = MemberChangeForm(current_user=staff, instance=member, data=data)
-        form.save()
-        member.refresh_from_db()
-        self.assertEqual(member.extra.get().value, 'Engineering')
 
 
 class MemberFormAdminTest(BluebottleAdminTestCase):

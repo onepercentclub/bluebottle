@@ -306,12 +306,33 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         }
         super().setUp()
 
-    def test_initiate(self):
+    def test_initiate_future_start(self):
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(NewParticipantNotification)
             self.assertNotificationEffect(ParticipantJoinedNotification)
+            self.model.save()
+            self.assertEqual(
+                self.model.status,
+                'accepted'
+            )
+            self.assertEqual(
+                self.model.contributions.first().status,
+                'new'
+            )
+
+    def test_initiate_passed_start(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateEffortContribution)
+            self.assertNotificationEffect(NewParticipantNotification)
+            self.assertNotificationEffect(ParticipantJoinedNotification)
+            self.model.save()
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
 
     def test_added_by_admin(self):
         self.model = self.factory.build(**self.defaults)
@@ -339,6 +360,23 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
     def test_initiate_succeeded(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
         self.defaults['activity'].end = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute():
+            effect = self.assertEffect(CreateEffortContribution)
+            self.assertEqual(effect.contribution.contribution_type, 'deed')
+
+            self.assertTransitionEffect(DeedParticipantStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+    def test_initiate_started(self):
+        self.defaults['activity'].start = None
+        self.defaults['activity'].end = date.today() + timedelta(days=1)
         self.defaults['activity'].save()
 
         self.model = self.factory.build(**self.defaults)

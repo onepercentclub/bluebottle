@@ -378,19 +378,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             self.reset_disable_token()
         return self.disable_token
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.generate_username()
-
-        super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
-                                             update_fields)
-
-    def __getattr__(self, name):
-        # Magically get extra fields
-        if name.startswith('extra_'):
-            name = name.replace('extra_', '')
-            return self.extra.filter(field__name=name).first().value
-        return super(BlueBottleBaseUser, self).__getattribute__(name)
+        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
 
 
 @receiver(post_save)

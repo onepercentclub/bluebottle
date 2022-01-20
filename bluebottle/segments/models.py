@@ -153,7 +153,7 @@ class Segment(models.Model):
         )[0]
 
     def __str__(self):
-        return u'{}: {}'.format(self.segment_type.name, self.name)
+        return self.name
 
     def get_absolute_url(self):
         domain = get_current_host()

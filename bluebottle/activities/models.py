@@ -131,7 +131,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
         super(Activity, self).save(**kwargs)
 
-        if not self.segments.count():
+        if not self.segments.count() and not self.id:
             for segment in self.owner.segments.all():
                 self.segments.add(segment)
 

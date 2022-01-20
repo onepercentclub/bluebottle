@@ -1,5 +1,7 @@
+from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.db import connection
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
@@ -18,10 +20,11 @@ from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.segments.models import Segment
+from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
     TimeContribution
 from bluebottle.utils.widgets import get_human_readable_duration
@@ -228,10 +231,39 @@ class EffortContributionAdmin(ContributionChildAdmin):
     model = EffortContribution
 
 
+class ActivityForm(StateMachineModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ActivityForm, self).__init__(*args, **kwargs)
+        f = self.fields.get('user_permissions', None)
+        if f is not None:
+            f.queryset = f.queryset.select_related('content_type')
+
+        if connection.tenant.schema_name != 'public':
+            for segment_type in SegmentType.objects.all():
+                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                    required=False,
+                    label=segment_type.name,
+                    queryset=segment_type.segments,
+                )
+                self.initial[segment_type.field_name] = self.instance.segments.filter(
+                    segment_type=segment_type).all()
+
+    def save(self, commit=True):
+        activity = super(ActivityForm, self).save(commit=commit)
+        segments = []
+        for segment_type in SegmentType.objects.all():
+            segments += self.cleaned_data.get(segment_type.field_name, [])
+        activity.segments.set(segments)
+        del self.cleaned_data['segments']
+        return activity
+
+
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline,)
+    form = ActivityForm
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -334,9 +366,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_description_fields(self, request, obj):
         fields = self.description_fields
 
-        if Segment.objects.filter(segment_type__is_active=True).count():
-            fields = fields + ('segments',)
-
         if (
                 obj and
                 obj.status in ('succeeded', 'partially_funded') and
@@ -365,17 +394,29 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     location_link.short_description = _('office')
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = (
+        fieldsets = [
             (_('Detail'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
-        )
+        ]
         if request.user.is_superuser:
-            fieldsets += (
+            fieldsets += [
                 (_('Super admin'), {'fields': (
                     'force_status',
                 )}),
+            ]
+
+        if SegmentType.objects.count():
+            extra = (
+                _('Segments'), {
+                    'fields': [
+                        segment_type.field_name
+                        for segment_type in SegmentType.objects.all()
+                    ]
+                }
             )
+
+            fieldsets.insert(2, extra)
         return fieldsets
 
     def stats_data(self, obj):

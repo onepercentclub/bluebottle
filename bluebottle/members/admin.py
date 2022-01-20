@@ -1,7 +1,6 @@
 import functools
 from builtins import object
 
-import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
@@ -14,7 +13,6 @@ from django.db import connection
 from django.db import models
 from django.db.models import Q
 from django.forms import BaseInlineFormSet
-from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
@@ -47,16 +45,17 @@ from bluebottle.members.models import (
     MemberPlatformSettings,
     UserActivity,
 )
+from bluebottle.notifications.models import Message
+from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
-from ..notifications.models import Message
 
 
-class MemberForm(forms.ModelForm):
+class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
     def __init__(self, data=None, files=None, current_user=None, *args, **kwargs):
         self.current_user = current_user
         super(MemberForm, self).__init__(data, files, *args, **kwargs)
@@ -132,19 +131,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
 
 
-class SegmentAdminFormMetaClass(ModelFormMetaclass):
-    def __new__(cls, name, bases, attrs):
-        if connection.tenant.schema_name != 'public':
-            for field in SegmentType.objects.all():
-                attrs[field.field_name] = forms.CharField(
-                    required=False,
-                    label=field.name
-                )
-
-        return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
-
-
-class MemberChangeForm(six.with_metaclass(SegmentAdminFormMetaClass, MemberForm)):
+class MemberChangeForm(MemberForm):
     """
     Change Member form
     """

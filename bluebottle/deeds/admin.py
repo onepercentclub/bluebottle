@@ -5,13 +5,12 @@ from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline, ActivityForm
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.utils.admin import export_as_csv_action
 
 
-class DeedAdminForm(StateMachineModelForm):
+class DeedAdminForm(ActivityForm):
     class Meta(object):
         model = Deed
         fields = '__all__'

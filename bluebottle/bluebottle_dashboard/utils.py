@@ -6,6 +6,8 @@ from django.apps import apps
 from django.conf import settings
 from jet.utils import get_menu_items as jet_get_menu_items
 
+from bluebottle.segments.models import SegmentType
+
 register = template.Library()
 
 
@@ -55,6 +57,17 @@ def get_menu_items(context):
                 'label': look.title,
                 'has_perms': True,
                 'current': False} for look in LookerEmbed.objects.all()
+            ]
+        if group['app_label'] == 'segments':
+            group['items'] += [{
+                'url': reverse('admin:segments_segmenttype_change', args=(segment_type.id,)),
+                'url_blank': False,
+                'name': 'segmenttype',
+                'object_name': 'SegmentType',
+                'label': segment_type.name,
+                'has_perms': True,
+                'current': False}
+                for segment_type in SegmentType.objects.all()
             ]
 
     for group in list(groups):

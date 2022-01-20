@@ -5,13 +5,12 @@ from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ActivityForm
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.utils.admin import export_as_csv_action
 
 
-class CollectAdminForm(StateMachineModelForm):
+class CollectAdminForm(ActivityForm):
     class Meta(object):
         model = CollectActivity
         fields = '__all__'

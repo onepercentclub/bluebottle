@@ -1,15 +1,14 @@
-from bluebottle.time_based.tests.factories import DateActivityFactory
-
-from bluebottle.time_based.models import DateActivity
-
-from bluebottle.time_based.admin import DateActivityAdmin
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
 from bluebottle.segments.admin import SegmentAdmin
 from bluebottle.segments.models import Segment
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.time_based.admin import DateActivityAdmin
+from bluebottle.time_based.models import DateActivity
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class TestSegmentAdmin(BluebottleAdminTestCase):
@@ -42,3 +41,33 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         list_url = reverse('admin:segments_segmenttype_changelist')
         response = self.client.get(list_url)
         self.assertContains(response, 'Number of segments')
+
+
+class TestMemberSegmentAdmin(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(TestMemberSegmentAdmin, self).setUp()
+        self.app.set_user(self.superuser)
+        self.site = AdminSite()
+        department = SegmentTypeFactory.create(name='department')
+        self.engineering = SegmentFactory.create(name='engineering', type=department)
+        SegmentFactory.create(name='product', type=department)
+        title = SegmentTypeFactory.create(name='title')
+        SegmentFactory.create_batch(3, type=title)
+        self.member = BlueBottleUserFactory.create()
+
+    def test_member_segments_admin(self):
+        activity = DateActivityFactory.create(owner=self.member)
+        member_url = reverse('admin:members_member_change', args=(self.member.id,))
+        page = self.app.get(member_url)
+        form = page.forms['member_form']
+        form['department'] = [self.engineering.id]
+        form.submit()
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.segments.first(), self.engineering)
+        activity.refresh_from_db()
+        self.assertEqual(activity.segments.first(), self.engineering)

@@ -4,7 +4,6 @@ from builtins import object
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from bluebottle.collect.models import CollectContributor
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -32,6 +31,7 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Donor, PaymentProvider
 from bluebottle.funding_pledge.models import PledgePaymentProvider
@@ -44,7 +44,6 @@ from bluebottle.members.forms import (
 )
 from bluebottle.members.models import (
     CustomMemberFieldSettings,
-    CustomMemberField,
     MemberPlatformSettings,
     UserActivity,
 )
@@ -133,18 +132,19 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
 
 
-class CustomAdminFormMetaClass(ModelFormMetaclass):
+class SegmentAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
-            for field in CustomMemberFieldSettings.objects.all():
-                attrs[field.slug] = forms.CharField(required=False,
-                                                    label=field.name,
-                                                    help_text=field.description)
+            for field in SegmentType.objects.all():
+                attrs[field.field_name] = forms.CharField(
+                    required=False,
+                    label=field.name
+                )
 
-        return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
+        return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm)):
+class MemberChangeForm(six.with_metaclass(SegmentAdminFormMetaClass, MemberForm)):
     """
     Change Member form
     """
@@ -163,13 +163,13 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
             f.queryset = f.queryset.select_related('content_type')
 
         if connection.tenant.schema_name != 'public':
-            for field in CustomMemberFieldSettings.objects.all():
-                self.fields[field.slug] = forms.CharField(required=False,
-                                                          label=field.name,
-                                                          help_text=field.description)
-                if CustomMemberField.objects.filter(member=self.instance, field=field).exists():
-                    value = CustomMemberField.objects.filter(member=self.instance, field=field).get().value
-                    self.initial[field.slug] = value
+            for segment_type in SegmentType.objects.all():
+                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                    required=False,
+                    label=segment_type.name,
+                    queryset=segment_type.segments,
+                )
+                self.initial[segment_type.field_name] = self.instance.segments.filter(type=segment_type).all()
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -179,13 +179,10 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
 
     def save(self, commit=True):
         member = super(MemberChangeForm, self).save(commit=commit)
-        for field in CustomMemberFieldSettings.objects.all():
-            extra, created = CustomMemberField.objects.get_or_create(
-                member=member,
-                field=field
-            )
-            extra.value = self.cleaned_data.get(field.slug, None)
-            extra.save()
+        segments = []
+        for segment_type in SegmentType.objects.all():
+            segments += self.cleaned_data.get(segment_type.field_name, [])
+        member.segments.set(segments)
         return member
 
 
@@ -333,9 +330,6 @@ class MemberAdmin(UserAdmin):
             if Location.objects.count():
                 fieldsets[1][1]['fields'].append('location')
 
-            if SegmentType.objects.filter(is_active=True).count():
-                fieldsets[1][1]['fields'].append('segments')
-
             member_settings = MemberPlatformSettings.load()
 
             if member_settings.enable_gender:
@@ -346,20 +340,20 @@ class MemberAdmin(UserAdmin):
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
-            if CustomMemberFieldSettings.objects.count():
+            if obj and (obj.is_staff or obj.is_superuser):
+                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+
+            if SegmentType.objects.count():
                 extra = (
-                    _('Extra fields'), {
+                    _('Segments'), {
                         'fields': [
-                            field.slug
-                            for field in CustomMemberFieldSettings.objects.all()
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
                         ]
                     }
                 )
 
-                fieldsets.append(extra)
-
-            if obj and (obj.is_staff or obj.is_superuser):
-                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+                fieldsets.insert(2, extra)
 
         return fieldsets
 

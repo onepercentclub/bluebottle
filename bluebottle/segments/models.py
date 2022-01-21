@@ -23,6 +23,10 @@ class SegmentType(models.Model):
         default=False
     )
 
+    @property
+    def field_name(self):
+        return self.slug.replace('-', '_')
+
     def save(self, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -59,7 +63,7 @@ class Segment(models.Model):
         super(Segment, self).save(*args, **kwargs)
 
     def __str__(self):
-        return u'{}: {}'.format(self.type.name, self.name)
+        return self.name
 
     class Meta:
         ordering = ('name',)

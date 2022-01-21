@@ -412,7 +412,7 @@ def connect_to_segments(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
 
     USER_MODEL = get_user_model()
-    if isinstance(instance, USER_MODEL) and created:
-        for segment in Segment.objects.filter(email_domain__isnull=False).all():
-            if instance.email.endswith('@' + segment.email_domain):
-                instance.segments.add(segment)
+    if isinstance(instance, USER_MODEL) and created and '@' in instance.email:
+        user_email_domain = instance.email.split('@')[1]
+        for segment in Segment.objects.filter(email_domain=user_email_domain).all():
+            instance.segments.add(segment)

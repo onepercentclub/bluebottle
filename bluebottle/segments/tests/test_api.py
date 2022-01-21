@@ -186,13 +186,13 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('story', '&lt;script&gt;test&lt;/script&gt;<b>test</b>')
 
-    def test_retrieve_closed(self):
+    def test_retrieve_closed_site(self):
         with self.closed_site():
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
-    def test_retrieve_closed_user(self):
+    def test_retrieve_closed_site_user(self):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
 
@@ -283,3 +283,24 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertEqual(
             stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
         )
+
+    def test_retrieve_closed_segment(self):
+        closed_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+        self.url = reverse('segment-detail', args=(closed_segment.id,))
+        user = BlueBottleUserFactory()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_closed_segment_user(self):
+        closed_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+        self.url = reverse('segment-detail', args=(closed_segment.id,))
+        user = BlueBottleUserFactory()
+        user.segments.add(closed_segment)
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)

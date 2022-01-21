@@ -1,11 +1,10 @@
-from django.urls import reverse
-
-from bluebottle.looker.models import LookerEmbed
 from django import template
 from django.apps import apps
 from django.conf import settings
+from django.urls import reverse
 from jet.utils import get_menu_items as jet_get_menu_items
 
+from bluebottle.looker.models import LookerEmbed
 from bluebottle.segments.models import SegmentType
 
 register = template.Library()

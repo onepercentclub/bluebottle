@@ -31,7 +31,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Segment:')
 
     def test_segment_admin(self):
-        segment_type = SegmentTypeFactory.create()
+        segment_type = SegmentTypeFactory.create(name='Job title')
         SegmentFactory.create_batch(5, type=segment_type)
 
         segment_url = reverse('admin:segments_segmenttype_change', args=(segment_type.id,))
@@ -41,6 +41,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         list_url = reverse('admin:segments_segmenttype_changelist')
         response = self.client.get(list_url)
         self.assertContains(response, 'Number of segments')
+        self.assertContains(response, 'Job title')
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):

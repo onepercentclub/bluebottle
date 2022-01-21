@@ -1,18 +1,18 @@
+import wcag_contrast_ratio as contrast
+from PIL import ImageColor
+from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-
-import wcag_contrast_ratio as contrast
-from PIL import ImageColor
-
-from colorfield.fields import ColorField
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -166,3 +166,15 @@ class Segment(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'segments'
+
+
+@receiver(post_save)
+def connect_members_to_segments(sender, instance, created, **kwargs):
+    from bluebottle.members.models import Member
+    if isinstance(instance, Segment):
+        if instance.email_domain:
+            for member in Member.objects\
+                    .exclude(segments=instance)\
+                    .filter(email__endswith=instance.email_domain)\
+                    .all():
+                member.segments.add(instance)

@@ -128,12 +128,13 @@ class Link(SortableMixin):
 
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
-    highlight = models.BooleanField(default=False)
+    highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
+    link_behaviour = models.BooleanField(default=False, blank=False, help_text=_('Open the link in a new browser tab'))
     title = models.CharField(_('Title'), null=False, max_length=100)
     component = models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50,
                                  blank=True, null=True)
     component_id = models.CharField(_('Component ID'), max_length=100, blank=True, null=True)
-    external_link = models.CharField(_('External Link'), max_length=2000, blank=True, null=True)
+    external_link = models.CharField(_('Link'), max_length=2000, blank=True, null=True)
     link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

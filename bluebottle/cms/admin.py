@@ -36,7 +36,7 @@ class LinkInline(SortableStackedInline):
     extra = 0
 
     fields = (
-        ('title', 'highlight'),
+        ('title', 'highlight', 'link_behaviour'),
         'link_permissions',
         ('component', 'component_id',),
         'external_link'

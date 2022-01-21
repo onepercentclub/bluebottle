@@ -156,16 +156,10 @@ def get_user_site_links(user):
             link_data = {
                 'title': link.title,
                 'isHighlighted': link.highlight,
+                'openInNewTab': link.open_in_new_tab,
+                'link': link.link,
                 'sequence': link.link_order
             }
-
-            if link.component:
-                link_data['route'] = link.component
-            if link.component_id:
-                link_data['param'] = link.component_id
-            elif link.external_link:
-                link_data['route'] = link.external_link
-                link_data['external'] = True
 
             links.append(link_data)
 

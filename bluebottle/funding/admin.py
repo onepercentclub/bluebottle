@@ -1,11 +1,9 @@
 from __future__ import division
 
-from past.utils import old_div
-from builtins import object
 import logging
+from builtins import object
 
 from babel.numbers import get_currency_symbol
-from bluebottle.utils.utils import reverse_signed
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -17,11 +15,12 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
+from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -43,6 +42,7 @@ from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPay
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.utils.utils import reverse_signed
 from bluebottle.wallposts.admin import DonorWallpostInline
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
 
-class FundingAdminForm(StateMachineModelForm):
+class FundingAdminForm(ActivityForm):
 
     class Meta(object):
         model = Funding

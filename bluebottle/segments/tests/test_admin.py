@@ -29,11 +29,13 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         activity = DateActivityFactory.create()
         activity_url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
         response = self.client.get(activity_url)
-        self.assertNotContains(response, 'Segment:')
-        segment_type = SegmentTypeFactory.create()
-        SegmentFactory.create_batch(5, segment_type=segment_type)
+        self.assertNotContains(response, 'Segments')
+        self.assertNotContains(response, 'Department:')
+        segment_type = SegmentTypeFactory.create(name="Department")
+        SegmentFactory.create_batch(5, type=segment_type)
         response = self.client.get(activity_url)
-        self.assertContains(response, 'Segment:')
+        self.assertContains(response, 'Segments')
+        self.assertContains(response, 'Department:')
 
     def test_segment_admin(self):
         segment_type = SegmentTypeFactory.create(name='Job title')

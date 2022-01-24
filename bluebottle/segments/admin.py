@@ -102,7 +102,7 @@ class SegmentAdmin(admin.ModelAdmin):
         url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
         return format_html("<a href='{}'>{}</a>", url, obj.segment_type.name)
 
-    type_link.short_description = _('Type')
+    type_link.short_description = _('Segment type')
 
 
 @admin.register(SegmentType)

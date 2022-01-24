@@ -8,8 +8,6 @@ from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.segments.models import SegmentType, Segment
-from bluebottle.activities.models import Activity
-from bluebottle.members.models import Member
 
 
 class SegmentInline(admin.TabularInline):
@@ -29,44 +27,10 @@ class SegmentAdminForm(forms.ModelForm):
         }
 
 
-class SegmentActivityInline(admin.TabularInline):
-    model = Activity.segments.through
-    fields = ('link', )
-    readonly_fields = ('link', )
-    extra = 0
-    verbose_name = _('Activity')
-    verbose_name_plural = _('Activities')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def link(self, obj):
-        url = reverse('admin:activities_activity_change', args=(obj.activity.id, ))
-        return format_html("<a href='{}'>{}</a>", url, obj.activity.title)
-
-
-class SegmentMemberInline(admin.TabularInline):
-    model = Member.segments.through
-    fields = ('link', )
-    readonly_fields = ('link', )
-    extra = 0
-    verbose_name = _('Member')
-    verbose_name_plural = _('Members')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def link(self, obj):
-        url = reverse('admin:members_member_change', args=(obj.member.id, ))
-        return format_html("<a href='{}'>{}</a>", url, obj.member)
-
-
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
     model = Segment
     form = SegmentAdminForm
-
-    inlines = [SegmentActivityInline, SegmentMemberInline]
 
     readonly_fields = ('text_color', 'activities_link', 'type_link')
 

@@ -254,8 +254,9 @@ class ActivityForm(StateMachineModelForm):
         segments = []
         for segment_type in SegmentType.objects.all():
             segments += self.cleaned_data.get(segment_type.field_name, [])
-        activity.segments.set(segments)
-        del self.cleaned_data['segments']
+        if segments:
+            activity.segments.set(segments)
+            del self.cleaned_data['segments']
         return activity
 
 

@@ -1,15 +1,12 @@
-from django.contrib import admin
 from django import forms
+from django.contrib import admin
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from django.utils.html import format_html
-
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.segments.models import SegmentType, Segment
-from bluebottle.activities.models import Activity
-from bluebottle.members.models import Member
 
 
 class SegmentInline(admin.TabularInline):
@@ -29,46 +26,12 @@ class SegmentAdminForm(forms.ModelForm):
         }
 
 
-class SegmentActivityInline(admin.TabularInline):
-    model = Activity.segments.through
-    fields = ('link', )
-    readonly_fields = ('link', )
-    extra = 0
-    verbose_name = _('Activity')
-    verbose_name_plural = _('Activities')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def link(self, obj):
-        url = reverse('admin:activities_activity_change', args=(obj.activity.id, ))
-        return format_html("<a href='{}'>{}</a>", url, obj.activity.title)
-
-
-class SegmentMemberInline(admin.TabularInline):
-    model = Member.segments.through
-    fields = ('link', )
-    readonly_fields = ('link', )
-    extra = 0
-    verbose_name = _('Member')
-    verbose_name_plural = _('Members')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def link(self, obj):
-        url = reverse('admin:members_member_change', args=(obj.member.id, ))
-        return format_html("<a href='{}'>{}</a>", url, obj.member)
-
-
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
     model = Segment
     form = SegmentAdminForm
 
-    inlines = [SegmentActivityInline, SegmentMemberInline]
-
-    readonly_fields = ('text_color', 'activities_link', 'type_link')
+    readonly_fields = ('text_color', 'activities_link', 'members_link', 'type_link')
 
     list_display = ['name', 'segment_type', 'activities_link', ]
 
@@ -76,7 +39,10 @@ class SegmentAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = (
         (None, {
-            'fields': ['type_link', 'name', 'slug', 'email_domain', 'activities_link']
+            'fields': [
+                'type_link', 'name', 'slug', 'email_domain',
+                'activities_link', 'members_link'
+            ]
         }),
 
         (_('Content'), {
@@ -96,6 +62,14 @@ class SegmentAdmin(admin.ModelAdmin):
     def activities_link(self, obj):
         url = "{}?segments__id__exact={}".format(reverse('admin:activities_activity_changelist'), obj.id)
         return format_html("<a href='{}'>{} activities</a>", url, obj.activities.count())
+
+    activities_link.short_description = _('Activities')
+
+    def members_link(self, obj):
+        url = "{}?segments__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html("<a href='{}'>{} members</a>", url, obj.users.count())
+
+    members_link.short_description = _('Members')
 
     def type_link(self, obj):
         url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))

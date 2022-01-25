@@ -32,7 +32,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertNotContains(response, 'Segments')
         self.assertNotContains(response, 'Department:')
         segment_type = SegmentTypeFactory.create(name="Department")
-        SegmentFactory.create_batch(5, type=segment_type)
+        SegmentFactory.create_batch(5, segment_type=segment_type)
         response = self.client.get(activity_url)
         self.assertContains(response, 'Segments')
         self.assertContains(response, 'Department:')

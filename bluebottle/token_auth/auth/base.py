@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
 from bluebottle.geo.models import Location
-from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings, MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -102,22 +102,6 @@ class BaseTokenAuthentication(object):
                 except IntegrityError:
                     pass
 
-    def set_custom_data(self, user, data):
-        """
-        Set custom user data
-        """
-        for key, value in list(data.items()):
-            if key.startswith('custom'):
-
-                name = key.replace('custom.', '')
-                try:
-                    field = CustomMemberFieldSettings.objects.get(name=name)
-                    CustomMemberField.objects.update_or_create(
-                        field=field, member=user, defaults={'value': value}
-                    )
-                except CustomMemberFieldSettings.DoesNotExist:
-                    logger.error('SSO Error: Missing custom field: {}'.format(name))
-
     def get_or_create_user(self, data):
         """
         Get or create the user.
@@ -149,7 +133,6 @@ class BaseTokenAuthentication(object):
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
 
-        self.set_custom_data(user, data)
         self.set_location(user, data)
         self.set_segments(user, data)
 

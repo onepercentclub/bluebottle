@@ -154,6 +154,7 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['auth.change_group']
             },
             {
+                'label': _('All segment types'),
                 'name': 'segments.segmenttype',
                 'permissions': ['segments.change_segment'],
                 'enabled': 'members.MemberPlatformSettings.enable_segments'

@@ -54,7 +54,7 @@ class SegmentAdminForm(forms.ModelForm):
 
 
 @admin.register(Segment)
-class SegmentAdmin(admin.ModelAdmin):
+class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
     model = Segment
     form = SegmentAdminForm
 

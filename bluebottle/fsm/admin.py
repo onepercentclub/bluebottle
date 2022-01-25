@@ -1,19 +1,19 @@
-from builtins import str
 from builtins import object
+from builtins import str
 from collections import defaultdict
 
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.urls import reverse
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
-from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
 

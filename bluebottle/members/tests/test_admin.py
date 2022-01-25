@@ -18,7 +18,7 @@ from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.admin import MemberAdmin, MemberCreationForm
-from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
+from bluebottle.members.models import Member
 from bluebottle.notifications.models import MessageTemplate
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -309,9 +309,6 @@ class MemberAdminExportTest(BluebottleTestCase):
 
     def test_member_export(self):
         member = BlueBottleUserFactory.create()
-        CustomMemberFieldSettings.objects.create(name='Extra Info')
-        field = CustomMemberFieldSettings.objects.create(name='How are you')
-        CustomMemberField.objects.create(member=member, value='Fine', field=field)
 
         ParticipationFactory.create(
             value=timedelta(hours=5),
@@ -344,7 +341,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers, [
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
+            'amount donated', 'time spent', 'subscribed to matching projects'])
         self.assertEqual(user_data[0], member.email)
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
@@ -352,12 +349,11 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[9], u'35.00 €')
         self.assertEqual(user_data[10], '47.0')
 
-        self.assertEqual(user_data[13], 'Fine')
-
     def test_member_unicode_export(self):
-        member = BlueBottleUserFactory.create()
-        friend = CustomMemberFieldSettings.objects.create(name='Best friend')
-        CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
+        member = BlueBottleUserFactory.create(
+            first_name='Ren',
+            last_name='Höek'
+        )
 
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
@@ -367,9 +363,8 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'email')
-        self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], member.email)
-        self.assertEqual(data[12], u'Ren Höek')
+        self.assertEqual(data[4], u'Höek')
 
     def test_member_segments_export(self):
         member = BlueBottleUserFactory.create(email='malle@eppie.nl')

@@ -2,11 +2,9 @@ from __future__ import absolute_import
 
 from builtins import object
 
-from adminsortable.models import SortableMixin
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -15,32 +13,6 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
-
-
-class CustomMemberFieldSettings(SortableMixin):
-    member_settings = models.ForeignKey(
-        'members.MemberPlatformSettings',
-        null=True,
-        related_name='extra_fields',
-        on_delete=models.CASCADE
-    )
-
-    name = models.CharField(max_length=100)
-    description = models.CharField(max_length=200, null=True, blank=True)
-    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    @property
-    def slug(self):
-        return slugify(self.name)
-
-    class Meta(object):
-        ordering = ['sequence']
-
-
-class CustomMemberField(models.Model):
-    member = models.ForeignKey('members.Member', related_name='extra', on_delete=models.CASCADE)
-    field = models.ForeignKey('members.CustomMemberFieldSettings', on_delete=models.CASCADE)
-    value = models.CharField(max_length=5000, null=True, blank=True)
 
 
 class MemberPlatformSettings(BasePlatformSettings):

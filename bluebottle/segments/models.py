@@ -129,16 +129,15 @@ class Segment(models.Model):
 
     @property
     def text_color(self):
-        options = {
-            _('white'): (1, 1, 1),
-            _('grey'): (0.2890625, 0.2890625, 0.2890625)
-        }
         rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color, 'RGB')]
+        white = (1, 1, 1)
 
-        return max(
-            options.items(),
-            key=lambda option: contrast.rgb(rgb_background_color, option[1])
-        )[0]
+        contrast_with_white = contrast.rgb(rgb_background_color, white)
+
+        if contrast.passes_AA(contrast_with_white, large=True):
+            return 'white'
+        else:
+            return 'grey'
 
     def __str__(self):
         return u'{}: {}'.format(self.segment_type.name, self.name)

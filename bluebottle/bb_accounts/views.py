@@ -36,6 +36,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.initiatives.serializers import MemberSerializer
+from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
@@ -201,40 +202,55 @@ class Logout(generics.CreateAPIView):
         return response.Response('', status=status.HTTP_204_NO_CONTENT)
 
 
-class SignUpToken(generics.CreateAPIView):
+class SignUpToken(JsonApiViewMixin, CreateAPIView):
     """
     Request a signup token
 
     """
+    permission_classes = []
+
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenSerializer
 
+    def perform_create(self, serializer):
+        (instance, _) = USER_MODEL.objects.get_or_create(
+            email=serializer.validated_data['email'], defaults={'is_active': False}
+        )
+        token = TimestampSigner().sign(instance.pk)
+        SignUptokenMessage(
+            instance,
+            custom_message={'token': token, 'url': serializer.validated_data.get('url', '')}
+        ).compose_and_send()
 
-class SignUpTokenConfirmation(generics.UpdateAPIView):
+        return instance
+
+
+class SignUpTokenConfirmation(JsonApiViewMixin, CreateAPIView):
     """
     Confirm a signup token
 
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenConfirmationSerializer
+    permission_classes = []
 
-    def get_object(self):
+    def perform_create(self, serializer):
+
         try:
             signer = TimestampSigner()
             member = self.queryset.get(
-                pk=signer.unsign(self.kwargs['pk'], max_age=timedelta(hours=2))
+                pk=signer.unsign(serializer.validated_data['token'], max_age=timedelta(hours=2))
             )
 
             if member.is_active:
-                raise ValidationError({'id': _('The link to activate your account has already been used.')})
+                raise ValidationError({'token': _('The link to activate your account has already been used.')})
 
-            return member
         except SignatureExpired:
-            raise ValidationError({'id': _('The link to activate your account has expired. Please sign up again.')})
+            raise ValidationError({'token': _('The link to activate your account has expired. Please sign up again.')})
         except BadSignature:
-            raise ValidationError({'id': _('Something went wrong on our side. Please sign up again.')})
+            raise ValidationError({'token': _('Something went wrong on our side. Please sign up again.')})
 
-    def perform_update(self, serializer):
+        serializer.instance = member
         serializer.save(is_active=True)
         send_welcome_mail(serializer.instance)
 

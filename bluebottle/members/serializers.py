@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
-from django.core.signing import TimestampSigner
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
@@ -19,7 +18,6 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
@@ -405,17 +403,8 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
         return email
 
-    def create(self, validated_data):
-        (instance, _) = BB_USER_MODEL.objects.get_or_create(
-            email=validated_data['email'], defaults={'is_active': False}
-        )
-        token = TimestampSigner().sign(instance.pk)
-        SignUptokenMessage(
-            instance,
-            custom_message={'token': token, 'url': validated_data.get('url', '')}
-        ).compose_and_send()
-
-        return instance
+    class JSONAPIMeta:
+        resource_name = 'signup-tokens'
 
 
 class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
@@ -425,6 +414,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     password = PasswordField(required=True, max_length=128)
+    token = serializers.CharField(required=True, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     first_name = serializers.CharField(max_length=100)
@@ -432,10 +422,13 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'password', 'jwt_token', 'first_name', 'last_name', )
+        fields = ('id', 'password', 'token', 'jwt_token', 'first_name', 'last_name', )
 
     def validate_password(self, password):
         return make_password(password)
+
+    class JSONAPIMeta:
+        resource_name = 'signup-token-confirmations'
 
 
 class PasswordStrengthSerializer(serializers.ModelSerializer):

@@ -13,7 +13,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
-from rest_framework import status, views, response, generics
+from rest_framework import status, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
@@ -40,12 +40,12 @@ from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
-    PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
+    PasswordResetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer,
-    PasswordStrengthSerializer
+    PasswordStrengthSerializer, PasswordResetConfirmSerializer
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.utils import get_client_ip
@@ -276,42 +276,71 @@ class UserCreate(generics.CreateAPIView):
             serializer.save(is_active=True)
 
 
-class PasswordReset(views.APIView):
+class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
+    """
+    Allows a new password to be set in the resource that is a valid password
+    reset hash.
+    """
+
+    serializer_class = PasswordResetConfirmSerializer
+
+    def perform_create(self, serializer):
+        # The uidb36 and the token are checked by the URLconf.
+        uidb36, token = serializer.validated_data['token'].split('-', 1)
+
+        user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
+
+        if default_token_generator.check_token(user, token):
+
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            serializer.validated_data['jwt_token'] = user.get_jwt_token()
+
+            # return a jwt token so the user can be logged in immediately
+        else:
+            raise ValidationError('Token expired')
+
+    def get(self, *args, **kwargs):
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
+
+        if user is not None and default_token_generator.check_token(user,
+                                                                    token):
+            return response.Response(status=status.HTTP_200_OK)
+        return response.Response({'message': 'Token expired'},
+                                 status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordReset(JsonApiViewMixin, CreateAPIView):
     """
     Allows a password reset to be initiated for valid users in the system. An
     email will be sent to the user with a
     password reset link upon successful submission.
     """
-    def put(self, request, *args, **kwargs):
-        serializer = PasswordResetSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    serializer_class = PasswordResetSerializer
 
-        try:
-            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
-            context = {
-                'email': user.email,
-                'site': tenant_url(),
-                'site_name': tenant_url(),
-                'uid': int_to_base36(user.pk),
-                'user': user,
-                'token': default_token_generator.make_token(user),
-            }
+    def perform_create(self, serializer):
+        user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
+        context = {
+            'email': user.email,
+            'site': tenant_url(),
+            'site_name': tenant_url(),
+            'uid': int_to_base36(user.pk),
+            'user': user,
+            'token': default_token_generator.make_token(user),
+        }
 
-            with TenantLanguage(user.primary_language):
-                subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
-                # Email subject *must not* contain newlines
-                subject = ''.join(subject.splitlines())
+        with TenantLanguage(user.primary_language):
+            subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
+            # Email subject *must not* contain newlines
+            subject = ''.join(subject.splitlines())
 
-            send_mail(
-                template_name='bb_accounts/password_reset_email',
-                to=user,
-                subject=subject,
-                **context
-            )
-        except USER_MODEL.DoesNotExist:
-            pass
-
-        return response.Response({}, status=status.HTTP_200_OK)
+        send_mail(
+            template_name='bb_accounts/password_reset_email',
+            to=user,
+            subject=subject,
+            **context
+        )
 
 
 class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
@@ -342,51 +371,6 @@ class EmailSetView(PasswordProtectedMemberUpdateApiView):
 
 class PasswordSetView(PasswordProtectedMemberUpdateApiView):
     serializer_class = PasswordUpdateSerializer
-
-
-class PasswordSet(views.APIView):
-    """
-    Allows a new password to be set in the resource that is a valid password
-    reset hash.
-    """
-    def _get_user(self, uidb36):
-        try:
-            uid_int = base36_to_int(uidb36)
-            user = USER_MODEL._default_manager.get(pk=uid_int)
-        except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
-            user = None
-
-        return user
-
-    def put(self, request, *args, **kwargs):
-        # The uidb36 and the token are checked by the URLconf.
-        user = self._get_user(self.kwargs.get('uidb36'))
-        token = self.kwargs.get('token')
-
-        if user is not None and default_token_generator.check_token(
-                user, token):
-
-            serializer = PasswordSetSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
-            user.set_password(serializer.validated_data['new_password1'])
-            user.save()
-
-            # return a jwt token so the user can be logged in immediately
-            return response.Response({'token': user.get_jwt_token()},
-                                     status=status.HTTP_200_OK)
-
-        return response.Response(status=status.HTTP_404_NOT_FOUND)
-
-    def get(self, *args, **kwargs):
-        user = self._get_user(self.kwargs.get('uidb36'))
-        token = self.kwargs.get('token')
-
-        if user is not None and default_token_generator.check_token(user,
-                                                                    token):
-            return response.Response(status=status.HTTP_200_OK)
-        return response.Response({'message': 'Token expired'},
-                                 status=status.HTTP_400_BAD_REQUEST)
 
 
 class TokenLogin(generics.CreateAPIView):

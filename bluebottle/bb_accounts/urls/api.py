@@ -3,7 +3,7 @@ from django.conf.urls import url
 from bluebottle.bb_accounts.views import UserActivityDetail
 from bluebottle.bb_accounts.views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
+    PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
     PasswordStrengthDetail,
@@ -34,10 +34,8 @@ urlpatterns = [
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),
     url(r'^logout$', Logout.as_view(), name='user-logout'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
+    url(r'^passwordreset/confirm$', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
     url(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
-    url(
-        r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',
-        PasswordSet.as_view(), name='password-set'),
     url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
         name='manage-profile'),
     url(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),

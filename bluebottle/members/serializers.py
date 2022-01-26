@@ -539,6 +539,21 @@ class PasswordResetSerializer(serializers.Serializer):
     class Meta(object):
         fields = ('email',)
 
+    class JSONAPIMeta(object):
+        resource_name = 'reset-tokens'
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, max_length=254)
+    password = serializers.CharField(required=True, max_length=254)
+    jwt_token = serializers.CharField(read_only=True)
+
+    class Meta(object):
+        fields = ('token', 'jwt_token', )
+
+    class JSONAPIMeta(object):
+        resource_name = 'reset-token-confirmations'
+
 
 class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
     password = serializers.CharField(

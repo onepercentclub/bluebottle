@@ -545,7 +545,7 @@ class PasswordResetSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField(required=True, max_length=254)
-    password = serializers.CharField(required=True, max_length=254)
+    password = PasswordField(required=True, max_length=254)
     jwt_token = serializers.CharField(read_only=True)
 
     class Meta(object):

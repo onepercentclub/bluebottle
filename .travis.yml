@@ -26,6 +26,7 @@ env:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
+  - curl http://localhost:9200
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
   - psql -c "CREATE USER testuser WITH PASSWORD 'password'"

@@ -5,7 +5,6 @@ addons:
   postgresql: "10"
   apt:
     packages:
-      - elasticsearch-6.6.0
       - libxmlsec1
       - libxmlsec1-dev
       - libgdal-dev
@@ -26,6 +25,11 @@ env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
+#  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
+  - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb -o elasticsearch.deb
+  - sudo dpkg -i --force-confnew elasticsearch.deb
+  - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
+  - sudo service elasticsearch restart
   - curl http://localhost:9200
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

@@ -67,6 +67,11 @@ class SegmentAdmin(admin.ModelAdmin):
 
     type_link.short_description = _('Type')
 
+    def text_color(self, obj):
+        return obj.text_color
+
+    text_color.short_description = _("Text colour")
+
 
 @admin.register(SegmentType)
 class SegmentTypeAdmin(admin.ModelAdmin, DynamicArrayMixin):

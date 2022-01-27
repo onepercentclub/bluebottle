@@ -25,20 +25,6 @@ env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb -o elasticsearch.deb
-  - sudo dpkg -i --force-confnew elasticsearch.deb
-  - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
-  - sudo chown -R elasticsearch:elasticsearch /var/lib/elasticsearch/
-  - sudo echo -e "network.host" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo echo -e ":" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo echo -e " 0.0.0.0\n" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo echo -e "network.port" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo echo -e ":" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo echo -e " 9200\n" >> /etc/elasticsearch/elasticsearch.yml
-  - sudo systemctl start elasticsearch
-  - sudo cat /etc/elasticsearch/elasticsearch.yml
-  - sudo cat /etc/default/elasticsearch
-  - sudo service elasticsearch status
   - curl http://localhost:9200
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

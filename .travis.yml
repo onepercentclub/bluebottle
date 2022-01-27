@@ -29,7 +29,8 @@ before_install:
   - sudo dpkg -i --force-confnew elasticsearch.deb
   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
   - sudo chown -R elasticsearch:elasticsearch /var/lib/elasticsearch/
-  - sudo echo -e "network.host: 0.0.0.0\nnetwork.port: 9200\n" >> /etc/elasticsearch/elasticsearch.yml
+  - sudo echo -e 'network.host: 0.0.0.0\n' >> /etc/elasticsearch/elasticsearch.yml
+  - sudo echo -e 'network.port: 9200\n' >> /etc/elasticsearch/elasticsearch.yml
   - sudo service elasticsearch restart
   - sudo cat /etc/elasticsearch/elasticsearch.yml
   - sudo cat /etc/default/elasticsearch

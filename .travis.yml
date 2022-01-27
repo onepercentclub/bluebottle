@@ -30,6 +30,7 @@ before_install:
   - sudo dpkg -i --force-confnew elasticsearch.deb
   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
   - sudo service elasticsearch restart
+  - sudo cat /etc/elasticsearch/elasticsearch.yml
   - curl http://localhost:9200
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

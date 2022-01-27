@@ -29,9 +29,11 @@ before_install:
   - curl https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb -o elasticsearch.deb
   - sudo dpkg -i --force-confnew elasticsearch.deb
   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
+  - sudo echo 'network.host: 0.0.0.0' >> /etc/elasticsearch/elasticsearch.yml
   - sudo service elasticsearch restart
   - sudo cat /etc/elasticsearch/elasticsearch.yml
   - sudo cat /etc/default/elasticsearch
+  - sudo service elasticsearch status
   - curl http://localhost:9200
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

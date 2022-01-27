@@ -32,6 +32,7 @@ before_install:
   - sudo service elasticsearch restart
   - sudo systemctl restart elasticsearch
   - curl http://localhost:9200
+  - echo "network.host: 0.0.0.0" >> /etc/elasticsearch/elasticsearch.yml
   - sudo cat /etc/elasticsearch/elasticsearch.yml
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

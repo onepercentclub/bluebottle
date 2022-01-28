@@ -25,7 +25,8 @@ env:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - sudo service elasticsearch stop
-  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb 
+  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.23.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb 
+  - sudo systemctl daemon-reload
   - sudo service elasticsearch start
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

@@ -39,6 +39,7 @@ install:
   - pip install --upgrade -I flake8==3.9.2
   - pip install -e .[test] --trusted-host github.com
   - sudo journalctl --unit elasticsearch
+  - sudo cat /var/log/elasticsearch/elasticsearch.log
   - curl http://localhost:9200
 before_script:
   - flake8 .

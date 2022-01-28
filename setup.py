@@ -75,7 +75,7 @@ install_requires = [
     'dkimpy==1.0.5',
     'drf-jwt==1.19.0',
     'elasticsearch-dsl==6.4.0',
-    'elasticsearch==7.13.4',
+    'elasticsearch==6.8.2',
     'geocoder==1.37.0',
     'geopy==2.1.0',
     'html2text==2020.1.16',

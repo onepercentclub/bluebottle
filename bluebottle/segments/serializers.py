@@ -65,3 +65,16 @@ class SegmentSerializer(serializers.ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = ['segment_type', ]
         resource_name = 'segments'
+
+
+class SegmentPublicDetailSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    logo = SorlImageField('82x82', crop='center')
+
+    class Meta(object):
+        model = Segment
+        fields = ('id', 'name', 'logo')
+
+    class JSONAPIMeta(object):
+        included_resources = ['segment_type', ]
+        resource_name = 'segments'

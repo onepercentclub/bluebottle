@@ -20,4 +20,10 @@ urlpatterns = [
         SegmentDetail.as_view(),
         name='segment-detail'
     ),
+
+    url(
+        r'^public/(?P<pk>\d+)/$',
+        SegmentDetail.as_view(),
+        name='segment-public-detail'
+    ),
 ]

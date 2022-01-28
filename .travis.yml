@@ -24,7 +24,8 @@ env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - sudo service elasticsearch stop
+  - sudo service elasticsearch stop  
+  - sudo rm -rf /var/lib/elasticsearch
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.23.deb && sudo dpkg -i --force-confnew elasticsearch-6.8.23.deb 
   - sudo systemctl daemon-reload
   - sudo service elasticsearch start

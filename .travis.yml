@@ -38,7 +38,6 @@ install:
   - pip install wheel==0.29.0 mercurial==5.7.1
   - pip install --upgrade -I flake8==3.9.2
   - pip install -e .[test] --trusted-host github.com
-  - sudo service elasticsearch status  
   - sudo journalctl --unit elasticsearch
   - curl http://localhost:9200
 before_script:

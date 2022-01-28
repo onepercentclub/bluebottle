@@ -19,13 +19,15 @@ cache: pip
 python:
   - 3.7
 services:
-  - elasticsearch
   - postgresql
 env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
+  - sudo service elasticsearch stop  
+  - sudo rm -rf /var/lib/elasticsearch
+  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.23.deb && sudo dpkg -i --force-confnew elasticsearch-6.8.23.deb 
+  - sudo service elasticsearch start
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
   - psql -c "CREATE USER testuser WITH PASSWORD 'password'"

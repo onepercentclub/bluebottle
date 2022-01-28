@@ -19,7 +19,6 @@ cache: pip
 python:
   - 3.7
 services:
-  - elasticsearch
   - postgresql
 env:
   global:

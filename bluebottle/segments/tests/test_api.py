@@ -14,7 +14,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.segments.serializers import SegmentSerializer
+from bluebottle.segments.serializers import SegmentDetailSerializer
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
@@ -153,7 +153,7 @@ class SegmentDetailAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.serializer = SegmentSerializer
+        self.serializer = SegmentDetailSerializer
         self.factory = SegmentFactory
 
         self.segment_type = SegmentTypeFactory.create()

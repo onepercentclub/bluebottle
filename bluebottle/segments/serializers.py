@@ -14,7 +14,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
 
     included_serializers = {
-        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
     }
 
     class Meta(object):
@@ -28,19 +28,33 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
         resource_name = 'segment-types'
 
 
-class SegmentSerializer(serializers.ModelSerializer):
+class SegmentListSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     logo = SorlImageField('82x82', crop='center')
     cover_image = SorlImageField('384x288', crop='center')
 
     story = SafeField(required=False, allow_blank=True, allow_null=True)
 
-    initiatives_count = serializers.SerializerMethodField()
-    activities_count = serializers.SerializerMethodField()
-
     included_serializers = {
         'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
     }
+
+    class Meta(object):
+        model = Segment
+        fields = (
+            'id', 'name', 'segment_type', 'email_domain', 'slug', 'tag_line', 'background_color',
+            'text_color', 'logo', 'cover_image', 'story',
+        )
+
+    class JSONAPIMeta(object):
+        included_resources = ['segment_type', ]
+        resource_name = 'segments'
+
+
+class SegmentDetailSerializer(SegmentListSerializer):
+    initiatives_count = serializers.SerializerMethodField()
+    activities_count = serializers.SerializerMethodField()
+    stats = serializers.SerializerMethodField()
 
     def get_initiatives_count(self, obj):
         return len(Initiative.objects.filter(status='approved', activities__segments=obj).distinct())
@@ -57,20 +71,11 @@ class SegmentSerializer(serializers.ModelSerializer):
             )
         )
 
-    stats = serializers.SerializerMethodField()
-
     def get_stats(self, obj):
         return get_stats_for_activities(obj.activities.all())
 
-    class Meta(object):
-        model = Segment
-        fields = (
-            'id', 'name', 'segment_type', 'email_domain', 'slug', 'tag_line', 'background_color',
-            'text_color', 'logo', 'cover_image', 'story',
+    class Meta(SegmentListSerializer.Meta):
+        fields = SegmentListSerializer.Meta.fields + (
             'initiatives_count', 'activities_count', 'stats'
         )
         meta_fields = ['initiatives_count', 'activities_count', 'stats']
-
-    class JSONAPIMeta(object):
-        included_resources = ['segment_type', ]
-        resource_name = 'segments'

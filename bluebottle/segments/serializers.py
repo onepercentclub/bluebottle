@@ -43,10 +43,19 @@ class SegmentSerializer(serializers.ModelSerializer):
     }
 
     def get_initiatives_count(self, obj):
-        return len(Initiative.objects.filter(status='approved', activities__segments=obj))
+        return len(Initiative.objects.filter(status='approved', activities__segments=obj).distinct())
 
     def get_activities_count(self, obj):
-        return len(Activity.objects.filter(segments=obj))
+        return len(
+            Activity.objects.filter(
+                segments=obj
+            ).exclude(
+                status__in=(
+                    'draft', 'needs_work', 'submitted', 'deleted',
+                    'closed', 'cancelled', 'rejected'
+                )
+            )
+        )
 
     stats = serializers.SerializerMethodField()
 

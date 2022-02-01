@@ -189,9 +189,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
                 return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
             else:
                 return activities.filter(
-                     Q(status__in=public_statuses) |
-                     Q(owner=user) |
-                     Q(initiative__activity_managers=user)
+                    Q(status__in=public_statuses) |
+                    Q(owner=user) |
+                    Q(initiative__activity_managers=user)
                 ).filter(
                     ~Q(segments__closed=True) |
                     Q(segments__in=user.segments.filter(closed=True))

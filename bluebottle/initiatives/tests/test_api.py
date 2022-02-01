@@ -586,6 +586,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 1)
+        response = self.client.get(self.url)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 1)
 
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')

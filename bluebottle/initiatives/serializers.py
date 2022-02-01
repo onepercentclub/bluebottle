@@ -1,5 +1,6 @@
 from builtins import object
 
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
@@ -174,10 +175,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     def get_activities(self, instance):
         user = self.context['request'].user
-        activities = [
-            activity for activity in instance.activities.all() if
-            activity.status != ActivityStateMachine.deleted.value
-        ]
+        activities = instance.activities.exclude(status='deleted').all()
 
         public_statuses = [
             ActivityStateMachine.succeeded.value,
@@ -187,14 +185,19 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ]
 
         if user != instance.owner and user not in instance.activity_managers.all():
-            return [
-                activity for activity in activities if (
-                    activity.status in public_statuses or
-                    user == activity.owner
+            if not user.is_authenticated:
+                return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
+            else:
+                return activities.filter(
+                     Q(status__in=public_statuses) |
+                     Q(owner=user) |
+                     Q(initiative__activity_managers=user)
+                ).filter(
+                    ~Q(segments__closed=True) |
+                    Q(segments__in=user.segments.filter(closed=True))
                 )
-            ]
-        else:
-            return activities
+
+        return activities
 
     def get_segments(self, instance):
         segments = []

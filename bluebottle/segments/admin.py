@@ -67,14 +67,14 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
     fieldsets = (
         (None, {
             'fields': [
-                'type_link', 'name', 'slug', 'email_domain',
+                'type_link', 'name', 'slug', 'email_domain', 'closed',
                 'activities_link', 'members_link'
             ]
         }),
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image', 'closed',
+                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image',
             ],
         }),
 

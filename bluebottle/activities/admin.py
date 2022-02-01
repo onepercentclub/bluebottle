@@ -246,8 +246,9 @@ class ActivityForm(StateMachineModelForm):
                     label=segment_type.name,
                     queryset=segment_type.segments,
                 )
-                self.initial[segment_type.field_name] = self.instance.segments.filter(
-                    segment_type=segment_type).all()
+                if self.instance.pk:
+                    self.initial[segment_type.field_name] = self.instance.segments.filter(
+                        segment_type=segment_type).all()
 
     def save(self, commit=True):
         activity = super(ActivityForm, self).save(commit=commit)

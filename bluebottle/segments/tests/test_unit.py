@@ -26,6 +26,20 @@ class TestSegmentModel(BluebottleTestCase):
 
         self.assertEqual(segment.alternate_names, ['test'])
 
+    def test_text_color(self):
+        segment = Segment(
+            segment_type=self.type,
+            name='test',
+        )
+
+        for color, text_color in [
+            ('#ffffff', 'grey'),
+            ('#000000', 'white'),
+            ('#ff4422', 'white')
+        ]:
+            segment.background_color = color
+            self.assertEqual(segment.text_color, text_color)
+
 
 class MemberSegmentTestCase(BluebottleTestCase):
 

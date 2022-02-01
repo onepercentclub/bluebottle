@@ -2,7 +2,7 @@ import functools
 from builtins import object
 
 from adminfilters.multiselect import UnionFieldListFilter
-from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from adminsortable.admin import NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -41,7 +41,6 @@ from bluebottle.members.forms import (
     SendPasswordResetMailConfirmationForm
 )
 from bluebottle.members.models import (
-    CustomMemberFieldSettings,
     MemberPlatformSettings,
     UserActivity,
 )
@@ -110,22 +109,12 @@ class MemberCreationForm(MemberForm):
         return user
 
 
-class CustomMemberFieldSettingsInline(SortableTabularInline):
-    model = CustomMemberFieldSettings
-    readonly_fields = ('slug',)
-    extra = 0
-
-
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
         'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
         'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
         'background', 'require_consent', 'consent_link', 'anonymization_age'
     )
-
-    inlines = [
-        CustomMemberFieldSettingsInline
-    ]
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)

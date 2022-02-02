@@ -609,6 +609,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][1]['id'], str(second.pk))
 
+    def test_search_page_size(self):
+        DateActivityFactory.create_batch(
+            12,
+            title='Lorem ipsum dolor sit amet',
+            description="Lorem ipsum",
+            status='open'
+        )
+        response = self.client.get(
+            self.url + '?page[amount]=4'
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 12)
+        self.assertEqual(len(data['data']), 4)
+
+        response = self.client.get(
+            self.url + '?page[amount]=8'
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 12)
+        self.assertEqual(len(data['data']), 8)
+
+        response = self.client.get(
+            self.url
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 12)
+        self.assertEqual(len(data['data']), 8)
+
     def test_search_different_type(self):
         first = DateActivityFactory.create(
             title='Lorem ipsum dolor sit amet',

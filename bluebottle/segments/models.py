@@ -120,7 +120,7 @@ class Segment(models.Model):
     )
 
     closed = models.BooleanField(
-        _('Closed'),
+        _('Restricted'),
         default=False,
         help_text=_(
             'Closed segments will only be accessible to members that belong to this segment'

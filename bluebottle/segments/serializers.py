@@ -76,5 +76,4 @@ class SegmentPublicDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'logo')
 
     class JSONAPIMeta(object):
-        included_resources = ['segment_type', ]
         resource_name = 'segments'

@@ -88,8 +88,9 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
-        form['email_domain'] = 'test.com'
+        test_domains = ['test.com', 'test2.com', 'test3.com']
+        form['email_domain'] = test_domains
         page = form.submit()
 
         segment.refresh_from_db()
-        self.assertEqual(segment.email_domain, 'test.com')
+        self.assertEqual(segment.email_domain, test_domains)

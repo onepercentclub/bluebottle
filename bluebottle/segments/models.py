@@ -2,12 +2,12 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -70,10 +70,14 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = models.CharField(
-        _('Email domain'), blank=True, null=True,
-        max_length=255,
-        help_text=_('Users with email addresses for this domain are automatically added to this segment')
+    email_domain = ArrayField(
+        ArrayField(
+            models.CharField(
+                _('Email domain'), blank=True, null=True,
+                max_length=255,
+                help_text=_('Users with email addresses for this domain are automatically added to this segment')
+            )
+        )
     )
 
     tag_line = models.CharField(

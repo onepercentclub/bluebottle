@@ -556,7 +556,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                segment.type.slug, segment.pk
+                segment.segment_type.slug, segment.pk
             ),
             user=self.owner
         )
@@ -581,7 +581,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[segment.{}]={}'.format(
-                first_segment.type.slug, second_segment.pk
+                first_segment.segment_type.slug, second_segment.pk
             ),
             user=self.owner
         )
@@ -617,14 +617,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open'
         )
         response = self.client.get(
-            self.url + '?page[amount]=4'
+            self.url + '?page[size]=4'
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 12)
         self.assertEqual(len(data['data']), 4)
 
         response = self.client.get(
-            self.url + '?page[amount]=8'
+            self.url + '?page[size]=8'
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 12)

@@ -89,12 +89,12 @@ class TestBaseTokenAuthentication(TestCase):
     )
     def test_user_created_segments(self, authenticate_request):
         team = SegmentTypeFactory.create(name='Team')
-        team_segment = SegmentFactory.create(name='Online Marketing', type=team)
-        SegmentFactory.create(name='Direct Marketing', type=team)
+        team_segment = SegmentFactory.create(name='Online Marketing', segment_type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
 
         unit = SegmentTypeFactory.create(name='Unit')
-        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
-        SegmentFactory.create(name='Communications', type=unit)
+        unit_segment = SegmentFactory.create(name='Marketing', segment_type=unit)
+        SegmentFactory.create(name='Communications', segment_type=unit)
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
@@ -123,14 +123,14 @@ class TestBaseTokenAuthentication(TestCase):
         team = SegmentTypeFactory.create(name='Team')
         team_segment = SegmentFactory.create(
             name='Online Marketing',
-            type=team,
+            segment_type=team,
             alternate_names=['Marketing, online']
         )
-        SegmentFactory.create(name='Direct Marketing', type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
 
         unit = SegmentTypeFactory.create(name='Unit')
-        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
-        SegmentFactory.create(name='Communications', type=unit)
+        unit_segment = SegmentFactory.create(name='Marketing', segment_type=unit)
+        SegmentFactory.create(name='Communications', segment_type=unit)
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
@@ -158,9 +158,12 @@ class TestBaseTokenAuthentication(TestCase):
         team = SegmentTypeFactory.create(name='Team')
         team_segment = SegmentFactory.create(
             name='Online Marketing',
-            type=team,
+            segment_type=team,
         )
-        SegmentFactory.create(name='Direct Marketing', type=team)
+        SegmentFactory.create(
+            name='Direct Marketing',
+            segment_type=team
+        )
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
@@ -188,9 +191,9 @@ class TestBaseTokenAuthentication(TestCase):
         team = SegmentTypeFactory.create(name='Team')
         SegmentFactory.create(
             name='Online Marketing',
-            type=team,
+            segment_type=team,
         )
-        SegmentFactory.create(name='Direct Marketing', type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
@@ -238,15 +241,15 @@ class TestBaseTokenAuthentication(TestCase):
     def test_user_updated_segments(self, authenticate_request):
         user = BlueBottleUserFactory.create(remote_id='test@example.com')
         team = SegmentTypeFactory.create(name='Team')
-        team_segment = SegmentFactory.create(name='Online Marketing', type=team)
+        team_segment = SegmentFactory.create(name='Online Marketing', segment_type=team)
         user.segments.add(
-            SegmentFactory.create(name='Direct Marketing', type=team)
+            SegmentFactory.create(name='Direct Marketing', segment_type=team)
         )
 
         unit = SegmentTypeFactory.create(name='Unit')
-        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
+        unit_segment = SegmentFactory.create(name='Marketing', segment_type=unit)
         user.segments.add(
-            SegmentFactory.create(name='Communications', type=unit)
+            SegmentFactory.create(name='Communications', segment_type=unit)
         )
 
         with self.settings(TOKEN_AUTH={}):
@@ -276,16 +279,15 @@ class TestBaseTokenAuthentication(TestCase):
     def test_user_created_segments_missing(self, authenticate_request):
         BlueBottleUserFactory.create(remote_id='test@example.com')
         team = SegmentTypeFactory.create(name='Team')
-        SegmentFactory.create(name='Online Marketing', type=team)
-        SegmentFactory.create(name='Direct Marketing', type=team)
+        SegmentFactory.create(name='Online Marketing', segment_type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
 
         unit = SegmentTypeFactory.create(name='Unit')
-        SegmentFactory.create(name='Marketing', type=unit)
-        SegmentFactory.create(name='Communications', type=unit)
+        SegmentFactory.create(name='Marketing', segment_type=unit)
+        SegmentFactory.create(name='Communications', segment_type=unit)
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
-
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertFalse(created)
             self.assertEqual(user.email, 'test@example.com')
@@ -314,8 +316,12 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertEqual(len(user.segments.all()), 2)
 
     @patch.object(
-        BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',
-                                                                       'email': 'test@example.com'}
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com'
+        }
     )
     def test_user_already_exists(self, authenticate_request):
         with self.settings(TOKEN_AUTH={}):

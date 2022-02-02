@@ -289,7 +289,6 @@ class JsonApiPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator
-    page_size_query_param = "page[amount]"
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):

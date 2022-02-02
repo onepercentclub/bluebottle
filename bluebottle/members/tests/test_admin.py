@@ -369,9 +369,9 @@ class MemberAdminExportTest(BluebottleTestCase):
     def test_member_segments_export(self):
         member = BlueBottleUserFactory.create(email='malle@eppie.nl')
         food = SegmentTypeFactory.create(name='Food')
-        bb = SegmentFactory.create(type=food, name='Bitterballen')
+        bb = SegmentFactory.create(segment_type=food, name='Bitterballen')
         drinks = SegmentTypeFactory.create(name='Drinks')
-        br = SegmentFactory.create(type=drinks, name='Bier')
+        br = SegmentFactory.create(segment_type=drinks, name='Bier')
         member.segments.add(bb)
         member.segments.add(br)
         member.save()

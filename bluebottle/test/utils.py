@@ -227,6 +227,12 @@ class APITestCase(BluebottleTestCase):
         ):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
 
+    def perform_delete(self, user=None):
+        self.response = self.client.delete(
+            self.url,
+            user=user
+        )
+
     def loadLinkedRelated(self, relationship, user=None):
         user = user or self.user
         url = self.response.json()['data']['relationships'][relationship]['links']['related']
@@ -243,15 +249,16 @@ class APITestCase(BluebottleTestCase):
         try:
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')
-            group.permissions.remove(
-                Permission.objects.get(codename='api_read_{}'.format(model_name))
-            )
+            try:
+                group.permissions.remove(
+                    Permission.objects.get(codename='api_read_{}'.format(model_name))
+                )
+            except Permission.DoesNotExist:
+                pass
+
             yield
         finally:
             MemberPlatformSettings.objects.update(closed=False)
-            group.permissions.remove(
-                Permission.objects.get(codename='api_read_{}'.format(model_name))
-            )
 
     def assertStatus(self, status):
         self.assertEqual(self.response.status_code, status)
@@ -268,7 +275,6 @@ class APITestCase(BluebottleTestCase):
             for inc in self.response.json()['included']
         ]
         relationship = self.response.json()['data']['relationships'][included]['data']
-
         self.assertTrue(
             {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
             in included_resources
@@ -303,7 +309,7 @@ class APITestCase(BluebottleTestCase):
             self.assertTrue(attr in data['attributes'])
 
         if value:
-            self.assertEqual(getattr(self.model, attr), value)
+            self.assertEqual(getattr(self.model, attr.replace('-', '_')), value)
 
     def assertPermission(self, permission, value):
         self.assertEqual(self.response.json()['data']['meta']['permissions'][permission], value)

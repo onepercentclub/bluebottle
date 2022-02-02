@@ -153,11 +153,21 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'auth.group',
                 'permissions': ['auth.change_group']
             },
+        ]
+    },
+    {
+        'label': _('Segments'),
+        'permissions': ['segments.change_segmenttype'],
+        'enabled': 'members.MemberPlatformSettings.enable_segments',
+        'items': [
             {
                 'label': _('All segment types'),
                 'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segmenttype'],
+            },
+            {
+                'name': 'segments.segment',
                 'permissions': ['segments.change_segment'],
-                'enabled': 'members.MemberPlatformSettings.enable_segments'
             },
         ]
     },

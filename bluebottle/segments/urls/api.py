@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
-from bluebottle.segments.views import(
-    SegmentList, SegmentDetail, SegmentTypeList, SegmentPublicDetail
+from bluebottle.segments.views import (
+    SegmentList, SegmentDetail, SegmentPublicDetail, SegmentTypeList
 )
 
 

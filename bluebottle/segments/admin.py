@@ -1,5 +1,6 @@
-from django import forms
 from django.contrib import admin
+from django import forms
+from django.urls import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.urls import reverse
@@ -103,6 +104,11 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
         return format_html("<a href='{}'>{}</a>", url, obj.segment_type.name)
 
     type_link.short_description = _('Segment type')
+
+    def text_color(self, obj):
+        return obj.text_color
+
+    text_color.short_description = _("Text colour")
 
 
 @admin.register(SegmentType)

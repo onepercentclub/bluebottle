@@ -222,7 +222,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
-        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',

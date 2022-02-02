@@ -77,19 +77,23 @@ class Segment(models.Model):
     )
 
     tag_line = models.CharField(
-        _('tag line'), max_length=255, null=True, blank=True,
-        help_text=_('Short tag line for your segment')
+        _('Slogan'), max_length=255, null=True, blank=True,
+        help_text=_(
+            'A short sentence to explain your segment. This sentence is directly visible on the page.'
+        )
     )
 
     story = models.TextField(
         _('Story'), blank=True, null=True,
-        help_text=_('Longer explanation, containing the goals of your segment')
+        help_text=_(
+            'A more detailed story for your segment. This story can be accessed via a link on the page.'
+        )
     )
 
     logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("Logo image. 100x100px"),
+        help_text=_("The uploaded image will be scaled so that it is fully visible."),
 
         validators=[
             FileMimetypeValidator(
@@ -102,14 +106,14 @@ class Segment(models.Model):
     background_color = ColorField(
         _('Background color'), null=True, blank=True,
         help_text=_(
-            'The text color will automatically be set based on the contrast with the background'
+            'Add a background colour to your segment page.'
         )
     )
 
     cover_image = ImageField(
         _("cover image"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("Cover image, 400x300 px"),
+        help_text=_("The uploaded image will be cropped to fit a 4:3 rectangle."),
 
         validators=[
             FileMimetypeValidator(

@@ -76,10 +76,10 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         self.app.set_user(self.superuser)
         self.site = AdminSite()
         department = SegmentTypeFactory.create(name='department')
-        self.engineering = SegmentFactory.create(name='engineering', type=department)
-        SegmentFactory.create(name='product', type=department)
+        self.engineering = SegmentFactory.create(name='engineering', segment_type=department)
+        SegmentFactory.create(name='product', segment_type=department)
         title = SegmentTypeFactory.create(name='title')
-        SegmentFactory.create_batch(3, type=title)
+        SegmentFactory.create_batch(3, segment_type=title)
         self.member = BlueBottleUserFactory.create()
 
     def test_member_segments_admin(self):

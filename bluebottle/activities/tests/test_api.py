@@ -617,14 +617,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open'
         )
         response = self.client.get(
-            self.url + '?page[amount]=4'
+            self.url + '?page[size]=4'
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 12)
         self.assertEqual(len(data['data']), 4)
 
         response = self.client.get(
-            self.url + '?page[amount]=8'
+            self.url + '?page[size]=8'
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 12)

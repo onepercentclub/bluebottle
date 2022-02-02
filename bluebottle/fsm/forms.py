@@ -1,9 +1,8 @@
-from django.forms import Select
-from django.utils.translation import gettext_lazy as _
 from django import forms
-from django.urls import reverse
+from django.forms import Select
 from django.forms.models import ModelFormMetaclass
-from future.utils import with_metaclass
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 
 class TransitionSelectWidget(forms.Select):
@@ -39,7 +38,7 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
         return super(StateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class StateMachineModelForm(with_metaclass(StateMachineModelFormMetaClass, forms.ModelForm)):
+class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:

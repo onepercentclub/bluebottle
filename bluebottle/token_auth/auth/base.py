@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
 from bluebottle.geo.models import Location
-from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings, MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -72,51 +72,34 @@ class BaseTokenAuthentication(object):
                 logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
                 return
 
-            try:
-                current_segment = user.segments.get(
-                    type__slug=type_slug
-                )
+            current_segments = user.segments.filter(
+                segment_type__slug=type_slug
+            ).all()
+            for current_segment in current_segments:
                 user.segments.remove(current_segment)
-            except Segment.DoesNotExist:
-                pass
 
             if not isinstance(value, (list, tuple)):
                 value = [value]
 
             for val in value:
                 try:
-
-                    segment = Segment.objects.get(
-                        type__slug=type_slug,
-                        alternate_names__contains=[val]
-                    )
+                    segment = Segment.objects.filter(
+                        segment_type__slug=type_slug,
+                    ).extra(
+                        where=['%s ILIKE ANY (alternate_names)'],
+                        params=[val, ]
+                    ).get()
                     user.segments.add(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
-                            type=segment_type,
+                            segment_type=segment_type,
                             name=val,
                             alternate_names=[val]
                         )
                         user.segments.add(segment)
                 except IntegrityError:
                     pass
-
-    def set_custom_data(self, user, data):
-        """
-        Set custom user data
-        """
-        for key, value in list(data.items()):
-            if key.startswith('custom'):
-
-                name = key.replace('custom.', '')
-                try:
-                    field = CustomMemberFieldSettings.objects.get(name=name)
-                    CustomMemberField.objects.update_or_create(
-                        field=field, member=user, defaults={'value': value}
-                    )
-                except CustomMemberFieldSettings.DoesNotExist:
-                    logger.error('SSO Error: Missing custom field: {}'.format(name))
 
     def get_or_create_user(self, data):
         """
@@ -149,7 +132,6 @@ class BaseTokenAuthentication(object):
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
 
-        self.set_custom_data(user, data)
         self.set_location(user, data)
         self.set_segments(user, data)
 

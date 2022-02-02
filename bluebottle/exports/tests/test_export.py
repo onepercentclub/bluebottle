@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-import xlrd
 from datetime import timedelta
+
+import xlrd
 from django.db import connection
 from django.test import override_settings
 from django.utils.timezone import now
 
+from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.exports.exporter import Exporter
+from bluebottle.exports.tasks import plain_export
+from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.impact.models import ImpactType
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, PeriodParticipantFactory,
     DateActivityFactory
 )
-from bluebottle.exports.exporter import Exporter
-from bluebottle.exports.tasks import plain_export
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory
-from bluebottle.impact.models import ImpactType
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
-from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
 
 TEST_EXPORT_SETTINGS = {
     'EXPORTDB_USE_CELERY': False
@@ -127,86 +127,13 @@ class TestExportAdmin(BluebottleTestCase):
             'End'
         )
 
-    def test_export_custom_user_fields(self):
-        from_date = now() - timedelta(weeks=2)
-        to_date = now() + timedelta(weeks=1)
-
-        colour = CustomMemberFieldSettings.objects.create(
-            name='colour',
-            description='Favourite colour'
-        )
-
-        BlueBottleUserFactory.create_batch(2)
-        user = BlueBottleUserFactory.create(email='markies@decanteclaer.nl')
-        BlueBottleUserFactory.create_batch(2)
-
-        CustomMemberField.objects.create(
-            member=user,
-            field=colour,
-            value='Parblue Yellow'
-        )
-        initiative = InitiativeFactory.create(owner=user)
-        activity = PeriodActivityFactory.create(owner=user, initiative=initiative)
-        PeriodParticipantFactory.create(activity=activity, user=user)
-
-        activity = DeedFactory.create(owner=user, initiative=initiative)
-        DeedParticipantFactory.create(activity=activity, user=user)
-
-        data = {
-            'from_date': from_date,
-            'to_date': to_date,
-            '_save': 'Confirm'
-        }
-        tenant = connection.tenant
-        result = plain_export(Exporter, tenant=tenant, **data)
-        book = xlrd.open_workbook(result)
-
-        self.assertEqual(
-            book.sheet_by_name('Users').ncols,
-            17
-        )
-        t = 1
-        while t < book.sheet_by_name('Users').nrows:
-            if book.sheet_by_name('Users').cell(t, 5).value == 'markies@decanteclaer.nl':
-                self.assertEqual(
-                    book.sheet_by_name('Users').cell(t, 16).value,
-                    'Parblue Yellow'
-                )
-            t += 1
-
-        self.assertEqual(
-            book.sheet_by_name('Time contributions').cell(0, 16).value,
-            'Favourite colour'
-        )
-        self.assertEqual(
-            book.sheet_by_name('Time contributions').cell(1, 16).value,
-            'Parblue Yellow'
-        )
-
-        self.assertEqual(
-            book.sheet_by_name('Deed participants').cell(0, 9).value,
-            'Favourite colour'
-        )
-        self.assertEqual(
-            book.sheet_by_name('Deed participants').cell(1, 9).value,
-            'Parblue Yellow'
-        )
-        self.assertEqual(
-            book.sheet_by_name('Effort contributions').cell(0, 15).value,
-            'Favourite colour'
-        )
-        self.assertEqual(
-            book.sheet_by_name('Effort contributions').cell(1, 15).value,
-            'Parblue Yellow'
-        )
-
     def test_export_user_segments(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
         users = BlueBottleUserFactory.create_batch(5)
         segment_type = SegmentTypeFactory.create(name='Department')
-        engineering = SegmentFactory.create(type=segment_type, name='Engineering')
-        rubbish = SegmentFactory.create(type=segment_type, name='Rubbish')
+        engineering = SegmentFactory.create(segment_type=segment_type, name='Engineering')
+        rubbish = SegmentFactory.create(segment_type=segment_type, name='Rubbish')
         users[0].segments.add(engineering)
         initiative = InitiativeFactory.create(owner=users[0])
         activity = PeriodActivityFactory.create(

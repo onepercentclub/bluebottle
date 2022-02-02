@@ -35,6 +35,7 @@ install_requires = [
     'django-axes==5.14.0',
     'django-better-admin-arrayfield==1.4.2',
     'django-choices==1.7.1',
+    'django-colorfield==0.5.0',
     'django-cors-headers==3.7.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==1.9.5',
@@ -89,6 +90,7 @@ install_requires = [
     'mixpanel==4.3.2',
     'munch==2.5.0',
     'openpyxl==2.4.8',
+    'passwordmeter==0.1.8',
     'pendulum==1.2.4',
     'premailer==3.9.0',
     'psycopg2-binary==2.8.6',
@@ -114,6 +116,7 @@ install_requires = [
     'tablib==0.14.0',
     'timezonefinder==3.4.2',
     'unicodecsv==0.14.1',
+    'wcag-contrast-ratio==0.9',
     'wheel==0.29.0',
     'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
@@ -126,7 +129,6 @@ install_requires = [
 ]
 
 tests_requires = [
-    'coverage==6.0.2',
     'coveralls==3.2.0',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',

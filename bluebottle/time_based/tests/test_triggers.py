@@ -1,11 +1,10 @@
 import time
-import mock
 from datetime import timedelta, date
 
+import mock
 from django.core import mail
 from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
-
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
@@ -812,6 +811,49 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             self.assertEqual(duration.start, self.slot.start)
             self.assertEqual(duration.end, self.slot.start + self.slot.duration)
             self.assertEqual(duration.value, self.slot.duration)
+
+    def test_cancel(self):
+        DateParticipantFactory.create(activity=self.activity)
+        mail.outbox = []
+        self.slot.title = 'Session 1'
+        self.slot.states.cancel(save=True)
+        self.assertEqual(self.slot.status, 'cancelled')
+        self.assertEqual(
+            len(mail.outbox),
+            2
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'Your activity "{}" has been cancelled'.format(self.activity.title)
+        )
+
+        self.assertTrue(
+            'Session 1' in
+            mail.outbox[1].body
+        )
+
+    def test_cancel_with_cancelled_activity(self):
+        DateParticipantFactory.create(activity=self.activity)
+        self.activity.states.cancel(save=True)
+        mail.outbox = []
+        self.slot.title = 'Session 3'
+        self.slot.states.cancel(save=True)
+        self.assertEqual(self.slot.status, 'cancelled')
+        self.assertEqual(
+            len(mail.outbox),
+            1
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your activity "{}" has been cancelled'.format(self.activity.title)
+        )
+
+        self.assertTrue(
+            'Session 3' in
+            mail.outbox[0].body
+        )
 
 
 class ParticipantTriggerTestCase():

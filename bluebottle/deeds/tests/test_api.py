@@ -5,6 +5,7 @@ import io
 from rest_framework import status
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.utils import APITestCase
 from bluebottle.deeds.serializers import (
@@ -153,6 +154,18 @@ class DeedsDetailViewAPITestCase(APITestCase):
             contributors,
             self.accepted_participants + self.withdrawn_participants
         )
+
+    def test_get_with_segments(self):
+        segment = SegmentFactory.create(
+            name="SDG1"
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get(user=self.model.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
 
     def test_get_calendar_links(self):
         self.perform_get(user=self.model.owner)

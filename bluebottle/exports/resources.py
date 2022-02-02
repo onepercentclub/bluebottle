@@ -1,10 +1,9 @@
 from builtins import object
 from datetime import timedelta
 
-from bluebottle.members.models import CustomMemberFieldSettings
-from .exporter import ExportModelResource
-from ..impact.models import ImpactType
-from ..segments.models import SegmentType
+from bluebottle.exports.exporter import ExportModelResource
+from bluebottle.impact.models import ImpactType
+from bluebottle.segments.models import SegmentType
 
 
 class ImpactMixin(object):
@@ -26,22 +25,6 @@ class SegmentMixin(object):
         ])
 
 
-class UserFieldsMixin(object):
-    user_field = ''
-    select_related = ['place', 'segments']
-
-    def get_extra_fields(self):
-        if self.user_field:
-            user_path = self.user_field.replace('.', '__') + '__'
-        else:
-            user_path = ''
-
-        return tuple([
-            ("{}extra_{}".format(user_path, extra.name), extra.description)
-            for extra in CustomMemberFieldSettings.objects.all()
-        ]) + super().get_extra_fields()
-
-
 class DateRangeResource(ExportModelResource):
     range_field = 'created'
     select_related = None
@@ -55,7 +38,7 @@ class DateRangeResource(ExportModelResource):
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 
-class UserResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class UserResource(SegmentMixin, DateRangeResource):
     range_field = 'date_joined'
     select_related = ('location', 'location__group')
 
@@ -75,7 +58,7 @@ class PeriodActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class PeriodParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class PeriodParticipantResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
     select_related = (
@@ -95,7 +78,7 @@ class DateActivitySlotResource(DateRangeResource):
     )
 
 
-class DateParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class DateParticipantResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
 
@@ -104,7 +87,7 @@ class DateParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class SlotParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class SlotParticipantResource(SegmentMixin, DateRangeResource):
     segment_field = 'participant.user'
     user_field = 'participant.user'
 
@@ -115,7 +98,7 @@ class SlotParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class TimeContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class TimeContributionResource(SegmentMixin, DateRangeResource):
     segment_field = 'contributor.user'
     user_field = 'contributor.user'
 
@@ -133,7 +116,7 @@ class FundingResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class DonationResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class DonationResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
 
@@ -148,7 +131,7 @@ class DeedResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class DeedParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class DeedParticipantResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
     select_related = (
@@ -156,7 +139,7 @@ class DeedParticipantResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class EffortContributionResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class EffortContributionResource(SegmentMixin, DateRangeResource):
     segment_field = 'contributor.user'
     user_field = 'contributor.user'
 
@@ -174,7 +157,7 @@ class CollectActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     )
 
 
-class CollectContributorResource(UserFieldsMixin, SegmentMixin, DateRangeResource):
+class CollectContributorResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
     select_related = (

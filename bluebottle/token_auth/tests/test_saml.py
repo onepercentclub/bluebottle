@@ -487,12 +487,12 @@ class TestSAMLTokenAuthentication(TestCase):
 
         segment_type = SegmentTypeFactory.create(slug='segment')
         SegmentFactory.create(
-            type=segment_type,
+            segment_type=segment_type,
             name='Marketing',
             alternate_names=['MarkCom', 'Propaganda', 'Online Marketing']
         )
         SegmentFactory.create(
-            type=segment_type,
+            segment_type=segment_type,
             name='Sales'
         )
 
@@ -514,6 +514,13 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(
                 list(user.segments.values_list('name', flat=True)),
                 ['Marketing', 'Sales']
+            )
+            auth_backend.set_segments(user, {
+                'segment.segment': ['markeTING']
+            })
+            self.assertEqual(
+                list(user.segments.values_list('name', flat=True)),
+                ['Marketing']
             )
 
     def test_parse_user_missing(self):

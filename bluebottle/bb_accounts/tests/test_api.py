@@ -10,7 +10,6 @@ import mock
 
 import httmock
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
@@ -478,29 +477,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
             str(response.data['non_field_errors'][0]['id']), str(user_1.pk)
         )
 
-    def test_generate_username(self):
-        new_user_email = 'nijntje74@hetkonijntje.nl'
-        first_name = 'Nijntje'
-        last_name = 'het Konijntje'
-        new_user_password = 'password'
-
-        # Test username generation with duplicates.
-        response = self.client.post(self.user_create_api_url,
-                                    {'first_name': first_name,
-                                     'last_name': last_name,
-                                     'email': new_user_email,
-                                     'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-                         response.data)
-
-        user = get_user_model().objects.get(email=new_user_email)
-
-        self.assertEqual(user.username, new_user_email)
-
     def test_password_reset(self):
         # Setup: create a user.
         new_user_email = 'nijntje94@hetkonijntje.nl'
-        new_user_password = 'password'
+        new_user_password = 'some-password'
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})

@@ -294,7 +294,6 @@ class JsonApiPagination(JsonApiPageNumberPagination):
 class JsonApiViewMixin(AutoPrefetchMixin):
 
     pagination_class = JsonApiPagination
-
     parser_classes = (JSONParser,)
     renderer_classes = (BluebottleJSONAPIRenderer,)
 

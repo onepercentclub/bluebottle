@@ -3,14 +3,10 @@
 {% block message %}
 <p>
 {% blocktrans context 'email' %}
-The activity  is just a few days away!
+The activity is just a few days away!
 {% endblocktrans %}
 
-{% if duration %}
-    {% include 'mails/messages/partial/period.html' %}
-{% else %}
-    {% include 'mails/messages/partial/slots.html' %}
-{%  endif %}
+{% include 'mails/messages/partial/slots.html' %}
 </p>
 
 <p>

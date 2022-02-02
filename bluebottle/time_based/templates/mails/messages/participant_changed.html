@@ -13,8 +13,7 @@
     {% include 'mails/messages/partial/slots.html' %}
 {% endblock %}
 
-{% block action %}
-    {{block.super}}
+{% block end_message %}
     <p>
         <i>
             {% blocktrans context 'email' %}

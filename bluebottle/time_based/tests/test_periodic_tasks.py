@@ -25,7 +25,8 @@ from bluebottle.time_based.tasks import (
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
+    SlotParticipantFactory
 )
 
 
@@ -685,6 +686,43 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
             self.slot.refresh_from_db()
 
         self.assertEqual(self.slot.status, 'finished')
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'expired')
+
+    def test_finish_with_participants(self):
+        self.assertEqual(self.slot.status, 'open')
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.run_task(self.after)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.slot.status, 'finished')
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'succeeded')
+
+    def test_finish_free(self):
+        self.activity = DateActivityFactory.create(
+            slot_selection='free', initiative=self.initiative, review=False
+        )
+        self.activity.states.submit(save=True)
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.assertEqual(self.slot.status, 'open')
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory(slot=self.slot, participant=self.participant)
+
+        self.run_task(self.after)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.slot.status, 'finished')
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'succeeded')
 
     def test_after_start_dont_expire(self):
         self.assertEqual(self.slot.status, 'open')

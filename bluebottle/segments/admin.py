@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django import forms
 from django.urls import reverse
+from django.db import connection
+from django.forms.models import ModelFormMetaclass
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django.utils.html import format_html
@@ -8,6 +10,18 @@ from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.segments.models import SegmentType, Segment
+
+
+class SegmentAdminFormMetaClass(ModelFormMetaclass):
+    def __new__(cls, name, bases, attrs):
+        if connection.tenant.schema_name != 'public':
+            for field in SegmentType.objects.all():
+                attrs[field.field_name] = forms.CharField(
+                    required=False,
+                    label=field.name
+                )
+
+        return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
 class SegmentInline(admin.TabularInline):

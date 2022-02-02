@@ -487,7 +487,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
         current_time = time.time()
 
-        with mock.patch('time.time', return_value=current_time - (3 * 60 * 60)):
+        with mock.patch('time.time', return_value=current_time - (25 * 60 * 60)):
             token = TimestampSigner().sign(member.pk)
 
         response = self.client.put(

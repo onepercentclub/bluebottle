@@ -1,22 +1,21 @@
-from django.contrib.admin import SimpleListFilter
-from django_admin_inline_paginator.admin import TabularInlinePaginated
-from pytz import timezone
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from django.db import models
 from django.db.models import Sum
 from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
 from django.template import loader, defaultfilters
 from django.urls import reverse, resolve
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
+from pytz import timezone
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
@@ -148,7 +147,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     duration_string.short_description = _('Duration')
 
 
-class TimeBasedActivityAdminForm(StateMachineModelForm):
+class TimeBasedActivityAdminForm(ActivityForm):
     class Meta(object):
         model = PeriodActivity
         fields = '__all__'

@@ -123,4 +123,4 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Office groups')
         self.assertContains(response, 'Impact types')
-        self.assertContains(response, 'Segment types')
+        self.assertContains(response, 'All segment types')

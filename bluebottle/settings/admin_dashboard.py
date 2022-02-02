@@ -161,6 +161,7 @@ JET_SIDE_MENU_ITEMS = [
         'enabled': 'members.MemberPlatformSettings.enable_segments',
         'items': [
             {
+                'label': _('All segment types'),
                 'name': 'segments.segmenttype',
                 'permissions': ['segments.change_segmenttype'],
             },
@@ -188,6 +189,19 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['offices.change_officeregion']
             },
         ]
+    },
+    {
+        'label': _('Segments'),
+        'app_label': 'segments',
+        'permissions': ['segments.change_segmenttype'],
+        'enabled': 'members.MemberPlatformSettings.enable_segments',
+        'items': [
+            {
+                'label': _('All segment types'),
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment'],
+            },
+        ]  # Segment type items are added programmatically in bluebottle_dashboard/utils.py
     },
     {
         'label': _('Content'),

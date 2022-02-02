@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.3
--- Dumped by pg_dump version 13.3
+-- Dumped from database version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -562,7 +562,8 @@ CREATE TABLE test.activities_activity (
     review_status character varying(40) NOT NULL,
     transition_date timestamp with time zone,
     image_id uuid,
-    video_url character varying(100)
+    video_url character varying(100),
+    office_location_id integer
 );
 
 
@@ -573,7 +574,9 @@ CREATE TABLE test.activities_activity (
 CREATE TABLE test.deeds_deed (
     activity_ptr_id integer NOT NULL,
     start date,
-    "end" date
+    "end" date,
+    target integer,
+    enable_impact boolean NOT NULL
 );
 
 
@@ -806,6 +809,8 @@ CREATE TABLE test.analytics_analyticsplatformsettings (
     fiscal_month_offset integer NOT NULL,
     user_base integer,
     platform_type character varying(10) NOT NULL,
+    engagement_target integer,
+    CONSTRAINT analytics_analyticsplatformsettings_engagement_target_check CHECK ((engagement_target >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_fiscal_month_offset_check CHECK ((fiscal_month_offset >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_user_base_check CHECK ((user_base >= 0))
 );
@@ -1875,6 +1880,108 @@ CREATE SEQUENCE test.cms_step_id_seq
 --
 
 ALTER SEQUENCE test.cms_step_id_seq OWNED BY test.cms_step.id;
+
+
+--
+-- Name: collect_collectactivity; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.collect_collectactivity (
+    activity_ptr_id integer NOT NULL,
+    start date,
+    "end" date,
+    collect_type_id integer,
+    location_id integer,
+    target numeric(15,3),
+    location_hint text,
+    realized numeric(15,3),
+    enable_impact boolean NOT NULL
+);
+
+
+--
+-- Name: collect_collectcontribution; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.collect_collectcontribution (
+    contribution_ptr_id integer NOT NULL,
+    value numeric(12,5),
+    type_id integer
+);
+
+
+--
+-- Name: collect_collectcontributor; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.collect_collectcontributor (
+    contributor_ptr_id integer NOT NULL,
+    value numeric(12,5)
+);
+
+
+--
+-- Name: collect_collecttype; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.collect_collecttype (
+    id integer NOT NULL,
+    disabled boolean NOT NULL
+);
+
+
+--
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.collect_collecttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.collect_collecttype_id_seq OWNED BY test.collect_collecttype.id;
+
+
+--
+-- Name: collect_collecttype_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.collect_collecttype_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer,
+    unit character varying(100) NOT NULL,
+    unit_plural character varying(100) NOT NULL
+);
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.collect_collecttype_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.collect_collecttype_translation_id_seq OWNED BY test.collect_collecttype_translation.id;
 
 
 --
@@ -3500,11 +3607,8 @@ CREATE TABLE test.geo_place (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
-    country_id integer NOT NULL,
-    "position" public.geometry(Point,4326),
-    CONSTRAINT geo_place_object_id_check CHECK ((object_id >= 0))
+    country_id integer,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -3662,7 +3766,8 @@ CREATE TABLE test.impact_impactgoal (
     target double precision,
     realized double precision,
     type_id integer NOT NULL,
-    activity_id integer NOT NULL
+    activity_id integer NOT NULL,
+    realized_from_contributions double precision
 );
 
 
@@ -3779,7 +3884,8 @@ CREATE TABLE test.initiatives_initiative (
     updated timestamp with time zone NOT NULL,
     location_id integer,
     activity_manager_id integer,
-    is_open boolean NOT NULL
+    is_open boolean NOT NULL,
+    is_global boolean NOT NULL
 );
 
 
@@ -4101,72 +4207,6 @@ ALTER SEQUENCE test.mails_mailplatformsettings_id_seq OWNED BY test.mails_mailpl
 
 
 --
--- Name: members_custommemberfield; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.members_custommemberfield (
-    id integer NOT NULL,
-    value character varying(5000),
-    field_id integer NOT NULL,
-    member_id integer NOT NULL
-);
-
-
---
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.members_custommemberfield_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.members_custommemberfield_id_seq OWNED BY test.members_custommemberfield.id;
-
-
---
--- Name: members_custommemberfieldsettings; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.members_custommemberfieldsettings (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    description character varying(200),
-    sequence integer NOT NULL,
-    member_settings_id integer,
-    CONSTRAINT members_custommemberfieldsettings_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE; Schema: test; Owner: -
---
-
-CREATE SEQUENCE test.members_custommemberfieldsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
---
-
-ALTER SEQUENCE test.members_custommemberfieldsettings_id_seq OWNED BY test.members_custommemberfieldsettings.id;
-
-
---
 -- Name: members_member; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -4212,7 +4252,9 @@ CREATE TABLE test.members_member (
     last_logout timestamp with time zone,
     scim_external_id character varying(75),
     matching_options_set timestamp with time zone,
-    subscribed boolean NOT NULL
+    subscribed boolean NOT NULL,
+    submitted_initiative_notifications boolean NOT NULL,
+    place_id integer
 );
 
 
@@ -4408,7 +4450,10 @@ CREATE TABLE test.members_memberplatformsettings (
     anonymization_age integer NOT NULL,
     enable_segments boolean NOT NULL,
     create_segments boolean NOT NULL,
-    session_only boolean NOT NULL
+    session_only boolean NOT NULL,
+    enable_birthdate boolean NOT NULL,
+    enable_gender boolean NOT NULL,
+    enable_address boolean NOT NULL
 );
 
 
@@ -4558,6 +4603,7 @@ CREATE TABLE test.notifications_message (
     custom_message text,
     body_html text,
     body_txt text,
+    bcc character varying(200)[],
     CONSTRAINT notifications_message_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -4655,7 +4701,8 @@ CREATE TABLE test.notifications_notificationplatformsettings (
     update timestamp with time zone NOT NULL,
     share_options character varying(100) NOT NULL,
     facebook_at_work_url character varying(100),
-    match_options boolean NOT NULL
+    match_options boolean NOT NULL,
+    default_yammer_group_id character varying(100)
 );
 
 
@@ -5111,7 +5158,14 @@ CREATE TABLE test.segments_segment (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     alternate_names character varying(200)[] NOT NULL,
-    type_id integer NOT NULL
+    segment_type_id integer NOT NULL,
+    slug character varying(255) NOT NULL,
+    background_color character varying(18),
+    cover_image character varying(255),
+    logo character varying(255),
+    tag_line character varying(255),
+    story text,
+    email_domain character varying(255)
 );
 
 
@@ -5144,7 +5198,8 @@ CREATE TABLE test.segments_segmenttype (
     name character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     is_active boolean NOT NULL,
-    enable_search boolean NOT NULL
+    enable_search boolean NOT NULL,
+    user_editable boolean NOT NULL
 );
 
 
@@ -5979,7 +6034,9 @@ CREATE TABLE test.utils_language (
     id integer NOT NULL,
     code character varying(2) NOT NULL,
     language_name character varying(100) NOT NULL,
-    native_name character varying(100) NOT NULL
+    native_name character varying(100) NOT NULL,
+    "default" boolean NOT NULL,
+    sub_code character varying(2) NOT NULL
 );
 
 
@@ -6274,7 +6331,8 @@ CREATE TABLE test2.activities_activity (
     review_status character varying(40) NOT NULL,
     transition_date timestamp with time zone,
     image_id uuid,
-    video_url character varying(100)
+    video_url character varying(100),
+    office_location_id integer
 );
 
 
@@ -6285,7 +6343,9 @@ CREATE TABLE test2.activities_activity (
 CREATE TABLE test2.deeds_deed (
     activity_ptr_id integer NOT NULL,
     start date,
-    "end" date
+    "end" date,
+    target integer,
+    enable_impact boolean NOT NULL
 );
 
 
@@ -6518,6 +6578,8 @@ CREATE TABLE test2.analytics_analyticsplatformsettings (
     fiscal_month_offset integer NOT NULL,
     user_base integer,
     platform_type character varying(10) NOT NULL,
+    engagement_target integer,
+    CONSTRAINT analytics_analyticsplatformsettings_engagement_target_check CHECK ((engagement_target >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_fiscal_month_offset_check CHECK ((fiscal_month_offset >= 0)),
     CONSTRAINT analytics_analyticsplatformsettings_user_base_check CHECK ((user_base >= 0))
 );
@@ -7587,6 +7649,108 @@ CREATE SEQUENCE test2.cms_step_id_seq
 --
 
 ALTER SEQUENCE test2.cms_step_id_seq OWNED BY test2.cms_step.id;
+
+
+--
+-- Name: collect_collectactivity; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.collect_collectactivity (
+    activity_ptr_id integer NOT NULL,
+    start date,
+    "end" date,
+    collect_type_id integer,
+    location_id integer,
+    target numeric(15,3),
+    location_hint text,
+    realized numeric(15,3),
+    enable_impact boolean NOT NULL
+);
+
+
+--
+-- Name: collect_collectcontribution; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.collect_collectcontribution (
+    contribution_ptr_id integer NOT NULL,
+    value numeric(12,5),
+    type_id integer
+);
+
+
+--
+-- Name: collect_collectcontributor; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.collect_collectcontributor (
+    contributor_ptr_id integer NOT NULL,
+    value numeric(12,5)
+);
+
+
+--
+-- Name: collect_collecttype; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.collect_collecttype (
+    id integer NOT NULL,
+    disabled boolean NOT NULL
+);
+
+
+--
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.collect_collecttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.collect_collecttype_id_seq OWNED BY test2.collect_collecttype.id;
+
+
+--
+-- Name: collect_collecttype_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.collect_collecttype_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer,
+    unit character varying(100) NOT NULL,
+    unit_plural character varying(100) NOT NULL
+);
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.collect_collecttype_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.collect_collecttype_translation_id_seq OWNED BY test2.collect_collecttype_translation.id;
 
 
 --
@@ -9212,11 +9376,8 @@ CREATE TABLE test2.geo_place (
     locality character varying(255),
     province character varying(255),
     formatted_address character varying(255),
-    object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
-    country_id integer NOT NULL,
-    "position" public.geometry(Point,4326),
-    CONSTRAINT geo_place_object_id_check CHECK ((object_id >= 0))
+    country_id integer,
+    "position" public.geometry(Point,4326)
 );
 
 
@@ -9374,7 +9535,8 @@ CREATE TABLE test2.impact_impactgoal (
     target double precision,
     realized double precision,
     type_id integer NOT NULL,
-    activity_id integer NOT NULL
+    activity_id integer NOT NULL,
+    realized_from_contributions double precision
 );
 
 
@@ -9491,7 +9653,8 @@ CREATE TABLE test2.initiatives_initiative (
     updated timestamp with time zone NOT NULL,
     location_id integer,
     activity_manager_id integer,
-    is_open boolean NOT NULL
+    is_open boolean NOT NULL,
+    is_global boolean NOT NULL
 );
 
 
@@ -9813,72 +9976,6 @@ ALTER SEQUENCE test2.mails_mailplatformsettings_id_seq OWNED BY test2.mails_mail
 
 
 --
--- Name: members_custommemberfield; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.members_custommemberfield (
-    id integer NOT NULL,
-    value character varying(5000),
-    field_id integer NOT NULL,
-    member_id integer NOT NULL
-);
-
-
---
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.members_custommemberfield_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.members_custommemberfield_id_seq OWNED BY test2.members_custommemberfield.id;
-
-
---
--- Name: members_custommemberfieldsettings; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.members_custommemberfieldsettings (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    description character varying(200),
-    sequence integer NOT NULL,
-    member_settings_id integer,
-    CONSTRAINT members_custommemberfieldsettings_sequence_check CHECK ((sequence >= 0))
-);
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
---
-
-CREATE SEQUENCE test2.members_custommemberfieldsettings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
---
-
-ALTER SEQUENCE test2.members_custommemberfieldsettings_id_seq OWNED BY test2.members_custommemberfieldsettings.id;
-
-
---
 -- Name: members_member; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -9924,7 +10021,9 @@ CREATE TABLE test2.members_member (
     last_logout timestamp with time zone,
     scim_external_id character varying(75),
     matching_options_set timestamp with time zone,
-    subscribed boolean NOT NULL
+    subscribed boolean NOT NULL,
+    submitted_initiative_notifications boolean NOT NULL,
+    place_id integer
 );
 
 
@@ -10120,7 +10219,10 @@ CREATE TABLE test2.members_memberplatformsettings (
     anonymization_age integer NOT NULL,
     enable_segments boolean NOT NULL,
     create_segments boolean NOT NULL,
-    session_only boolean NOT NULL
+    session_only boolean NOT NULL,
+    enable_birthdate boolean NOT NULL,
+    enable_gender boolean NOT NULL,
+    enable_address boolean NOT NULL
 );
 
 
@@ -10270,6 +10372,7 @@ CREATE TABLE test2.notifications_message (
     custom_message text,
     body_html text,
     body_txt text,
+    bcc character varying(200)[],
     CONSTRAINT notifications_message_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -10367,7 +10470,8 @@ CREATE TABLE test2.notifications_notificationplatformsettings (
     update timestamp with time zone NOT NULL,
     share_options character varying(100) NOT NULL,
     facebook_at_work_url character varying(100),
-    match_options boolean NOT NULL
+    match_options boolean NOT NULL,
+    default_yammer_group_id character varying(100)
 );
 
 
@@ -10823,7 +10927,14 @@ CREATE TABLE test2.segments_segment (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     alternate_names character varying(200)[] NOT NULL,
-    type_id integer NOT NULL
+    segment_type_id integer NOT NULL,
+    slug character varying(255) NOT NULL,
+    background_color character varying(18),
+    cover_image character varying(255),
+    logo character varying(255),
+    tag_line character varying(255),
+    story text,
+    email_domain character varying(255)
 );
 
 
@@ -10856,7 +10967,8 @@ CREATE TABLE test2.segments_segmenttype (
     name character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
     is_active boolean NOT NULL,
-    enable_search boolean NOT NULL
+    enable_search boolean NOT NULL,
+    user_editable boolean NOT NULL
 );
 
 
@@ -11691,7 +11803,9 @@ CREATE TABLE test2.utils_language (
     id integer NOT NULL,
     code character varying(2) NOT NULL,
     language_name character varying(100) NOT NULL,
-    native_name character varying(100) NOT NULL
+    native_name character varying(100) NOT NULL,
+    "default" boolean NOT NULL,
+    sub_code character varying(2) NOT NULL
 );
 
 
@@ -12297,6 +12411,20 @@ ALTER TABLE ONLY test.cms_step ALTER COLUMN id SET DEFAULT nextval('test.cms_ste
 
 
 --
+-- Name: collect_collecttype id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype ALTER COLUMN id SET DEFAULT nextval('test.collect_collecttype_id_seq'::regclass);
+
+
+--
+-- Name: collect_collecttype_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype_translation ALTER COLUMN id SET DEFAULT nextval('test.collect_collecttype_translation_id_seq'::regclass);
+
+
+--
 -- Name: contact_contactmessage id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -12609,20 +12737,6 @@ ALTER TABLE ONLY test.looker_lookerembed ALTER COLUMN id SET DEFAULT nextval('te
 --
 
 ALTER TABLE ONLY test.mails_mailplatformsettings ALTER COLUMN id SET DEFAULT nextval('test.mails_mailplatformsettings_id_seq'::regclass);
-
-
---
--- Name: members_custommemberfield id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfield ALTER COLUMN id SET DEFAULT nextval('test.members_custommemberfield_id_seq'::regclass);
-
-
---
--- Name: members_custommemberfieldsettings id; Type: DEFAULT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfieldsettings ALTER COLUMN id SET DEFAULT nextval('test.members_custommemberfieldsettings_id_seq'::regclass);
 
 
 --
@@ -13263,6 +13377,20 @@ ALTER TABLE ONLY test2.cms_step ALTER COLUMN id SET DEFAULT nextval('test2.cms_s
 
 
 --
+-- Name: collect_collecttype id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype ALTER COLUMN id SET DEFAULT nextval('test2.collect_collecttype_id_seq'::regclass);
+
+
+--
+-- Name: collect_collecttype_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype_translation ALTER COLUMN id SET DEFAULT nextval('test2.collect_collecttype_translation_id_seq'::regclass);
+
+
+--
 -- Name: contact_contactmessage id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -13575,20 +13703,6 @@ ALTER TABLE ONLY test2.looker_lookerembed ALTER COLUMN id SET DEFAULT nextval('t
 --
 
 ALTER TABLE ONLY test2.mails_mailplatformsettings ALTER COLUMN id SET DEFAULT nextval('test2.mails_mailplatformsettings_id_seq'::regclass);
-
-
---
--- Name: members_custommemberfield id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfield ALTER COLUMN id SET DEFAULT nextval('test2.members_custommemberfield_id_seq'::regclass);
-
-
---
--- Name: members_custommemberfieldsettings id; Type: DEFAULT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfieldsettings ALTER COLUMN id SET DEFAULT nextval('test2.members_custommemberfieldsettings_id_seq'::regclass);
 
 
 --
@@ -15147,6 +15261,66 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:15.908372+02
 1139	social_django	0010_uid_db_index	2021-06-01 15:14:15.951872+02
 1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:15.979256+02
+1141	activities	0044_activity_office_location	2022-02-02 12:30:10.741536+01
+1142	activities	0045_auto_20211102_1258	2022-02-02 12:30:10.874736+01
+1143	analytics	0008_analyticsplatformsettings_engagement_target	2022-02-02 12:30:10.888791+01
+1144	geo	0027_auto_20210927_1047	2022-02-02 12:30:11.49643+01
+1145	collect	0001_initial	2022-02-02 12:30:11.864198+01
+1146	collect	0002_auto_20210920_0917	2022-02-02 12:30:11.906255+01
+1147	collect	0003_auto_20210920_0922	2022-02-02 12:30:12.057561+01
+1148	collect	0004_auto_20210922_1502	2022-02-02 12:30:12.130251+01
+1149	collect	0005_auto_20210922_1502	2022-02-02 12:30:12.1383+01
+1150	collect	0006_auto_20210927_1047	2022-02-02 12:30:12.255211+01
+1151	collect	0007_collecttype_disabled	2022-02-02 12:30:12.270325+01
+1152	collect	0008_collectactivity_target	2022-02-02 12:30:12.450271+01
+1153	collect	0009_auto_20211102_1100	2022-02-02 12:30:12.539385+01
+1154	collect	0010_auto_20211102_1258	2022-02-02 12:30:12.635796+01
+1155	collect	0011_auto_20211102_1649	2022-02-02 12:30:12.670563+01
+1156	collect	0012_auto_20211103_1420	2022-02-02 12:30:12.706797+01
+1157	collect	0013_auto_20211108_1113	2022-02-02 12:30:12.747078+01
+1158	collect	0014_create_defaults	2022-02-02 12:30:12.755474+01
+1159	collect	0015_auto_20211109_1123	2022-02-02 12:30:12.870735+01
+1160	collect	0016_auto_20211119_1143	2022-02-02 12:30:12.944119+01
+1161	deeds	0008_deed_target	2022-02-02 12:30:12.968031+01
+1162	deeds	0009_auto_20211004_1150	2022-02-02 12:30:13.016282+01
+1163	deeds	0010_auto_20211208_0833	2022-02-02 12:30:13.02377+01
+1164	deeds	0011_auto_20211209_1640	2022-02-02 12:30:13.031057+01
+1165	deeds	0012_auto_20220113_1251	2022-02-02 12:30:13.038317+01
+1166	members	0042_auto_20210527_1128	2022-02-02 12:30:13.065316+01
+1167	members	0043_merge_20210527_1631	2022-02-02 12:30:13.068391+01
+1168	members	0044_auto_20210708_1011	2022-02-02 12:30:13.110818+01
+1169	members	0045_auto_20210708_1020	2022-02-02 12:30:13.121979+01
+1170	members	0046_auto_20211012_1242	2022-02-02 12:30:13.585552+01
+1171	geo	0027_auto_20211012_1203	2022-02-02 12:30:14.125097+01
+1172	members	0047_auto_20211012_1255	2022-02-02 12:30:14.214708+01
+1173	members	0048_auto_20211012_1256	2022-02-02 12:30:14.225728+01
+1174	geo	0028_auto_20211012_1316	2022-02-02 12:30:14.322722+01
+1175	geo	0029_auto_20211014_1404	2022-02-02 12:30:14.400884+01
+1176	geo	0030_merge_20211026_1137	2022-02-02 12:30:14.407868+01
+1177	impact	0018_auto_20210920_1307	2022-02-02 12:30:14.602317+01
+1178	impact	0019_auto_20210924_1438	2022-02-02 12:30:14.63678+01
+1179	impact	0020_auto_20211001_1134	2022-02-02 12:30:14.757281+01
+1180	initiatives	0038_auto_20210716_1459	2022-02-02 12:30:14.794377+01
+1181	segments	0005_auto_20210628_1409	2022-02-02 12:30:14.826585+01
+1182	segments	0006_auto_20210914_1134	2022-02-02 12:30:14.839115+01
+1183	segments	0007_auto_20220119_0945	2022-02-02 12:30:14.84645+01
+1184	members	0049_auto_20220124_0938	2022-02-02 12:30:14.867476+01
+1185	notifications	0010_auto_20210830_1331	2022-02-02 12:30:14.877982+01
+1186	notifications	0011_auto_20210913_1601	2022-02-02 12:30:14.920609+01
+1187	utils	0006_auto_20210825_1018	2022-02-02 12:30:14.939768+01
+1188	utils	0007_auto_20210825_1018	2022-02-02 12:30:14.948846+01
+1189	utils	0008_auto_20211012_1231	2022-02-02 12:30:14.993907+01
+1190	segments	0007_segment_slug	2022-02-02 14:33:32.114338+01
+1191	segments	0008_auto_20211122_1522	2022-02-02 14:33:32.124438+01
+1192	segments	0009_auto_20211122_1527	2022-02-02 14:33:32.140845+01
+1193	segments	0010_auto_20211123_1533	2022-02-02 14:33:32.199403+01
+1194	segments	0011_segment_story	2022-02-02 14:33:32.216514+01
+1195	segments	0012_auto_20211209_1001	2022-02-02 14:33:32.292713+01
+1196	segments	0013_auto_20211210_1245	2022-02-02 14:33:32.304132+01
+1197	segments	0014_auto_20211210_1246	2022-02-02 14:33:32.410497+01
+1198	segments	0015_segment_email_domain	2022-02-02 14:33:32.439073+01
+1199	segments	0016_auto_20220118_1031	2022-02-02 14:33:32.457922+01
+1200	segments	0017_merge_20220202_1244	2022-02-02 14:33:32.461194+01
 \.
 
 
@@ -15249,7 +15423,7 @@ COPY public.spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM
 -- Data for Name: activities_activity; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url) FROM stdin;
+COPY test.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url, office_location_id) FROM stdin;
 \.
 
 
@@ -15297,8 +15471,8 @@ COPY test.activities_organizer (contributor_ptr_id) FROM stdin;
 -- Data for Name: analytics_analyticsplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type) FROM stdin;
-1	2020-10-12 14:25:16.740421+02	0	\N	corporate
+COPY test.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type, engagement_target) FROM stdin;
+1	2020-10-12 14:25:16.740421+02	0	\N	corporate	\N
 \.
 
 
@@ -15832,6 +16006,28 @@ COPY test.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 533	1	1188
 534	2	1189
 535	3	1189
+536	1	1379
+537	1	1380
+538	1	1381
+539	1	1391
+540	1	1392
+541	1	1393
+542	1	1403
+543	1	1404
+544	1	1405
+545	2	1383
+546	2	1407
+547	2	1395
+548	3	1383
+549	3	1388
+550	3	1389
+551	3	1390
+552	3	1395
+553	3	1400
+554	3	1401
+555	3	1402
+556	3	1396
+557	3	1407
 \.
 
 
@@ -17218,6 +17414,55 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 1376	Can view Statistics	199	view_homepagestatisticscontent
 1377	Can view access attempt	98	view_accessattempt
 1378	Can view access log	99	view_accesslog
+1379	Can add Collect Activity	304	add_collectactivity
+1380	Can change Collect Activity	304	change_collectactivity
+1381	Can delete Collect Activity	304	delete_collectactivity
+1382	Can view Collect Activity	304	view_collectactivity
+1383	Can view collect activity through the API	304	api_read_collectactivity
+1384	Can add collect activity through the API	304	api_add_collectactivity
+1385	Can change collect activity through the API	304	api_change_collectactivity
+1386	Can delete collect activity through the API	304	api_delete_collectactivity
+1387	Can view own collect activity through the API	304	api_read_own_collectactivity
+1388	Can add own collect activity through the API	304	api_add_own_collectactivity
+1389	Can change own collect activity through the API	304	api_change_own_collectactivity
+1390	Can delete own collect activity through the API	304	api_delete_own_collectactivity
+1391	Can add Contributor	305	add_collectcontributor
+1392	Can change Contributor	305	change_collectcontributor
+1393	Can delete Contributor	305	delete_collectcontributor
+1394	Can view Contributor	305	view_collectcontributor
+1395	Can view collect contributor through the API	305	api_read_collectcontributor
+1396	Can add collect contributor through the API	305	api_add_collectcontributor
+1397	Can change collect contributor through the API	305	api_change_collectcontributor
+1398	Can delete collect contributor through the API	305	api_delete_collectcontributor
+1399	Can view own collect contributor through the API	305	api_read_own_collectcontributor
+1400	Can add own collect contributor through the API	305	api_add_own_collectcontributor
+1401	Can change own collect contributor through the API	305	api_change_own_collectcontributor
+1402	Can delete own collect contributor through the API	305	api_delete_own_collectcontributor
+1403	Can add collect type	306	add_collecttype
+1404	Can change collect type	306	change_collecttype
+1405	Can delete collect type	306	delete_collecttype
+1406	Can view collect type	306	view_collecttype
+1407	Can view collect type through API	306	api_read_collecttype
+1408	Can add post gis geometry columns	308	add_postgisgeometrycolumns
+1409	Can change post gis geometry columns	308	change_postgisgeometrycolumns
+1410	Can delete post gis geometry columns	308	delete_postgisgeometrycolumns
+1411	Can view post gis geometry columns	308	view_postgisgeometrycolumns
+1412	Can add post gis spatial ref sys	309	add_postgisspatialrefsys
+1413	Can change post gis spatial ref sys	309	change_postgisspatialrefsys
+1414	Can delete post gis spatial ref sys	309	delete_postgisspatialrefsys
+1415	Can view post gis spatial ref sys	309	view_postgisspatialrefsys
+1416	Can view collect activity through the API	304	api_read_collect
+1417	Can add collect activity through the API	304	api_add_collect
+1418	Can change collect activity through the API	304	api_change_collect
+1419	Can delete collect activity through the API	304	api_delete_collect
+1420	Can view own collect activity through the API	304	api_read_own_collect
+1421	Can add own collect activity through the API	304	api_add_own_collect
+1422	Can change own collect activity through the API	304	api_change_own_collect
+1423	Can delete own collect activity through the API	304	api_delete_own_collect
+1424	Can add Collect contribution	310	add_collectcontribution
+1425	Can change Collect contribution	310	change_collectcontribution
+1426	Can delete Collect contribution	310	delete_collectcontribution
+1427	Can view Collect contribution	310	view_collectcontribution
 \.
 
 
@@ -17473,6 +17718,55 @@ COPY test.cms_step (id, image, block_id, header, text, sequence) FROM stdin;
 
 
 --
+-- Data for Name: collect_collectactivity; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.collect_collectactivity (activity_ptr_id, start, "end", collect_type_id, location_id, target, location_hint, realized, enable_impact) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collectcontribution; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.collect_collectcontribution (contribution_ptr_id, value, type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collectcontributor; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.collect_collectcontributor (contributor_ptr_id, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collecttype; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.collect_collecttype (id, disabled) FROM stdin;
+1	f
+2	f
+3	f
+\.
+
+
+--
+-- Data for Name: collect_collecttype_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.collect_collecttype_translation (id, language_code, name, master_id, unit, unit_plural) FROM stdin;
+1	en	Clothing	1	Bag of clothing	Bags of clothing
+2	nl	Kleding	1	Zak kleding	Zakken kleding
+3	en	Laptops	2	Laptop	Laptops
+4	nl	Laptops	2	Laptop	Laptops
+5	en	Groceries	3	Crate of groceries	Crates of groceries
+6	nl	Boodschappen	3	Krat boodschappen	Kratten boodschappen
+\.
+
+
+--
 -- Data for Name: contact_contactmessage; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -17694,7 +17988,7 @@ COPY test.dashboard_userdashboardmodule (id, title, module, app_label, "user", "
 -- Data for Name: deeds_deed; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.deeds_deed (activity_ptr_id, start, "end") FROM stdin;
+COPY test.deeds_deed (activity_ptr_id, start, "end", target, enable_impact) FROM stdin;
 \.
 
 
@@ -18022,6 +18316,13 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 301	time_based	skill
 302	time_based	skilltranslation
 303	authtoken	tokenproxy
+304	collect	collectactivity
+305	collect	collectcontributor
+306	collect	collecttype
+307	collect	collecttypetranslation
+308	gis	postgisgeometrycolumns
+309	gis	postgisspatialrefsys
+310	collect	collectcontribution
 \.
 
 
@@ -19170,6 +19471,66 @@ COPY test.django_migrations (id, app, name, applied) FROM stdin;
 1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:27.884084+02
 1139	social_django	0010_uid_db_index	2021-06-01 15:14:27.946425+02
 1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:28.013057+02
+1141	activities	0044_activity_office_location	2022-02-02 12:30:24.135004+01
+1142	activities	0045_auto_20211102_1258	2022-02-02 12:30:24.286521+01
+1143	analytics	0008_analyticsplatformsettings_engagement_target	2022-02-02 12:30:24.302907+01
+1144	geo	0027_auto_20210927_1047	2022-02-02 12:30:25.119072+01
+1145	collect	0001_initial	2022-02-02 12:30:25.33916+01
+1146	collect	0002_auto_20210920_0917	2022-02-02 12:30:25.383265+01
+1147	collect	0003_auto_20210920_0922	2022-02-02 12:30:25.71658+01
+1148	collect	0004_auto_20210922_1502	2022-02-02 12:30:25.834579+01
+1149	collect	0005_auto_20210922_1502	2022-02-02 12:30:26.591757+01
+1150	collect	0006_auto_20210927_1047	2022-02-02 12:30:26.719235+01
+1151	collect	0007_collecttype_disabled	2022-02-02 12:30:26.742421+01
+1152	collect	0008_collectactivity_target	2022-02-02 12:30:26.77184+01
+1153	collect	0009_auto_20211102_1100	2022-02-02 12:30:26.878109+01
+1154	collect	0010_auto_20211102_1258	2022-02-02 12:30:27.151912+01
+1155	collect	0011_auto_20211102_1649	2022-02-02 12:30:27.247214+01
+1156	collect	0012_auto_20211103_1420	2022-02-02 12:30:27.284277+01
+1157	collect	0013_auto_20211108_1113	2022-02-02 12:30:27.329208+01
+1158	collect	0014_create_defaults	2022-02-02 12:30:27.451932+01
+1159	collect	0015_auto_20211109_1123	2022-02-02 12:30:27.570346+01
+1160	collect	0016_auto_20211119_1143	2022-02-02 12:30:27.656421+01
+1161	deeds	0008_deed_target	2022-02-02 12:30:27.687252+01
+1162	deeds	0009_auto_20211004_1150	2022-02-02 12:30:27.736293+01
+1163	deeds	0010_auto_20211208_0833	2022-02-02 12:30:28.030987+01
+1164	deeds	0011_auto_20211209_1640	2022-02-02 12:30:28.151099+01
+1165	deeds	0012_auto_20220113_1251	2022-02-02 12:30:28.276224+01
+1166	members	0042_auto_20210527_1128	2022-02-02 12:30:28.305975+01
+1167	members	0043_merge_20210527_1631	2022-02-02 12:30:28.309326+01
+1168	members	0044_auto_20210708_1011	2022-02-02 12:30:28.358935+01
+1169	members	0045_auto_20210708_1020	2022-02-02 12:30:28.37346+01
+1170	members	0046_auto_20211012_1242	2022-02-02 12:30:28.8981+01
+1171	geo	0027_auto_20211012_1203	2022-02-02 12:30:29.299161+01
+1172	members	0047_auto_20211012_1255	2022-02-02 12:30:29.602231+01
+1173	members	0048_auto_20211012_1256	2022-02-02 12:30:29.739233+01
+1174	geo	0028_auto_20211012_1316	2022-02-02 12:30:29.858453+01
+1175	geo	0029_auto_20211014_1404	2022-02-02 12:30:29.94224+01
+1176	geo	0030_merge_20211026_1137	2022-02-02 12:30:29.949382+01
+1177	impact	0018_auto_20210920_1307	2022-02-02 12:30:29.981106+01
+1178	impact	0019_auto_20210924_1438	2022-02-02 12:30:30.009801+01
+1179	impact	0020_auto_20211001_1134	2022-02-02 12:30:30.306819+01
+1180	initiatives	0038_auto_20210716_1459	2022-02-02 12:30:30.34689+01
+1181	segments	0005_auto_20210628_1409	2022-02-02 12:30:30.380107+01
+1182	segments	0006_auto_20210914_1134	2022-02-02 12:30:30.395285+01
+1183	segments	0007_auto_20220119_0945	2022-02-02 12:30:30.51065+01
+1184	members	0049_auto_20220124_0938	2022-02-02 12:30:30.545281+01
+1185	notifications	0010_auto_20210830_1331	2022-02-02 12:30:30.558435+01
+1186	notifications	0011_auto_20210913_1601	2022-02-02 12:30:30.611171+01
+1187	utils	0006_auto_20210825_1018	2022-02-02 12:30:30.633768+01
+1188	utils	0007_auto_20210825_1018	2022-02-02 12:30:30.745067+01
+1189	utils	0008_auto_20211012_1231	2022-02-02 12:30:30.807691+01
+1190	segments	0007_segment_slug	2022-02-02 14:33:35.421659+01
+1191	segments	0008_auto_20211122_1522	2022-02-02 14:33:35.538448+01
+1192	segments	0009_auto_20211122_1527	2022-02-02 14:33:35.55906+01
+1193	segments	0010_auto_20211123_1533	2022-02-02 14:33:35.632063+01
+1194	segments	0011_segment_story	2022-02-02 14:33:35.656073+01
+1195	segments	0012_auto_20211209_1001	2022-02-02 14:33:35.743701+01
+1196	segments	0013_auto_20211210_1245	2022-02-02 14:33:36.095327+01
+1197	segments	0014_auto_20211210_1246	2022-02-02 14:33:36.247732+01
+1198	segments	0015_segment_email_domain	2022-02-02 14:33:36.271675+01
+1199	segments	0016_auto_20220118_1031	2022-02-02 14:33:36.29209+01
+1200	segments	0017_merge_20220202_1244	2022-02-02 14:33:36.295338+01
 \.
 
 
@@ -19601,7 +19962,7 @@ COPY test.geo_locationgroup (id, name, description) FROM stdin;
 -- Data for Name: geo_place; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, object_id, content_type_id, country_id, "position") FROM stdin;
+COPY test.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, country_id, "position") FROM stdin;
 \.
 
 
@@ -19641,7 +20002,7 @@ COPY test.geo_subregion_translation (id, language_code, name, master_id) FROM st
 -- Data for Name: impact_impactgoal; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.impact_impactgoal (id, target, realized, type_id, activity_id) FROM stdin;
+COPY test.impact_impactgoal (id, target, realized, type_id, activity_id, realized_from_contributions) FROM stdin;
 \.
 
 
@@ -19693,7 +20054,7 @@ COPY test.impact_impacttype_translation (id, language_code, master_id, text, tex
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open) FROM stdin;
+COPY test.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open, is_global) FROM stdin;
 \.
 
 
@@ -19826,27 +20187,11 @@ COPY test.mails_mailplatformsettings (id, update, email_logo) FROM stdin;
 
 
 --
--- Data for Name: members_custommemberfield; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.members_custommemberfield (id, value, field_id, member_id) FROM stdin;
-\.
-
-
---
--- Data for Name: members_custommemberfieldsettings; Type: TABLE DATA; Schema: test; Owner: -
---
-
-COPY test.members_custommemberfieldsettings (id, name, description, sequence, member_settings_id) FROM stdin;
-\.
-
-
---
 -- Data for Name: members_member; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed) FROM stdin;
-1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-10-12 14:24:50.165554+02	2020-10-12 14:25:00.415972+02	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
+COPY test.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed, submitted_initiative_notifications, place_id) FROM stdin;
+1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-10-12 14:24:50.165554+02	2022-02-02 12:30:29.736288+01	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f	f	\N
 \.
 
 
@@ -19896,8 +20241,8 @@ COPY test.members_member_user_permissions (id, member_id, permission_id) FROM st
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only) FROM stdin;
-1	2020-10-12 14:26:30.714573+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f
+COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only, enable_birthdate, enable_gender, enable_address) FROM stdin;
+1	2020-10-12 14:26:30.714573+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f	f	f	f
 \.
 
 
@@ -19929,7 +20274,7 @@ COPY test.news_newsitem (id, title, slug, main_image, language, status, publicat
 -- Data for Name: notifications_message; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.notifications_message (id, sent, adapter, template, subject, object_id, content_type_id, recipient_id, custom_message, body_html, body_txt) FROM stdin;
+COPY test.notifications_message (id, sent, adapter, template, subject, object_id, content_type_id, recipient_id, custom_message, body_html, body_txt, bcc) FROM stdin;
 \.
 
 
@@ -19953,8 +20298,8 @@ COPY test.notifications_messagetemplate_translation (id, language_code, subject,
 -- Data for Name: notifications_notificationplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2020-10-12 14:26:47.495948+02	twitter,facebook	\N	f
+COPY test.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options, default_yammer_group_id) FROM stdin;
+1	2020-10-12 14:26:47.495948+02	twitter,facebook	\N	f	\N
 \.
 
 
@@ -20075,7 +20420,7 @@ COPY test.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
 -- Data for Name: segments_segment; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.segments_segment (id, name, alternate_names, type_id) FROM stdin;
+COPY test.segments_segment (id, name, alternate_names, segment_type_id, slug, background_color, cover_image, logo, tag_line, story, email_domain) FROM stdin;
 \.
 
 
@@ -20083,7 +20428,7 @@ COPY test.segments_segment (id, name, alternate_names, type_id) FROM stdin;
 -- Data for Name: segments_segmenttype; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.segments_segmenttype (id, name, slug, is_active, enable_search) FROM stdin;
+COPY test.segments_segmenttype (id, name, slug, is_active, enable_search, user_editable) FROM stdin;
 \.
 
 
@@ -20429,9 +20774,9 @@ COPY test.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 -- Data for Name: utils_language; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.utils_language (id, code, language_name, native_name) FROM stdin;
-94	en	English	English
-95	nl	Dutch	Nederlands
+COPY test.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
+116	en	English	English	t	
+117	nl	Dutch	Nederlands	f	
 \.
 
 
@@ -20511,7 +20856,7 @@ COPY test.wallposts_wallpost (id, created, updated, deleted, ip_address, object_
 -- Data for Name: activities_activity; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url) FROM stdin;
+COPY test2.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url, office_location_id) FROM stdin;
 \.
 
 
@@ -20559,8 +20904,8 @@ COPY test2.activities_organizer (contributor_ptr_id) FROM stdin;
 -- Data for Name: analytics_analyticsplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type) FROM stdin;
-1	2020-10-12 14:22:57.946752+02	0	\N	corporate
+COPY test2.analytics_analyticsplatformsettings (id, update, fiscal_month_offset, user_base, platform_type, engagement_target) FROM stdin;
+1	2020-10-12 14:22:57.946752+02	0	\N	corporate	\N
 \.
 
 
@@ -21094,6 +21439,28 @@ COPY test2.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 533	1	1188
 534	2	1189
 535	3	1189
+536	1	1379
+537	1	1380
+538	1	1381
+539	1	1391
+540	1	1392
+541	1	1393
+542	1	1403
+543	1	1404
+544	1	1405
+545	2	1383
+546	2	1407
+547	2	1395
+548	3	1383
+549	3	1388
+550	3	1389
+551	3	1390
+552	3	1395
+553	3	1400
+554	3	1401
+555	3	1402
+556	3	1396
+557	3	1407
 \.
 
 
@@ -22480,6 +22847,55 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 1376	Can view Statistics	199	view_homepagestatisticscontent
 1377	Can view access attempt	98	view_accessattempt
 1378	Can view access log	99	view_accesslog
+1379	Can add Collect Activity	304	add_collectactivity
+1380	Can change Collect Activity	304	change_collectactivity
+1381	Can delete Collect Activity	304	delete_collectactivity
+1382	Can view Collect Activity	304	view_collectactivity
+1383	Can view collect activity through the API	304	api_read_collectactivity
+1384	Can add collect activity through the API	304	api_add_collectactivity
+1385	Can change collect activity through the API	304	api_change_collectactivity
+1386	Can delete collect activity through the API	304	api_delete_collectactivity
+1387	Can view own collect activity through the API	304	api_read_own_collectactivity
+1388	Can add own collect activity through the API	304	api_add_own_collectactivity
+1389	Can change own collect activity through the API	304	api_change_own_collectactivity
+1390	Can delete own collect activity through the API	304	api_delete_own_collectactivity
+1391	Can add Contributor	305	add_collectcontributor
+1392	Can change Contributor	305	change_collectcontributor
+1393	Can delete Contributor	305	delete_collectcontributor
+1394	Can view Contributor	305	view_collectcontributor
+1395	Can view collect contributor through the API	305	api_read_collectcontributor
+1396	Can add collect contributor through the API	305	api_add_collectcontributor
+1397	Can change collect contributor through the API	305	api_change_collectcontributor
+1398	Can delete collect contributor through the API	305	api_delete_collectcontributor
+1399	Can view own collect contributor through the API	305	api_read_own_collectcontributor
+1400	Can add own collect contributor through the API	305	api_add_own_collectcontributor
+1401	Can change own collect contributor through the API	305	api_change_own_collectcontributor
+1402	Can delete own collect contributor through the API	305	api_delete_own_collectcontributor
+1403	Can add collect type	306	add_collecttype
+1404	Can change collect type	306	change_collecttype
+1405	Can delete collect type	306	delete_collecttype
+1406	Can view collect type	306	view_collecttype
+1407	Can view collect type through API	306	api_read_collecttype
+1408	Can add post gis geometry columns	308	add_postgisgeometrycolumns
+1409	Can change post gis geometry columns	308	change_postgisgeometrycolumns
+1410	Can delete post gis geometry columns	308	delete_postgisgeometrycolumns
+1411	Can view post gis geometry columns	308	view_postgisgeometrycolumns
+1412	Can add post gis spatial ref sys	309	add_postgisspatialrefsys
+1413	Can change post gis spatial ref sys	309	change_postgisspatialrefsys
+1414	Can delete post gis spatial ref sys	309	delete_postgisspatialrefsys
+1415	Can view post gis spatial ref sys	309	view_postgisspatialrefsys
+1416	Can view collect activity through the API	304	api_read_collect
+1417	Can add collect activity through the API	304	api_add_collect
+1418	Can change collect activity through the API	304	api_change_collect
+1419	Can delete collect activity through the API	304	api_delete_collect
+1420	Can view own collect activity through the API	304	api_read_own_collect
+1421	Can add own collect activity through the API	304	api_add_own_collect
+1422	Can change own collect activity through the API	304	api_change_own_collect
+1423	Can delete own collect activity through the API	304	api_delete_own_collect
+1424	Can add Collect contribution	310	add_collectcontribution
+1425	Can change Collect contribution	310	change_collectcontribution
+1426	Can delete Collect contribution	310	delete_collectcontribution
+1427	Can view Collect contribution	310	view_collectcontribution
 \.
 
 
@@ -22735,6 +23151,55 @@ COPY test2.cms_step (id, image, block_id, header, text, sequence) FROM stdin;
 
 
 --
+-- Data for Name: collect_collectactivity; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.collect_collectactivity (activity_ptr_id, start, "end", collect_type_id, location_id, target, location_hint, realized, enable_impact) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collectcontribution; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.collect_collectcontribution (contribution_ptr_id, value, type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collectcontributor; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.collect_collectcontributor (contributor_ptr_id, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: collect_collecttype; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.collect_collecttype (id, disabled) FROM stdin;
+1	f
+2	f
+3	f
+\.
+
+
+--
+-- Data for Name: collect_collecttype_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.collect_collecttype_translation (id, language_code, name, master_id, unit, unit_plural) FROM stdin;
+1	en	Clothing	1	Bag of clothing	Bags of clothing
+2	nl	Kleding	1	Zak kleding	Zakken kleding
+3	en	Laptops	2	Laptop	Laptops
+4	nl	Laptops	2	Laptop	Laptops
+5	en	Groceries	3	Crate of groceries	Crates of groceries
+6	nl	Boodschappen	3	Krat boodschappen	Kratten boodschappen
+\.
+
+
+--
 -- Data for Name: contact_contactmessage; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -22956,7 +23421,7 @@ COPY test2.dashboard_userdashboardmodule (id, title, module, app_label, "user", 
 -- Data for Name: deeds_deed; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.deeds_deed (activity_ptr_id, start, "end") FROM stdin;
+COPY test2.deeds_deed (activity_ptr_id, start, "end", target, enable_impact) FROM stdin;
 \.
 
 
@@ -23284,6 +23749,13 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 301	time_based	skill
 302	time_based	skilltranslation
 303	authtoken	tokenproxy
+304	collect	collectactivity
+305	collect	collectcontributor
+306	collect	collecttype
+307	collect	collecttypetranslation
+308	gis	postgisgeometrycolumns
+309	gis	postgisspatialrefsys
+310	collect	collectcontribution
 \.
 
 
@@ -24432,6 +24904,66 @@ COPY test2.django_migrations (id, app, name, applied) FROM stdin;
 1138	social_django	0009_auto_20191118_0520	2021-06-01 15:14:20.701096+02
 1139	social_django	0010_uid_db_index	2021-06-01 15:14:20.987354+02
 1140	taggit	0003_taggeditem_add_unique_index	2021-06-01 15:14:21.08849+02
+1141	activities	0044_activity_office_location	2022-02-02 12:30:15.848377+01
+1142	activities	0045_auto_20211102_1258	2022-02-02 12:30:15.995923+01
+1143	analytics	0008_analyticsplatformsettings_engagement_target	2022-02-02 12:30:16.020068+01
+1144	geo	0027_auto_20210927_1047	2022-02-02 12:30:16.836386+01
+1145	collect	0001_initial	2022-02-02 12:30:17.052886+01
+1146	collect	0002_auto_20210920_0917	2022-02-02 12:30:17.099232+01
+1147	collect	0003_auto_20210920_0922	2022-02-02 12:30:17.285538+01
+1148	collect	0004_auto_20210922_1502	2022-02-02 12:30:17.568402+01
+1149	collect	0005_auto_20210922_1502	2022-02-02 12:30:18.369899+01
+1150	collect	0006_auto_20210927_1047	2022-02-02 12:30:18.505496+01
+1151	collect	0007_collecttype_disabled	2022-02-02 12:30:18.52479+01
+1152	collect	0008_collectactivity_target	2022-02-02 12:30:18.553278+01
+1153	collect	0009_auto_20211102_1100	2022-02-02 12:30:18.659762+01
+1154	collect	0010_auto_20211102_1258	2022-02-02 12:30:18.755908+01
+1155	collect	0011_auto_20211102_1649	2022-02-02 12:30:18.832558+01
+1156	collect	0012_auto_20211103_1420	2022-02-02 12:30:18.878502+01
+1157	collect	0013_auto_20211108_1113	2022-02-02 12:30:18.922697+01
+1158	collect	0014_create_defaults	2022-02-02 12:30:19.219207+01
+1159	collect	0015_auto_20211109_1123	2022-02-02 12:30:19.342317+01
+1160	collect	0016_auto_20211119_1143	2022-02-02 12:30:19.425845+01
+1161	deeds	0008_deed_target	2022-02-02 12:30:19.452902+01
+1162	deeds	0009_auto_20211004_1150	2022-02-02 12:30:19.504216+01
+1163	deeds	0010_auto_20211208_0833	2022-02-02 12:30:19.630663+01
+1164	deeds	0011_auto_20211209_1640	2022-02-02 12:30:19.928825+01
+1165	deeds	0012_auto_20220113_1251	2022-02-02 12:30:20.052962+01
+1166	members	0042_auto_20210527_1128	2022-02-02 12:30:20.082058+01
+1167	members	0043_merge_20210527_1631	2022-02-02 12:30:20.086311+01
+1168	members	0044_auto_20210708_1011	2022-02-02 12:30:20.142697+01
+1169	members	0045_auto_20210708_1020	2022-02-02 12:30:20.157488+01
+1170	members	0046_auto_20211012_1242	2022-02-02 12:30:20.692316+01
+1171	geo	0027_auto_20211012_1203	2022-02-02 12:30:21.128143+01
+1172	members	0047_auto_20211012_1255	2022-02-02 12:30:21.218527+01
+1173	members	0048_auto_20211012_1256	2022-02-02 12:30:21.579226+01
+1174	geo	0028_auto_20211012_1316	2022-02-02 12:30:21.68602+01
+1175	geo	0029_auto_20211014_1404	2022-02-02 12:30:21.777331+01
+1176	geo	0030_merge_20211026_1137	2022-02-02 12:30:21.784032+01
+1177	impact	0018_auto_20210920_1307	2022-02-02 12:30:21.816787+01
+1178	impact	0019_auto_20210924_1438	2022-02-02 12:30:21.843907+01
+1179	impact	0020_auto_20211001_1134	2022-02-02 12:30:21.974251+01
+1180	initiatives	0038_auto_20210716_1459	2022-02-02 12:30:22.179361+01
+1181	segments	0005_auto_20210628_1409	2022-02-02 12:30:22.226517+01
+1182	segments	0006_auto_20210914_1134	2022-02-02 12:30:22.240877+01
+1183	segments	0007_auto_20220119_0945	2022-02-02 12:30:22.36297+01
+1184	members	0049_auto_20220124_0938	2022-02-02 12:30:22.416974+01
+1185	notifications	0010_auto_20210830_1331	2022-02-02 12:30:22.431691+01
+1186	notifications	0011_auto_20210913_1601	2022-02-02 12:30:22.490286+01
+1187	utils	0006_auto_20210825_1018	2022-02-02 12:30:22.5148+01
+1188	utils	0007_auto_20210825_1018	2022-02-02 12:30:22.626457+01
+1189	utils	0008_auto_20211012_1231	2022-02-02 12:30:22.692257+01
+1190	segments	0007_segment_slug	2022-02-02 14:33:33.295124+01
+1191	segments	0008_auto_20211122_1522	2022-02-02 14:33:33.409774+01
+1192	segments	0009_auto_20211122_1527	2022-02-02 14:33:33.432669+01
+1193	segments	0010_auto_20211123_1533	2022-02-02 14:33:33.498206+01
+1194	segments	0011_segment_story	2022-02-02 14:33:33.523559+01
+1195	segments	0012_auto_20211209_1001	2022-02-02 14:33:33.607538+01
+1196	segments	0013_auto_20211210_1245	2022-02-02 14:33:33.761767+01
+1197	segments	0014_auto_20211210_1246	2022-02-02 14:33:33.910848+01
+1198	segments	0015_segment_email_domain	2022-02-02 14:33:33.931127+01
+1199	segments	0016_auto_20220118_1031	2022-02-02 14:33:33.952448+01
+1200	segments	0017_merge_20220202_1244	2022-02-02 14:33:33.955724+01
 \.
 
 
@@ -24863,7 +25395,7 @@ COPY test2.geo_locationgroup (id, name, description) FROM stdin;
 -- Data for Name: geo_place; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, object_id, content_type_id, country_id, "position") FROM stdin;
+COPY test2.geo_place (id, street_number, street, postal_code, locality, province, formatted_address, country_id, "position") FROM stdin;
 \.
 
 
@@ -24903,7 +25435,7 @@ COPY test2.geo_subregion_translation (id, language_code, name, master_id) FROM s
 -- Data for Name: impact_impactgoal; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.impact_impactgoal (id, target, realized, type_id, activity_id) FROM stdin;
+COPY test2.impact_impactgoal (id, target, realized, type_id, activity_id, realized_from_contributions) FROM stdin;
 \.
 
 
@@ -24955,7 +25487,7 @@ COPY test2.impact_impacttype_translation (id, language_code, master_id, text, te
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open) FROM stdin;
+COPY test2.initiatives_initiative (id, status, title, slug, pitch, story, video_url, place_id, image_id, owner_id, reviewer_id, theme_id, organization_id, organization_contact_id, promoter_id, has_organization, created, updated, location_id, activity_manager_id, is_open, is_global) FROM stdin;
 \.
 
 
@@ -25088,27 +25620,11 @@ COPY test2.mails_mailplatformsettings (id, update, email_logo) FROM stdin;
 
 
 --
--- Data for Name: members_custommemberfield; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.members_custommemberfield (id, value, field_id, member_id) FROM stdin;
-\.
-
-
---
--- Data for Name: members_custommemberfieldsettings; Type: TABLE DATA; Schema: test2; Owner: -
---
-
-COPY test2.members_custommemberfieldsettings (id, name, description, sequence, member_settings_id) FROM stdin;
-\.
-
-
---
 -- Data for Name: members_member; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed) FROM stdin;
-1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-10-12 14:22:33.543853+02	2020-10-12 14:22:43.119681+02	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
+COPY test2.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed, submitted_initiative_notifications, place_id) FROM stdin;
+1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-10-12 14:22:33.543853+02	2022-02-02 12:30:21.576331+01	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f	f	\N
 \.
 
 
@@ -25158,8 +25674,8 @@ COPY test2.members_member_user_permissions (id, member_id, permission_id) FROM s
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only) FROM stdin;
-1	2020-10-12 14:24:06.526667+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f
+COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments, session_only, enable_birthdate, enable_gender, enable_address) FROM stdin;
+1	2020-10-12 14:24:06.526667+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f	f	f	f	f
 \.
 
 
@@ -25191,7 +25707,7 @@ COPY test2.news_newsitem (id, title, slug, main_image, language, status, publica
 -- Data for Name: notifications_message; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.notifications_message (id, sent, adapter, template, subject, object_id, content_type_id, recipient_id, custom_message, body_html, body_txt) FROM stdin;
+COPY test2.notifications_message (id, sent, adapter, template, subject, object_id, content_type_id, recipient_id, custom_message, body_html, body_txt, bcc) FROM stdin;
 \.
 
 
@@ -25215,8 +25731,8 @@ COPY test2.notifications_messagetemplate_translation (id, language_code, subject
 -- Data for Name: notifications_notificationplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2020-10-12 14:24:23.289132+02	twitter,facebook	\N	f
+COPY test2.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options, default_yammer_group_id) FROM stdin;
+1	2020-10-12 14:24:23.289132+02	twitter,facebook	\N	f	\N
 \.
 
 
@@ -25337,7 +25853,7 @@ COPY test2.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
 -- Data for Name: segments_segment; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.segments_segment (id, name, alternate_names, type_id) FROM stdin;
+COPY test2.segments_segment (id, name, alternate_names, segment_type_id, slug, background_color, cover_image, logo, tag_line, story, email_domain) FROM stdin;
 \.
 
 
@@ -25345,7 +25861,7 @@ COPY test2.segments_segment (id, name, alternate_names, type_id) FROM stdin;
 -- Data for Name: segments_segmenttype; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.segments_segmenttype (id, name, slug, is_active, enable_search) FROM stdin;
+COPY test2.segments_segmenttype (id, name, slug, is_active, enable_search, user_editable) FROM stdin;
 \.
 
 
@@ -25691,9 +26207,9 @@ COPY test2.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 -- Data for Name: utils_language; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.utils_language (id, code, language_name, native_name) FROM stdin;
-38	en	English	English
-39	nl	Dutch	Nederlands
+COPY test2.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
+60	en	English	English	t	
+61	nl	Dutch	Nederlands	f	
 \.
 
 
@@ -25794,7 +26310,7 @@ SELECT pg_catalog.setval('public.clients_client_id_seq', 2, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 1140, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 1200, true);
 
 
 --
@@ -25850,28 +26366,28 @@ SELECT pg_catalog.setval('public.exchange_rate_id_seq', 6, true);
 -- Name: activities_activity_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_activity_id_seq', 281, true);
+SELECT pg_catalog.setval('test.activities_activity_id_seq', 821, true);
 
 
 --
 -- Name: activities_activity_segments_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_activity_segments_id_seq', 1, false);
+SELECT pg_catalog.setval('test.activities_activity_segments_id_seq', 13, true);
 
 
 --
 -- Name: activities_contribution_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_contribution_id_seq', 309, true);
+SELECT pg_catalog.setval('test.activities_contribution_id_seq', 574, true);
 
 
 --
 -- Name: activities_contributionvalue_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_contributionvalue_id_seq', 152, true);
+SELECT pg_catalog.setval('test.activities_contributionvalue_id_seq', 365, true);
 
 
 --
@@ -25892,14 +26408,14 @@ SELECT pg_catalog.setval('test.auth_group_id_seq', 4, true);
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 535, true);
+SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 560, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_permission_id_seq', 1378, true);
+SELECT pg_catalog.setval('test.auth_permission_id_seq', 1427, true);
 
 
 --
@@ -25913,7 +26429,7 @@ SELECT pg_catalog.setval('test.axes_accessattempt_id_seq', 1, false);
 -- Name: axes_accesslog_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 11, true);
+SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 33, true);
 
 
 --
@@ -26099,6 +26615,20 @@ SELECT pg_catalog.setval('test.cms_step_id_seq', 1, false);
 
 
 --
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.collect_collecttype_id_seq', 3, true);
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.collect_collecttype_translation_id_seq', 6, true);
+
+
+--
 -- Name: contact_contactmessage_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
@@ -26116,21 +26646,21 @@ SELECT pg_catalog.setval('test.dashboard_userdashboardmodule_id_seq', 8, true);
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_admin_log_id_seq', 3, true);
+SELECT pg_catalog.setval('test.django_admin_log_id_seq', 9, true);
 
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_content_type_id_seq', 303, true);
+SELECT pg_catalog.setval('test.django_content_type_id_seq', 310, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_migrations_id_seq', 1140, true);
+SELECT pg_catalog.setval('test.django_migrations_id_seq', 1200, true);
 
 
 --
@@ -26172,7 +26702,7 @@ SELECT pg_catalog.setval('test.fluent_contents_placeholder_id_seq', 2, true);
 -- Name: follow_follow_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.follow_follow_id_seq', 1, false);
+SELECT pg_catalog.setval('test.follow_follow_id_seq', 127, true);
 
 
 --
@@ -26256,70 +26786,70 @@ SELECT pg_catalog.setval('test.funding_stripe_paymentintent_id_seq', 1, false);
 -- Name: geo_activityplace_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 435, true);
+SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 1460, true);
 
 
 --
 -- Name: geo_country_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_id_seq', 349, true);
+SELECT pg_catalog.setval('test.geo_country_id_seq', 1377, true);
 
 
 --
 -- Name: geo_country_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 591, true);
+SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 1619, true);
 
 
 --
 -- Name: geo_location_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_location_id_seq', 38, true);
+SELECT pg_catalog.setval('test.geo_location_id_seq', 58, true);
 
 
 --
 -- Name: geo_locationgroup_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_locationgroup_id_seq', 18, true);
+SELECT pg_catalog.setval('test.geo_locationgroup_id_seq', 38, true);
 
 
 --
 -- Name: geo_place_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_place_id_seq', 1, false);
+SELECT pg_catalog.setval('test.geo_place_id_seq', 3, true);
 
 
 --
 -- Name: geo_region_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_id_seq', 119, true);
+SELECT pg_catalog.setval('test.geo_region_id_seq', 1147, true);
 
 
 --
 -- Name: geo_region_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 111, true);
+SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 1139, true);
 
 
 --
 -- Name: geo_subregion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_id_seq', 124, true);
+SELECT pg_catalog.setval('test.geo_subregion_id_seq', 1152, true);
 
 
 --
 -- Name: geo_subregion_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 145, true);
+SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 1173, true);
 
 
 --
@@ -26347,7 +26877,7 @@ SELECT pg_catalog.setval('test.impact_impacttype_translation_id_seq', 21, true);
 -- Name: initiatives_initiative_activity_managers_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_initiative_activity_managers_id_seq', 200, true);
+SELECT pg_catalog.setval('test.initiatives_initiative_activity_managers_id_seq', 1218, true);
 
 
 --
@@ -26361,7 +26891,7 @@ SELECT pg_catalog.setval('test.initiatives_initiative_categories_id_seq', 1, fal
 -- Name: initiatives_initiative_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 348, true);
+SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 857, true);
 
 
 --
@@ -26375,14 +26905,14 @@ SELECT pg_catalog.setval('test.initiatives_initiativeplatformsettings_id_seq', 1
 -- Name: initiatives_theme_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_theme_id_seq', 118, true);
+SELECT pg_catalog.setval('test.initiatives_theme_id_seq', 28, true);
 
 
 --
 -- Name: initiatives_theme_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_theme_translation_id_seq', 133, true);
+SELECT pg_catalog.setval('test.initiatives_theme_translation_id_seq', 43, true);
 
 
 --
@@ -26414,38 +26944,24 @@ SELECT pg_catalog.setval('test.mails_mailplatformsettings_id_seq', 1, true);
 
 
 --
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.members_custommemberfield_id_seq', 1, false);
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
---
-
-SELECT pg_catalog.setval('test.members_custommemberfieldsettings_id_seq', 1, false);
-
-
---
 -- Name: members_member_favourite_themes_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_favourite_themes_id_seq', 1, false);
+SELECT pg_catalog.setval('test.members_member_favourite_themes_id_seq', 6, true);
 
 
 --
 -- Name: members_member_groups_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_groups_id_seq', 1606, true);
+SELECT pg_catalog.setval('test.members_member_groups_id_seq', 4154, true);
 
 
 --
 -- Name: members_member_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_id_seq', 1599, true);
+SELECT pg_catalog.setval('test.members_member_id_seq', 4137, true);
 
 
 --
@@ -26459,7 +26975,7 @@ SELECT pg_catalog.setval('test.members_member_segments_id_seq', 1, false);
 -- Name: members_member_skills_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_skills_id_seq', 1, false);
+SELECT pg_catalog.setval('test.members_member_skills_id_seq', 6, true);
 
 
 --
@@ -26501,7 +27017,7 @@ SELECT pg_catalog.setval('test.news_newsitem_id_seq', 1, false);
 -- Name: notifications_message_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.notifications_message_id_seq', 133, true);
+SELECT pg_catalog.setval('test.notifications_message_id_seq', 452, true);
 
 
 --
@@ -26606,14 +27122,14 @@ SELECT pg_catalog.setval('test.scim_scimplatformsettings_id_seq', 1, true);
 -- Name: segments_segment_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.segments_segment_id_seq', 293, true);
+SELECT pg_catalog.setval('test.segments_segment_id_seq', 306, true);
 
 
 --
 -- Name: segments_segmenttype_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.segments_segmenttype_id_seq', 54, true);
+SELECT pg_catalog.setval('test.segments_segmenttype_id_seq', 67, true);
 
 
 --
@@ -26725,7 +27241,7 @@ SELECT pg_catalog.setval('test.terms_termsagreement_id_seq', 1, false);
 -- Name: time_based_dateactivityslot_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.time_based_dateactivityslot_id_seq', 78, true);
+SELECT pg_catalog.setval('test.time_based_dateactivityslot_id_seq', 469, true);
 
 
 --
@@ -26739,21 +27255,21 @@ SELECT pg_catalog.setval('test.time_based_periodactivityslot_id_seq', 1, false);
 -- Name: time_based_skill_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.time_based_skill_id_seq', 30, true);
+SELECT pg_catalog.setval('test.time_based_skill_id_seq', 40, true);
 
 
 --
 -- Name: time_based_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.time_based_skill_translation_id_seq', 59, true);
+SELECT pg_catalog.setval('test.time_based_skill_translation_id_seq', 79, true);
 
 
 --
 -- Name: time_based_slotparticipant_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.time_based_slotparticipant_id_seq', 1, false);
+SELECT pg_catalog.setval('test.time_based_slotparticipant_id_seq', 177, true);
 
 
 --
@@ -26767,7 +27283,7 @@ SELECT pg_catalog.setval('test.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.utils_language_id_seq', 95, true);
+SELECT pg_catalog.setval('test.utils_language_id_seq', 117, true);
 
 
 --
@@ -26858,14 +27374,14 @@ SELECT pg_catalog.setval('test2.auth_group_id_seq', 4, true);
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 535, true);
+SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 557, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_permission_id_seq', 1378, true);
+SELECT pg_catalog.setval('test2.auth_permission_id_seq', 1427, true);
 
 
 --
@@ -27065,6 +27581,20 @@ SELECT pg_catalog.setval('test2.cms_step_id_seq', 1, false);
 
 
 --
+-- Name: collect_collecttype_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.collect_collecttype_id_seq', 3, true);
+
+
+--
+-- Name: collect_collecttype_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.collect_collecttype_translation_id_seq', 6, true);
+
+
+--
 -- Name: contact_contactmessage_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -27089,14 +27619,14 @@ SELECT pg_catalog.setval('test2.django_admin_log_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_content_type_id_seq', 303, true);
+SELECT pg_catalog.setval('test2.django_content_type_id_seq', 310, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_migrations_id_seq', 1140, true);
+SELECT pg_catalog.setval('test2.django_migrations_id_seq', 1200, true);
 
 
 --
@@ -27377,20 +27907,6 @@ SELECT pg_catalog.setval('test2.looker_lookerembed_id_seq', 3, true);
 --
 
 SELECT pg_catalog.setval('test2.mails_mailplatformsettings_id_seq', 1, true);
-
-
---
--- Name: members_custommemberfield_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.members_custommemberfield_id_seq', 1, false);
-
-
---
--- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
---
-
-SELECT pg_catalog.setval('test2.members_custommemberfieldsettings_id_seq', 1, false);
 
 
 --
@@ -27733,7 +28249,7 @@ SELECT pg_catalog.setval('test2.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.utils_language_id_seq', 39, true);
+SELECT pg_catalog.setval('test2.utils_language_id_seq', 61, true);
 
 
 --
@@ -28432,6 +28948,54 @@ ALTER TABLE ONLY test.cms_stat
 
 ALTER TABLE ONLY test.cms_step
     ADD CONSTRAINT cms_step_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: collect_collectactivity collect_collectactivity_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectactivity
+    ADD CONSTRAINT collect_collectactivity_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontribution_pkey PRIMARY KEY (contribution_ptr_id);
+
+
+--
+-- Name: collect_collectcontributor collect_collectcontributor_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectcontributor
+    ADD CONSTRAINT collect_collectcontributor_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: collect_collecttype collect_collecttype_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype
+    ADD CONSTRAINT collect_collecttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype_tran_language_code_master_id_8f3cd1cc_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype_tran_language_code_master_id_8f3cd1cc_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -29363,22 +29927,6 @@ ALTER TABLE ONLY test.mails_mailplatformsettings
 
 
 --
--- Name: members_custommemberfield members_custommemberfield_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfield
-    ADD CONSTRAINT members_custommemberfield_pkey PRIMARY KEY (id);
-
-
---
--- Name: members_custommemberfieldsettings members_custommemberfieldsettings_pkey; Type: CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfieldsettings
-    ADD CONSTRAINT members_custommemberfieldsettings_pkey PRIMARY KEY (id);
-
-
---
 -- Name: members_member members_member_email_key; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -29696,6 +30244,14 @@ ALTER TABLE ONLY test.scim_scimplatformsettings
 
 ALTER TABLE ONLY test.segments_segment
     ADD CONSTRAINT segments_segment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segment segments_segment_slug_segment_type_id_da27b364_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segment
+    ADD CONSTRAINT segments_segment_slug_segment_type_id_da27b364_uniq UNIQUE (slug, segment_type_id);
 
 
 --
@@ -30627,6 +31183,54 @@ ALTER TABLE ONLY test2.cms_step
 
 
 --
+-- Name: collect_collectactivity collect_collectactivity_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectactivity
+    ADD CONSTRAINT collect_collectactivity_pkey PRIMARY KEY (activity_ptr_id);
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontribution_pkey PRIMARY KEY (contribution_ptr_id);
+
+
+--
+-- Name: collect_collectcontributor collect_collectcontributor_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectcontributor
+    ADD CONSTRAINT collect_collectcontributor_pkey PRIMARY KEY (contributor_ptr_id);
+
+
+--
+-- Name: collect_collecttype collect_collecttype_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype
+    ADD CONSTRAINT collect_collecttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype_tran_language_code_master_id_8f3cd1cc_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype_tran_language_code_master_id_8f3cd1cc_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype_translation_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: contact_contactmessage contact_contactmessage_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -31555,22 +32159,6 @@ ALTER TABLE ONLY test2.mails_mailplatformsettings
 
 
 --
--- Name: members_custommemberfield members_custommemberfield_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfield
-    ADD CONSTRAINT members_custommemberfield_pkey PRIMARY KEY (id);
-
-
---
--- Name: members_custommemberfieldsettings members_custommemberfieldsettings_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfieldsettings
-    ADD CONSTRAINT members_custommemberfieldsettings_pkey PRIMARY KEY (id);
-
-
---
 -- Name: members_member members_member_email_key; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -31888,6 +32476,14 @@ ALTER TABLE ONLY test2.scim_scimplatformsettings
 
 ALTER TABLE ONLY test2.segments_segment
     ADD CONSTRAINT segments_segment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segment segments_segment_slug_segment_type_id_da27b364_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segment
+    ADD CONSTRAINT segments_segment_slug_segment_type_id_da27b364_uniq UNIQUE (slug, segment_type_id);
 
 
 --
@@ -32536,6 +33132,13 @@ CREATE INDEX activities_activity_initiative_id_9478bef8 ON test.activities_activ
 
 
 --
+-- Name: activities_activity_office_location_id_31be2516; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX activities_activity_office_location_id_31be2516 ON test.activities_activity USING btree (office_location_id);
+
+
+--
 -- Name: activities_activity_owner_id_44d8a0b4; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -33075,6 +33678,48 @@ CREATE INDEX cms_step_sequence_1d7e4beb ON test.cms_step USING btree (sequence);
 
 
 --
+-- Name: collect_collectactivity_location_id_ca9ae04d; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collectactivity_location_id_ca9ae04d ON test.collect_collectactivity USING btree (location_id);
+
+
+--
+-- Name: collect_collectactivity_type_id_8ad4f357; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collectactivity_type_id_8ad4f357 ON test.collect_collectactivity USING btree (collect_type_id);
+
+
+--
+-- Name: collect_collectcontribution_type_id_993bf065; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collectcontribution_type_id_993bf065 ON test.collect_collectcontribution USING btree (type_id);
+
+
+--
+-- Name: collect_collecttype_translation_language_code_bcadc1ec; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_language_code_bcadc1ec ON test.collect_collecttype_translation USING btree (language_code);
+
+
+--
+-- Name: collect_collecttype_translation_language_code_bcadc1ec_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_language_code_bcadc1ec_like ON test.collect_collecttype_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: collect_collecttype_translation_master_id_a041092b; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_master_id_a041092b ON test.collect_collecttype_translation USING btree (master_id);
+
+
+--
 -- Name: contact_contactmessage_author_id_ee42046c; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -33481,13 +34126,6 @@ CREATE INDEX geo_location_subregion_id_9e5a8036 ON test.geo_location USING btree
 
 
 --
--- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX geo_place_content_type_id_462feeb6 ON test.geo_place USING btree (content_type_id);
-
-
---
 -- Name: geo_place_country_id_25fc5388; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -33726,34 +34364,6 @@ CREATE INDEX looker_lookerembed_title_6e458de6_like ON test.looker_lookerembed U
 
 
 --
--- Name: members_custommemberfield_field_id_2ee717f8; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX members_custommemberfield_field_id_2ee717f8 ON test.members_custommemberfield USING btree (field_id);
-
-
---
--- Name: members_custommemberfield_member_id_10a9afdb; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX members_custommemberfield_member_id_10a9afdb ON test.members_custommemberfield USING btree (member_id);
-
-
---
--- Name: members_custommemberfieldsettings_member_settings_id_4ac0b18d; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX members_custommemberfieldsettings_member_settings_id_4ac0b18d ON test.members_custommemberfieldsettings USING btree (member_settings_id);
-
-
---
--- Name: members_custommemberfieldsettings_sequence_96e4e064; Type: INDEX; Schema: test; Owner: -
---
-
-CREATE INDEX members_custommemberfieldsettings_sequence_96e4e064 ON test.members_custommemberfieldsettings USING btree (sequence);
-
-
---
 -- Name: members_member_email_156bbce1_like; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -33800,6 +34410,13 @@ CREATE INDEX members_member_location_id_9166afc9 ON test.members_member USING bt
 --
 
 CREATE INDEX members_member_partner_organization_id_d0cb8957 ON test.members_member USING btree (partner_organization_id);
+
+
+--
+-- Name: members_member_place_id_f72d1ec0; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX members_member_place_id_f72d1ec0 ON test.members_member USING btree (place_id);
 
 
 --
@@ -34135,7 +34752,7 @@ CREATE INDEX quotes_quote_user_id_ca72ed0b ON test.quotes_quote USING btree (use
 -- Name: segments_segment_type_id_21ef9900; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX segments_segment_type_id_21ef9900 ON test.segments_segment USING btree (type_id);
+CREATE INDEX segments_segment_type_id_21ef9900 ON test.segments_segment USING btree (segment_type_id);
 
 
 --
@@ -34668,6 +35285,13 @@ CREATE INDEX activities_activity_image_id_7297db2f ON test2.activities_activity 
 --
 
 CREATE INDEX activities_activity_initiative_id_9478bef8 ON test2.activities_activity USING btree (initiative_id);
+
+
+--
+-- Name: activities_activity_office_location_id_31be2516; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX activities_activity_office_location_id_31be2516 ON test2.activities_activity USING btree (office_location_id);
 
 
 --
@@ -35210,6 +35834,48 @@ CREATE INDEX cms_step_sequence_1d7e4beb ON test2.cms_step USING btree (sequence)
 
 
 --
+-- Name: collect_collectactivity_location_id_ca9ae04d; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collectactivity_location_id_ca9ae04d ON test2.collect_collectactivity USING btree (location_id);
+
+
+--
+-- Name: collect_collectactivity_type_id_8ad4f357; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collectactivity_type_id_8ad4f357 ON test2.collect_collectactivity USING btree (collect_type_id);
+
+
+--
+-- Name: collect_collectcontribution_type_id_993bf065; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collectcontribution_type_id_993bf065 ON test2.collect_collectcontribution USING btree (type_id);
+
+
+--
+-- Name: collect_collecttype_translation_language_code_bcadc1ec; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_language_code_bcadc1ec ON test2.collect_collecttype_translation USING btree (language_code);
+
+
+--
+-- Name: collect_collecttype_translation_language_code_bcadc1ec_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_language_code_bcadc1ec_like ON test2.collect_collecttype_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: collect_collecttype_translation_master_id_a041092b; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX collect_collecttype_translation_master_id_a041092b ON test2.collect_collecttype_translation USING btree (master_id);
+
+
+--
 -- Name: contact_contactmessage_author_id_ee42046c; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -35616,13 +36282,6 @@ CREATE INDEX geo_location_subregion_id_9e5a8036 ON test2.geo_location USING btre
 
 
 --
--- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX geo_place_content_type_id_462feeb6 ON test2.geo_place USING btree (content_type_id);
-
-
---
 -- Name: geo_place_country_id_25fc5388; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -35861,34 +36520,6 @@ CREATE INDEX looker_lookerembed_title_6e458de6_like ON test2.looker_lookerembed 
 
 
 --
--- Name: members_custommemberfield_field_id_2ee717f8; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX members_custommemberfield_field_id_2ee717f8 ON test2.members_custommemberfield USING btree (field_id);
-
-
---
--- Name: members_custommemberfield_member_id_10a9afdb; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX members_custommemberfield_member_id_10a9afdb ON test2.members_custommemberfield USING btree (member_id);
-
-
---
--- Name: members_custommemberfieldsettings_member_settings_id_4ac0b18d; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX members_custommemberfieldsettings_member_settings_id_4ac0b18d ON test2.members_custommemberfieldsettings USING btree (member_settings_id);
-
-
---
--- Name: members_custommemberfieldsettings_sequence_96e4e064; Type: INDEX; Schema: test2; Owner: -
---
-
-CREATE INDEX members_custommemberfieldsettings_sequence_96e4e064 ON test2.members_custommemberfieldsettings USING btree (sequence);
-
-
---
 -- Name: members_member_email_156bbce1_like; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -35935,6 +36566,13 @@ CREATE INDEX members_member_location_id_9166afc9 ON test2.members_member USING b
 --
 
 CREATE INDEX members_member_partner_organization_id_d0cb8957 ON test2.members_member USING btree (partner_organization_id);
+
+
+--
+-- Name: members_member_place_id_f72d1ec0; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX members_member_place_id_f72d1ec0 ON test2.members_member USING btree (place_id);
 
 
 --
@@ -36270,7 +36908,7 @@ CREATE INDEX quotes_quote_user_id_ca72ed0b ON test2.quotes_quote USING btree (us
 -- Name: segments_segment_type_id_21ef9900; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX segments_segment_type_id_21ef9900 ON test2.segments_segment USING btree (type_id);
+CREATE INDEX segments_segment_type_id_21ef9900 ON test2.segments_segment USING btree (segment_type_id);
 
 
 --
@@ -36856,6 +37494,14 @@ ALTER TABLE ONLY test.activities_activity
 
 
 --
+-- Name: activities_activity activities_activity_office_location_id_31be2516_fk_geo_locat; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity
+    ADD CONSTRAINT activities_activity_office_location_id_31be2516_fk_geo_locat FOREIGN KEY (office_location_id) REFERENCES test.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: activities_activity activities_activity_owner_id_44d8a0b4_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -37173,6 +37819,62 @@ ALTER TABLE ONLY test.cms_stat
 
 ALTER TABLE ONLY test.cms_step
     ADD CONSTRAINT cms_step_block_id_19464a6a_fk_contentit FOREIGN KEY (block_id) REFERENCES test.contentitem_cms_stepscontent(contentitem_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_activity_ptr_id_eea171ef_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_activity_ptr_id_eea171ef_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_collect_type_id_aeda058d_fk_collect_c; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_collect_type_id_aeda058d_fk_collect_c FOREIGN KEY (collect_type_id) REFERENCES test.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_location_id_ca9ae04d_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_location_id_ca9ae04d_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontr_contribution_ptr_id_d505d56b_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontr_contribution_ptr_id_d505d56b_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontributor collect_collectcontr_contributor_ptr_id_7d9b511c_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectcontributor
+    ADD CONSTRAINT collect_collectcontr_contributor_ptr_id_7d9b511c_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontr_type_id_993bf065_fk_collect_c; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontr_type_id_993bf065_fk_collect_c FOREIGN KEY (type_id) REFERENCES test.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype__master_id_a041092b_fk_collect_c; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype__master_id_a041092b_fk_collect_c FOREIGN KEY (master_id) REFERENCES test.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -37936,14 +38638,6 @@ ALTER TABLE ONLY test.geo_location
 
 
 --
--- Name: geo_place geo_place_content_type_id_462feeb6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.geo_place
-    ADD CONSTRAINT geo_place_content_type_id_462feeb6_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_place geo_place_country_id_25fc5388_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -38112,30 +38806,6 @@ ALTER TABLE ONLY test.initiatives_initiative
 
 
 --
--- Name: members_custommemberfield members_custommember_field_id_2ee717f8_fk_members_c; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfield
-    ADD CONSTRAINT members_custommember_field_id_2ee717f8_fk_members_c FOREIGN KEY (field_id) REFERENCES test.members_custommemberfieldsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: members_custommemberfield members_custommember_member_id_10a9afdb_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfield
-    ADD CONSTRAINT members_custommember_member_id_10a9afdb_fk_members_m FOREIGN KEY (member_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: members_custommemberfieldsettings members_custommember_member_settings_id_4ac0b18d_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-
-ALTER TABLE ONLY test.members_custommemberfieldsettings
-    ADD CONSTRAINT members_custommember_member_settings_id_4ac0b18d_fk_members_m FOREIGN KEY (member_settings_id) REFERENCES test.members_memberplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: members_member_favourite_themes members_member_favou_member_id_043fee3c_fk_members_m; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -38181,6 +38851,14 @@ ALTER TABLE ONLY test.members_member
 
 ALTER TABLE ONLY test.members_member
     ADD CONSTRAINT members_member_partner_organization_d0cb8957_fk_organizat FOREIGN KEY (partner_organization_id) REFERENCES test.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member members_member_place_id_f72d1ec0_fk_geo_place_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member
+    ADD CONSTRAINT members_member_place_id_f72d1ec0_fk_geo_place_id FOREIGN KEY (place_id) REFERENCES test.geo_place(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -38416,11 +39094,11 @@ ALTER TABLE ONLY test.quotes_quote
 
 
 --
--- Name: segments_segment segments_segment_type_id_21ef9900_fk_segments_segmenttype_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: segments_segment segments_segment_segment_type_id_5f0a6d61_fk_segments_; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.segments_segment
-    ADD CONSTRAINT segments_segment_type_id_21ef9900_fk_segments_segmenttype_id FOREIGN KEY (type_id) REFERENCES test.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT segments_segment_segment_type_id_5f0a6d61_fk_segments_ FOREIGN KEY (segment_type_id) REFERENCES test.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -38864,6 +39542,14 @@ ALTER TABLE ONLY test2.activities_activity
 
 
 --
+-- Name: activities_activity activities_activity_office_location_id_31be2516_fk_geo_locat; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity
+    ADD CONSTRAINT activities_activity_office_location_id_31be2516_fk_geo_locat FOREIGN KEY (office_location_id) REFERENCES test2.geo_location(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: activities_activity activities_activity_owner_id_44d8a0b4_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -39181,6 +39867,62 @@ ALTER TABLE ONLY test2.cms_stat
 
 ALTER TABLE ONLY test2.cms_step
     ADD CONSTRAINT cms_step_block_id_19464a6a_fk_contentit FOREIGN KEY (block_id) REFERENCES test2.contentitem_cms_stepscontent(contentitem_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_activity_ptr_id_eea171ef_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_activity_ptr_id_eea171ef_fk_activitie FOREIGN KEY (activity_ptr_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_collect_type_id_aeda058d_fk_collect_c; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_collect_type_id_aeda058d_fk_collect_c FOREIGN KEY (collect_type_id) REFERENCES test2.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectactivity collect_collectactiv_location_id_ca9ae04d_fk_geo_geolo; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectactivity
+    ADD CONSTRAINT collect_collectactiv_location_id_ca9ae04d_fk_geo_geolo FOREIGN KEY (location_id) REFERENCES test2.geo_geolocation(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontr_contribution_ptr_id_d505d56b_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontr_contribution_ptr_id_d505d56b_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontributor collect_collectcontr_contributor_ptr_id_7d9b511c_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectcontributor
+    ADD CONSTRAINT collect_collectcontr_contributor_ptr_id_7d9b511c_fk_activitie FOREIGN KEY (contributor_ptr_id) REFERENCES test2.activities_contributor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collectcontribution collect_collectcontr_type_id_993bf065_fk_collect_c; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collectcontribution
+    ADD CONSTRAINT collect_collectcontr_type_id_993bf065_fk_collect_c FOREIGN KEY (type_id) REFERENCES test2.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collect_collecttype_translation collect_collecttype__master_id_a041092b_fk_collect_c; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.collect_collecttype_translation
+    ADD CONSTRAINT collect_collecttype__master_id_a041092b_fk_collect_c FOREIGN KEY (master_id) REFERENCES test2.collect_collecttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -39944,14 +40686,6 @@ ALTER TABLE ONLY test2.geo_location
 
 
 --
--- Name: geo_place geo_place_content_type_id_462feeb6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.geo_place
-    ADD CONSTRAINT geo_place_content_type_id_462feeb6_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: geo_place geo_place_country_id_25fc5388_fk_geo_country_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -40120,30 +40854,6 @@ ALTER TABLE ONLY test2.initiatives_initiative
 
 
 --
--- Name: members_custommemberfield members_custommember_field_id_2ee717f8_fk_members_c; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfield
-    ADD CONSTRAINT members_custommember_field_id_2ee717f8_fk_members_c FOREIGN KEY (field_id) REFERENCES test2.members_custommemberfieldsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: members_custommemberfield members_custommember_member_id_10a9afdb_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfield
-    ADD CONSTRAINT members_custommember_member_id_10a9afdb_fk_members_m FOREIGN KEY (member_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: members_custommemberfieldsettings members_custommember_member_settings_id_4ac0b18d_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
---
-
-ALTER TABLE ONLY test2.members_custommemberfieldsettings
-    ADD CONSTRAINT members_custommember_member_settings_id_4ac0b18d_fk_members_m FOREIGN KEY (member_settings_id) REFERENCES test2.members_memberplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: members_member_favourite_themes members_member_favou_member_id_043fee3c_fk_members_m; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -40189,6 +40899,14 @@ ALTER TABLE ONLY test2.members_member
 
 ALTER TABLE ONLY test2.members_member
     ADD CONSTRAINT members_member_partner_organization_d0cb8957_fk_organizat FOREIGN KEY (partner_organization_id) REFERENCES test2.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member members_member_place_id_f72d1ec0_fk_geo_place_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member
+    ADD CONSTRAINT members_member_place_id_f72d1ec0_fk_geo_place_id FOREIGN KEY (place_id) REFERENCES test2.geo_place(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40424,11 +41142,11 @@ ALTER TABLE ONLY test2.quotes_quote
 
 
 --
--- Name: segments_segment segments_segment_type_id_21ef9900_fk_segments_segmenttype_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: segments_segment segments_segment_segment_type_id_5f0a6d61_fk_segments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.segments_segment
-    ADD CONSTRAINT segments_segment_type_id_21ef9900_fk_segments_segmenttype_id FOREIGN KEY (type_id) REFERENCES test2.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT segments_segment_segment_type_id_5f0a6d61_fk_segments_ FOREIGN KEY (segment_type_id) REFERENCES test2.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

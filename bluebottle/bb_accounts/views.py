@@ -239,7 +239,7 @@ class SignUpTokenConfirmation(JsonApiViewMixin, CreateAPIView):
         try:
             signer = TimestampSigner()
             member = self.queryset.get(
-                pk=signer.unsign(serializer.validated_data['token'], max_age=timedelta(hours=2))
+                pk=signer.unsign(self.kwargs['pk'], max_age=timedelta(hours=24))
             )
 
             if member.is_active:

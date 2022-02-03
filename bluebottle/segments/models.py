@@ -77,19 +77,23 @@ class Segment(models.Model):
     )
 
     tag_line = models.CharField(
-        _('tag line'), max_length=255, null=True, blank=True,
-        help_text=_('Short tag line for your segment')
+        _('Slogan'), max_length=255, null=True, blank=True,
+        help_text=_(
+            'A short sentence to explain your segment. This sentence is directly visible on the page.'
+        )
     )
 
     story = models.TextField(
         _('Story'), blank=True, null=True,
-        help_text=_('Longer explanation, containing the goals of your segment')
+        help_text=_(
+            'A more detailed story for your segment. This story can be accessed via a link on the page.'
+        )
     )
 
     logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("Logo image. 100x100px"),
+        help_text=_("The uploaded image will be scaled so that it is fully visible."),
 
         validators=[
             FileMimetypeValidator(
@@ -102,14 +106,14 @@ class Segment(models.Model):
     background_color = ColorField(
         _('Background color'), null=True, blank=True,
         help_text=_(
-            'The text color will automatically be set based on the contrast with the background'
+            'Add a background colour to your segment page.'
         )
     )
 
     cover_image = ImageField(
         _("cover image"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("Cover image, 400x300 px"),
+        help_text=_("The uploaded image will be cropped to fit a 4:3 rectangle."),
 
         validators=[
             FileMimetypeValidator(
@@ -120,7 +124,7 @@ class Segment(models.Model):
     )
 
     closed = models.BooleanField(
-        _('Closed'),
+        _('Restricted'),
         default=False,
         help_text=_(
             'Closed segments will only be accessible to members that belong to this segment'
@@ -141,16 +145,15 @@ class Segment(models.Model):
 
     @property
     def text_color(self):
-        options = {
-            _('white'): (1, 1, 1),
-            _('grey'): (0.2890625, 0.2890625, 0.2890625)
-        }
         rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color, 'RGB')]
+        white = (1, 1, 1)
 
-        return max(
-            options.items(),
-            key=lambda option: contrast.rgb(rgb_background_color, option[1])
-        )[0]
+        contrast_with_white = contrast.rgb(rgb_background_color, white)
+
+        if contrast.passes_AA(contrast_with_white, large=True):
+            return 'white'
+        else:
+            return 'grey'
 
     def __str__(self):
         return self.name

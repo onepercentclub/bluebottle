@@ -499,23 +499,28 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         )
 
     def test_confirm_expired_token(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=False)
+
         current_time = time.time()
 
-        with mock.patch('time.time', return_value=current_time - (3 * 60 * 60)):
-            self.data['data']['attributes']['token'] = TimestampSigner().sign(self.member.pk)
+        with mock.patch('time.time', return_value=current_time - (25 * 60 * 60)):
+            token = TimestampSigner().sign(member.pk)
 
-        response = self.client.post(self.url, self.data)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json()['errors'][0]['detail'],
-            'The link to activate your account has expired. Please sign up again.'
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(token, )),
+            {'password': password}
         )
 
-        self.member.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'The link to activate your account has expired. Please sign up again.')
 
-        self.assertEqual(self.member.is_active, False)
-        self.assertFalse(self.member.check_password(self.password))
+        member.refresh_from_db()
+
+        self.assertEqual(member.is_active, False)
+        self.assertFalse(member.check_password(password))
 
     def test_confirm_wrong_token(self):
         self.data['data']['attributes']['token'] = self.token + 'bla'

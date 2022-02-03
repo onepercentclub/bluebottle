@@ -1,6 +1,5 @@
-from django.contrib import admin
 from django import forms
-from django.urls import reverse
+from django.contrib import admin
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.urls import reverse

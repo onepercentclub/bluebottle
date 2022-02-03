@@ -35,7 +35,7 @@ class SegmentType(models.Model):
 
     @property
     def field_name(self):
-        return self.slug.replace('-', '_')
+        return 'segment__' + self.slug.replace('-', '_')
 
     def save(self, **kwargs):
         if not self.slug:

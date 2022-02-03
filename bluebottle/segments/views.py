@@ -3,7 +3,7 @@ from rest_framework.pagination import PageNumberPagination
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.segments.permissions import OpenSegmentOrMember
 from bluebottle.segments.serializers import (
-    SegmentDetailSerializer, SegmentPublicDetailSerializer, SegmentListSerializer, , SegmentTypeSerializer
+    SegmentDetailSerializer, SegmentPublicDetailSerializer, SegmentListSerializer, SegmentTypeSerializer
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin

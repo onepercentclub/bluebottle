@@ -127,7 +127,7 @@ class BaseActivitySerializer(ModelSerializer):
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
-        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',

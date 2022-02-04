@@ -499,8 +499,8 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         )
 
     def test_confirm_expired_token(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
+        email = 'henkie@example.com'
+        password = 'henkie@example.com'
 
         member = Member.objects.create(email=email, is_active=False)
 

@@ -180,8 +180,10 @@ def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
     if isinstance(instance, Segment):
         if instance.email_domain:
-            for member in Member.objects\
-                    .exclude(segments=instance)\
-                    .filter(email__endswith=instance.email_domain)\
-                    .all():
-                member.segments.add(instance)
+            for email_domain in instance.email_domain:
+                for member in Member.objects\
+                        .exclude(segments=instance)\
+                        .filter(email__endswith=email_domain)\
+                        .all():
+
+                    member.segments.add(instance)

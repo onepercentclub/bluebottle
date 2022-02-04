@@ -88,7 +88,5 @@ class MemberSegmentTestCase(BluebottleTestCase):
             closed=True
         )
 
-        print(f"this is the test:\n {robbie.segments}")
-        print(f"this is the segment:\n {segment}")
         self.assertEqual(robbie.segments.first(), segment)
         self.assertEqual(jan.segments.first(), None)

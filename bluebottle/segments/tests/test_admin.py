@@ -88,7 +88,7 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
-        test_domains = ['test.com', 'test2.com', 'test3.com']
+        test_domains = ['test.com', 'test2.com']
         form['email_domain'] = test_domains
         page = form.submit()
 

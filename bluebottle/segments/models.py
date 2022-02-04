@@ -71,13 +71,13 @@ class Segment(models.Model):
     )
 
     email_domain = ArrayField(
-        ArrayField(
-            models.CharField(
-                _('Email domain'), blank=True, null=True,
-                max_length=255,
-                help_text=_('Users with email addresses for this domain are automatically added to this segment')
-            )
-        )
+        models.CharField(
+            blank=True, null=True,
+            max_length=255,
+        ),
+        verbose_name=_('Email domain'),
+        default=list,
+        help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 
     tag_line = models.CharField(

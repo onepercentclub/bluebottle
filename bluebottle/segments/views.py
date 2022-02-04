@@ -43,5 +43,5 @@ class SegmentPublicDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')
 
     permission_classes = [
-        OpenSegmentOrMember,
+        TenantConditionalOpenClose,
     ]

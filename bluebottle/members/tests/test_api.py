@@ -507,15 +507,16 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         current_time = time.time()
 
         with mock.patch('time.time', return_value=current_time - (25 * 60 * 60)):
-            token = TimestampSigner().sign(member.pk)
+            self.data['data']['attributes']['token'] = TimestampSigner().sign(member.pk)
 
-        response = self.client.put(
-            reverse('user-signup-token-confirm', args=(token, )),
-            {'password': password}
-        )
+        response = self.client.post(self.url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'The link to activate your account has expired. Please sign up again.')
+
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            'The link to activate your account has expired. Please sign up again.'
+        )
 
         member.refresh_from_db()
 

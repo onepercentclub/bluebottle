@@ -22,7 +22,7 @@ def migrate_extra_fields_to_segments(apps, schema_editor):
         )
         for member in Member.objects.all():
             field = CustomMemberField.objects.filter(member=member, field__name='department').first()
-            if field:
+            if field and field.value:
                 segment, _ = Segment.objects.get_or_create(
                     segment_type=department,
                     name=field.value
@@ -40,14 +40,14 @@ def migrate_extra_fields_to_segments(apps, schema_editor):
         )
         for member in Member.objects.all():
             field = CustomMemberField.objects.filter(member=member, field__name='country').first()
-            if field:
+            if field and field.value:
                 my_country, _ = Segment.objects.get_or_create(
                     segment_type=country,
                     name=field.value
                 )
                 member.segments.add(my_country)
             field = CustomMemberField.objects.filter(member=member, field__name='city').first()
-            if field:
+            if field and field.value:
                 my_city, _ = Segment.objects.get_or_create(
                     segment_type=city,
                     name=field.value

@@ -24,7 +24,7 @@ class Command(BaseCommand):
                         'title': link.title,
                         'highlight': link.highlight,
                         'open_in_new_tab': link.open_in_new_tab,
-                        'link': link.external_link,
+                        'link': link.link,
                         'link_order': link.link_order
                     })
                 groups.append({

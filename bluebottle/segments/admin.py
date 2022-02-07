@@ -67,14 +67,14 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
     fieldsets = (
         (None, {
             'fields': [
-                'type_link', 'name', 'slug', 'email_domain',
+                'type_link', 'name', 'slug', 'email_domain', 'closed',
                 'activities_link', 'members_link'
             ]
         }),
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image', 'closed',
+                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image',
             ],
         }),
 
@@ -103,6 +103,11 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
         return format_html("<a href='{}'>{}</a>", url, obj.segment_type.name)
 
     type_link.short_description = _('Segment type')
+
+    def text_color(self, obj):
+        return obj.text_color
+
+    text_color.short_description = _("Text colour")
 
 
 @admin.register(SegmentType)

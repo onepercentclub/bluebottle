@@ -2,7 +2,7 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
+from django_better_admin_arrayfield.models.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver

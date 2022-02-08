@@ -20,7 +20,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = SegmentType
         fields = (
-            'id', 'name', 'slug', 'enable_search', 'user_editable', 'segments'
+            'id', 'name', 'slug', 'inherit', 'enable_search', 'user_editable', 'segments'
         )
 
     class JSONAPIMeta(object):

@@ -241,14 +241,15 @@ class ActivityForm(StateMachineModelForm):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
-                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
-                    required=False,
-                    label=segment_type.name,
-                    queryset=segment_type.segments,
-                )
-                if self.instance.pk:
-                    self.initial[segment_type.field_name] = self.instance.segments.filter(
-                        segment_type=segment_type).all()
+                if segment_type.inherit == True:
+                    self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                        required=False,
+                        label=segment_type.name,
+                        queryset=segment_type.segments,
+                    )
+                    if self.instance.pk:
+                        self.initial[segment_type.field_name] = self.instance.segments.filter(
+                            segment_type=segment_type).all()
 
     def save(self, commit=True):
         activity = super(ActivityForm, self).save(commit=commit)

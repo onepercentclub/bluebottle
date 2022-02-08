@@ -20,12 +20,19 @@ class SegmentType(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
+    inherit = models.BooleanField(
+        _('Inherit'),
+        help_text=_(
+            'Newly created activities will inherit the segments set on the activity owner.'
+        ),
+        default=True
+    )
     is_active = models.BooleanField(
-        _('Is active'),
+        _('Is active.'),
         default=True
     )
     user_editable = models.BooleanField(
-        _('Editable in user profile'),
+        _('Editable in user profile.'),
         default=True
     )
     enable_search = models.BooleanField(
@@ -73,7 +80,9 @@ class Segment(models.Model):
     email_domain = models.CharField(
         _('Email domain'), blank=True, null=True,
         max_length=255,
-        help_text=_('Users with email addresses for this domain are automatically added to this segment')
+        help_text=_(
+            'Users with email addresses for this domain are automatically added to this segment.'
+        )
     )
 
     tag_line = models.CharField(
@@ -127,7 +136,7 @@ class Segment(models.Model):
         _('Restricted'),
         default=False,
         help_text=_(
-            'Closed segments will only be accessible to members that belong to this segment'
+            'Closed segments will only be accessible to members that belong to this segment.'
         )
     )
 

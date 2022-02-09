@@ -170,7 +170,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertIncluded('segment-type', self.segment_type)
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
-        self.assertAttribute('email-domain', self.model.email_domains)
+        self.assertAttribute('email-domains', self.model.email_domains)
         self.assertAttribute('tag-line', self.model.tag_line)
         self.assertAttribute('story', self.model.story)
         self.assertAttribute('background-color', self.model.background_color)

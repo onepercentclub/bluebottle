@@ -1,8 +1,9 @@
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.activities.models import Activity
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -50,15 +51,26 @@ class ActivityStatusPermission(ResourcePermission):
         return True
 
 
-class ActivitySegmentPermission(ResourcePermission):
-    def has_object_action_permission(self, action, user, obj):
-        segments = obj.segments.filter(closed=True)
+class ActivitySegmentPermission(BasePermission):
 
-        if segments:
-            return (
-                user.is_authenticated and
-                any(segment in segments for segment in user.segments.filter(closed=True))
-            )
+    def has_object_action_permission(self, action, user, obj):
+        activity_segments = obj.segments.filter(closed=True)
+
+        if activity_segments:
+            if not user.is_authenticated:
+                raise NotAuthenticated(
+                    detail=activity_segments.first().id,
+                    code='closed_segment'
+                )
+            if any(
+                    segment in activity_segments for segment in user.segments.filter(closed=True)
+            ):
+                return True
+            else:
+                raise PermissionDenied(
+                    detail=activity_segments.first().id,
+                    code='closed_segment'
+                )
         else:
             return True
 

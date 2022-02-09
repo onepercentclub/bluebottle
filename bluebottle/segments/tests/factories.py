@@ -26,7 +26,7 @@ class SegmentFactory(factory.DjangoModelFactory):
 
     segment_type = factory.SubFactory(SegmentTypeFactory)
 
-    email_domain = ['example.com']
+    email_domains = ['example.com']
 
     tag_line = factory.Faker('sentence')
     story = factory.Faker('paragraph')

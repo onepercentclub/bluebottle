@@ -2,12 +2,12 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
+from django_better_admin_arrayfield.models.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -70,9 +70,13 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = models.CharField(
-        _('Email domain'), blank=True, null=True,
-        max_length=255,
+    email_domain = ArrayField(
+        models.CharField(
+            blank=True, null=True,
+            max_length=255,
+        ),
+        verbose_name=_('Email domain'),
+        default=list,
         help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 
@@ -180,8 +184,10 @@ def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
     if isinstance(instance, Segment):
         if instance.email_domain:
-            for member in Member.objects\
-                    .exclude(segments=instance)\
-                    .filter(email__endswith=instance.email_domain)\
-                    .all():
-                member.segments.add(instance)
+            for email_domain in instance.email_domain:
+                for member in Member.objects\
+                        .exclude(segments=instance)\
+                        .filter(email__endswith=email_domain)\
+                        .all():
+
+                    member.segments.add(instance)

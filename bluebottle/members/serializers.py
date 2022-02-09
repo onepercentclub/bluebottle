@@ -390,12 +390,12 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
         if (
-            settings.email_domain and
-            not email.endswith('@{}'.format(settings.email_domain))
+            settings.email_domains and
+            not email.endswith('@{}'.format(settings.email_domains))
         ):
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
-                    settings.email_domain)
+                    settings.email_domains)
             )
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):

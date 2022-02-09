@@ -552,45 +552,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
-    def test_get_activities_closed_segments(self):
-        open_segment = SegmentFactory.create(closed=False)
-        closed_segment = SegmentFactory.create(closed=True)
-        user = BlueBottleUserFactory.create()
-        user.segments.add(closed_segment)
-        another_user = BlueBottleUserFactory.create()
-        another_user.segments.add(open_segment)
-
-        act1 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act1.segments.add(open_segment)
-
-        act2 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act2.segments.add(closed_segment)
-
-        act3 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act3.segments.add(closed_segment)
-        act3.segments.add(open_segment)
-        response = self.client.get(self.url, user=user)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 3)
-        response = self.client.get(self.url, user=another_user)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 1)
-        response = self.client.get(self.url)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 1)
-
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')
         response = self.client.get(

@@ -59,7 +59,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
     activity_managers = models.ManyToManyField(
         'members.Member',
-        null=True,
         blank=True,
         verbose_name=_('co-initiators'),
         help_text=_('Co-initiators can create and edit activities for '

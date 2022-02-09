@@ -193,17 +193,12 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         super(SignUpTokenTestCase, self).setUp()
 
-        self.client = JSONAPITestClient()
-
     def test_create(self):
         email = 'test@example.com'
         connection.tenant.name = 'Test'
         connection.tenant.save()
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -217,10 +212,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         connection.tenant.name = 'Test'
         connection.tenant.save()
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email, 'url': '/example'}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email, 'url': '/example'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -233,15 +225,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def test_create_twice(self):
         email = 'test@example.com'
 
-        self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
-
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -253,14 +238,10 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         Member.objects.create(email=email, is_active=True)
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
-
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'member with this email address already exists.')
+        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_already_active_different_case(self):
@@ -268,13 +249,10 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         Member.objects.create(email=email, is_active=True)
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email.title()}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email.title()})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'member with this email address already exists.')
+        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_correct_domain(self):
@@ -282,10 +260,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.settings.email_domain = 'example.com'
         self.settings.save()
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -297,14 +272,11 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.settings.email_domain = 'example.com'
         self.settings.save()
 
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(mail.outbox), 0)
         self.assertTrue(
-            'Only emails' in response.json()['errors'][0]['detail']
+            'Only emails' in response.json()['email'][0]
         )
 
 
@@ -447,76 +419,84 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
         super(ConfirmSignUpTestCase, self).setUp()
-        self.email = 'test@example.com'
-        self.password = 'some-password'
-        self.member = Member.objects.create(email=self.email, is_active=False)
-        self.token = TimestampSigner().sign(self.member.pk)
-
-        mail.outbox = []
-        self.client = JSONAPITestClient()
-        self.data = {
-            'data': {
-                'attributes': {
-                    'password': self.password,
-                    'first_name': 'Tester',
-                    'last_name': 'de Test',
-                    'token': self.token,
-                },
-                'type': 'signup-token-confirmations'
-            },
-        }
-        self.url = reverse('user-signup-token-confirm')
 
     def test_confirm(self):
-        response = self.client.post(self.url, self.data)
+        email = 'test@example.com'
+        password = 'some-password'
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        member = Member.objects.create(email=email, is_active=False)
+        mail.outbox = []
 
-        self.member.refresh_from_db()
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(self.member.is_active, True)
-        self.assertTrue(self.member.check_password(self.password))
-        self.assertEqual(self.member.first_name, 'Tester')
-        self.assertEqual(self.member.last_name, 'de Test')
+        member.refresh_from_db()
+
+        self.assertEqual(member.is_active, True)
+        self.assertTrue(member.check_password(password))
+        self.assertEqual(member.first_name, 'Tester')
+        self.assertEqual(member.last_name, 'de Test')
 
         profile_response = self.client.get(
             reverse('user-current'),
-            HTTP_AUTHORIZATION='JWT {}'.format(response.json()['data']['attributes']['jwt-token'])
+            token='JWT {}'.format(response.json()['jwt_token'])
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Welcome to Test!')
 
     def test_confirm_twice(self):
-        response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        email = 'test@example.com'
+        password = 'some-password'
 
-        response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json()['errors'][0]['detail'],
-            'The link to activate your account has already been used.'
+        member = Member.objects.create(email=email, is_active=False)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'The link to activate your account has already been used.')
 
     def test_confirm_expired_token(self):
-        email = 'henkie@example.com'
-        password = 'henkie@example.com'
+        email = 'test@example.com'
+        password = 'test@example.com'
 
         member = Member.objects.create(email=email, is_active=False)
 
         current_time = time.time()
 
-        with mock.patch('time.time', return_value=current_time - (25 * 60 * 60)):
-            self.data['data']['attributes']['token'] = TimestampSigner().sign(member.pk)
+        with mock.patch('time.time', return_value=current_time - (3 * 60 * 60)):
+            token = TimestampSigner().sign(member.pk)
 
-        response = self.client.post(self.url, self.data)
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(token, )),
+            {'password': password}
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        self.assertEqual(
-            response.json()['errors'][0]['detail'],
-            'The link to activate your account has expired. Please sign up again.'
-        )
+        self.assertEqual(response.json()['id'], 'The link to activate your account has expired. Please sign up again.')
 
         member.refresh_from_db()
 
@@ -524,19 +504,25 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         self.assertFalse(member.check_password(password))
 
     def test_confirm_wrong_token(self):
-        self.data['data']['attributes']['token'] = self.token + 'bla'
+        email = 'test@example.com'
+        password = 'test@example.com'
 
-        response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json()['errors'][0]['detail'],
-            'Something went wrong on our side. Please sign up again.'
+        member = Member.objects.create(email=email, is_active=False)
+
+        response = self.client.put(
+            reverse(
+                'user-signup-token-confirm',
+                args=('{}:wrong-signature'.format(member.pk), )
+            ),
+            {'password': password}
         )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'Something went wrong on our side. Please sign up again.')
 
-        self.member.refresh_from_db()
+        member.refresh_from_db()
 
-        self.assertEqual(self.member.is_active, False)
-        self.assertFalse(self.member.check_password(self.password))
+        self.assertEqual(member.is_active, False)
+        self.assertFalse(member.check_password(password))
 
 
 class UserDataExportTest(BluebottleTestCase):

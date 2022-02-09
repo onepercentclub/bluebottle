@@ -13,7 +13,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
-from rest_framework import status, response, generics
+from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
@@ -36,16 +36,15 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.initiatives.serializers import MemberSerializer
-from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
-    PasswordResetSerializer, CurrentUserSerializer,
+    PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer,
-    PasswordStrengthSerializer, PasswordResetConfirmSerializer
+    PasswordStrengthSerializer
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.utils import get_client_ip
@@ -202,55 +201,40 @@ class Logout(generics.CreateAPIView):
         return response.Response('', status=status.HTTP_204_NO_CONTENT)
 
 
-class SignUpToken(JsonApiViewMixin, CreateAPIView):
+class SignUpToken(generics.CreateAPIView):
     """
     Request a signup token
 
     """
-    permission_classes = []
-
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenSerializer
 
-    def perform_create(self, serializer):
-        (instance, _) = USER_MODEL.objects.get_or_create(
-            email=serializer.validated_data['email'], defaults={'is_active': False}
-        )
-        token = TimestampSigner().sign(instance.pk)
-        SignUptokenMessage(
-            instance,
-            custom_message={'token': token, 'url': serializer.validated_data.get('url', '')}
-        ).compose_and_send()
 
-        return instance
-
-
-class SignUpTokenConfirmation(JsonApiViewMixin, CreateAPIView):
+class SignUpTokenConfirmation(generics.UpdateAPIView):
     """
     Confirm a signup token
 
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenConfirmationSerializer
-    permission_classes = []
 
-    def perform_create(self, serializer):
-
+    def get_object(self):
         try:
             signer = TimestampSigner()
             member = self.queryset.get(
-                pk=signer.unsign(serializer.validated_data['token'], max_age=timedelta(hours=2))
+                pk=signer.unsign(self.kwargs['pk'], max_age=timedelta(hours=2))
             )
 
             if member.is_active:
-                raise ValidationError({'token': _('The link to activate your account has already been used.')})
+                raise ValidationError({'id': _('The link to activate your account has already been used.')})
 
+            return member
         except SignatureExpired:
-            raise ValidationError({'token': _('The link to activate your account has expired. Please sign up again.')})
+            raise ValidationError({'id': _('The link to activate your account has expired. Please sign up again.')})
         except BadSignature:
-            raise ValidationError({'token': _('Something went wrong on our side. Please sign up again.')})
+            raise ValidationError({'id': _('Something went wrong on our side. Please sign up again.')})
 
-        serializer.instance = member
+    def perform_update(self, serializer):
         serializer.save(is_active=True)
         send_welcome_mail(serializer.instance)
 
@@ -276,50 +260,16 @@ class UserCreate(generics.CreateAPIView):
             serializer.save(is_active=True)
 
 
-class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
-    """
-    Allows a new password to be set in the resource that is a valid password
-    reset hash.
-    """
-
-    serializer_class = PasswordResetConfirmSerializer
-
-    def perform_create(self, serializer):
-        # The uidb36 and the token are checked by the URLconf.
-        uidb36, token = serializer.validated_data['token'].split('-', 1)
-
-        user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
-
-        if default_token_generator.check_token(user, token):
-
-            user.set_password(serializer.validated_data['password'])
-            user.save()
-            serializer.validated_data['jwt_token'] = user.get_jwt_token()
-
-            # return a jwt token so the user can be logged in immediately
-        else:
-            raise ValidationError('Token expired')
-
-    def get(self, *args, **kwargs):
-        user = self._get_user(self.kwargs.get('uidb36'))
-        token = self.kwargs.get('token')
-
-        if user is not None and default_token_generator.check_token(user,
-                                                                    token):
-            return response.Response(status=status.HTTP_200_OK)
-        return response.Response({'message': 'Token expired'},
-                                 status=status.HTTP_400_BAD_REQUEST)
-
-
-class PasswordReset(JsonApiViewMixin, CreateAPIView):
+class PasswordReset(views.APIView):
     """
     Allows a password reset to be initiated for valid users in the system. An
     email will be sent to the user with a
     password reset link upon successful submission.
     """
-    serializer_class = PasswordResetSerializer
+    def put(self, request, *args, **kwargs):
+        serializer = PasswordResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-    def perform_create(self, serializer):
         try:
             user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
             context = {
@@ -344,6 +294,8 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
             )
         except USER_MODEL.DoesNotExist:
             pass
+
+        return response.Response({}, status=status.HTTP_200_OK)
 
 
 class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
@@ -374,6 +326,51 @@ class EmailSetView(PasswordProtectedMemberUpdateApiView):
 
 class PasswordSetView(PasswordProtectedMemberUpdateApiView):
     serializer_class = PasswordUpdateSerializer
+
+
+class PasswordSet(views.APIView):
+    """
+    Allows a new password to be set in the resource that is a valid password
+    reset hash.
+    """
+    def _get_user(self, uidb36):
+        try:
+            uid_int = base36_to_int(uidb36)
+            user = USER_MODEL._default_manager.get(pk=uid_int)
+        except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
+            user = None
+
+        return user
+
+    def put(self, request, *args, **kwargs):
+        # The uidb36 and the token are checked by the URLconf.
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
+
+        if user is not None and default_token_generator.check_token(
+                user, token):
+
+            serializer = PasswordSetSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user.set_password(serializer.validated_data['new_password1'])
+            user.save()
+
+            # return a jwt token so the user can be logged in immediately
+            return response.Response({'token': user.get_jwt_token()},
+                                     status=status.HTTP_200_OK)
+
+        return response.Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, *args, **kwargs):
+        user = self._get_user(self.kwargs.get('uidb36'))
+        token = self.kwargs.get('token')
+
+        if user is not None and default_token_generator.check_token(user,
+                                                                    token):
+            return response.Response(status=status.HTTP_200_OK)
+        return response.Response({'message': 'Token expired'},
+                                 status=status.HTTP_400_BAD_REQUEST)
 
 
 class TokenLogin(generics.CreateAPIView):

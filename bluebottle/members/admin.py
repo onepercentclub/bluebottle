@@ -145,9 +145,7 @@ class MemberChangeForm(MemberForm):
                     label=segment_type.name,
                     queryset=segment_type.segments,
                 )
-                self.initial[segment_type.field_name] = self.instance.segments.filter(
-                    segment_type=segment_type
-                ).all()
+                self.initial[segment_type.field_name] = self.instance.segments.filter(segment_type=segment_type).all()
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.

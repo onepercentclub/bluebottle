@@ -2,12 +2,12 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -42,7 +42,7 @@ class SegmentType(models.Model):
 
     @property
     def field_name(self):
-        return 'segment__' + self.slug.replace('-', '_')
+        return self.slug.replace('-', '_')
 
     def save(self, **kwargs):
         if not self.slug:
@@ -77,32 +77,30 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = models.CharField(
-        _('Email domain'), blank=True, null=True,
-        max_length=255,
-        help_text=_(
-            'Users with email addresses for this domain are automatically added to this segment.'
-        )
+    email_domain = ArrayField(
+        models.CharField(
+            blank=True, null=True,
+            max_length=255,
+        ),
+        verbose_name=_('Email domain'),
+        default=list,
+        help_text=_('Users with email addresses for this domain are automatically added to this segment.')
     )
 
     tag_line = models.CharField(
-        _('Slogan'), max_length=255, null=True, blank=True,
-        help_text=_(
-            'A short sentence to explain your segment. This sentence is directly visible on the page.'
-        )
+        _('tag line'), max_length=255, null=True, blank=True,
+        help_text=_('Short tag line for your segment.')
     )
 
     story = models.TextField(
         _('Story'), blank=True, null=True,
-        help_text=_(
-            'A more detailed story for your segment. This story can be accessed via a link on the page.'
-        )
+        help_text=_('Longer explanation, containing the goals of your segment.')
     )
 
     logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("The uploaded image will be scaled so that it is fully visible."),
+        help_text=_("Logo image. 100x100px"),
 
         validators=[
             FileMimetypeValidator(
@@ -115,14 +113,14 @@ class Segment(models.Model):
     background_color = ColorField(
         _('Background color'), null=True, blank=True,
         help_text=_(
-            'Add a background colour to your segment page.'
+            'The text color will automatically be set based on the contrast with the background.'
         )
     )
 
     cover_image = ImageField(
         _("cover image"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("The uploaded image will be cropped to fit a 4:3 rectangle."),
+        help_text=_("Cover image, 400x300 px"),
 
         validators=[
             FileMimetypeValidator(
@@ -133,7 +131,7 @@ class Segment(models.Model):
     )
 
     closed = models.BooleanField(
-        _('Restricted'),
+        _('Closed'),
         default=False,
         help_text=_(
             'Closed segments will only be accessible to members that belong to this segment.'
@@ -189,8 +187,10 @@ def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
     if isinstance(instance, Segment):
         if instance.email_domain:
-            for member in Member.objects\
-                    .exclude(segments=instance)\
-                    .filter(email__endswith=instance.email_domain)\
-                    .all():
-                member.segments.add(instance)
+            for email_domain in instance.email_domain:
+                for member in Member.objects\
+                        .exclude(segments=instance)\
+                        .filter(email__endswith=email_domain)\
+                        .all():
+
+                    member.segments.add(instance)

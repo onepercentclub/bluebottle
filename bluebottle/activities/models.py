@@ -132,7 +132,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         super(Activity, self).save(**kwargs)
 
         if not self.segments.count():
-            for segment in self.owner.segments.filter(segment_type__inherit=True).all():
+            for segment in self.owner.segments.all():
                 self.segments.add(segment)
 
     def get_absolute_url(self):

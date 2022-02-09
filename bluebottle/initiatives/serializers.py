@@ -1,6 +1,5 @@
 from builtins import object
 
-from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
@@ -175,7 +174,10 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     def get_activities(self, instance):
         user = self.context['request'].user
-        activities = instance.activities.exclude(status='deleted').all()
+        activities = [
+            activity for activity in instance.activities.all() if
+            activity.status != ActivityStateMachine.deleted.value
+        ]
 
         public_statuses = [
             ActivityStateMachine.succeeded.value,
@@ -185,19 +187,14 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ]
 
         if user != instance.owner and user not in instance.activity_managers.all():
-            if not user.is_authenticated:
-                return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
-            else:
-                return activities.filter(
-                    Q(status__in=public_statuses) |
-                    Q(owner=user) |
-                    Q(initiative__activity_managers=user)
-                ).filter(
-                    ~Q(segments__closed=True) |
-                    Q(segments__in=user.segments.filter(closed=True))
+            return [
+                activity for activity in activities if (
+                    activity.status in public_statuses or
+                    user == activity.owner
                 )
-
-        return activities
+            ]
+        else:
+            return activities
 
     def get_segments(self, instance):
         segments = []
@@ -222,7 +219,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
-        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentSerializer',
         'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',

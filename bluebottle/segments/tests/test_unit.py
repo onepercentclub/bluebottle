@@ -9,6 +9,7 @@ class TestSegmentModel(BluebottleTestCase):
         save() automatically updates some fields, specifically
         the status field. Make sure it picks the right one
     """
+
     def setUp(self):
         self.type = SegmentTypeFactory.create()
 
@@ -60,7 +61,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
     def test_new_user_added_to_segment(self):
         segment = SegmentFactory.create(
             segment_type=self.segment_type,
-            email_domain='leidse-zangers.nl',
+            email_domain=['leidse-zangers.nl'],
             closed=True
         )
 
@@ -83,8 +84,9 @@ class MemberSegmentTestCase(BluebottleTestCase):
         )
         segment = SegmentFactory.create(
             segment_type=self.segment_type,
-            email_domain='leidse-zangers.nl',
+            email_domain=['leidse-zangers.nl'],
             closed=True
         )
+
         self.assertEqual(robbie.segments.first(), segment)
         self.assertEqual(jan.segments.first(), None)

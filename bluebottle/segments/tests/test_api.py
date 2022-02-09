@@ -11,10 +11,9 @@ from rest_framework import status
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPublicDetailSerializer
+from bluebottle.segments.serializers import SegmentSerializer, SegmentPublicDetailSerializer
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
@@ -153,7 +152,7 @@ class SegmentDetailAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.serializer = SegmentDetailSerializer
+        self.serializer = SegmentSerializer
         self.factory = SegmentFactory
 
         self.segment_type = SegmentTypeFactory.create()
@@ -210,10 +209,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get_stats(self):
-        initiative = InitiativeFactory.create(status='approved')
-
         period_activity = PeriodActivityFactory.create(
-            initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
@@ -223,7 +219,6 @@ class SegmentDetailAPITestCase(APITestCase):
         PeriodParticipantFactory.create_batch(3, activity=period_activity)
 
         date_activity = DateActivityFactory.create(
-            initiative=initiative,
             status='succeeded',
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
         )
@@ -235,7 +230,6 @@ class SegmentDetailAPITestCase(APITestCase):
         DateParticipantFactory.create_batch(3, activity=date_activity)
 
         funding = FundingFactory.create(
-            initiative=initiative,
             deadline=now() - datetime.timedelta(weeks=1),
             status='succeeded'
         )
@@ -246,7 +240,6 @@ class SegmentDetailAPITestCase(APITestCase):
             donor.contributions.get().states.succeed(save=True)
 
         deed_activity = DeedFactory.create(
-            initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(days=10),
             end=datetime.date.today() - datetime.timedelta(days=5)
@@ -259,7 +252,6 @@ class SegmentDetailAPITestCase(APITestCase):
             participant.states.withdraw(save=True)
 
         collect_activity = CollectActivityFactory.create(
-            initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
@@ -269,7 +261,6 @@ class SegmentDetailAPITestCase(APITestCase):
         CollectContributorFactory.create_batch(3, activity=collect_activity)
 
         unrelated_activity = PeriodActivityFactory.create(
-            initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
@@ -282,10 +273,6 @@ class SegmentDetailAPITestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(response.json()['data']['meta']['activities-count'], 5)
-        self.assertEqual(response.json()['data']['meta']['initiatives-count'], 1)
-
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 66.0)
         self.assertEqual(stats['activities'], 5)

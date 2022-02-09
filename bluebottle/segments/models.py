@@ -70,13 +70,17 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = ArrayField(
-        models.CharField(
-            blank=True, null=True,
-            max_length=255,
-        ),
+    email_domain = models.CharField(
+        max_length=200,
         verbose_name=_('Email domain'),
+        null=True,
+        blank=True,
+    )
+    email_domains = ArrayField(
+        models.CharField(max_length=200),
+        verbose_name=_('Email domains'),
         default=list,
+        blank=True,
         help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 

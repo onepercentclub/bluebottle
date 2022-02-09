@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('segments', '0019_merge_20220120_1134'),
     ]
@@ -14,11 +13,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='segment',
             name='alternate_names',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=200), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=200),
+                blank=True,
+                default=list, size=None),
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='segment',
-            name='email_domain',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=255, null=True), default=list, help_text='Users with email addresses for this domain are automatically added to this segment', size=None, verbose_name='Email domain'),
+            name='email_domains',
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=255),
+                blank=True,
+                default=list,
+                help_text='Users with email addresses for this domain are automatically added to this segment',
+                size=None, verbose_name='Email domain'),
         ),
     ]

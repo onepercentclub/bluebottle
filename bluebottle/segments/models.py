@@ -28,15 +28,15 @@ class SegmentType(models.Model):
         default=True
     )
     is_active = models.BooleanField(
-        _('Is active.'),
+        _('Is active'),
         default=True
     )
     user_editable = models.BooleanField(
-        _('Editable in user profile.'),
+        _('Editable in user profile'),
         default=True
     )
     enable_search = models.BooleanField(
-        _('Enable search filters.'),
+        _('Enable search filters'),
         default=False
     )
 

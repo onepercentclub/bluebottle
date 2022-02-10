@@ -58,6 +58,7 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
             return obj.states.current_state.name
 
     state_name.short_description = _('status')
+    ordering = ['-created']
 
     def contributor_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -76,6 +77,7 @@ class ContributionAdminInline(StackedPolymorphicInline):
     fields = readonly_fields
     extra = 0
     can_delete = False
+    ordering = ['-created']
 
     class EffortContributionInline(ContributionInlineChild):
         readonly_fields = ['contributor_link', 'status', 'start']
@@ -606,6 +608,9 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 
 class ActivityInlineChild(StackedPolymorphicInline.Child):
+
+    ordering = ['-created']
+
     def state_name(self, obj):
         if obj.states.current_state:
             return obj.states.current_state.name
@@ -629,6 +634,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
     fields = readonly_fields
     extra = 0
     can_delete = False
+    ordering = ['-created']
 
     class CollectActivityInline(ActivityInlineChild):
         readonly_fields = ['activity_link', 'start', 'end', 'state_name']

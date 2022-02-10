@@ -170,7 +170,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertIncluded('segment-type', self.segment_type)
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
-        self.assertAttribute('email-domain', self.model.email_domain)
+        self.assertAttribute('email-domains', self.model.email_domains)
         self.assertAttribute('tag-line', self.model.tag_line)
         self.assertAttribute('story', self.model.story)
         self.assertAttribute('background-color', self.model.background_color)
@@ -354,3 +354,33 @@ class SegmentPublicDetailAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=self.user)
             self.assertStatus(status.HTTP_200_OK)
+
+
+class SegmentActivityDetailAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = SegmentDetailSerializer
+        self.factory = SegmentFactory
+
+        self.segment_type = SegmentTypeFactory.create()
+        self.closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
+        self.model = DeedFactory.create(status='open')
+        self.model.segments.add(self.closed_segment)
+        self.url = reverse('deed-detail', args=(self.model.pk, ))
+
+    def test_retrieve_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+        data = self.response.json()
+        self.assertEqual(data['errors'][0]['detail'], str(self.closed_segment.id))
+        self.assertEqual(data['errors'][0]['code'], 'closed_segment')
+
+    def test_retrieve_user(self):
+        user = BlueBottleUserFactory.create()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        data = self.response.json()
+        self.assertEqual(data['errors'][0]['detail'], str(self.closed_segment.id))
+        self.assertEqual(data['errors'][0]['code'], 'closed_segment')

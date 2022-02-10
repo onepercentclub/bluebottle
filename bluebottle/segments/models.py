@@ -70,13 +70,11 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = ArrayField(
-        models.CharField(
-            blank=True, null=True,
-            max_length=255,
-        ),
-        verbose_name=_('Email domain'),
+    email_domains = ArrayField(
+        models.CharField(max_length=200),
+        verbose_name=_('Email domains'),
         default=list,
+        blank=True,
         help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 
@@ -183,8 +181,8 @@ class Segment(models.Model):
 def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
     if isinstance(instance, Segment):
-        if instance.email_domain:
-            for email_domain in instance.email_domain:
+        if instance.email_domains:
+            for email_domain in instance.email_domains:
                 for member in Member.objects\
                         .exclude(segments=instance)\
                         .filter(email__endswith=email_domain)\

@@ -68,7 +68,7 @@ class InitiativeDocument(Document):
         'id': fields.KeywordField(),
     })
     categories = fields.NestedField(properties={
-        'id': fields.LongField(),
+        'id': fields.KeywordField(),
         'slug': fields.KeywordField(),
     })
 

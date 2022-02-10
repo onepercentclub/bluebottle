@@ -62,18 +62,12 @@ class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
     serializer_class = AxesJSONWebTokenSerializer
 
 
-class CaptchaVerification(generics.CreateAPIView):
+class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
     serializer_class = CaptchaSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-
-        serializer.is_valid(raise_exception=True)
-
-        ip = get_client_ip(request)
+    def perform_create(self, serializer):
+        ip = get_client_ip(self.request)
         reset(ip=ip)
-
-        return response.Response(status=status.HTTP_201_CREATED)
 
 
 class UserProfileDetail(RetrieveAPIView):

@@ -2,6 +2,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.segments.models import Segment
+from bluebottle.deeds.tests.factories import DeedFactory
 
 
 class TestSegmentModel(BluebottleTestCase):
@@ -68,6 +69,7 @@ class MemberSegmentTestCase(BluebottleTestCase):
         mart = BlueBottleUserFactory.create(
             email='mart.hoogkamer@leidse-zangers.nl'
         )
+
         self.assertEqual(mart.segments.first(), segment)
 
         jan = BlueBottleUserFactory.create(
@@ -90,3 +92,29 @@ class MemberSegmentTestCase(BluebottleTestCase):
 
         self.assertEqual(robbie.segments.first(), segment)
         self.assertEqual(jan.segments.first(), None)
+
+    def test_new_user_added_to_segment_with_inherit(self):
+        type = SegmentTypeFactory.create(inherit=True)
+        segment = SegmentFactory.create(
+            segment_type=type
+        )
+
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+
+        activity = DeedFactory.create(owner=user)
+
+        self.assertEqual(list(activity.segments.all()), list(user.segments.all()))
+
+    def test_new_user_added_to_segment_without_inherit(self):
+        type = SegmentTypeFactory.create(inherit=False)
+        segment = SegmentFactory.create(
+            segment_type=type
+        )
+
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+
+        activity = DeedFactory.create(owner=user)
+
+        self.assertEqual(len(activity.segments.all()), 0)

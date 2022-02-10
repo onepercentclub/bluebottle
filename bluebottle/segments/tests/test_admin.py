@@ -62,7 +62,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         page = form.submit()
 
         segment.refresh_from_db()
-        self.assertEqual(segment.email_domain, 'test.com')
+        self.assertEqual(segment.email_domain, ['test.com'])
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
@@ -87,7 +87,7 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         member_url = reverse('admin:members_member_change', args=(self.member.id,))
         page = self.app.get(member_url)
         form = page.forms['member_form']
-        form['department'] = [self.engineering.id]
+        form['segment__department'] = [self.engineering.id]
         form.submit()
         self.member.refresh_from_db()
         self.assertEqual(self.member.segments.first(), self.engineering)

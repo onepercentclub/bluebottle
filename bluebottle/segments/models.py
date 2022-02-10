@@ -2,7 +2,7 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
+from django_better_admin_arrayfield.models.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -35,7 +35,7 @@ class SegmentType(models.Model):
 
     @property
     def field_name(self):
-        return self.slug.replace('-', '_')
+        return 'segment__' + self.slug.replace('-', '_')
 
     def save(self, **kwargs):
         if not self.slug:
@@ -184,8 +184,10 @@ def connect_members_to_segments(sender, instance, created, **kwargs):
     from bluebottle.members.models import Member
     if isinstance(instance, Segment):
         if instance.email_domain:
-            for member in Member.objects\
-                    .exclude(segments=instance)\
-                    .filter(email__endswith=instance.email_domain)\
-                    .all():
-                member.segments.add(instance)
+            for email_domain in instance.email_domain:
+                for member in Member.objects\
+                        .exclude(segments=instance)\
+                        .filter(email__endswith=email_domain)\
+                        .all():
+
+                    member.segments.add(instance)

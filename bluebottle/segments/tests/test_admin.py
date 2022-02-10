@@ -50,6 +50,21 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Number of segments')
         self.assertContains(response, 'Job title')
 
+    def test_segment_email_domain(self):
+        segment_type = SegmentTypeFactory.create()
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        segment_url = reverse('admin:segments_segment_change', args=(segment.id, ))
+        page = self.app.get(segment_url)
+
+        form = page.forms['segment_form']
+        form['email_domain'] = ['test.com', 'test2.com']
+        page = form.submit()
+
+        segment.refresh_from_db()
+        self.assertEqual(segment.email_domain[0], ['test.com'])
+        self.assertEqual(segment.email_domain[1], ['test2.com'])
+
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
 

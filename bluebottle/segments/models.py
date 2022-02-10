@@ -2,7 +2,7 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
+from django_better_admin_arrayfield.models.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -79,12 +79,11 @@ class Segment(models.Model):
 
     email_domain = ArrayField(
         models.CharField(
-            blank=True, null=True,
             max_length=255,
         ),
         verbose_name=_('Email domain'),
         default=list,
-        help_text=_('Users with email addresses for this domain are automatically added to this segment.')
+        help_text=_('Users with email addresses for this domain are automatically added to this segment')
     )
 
     tag_line = models.CharField(

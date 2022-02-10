@@ -4,6 +4,7 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.segments.models import Segment
 from bluebottle.deeds.tests.factories import DeedFactory
 
+
 class TestSegmentModel(BluebottleTestCase):
     """
         save() automatically updates some fields, specifically

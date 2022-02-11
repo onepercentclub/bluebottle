@@ -1,18 +1,18 @@
-from django.conf import settings
-from django.db import models
-from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
-from django_better_admin_arrayfield.models.fields import ArrayField
-
 import wcag_contrast_ratio as contrast
 from PIL import ImageColor
-
 from colorfield.fields import ColorField
+from django.conf import settings
+from django_better_admin_arrayfield.models.fields import ArrayField
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.template.defaultfilters import slugify
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -20,6 +20,13 @@ class SegmentType(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
+    inherit = models.BooleanField(
+        _('Inherit'),
+        help_text=_(
+            'Newly created activities will inherit the segments set on the activity owner.'
+        ),
+        default=True
+    )
     is_active = models.BooleanField(
         _('Is active'),
         default=True
@@ -29,7 +36,7 @@ class SegmentType(models.Model):
         default=True
     )
     enable_search = models.BooleanField(
-        _('Enable search filters.'),
+        _('Enable search filters'),
         default=False
     )
 
@@ -70,10 +77,12 @@ class Segment(models.Model):
         on_delete=models.CASCADE
     )
 
-    email_domain = models.CharField(
-        _('Email domain'), blank=True, null=True,
-        max_length=255,
-        help_text=_('Users with email addresses for this domain are automatically added to this segment')
+    email_domains = ArrayField(
+        models.CharField(max_length=200),
+        verbose_name=_('Email domains'),
+        default=list,
+        blank=True,
+        help_text=_('Users with email addresses for this domain are automatically added to this segment.')
     )
 
     tag_line = models.CharField(
@@ -123,6 +132,14 @@ class Segment(models.Model):
         ]
     )
 
+    closed = models.BooleanField(
+        _('Restricted'),
+        default=False,
+        help_text=_(
+            'Closed segments will only be accessible to members that belong to this segment.'
+        )
+    )
+
     def save(self, *args, **kwargs):
         if self.name not in self.alternate_names:
             self.alternate_names.append(self.name)
@@ -148,7 +165,7 @@ class Segment(models.Model):
             return 'grey'
 
     def __str__(self):
-        return u'{}: {}'.format(self.segment_type.name, self.name)
+        return self.name
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -165,3 +182,17 @@ class Segment(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'segments'
+
+
+@receiver(post_save)
+def connect_members_to_segments(sender, instance, created, **kwargs):
+    from bluebottle.members.models import Member
+    if isinstance(instance, Segment):
+        if instance.email_domains:
+            for email_domain in instance.email_domains:
+                for member in Member.objects\
+                        .exclude(segments=instance)\
+                        .filter(email__endswith=email_domain)\
+                        .all():
+
+                    member.segments.add(instance)

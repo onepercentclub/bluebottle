@@ -14,7 +14,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.segments.serializers import SegmentDetailSerializer
+from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPublicDetailSerializer
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
@@ -170,7 +170,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertIncluded('segment-type', self.segment_type)
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
-        self.assertAttribute('email-domain', self.model.email_domain)
+        self.assertAttribute('email-domains', self.model.email_domains)
         self.assertAttribute('tag-line', self.model.tag_line)
         self.assertAttribute('story', self.model.story)
         self.assertAttribute('background-color', self.model.background_color)
@@ -187,13 +187,13 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('story', '&lt;script&gt;test&lt;/script&gt;<b>test</b>')
 
-    def test_retrieve_closed(self):
+    def test_retrieve_closed_site(self):
         with self.closed_site():
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
-    def test_retrieve_closed_user(self):
+    def test_retrieve_closed_site_user(self):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
 
@@ -296,3 +296,91 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertEqual(
             stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
         )
+
+    def test_retrieve_closed_segment(self):
+        closed_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+        self.url = reverse('segment-detail', args=(closed_segment.id,))
+        user = BlueBottleUserFactory()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_closed_segment_user(self):
+        closed_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+        self.url = reverse('segment-detail', args=(closed_segment.id,))
+        user = BlueBottleUserFactory()
+        user.segments.add(closed_segment)
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+
+
+class SegmentPublicDetailAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = SegmentPublicDetailSerializer
+        self.factory = SegmentFactory
+        self.model = self.factory()
+
+        self.url = reverse('segment-public-detail', args=(self.model.pk,))
+
+    def test_get(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('name', self.model.name)
+        self.assertAttribute('logo')
+        self.assertNoAttribute('story')
+        self.assertNotIncluded('segment-types')
+
+        self.assertTrue(self.response.json()['data']['attributes']['logo'].startswith('/media/cache'))
+
+    def test_get_closed_segment(self):
+        self.model.closed = True
+        self.model.save()
+
+        self.test_get()
+
+    def test_get_closed_platform(self):
+        with self.closed_site():
+            self.perform_get()
+            self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_logged_in(self):
+        with self.closed_site():
+            self.perform_get(user=self.user)
+            self.assertStatus(status.HTTP_200_OK)
+
+
+class SegmentActivityDetailAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = SegmentDetailSerializer
+        self.factory = SegmentFactory
+
+        self.segment_type = SegmentTypeFactory.create()
+        self.closed_segment = SegmentFactory.create(segment_type=self.segment_type, closed=True)
+        self.model = DeedFactory.create(status='open')
+        self.model.segments.add(self.closed_segment)
+        self.url = reverse('deed-detail', args=(self.model.pk, ))
+
+    def test_retrieve_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+        data = self.response.json()
+        self.assertEqual(data['errors'][0]['detail'], str(self.closed_segment.id))
+        self.assertEqual(data['errors'][0]['code'], 'closed_segment')
+
+    def test_retrieve_user(self):
+        user = BlueBottleUserFactory.create()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        data = self.response.json()
+        self.assertEqual(data['errors'][0]['detail'], str(self.closed_segment.id))
+        self.assertEqual(data['errors'][0]['code'], 'closed_segment')

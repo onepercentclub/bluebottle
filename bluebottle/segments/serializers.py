@@ -20,7 +20,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = SegmentType
         fields = (
-            'id', 'name', 'slug', 'enable_search', 'user_editable', 'segments'
+            'id', 'name', 'slug', 'inherit', 'enable_search', 'user_editable', 'segments'
         )
 
     class JSONAPIMeta(object):
@@ -42,8 +42,8 @@ class SegmentListSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Segment
         fields = (
-            'id', 'name', 'segment_type', 'email_domain', 'slug', 'tag_line', 'background_color',
-            'text_color', 'logo', 'cover_image', 'story',
+            'id', 'name', 'segment_type', 'email_domains', 'slug', 'tag_line', 'background_color',
+            'text_color', 'logo', 'cover_image', 'story', 'closed',
         )
 
     class JSONAPIMeta(object):
@@ -79,3 +79,16 @@ class SegmentDetailSerializer(SegmentListSerializer):
             'initiatives_count', 'activities_count', 'stats'
         )
         meta_fields = ['initiatives_count', 'activities_count', 'stats']
+
+
+class SegmentPublicDetailSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    logo = SorlImageField('180x180', crop='center')
+    cover_image = SorlImageField('1200x900', crop='center')
+
+    class Meta(object):
+        model = Segment
+        fields = ('id', 'name', 'logo', 'cover_image', 'email_domains', 'closed')
+
+    class JSONAPIMeta(object):
+        resource_name = 'segment-previews'

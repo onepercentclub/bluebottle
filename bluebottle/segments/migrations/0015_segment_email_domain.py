@@ -13,6 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='segment',
             name='email_domain',
-            field=models.EmailField(blank=True, help_text='Users with email addresses for this domain are automatically added to this segment', max_length=255, null=True, verbose_name='Email'),
+            field=models.EmailField(
+                blank=True,
+                help_text='Users with email addresses for this domain are automatically added to this segment',
+                max_length=255, null=True, verbose_name='Email'),
         ),
     ]

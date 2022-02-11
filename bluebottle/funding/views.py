@@ -25,6 +25,7 @@ from bluebottle.funding.serializers import (
     PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission
@@ -122,7 +123,7 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.select_related(
         'initiative', 'initiative__owner',
     ).prefetch_related('rewards')

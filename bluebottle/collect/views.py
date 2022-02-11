@@ -13,6 +13,7 @@ from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
@@ -47,7 +48,7 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class CollectActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),

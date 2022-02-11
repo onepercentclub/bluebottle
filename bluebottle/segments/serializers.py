@@ -83,8 +83,8 @@ class SegmentDetailSerializer(SegmentListSerializer):
 
 class SegmentPublicDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
-    logo = SorlImageField('82x82', crop='center')
-    cover_image = SorlImageField('384x288', crop='center')
+    logo = SorlImageField('180x180', crop='center')
+    cover_image = SorlImageField('1200x900', crop='center')
 
     class Meta(object):
         model = Segment

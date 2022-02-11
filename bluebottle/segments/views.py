@@ -7,6 +7,15 @@ from bluebottle.segments.serializers import (
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
+from rest_framework import exceptions
+
+
+class ClosedSegmentActivityViewMixin(object):
+    def permission_denied(self, request, message=None, code=None):
+        if request.authenticators and not request.successful_authenticator:
+            if code and message:
+                raise exceptions.NotAuthenticated(detail=message, code=code)
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
 class SegmentPagination(PageNumberPagination):

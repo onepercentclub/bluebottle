@@ -53,6 +53,7 @@ class ActivityStatusPermission(ResourcePermission):
 class ActivitySegmentPermission(BasePermission):
 
     code = "closed_segment"
+    message = None
 
     def has_object_action_permission(self, action, user, obj):
         self.message = None

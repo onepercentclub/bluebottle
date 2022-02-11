@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='segment',
             name='background_color',
-            field=colorfield.fields.ColorField(blank=True, default=None, help_text='Add a background colour to your segment page.', max_length=18, null=True, samples=None, verbose_name='Background color'),
+            field=colorfield.fields.ColorField(blank=True, default=None, help_text='Add a background colour to your segment page.', max_length=18, null=True, verbose_name='Background color'),
         ),
         migrations.AlterField(
             model_name='segment',

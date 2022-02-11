@@ -1,4 +1,5 @@
 from builtins import object
+import uuid
 
 from axes.handlers.proxy import AxesProxyHandler
 from django import forms
@@ -639,3 +640,13 @@ class TokenLoginSerializer(serializers.Serializer):
 
 class CaptchaSerializer(serializers.Serializer):
     token = CaptchaField(required=True)
+    id = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return str(uuid.uuid4())
+
+    class Meta(object):
+        fields = ('id', 'token')
+
+    class JSONAPIMeta:
+        resource_name = 'captcha-tokens'

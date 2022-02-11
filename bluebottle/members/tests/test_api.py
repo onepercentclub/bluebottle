@@ -162,8 +162,10 @@ class LoginTestCase(BluebottleTestCase):
         mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'testserver'})
 
         with mock.patch.object(client, 'submit', return_value=mock_response):
-            captcha_response = self.client.post(
-                reverse('captcha-verification'), {'token': 'test-token'}
+            json_api_client = JSONAPITestClient()
+            captcha_response = json_api_client.post(
+                reverse('captcha-verification'),
+                {'data': {'type': 'captcha-tokens', 'attributes': {'token': 'test-token'}}},
             )
 
         self.assertEqual(captcha_response.status_code, status.HTTP_201_CREATED)

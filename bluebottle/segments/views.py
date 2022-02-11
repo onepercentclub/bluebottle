@@ -1,5 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.activities.permissions import ActivitySegmentPermission
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.segments.permissions import OpenSegmentOrMember
 from bluebottle.segments.serializers import (
@@ -11,11 +12,22 @@ from rest_framework import exceptions
 
 
 class ClosedSegmentActivityViewMixin(object):
-    def permission_denied(self, request, message=None, code=None):
-        if request.authenticators and not request.successful_authenticator:
-            if code and message:
-                raise exceptions.NotAuthenticated(detail=message, code=code)
-        raise exceptions.PermissionDenied(detail=message, code=code)
+
+    def check_object_permissions(self, request, obj):
+        for permission in self.get_permissions():
+            if not permission.has_object_permission(request, self, obj):
+                if isinstance(permission, ActivitySegmentPermission):
+                    code = 'closed_segment'
+                    message = obj.segments.filter(closed=True).first().id
+                    if request.authenticators and not request.successful_authenticator:
+                        raise exceptions.NotAuthenticated(detail=message, code=code)
+                    raise exceptions.PermissionDenied(detail=message, code=code)
+                else:
+                    self.permission_denied(
+                        request,
+                        message=getattr(permission, 'message', None),
+                        code=getattr(permission, 'code', None)
+                    )
 
 
 class SegmentPagination(PageNumberPagination):

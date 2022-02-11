@@ -52,15 +52,9 @@ class ActivityStatusPermission(ResourcePermission):
 
 class ActivitySegmentPermission(BasePermission):
 
-    code = "closed_segment"
-    message = None
-
     def has_object_action_permission(self, action, user, obj):
-        self.message = None
         activity_segments = obj.segments.filter(closed=True)
-
         if activity_segments:
-            self.message = activity_segments.first().id
             if not user.is_authenticated:
                 return False
             if any(

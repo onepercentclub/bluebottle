@@ -318,6 +318,16 @@ class SegmentDetailAPITestCase(APITestCase):
         self.perform_get(user=user)
         self.assertStatus(status.HTTP_200_OK)
 
+    def test_retrieve_closed_segment_staff(self):
+        closed_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            closed=True
+        )
+        self.url = reverse('segment-detail', args=(closed_segment.id,))
+        user = BlueBottleUserFactory(is_staff=True)
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+
 
 class SegmentPublicDetailAPITestCase(APITestCase):
     def setUp(self):
@@ -384,3 +394,14 @@ class SegmentActivityDetailAPITestCase(APITestCase):
         data = self.response.json()
         self.assertEqual(data['errors'][0]['detail'], str(self.closed_segment.id))
         self.assertEqual(data['errors'][0]['code'], 'closed_segment')
+
+    def test_retrieve_staff(self):
+        user = BlueBottleUserFactory.create(is_staff=True)
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_retrieve_user_with_segment(self):
+        user = BlueBottleUserFactory.create()
+        user.segments.add(self.closed_segment)
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)

@@ -57,7 +57,9 @@ class ActivitySegmentPermission(BasePermission):
         if activity_segments:
             if not user.is_authenticated:
                 return False
-            if any(
+            elif user.is_staff:
+                return True
+            elif any(
                     segment in activity_segments for segment in user.segments.filter(closed=True)
             ):
                 return True

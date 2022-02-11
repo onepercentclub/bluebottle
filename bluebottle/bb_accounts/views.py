@@ -280,7 +280,10 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         # The uidb36 and the token are checked by the URLconf.
-        uidb36, token = serializer.validated_data['token'].split('-', 1)
+        try:
+            uidb36, token = serializer.validated_data['token'].split('-', 1)
+        except ValueError:
+            raise ValidationError('Invalid token')
 
         user = USER_MODEL.objects.get(pk=base36_to_int(uidb36))
 

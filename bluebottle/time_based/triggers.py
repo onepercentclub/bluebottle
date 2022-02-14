@@ -59,6 +59,7 @@ def is_full(effect):
     the activity is full
     """
     return (
+        (effect.instance.slots.count() == 1 or effect.instance.slot_selection == 'all') and
         effect.instance.capacity and
         effect.instance.capacity <= len(effect.instance.accepted_participants)
     )
@@ -873,6 +874,7 @@ def activity_will_be_full(effect):
     """
     activity = effect.instance.activity
     return (
+        (activity.slots.count() == 1 or activity.slot_selection == 'all') and
         activity.capacity and
         activity.capacity == len(activity.accepted_participants) + 1
     )

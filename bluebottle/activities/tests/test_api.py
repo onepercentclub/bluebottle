@@ -680,7 +680,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             description="Lorem ipsum",
             status='open'
         )
-        second = FundingFactory.create(title='Lorem ipsum dolor sit amet', status='open')
+        second = PeriodActivityFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -693,7 +693,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/time-based/dates')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['type'], 'activities/fundings')
+        self.assertEqual(data['data'][1]['type'], 'activities/time-based/periods')
 
     def test_search_boost(self):
         first = DateActivityFactory.create(

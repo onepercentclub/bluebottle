@@ -723,7 +723,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             title='Location! Location!',
             status='open'
         )
-        location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
+        location = GeolocationFactory.create(formatted_address='Van noordtkade')
         DateActivitySlotFactory.create(
             location=location,
             activity=activity1
@@ -749,7 +749,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?filter[search]=Roggeveenstraat',
+            self.url + '?filter[search]=Van noordtkade',
             user=self.owner
         )
 

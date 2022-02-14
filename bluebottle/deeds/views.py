@@ -5,18 +5,19 @@ from django.http import HttpResponse
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
     DeedParticipantTransitionSerializer
 )
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
-from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     JsonApiViewMixin, PrivateFileView, IcalView
@@ -45,10 +46,11 @@ class DeedListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class DeedDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class DeedDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
+        ActivitySegmentPermission,
         DeleteActivityPermission
     )
 

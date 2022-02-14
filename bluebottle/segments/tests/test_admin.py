@@ -58,11 +58,11 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
-        form['email_domain'] = 'test.com'
+        form['email_domains'] = 'test.com'
         page = form.submit()
 
         segment.refresh_from_db()
-        self.assertEqual(segment.email_domain, 'test.com')
+        self.assertEqual(segment.email_domains, ['test.com'])
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
@@ -87,9 +87,24 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         member_url = reverse('admin:members_member_change', args=(self.member.id,))
         page = self.app.get(member_url)
         form = page.forms['member_form']
-        form['department'] = [self.engineering.id]
+        form['segment__department'] = [self.engineering.id]
         form.submit()
         self.member.refresh_from_db()
         self.assertEqual(self.member.segments.first(), self.engineering)
         activity.refresh_from_db()
         self.assertEqual(activity.segments.first(), self.engineering)
+
+    def test_segment_email_domain(self):
+        segment_type = SegmentTypeFactory.create()
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        segment_url = reverse('admin:segments_segment_change', args=(segment.id, ))
+        page = self.app.get(segment_url)
+
+        form = page.forms['segment_form']
+        form['email_domains'] = ['test.com', 'test2.com']
+        form.submit()
+
+        segment.refresh_from_db()
+        self.assertEqual(segment.email_domains[0], 'test.com')
+        self.assertEqual(segment.email_domains[1], 'test2.com')

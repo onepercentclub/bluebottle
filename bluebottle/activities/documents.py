@@ -70,7 +70,8 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'type': fields.KeywordField(attr='segment_type.slug'),
-            'name': fields.TextField()
+            'name': fields.TextField(),
+            'closed': fields.BooleanField(),
         }
     )
 

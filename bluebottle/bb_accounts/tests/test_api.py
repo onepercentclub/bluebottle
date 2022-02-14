@@ -26,7 +26,7 @@ from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
 )
 from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase, APITestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase, JSONAPITestClient
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -479,6 +479,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_password_reset(self):
         # Setup: create a user.
+        client = JSONAPITestClient()
+
         new_user_email = 'nijntje94@hetkonijntje.nl'
         new_user_password = 'some-password'
         response = self.client.post(self.user_create_api_url,
@@ -486,45 +488,49 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                      'password': new_user_password})
 
         # Test: resetting the password should be allowed.
-        response = self.client.put(self.user_password_reset_api_url, {'email': new_user_email})
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        response = client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': new_user_email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(len(mail.outbox), 1)
 
         # Setup: get the password reset token and url.
-        c = re.compile(
+        token_regex = re.compile(
             '/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
             re.DOTALL)
-        m = c.search(mail.outbox[0].body)
-        password_set_url = reverse('password-set', kwargs={'uidb36': m.group(1), 'token': m.group(2)})
+        token_matches = token_regex.search(mail.outbox[0].body)
+        reset_confirm_url = reverse('password-reset-confirm')
 
-        # Test: check that non-matching passwords produce a validation error.
-        passwords = {'new_password1': 'test-password', 'new_password2': 'test-passwordd'}
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                         response.data)
+        attributes = {'password': 'test-password', 'token': f'{token_matches[1]}-{token_matches[2]}'}
 
-        self.assertEqual(response.data['non_field_errors'][0],
-                         "The two password fields didn't match.")
-
-        # Test: check that updating the password works when the passwords match.
-        passwords['new_password2'] = 'test-password'
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 
         # Test: check that trying to reuse the password reset link doesn't work.
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
-                         response.data)
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_reset_validation(self):
+        client = JSONAPITestClient()
         token = default_token_generator.make_token(self.user_1)       # Setup: create a user.
         uidb36 = int_to_base36(self.user_1.pk)
-        password_set_url = reverse('password-set', kwargs={'uidb36': uidb36, 'token': token})
+        reset_confirm_url = reverse('password-reset-confirm')
 
         # Test: check that short passwords produce a validation error.
-        passwords = {'new_password1': 'short', 'new_password2': 'short'}
-        response = self.client.put(password_set_url, passwords)
+        attributes = {'password': 'short', 'token': f'{uidb36}-{token}'}
+
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(b'This password is too short' in response.content)
 

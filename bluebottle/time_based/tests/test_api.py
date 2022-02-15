@@ -2068,15 +2068,16 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
+    def assertTotal(self, total):
+        return self.assertEqual(self.response.json()['meta']['pagination']['count'], total)
+
     def test_get_owner(self):
         self.response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(self.response.json()['data']), 10)
-
+        self.assertTotal(10)
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 10)
+        self.assertEqual(len(included_documents), 8)
 
     def test_get_with_duplicate_files(self):
         file = PrivateDocumentFactory.create(owner=self.participants[2].user)
@@ -2084,27 +2085,26 @@ class RelatedParticipantsAPIViewTestCase():
         self.participants[2].save()
         self.participants[3].document = file
         self.participants[3].save()
+        self.participants[4].document = file
+        self.participants[4].save()
         self.response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 10)
+        self.assertTotal(10)
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 9)
+        self.assertEqual(len(included_documents), 6)
 
     def test_get_anonymous(self):
         self.response = self.client.get(self.url)
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 8)
-
+        self.assertTotal(8)
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
 
     def test_get_removed_participant(self):
         self.response = self.client.get(self.url, user=self.participants[0].user)
-
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 9)
-
+        self.assertTotal(9)
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 1)
 
@@ -2157,17 +2157,17 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
 
     def test_get_owner(self):
         super().test_get_owner()
-        self.assertEqual(len(self.response.data), 10)
-        self.assertEqual(self.response.data[0]['permissions']['PUT'], True)
+        self.assertTotal(10)
+        self.assertEqual(self.response.data['results'][0]['permissions']['PUT'], True)
 
     def test_get_anonymous(self):
         super().test_get_anonymous()
-        self.assertEqual(len(self.response.data), 8)
-        self.assertEqual(self.response.data[0]['permissions']['PUT'], False)
+        self.assertTotal(8)
+        self.assertEqual(self.response.data['results'][0]['permissions']['PUT'], False)
 
     def test_get_removed_participant(self):
         super().test_get_removed_participant()
-        self.assertEqual(len(self.response.data), 9)
+        self.assertTotal(9)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):

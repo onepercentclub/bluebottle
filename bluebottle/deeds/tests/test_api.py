@@ -118,10 +118,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.model = self.factory.create(**self.defaults)
 
         self.accepted_participants = DeedParticipantFactory.create_batch(
-            5, activity=self.model, status='accepted'
+            4, activity=self.model, status='accepted'
         )
         self.withdrawn_participants = DeedParticipantFactory.create_batch(
-            5, activity=self.model, status='withdrawn'
+            4, activity=self.model, status='withdrawn'
         )
 
         self.url = reverse('deed-detail', args=(self.model.pk, ))
@@ -380,7 +380,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertTotal(10)
+        self.assertTotal(8)
 
         self.assertTrue(
             all(

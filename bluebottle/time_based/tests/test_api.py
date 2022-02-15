@@ -2181,7 +2181,7 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
         super().test_get_owner()
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
-        self.assertEqual(len(included_contributions), 10)
+        self.assertEqual(len(included_contributions), 8)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

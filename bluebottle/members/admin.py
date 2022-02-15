@@ -110,10 +110,40 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
-    fields = (
-        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
-        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
-        'background', 'require_consent', 'consent_link', 'anonymization_age'
+    fieldsets = (
+        (
+            _('Login'),
+            {
+                'fields': (
+                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'background',
+                )
+            }
+        ),
+
+        (
+            _('Profile'),
+            {
+                'fields': (
+                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_address', 'create_segments',
+                )
+            }
+        ),
+        (
+            _('Privacy'),
+            {
+                'fields': (
+                    'session_only', 'require_consent', 'consent_link', 'anonymization_age'
+                )
+            }
+        ),
+        (
+            _('Required Fields'),
+            {
+                'fields': ()
+            }
+        ),
     )
 
 
@@ -267,6 +297,7 @@ class MemberAdmin(UserAdmin):
                         'fields':
                         ['picture', 'about_me', 'matching_options_set',
                          'favourite_themes', 'skills', 'place']
+
                     }
                 ],
                 [

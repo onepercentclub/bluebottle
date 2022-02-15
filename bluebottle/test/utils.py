@@ -333,7 +333,10 @@ class APITestCase(BluebottleTestCase):
         Assert that total the number of found objects is the same as expected
         """
         if 'meta' in self.response.json():
-            self.assertEqual(self.response.json()['meta']['count'], count)
+            if 'count' in self.response.json()['meta']:
+                self.assertEqual(self.response.json()['meta']['count'], count)
+            else:
+                self.assertEqual(self.response.json()['meta']['pagination']['count'], count)
         else:
             self.assertEqual(len(self.response.json()['data']), count)
 

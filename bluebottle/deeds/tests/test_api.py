@@ -380,7 +380,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertTotal(8)
+        self.assertTotal(10)
 
         self.assertTrue(
             all(

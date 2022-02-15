@@ -42,8 +42,8 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=False, help_text=_('Require users to consent to cookies')
     )
     consent_link = models.CharField(
-        default='/pages/terms-and-conditions',
-        help_text=_('Link more information about the platforms policy'),
+        default='"https://goodup.com/cookie-policy"',
+        help_text=_('Link more information about the platforms cookie policy'),
         max_length=255
     )
 

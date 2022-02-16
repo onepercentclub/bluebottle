@@ -126,7 +126,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate', 'enable_segments',
-                    'enable_address', 'create_segments',
+                    'enable_address', 'create_segments'
                 )
             }
         ),
@@ -138,13 +138,29 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 )
             }
         ),
-        (
-            _('Required Fields'),
-            {
-                'fields': ()
-            }
-        ),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = self.fieldsets
+        if SegmentType.objects.count():
+            fieldsets += ((
+                _('Required segment types'),
+                {
+                    'fields': ('required_segment_types',)
+                }
+            ),)
+        return fieldsets
+
+    readonly_fields = ('required_segment_types',)
+
+    def required_segment_types(self, obj):
+        template = loader.get_template('segments/admin/required_segment_types.html')
+        context = {
+            'required': SegmentType.objects.filter(required=True).all(),
+            'link': reverse('admin:segments_segmenttype_changelist')
+        }
+        html = template.render(context)
+        return html
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)

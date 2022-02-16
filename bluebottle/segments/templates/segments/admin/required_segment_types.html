@@ -1,0 +1,25 @@
+{% load i18n %}
+<ul>
+    {% for segment_type in required %}
+        <li>
+            <b>{{ segment_type.name }}</b>
+        </li>
+    {% empty %}
+        <li>
+            <i>
+                {% trans "no segment types are marked as required" %}
+            </i>
+        </li>
+    {% endfor %}
+</ul>
+
+<br/>
+{% trans "Mark segment types as required in " %}
+<a href="{{ link }}">
+    {% trans "segment type overview" %}
+</a>
+<span class="et bb-icon-info">
+    <span class="et-right">
+       {% trans "After logging in the user is prompted to fill out or confirm the required segment types before they can continue to the platform." %}
+    </span>
+</span>

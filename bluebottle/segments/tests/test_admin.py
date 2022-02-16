@@ -65,6 +65,47 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertEqual(segment.email_domains, ['test.com'])
 
 
+class TestSegmentTypeAdmin(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(TestSegmentTypeAdmin, self).setUp()
+        self.app.set_user(self.superuser)
+        self.client.force_login(self.superuser)
+        self.site = AdminSite()
+
+    def test_required_segment_types_no_segments(self):
+        member_settings_url = reverse('admin:members_memberplatformsettings_change')
+        page = self.app.get(member_settings_url)
+        self.assertFalse('Required segment types' in page.text)
+
+    def test_required_segment_types(self):
+        SegmentTypeFactory.create(name='Department')
+        SegmentTypeFactory.create(name='Hobbies')
+        member_settings_url = reverse('admin:members_memberplatformsettings_change')
+        page = self.app.get(member_settings_url)
+        self.assertTrue('Required segment types' in page.text)
+        self.assertTrue('no segment types are marked as required' in page.text)
+        page = page.click('segment type overview')
+        page = page.click('Department')
+        form = page.forms[0]
+        form.fields['required'][0].checked = True
+        page = form.submit().follow()
+        page = page.click('Hobbies')
+        form = page.forms[0]
+        form.fields['required'][0].checked = True
+        page = form.submit().follow()
+        self.assertTrue(page.forms[0]['form-0-required'].checked)
+        self.assertTrue(page.forms[0]['form-1-required'].checked)
+        page = self.app.get(member_settings_url)
+        self.assertFalse('no segment types are marked as required' in page.text)
+        self.assertTrue('<b>Department</b>' in page.text)
+        self.assertTrue('<b>Hobbies</b>' in page.text)
+
+
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
 
     extra_environ = {}

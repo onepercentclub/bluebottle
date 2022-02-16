@@ -27,6 +27,14 @@ class SegmentType(models.Model):
         ),
         default=True
     )
+    required = models.BooleanField(
+        _('Required'),
+        help_text=_(
+            'Users can only use the platform if they have a value for this segment in their profile'
+        ),
+        default=False
+    )
+
     is_active = models.BooleanField(
         _('Is active'),
         default=True

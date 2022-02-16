@@ -383,10 +383,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
+    segment_id = serializers.CharField(required=False, allow_blank=True)
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url',)
+        fields = ('id', 'email', 'url', 'segment_id')
 
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()

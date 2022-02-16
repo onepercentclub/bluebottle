@@ -213,7 +213,11 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
         token = TimestampSigner().sign(instance.pk)
         SignUptokenMessage(
             instance,
-            custom_message={'token': token, 'url': serializer.validated_data.get('url', '')}
+            custom_message={
+                'token': token,
+                'url': serializer.validated_data.get('url', ''),
+                'segment_id': serializer.validated_data.get('segment_id', '')
+            },
         ).compose_and_send()
 
         return instance
@@ -233,7 +237,7 @@ class SignUpTokenConfirmation(JsonApiViewMixin, CreateAPIView):
         try:
             signer = TimestampSigner()
             member = self.queryset.get(
-                pk=signer.unsign(serializer.validated_data['token'], max_age=timedelta(hours=2))
+                pk=signer.unsign(serializer.validated_data['token'], max_age=timedelta(hours=24))
             )
 
             if member.is_active:

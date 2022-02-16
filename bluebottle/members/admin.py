@@ -110,11 +110,57 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
-    fields = (
-        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
-        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
-        'background', 'require_consent', 'consent_link', 'anonymization_age'
+    fieldsets = (
+        (
+            _('Login'),
+            {
+                'fields': (
+                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'background',
+                )
+            }
+        ),
+
+        (
+            _('Profile'),
+            {
+                'fields': (
+                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Privacy'),
+            {
+                'fields': (
+                    'session_only', 'require_consent', 'consent_link', 'anonymization_age'
+                )
+            }
+        ),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = self.fieldsets
+        if SegmentType.objects.count():
+            fieldsets += ((
+                _('Required segment types'),
+                {
+                    'fields': ('required_segment_types',)
+                }
+            ),)
+        return fieldsets
+
+    readonly_fields = ('required_segment_types',)
+
+    def required_segment_types(self, obj):
+        template = loader.get_template('segments/admin/required_segment_types.html')
+        context = {
+            'required': SegmentType.objects.filter(required=True).all(),
+            'link': reverse('admin:segments_segmenttype_changelist')
+        }
+        html = template.render(context)
+        return html
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
@@ -267,6 +313,7 @@ class MemberAdmin(UserAdmin):
                         'fields':
                         ['picture', 'about_me', 'matching_options_set',
                          'favourite_themes', 'skills', 'place']
+
                     }
                 ],
                 [

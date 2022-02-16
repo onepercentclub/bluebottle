@@ -109,6 +109,21 @@ class TestBaseTokenAuthentication(TestCase):
                 unit_segment in user.segments.all()
             )
 
+    def test_user_created_segments_unverified(self, authenticate_request):
+        team = SegmentTypeFactory.create(name='Team', needs_verification=True)
+        team_segment = SegmentFactory.create(name='Online Marketing', segment_type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+
     @patch.object(
         BaseTokenAuthentication,
         'authenticate_request',

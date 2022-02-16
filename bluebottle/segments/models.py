@@ -27,7 +27,16 @@ class SegmentType(models.Model):
         ),
         default=True
     )
+
     required = models.BooleanField(
+        _('Required'),
+        help_text=_(
+            'User can only use the platform is they have a value for this segment in their profile'
+        ),
+        default=False
+    )
+
+    needs_verification = models.BooleanField(
         _('Required'),
         help_text=_(
             'User can only use the platform is they have a value for this segment in their profile'

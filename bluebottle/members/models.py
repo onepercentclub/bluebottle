@@ -126,6 +126,7 @@ class Member(BlueBottleBaseUser):
         verbose_name=_('Segment'),
         related_name='users',
         blank=True,
+        through='members.UserSegment'
     )
 
     def __init__(self, *args, **kwargs):
@@ -184,6 +185,12 @@ class Member(BlueBottleBaseUser):
         if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
             self.submitted_initiative_notifications = False
         super(Member, self).save(*args, **kwargs)
+
+
+class UserSegment(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
+    verified = models.BooleanField(default=True)
 
 
 class UserActivity(models.Model):

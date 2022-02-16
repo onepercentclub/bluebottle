@@ -124,4 +124,4 @@ class SegmentTypeAdmin(admin.ModelAdmin, DynamicArrayMixin):
     segments.short_description = _('Number of segments')
 
     list_display = ['name', 'slug', 'segments', 'is_active', 'required']
-    list_editable = ['is_active']
+    list_editable = ['is_active', 'required']

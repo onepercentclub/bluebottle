@@ -185,7 +185,7 @@ class Member(BlueBottleBaseUser):
         for segment_type in SegmentType.objects.filter(required=True).all():
             if not self.segments.filter(segment_type=segment_type).count():
                 required.append(f'segment_type.{segment_type.id}')
-            return required
+        return required
 
     def __str__(self):
         return self.full_name

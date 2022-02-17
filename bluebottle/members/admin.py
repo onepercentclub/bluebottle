@@ -222,7 +222,9 @@ class MemberChangeForm(MemberForm):
         member = super(MemberChangeForm, self).save(commit=commit)
         segments = []
         for segment_type in SegmentType.objects.all():
-            segments += self.cleaned_data.get(segment_type.field_name, [])
+            segment = self.cleaned_data.get(segment_type.field_name, None)
+            if segment:
+                segments.append(segment)
         member.segments.set(segments)
         return member
 

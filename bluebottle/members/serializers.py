@@ -216,7 +216,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments',
+            'organization', 'segments', 'required'
         )
 
 

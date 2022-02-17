@@ -20,6 +20,7 @@ from bluebottle.members.models import MemberPlatformSettings, UserActivity, Memb
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from build.lib.bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -939,3 +940,37 @@ class RefreshTokenTest(BluebottleTestCase):
         response = self.client.get(reverse('user-current'), token=new_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['id'], self.user.pk)
+
+
+class UserAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.current_user_url = reverse('user-current')
+        self.segment_type = SegmentTypeFactory.create(required=False)
+        self.segments = SegmentFactory.create_batch(3, segment_type=self.segment_type)
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.current_user_url = reverse('user-current')
+        self.logout_url = reverse('user-logout')
+
+    def test_get_current_user_no_required_segments(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_required_segments_defined(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0])
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])

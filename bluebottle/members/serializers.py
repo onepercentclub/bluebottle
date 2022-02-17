@@ -401,8 +401,9 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             )
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
-            raise serializers.ValidationError('member with this email address already exists.')
-
+            raise serializers.ValidationError(
+                'a member with this email address already exists.', code='duplicate-facebook',
+            )
         return email
 
     class JSONAPIMeta:

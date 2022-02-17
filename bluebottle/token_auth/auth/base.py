@@ -91,7 +91,8 @@ class BaseTokenAuthentication(object):
                         params=[val, ]
                     ).get()
                     user.segments.add(
-                        segment, through_defaults={'verified': segment.type.needs_verification}
+                        segment,
+                        through_defaults={'verified': not segment.segment_type.needs_verification}
                     )
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
@@ -101,7 +102,8 @@ class BaseTokenAuthentication(object):
                             alternate_names=[val]
                         )
                         user.segments.add(
-                            segment, through_defaults={'verified': segment.type.needs_verification}
+                            segment,
+                            through_defaults={'verified': not segment.segment_type.needs_verification}
                         )
                 except IntegrityError:
                     pass

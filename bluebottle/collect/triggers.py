@@ -48,17 +48,23 @@ def is_not_finished(effect):
 
 
 def has_contributors(effect):
-    """ has contributors"""
+    """
+    has contributors
+    """
     return len(effect.instance.active_contributors) > 0
 
 
 def has_no_contributors(effect):
-    """ has no contributors"""
+    """
+    has no contributors
+    """
     return not has_contributors(effect)
 
 
 def has_start_date(effect):
-    """has start date"""
+    """
+    has start date
+    """
     return effect.instance.start
 
 

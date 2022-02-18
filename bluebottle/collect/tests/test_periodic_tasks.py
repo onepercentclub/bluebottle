@@ -1,9 +1,11 @@
 from datetime import timedelta, date
+from unittest import mock
 
 from django.core import mail
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.collect.tasks import collect_tasks
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory, CollectContributorFactory
 )
@@ -29,6 +31,12 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
         self.activity.states.submit(save=True)
 
         self.tenant = connection.tenant
+
+    def run_tasks(self, when):
+        with mock.patch('bluebottle.collect.periodic_tasks.date') as mock_date:
+            mock_date.today.return_value = when
+            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+            collect_tasks()
 
     def test_nothing(self):
         self.assertEqual(self.activity.status, 'open')

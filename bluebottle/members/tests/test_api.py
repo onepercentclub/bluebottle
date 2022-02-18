@@ -1,26 +1,25 @@
 import json
-from builtins import range
 import time
-from datetime import datetime, timedelta
+from builtins import range
 from calendar import timegm
-from bluebottle.clients import properties
+from datetime import datetime, timedelta
 
 import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
+from django.urls import reverse
 from rest_framework import status
-
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.auth.middleware import authorization_logger
+from bluebottle.clients import properties
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-from build.lib.bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 
 class LoginTestCase(BluebottleTestCase):

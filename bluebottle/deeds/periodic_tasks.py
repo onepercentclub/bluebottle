@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.deeds.messages import DeedReminderNotification
@@ -56,7 +55,7 @@ class DeedReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return Deed.objects.filter(
-            start__lte=now() + timedelta(hours=24),
+            start__lte=date.today() + timedelta(hours=24),
             status__in=['open', 'full']
         )
 

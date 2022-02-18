@@ -49,7 +49,7 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
     def test_start(self):
         self.activity.end = None
         self.activity.save()
-        participants = CollectActivityFactory.create_batch(3, activity=self.activity)
+        participants = CollectContributorFactory.create_batch(3, activity=self.activity)
         self.run_tasks(self.activity.start + timedelta(days=1))
 
         with LocalTenant(self.tenant, clear_tenant=True):
@@ -106,10 +106,11 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
 
     def test_reminder(self):
         CollectContributorFactory.create(activity=self.activity)
-
+        mail.outbox = []
         self.run_tasks(self.activity.start - timedelta(days=1))
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
+        self.assertEqual(mail.outbox[0].subject, f'Your activity "{self.activity.title}" will start tomorrow!')
         mail.outbox = []
         self.assertEqual(len(mail.outbox), 0)
         self.run_tasks(self.activity.start - timedelta(days=1))

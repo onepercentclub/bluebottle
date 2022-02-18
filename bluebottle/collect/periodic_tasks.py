@@ -1,13 +1,8 @@
 from datetime import date, timedelta
 
-from django.utils.timezone import now
-
-from bluebottle.collect.messages import CollectActivityReminderNotification
-from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
+from bluebottle.collect.messages import CollectActivityReminderNotification
 from bluebottle.collect.models import (
     CollectActivity
 )
@@ -15,6 +10,9 @@ from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine
 )
 from bluebottle.collect.triggers import has_contributors, has_no_contributors, has_no_end_date
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
+from bluebottle.notifications.effects import NotificationEffect
 
 
 class CollectActivityStartedTask(ModelPeriodicTask):
@@ -58,7 +56,7 @@ class CollectActivityReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return CollectActivity.objects.filter(
-            start__lte=now() + timedelta(hours=24),
+            start__lte=date.today() + timedelta(hours=24),
             status__in=['open', 'full']
         )
 

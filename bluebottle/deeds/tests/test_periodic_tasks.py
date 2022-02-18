@@ -108,10 +108,11 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
 
     def test_reminder(self):
         DeedParticipantFactory.create(activity=self.activity)
-
+        mail.outbox = []
         self.run_tasks(self.activity.start - timedelta(days=1))
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
+        self.assertEqual(mail.outbox[0].subject, f'Your activity "{self.activity.title}" will start tomorrow!')
         mail.outbox = []
         self.assertEqual(len(mail.outbox), 0)
         self.run_tasks(self.activity.start - timedelta(days=1))

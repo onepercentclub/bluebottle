@@ -1,5 +1,3 @@
-
-from builtins import object
 import factory
 
 from bluebottle.segments.models import Segment, SegmentType
@@ -7,7 +5,7 @@ from bluebottle.segments.models import Segment, SegmentType
 
 class SegmentTypeFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta():
         model = SegmentType
     name = factory.Faker('sentence')
     is_active = True
@@ -15,7 +13,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
 
 class SegmentFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta():
         model = Segment
 
     name = factory.Sequence(lambda n: 'Segment - {0}'.format(n))

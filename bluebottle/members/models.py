@@ -13,6 +13,7 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from ..segments.models import SegmentType
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -177,6 +178,14 @@ class Member(BlueBottleBaseUser):
             initials += self.last_name[0]
 
         return initials
+
+    @property
+    def required(self):
+        required = []
+        for segment_type in SegmentType.objects.filter(required=True).all():
+            if not self.segments.filter(segment_type=segment_type).count():
+                required.append(f'segment_type.{segment_type.id}')
+        return required
 
     def __str__(self):
         return self.full_name

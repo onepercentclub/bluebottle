@@ -13,6 +13,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import Q
 from django.forms import BaseInlineFormSet
+from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
@@ -51,7 +52,7 @@ from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member
+from .models import Member, UserSegment
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -166,6 +167,19 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
 
 
+class SegmentSelect(Select):
+    template_name = 'widgets/segment-select.html'
+
+    def __init__(self, verified):
+        self.verified = verified
+        super().__init__()
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['verified'] = self.verified
+        return context
+
+
 class MemberChangeForm(MemberForm):
     """
     Change Member form
@@ -186,14 +200,17 @@ class MemberChangeForm(MemberForm):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
-                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                user_segment = UserSegment.objects.filter(
+                    member=self.instance, segment__segment_type=segment_type
+                ).first()
+
+                self.fields[segment_type.field_name] = forms.ModelChoiceField(
                     required=False,
                     label=segment_type.name,
                     queryset=segment_type.segments,
+                    widget=SegmentSelect(verified=user_segment.verified if user_segment else None)
                 )
-                self.initial[segment_type.field_name] = self.instance.segments.filter(
-                    segment_type=segment_type
-                ).all()
+                self.initial[segment_type.field_name] = user_segment.segment if user_segment else None
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -205,7 +222,9 @@ class MemberChangeForm(MemberForm):
         member = super(MemberChangeForm, self).save(commit=commit)
         segments = []
         for segment_type in SegmentType.objects.all():
-            segments += self.cleaned_data.get(segment_type.field_name, [])
+            segment = self.cleaned_data.get(segment_type.field_name, None)
+            if segment:
+                segments.append(segment)
         member.segments.set(segments)
         return member
 

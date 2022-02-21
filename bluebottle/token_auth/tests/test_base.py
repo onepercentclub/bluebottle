@@ -6,6 +6,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
+from bluebottle.members.models import UserSegment
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 
 
@@ -105,9 +106,33 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertTrue(
                 team_segment in user.segments.all()
             )
+            self.assertTrue(UserSegment.objects.get(segment=team_segment, member=user).verified)
             self.assertTrue(
                 unit_segment in user.segments.all()
             )
+            self.assertTrue(UserSegment.objects.get(segment=unit_segment, member=user).verified)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': 'Online Marketing',
+        }
+    )
+    def test_user_created_segments_unverified(self, authenticate_request):
+        team = SegmentTypeFactory.create(name='Team', needs_verification=True)
+        team_segment = SegmentFactory.create(name='Online Marketing', segment_type=team)
+        SegmentFactory.create(name='Direct Marketing', segment_type=team)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+            self.assertFalse(UserSegment.objects.get(segment=team_segment, member=user).verified)
 
     @patch.object(
         BaseTokenAuthentication,

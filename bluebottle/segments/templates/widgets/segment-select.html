@@ -1,0 +1,6 @@
+{% load i18n %}
+
+{% include "django/forms/widgets/select.html" with widget=widget %}
+{% if verified %}
+    <span>({% trans "verified" %})</span>
+{% endif %}

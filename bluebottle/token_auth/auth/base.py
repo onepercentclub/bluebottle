@@ -75,6 +75,7 @@ class BaseTokenAuthentication(object):
             current_segments = user.segments.filter(
                 segment_type__slug=type_slug
             ).all()
+
             for current_segment in current_segments:
                 user.segments.remove(current_segment)
 
@@ -89,7 +90,10 @@ class BaseTokenAuthentication(object):
                         where=['%s ILIKE ANY (alternate_names)'],
                         params=[val, ]
                     ).get()
-                    user.segments.add(segment)
+                    user.segments.add(
+                        segment,
+                        through_defaults={'verified': not segment.segment_type.needs_verification}
+                    )
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
@@ -97,7 +101,10 @@ class BaseTokenAuthentication(object):
                             name=val,
                             alternate_names=[val]
                         )
-                        user.segments.add(segment)
+                        user.segments.add(
+                            segment,
+                            through_defaults={'verified': not segment.segment_type.needs_verification}
+                        )
                 except IntegrityError:
                     pass
 

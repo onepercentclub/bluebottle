@@ -127,7 +127,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate', 'enable_segments',
-                    'enable_address', 'create_segments'
+                    'enable_address', 'create_segments', 'require_office'
                 )
             }
         ),

@@ -961,6 +961,13 @@ class UserAPITestCase(BluebottleTestCase):
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
 
+    def test_get_current_user_required_location(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
     def test_get_current_user_with_required_segments(self):
         self.segment_type.required = True
         self.segment_type.save()

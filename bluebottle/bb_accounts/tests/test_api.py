@@ -19,7 +19,9 @@ from django.utils.http import int_to_base36
 from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, UserSegment
+
+from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
@@ -349,6 +351,52 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertIsNone(
             self.user_1.place
         )
+
+    def test_user_set_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+
+    def test_user_verify_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        self.user_1.segments.add(segment, through_defaults={'verified': False})
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+        self.assertTrue(UserSegment.objects.get(member=self.user_1, segment=segment).verified)
 
     def test_unauthenticated_user(self):
         """

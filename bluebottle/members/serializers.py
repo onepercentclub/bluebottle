@@ -19,7 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -262,6 +262,15 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     )
 
     is_active = serializers.BooleanField(read_only=True)
+
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL

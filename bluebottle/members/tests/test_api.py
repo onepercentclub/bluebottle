@@ -973,3 +973,11 @@ class UserAPITestCase(BluebottleTestCase):
         self.user.segments.add(self.segments[0])
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_unverified_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.needs_verification = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': False})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])

@@ -183,7 +183,9 @@ class Member(BlueBottleBaseUser):
     def required(self):
         required = []
         for segment_type in SegmentType.objects.filter(required=True).all():
-            if not self.segments.filter(segment_type=segment_type).count():
+            if not self.segments.filter(
+                usersegment__verified=True, segment_type=segment_type
+            ).count():
                 required.append(f'segment_type.{segment_type.id}')
         return required
 

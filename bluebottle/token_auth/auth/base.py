@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.members.models import UserSegment
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
 
@@ -76,11 +77,20 @@ class BaseTokenAuthentication(object):
                 segment_type__slug=type_slug
             ).all()
 
-            for current_segment in current_segments:
-                user.segments.remove(current_segment)
-
             if not isinstance(value, (list, tuple)):
                 value = [value]
+
+            if (
+                segment_type.needs_verification and
+                any(
+                    user_segment.verified for user_segment in
+                    UserSegment.objects.filter(member=user, segment__segment_type=segment_type)
+                )
+            ):
+                continue
+
+            for current_segment in current_segments:
+                user.segments.remove(current_segment)
 
             for val in value:
                 try:

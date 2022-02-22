@@ -32,6 +32,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute('date_info', {
             'count': 0,
             'first': None,
+            'is_full': True,
             'duration': None,
             'has_multiple': False,
             'total': 0
@@ -43,6 +44,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             'count': 1,
             'first': slot.start,
             'duration': timedelta(hours=2),
+            'is_full': False,
             'has_multiple': False,
             'total': 1
         })
@@ -58,6 +60,29 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
             'duration': None,
+            'is_full': False,
+            'has_multiple': True,
+            'total': 3
+        })
+
+    def test_date_info_multiple_dates_full(self):
+        slots = [
+            DateActivitySlotFactory.create(
+                activity=self.activity, start=now() + timedelta(days=2), status='full'
+            ),
+            DateActivitySlotFactory.create(
+                activity=self.activity, start=now() + timedelta(days=4), status='full'
+            ),
+            DateActivitySlotFactory.create(
+                activity=self.activity, start=now() + timedelta(days=6), status='full'
+            ),
+        ]
+
+        self.assertAttribute('date_info', {
+            'count': 3,
+            'first': min(slot.start.date() for slot in slots),
+            'duration': None,
+            'is_full': True,
             'has_multiple': True,
             'total': 3
         })
@@ -73,6 +98,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             'count': 2,
             'first': min(slot.start.date() for slot in slots),
             'duration': None,
+            'is_full': False,
             'has_multiple': True,
             'total': 3
         })
@@ -89,6 +115,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
             {
                 'count': 2,
                 'duration': None,
+                'is_full': False,
                 'first': min(slot.start.date() for slot in slots),
                 'has_multiple': True,
                 'total': 2

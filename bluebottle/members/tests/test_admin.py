@@ -20,6 +20,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.admin import MemberAdmin, MemberCreationForm
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.notifications.models import MessageTemplate
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
@@ -300,6 +301,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     setup_auth = True
 
     def test_require_location(self):
+        LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
         form = page.forms[0]

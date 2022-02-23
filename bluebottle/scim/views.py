@@ -12,6 +12,7 @@ from bluebottle.members.models import Member
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer
 from bluebottle.scim import scim_data
+from bluebottle.scim.filters import SCIMFilter
 
 
 from rest_framework import pagination
@@ -68,6 +69,7 @@ class SCIMViewMixin(object):
     pagination_class = SCIMPaginator
     renderer_classes = (SCIMRenderer, )
     parser_classes = (SCIMParser, parsers.JSONParser,)
+    filter_backends = (SCIMFilter, )
 
     def handle_exception(self, exc):
         try:

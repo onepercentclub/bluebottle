@@ -301,13 +301,15 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
 
     def test_require_location(self):
         self.app.set_user(self.superuser)
+        user = BlueBottleUserFactory.create()
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
         form = page.forms[0]
         form['require_office'].checked = True
 
         form.submit()
         settings_platform = MemberPlatformSettings.load()
-        self.assertTrue(settings_platform.require_office)
+        if user.place is None:
+            self.assertTrue(settings_platform.require_office)
 
 
 class MemberAdminExportTest(BluebottleTestCase):

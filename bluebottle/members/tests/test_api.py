@@ -17,10 +17,10 @@ from rest_framework_jwt.settings import api_settings
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-from build.lib.bluebottle.offices.tests.factories import LocationFactory
 
 
 class LoginTestCase(BluebottleTestCase):

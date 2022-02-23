@@ -89,6 +89,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
     )
 
+    require_office = models.BooleanField(
+        default=False,
+        help_text=_('Required office location')
+    )
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -187,6 +192,9 @@ class Member(BlueBottleBaseUser):
                 usersegment__verified=True, segment_type=segment_type
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
+        if MemberPlatformSettings.load().require_office and not self.location:
+            required.append('location')
+
         return required
 
     def __str__(self):

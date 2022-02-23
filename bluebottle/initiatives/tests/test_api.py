@@ -1519,6 +1519,13 @@ class InitiativeAPITestCase(APITestCase):
         self.assertRelationship('segments', [segment])
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    },
+)
 class InitiativeMapListTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -1534,4 +1541,14 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(data), 5)
+
+    def test_submitted_initiatives_dont_show_on_map(self):
+        InitiativeFactory.create_batch(5, status='approved')
+        InitiativeFactory.create_batch(5, status='submitted')
+        response = self.client.get(
+            self.url
+        )
+
+        data = response.json()
         self.assertTrue(len(data), 5)

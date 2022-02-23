@@ -127,7 +127,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate', 'enable_segments',
-                    'enable_address', 'create_segments', 'require_office'
+                    'enable_address', 'create_segments'
                 )
             }
         ),
@@ -143,11 +143,17 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
+        required_fields = []
+        if Location.objects.count():
+            required_fields.append('require_office')
         if SegmentType.objects.count():
+            required_fields.append('required_segment_types')
+
+        if len(required_fields):
             fieldsets += ((
-                _('Required segment types'),
+                _('Required fields'),
                 {
-                    'fields': ('required_segment_types',)
+                    'fields': required_fields
                 }
             ),)
         return fieldsets

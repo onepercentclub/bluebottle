@@ -192,7 +192,7 @@ class Member(BlueBottleBaseUser):
                 usersegment__verified=True, segment_type=segment_type
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
-        if MemberPlatformSettings.load().require_office:
+        if MemberPlatformSettings.load().require_office and not self.location:
             required.append('location')
 
         return required

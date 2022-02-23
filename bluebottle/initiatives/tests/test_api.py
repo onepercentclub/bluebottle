@@ -120,7 +120,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
         self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
-    def test_create_missing_iamge(self):
+    def test_create_missing_image(self):
         data = {
             'data': {
                 'type': 'initiatives',
@@ -1517,3 +1517,20 @@ class InitiativeAPITestCase(APITestCase):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('segments', [segment])
+
+
+class InitiativeMapListTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(InitiativeMapListTestCase, self).setUp()
+
+        self.url = reverse('initiative-map-list')
+        self.client = JSONAPITestClient()
+
+    def test_list_initiatives(self):
+        InitiativeFactory.create_batch(5, status='approved')
+        response = self.client.get(
+            self.url
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

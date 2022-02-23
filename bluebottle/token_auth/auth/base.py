@@ -57,14 +57,14 @@ class BaseTokenAuthentication(object):
             except Location.DoesNotExist:
                 pass
 
-    def set_segments(self, user, data):
-        segments = [
+    def get_segments_from_data(self, data):
+        segment_list = {}
+        segment_data = [
             (field, value)
             for field, value in list(data.items())
             if field.startswith('segment.')
         ]
-
-        for (path, value) in segments:
+        for (path, value) in segment_data:
             type_slug = path.split('.')[-1]
             try:
                 segment_type = SegmentType.objects.get(slug=type_slug)
@@ -72,15 +72,9 @@ class BaseTokenAuthentication(object):
                 logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
                 return
 
-            current_segments = user.segments.filter(
-                segment_type__slug=type_slug
-            ).all()
-            for current_segment in current_segments:
-                user.segments.remove(current_segment)
-
             if not isinstance(value, (list, tuple)):
                 value = [value]
-
+            segment_list[segment_type.id] = []
             for val in value:
                 try:
                     segment = Segment.objects.filter(
@@ -89,7 +83,7 @@ class BaseTokenAuthentication(object):
                         where=['%s ILIKE ANY (alternate_names)'],
                         params=[val, ]
                     ).get()
-                    user.segments.add(segment)
+                    segment_list[segment_type.id].append(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
@@ -97,9 +91,17 @@ class BaseTokenAuthentication(object):
                             name=val,
                             alternate_names=[val]
                         )
-                        user.segments.add(segment)
+                        segment_list[segment_type.id].append(segment)
                 except IntegrityError:
                     pass
+        return segment_list
+
+    def set_segments(self, user, data):
+        segment_list = self.get_segments_from_data(data)
+        for segment_type_id, segments in segment_list.items():
+            if segments != user.segments.filter(segment_type__id=segment_type_id):
+                user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
+                user.segments.add(*segments)
 
     def get_or_create_user(self, data):
         """

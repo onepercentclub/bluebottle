@@ -20,6 +20,7 @@ from bluebottle.members.models import MemberPlatformSettings, UserActivity, Memb
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from build.lib.bluebottle.offices.tests.factories import LocationFactory
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -967,6 +968,15 @@ class UserAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], ['location'])
+
+    def test_get_current_user_required_location_set(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        self.user.location = LocationFactory.create()
+        self.user.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
 
     def test_get_current_user_with_required_segments(self):
         self.segment_type.required = True

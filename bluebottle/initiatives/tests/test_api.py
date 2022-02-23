@@ -1525,12 +1525,13 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         super(InitiativeMapListTestCase, self).setUp()
 
         self.url = reverse('initiative-map-list')
-        self.client = JSONAPITestClient()
 
     def test_list_initiatives(self):
         InitiativeFactory.create_batch(5, status='approved')
         response = self.client.get(
             self.url
         )
+        data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(data), 5)

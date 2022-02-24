@@ -17,7 +17,7 @@ Contributors
 For those who want to contribute to the BlueBottle project, it's easy to get
 started:
 
-#. Make sure you have a recent Python distro (2.7+ recommended).
+#. Make sure you have a recent Python distro (3.7+ recommended).
 #. Make sure (a recent) `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ is installed.
 #. Fork and/or clone the repository.
 #. Navigate to your local repository directory.

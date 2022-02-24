@@ -36,7 +36,7 @@ started:
     $ python manage.py runserver
 
 #. You might still need to
-    * Install libraries to get `pip install` working, like `libxmlsec1`, `postgresql`, `postgis`, `elasticsearch`
+    * Install libraries to get `pip install` working, like `libxmlsec1`, `postgresql`, `postgis`, `elasticsearch 6.x`.
     * Alter your hosts file (e.g. in `/etc/hosts` on Linux/OSX) to contain tenants you've created like::
 
         127.0.0.1 tenant35.localhost

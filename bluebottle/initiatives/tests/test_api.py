@@ -1519,13 +1519,6 @@ class InitiativeAPITestCase(APITestCase):
         self.assertRelationship('segments', [segment])
 
 
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    },
-)
 class InitiativeMapListTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -1569,23 +1562,13 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         )
         data = response.json()
 
-        lat = data[0]['position'][0]
-        long = data[0]['position'][1]
-        lat_2 = data[1]['position'][0]
-        long_2 = data[1]['position'][1]
-        self.assertTrue(lat in data[0]['position'])
-        self.assertTrue(long in data[0]['position'])
-        self.assertTrue(lat_2 in data[1]['position'])
-        self.assertTrue(long_2 in data[1]['position'])
+        self.assertTrue(data[0]['position'][0], '43.0579025')
+        self.assertTrue(data[1]['position'][1], '27.6851594')
 
     def test_lat_long_omitted(self):
         InitiativeFactory(
             status='approved',
-            place=GeolocationFactory(position=Point(23.6851594, 0))
-        )
-        InitiativeFactory(
-            status='approved',
-            place=GeolocationFactory(position=Point(0, 34.0579025))
+            place=GeolocationFactory(position=Point(0, 0))
         )
         InitiativeFactory(
             status='approved',
@@ -1596,23 +1579,20 @@ class InitiativeMapListTestCase(BluebottleTestCase):
             self.url
         )
         data = response.json()
-
-        for i in range(len(data)):
-            if data[i]['position'][0] == 0.0:
-                del data[i]
-                break
+        self.assertTrue(len(data), 1)
 
     def test_working_cache(self):
         InitiativeFactory.create_batch(5, status='approved')
+
         response = self.client.get(
             self.url
         )
-
         data = response.json()
         self.assertTrue(len(data), 5)
 
         InitiativeFactory.create(status='approved')
-        self.assertTrue(len(data), 7)
-
-    def test_correct_ordering(self):
-        pass
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 5)

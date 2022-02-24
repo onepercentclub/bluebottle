@@ -1524,7 +1524,7 @@ class InitiativeMapListTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(InitiativeMapListTestCase, self).setUp()
-
+        cache.clear()
         self.url = reverse('initiative-map-list')
 
     def test_list_initiatives(self):

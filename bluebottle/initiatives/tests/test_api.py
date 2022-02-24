@@ -4,6 +4,7 @@ from builtins import str
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -1532,7 +1533,6 @@ class InitiativeMapListTestCase(BluebottleTestCase):
             self.url
         )
         data = response.json()
-        print(data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(data), 5)
@@ -1548,11 +1548,11 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         self.assertTrue(len(data), 5)
 
     def test_locations(self):
-        InitiativeFactory(
+        InitiativeFactory.create(
             status='approved',
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
-        InitiativeFactory(
+        InitiativeFactory.create(
             status='approved',
             place=GeolocationFactory(position=Point(27.6851594, 34.0579025))
         )
@@ -1566,11 +1566,11 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         self.assertTrue(data[1]['position'][1], '27.6851594')
 
     def test_lat_long_omitted(self):
-        InitiativeFactory(
+        InitiativeFactory.create(
             status='approved',
             place=GeolocationFactory(position=Point(0, 0))
         )
-        InitiativeFactory(
+        InitiativeFactory.create(
             status='approved',
             place=GeolocationFactory(position=Point(23.6851594, 34.0579025))
         )
@@ -1590,9 +1590,17 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         data = response.json()
         self.assertTrue(len(data), 5)
 
-        InitiativeFactory.create(status='approved')
+        InitiativeFactory.create_batch(3, status='approved')
         response = self.client.get(
             self.url
         )
         data = response.json()
         self.assertTrue(len(data), 5)
+
+        # Bust cache
+        cache.clear()
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 8)

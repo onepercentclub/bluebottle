@@ -1539,6 +1539,7 @@ class InitiativeMapListTestCase(BluebottleTestCase):
             self.url
         )
         data = response.json()
+        print(data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(data), 5)
@@ -1552,3 +1553,66 @@ class InitiativeMapListTestCase(BluebottleTestCase):
 
         data = response.json()
         self.assertTrue(len(data), 5)
+
+    def test_locations(self):
+        InitiativeFactory(
+            status='approved',
+            place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
+        )
+        InitiativeFactory(
+            status='approved',
+            place=GeolocationFactory(position=Point(27.6851594, 34.0579025))
+        )
+
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+
+        lat = data[0]['position'][0]
+        long = data[0]['position'][1]
+        lat_2 = data[1]['position'][0]
+        long_2 = data[1]['position'][1]
+        self.assertTrue(lat in data[0]['position'])
+        self.assertTrue(long in data[0]['position'])
+        self.assertTrue(lat_2 in data[1]['position'])
+        self.assertTrue(long_2 in data[1]['position'])
+
+    def test_lat_long_omitted(self):
+        InitiativeFactory(
+            status='approved',
+            place=GeolocationFactory(position=Point(23.6851594, 0))
+        )
+        InitiativeFactory(
+            status='approved',
+            place=GeolocationFactory(position=Point(0, 34.0579025))
+        )
+        InitiativeFactory(
+            status='approved',
+            place=GeolocationFactory(position=Point(23.6851594, 34.0579025))
+        )
+
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+
+        for i in range(len(data)):
+            if data[i]['position'][0] == 0.0:
+                del data[i]
+                break
+
+    def test_working_cache(self):
+        InitiativeFactory.create_batch(5, status='approved')
+        response = self.client.get(
+            self.url
+        )
+
+        data = response.json()
+        self.assertTrue(len(data), 5)
+
+        InitiativeFactory.create(status='approved')
+        self.assertTrue(len(data), 7)
+
+    def test_correct_ordering(self):
+        pass

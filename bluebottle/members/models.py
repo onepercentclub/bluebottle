@@ -90,8 +90,9 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     require_office = models.BooleanField(
+        _('Office location'),
         default=False,
-        help_text=_('Required office location')
+        help_text=_('Required')
     )
 
     class Meta(object):

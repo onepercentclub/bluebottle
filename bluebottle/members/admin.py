@@ -147,22 +147,22 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         if Location.objects.count():
             required_fields.append('require_office')
         if SegmentType.objects.count():
-            required_fields.append('required_segment_types')
+            required_fields.append('segment_types')
 
         if len(required_fields):
             fieldsets += ((
                 _('Required fields'),
                 {
-                    'description': _('After logging in the user is prompted to fill out or confirm the '
-                                     'required segment types before they can continue to the platform.'),
+                    'description': _('After logging in members are required to '
+                                     'fill out or confirm the  fields listed below.'),
                     'fields': required_fields
                 }
             ),)
         return fieldsets
 
-    readonly_fields = ('required_segment_types',)
+    readonly_fields = ('segment_types',)
 
-    def required_segment_types(self, obj):
+    def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {
             'required': SegmentType.objects.filter(required=True).all(),

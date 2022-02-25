@@ -4,6 +4,7 @@ from builtins import str
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -120,7 +121,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
         self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
-    def test_create_missing_iamge(self):
+    def test_create_missing_image(self):
         data = {
             'data': {
                 'type': 'initiatives',
@@ -1517,3 +1518,89 @@ class InitiativeAPITestCase(APITestCase):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('segments', [segment])
+
+
+class InitiativeMapListTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(InitiativeMapListTestCase, self).setUp()
+        cache.clear()
+        self.url = reverse('initiative-map-list')
+
+    def test_list_initiatives(self):
+        InitiativeFactory.create_batch(5, status='approved')
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(data), 5)
+
+    def test_submitted_initiatives_dont_show_on_map(self):
+        InitiativeFactory.create_batch(5, status='approved')
+        InitiativeFactory.create_batch(5, status='submitted')
+        response = self.client.get(
+            self.url
+        )
+
+        data = response.json()
+        self.assertTrue(len(data), 5)
+
+    def test_locations(self):
+        InitiativeFactory.create(
+            status='approved',
+            place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
+        )
+        InitiativeFactory.create(
+            status='approved',
+            place=GeolocationFactory(position=Point(27.6851594, 34.0579025))
+        )
+
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+
+        self.assertTrue(data[0]['position'][0], '43.0579025')
+        self.assertTrue(data[1]['position'][1], '27.6851594')
+
+    def test_lat_long_omitted(self):
+        InitiativeFactory.create(
+            status='approved',
+            place=GeolocationFactory(position=Point(0, 0))
+        )
+        InitiativeFactory.create(
+            status='approved',
+            place=GeolocationFactory(position=Point(23.6851594, 34.0579025))
+        )
+
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 1)
+
+    def test_working_cache(self):
+        InitiativeFactory.create_batch(5, status='approved')
+
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 5)
+
+        InitiativeFactory.create_batch(3, status='approved')
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 5)
+
+        # Bust cache
+        cache.clear()
+        response = self.client.get(
+            self.url
+        )
+        data = response.json()
+        self.assertTrue(len(data), 8)

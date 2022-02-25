@@ -153,6 +153,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             fieldsets += ((
                 _('Required fields'),
                 {
+                    'description': _('After logging in the user is prompted to fill out or confirm the '
+                                     'required segment types before they can continue to the platform.'),
                     'fields': required_fields
                 }
             ),)
@@ -166,8 +168,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             'required': SegmentType.objects.filter(required=True).all(),
             'link': reverse('admin:segments_segmenttype_changelist')
         }
-        html = template.render(context)
-        return html
+        return template.render(context)
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)

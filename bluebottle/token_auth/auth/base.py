@@ -53,6 +53,9 @@ class BaseTokenAuthentication(object):
     def set_location(self, user, data):
         if 'location.slug' in data:
             try:
+                if user.location_verified:
+                    return
+
                 user.location = Location.objects.get(slug=data['location.slug'])
                 user.save()
             except Location.DoesNotExist:

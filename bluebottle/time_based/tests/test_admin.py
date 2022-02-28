@@ -78,7 +78,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         DateParticipantFactory.create_batch(5, activity=activity)
         url = reverse('admin:time_based_dateactivity_changelist')
         response = self.app.get(url)
-        self.assertTrue(response.html.find_all('td')[5].get_text() == '5')
+        self.assertEqual(int(response.html.find_all('td')[5].get_text()), 5)
 
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):

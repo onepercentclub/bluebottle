@@ -14,10 +14,10 @@ by GoodUp.
 Contributors
 ------------
 
-For those who want to contribute to the BlueBottle project, it's easy to get
+For those who want to try out to the BlueBottle project, here's to get
 started:
 
-#. Make sure you have a recent Python distro (2.7+ recommended).
+#. Make sure you have a recent Python distro (3.7+ recommended).
 #. Make sure (a recent) `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ is installed.
 #. Fork and/or clone the repository.
 #. Navigate to your local repository directory.
@@ -26,34 +26,39 @@ started:
     $ virtualenv env
     $ source env/bin/activate
 
-#. Create a secrets.py base on secrets.py.example
+#. Create a `bluebottle/settings/local.py` base on `bluebottle/settings/secrets.py.example`
 
 #. Install the project::
 
-    $ pip install -e .[test] --process-dependency-links --trusted-host github.com
-    $ python manage.py sync_schemas --shared --settings=bluebottle.settings.testing
+    $ pip install -e .[test]
     $ python manage.py migrate_schemas --shared --settings=bluebottle.settings.testing
-    $ ... createtenant
-    $ ...
+    $ python manage.py  createtenant
+    $ python manage.py runserver
 
-#.  You're ready to roll now, baby!
+#. You might still need to
+    * Install libraries to get `pip install` working, like `libxmlsec1`, `postgresql`, `postgis`, `elasticsearch 6.x`.
+    * Alter your hosts file (e.g. in `/etc/hosts` on Linux/OSX) to contain tenants you've created like::
+
+        127.0.0.1 tenant35.localhost
+
 
 Testing
 -------
 
 The BlueBottle test suite can be run completely using:
 
-#. Get the latest Geodata
-
-    $ curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
-
 #. Install the dependencies
 
     $ pip install -e .[test,dev]
 
+#. Create test db and restore testdata
+    $ createdb test_reef
+    $ psql test_reef < testdata.sql
+
 #. Run the tests
 
-    $ python manage.py test --settings=bluebottle.settings.testing
+    $ python manage.py test -k
+
 
 Pull request - Testing, Reviewing and Merging Flow
 ------------

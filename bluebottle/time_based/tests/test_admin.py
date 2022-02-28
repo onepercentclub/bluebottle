@@ -73,6 +73,13 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         response = self.app.get(url)
         self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
 
+    def test_participant_count(self):
+        activity = DateActivityFactory.create()
+        DateParticipantFactory.create_batch(5, activity=activity)
+        url = reverse('admin:time_based_dateactivity_changelist')
+        response = self.app.get(url)
+        self.assertTrue(response.html.find_all('td')[5].get_text() == '5')
+
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 

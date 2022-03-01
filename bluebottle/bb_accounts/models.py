@@ -133,6 +133,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         'geo.Location', blank=True,
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
+
+    location_verified = models.BooleanField(
+        default=False,
+        help_text=_('Office location is verified by the user')
+    )
+
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)

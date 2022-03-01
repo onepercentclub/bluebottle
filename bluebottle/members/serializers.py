@@ -264,7 +264,13 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     is_active = serializers.BooleanField(read_only=True)
 
     def save(self, *args, **kwargs):
+
         instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
 
         if 'segments' in self.validated_data:
             # if we are setting segments, make sure we verify them too

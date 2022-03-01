@@ -783,7 +783,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
                     defaultfilters.date(slot.start),
                     defaultfilters.time(slot.start.astimezone(get_current_timezone())),
                     defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                    self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                    slot.start.astimezone(get_current_timezone()).strftime('%Z'),
                 )
 
                 self.assertTrue(expected in mail.outbox[0].body)

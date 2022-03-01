@@ -998,3 +998,21 @@ class UserAPITestCase(BluebottleTestCase):
         self.user.segments.add(self.segments[0], through_defaults={'verified': False})
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_unverified_required_location(self):
+        MemberPlatformSettings.objects.update_or_create(
+            require_office=True,
+            verify_office=True,
+        )
+        self.user.location = LocationFactory.create()
+        self.user.location_verified = False
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+        self.user.location_verified = True
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])

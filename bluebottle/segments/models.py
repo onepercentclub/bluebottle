@@ -29,9 +29,9 @@ class SegmentType(models.Model):
     )
 
     required = models.BooleanField(
-        _('Required'),
+        _('Required for members'),
         help_text=_(
-            'Users can only use the platform if they have a value for this segment in their profile'
+            'Enable to require members to enter their segment type after logging in'
         ),
         default=False
     )
@@ -39,7 +39,7 @@ class SegmentType(models.Model):
     needs_verification = models.BooleanField(
         _('Needs verification'),
         help_text=_(
-            'Users can only use the platform is they have validated the set segment for this segment type'
+            'Enable to require members to verify their segment type data that was provided by SSO'
         ),
         default=False
     )

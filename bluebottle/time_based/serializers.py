@@ -214,6 +214,7 @@ class DateActivitySlotInfoMixin():
         return {
             'total': total,
             'has_multiple': total > 1,
+            'is_full': all(slot.status == 'full' for slot in slots),
             'count': count,
             'first': first,
             'duration': duration

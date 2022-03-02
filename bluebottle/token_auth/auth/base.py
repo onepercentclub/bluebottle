@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 
 from django.contrib.auth import get_user_model
@@ -7,14 +6,13 @@ from django.db import IntegrityError
 from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.members.models import UserSegment
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTokenAuthentication(object):
+class BaseTokenAuthentication():
     """
     Base class for TokenAuthentication.
     """
@@ -61,14 +59,14 @@ class BaseTokenAuthentication(object):
             except Location.DoesNotExist:
                 pass
 
-    def set_segments(self, user, data):
-        segments = [
+    def get_segments_from_data(self, data):
+        segment_list = {}
+        segment_data = [
             (field, value)
             for field, value in list(data.items())
             if field.startswith('segment.')
         ]
-
-        for (path, value) in segments:
+        for (path, value) in segment_data:
             type_slug = path.split('.')[-1]
             try:
                 segment_type = SegmentType.objects.get(slug=type_slug)
@@ -76,25 +74,9 @@ class BaseTokenAuthentication(object):
                 logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
                 return
 
-            current_segments = user.segments.filter(
-                segment_type__slug=type_slug
-            ).all()
-
             if not isinstance(value, (list, tuple)):
                 value = [value]
-
-            if (
-                segment_type.needs_verification and
-                any(
-                    user_segment.verified for user_segment in
-                    UserSegment.objects.filter(member=user, segment__segment_type=segment_type)
-                )
-            ):
-                continue
-
-            for current_segment in current_segments:
-                user.segments.remove(current_segment)
-
+            segment_list[segment_type.id] = []
             for val in value:
                 try:
                     segment = Segment.objects.filter(
@@ -103,10 +85,7 @@ class BaseTokenAuthentication(object):
                         where=['%s ILIKE ANY (alternate_names)'],
                         params=[val, ]
                     ).get()
-                    user.segments.add(
-                        segment,
-                        through_defaults={'verified': not segment.segment_type.needs_verification}
-                    )
+                    segment_list[segment_type.id].append(segment)
                 except Segment.DoesNotExist:
                     if MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
@@ -114,12 +93,24 @@ class BaseTokenAuthentication(object):
                             name=val,
                             alternate_names=[val]
                         )
-                        user.segments.add(
-                            segment,
-                            through_defaults={'verified': not segment.segment_type.needs_verification}
-                        )
+                        segment_list[segment_type.id].append(segment)
                 except IntegrityError:
                     pass
+        return segment_list
+
+    def set_segments(self, user, data):
+        segment_list = self.get_segments_from_data(data)
+        for segment_type_id, segments in segment_list.items():
+            segment_type = SegmentType.objects.get(id=segment_type_id)
+            current_segments = user.segments.filter(segment_type__id=segment_type_id)
+            if segments == current_segments or (
+                segment_type.needs_verification and
+                current_segments.filter(usersegment__verified=True).count()
+            ):
+                continue
+            else:
+                user.segments.remove(*current_segments)
+                user.segments.add(*segments)
 
     def get_or_create_user(self, data):
         """

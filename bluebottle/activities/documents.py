@@ -52,7 +52,7 @@ class ActivityDocument(Document):
     categories = fields.NestedField(
         attr='initiative.categories',
         properties={
-            'id': fields.LongField(),
+            'id': fields.KeywordField(),
             'slug': fields.KeywordField(),
         }
     )

@@ -94,6 +94,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Required office location')
     )
 
+    verify_office = models.BooleanField(
+        default=False,
+        help_text=_('Let users verify their office location')
+    )
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -192,7 +197,13 @@ class Member(BlueBottleBaseUser):
                 usersegment__verified=True, segment_type=segment_type
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
-        if MemberPlatformSettings.load().require_office and not self.location:
+
+        settings = MemberPlatformSettings.load()
+
+        if settings.require_office and (
+            not self.location or
+            (settings.verify_office and not self.location_verified)
+        ):
             required.append('location')
 
         return required

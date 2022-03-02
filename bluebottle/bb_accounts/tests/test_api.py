@@ -27,7 +27,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
 )
-from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
+
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory, LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase, JSONAPITestClient
 
 ASSERTION_MAPPING = {
@@ -397,6 +398,38 @@ class UserApiIntegrationTest(BluebottleTestCase):
         )
         self.assertEqual(self.user_1.segments.first(), segment)
         self.assertTrue(UserSegment.objects.get(member=self.user_1, segment=segment).verified)
+
+    def test_user_verify_location(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+        MemberPlatformSettings.objects.update_or_create(
+            verify_office=True,
+        )
+
+        self.user_1.location = LocationFactory.create()
+        self.user_1.location_verified = False
+        self.user_1.save()
+
+        new_location = LocationFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'location': new_location.pk
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['location'], new_location.pk
+        )
+
+        self.user_1.refresh_from_db()
+        self.assertEqual(self.user_1.location, new_location)
+        self.assertTrue(self.user_1.location_verified)
 
     def test_unauthenticated_user(self):
         """

@@ -70,6 +70,60 @@ class TestBaseTokenAuthentication(TestCase):
             'location.slug': 'AMS'
         }
     )
+    def test_user_updated_location(self, authenticate_request):
+        BlueBottleUserFactory.create(remote_id='test@example.com', location=None)
+
+        location = LocationFactory.create(name='Amsterdam', slug='AMS')
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+
+            user.refresh_from_db()
+
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'location.slug': 'AMS'
+        }
+    )
+    def test_user_updated_location_verified(self, authenticate_request):
+        location = LocationFactory.create()
+        BlueBottleUserFactory.create(
+            remote_id='test@example.com',
+            location=location,
+            location_verified=True
+        )
+
+        LocationFactory.create(name='Amsterdam', slug='AMS')
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+
+            user.refresh_from_db()
+
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'location.slug': 'AMS'
+        }
+    )
     def test_user_created_location_missing(self, authenticate_request):
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()

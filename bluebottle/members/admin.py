@@ -146,6 +146,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         required_fields = []
         if Location.objects.count():
             required_fields.append('require_office')
+            required_fields.append('verify_office')
         if SegmentType.objects.count():
             required_fields.append('required_segment_types')
 

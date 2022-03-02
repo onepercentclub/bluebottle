@@ -209,7 +209,7 @@ class Member(BlueBottleBaseUser):
 class UserSegment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
-    verified = models.BooleanField(default=True)
+    verified = models.BooleanField(default=False)
 
 
 class UserActivity(models.Model):

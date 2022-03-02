@@ -106,11 +106,19 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertTrue(
                 team_segment in user.segments.all()
             )
-            self.assertTrue(UserSegment.objects.get(segment=team_segment, member=user).verified)
             self.assertTrue(
                 unit_segment in user.segments.all()
             )
-            self.assertTrue(UserSegment.objects.get(segment=unit_segment, member=user).verified)
+            self.assertFalse(
+                UserSegment.objects.get(segment=team_segment, member=user).verified
+            )
+            self.assertFalse(
+                UserSegment.objects.get(segment=unit_segment, member=user).verified
+            )
+            self.assertEqual(
+                user.required,
+                []
+            )
 
     @patch.object(
         BaseTokenAuthentication,

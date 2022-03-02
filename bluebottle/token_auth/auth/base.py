@@ -102,7 +102,7 @@ class BaseTokenAuthentication():
             current_segments = user.segments.filter(segment_type__id=segment_type_id)
             if segments == current_segments or (
                 segment_type.needs_verification and
-                current_segments.filter(verified=True).count()
+                current_segments.filter(usersegment__verified=True).count()
             ):
                 continue
             else:

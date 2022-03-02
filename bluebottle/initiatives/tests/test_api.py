@@ -854,6 +854,50 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
+    def test_filter_closed_segment(self):
+        segment = SegmentFactory.create()
+
+        first = InitiativeFactory.create(
+            status='approved'
+        )
+        activity = DateActivityFactory.create(
+            status='open',
+            initiative=first,
+        )
+        activity.segments.add(segment)
+
+        second = InitiativeFactory.create(
+            status='approved'
+        )
+        activity = DateActivityFactory.create(
+            status='open',
+            initiative=second,
+        )
+        activity.segments.add(segment)
+        DateActivityFactory.create(
+            status='open',
+            initiative=second,
+        )
+
+        InitiativeFactory.create(
+            status='approved'
+        )
+
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+
+        response = self.client.get(
+            self.url
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+
     def test_filter_owner(self):
         owned_initiatives = InitiativeFactory.create_batch(
             2, status='submitted', owner=self.owner

@@ -987,7 +987,7 @@ class UserAPITestCase(BluebottleTestCase):
     def test_get_current_user_with_required_segments_defined(self):
         self.segment_type.required = True
         self.segment_type.save()
-        self.user.segments.add(self.segments[0])
+        self.user.segments.add(self.segments[0], through_defaults={'verified': True})
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
 

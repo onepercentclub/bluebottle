@@ -73,21 +73,36 @@ class SCIMViewMixin(object):
 
     def handle_exception(self, exc):
         try:
+            codes = exc.get_codes()
+
+            status_code = exc.status_code
+
+            if isinstance(codes, dict):
+                if any(['unique' in error_codes for error_codes in codes.values()]):
+                    error_code = 'uniqueness'
+                    status_code = 409
+                else:
+                    error_code = list(codes.values())[0]
+            else:
+                error_code = codes
+
             data = {
+                'scimType': error_code,
                 'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                'status': exc.status_code
+                'status': status_code
             }
+
+            if isinstance(exc.detail, dict):
+                data['details'] = '\n'.join(
+                    '{}: {}'.format(key, ', '.join(value)) for key, value in list(exc.detail.items())
+                )
+            else:
+                data['details'] = str(exc.detail)
+
         except AttributeError:
             raise exc
 
-        if isinstance(exc.detail, dict):
-            data['details'] = '\n'.join(
-                '{}: {}'.format(key, ', '.join(value)) for key, value in list(exc.detail.items())
-            )
-        else:
-            data['details'] = str(exc.detail)
-
-        return response.Response(data, status=exc.status_code)
+        return response.Response(data, status=status_code)
 
 
 class StaticRetrieveAPIView(SCIMViewMixin, generics.RetrieveAPIView):

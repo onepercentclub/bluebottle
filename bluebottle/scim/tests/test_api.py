@@ -504,6 +504,8 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'externalId': '123',
+            'userName': '123',
+            'active': True,
             'emails': [{
                 'type': 'work',
                 'primary': True,
@@ -526,8 +528,45 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             token=self.token
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['status'], 400)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['status'], 409)
+        self.assertEqual(response.data['scimType'], 'uniqueness')
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_remote_id(self):
+        """
+        Test creating a user twice request
+        """
+        remote_id = '123'
+        BlueBottleUserFactory.create(remote_id=remote_id)
+        mail.outbox = []
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': remote_id,
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['status'], 409)
+        self.assertEqual(response.data['scimType'], 'uniqueness')
         self.assertEqual(len(mail.outbox), 0)
 
 

@@ -81,6 +81,7 @@ class InitiativeDocument(Document):
     )
 
     has_public_activities = fields.BooleanField()
+    has_closed_activities = fields.BooleanField()
 
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
@@ -197,4 +198,13 @@ class InitiativeDocument(Document):
         return countries
 
     def prepare_has_public_activities(self, instance):
-        return instance.activities.exclude(segments__closed=True).count() == 0
+        hidden_statuses = ['draft', 'needs_work', 'submitted', 'rejected', 'deleted']
+        return instance.activities.\
+            exclude(segments__closed=True).\
+            exclude(status__in=hidden_statuses).exists()
+
+    def prepare_has_closed_activities(self, instance):
+        hidden_statuses = ['draft', 'needs_work', 'submitted', 'rejected', 'deleted']
+        return instance.activities.\
+            filter(segments__closed=True).\
+            exclude(status__in=hidden_statuses).exists()

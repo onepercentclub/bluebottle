@@ -863,7 +863,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         first = InitiativeFactory.create(
-            status='approved'
+            status='approved',
+            owner=self.owner
         )
         activity = DateActivityFactory.create(
             status='open',
@@ -912,6 +913,13 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url,
+            user=self.owner
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        response = self.client.get(
+            self.url,
             user=user1
         )
         data = json.loads(response.content)
@@ -925,7 +933,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
         response = self.client.get(
-            self.url,
+            self.url
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)

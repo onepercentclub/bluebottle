@@ -80,6 +80,8 @@ class InitiativeDocument(Document):
         }
     )
 
+    has_public_activities = fields.BooleanField()
+
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
         'title': fields.KeywordField(),
@@ -156,6 +158,7 @@ class InitiativeDocument(Document):
                 {
                     'id': segment.id,
                     'name': segment.name,
+                    'closed': segment.closed,
                     'segment_type': segment.segment_type.slug
                 }
                 for segment in activity.segments.all()
@@ -192,3 +195,6 @@ class InitiativeDocument(Document):
         if instance.location and instance.location.country_id:
             countries += [instance.location.country_id]
         return countries
+
+    def prepare_has_public_activities(self, instance):
+        return instance.activities.exclude(segments__closed=True).count() == 0

@@ -36,13 +36,13 @@ def get_include(response, name):
     return [include for include in included if include['type'] == name][0]
 
 
-class InitiativeAPITestCase(TestCase):
+class InitiativeAPITestCase(APITestCase):
     """
     Integration tests for the Categories API.
     """
 
     def setUp(self):
-        self.client = JSONAPITestClient()
+        super().setUp()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
 
@@ -855,16 +855,31 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_closed_segment(self):
-        segment = SegmentFactory.create()
+        closed_segment = SegmentFactory.create(
+            closed=True
+        )
+        open_segment = SegmentFactory.create(
+            closed=False
+        )
 
         first = InitiativeFactory.create(
             status='approved'
         )
         activity = DateActivityFactory.create(
             status='open',
+            title='hup',
             initiative=first,
         )
-        activity.segments.add(segment)
+        activity.segments.add(closed_segment)
+        activity.segments.add(open_segment)
+        activity.save()
+
+        activity = DateActivityFactory.create(
+            status='open',
+            initiative=first,
+        )
+        activity.segments.add(closed_segment)
+        activity.save()
 
         second = InitiativeFactory.create(
             status='approved'
@@ -873,30 +888,47 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
             status='open',
             initiative=second,
         )
-        activity.segments.add(segment)
+        activity.segments.add(closed_segment)
+        activity.segments.add(open_segment)
+        activity.save()
+
         DateActivityFactory.create(
             status='open',
             initiative=second,
         )
+        activity.segments.add(open_segment)
 
         InitiativeFactory.create(
             status='approved'
         )
 
+        user1 = BlueBottleUserFactory.create()
+        user1.segments.add(closed_segment)
+        user1.save()
+
+        user2 = BlueBottleUserFactory.create()
+        user2.segments.add(open_segment)
+        user2.save()
+
         response = self.client.get(
             self.url,
-            user=self.owner
+            user=user1
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], str(first.pk))
 
         response = self.client.get(
-            self.url
+            self.url,
+            user=user2
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(second.pk))
+
+        response = self.client.get(
+            self.url,
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
 
     def test_filter_owner(self):
         owned_initiatives = InitiativeFactory.create_batch(

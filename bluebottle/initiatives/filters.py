@@ -1,6 +1,6 @@
 import re
 from elasticsearch_dsl import Q
-from elasticsearch_dsl.query import Term, Nested
+from elasticsearch_dsl.query import Term, Nested, Terms
 
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.initiatives.documents import InitiativeDocument
@@ -62,10 +62,9 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             if 'owner.id' not in fields:
                 filters.append(Term(status='approved'))
 
-            return filters
         elif 'owner.id' in fields and request.user.is_authenticated:
             value = request.user.pk
-            return [
+            filters = [
                 Nested(path='owner', query=Term(owner__id=value)) |
                 Nested(path='promoter', query=Term(promoter__id=value)) |
                 Nested(path='activity_managers', query=Term(activity_managers__id=value)) |
@@ -73,7 +72,23 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                 Term(status='approved')
             ]
         else:
-            return [Term(status='approved')]
+            filters = [Term(status='approved')]
+
+        filters.append(
+            Term(has_public_activities=True) |
+            Nested(
+                path='segments',
+                query=(
+                    Terms(
+                        segments__id=[
+                            segment.id for segment in request.user.segments.filter(closed=True)
+                        ] if request.user.is_authenticated else []
+                    )
+                )
+            )
+        )
+
+        return filters
 
     def get_filters(self, request):
         filters = super(InitiativeSearchFilter, self).get_filters(request)

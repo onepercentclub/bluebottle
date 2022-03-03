@@ -36,13 +36,14 @@ def get_include(response, name):
     return [include for include in included if include['type'] == name][0]
 
 
-class InitiativeAPITestCase(APITestCase):
+class InitiativeAPITestCase(TestCase):
     """
     Integration tests for the Categories API.
     """
 
     def setUp(self):
         super().setUp()
+        self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
 

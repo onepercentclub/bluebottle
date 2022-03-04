@@ -10,24 +10,26 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     document = InitiativeDocument
 
     sort_fields = {
-        'date': ('-created', ),
-        'activity_date': ({
-            'activities.status_score': {
-                'order': 'desc',
-                'mode': 'max',
-                'nested': {
-                    'path': 'activities'
+        'date': ('-created',),
+        'activity_date': (
+            {
+                'activities.status_score': {
+                    'order': 'desc',
+                    'mode': 'max',
+                    'nested': {
+                        'path': 'activities'
+                    }
+                },
+                'activities.activity_date': {
+                    'order': 'desc',
+                    'mode': 'max',
+                    'nested': {
+                        'path': 'activities'
+                    }
                 }
             },
-            'activities.activity_date': {
-                'order': 'desc',
-                'mode': 'max',
-                'nested': {
-                    'path': 'activities'
-                }
-            }
-        }, ),
-        'alphabetical': ('title_keyword', ),
+        ),
+        'alphabetical': ('title_keyword',),
     }
     default_sort_field = 'date'
 
@@ -56,37 +58,56 @@ class InitiativeSearchFilter(ElasticSearchFilter):
 
         permission = 'initiatives.api_read_initiative'
 
+        user_id = None
+        if request.user.is_authenticated:
+            user_id = request.user.pk
+
         public_filter = Term(status='approved') & (
-            Term(has_public_activities=True) |
-            Term(has_closed_activities=False) |
-            Nested(
-                path='segments',
-                query=(
-                    Terms(
-                        segments__id=[
-                            segment.id for segment in request.user.segments.filter(closed=True)
-                        ] if request.user.is_authenticated else []
+            Nested(path='owner', query=Term(owner__id=user_id)) |
+            Nested(path='promoter', query=Term(promoter__id=user_id)) |
+            Nested(path='activity_managers', query=Term(activity_managers__id=user_id)) |
+            Nested(path='activity_owners', query=Term(activity_owners__id=user_id)) |
+            (
+                Term(has_public_activities=True) |
+                Term(has_closed_activities=False) |
+                Nested(
+                    path='segments',
+                    query=(
+                        Terms(
+                            segments__id=[
+                                segment.id for segment in request.user.segments.filter(closed=True)
+                            ] if request.user.is_authenticated else []
+                        )
                     )
                 )
             )
         )
 
-        if not request.user.has_perm(permission):
-            filters = [Term(owner_id=request.user.id)]
-            if 'owner.id' not in fields:
-                filters.append(public_filter)
-        elif 'owner.id' in fields and request.user.is_authenticated:
-            value = request.user.pk
-            filters = [
-                Nested(path='owner', query=Term(owner__id=value)) |
-                Nested(path='promoter', query=Term(promoter__id=value)) |
-                Nested(path='activity_managers', query=Term(activity_managers__id=value)) |
-                Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
-                public_filter
-            ]
-        else:
-            filters = [public_filter]
+        owned_filter = ~Term(status='deleted') & (
+            Nested(path='owner', query=Term(owner__id=user_id)) |
+            Nested(path='promoter', query=Term(promoter__id=user_id)) |
+            Nested(path='activity_managers', query=Term(activity_managers__id=user_id)) |
+            Nested(path='activity_owners', query=Term(activity_owners__id=user_id))
+        )
 
+        if not request.user.has_perm(permission) and user_id:
+            # Not allowed to read initiatives through API unless owned.
+            filters = [owned_filter]
+        elif 'owner.id' in fields and user_id:
+            # Filter on user id.
+            # If owned then show also initiatives that are not approved.
+            filters = [owned_filter | public_filter]
+        elif user_id:
+            # Approved & owner or no closed segments or user has that segment
+            filters = [public_filter]
+        else:
+            # Guest user. Just approved projects without closed activities
+            filters = [
+                Term(status='approved') & (
+                    Term(has_public_activities=True) |
+                    Term(has_closed_activities=False)
+                )
+            ]
         return filters
 
     def get_filters(self, request):

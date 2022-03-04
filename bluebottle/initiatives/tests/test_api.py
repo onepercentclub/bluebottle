@@ -805,7 +805,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
         data = json.loads(response.content)
@@ -855,84 +855,110 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
-    def test_filter_closed_segment(self):
-        closed_segment = SegmentFactory.create(
+    def _create_closed_segments_initiatives(self):
+        self.closed_segment = SegmentFactory.create(
             closed=True
         )
-        open_segment = SegmentFactory.create(
+        self.open_segment = SegmentFactory.create(
             closed=False
         )
+        self.another_closed_segment = SegmentFactory.create(
+            closed=True
+        )
 
-        first = InitiativeFactory.create(
+        self.first = InitiativeFactory.create(
             status='approved',
             owner=self.owner
         )
         activity = DateActivityFactory.create(
             status='open',
             title='hup',
-            initiative=first,
+            initiative=self.first,
         )
-        activity.segments.add(closed_segment)
-        activity.segments.add(open_segment)
-        activity.save()
+        activity.segments.add(self.closed_segment)
+        activity.segments.add(self.another_closed_segment)
+        activity.segments.add(self.open_segment)
 
         activity = DateActivityFactory.create(
             status='open',
-            initiative=first,
+            initiative=self.first,
         )
-        activity.segments.add(closed_segment)
-        activity.save()
+        activity.segments.add(self.closed_segment)
 
-        second = InitiativeFactory.create(
+        self.second = InitiativeFactory.create(
+            owner=self.owner,
             status='approved'
         )
         activity = DateActivityFactory.create(
             status='open',
-            initiative=second,
+            initiative=self.second,
         )
-        activity.segments.add(closed_segment)
-        activity.segments.add(open_segment)
-        activity.save()
+        activity.segments.add(self.closed_segment)
+        activity.segments.add(self.open_segment)
 
-        DateActivityFactory.create(
+        activity = DateActivityFactory.create(
             status='open',
-            initiative=second,
+            initiative=self.second,
         )
-        activity.segments.add(open_segment)
+        activity.segments.add(self.open_segment)
 
-        InitiativeFactory.create(
+        self.third = InitiativeFactory.create(
+            owner=self.owner,
+            status='draft'
+        )
+        activity = DateActivityFactory.create(
+            status='draft',
+            initiative=self.third,
+        )
+        activity.segments.add(self.closed_segment)
+        activity.segments.add(self.open_segment)
+
+        self.fourth = InitiativeFactory.create(
+            owner=self.owner,
             status='approved'
         )
 
-        user1 = BlueBottleUserFactory.create()
-        user1.segments.add(closed_segment)
-        user1.save()
-
-        user2 = BlueBottleUserFactory.create()
-        user2.segments.add(open_segment)
-        user2.save()
-
+    def test_filter_closed_segment_owner(self):
+        self._create_closed_segments_initiatives()
         response = self.client.get(
             self.url,
             user=self.owner
         )
         data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        response = self.client.get(
+            self.url + f'?filter[owner.id]={self.owner.id}',
+            user=self.owner
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+
+    def test_filter_closed_segment_user_without_segment(self):
+        self._create_closed_segments_initiatives()
+        user = BlueBottleUserFactory.create()
+        user.segments.add(self.open_segment)
 
         response = self.client.get(
             self.url,
-            user=user1
+            user=user
+        )
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+    def test_filter_closed_segment_user_with_segment(self):
+        self._create_closed_segments_initiatives()
+        user = BlueBottleUserFactory.create()
+        user.segments.add(self.closed_segment)
+
+        response = self.client.get(
+            self.url,
+            user=user
         )
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
-        response = self.client.get(
-            self.url,
-            user=user2
-        )
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-
+    def test_filter_closed_segment_guest(self):
+        self._create_closed_segments_initiatives()
         response = self.client.get(
             self.url
         )
@@ -950,7 +976,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='submitted')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -971,7 +997,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         activity = DateActivityFactory.create(owner=self.owner, initiative=with_activity)
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -1038,7 +1064,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(3, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             user=self.visitor
         )
 
@@ -1055,7 +1081,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -1072,7 +1098,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -1089,7 +1115,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

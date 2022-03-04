@@ -66,6 +66,7 @@ class BlueBottleUserManager(UserManager):
         now = timezone.now()
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
         return super().create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username=None, email=None, password=None, **extra_fields):

@@ -654,6 +654,37 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_put_deleted(self):
+        """
+        Test authenticated put request
+        """
+        request_data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'id': 'goodup-user-{}'.format(self.user.pk),
+            'externalId': '123',
+            'active': False,
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+        url = self.url
+        self.user.delete()
+
+        response = self.client.put(
+            url,
+            request_data,
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['status'], 404)
+        self.assertEqual(response.json()['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
+
     def test_delete(self):
         response = self.client.delete(
             self.url,

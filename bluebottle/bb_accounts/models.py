@@ -68,10 +68,13 @@ class BlueBottleUserManager(UserManager):
         extra_fields['date_joined'] = now
         return super().create_user(username, email, password, **extra_fields)
 
-    def create_superuser(self, username, email=None, password=None, **extra_fields):
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         now = timezone.now()
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        if not username:
+            username = email
         return super().create_superuser(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):

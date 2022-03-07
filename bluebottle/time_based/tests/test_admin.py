@@ -100,7 +100,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         )
 
         start_time = activity.slots.all()[0].start.astimezone(get_current_timezone())
-        self.assertTrue(start_time == time_2)
+        self.assertEqual(start_time, time_2)
 
         url = reverse('admin:time_based_dateactivity_changelist')
         response = self.app.get(url)

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.admin import AdminSite
+from django.template import defaultfilters
 from django.urls import reverse
 from django.utils.timezone import now
 
@@ -35,7 +36,6 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -80,9 +80,17 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         response = self.app.get(url)
         self.assertEqual(int(response.html.find_all('td')[5].get_text()), 5)
 
+    def test_start_date(self):
+        activity = DateActivityFactory.create()
+        DateActivitySlotFactory.create(activity=activity)
+        date = defaultfilters.date(activity.slots.all()[0].start) + ', '\
+               + defaultfilters.time(activity.slots.all()[0].start + timedelta(hours=2)) # noqa
+        url = reverse('admin:time_based_dateactivity_changelist')
+        response = self.app.get(url)
+        self.assertEqual(date, response.html.find_all('td')[3].get_text())
+
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -138,7 +146,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         participant = DateParticipantFactory.create(activity=activity)
         self.assertEqual(len(participant.slot_participants.all()), 0)
 
-        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk, ))
+        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk,))
 
         page = self.app.get(url)
         form = page.forms['dateparticipant_form']
@@ -155,7 +163,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
     def test_add_participants(self):
         activity = DateActivityFactory.create(initiative=self.initiative, status='open')
         DateParticipantFactory.create(activity=activity)
-        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk, ))
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
         self.assertFalse(
             'First complete and submit the activity before managing participants.' in
@@ -175,7 +183,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
 
 class DateParticipantAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -219,7 +226,6 @@ class TestSkillAdmin(BluebottleAdminTestCase):
 
 
 class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

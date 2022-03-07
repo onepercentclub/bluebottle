@@ -206,7 +206,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     list_display = TimeBasedAdmin.list_display + [
         'start',
-        'duration',
+        'slot_count',
         'participant_count',
     ]
 
@@ -215,9 +215,9 @@ class DateActivityAdmin(TimeBasedAdmin):
         if first_slot:
             return first_slot.start
 
-    def duration(self, obj):
+    def slot_count(self, obj):
         return obj.slots.count()
-    duration.short_description = _('Slots')
+    slot_count.short_description = _('Slots')
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

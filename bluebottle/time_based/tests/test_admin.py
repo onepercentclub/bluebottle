@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib.admin import AdminSite
 from django.template import defaultfilters
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
@@ -82,12 +82,14 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
     def test_start_date(self):
         activity = DateActivityFactory.create()
-        DateActivitySlotFactory.create(activity=activity)
-        date = defaultfilters.date(activity.slots.all()[0].start) + ', '\
-               + defaultfilters.time(activity.slots.all()[0].start + timedelta(hours=2)) # noqa
+        DateActivitySlotFactory.create_batch(2, activity=activity)
+        start_time = activity.slots.all()[0].start.astimezone(get_current_timezone())
+        slot_time = f'{defaultfilters.date(start_time)}, {defaultfilters.time(start_time)}'
+        self.assertTrue(start_time == activity.slots.all().order_by('start')[0].start)
+
         url = reverse('admin:time_based_dateactivity_changelist')
         response = self.app.get(url)
-        self.assertEqual(date, response.html.find_all('td')[3].get_text())
+        self.assertEqual(slot_time, response.html.find_all('td')[3].get_text())
 
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):

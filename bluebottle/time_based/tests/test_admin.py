@@ -82,13 +82,29 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
     def test_start_date(self):
         activity = DateActivityFactory.create()
-        DateActivitySlotFactory.create_batch(2, activity=activity)
+        time_1 = now()
+        time_2 = now() - timedelta(days=2)
+        time_3 = now() + timedelta(days=3)
+
+        DateActivitySlotFactory.create(
+            activity=activity,
+            start=time_1
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
+            start=time_2
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
+            start=time_3
+        )
+
         start_time = activity.slots.all()[0].start.astimezone(get_current_timezone())
-        slot_time = f'{defaultfilters.date(start_time)}, {defaultfilters.time(start_time)}'
-        self.assertTrue(start_time == activity.slots.all().order_by('start')[0].start)
+        self.assertTrue(start_time == time_2)
 
         url = reverse('admin:time_based_dateactivity_changelist')
         response = self.app.get(url)
+        slot_time = f'{defaultfilters.date(start_time)}, {defaultfilters.time(start_time)}'
         self.assertEqual(slot_time, response.html.find_all('td')[3].get_text())
 
 

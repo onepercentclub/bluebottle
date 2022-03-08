@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 
 from django.contrib.auth import get_user_model
@@ -13,7 +12,7 @@ from bluebottle.token_auth.utils import get_settings
 logger = logging.getLogger(__name__)
 
 
-class BaseTokenAuthentication(object):
+class BaseTokenAuthentication():
     """
     Base class for TokenAuthentication.
     """
@@ -52,6 +51,9 @@ class BaseTokenAuthentication(object):
     def set_location(self, user, data):
         if 'location.slug' in data:
             try:
+                if user.location_verified:
+                    return
+
                 user.location = Location.objects.get(slug=data['location.slug'])
                 user.save()
             except Location.DoesNotExist:
@@ -99,7 +101,12 @@ class BaseTokenAuthentication(object):
     def set_segments(self, user, data):
         segment_list = self.get_segments_from_data(data)
         for segment_type_id, segments in segment_list.items():
-            if segments != user.segments.filter(segment_type__id=segment_type_id):
+            if (
+                segments != user.segments.filter(segment_type__id=segment_type_id) and
+                not user.segments.filter(
+                    segment_type__id=segment_type_id, usersegment__verified=True
+                ).count()
+            ):
                 user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
                 user.segments.add(*segments)
 

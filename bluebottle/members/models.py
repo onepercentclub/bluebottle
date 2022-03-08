@@ -13,6 +13,7 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from ..segments.models import SegmentType
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -88,6 +89,17 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
     )
 
+    require_office = models.BooleanField(
+        _('Office location'),
+        default=False,
+        help_text=_('Required')
+    )
+
+    verify_office = models.BooleanField(
+        default=False,
+        help_text=_('Let users verify their office location')
+    )
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -126,6 +138,7 @@ class Member(BlueBottleBaseUser):
         verbose_name=_('Segment'),
         related_name='users',
         blank=True,
+        through='members.UserSegment'
     )
 
     def __init__(self, *args, **kwargs):
@@ -177,6 +190,25 @@ class Member(BlueBottleBaseUser):
 
         return initials
 
+    @property
+    def required(self):
+        required = []
+        for segment_type in SegmentType.objects.filter(required=True).all():
+            if not self.segments.filter(
+                usersegment__verified=True, segment_type=segment_type
+            ).count():
+                required.append(f'segment_type.{segment_type.id}')
+
+        settings = MemberPlatformSettings.load()
+
+        if settings.require_office and (
+            not self.location or
+            (settings.verify_office and not self.location_verified)
+        ):
+            required.append('location')
+
+        return required
+
     def __str__(self):
         return self.full_name
 
@@ -184,6 +216,12 @@ class Member(BlueBottleBaseUser):
         if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
             self.submitted_initiative_notifications = False
         super(Member, self).save(*args, **kwargs)
+
+
+class UserSegment(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
+    verified = models.BooleanField(default=False)
 
 
 class UserActivity(models.Model):

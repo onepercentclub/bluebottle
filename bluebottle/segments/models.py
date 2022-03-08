@@ -27,6 +27,23 @@ class SegmentType(models.Model):
         ),
         default=True
     )
+
+    required = models.BooleanField(
+        _('Required for members'),
+        help_text=_(
+            'Enable to require members to enter their segment type after logging in'
+        ),
+        default=False
+    )
+
+    needs_verification = models.BooleanField(
+        _('Needs verification'),
+        help_text=_(
+            'Enable to require members to verify their segment type data that was provided by SSO'
+        ),
+        default=False
+    )
+
     is_active = models.BooleanField(
         _('Is active'),
         default=True

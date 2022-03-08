@@ -101,15 +101,13 @@ class BaseTokenAuthentication():
     def set_segments(self, user, data):
         segment_list = self.get_segments_from_data(data)
         for segment_type_id, segments in segment_list.items():
-            segment_type = SegmentType.objects.get(id=segment_type_id)
-            current_segments = user.segments.filter(segment_type__id=segment_type_id)
-            if segments == current_segments or (
-                segment_type.needs_verification and
-                current_segments.filter(usersegment__verified=True).count()
+            if (
+                segments != user.segments.filter(segment_type__id=segment_type_id) and
+                not user.segments.filter(
+                    segment_type__id=segment_type_id, usersegment__verified=True
+                ).count()
             ):
-                continue
-            else:
-                user.segments.remove(*current_segments)
+                user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
                 user.segments.add(*segments)
 
     def get_or_create_user(self, data):

@@ -59,24 +59,24 @@ def generate_picture_filename(instance, filename):
 
 
 class BlueBottleUserManager(UserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        return super().create_user(username, email, password, **extra_fields)
 
-        return super().create_user(username, password, **extra_fields)
-
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
-
-        return super().create_superuser(username, password, **extra_fields)
+        extra_fields['is_active'] = True
+        if not username:
+            username = email
+        return super().create_superuser(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):
         return self.get(**{

@@ -103,8 +103,13 @@ class InitiativeMapListTestCase(BluebottleTestCase):
         initiative_3 = InitiativeFactory(status="approved")
 
         initiative_1.created = now
+        initiative_1.save()
+
         initiative_2.created = yesterday
+        initiative_2.save()
+
         initiative_3.created = yesterday_late
+        initiative_3.save()
 
         initiative_list = [initiative_1, initiative_2, initiative_3]
 

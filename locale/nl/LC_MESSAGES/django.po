@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-09 09:52+0100\n"
-"PO-Revision-Date: 2022-03-09 08:53\n"
+"PO-Revision-Date: 2022-03-09 09:52\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -1154,7 +1154,7 @@ msgstr "Kantoor"
 
 #: bluebottle/bb_accounts/models.py:139
 msgid "Office location is verified by the user"
-msgstr ""
+msgstr "Kantoorlocatie is geverifieerd door de gebruiker"
 
 #: bluebottle/bb_accounts/models.py:144
 msgid "phone number"
@@ -4994,7 +4994,7 @@ msgstr "Is actief"
 
 #: bluebottle/members/admin.py:116
 msgid "Login"
-msgstr ""
+msgstr "Inloggen"
 
 #: bluebottle/members/admin.py:126 bluebottle/members/admin.py:338
 msgid "Profile"
@@ -5002,15 +5002,15 @@ msgstr "Profiel"
 
 #: bluebottle/members/admin.py:135
 msgid "Privacy"
-msgstr ""
+msgstr "Privacy"
 
 #: bluebottle/members/admin.py:155
 msgid "Required fields"
-msgstr ""
+msgstr "Verplichte velden"
 
 #: bluebottle/members/admin.py:157
 msgid "After logging in members are required to fill out or confirm the  fields listed below."
-msgstr ""
+msgstr "Na het inloggen zijn leden verplicht om de hieronder vermelde velden in te vullen of te bevestigen."
 
 #: bluebottle/members/admin.py:282
 msgid "Deleted"
@@ -5131,7 +5131,7 @@ msgstr "Vereisen dat gebruikers instemmen met cookies"
 
 #: bluebottle/members/models.py:47
 msgid "Link more information about the platforms cookie policy"
-msgstr ""
+msgstr "Link meer informatie over het cookiebeleid van het platform"
 
 #: bluebottle/members/models.py:63
 msgid "Show gender question in profile form"
@@ -5164,7 +5164,7 @@ msgstr "Vereist"
 
 #: bluebottle/members/models.py:100
 msgid "Let users verify their office location"
-msgstr ""
+msgstr "Laat gebruikers hun kantoorlocatie verifiëren"
 
 #: bluebottle/members/models.py:104 bluebottle/members/models.py:105
 msgid "member platform settings"
@@ -5280,7 +5280,15 @@ msgid "\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"<h1>Hallo </h1>\n"
+"<p class=\"lead\">Welkom bij de %(site_name)s gemeenschap.<p> \n"
+"<p>\n"
+"    Klik op de onderstaande link om een wachtwoord aan te maken en uw account te activeren.\n"
+"</p>\n"
+"<p>\n"
+"    De link vervalt binnen 24 uur.\n"
+"</p>\n"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:19
 msgctxt "email"
@@ -5775,19 +5783,19 @@ msgstr "Token opnieuw instellen"
 
 #: bluebottle/segments/admin.py:81
 msgid "SSO"
-msgstr ""
+msgstr "SSO"
 
 #: bluebottle/segments/admin.py:99
 msgid "Members"
-msgstr ""
+msgstr "Leden"
 
 #: bluebottle/segments/admin.py:105
 msgid "Segment type"
-msgstr ""
+msgstr "Segmenttype"
 
 #: bluebottle/segments/admin.py:110
 msgid "Text colour"
-msgstr ""
+msgstr "Tekstkleur"
 
 #: bluebottle/segments/admin.py:124
 msgid "Number of segments"
@@ -5795,27 +5803,27 @@ msgstr "Aantal segmenten"
 
 #: bluebottle/segments/models.py:24
 msgid "Inherit"
-msgstr ""
+msgstr "Overerven"
 
 #: bluebottle/segments/models.py:26
 msgid "Newly created activities will inherit the segments set on the activity owner."
-msgstr ""
+msgstr "Nieuw gecreëerde activiteiten erven de segmenten van de eigenaar van de activiteit."
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
-msgstr ""
+msgstr "Verplicht voor gebruikers"
 
 #: bluebottle/segments/models.py:34
 msgid "Enable to require members to enter their segment type after logging in"
-msgstr ""
+msgstr "Schakel in om leden hun segment type in te voeren na het inloggen"
 
 #: bluebottle/segments/models.py:40
 msgid "Needs verification"
-msgstr ""
+msgstr "Verificatie vereist"
 
 #: bluebottle/segments/models.py:42
 msgid "Enable to require members to verify their segment type data that was provided by SSO"
-msgstr ""
+msgstr "Inschakelen om leden te verplichten hun segment type gegevens te verifiëren die door SSO zijn verstrekt"
 
 #: bluebottle/segments/models.py:52
 msgid "Editable in user profile"
@@ -5823,71 +5831,71 @@ msgstr "Bewerkbaar in gebruikersprofiel"
 
 #: bluebottle/segments/models.py:56
 msgid "Enable search filters"
-msgstr ""
+msgstr "Zoekfilters activeren"
 
 #: bluebottle/segments/models.py:99
 msgid "Email domains"
-msgstr ""
+msgstr "E-maildomeinen"
 
 #: bluebottle/segments/models.py:102
 msgid "Users with email addresses for this domain are automatically added to this segment."
-msgstr ""
+msgstr "Gebruikers met e-mailadressen voor dit domein worden automatisch aan dit segment toegevoegd."
 
 #: bluebottle/segments/models.py:106
 msgid "Slogan"
-msgstr ""
+msgstr "Slogan"
 
 #: bluebottle/segments/models.py:108
 msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Een korte zin om je segment uit te leggen. Deze zin is direct zichtbaar op de pagina."
 
 #: bluebottle/segments/models.py:113
 msgid "Story"
-msgstr ""
+msgstr "Verhaal"
 
 #: bluebottle/segments/models.py:115
 msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Een meer gedetailleerd verhaal voor jouw segment. Dit verhaal kan worden geopend via een link op de pagina."
 
 #: bluebottle/segments/models.py:122
 msgid "The uploaded image will be scaled so that it is fully visible."
-msgstr ""
+msgstr "De geüploade afbeelding zal worden geschaald zodat deze volledig zichtbaar is."
 
 #: bluebottle/segments/models.py:133
 msgid "Background color"
-msgstr ""
+msgstr "Achtergrondkleur"
 
 #: bluebottle/segments/models.py:135
 msgid "Add a background colour to your segment page."
-msgstr ""
+msgstr "Voeg een achtergrondkleur toe aan je segment pagina."
 
 #: bluebottle/segments/models.py:140
 msgid "cover image"
-msgstr ""
+msgstr "omslagfoto"
 
 #: bluebottle/segments/models.py:142
 msgid "The uploaded image will be cropped to fit a 4:3 rectangle."
-msgstr ""
+msgstr "De geüploade afbeelding wordt bijgesneden om in een 4:3 rechthoek te passen."
 
 #: bluebottle/segments/models.py:153
 msgid "Restricted"
-msgstr ""
+msgstr "Beperkt"
 
 #: bluebottle/segments/models.py:156
 msgid "Closed segments will only be accessible to members that belong to this segment."
-msgstr ""
+msgstr "Gesloten segmenten zijn alleen toegankelijk voor leden die tot dit segment behoren."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"
-msgstr ""
+msgstr "geen segmenttypes zijn gemarkeerd als vereist"
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:16
 msgid "Mark segment types as required in "
-msgstr ""
+msgstr "Segmenttypes markeren als vereist in "
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:18
 msgid "segment type overview"
-msgstr ""
+msgstr "segment type overzicht"
 
 #: bluebottle/settings/admin_dashboard.py:56
 msgid "Time Based"
@@ -5899,7 +5907,7 @@ msgstr "Inzameling"
 
 #: bluebottle/settings/admin_dashboard.py:165
 msgid "All segment types"
-msgstr ""
+msgstr "Alle segmenttypes"
 
 #: bluebottle/settings/admin_dashboard.py:172
 msgid "Offices"
@@ -6581,7 +6589,7 @@ msgstr "Beëindig een activiteit als de eindtijd voorbij is."
 
 #: bluebottle/time_based/periodic_tasks.py:153
 msgid "Send a reminder five days before the activity slot."
-msgstr ""
+msgstr "Stuur een herinnering vijf dagen voordat het evenement begint."
 
 #: bluebottle/time_based/states.py:17 bluebottle/time_based/states.py:157
 msgid "full"
@@ -7250,7 +7258,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"De activiteit vindt plaats over een paar dagen!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_slot.html:19
 msgctxt "email"

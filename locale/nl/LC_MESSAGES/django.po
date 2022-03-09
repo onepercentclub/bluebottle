@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-05 14:14+0100\n"
-"PO-Revision-Date: 2021-11-29 16:26\n"
+"PO-Revision-Date: 2022-03-09 09:52\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -2097,7 +2097,7 @@ msgstr "Je neemt deel aan de activiteit \"{title}\""
 
 #: bluebottle/deeds/models.py:18
 msgid "The number of users you want to participate."
-msgstr ""
+msgstr "Het aantal gebruikers dat jij wilt dat deelneemt."
 
 #: bluebottle/deeds/models.py:28 bluebottle/initiatives/models.py:251
 msgid "Deed"
@@ -4234,7 +4234,7 @@ msgstr "Eenheid"
 
 #: bluebottle/impact/effects.py:8 bluebottle/impact/effects.py:26
 msgid "Update impact goals"
-msgstr ""
+msgstr "Update impact doelen"
 
 #: bluebottle/impact/models.py:14
 msgid "People"
@@ -4347,7 +4347,7 @@ msgstr "Zet een doel voor de impact die je verwacht te maken"
 
 #: bluebottle/impact/models.py:121
 msgid "realized from contributions"
-msgstr ""
+msgstr "gerealiseerd door bijdragen"
 
 #: bluebottle/impact/models.py:127
 msgid "realized"
@@ -4830,7 +4830,7 @@ msgstr "Is actief"
 
 #: bluebottle/members/admin.py:233
 msgid "Deleted"
-msgstr ""
+msgstr "Verwijderd"
 
 #: bluebottle/members/admin.py:290
 msgid "Profile"

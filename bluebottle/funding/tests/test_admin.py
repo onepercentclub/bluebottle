@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 
+from django.template import defaultfilters
 from django.urls import reverse
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -152,6 +153,18 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(first.title in response.content.decode('utf-8'))
         self.assertTrue(second.title in response.content.decode('utf-8'))
         self.assertFalse(third.title in response.content.decode('utf-8'))
+
+    def test_contribution_date(self):
+        donation = DonorFactory.create(
+            activity=self.funding,
+            amount=Money(100, 'EUR')
+        )
+        donation.states.succeed(save=True)
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.admin_url)
+        curr_time = now()
+        reported_time = f'{defaultfilters.date(curr_time)}, {defaultfilters.time(curr_time)}'
+        self.assertTrue(reported_time in response.content.decode('utf-8'))
 
 
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):

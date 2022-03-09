@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+from datetime import timedelta
+
+from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
     DateParticipant, SlotParticipant,
     PeriodParticipant, DateActivitySlot
@@ -129,6 +133,58 @@ class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
         ]
 
 
+class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    Reminder notification for a date activity slot
+    """
+    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
+    template = 'messages/reminder_slot'
+    send_once = True
+
+    context = {
+        'title': 'activity.title',
+    }
+
+    def get_slots(self, recipient):
+        days_ago = now() - timedelta(days=5)
+        return self.obj.activity.slots.filter(
+            start__date=self.obj.start.date(),
+            slot_participants__participant__user=recipient,
+            slot_participants__status__in=['registered'],
+            slot_participants__participant__created__lt=days_ago,
+            status__in=['open', 'full']
+        ).all()
+
+    def already_send(self, recipient):
+        slot_ids = self.get_slots(recipient).values_list('id', flat=True)
+        if slot_ids.count() == 0:
+            return True
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            content_type=get_content_type_for_model(self.obj),
+            object_id__in=slot_ids
+        ).count() > 0
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        slots = self.get_slots(recipient).all()
+        context['slots'] = [get_slot_info(slot) for slot in slots]
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]
+
+
 class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
@@ -212,7 +268,7 @@ class ParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -523,3 +579,26 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     def get_recipients(self):
         """activity owner"""
         return [self.obj.activity.owner]
+
+
+class SlotCancelledNotification(TransitionMessage):
+    """
+    The activity slot got cancelled
+    """
+    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
+    template = 'messages/slot_cancelled'
+
+    context = {
+        'title': 'activity.title',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slots'] = [get_slot_info(self.obj)]
+        return context
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.accepted_participants
+        ]

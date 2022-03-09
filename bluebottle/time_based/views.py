@@ -10,9 +10,12 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributorPermission, ContributionPermission, DeleteActivityPermission
+    ContributorPermission, ContributionPermission, DeleteActivityPermission,
+    ActivitySegmentPermission
 )
 from bluebottle.clients import properties
+from bluebottle.segments.models import SegmentType
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
@@ -69,11 +72,12 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission
+        DeleteActivityPermission,
+        ActivitySegmentPermission,
     )
 
 
@@ -450,27 +454,39 @@ class DateParticipantExportView(PrivateFileView):
 
     model = DateActivity
 
+    def get_segment_types(self):
+        return SegmentType.objects.all()
+
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
         slots = activity.active_slots.order_by('start')
         filename = 'participants for {}.xlsx'.format(activity.title)
-        row = [field[1] for field in self.fields]
+        title_row = [field[1] for field in self.fields]
+        for segment_type in self.get_segment_types():
+            title_row.append(segment_type.name)
         for slot in slots:
-            row.append(
+            title_row.append(
                 "{}\n{}".format(slot.title or str(slot), slot.start.strftime('%d-%m-%y %H:%M %Z'))
             )
-        rows = [row]
-        for participant in activity.contributors.instance_of(DateParticipant):
+        sheet = [title_row]
+        for participant in activity.contributors.instance_of(DateParticipant).prefetch_related('user__segments'):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
+            for segment_type in self.get_segment_types():
+                segments = ", ".join(
+                    participant.user.segments.filter(
+                        segment_type=segment_type
+                    ).values_list('name', flat=True)
+                )
+                row.append(segments)
             for slot in slots:
                 slot_participant = slot.slot_participants.filter(participant=participant).first()
                 if slot_participant:
                     row.append(slot_participant.status)
                 else:
                     row.append('-')
-            rows.append(row)
+            sheet.append(row)
 
-        return generate_xlsx_response(filename=filename, data=rows)
+        return generate_xlsx_response(filename=filename, data=sheet)
 
 
 class PeriodParticipantExportView(PrivateFileView):
@@ -484,18 +500,33 @@ class PeriodParticipantExportView(PrivateFileView):
 
     model = PeriodActivity
 
+    def get_segment_types(self):
+        return SegmentType.objects.all()
+
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
         filename = 'participants for {}.xlsx'.format(activity.title)
 
-        rows = []
-        rows.append([field[1] for field in self.fields])
+        sheet = []
+        title_row = [field[1] for field in self.fields]
+        for segment_type in self.get_segment_types():
+            title_row.append(segment_type.name)
+        sheet.append(title_row)
 
-        for t, participant in enumerate(activity.contributors.instance_of(PeriodParticipant)):
+        for t, participant in enumerate(
+            activity.contributors.instance_of(PeriodParticipant).prefetch_related('user__segments')
+        ):
             row = [prep_field(request, participant, field[0]) for field in self.fields]
-            rows.append(row)
+            for segment_type in self.get_segment_types():
+                segments = ", ".join(
+                    participant.user.segments.filter(
+                        segment_type=segment_type
+                    ).values_list('name', flat=True)
+                )
+                row.append(segments)
+            sheet.append(row)
 
-        return generate_xlsx_response(filename=filename, data=rows)
+        return generate_xlsx_response(filename=filename, data=sheet)
 
 
 class SkillPagination(JsonApiPagination):

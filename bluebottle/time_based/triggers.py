@@ -40,7 +40,7 @@ from bluebottle.time_based.messages import (
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
-    ParticipantAppliedNotification
+    ParticipantAppliedNotification, SlotCancelledNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -58,6 +58,13 @@ def is_full(effect):
     """
     the activity is full
     """
+    if (
+        isinstance(effect.instance, DateActivity) and
+        effect.instance.slots.count() > 1 and
+        effect.instance.slot_selection == 'free'
+    ):
+        return False
+
     return (
         effect.instance.capacity and
         effect.instance.capacity <= len(effect.instance.accepted_participants)
@@ -395,6 +402,7 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.cancel,
             effects=[
+                NotificationEffect(SlotCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
@@ -871,6 +879,14 @@ def activity_will_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+
+    if (
+        isinstance(activity, DateActivity) and
+        activity.slots.count() > 1 and
+        activity.slot_selection == 'free'
+    ):
+        return False
+
     return (
         activity.capacity and
         activity.capacity == len(activity.accepted_participants) + 1

@@ -1,23 +1,26 @@
-from builtins import range
+import json
 import time
-from datetime import datetime, timedelta
+from builtins import range
 from calendar import timegm
-from bluebottle.clients import properties
+from datetime import datetime, timedelta
 
 import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
+from django.urls import reverse
 from rest_framework import status
-
 from rest_framework_jwt.settings import api_settings
 
+from bluebottle.auth.middleware import authorization_logger
+from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -33,6 +36,18 @@ class LoginTestCase(BluebottleTestCase):
     def test_login(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+        )
+
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_login_different_case(self):
+        response = self.client.post(
+            reverse('token-auth'),
+            {'email': self.email.replace('test', 'Test'), 'password': self.password}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         current_user_response = self.client.get(
@@ -87,6 +102,35 @@ class LoginTestCase(BluebottleTestCase):
 
             self.assertEqual(current_user_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_token_renewal(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(token)
+        )
+
+        self.assertFalse('Refresh-Token' in current_user_response)
+
+        with mock.patch('bluebottle.auth.middleware.datetime') as mock_datetime:
+            mock_datetime.utcnow = mock.Mock(
+                return_value=datetime.utcnow() + timedelta(minutes=31)
+            )
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token='JWT {}'.format(token)
+            )
+            self.assertTrue('Refresh-Token' in current_user_response)
+
+            current_user_response = self.client.get(
+                reverse('user-current'), token=current_user_response['Refresh-Token']
+            )
+            self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
     def test_login_failed(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
@@ -95,17 +139,20 @@ class LoginTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_login_failed_multiple(self):
-        for i in range(0, 11):
+
+        with mock.patch.object(authorization_logger, 'error') as logger:
+            for i in range(0, 14):
+                response = self.client.post(
+                    reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+                )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
             response = self.client.post(
-                reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
             )
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-        response = self.client.post(
-            reverse('token-auth'), {'email': self.email, 'password': self.password}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertTrue(logger.call_count < 11)
 
     def test_login_failed_captcha(self):
         for i in range(0, 11):
@@ -116,8 +163,10 @@ class LoginTestCase(BluebottleTestCase):
         mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'testserver'})
 
         with mock.patch.object(client, 'submit', return_value=mock_response):
-            captcha_response = self.client.post(
-                reverse('captcha-verification'), {'token': 'test-token'}
+            json_api_client = JSONAPITestClient()
+            captcha_response = json_api_client.post(
+                reverse('captcha-verification'),
+                {'data': {'type': 'captcha-tokens', 'attributes': {'token': 'test-token'}}},
             )
 
         self.assertEqual(captcha_response.status_code, status.HTTP_201_CREATED)
@@ -147,12 +196,17 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         super(SignUpTokenTestCase, self).setUp()
 
+        self.client = JSONAPITestClient()
+
     def test_create(self):
         email = 'test@example.com'
         connection.tenant.name = 'Test'
         connection.tenant.save()
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -166,7 +220,10 @@ class SignUpTokenTestCase(BluebottleTestCase):
         connection.tenant.name = 'Test'
         connection.tenant.save()
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email, 'url': '/example'})
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email, 'url': '/example'}, 'type': 'signup-tokens'}}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -179,8 +236,15 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def test_create_twice(self):
         email = 'test@example.com'
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -192,10 +256,28 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         Member.objects.create(email=email, is_active=True)
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
+        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_create_already_active_different_case(self):
+        email = 'test@example.com'
+
+        Member.objects.create(email=email, is_active=True)
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email.title()}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_correct_domain(self):
@@ -203,7 +285,10 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.settings.email_domain = 'example.com'
         self.settings.save()
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -215,11 +300,14 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.settings.email_domain = 'example.com'
         self.settings.save()
 
-        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(mail.outbox), 0)
         self.assertTrue(
-            'Only emails' in response.json()['email'][0]
+            'Only emails' in response.json()['errors'][0]['detail']
         )
 
 
@@ -291,6 +379,42 @@ class CreateUserTestCase(BluebottleTestCase):
             user_id
         )
 
+    def test_create_twice_different_case(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'email_confirmation': email}
+        )
+        user_id = str(response.json()['id'])
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {
+                'email': email.replace('test', 'Test'),
+                'password': password,
+                'email_confirmation': email.replace('test', 'Test')
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['email'],
+            email
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['type'],
+            'email'
+        )
+
+        self.assertEqual(
+            response.json()['non_field_errors'][0]['id'],
+            user_id
+        )
+
     def test_failed_multiple(self):
         email = 'test@example.com'
         password = 'secret1234'
@@ -326,84 +450,76 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
         super(ConfirmSignUpTestCase, self).setUp()
+        self.email = 'test@example.com'
+        self.password = 'some-password'
+        self.member = Member.objects.create(email=self.email, is_active=False)
+        self.token = TimestampSigner().sign(self.member.pk)
+
+        mail.outbox = []
+        self.client = JSONAPITestClient()
+        self.data = {
+            'data': {
+                'attributes': {
+                    'password': self.password,
+                    'first_name': 'Tester',
+                    'last_name': 'de Test',
+                    'token': self.token,
+                },
+                'type': 'signup-token-confirmations'
+            },
+        }
+        self.url = reverse('user-signup-token-confirm')
 
     def test_confirm(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
+        response = self.client.post(self.url, self.data)
 
-        member = Member.objects.create(email=email, is_active=False)
-        mail.outbox = []
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.put(
-            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
-            {
-                'password': password,
-                'first_name': 'Tester',
-                'last_name': 'de Test'
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.member.refresh_from_db()
 
-        member.refresh_from_db()
-
-        self.assertEqual(member.is_active, True)
-        self.assertTrue(member.check_password(password))
-        self.assertEqual(member.first_name, 'Tester')
-        self.assertEqual(member.last_name, 'de Test')
+        self.assertEqual(self.member.is_active, True)
+        self.assertTrue(self.member.check_password(self.password))
+        self.assertEqual(self.member.first_name, 'Tester')
+        self.assertEqual(self.member.last_name, 'de Test')
 
         profile_response = self.client.get(
             reverse('user-current'),
-            token='JWT {}'.format(response.json()['jwt_token'])
+            HTTP_AUTHORIZATION='JWT {}'.format(response.json()['data']['attributes']['jwt-token'])
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Welcome to Test!')
 
     def test_confirm_twice(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        member = Member.objects.create(email=email, is_active=False)
-
-        response = self.client.put(
-            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
-            {
-                'password': password,
-                'first_name': 'Tester',
-                'last_name': 'de Test'
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        response = self.client.put(
-            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
-            {
-                'password': password,
-                'first_name': 'Tester',
-                'last_name': 'de Test'
-            }
-        )
+        response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'The link to activate your account has already been used.')
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            'The link to activate your account has already been used.'
+        )
 
     def test_confirm_expired_token(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
+        email = 'henkie@example.com'
+        password = 'henkie@example.com'
 
         member = Member.objects.create(email=email, is_active=False)
 
         current_time = time.time()
 
-        with mock.patch('time.time', return_value=current_time - (3 * 60 * 60)):
-            token = TimestampSigner().sign(member.pk)
+        with mock.patch('time.time', return_value=current_time - (25 * 60 * 60)):
+            self.data['data']['attributes']['token'] = TimestampSigner().sign(member.pk)
 
-        response = self.client.put(
-            reverse('user-signup-token-confirm', args=(token, )),
-            {'password': password}
-        )
+        response = self.client.post(self.url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'The link to activate your account has expired. Please sign up again.')
+
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            'The link to activate your account has expired. Please sign up again.'
+        )
 
         member.refresh_from_db()
 
@@ -411,25 +527,19 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         self.assertFalse(member.check_password(password))
 
     def test_confirm_wrong_token(self):
-        email = 'test@example.com'
-        password = 'test@example.com'
+        self.data['data']['attributes']['token'] = self.token + 'bla'
 
-        member = Member.objects.create(email=email, is_active=False)
-
-        response = self.client.put(
-            reverse(
-                'user-signup-token-confirm',
-                args=('{}:wrong-signature'.format(member.pk), )
-            ),
-            {'password': password}
-        )
+        response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'Something went wrong on our side. Please sign up again.')
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            'Something went wrong on our side. Please sign up again.'
+        )
 
-        member.refresh_from_db()
+        self.member.refresh_from_db()
 
-        self.assertEqual(member.is_active, False)
-        self.assertFalse(member.check_password(password))
+        self.assertEqual(self.member.is_active, False)
+        self.assertFalse(self.member.check_password(self.password))
 
 
 class UserDataExportTest(BluebottleTestCase):
@@ -513,6 +623,30 @@ class EmailSetTest(BluebottleTestCase):
             self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
         )
         self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
+
+    def test_update_duplicate(self):
+        existing_user = BlueBottleUserFactory.create()
+
+        response = self.client.put(
+            self.set_email_url,
+            {'password': 'some-password', 'email': existing_user.email},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+
+    def test_update_duplicate_upper_case(self):
+        existing_user = BlueBottleUserFactory.create()
+
+        response = self.client.put(
+            self.set_email_url,
+            {'password': 'some-password', 'email': existing_user.email},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
 
     def test_update_email_unauthenticated(self):
         response = self.client.put(
@@ -609,7 +743,7 @@ class PasswordSetTest(BluebottleTestCase):
     def test_update_password_wrong_password(self):
         response = self.client.put(
             self.set_password_url,
-            {'password': 'other-password', 'new_password': 'new@example.com'},
+            {'password': 'other-password', 'new_password': 'new-password'},
             token=self.user_token
         )
 
@@ -719,6 +853,66 @@ class UserActivityTest(BluebottleTestCase):
         self.assertTrue(activity.path.startswith('/aaaaaaa'))
 
 
+class PasswordStrengthDetailTest(BluebottleTestCase):
+    def setUp(self):
+        super(PasswordStrengthDetailTest, self).setUp()
+
+        self.url = reverse('password-strength')
+        self.client = JSONAPITestClient()
+        self.data = {
+            'data': {
+                'type': 'password-strengths',
+                'attributes': {
+                    'email': 'admin@example.com',
+                    'password': 'blabla',
+                }
+            }
+        }
+
+    def test_too_short(self):
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too short. It must contain at least 8 characters.'
+        )
+
+    def test_common(self):
+        self.data['data']['attributes']['password'] = 'password'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'This password is too common.'
+        )
+
+    def test_email(self):
+        self.data['data']['attributes']['password'] = 'adminexample'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 400)
+        errors = response.json()['errors']
+        self.assertEqual(
+            errors[0]['detail'],
+            'The password is too similar to the email address.'
+        )
+
+    def test_valid_fair(self):
+        self.data['data']['attributes']['password'] = 'somepassword'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] < 0.25)
+
+    def test_valid_string(self):
+        self.data['data']['attributes']['password'] = '243AfecioIEOIj^%efw'
+        response = self.client.post(self.url, data=json.dumps(self.data))
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']['attributes']
+        self.assertTrue(data['strength'] > 0.5)
+
+
 class RefreshTokenTest(BluebottleTestCase):
     def setUp(self):
         super().setUp()
@@ -746,3 +940,79 @@ class RefreshTokenTest(BluebottleTestCase):
         response = self.client.get(reverse('user-current'), token=new_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['id'], self.user.pk)
+
+
+class UserAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.current_user_url = reverse('user-current')
+        self.segment_type = SegmentTypeFactory.create(required=False)
+        self.segments = SegmentFactory.create_batch(3, segment_type=self.segment_type)
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.current_user_url = reverse('user-current')
+        self.logout_url = reverse('user-logout')
+
+    def test_get_current_user_no_required_segments(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_required_location(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+    def test_get_current_user_required_location_set(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        self.user.location = LocationFactory.create()
+        self.user.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_required_segments_defined(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': True})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_unverified_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.needs_verification = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': False})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_unverified_required_location(self):
+        MemberPlatformSettings.objects.update_or_create(
+            require_office=True,
+            verify_office=True,
+        )
+        self.user.location = LocationFactory.create()
+        self.user.location_verified = False
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+        self.user.location_verified = True
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])

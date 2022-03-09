@@ -18,7 +18,7 @@ from solo.admin import SingletonModelAdmin
 
 from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
-from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
+from bluebottle.members.models import Member
 from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
 from ..segments.models import SegmentType
@@ -103,8 +103,6 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
         if header:
             row = labels if labels else field_names
             if queryset.model is Member or issubclass(queryset.model, Contributor):
-                for field in CustomMemberFieldSettings.objects.all():
-                    labels.append(field.name)
                 for segment_type in SegmentType.objects.all():
                     labels.append(segment_type.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
@@ -119,22 +117,10 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
             # Write extra field data
             if queryset.model is Member:
-                for field in CustomMemberFieldSettings.objects.all():
-                    try:
-                        value = obj.extra.get(field=field).value
-                    except CustomMemberField.DoesNotExist:
-                        value = ''
-                    row.append(value)
                 for segment_type in SegmentType.objects.all():
-                    segments = ", ".join(obj.segments.filter(type=segment_type).values_list('name', flat=True))
+                    segments = ", ".join(obj.segments.filter(
+                        segment_type=segment_type).values_list('name', flat=True))
                     row.append(segments)
-            if isinstance(obj, Contributor):
-                for field in CustomMemberFieldSettings.objects.all():
-                    try:
-                        value = obj.user.extra.get(field=field).value
-                    except CustomMemberField.DoesNotExist:
-                        value = ''
-                    row.append(value)
             escaped_row = [escape_csv_formulas(item) for item in row]
             writer.writerow(escaped_row)
         return response

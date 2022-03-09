@@ -1,36 +1,32 @@
 # coding=utf-8
-from builtins import object
 import os
+from builtins import object
 from datetime import timedelta
 
-from bluebottle.collect.tests.factories import CollectContributorFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-
-from bluebottle.funding_pledge.models import PledgePaymentProvider
-from djmoney.money import Money
-
-from bluebottle.funding.tests.factories import DonorFactory
-from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
-
-from bluebottle.time_based.tests.factories import (
-    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
-)
-
+from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
-from django.conf import settings
-from django.utils import timezone
-
 from django.urls import reverse
+from django.utils import timezone
+from djmoney.money import Money
 
-from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
-from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
+from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.funding.tests.factories import DonorFactory
+from bluebottle.funding_pledge.models import PledgePaymentProvider
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.admin import MemberAdmin, MemberCreationForm
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.notifications.models import MessageTemplate
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.time_based.tests.factories import (
+    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+)
 from bluebottle.utils.models import Language
 
 factory = RequestFactory()
@@ -160,40 +156,6 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEqual(response.status_code, 403)
-
-
-class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
-    """
-    Test extra fields in Member Admin
-    """
-
-    def setUp(self):
-        super(MemberCustomFieldAdminTest, self).setUp()
-        self.client.force_login(self.superuser)
-
-    def test_load_custom_fields(self):
-        member = BlueBottleUserFactory.create()
-        field = CustomMemberFieldSettings.objects.create(name='Department')
-        member.extra.create(value='Engineering', field=field)
-        member.save()
-
-        member_url = reverse('admin:members_member_change', args=(member.id, ))
-        response = self.client.get(member_url)
-        self.assertEqual(response.status_code, 200)
-        # Test the extra field and it's value show up
-        self.assertContains(response, 'Department')
-        self.assertContains(response, 'Engineering')
-
-    def test_save_custom_fields(self):
-        member = BlueBottleUserFactory.create(password='testing')
-        staff = BlueBottleUserFactory.create(is_staff=True)
-        CustomMemberFieldSettings.objects.create(name='Department')
-        data = member.__dict__
-        data['department'] = 'Engineering'
-        form = MemberChangeForm(current_user=staff, instance=member, data=data)
-        form.save()
-        member.refresh_from_db()
-        self.assertEqual(member.extra.get().value, 'Engineering')
 
 
 class MemberFormAdminTest(BluebottleAdminTestCase):
@@ -332,6 +294,24 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         self.assertTrue('is_superuser' not in fields)
 
 
+class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def test_require_location(self):
+        LocationFactory.create_batch(3)
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['require_office'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.require_office)
+
+
 class MemberAdminExportTest(BluebottleTestCase):
     """
     Test csv export
@@ -347,10 +327,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.export_action = self.member_admin.get_actions(self.request)['export_as_csv'][0]
 
     def test_member_export(self):
-        member = BlueBottleUserFactory.create(username='malle-eppie')
-        CustomMemberFieldSettings.objects.create(name='Extra Info')
-        field = CustomMemberFieldSettings.objects.create(name='How are you')
-        CustomMemberField.objects.create(member=member, value='Fine', field=field)
+        member = BlueBottleUserFactory.create()
 
         ParticipationFactory.create(
             value=timedelta(hours=5),
@@ -376,25 +353,26 @@ class MemberAdminExportTest(BluebottleTestCase):
         headers = data[0].split(",")
         user_data = []
         for row in data:
-            if row.startswith('malle-eppie'):
+            if row.startswith(member.email):
                 user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
-        self.assertEqual(user_data[0], 'malle-eppie')
+            'amount donated', 'time spent', 'subscribed to matching projects'])
+        self.assertEqual(user_data[0], member.email)
+        self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], 'True')
-        self.assertEqual(user_data[10], u'35.00 €')
-        self.assertEqual(user_data[11], '47.0')
-        self.assertEqual(user_data[14], 'Fine')
+
+        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[10], '47.0')
 
     def test_member_unicode_export(self):
-        member = BlueBottleUserFactory.create(username='stimpy')
-        friend = CustomMemberFieldSettings.objects.create(name='Best friend')
-        CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
+        member = BlueBottleUserFactory.create(
+            first_name='Ren',
+            last_name='Höek'
+        )
 
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
@@ -403,17 +381,16 @@ class MemberAdminExportTest(BluebottleTestCase):
         data = data[1].split(",")
 
         # Test basic info and extra field are in the csv export
-        self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[13], 'Best friend')
-        self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[13], u'Ren Höek')
+        self.assertEqual(headers[0], 'email')
+        self.assertEqual(data[0], member.email)
+        self.assertEqual(data[4], u'Höek')
 
     def test_member_segments_export(self):
-        member = BlueBottleUserFactory.create(username='malle-eppie')
+        member = BlueBottleUserFactory.create(email='malle@eppie.nl')
         food = SegmentTypeFactory.create(name='Food')
-        bb = SegmentFactory.create(type=food, name='Bitterballen')
+        bb = SegmentFactory.create(segment_type=food, name='Bitterballen')
         drinks = SegmentTypeFactory.create(name='Drinks')
-        br = SegmentFactory.create(type=drinks, name='Bier')
+        br = SegmentFactory.create(segment_type=drinks, name='Bier')
         member.segments.add(bb)
         member.segments.add(br)
         member.save()
@@ -423,16 +400,16 @@ class MemberAdminExportTest(BluebottleTestCase):
         headers = data[0].split(",")
         user_data = []
         for row in data:
-            if row.startswith('malle-eppie'):
+            if row.startswith('malle@eppie.nl'):
                 user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
-            'username', 'email', 'phone number', 'remote id', 'first name', 'last name',
+            'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
             'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[13], 'Bier')
-        self.assertEqual(user_data[14], 'Bitterballen')
+        self.assertEqual(user_data[12], 'Bier')
+        self.assertEqual(user_data[13], 'Bitterballen')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

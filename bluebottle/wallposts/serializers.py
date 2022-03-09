@@ -105,6 +105,9 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         response = super(WallpostSerializerBase, self).to_representation(instance)
         if instance.donation:
             response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
+            if response['donation']['anonymous']:
+                del response['author']
+
         return response
 
     class Meta(object):

@@ -9,10 +9,12 @@ from builtins import str
 
 from django.conf import settings
 from django.contrib.auth.models import (
-    AbstractBaseUser, PermissionsMixin, BaseUserManager
+    AbstractBaseUser, PermissionsMixin, UserManager
 )
 from django.core.mail.message import EmailMessage
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import gettext_lazy as _
@@ -26,6 +28,8 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from .utils import send_welcome_mail
+from ..segments.models import Segment
 
 
 def generate_picture_filename(instance, filename):
@@ -54,33 +58,30 @@ def generate_picture_filename(instance, filename):
     return os.path.normpath(os.path.join(upload_directory, normalized_filename))
 
 
-# Our custom user model is based on option 3 from Two Scoops of Django
-# - Chapter 16: Dealing With the User Model.
-class BlueBottleUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+class BlueBottleUserManager(UserManager):
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-        if not email:
-            raise ValueError('The given email address must be set')
-        email = BlueBottleUserManager.normalize_email(email)
-        user = self.model(email=email, is_staff=False, is_active=True,
-                          is_superuser=False,
-                          last_login=now, date_joined=now, **extra_fields)
-        user.set_password(password)
-        user.generate_username()
-        user.reset_disable_token()
-        user.save(using=self._db)
-        return user
+        extra_fields['last_login'] = now
+        extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        return super().create_user(username, email, password, **extra_fields)
 
-    def create_superuser(self, email, password, **extra_fields):
-        u = self.create_user(email, password, **extra_fields)
-        u.is_staff = True
-        u.is_active = True
-        u.is_superuser = True
-        u.save(using=self._db)
-        return u
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
+        now = timezone.now()
+        extra_fields['last_login'] = now
+        extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        if not username:
+            username = email
+        return super().create_superuser(username, email, password, **extra_fields)
+
+    def get_by_natural_key(self, username):
+        return self.get(**{
+            '{}__iexact'.format(self.model.USERNAME_FIELD): username
+        })
 
 
 @python_2_unicode_compatible
@@ -132,6 +133,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         'geo.Location', blank=True,
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
+
+    location_verified = models.BooleanField(
+        default=False,
+        help_text=_('Office location is verified by the user')
+    )
+
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
@@ -377,24 +384,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             self.reset_disable_token()
         return self.disable_token
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.generate_username()
-
-        super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
-                                             update_fields)
-
-    def __getattr__(self, name):
-        # Magically get extra fields
-        if name.startswith('extra_'):
-            name = name.replace('extra_', '')
-            return self.extra.filter(field__name=name).first().value
-        return super(BlueBottleBaseUser, self).__getattribute__(name)
-
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils import send_welcome_mail
+        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
 
 
 @receiver(post_save)
@@ -409,3 +401,14 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
             not instance.welcome_email_is_sent:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
+
+
+@receiver(post_save)
+def connect_to_segments(sender, instance, created, **kwargs):
+    from django.contrib.auth import get_user_model
+
+    USER_MODEL = get_user_model()
+    if isinstance(instance, USER_MODEL) and created and '@' in instance.email:
+        user_email_domain = instance.email.split('@')[1]
+        for segment in Segment.objects.filter(email_domains__contains=[user_email_domain]).all():
+            instance.segments.add(segment)

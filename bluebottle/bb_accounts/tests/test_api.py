@@ -10,7 +10,6 @@ import mock
 
 import httmock
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
@@ -20,14 +19,17 @@ from django.utils.http import int_to_base36
 from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, UserSegment
+
+from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
 )
-from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase, APITestCase
+
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory, LocationFactory
+from bluebottle.test.utils import BluebottleTestCase, APITestCase, JSONAPITestClient
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -351,6 +353,84 @@ class UserApiIntegrationTest(BluebottleTestCase):
             self.user_1.place
         )
 
+    def test_user_set_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+
+    def test_user_verify_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        self.user_1.segments.add(segment, through_defaults={'verified': False})
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+        self.assertTrue(UserSegment.objects.get(member=self.user_1, segment=segment).verified)
+
+    def test_user_verify_location(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+        MemberPlatformSettings.objects.update_or_create(
+            verify_office=True,
+        )
+
+        self.user_1.location = LocationFactory.create()
+        self.user_1.location_verified = False
+        self.user_1.save()
+
+        new_location = LocationFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'location': new_location.pk
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['location'], new_location.pk
+        )
+
+        self.user_1.refresh_from_db()
+        self.assertEqual(self.user_1.location, new_location)
+        self.assertTrue(self.user_1.location_verified)
+
     def test_unauthenticated_user(self):
         """
         Test retrieving the currently logged in user while not logged in.
@@ -478,73 +558,60 @@ class UserApiIntegrationTest(BluebottleTestCase):
             str(response.data['non_field_errors'][0]['id']), str(user_1.pk)
         )
 
-    def test_generate_username(self):
-        new_user_email = 'nijntje74@hetkonijntje.nl'
-        first_name = 'Nijntje'
-        last_name = 'het Konijntje'
-        new_user_password = 'password'
-
-        # Test username generation with duplicates.
-        response = self.client.post(self.user_create_api_url,
-                                    {'first_name': first_name,
-                                     'last_name': last_name,
-                                     'email': new_user_email,
-                                     'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-                         response.data)
-
-        user = get_user_model().objects.get(email=new_user_email)
-
-        self.assertEqual(user.username, new_user_email)
-
     def test_password_reset(self):
         # Setup: create a user.
+        client = JSONAPITestClient()
+
         new_user_email = 'nijntje94@hetkonijntje.nl'
-        new_user_password = 'password'
+        new_user_password = 'some-password'
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})
 
         # Test: resetting the password should be allowed.
-        response = self.client.put(self.user_password_reset_api_url, {'email': new_user_email})
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        response = client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': new_user_email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(len(mail.outbox), 1)
 
         # Setup: get the password reset token and url.
-        c = re.compile(
+        token_regex = re.compile(
             '/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
             re.DOTALL)
-        m = c.search(mail.outbox[0].body)
-        password_set_url = reverse('password-set', kwargs={'uidb36': m.group(1), 'token': m.group(2)})
+        token_matches = token_regex.search(mail.outbox[0].body)
+        reset_confirm_url = reverse('password-reset-confirm')
 
-        # Test: check that non-matching passwords produce a validation error.
-        passwords = {'new_password1': 'test-password', 'new_password2': 'test-passwordd'}
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                         response.data)
+        attributes = {'password': 'test-password', 'token': f'{token_matches[1]}-{token_matches[2]}'}
 
-        self.assertEqual(response.data['non_field_errors'][0],
-                         "The two password fields didn't match.")
-
-        # Test: check that updating the password works when the passwords match.
-        passwords['new_password2'] = 'test-password'
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 
         # Test: check that trying to reuse the password reset link doesn't work.
-        response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
-                         response.data)
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_reset_validation(self):
+        client = JSONAPITestClient()
         token = default_token_generator.make_token(self.user_1)       # Setup: create a user.
         uidb36 = int_to_base36(self.user_1.pk)
-        password_set_url = reverse('password-set', kwargs={'uidb36': uidb36, 'token': token})
+        reset_confirm_url = reverse('password-reset-confirm')
 
         # Test: check that short passwords produce a validation error.
-        passwords = {'new_password1': 'short', 'new_password2': 'short'}
-        response = self.client.put(password_set_url, passwords)
+        attributes = {'password': 'short', 'token': f'{uidb36}-{token}'}
+
+        response = client.post(
+            reset_confirm_url,
+            {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(b'This password is too short' in response.content)
 

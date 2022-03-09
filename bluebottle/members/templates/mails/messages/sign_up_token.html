@@ -3,13 +3,18 @@
 
 {% block content %}
 {% blocktrans with context='email' %}
-Click the link below to create a password and activate your account. <br>
-
-The link will expire in 2 hours.
+<h1>Hi </h1>
+<p class="lead">Welcome to the {{ site_name }} community.<p> 
+<p>
+    Click the link below to create a password and activate your account.
+</p>
+<p>
+    The link will expire in 24 hours.
+</p>
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-<a href="{{site}}/signup/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}"
+<a href="{{site}}/signup/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}&segmentId={{custom_message.segment_id}}"
        class="action-email">{% trans 'Create your password' context 'email' %}</a>
 {% endblock %}`

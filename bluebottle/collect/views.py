@@ -6,13 +6,14 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
@@ -47,11 +48,11 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class CollectActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission
+        DeleteActivityPermission, ActivitySegmentPermission
     )
 
     queryset = CollectActivity.objects.all()
@@ -176,4 +177,4 @@ class CollectIcalView(IcalView):
 
     @property
     def details(self):
-        return super().details + _('\nCollecting {type}').format(type=self.get_object().type)
+        return super().details + _('\nCollecting {type}').format(type=self.get_object().collect_type)

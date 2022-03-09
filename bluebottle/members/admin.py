@@ -1,10 +1,8 @@
 import functools
 from builtins import object
 
-import six
 from adminfilters.multiselect import UnionFieldListFilter
-from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from bluebottle.collect.models import CollectContributor
+from adminsortable.admin import NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -15,7 +13,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import Q
 from django.forms import BaseInlineFormSet
-from django.forms.models import ModelFormMetaclass
+from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
@@ -32,6 +30,7 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Donor, PaymentProvider
 from bluebottle.funding_pledge.models import PledgePaymentProvider
@@ -43,21 +42,20 @@ from bluebottle.members.forms import (
     SendPasswordResetMailConfirmationForm
 )
 from bluebottle.members.models import (
-    CustomMemberFieldSettings,
-    CustomMemberField,
     MemberPlatformSettings,
     UserActivity,
 )
+from bluebottle.notifications.models import Message
+from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member
-from ..notifications.models import Message
+from .models import Member, UserSegment
 
 
-class MemberForm(forms.ModelForm):
+class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
     def __init__(self, data=None, files=None, current_user=None, *args, **kwargs):
         self.current_user = current_user
         super(MemberForm, self).__init__(data, files, *args, **kwargs)
@@ -112,39 +110,85 @@ class MemberCreationForm(MemberForm):
         return user
 
 
-class CustomMemberFieldSettingsInline(SortableTabularInline):
-    model = CustomMemberFieldSettings
-    readonly_fields = ('slug',)
-    extra = 0
-
-
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
-    fields = (
-        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
-        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
-        'background', 'require_consent', 'consent_link', 'anonymization_age'
+    fieldsets = (
+        (
+            _('Login'),
+            {
+                'fields': (
+                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'background',
+                )
+            }
+        ),
+
+        (
+            _('Profile'),
+            {
+                'fields': (
+                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Privacy'),
+            {
+                'fields': (
+                    'session_only', 'require_consent', 'consent_link', 'anonymization_age'
+                )
+            }
+        ),
     )
 
-    inlines = [
-        CustomMemberFieldSettingsInline
-    ]
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = self.fieldsets
+        required_fields = []
+        if Location.objects.count():
+            required_fields.append('require_office')
+            required_fields.append('verify_office')
+        if SegmentType.objects.count():
+            required_fields.append('segment_types')
+
+        if len(required_fields):
+            fieldsets += ((
+                _('Required fields'),
+                {
+                    'description': _('After logging in members are required to '
+                                     'fill out or confirm the  fields listed below.'),
+                    'fields': required_fields
+                }
+            ),)
+        return fieldsets
+
+    readonly_fields = ('segment_types',)
+
+    def segment_types(self, obj):
+        template = loader.get_template('segments/admin/required_segment_types.html')
+        context = {
+            'required': SegmentType.objects.filter(required=True).all(),
+            'link': reverse('admin:segments_segmenttype_changelist')
+        }
+        return template.render(context)
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
 
 
-class CustomAdminFormMetaClass(ModelFormMetaclass):
-    def __new__(cls, name, bases, attrs):
-        if connection.tenant.schema_name != 'public':
-            for field in CustomMemberFieldSettings.objects.all():
-                attrs[field.slug] = forms.CharField(required=False,
-                                                    label=field.name,
-                                                    help_text=field.description)
+class SegmentSelect(Select):
+    template_name = 'widgets/segment-select.html'
 
-        return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
+    def __init__(self, verified):
+        self.verified = verified
+        super().__init__()
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['verified'] = self.verified
+        return context
 
 
-class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm)):
+class MemberChangeForm(MemberForm):
     """
     Change Member form
     """
@@ -163,13 +207,18 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
             f.queryset = f.queryset.select_related('content_type')
 
         if connection.tenant.schema_name != 'public':
-            for field in CustomMemberFieldSettings.objects.all():
-                self.fields[field.slug] = forms.CharField(required=False,
-                                                          label=field.name,
-                                                          help_text=field.description)
-                if CustomMemberField.objects.filter(member=self.instance, field=field).exists():
-                    value = CustomMemberField.objects.filter(member=self.instance, field=field).get().value
-                    self.initial[field.slug] = value
+            for segment_type in SegmentType.objects.all():
+                user_segment = UserSegment.objects.filter(
+                    member=self.instance, segment__segment_type=segment_type
+                ).first()
+
+                self.fields[segment_type.field_name] = forms.ModelChoiceField(
+                    required=False,
+                    label=segment_type.name,
+                    queryset=segment_type.segments,
+                    widget=SegmentSelect(verified=user_segment.verified if user_segment else None)
+                )
+                self.initial[segment_type.field_name] = user_segment.segment if user_segment else None
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -179,13 +228,12 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
 
     def save(self, commit=True):
         member = super(MemberChangeForm, self).save(commit=commit)
-        for field in CustomMemberFieldSettings.objects.all():
-            extra, created = CustomMemberField.objects.get_or_create(
-                member=member,
-                field=field
-            )
-            extra.value = self.cleaned_data.get(field.slug, None)
-            extra.save()
+        segments = []
+        for segment_type in SegmentType.objects.all():
+            segment = self.cleaned_data.get(segment_type.field_name, None)
+            if segment:
+                segments.append(segment)
+        member.segments.set(segments)
         return member
 
 
@@ -274,7 +322,6 @@ class MemberAdmin(UserAdmin):
                             'remote_id',
                             'first_name',
                             'last_name',
-                            'username',
                             'phone_number',
                             'login_as_link',
                             'reset_password',
@@ -293,6 +340,7 @@ class MemberAdmin(UserAdmin):
                         'fields':
                         ['picture', 'about_me', 'matching_options_set',
                          'favourite_themes', 'skills', 'place']
+
                     }
                 ],
                 [
@@ -334,9 +382,6 @@ class MemberAdmin(UserAdmin):
             if Location.objects.count():
                 fieldsets[1][1]['fields'].append('location')
 
-            if SegmentType.objects.filter(is_active=True).count():
-                fieldsets[1][1]['fields'].append('segments')
-
             member_settings = MemberPlatformSettings.load()
 
             if member_settings.enable_gender:
@@ -347,20 +392,20 @@ class MemberAdmin(UserAdmin):
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
-            if CustomMemberFieldSettings.objects.count():
+            if obj and (obj.is_staff or obj.is_superuser):
+                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+
+            if SegmentType.objects.count():
                 extra = (
-                    _('Extra fields'), {
+                    _('Segments'), {
                         'fields': [
-                            field.slug
-                            for field in CustomMemberFieldSettings.objects.all()
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
                         ]
                     }
                 )
 
-                fieldsets.append(extra)
-
-            if obj and (obj.is_staff or obj.is_superuser):
-                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+                fieldsets.insert(2, extra)
 
         return fieldsets
 
@@ -389,7 +434,6 @@ class MemberAdmin(UserAdmin):
         return readonly_fields
 
     export_fields = (
-        ('username', 'username'),
         ('email', 'email'),
         ('phone_number', 'phone number'),
         ('remote_id', 'remote id'),

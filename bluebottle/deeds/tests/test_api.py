@@ -5,6 +5,7 @@ import io
 from rest_framework import status
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.utils import APITestCase
 from bluebottle.deeds.serializers import (
@@ -153,6 +154,60 @@ class DeedsDetailViewAPITestCase(APITestCase):
             contributors,
             self.accepted_participants + self.withdrawn_participants
         )
+
+    def test_get_with_segments(self):
+        segment = SegmentFactory.create(
+            name="SDG1"
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get(user=self.model.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+
+    def test_get_closed_segment(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_segment_logged_in(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+        self.model.segments.add(segment)
+        self.model.save()
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_get_closed_segment_logged_in_with_segment(self):
+        segment = SegmentFactory.create(
+            name="SDG1",
+            closed=True
+        )
+
+        SegmentFactory.create(
+            name="SDG2",
+            closed=True
+        )
+
+        self.model.segments.add(segment)
+        self.model.save()
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+        user.save()
+        self.perform_get(user=user)
+
+        self.assertStatus(status.HTTP_200_OK)
 
     def test_get_calendar_links(self):
         self.perform_get(user=self.model.owner)

@@ -1,44 +1,35 @@
 from builtins import object
 
-from django.db.models import Sum, Count, Q
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField
+    ResourceRelatedField, SerializerMethodResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
-from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
-from bluebottle.activities.models import EffortContribution, Activity, Contributor, Organizer
-from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivityListSerializer
+from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
-from bluebottle.clients import properties
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
-
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
-
-from bluebottle.collect.models import CollectContribution
-from bluebottle.funding.models import MoneyContribution
 from bluebottle.funding.states import FundingStateMachine
-
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
-
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
-
-from bluebottle.utils.exchange_rates import convert
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.fields import (
     SafeField,
     ValidationErrorsField,
@@ -164,6 +155,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         many=True,
         read_only=True
     )
+    segments = SerializerMethodResourceRelatedField(
+        ActivityListSerializer,
+        model=Segment,
+        many=True,
+        read_only=True
+    )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -178,10 +175,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     def get_activities(self, instance):
         user = self.context['request'].user
-        activities = [
-            activity for activity in instance.activities.all() if
-            activity.status != ActivityStateMachine.deleted.value
-        ]
+        activities = instance.activities.exclude(status='deleted').all()
 
         public_statuses = [
             ActivityStateMachine.succeeded.value,
@@ -191,106 +185,30 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ]
 
         if user != instance.owner and user not in instance.activity_managers.all():
-            return [
-                activity for activity in activities if (
-                    activity.status in public_statuses or
-                    user == activity.owner
+            if not user.is_authenticated:
+                return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
+            else:
+                return activities.filter(
+                    Q(status__in=public_statuses) |
+                    Q(owner=user) |
+                    Q(initiative__activity_managers=user)
+                ).filter(
+                    ~Q(segments__closed=True) |
+                    Q(segments__in=user.segments.filter(closed=True))
                 )
-            ]
-        else:
-            return activities
+
+        return activities
+
+    def get_segments(self, instance):
+        segments = []
+        for activity in self.get_activities(instance):
+            for segment in activity.segments.all():
+                if segment not in segments:
+                    segments.append(segment)
+        return segments
 
     def get_stats(self, obj):
-        default_currency = properties.DEFAULT_CURRENCY
-
-        effort = EffortContribution.objects.filter(
-            contribution_type='deed',
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).aggregate(
-            count=Count('id', distinct=True),
-            activities=Count('contributor__activity', distinct=True)
-        )
-
-        time = TimeContribution.objects.filter(
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).aggregate(
-            count=Count('id', distinct=True),
-            activities=Count('contributor__activity', distinct=True),
-            value=Sum('value')
-        )
-
-        money = MoneyContribution.objects.filter(
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).aggregate(
-            count=Count('id', distinct=True),
-            activities=Count('contributor__activity', distinct=True)
-        )
-
-        collect = CollectContribution.objects.filter(
-            status='succeeded',
-            contributor__user__isnull=False,
-            contributor__activity__initiative=obj
-        ).aggregate(
-            count=Count('id', distinct=True),
-            activities=Count('contributor__activity', distinct=True)
-        )
-
-        amounts = MoneyContribution.objects.filter(
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).values(
-            'value_currency'
-        ).annotate(
-            amount=Sum('value')
-        ).order_by()
-
-        contributor_count = Contributor.objects.filter(
-            user__isnull=False,
-            activity__initiative=obj,
-            contributions__status='succeeded',
-        ).exclude(
-            Q(instance_of=Organizer)
-        ).values('user_id').distinct().count()
-
-        anonymous_donations = MoneyContribution.objects.filter(
-            contributor__user__isnull=True,
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).count()
-
-        contributor_count += anonymous_donations
-
-        collected = CollectContribution.objects.filter(
-            status='succeeded',
-            contributor__activity__initiative=obj
-        ).values(
-            'type_id'
-        ).annotate(
-            amount=Sum('value')
-        ).order_by()
-
-        amount = {
-            'amount': sum(
-                convert(
-                    Money(c['amount'], c['value_currency']),
-                    default_currency
-                ).amount
-                for c in amounts if c['amount']
-            ),
-            'currency': default_currency
-        }
-
-        return {
-            'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
-            'effort': effort['count'],
-            'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
-            'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
-            'contributors': contributor_count,
-            'amount': amount
-        }
+        return get_stats_for_activities(obj.activities)
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -304,6 +222,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'activities.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
@@ -322,7 +242,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_managers',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
-            'theme', 'place', 'location', 'activities',
+            'theme', 'place', 'location', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
@@ -340,6 +260,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'activities.goals', 'activities.goals.type',
             'activities.slots', 'activities.slots.location',
             'activities.collect_type',
+            'segments', 'segments.segment_type'
         ]
         resource_name = 'initiatives'
 

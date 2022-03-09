@@ -12,18 +12,19 @@ from django_elasticsearch_dsl.test import ESTestCase
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
     DateActivitySlotFactory
@@ -41,7 +42,6 @@ class InitiativeAPITestCase(TestCase):
     """
 
     def setUp(self):
-        super(InitiativeAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
@@ -552,6 +552,45 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
+    def test_get_activities_closed_segments(self):
+        open_segment = SegmentFactory.create(closed=False)
+        closed_segment = SegmentFactory.create(closed=True)
+        user = BlueBottleUserFactory.create()
+        user.segments.add(closed_segment)
+        another_user = BlueBottleUserFactory.create()
+        another_user.segments.add(open_segment)
+
+        act1 = DateActivityFactory.create(
+            status='open',
+            initiative=self.initiative,
+        )
+        act1.segments.add(open_segment)
+
+        act2 = DateActivityFactory.create(
+            status='open',
+            initiative=self.initiative,
+        )
+        act2.segments.add(closed_segment)
+
+        act3 = DateActivityFactory.create(
+            status='open',
+            initiative=self.initiative,
+        )
+        act3.segments.add(closed_segment)
+        act3.segments.add(open_segment)
+        response = self.client.get(self.url, user=user)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 3)
+        response = self.client.get(self.url, user=another_user)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 1)
+        response = self.client.get(self.url)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 1)
+
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')
         response = self.client.get(
@@ -787,6 +826,33 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(approved.pk))
+
+    def test_filter_segment(self):
+        segment = SegmentFactory.create()
+
+        first = InitiativeFactory.create(
+            status='approved'
+        )
+        activity = DateActivityFactory.create(
+            status='open',
+            initiative=first,
+        )
+        activity.segments.add(segment)
+
+        InitiativeFactory.create(
+            status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                segment.segment_type.slug, segment.pk
+            ),
+            user=self.owner
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_owner(self):
         owned_initiatives = InitiativeFactory.create_batch(
@@ -1426,3 +1492,28 @@ class ThemeApiTestCase(BluebottleTestCase):
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
+
+
+class InitiativeAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.model = InitiativeFactory.create(
+            status='approved'
+        )
+        self.url = reverse('initiative-detail', args=(self.model.id,))
+
+    def test_get_with_segments(self):
+        segment = SegmentFactory.create(
+            name='SDG1'
+        )
+        activity = DateActivityFactory.create(
+            initiative=self.model,
+            status='open',
+        )
+        activity.segments.add(segment)
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('segments', [segment])

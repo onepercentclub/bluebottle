@@ -1,0 +1,5 @@
+Friendly reminder how to set up django jet here to change CSS or JS.
+
+1. nvm use 8
+2. npm i
+3. gulp watch

@@ -15,6 +15,7 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -426,6 +427,51 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(
             wrong_signature_response.status_code, 404
         )
+
+    def test_export_with_segments(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+
+        department = SegmentTypeFactory.create(name='Department')
+        music = SegmentTypeFactory.create(name='Music')
+        workshop = SegmentFactory.create(
+            segment_type=department,
+            name='Workshop'
+        )
+        metal = SegmentFactory.create(
+            segment_type=music,
+            name='Metal'
+        )
+        classical = SegmentFactory.create(
+            segment_type=music,
+            name='Classical'
+        )
+        user = BlueBottleUserFactory.create()
+        user.segments.add(workshop)
+        user.segments.add(metal)
+        user.segments.add(classical)
+        self.participant_factory.create(
+            activity=self.activity,
+            user=user,
+            status='accepted'
+        )
+
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']['url']
+        export_response = self.client.get(export_url)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(sheet['A1'].value, 'Email')
+        self.assertEqual(sheet['B1'].value, 'Name')
+        self.assertEqual(sheet['C1'].value, 'Motivation')
+
+        self.assertEqual(sheet['F1'].value, 'Department')
+        self.assertEqual(sheet['G1'].value, 'Music')
+
+        self.assertEqual(sheet['F2'].value, 'Workshop')
+        self.assertEqual(sheet['G2'].value, 'Classical, Metal')
 
     def test_get_other_user_export(self):
         response = self.client.get(self.url, user=self.user)

@@ -1,11 +1,10 @@
 from datetime import datetime
 
-from django.db.models import F
+from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import get_current_timezone
 
-from bluebottle.fsm.effects import Effect
 from bluebottle.activities.models import EffortContribution
+from bluebottle.fsm.effects import Effect
 
 
 class CreateEffortContribution(Effect):
@@ -14,20 +13,18 @@ class CreateEffortContribution(Effect):
     display = False
 
     def pre_save(self, effects):
+        start = now()
         tz = get_current_timezone()
-
+        if self.instance.activity.start and self.instance.activity.start > start.date():
+            start = tz.localize(
+                datetime.combine(
+                    self.instance.activity.start, datetime.min.replace(hour=12).time()
+                )
+            )
         self.contribution = EffortContribution(
             contributor=self.instance,
             contribution_type=EffortContribution.ContributionTypeChoices.deed,
-            start=tz.localize(
-                datetime.combine(
-                    self.instance.activity.start, datetime.min.time()
-                ) if self.instance.activity.start else datetime.now(),
-
-            ),
-            end=tz.localize(
-                datetime.combine(self.instance.activity.end, datetime.min.time())
-            ) if self.instance.activity.end else None,
+            start=start,
         )
         effects.extend(self.contribution.execute_triggers())
 
@@ -45,17 +42,12 @@ class RescheduleEffortsEffect(Effect):
     def post_save(self, **kwargs):
         tz = get_current_timezone()
 
-        if self.instance.start:
-            start = tz.localize(datetime.combine(self.instance.start, datetime.min.time()))
-        else:
-            start = F('start')
-
-        if self.instance.end:
-            end = tz.localize(datetime.combine(self.instance.end, datetime.min.time()))
-        else:
-            end = None
-
-        self.instance.efforts.update(
-            start=start,
-            end=end
-        )
+        if self.instance.start and self.instance.start > now().date():
+            start = tz.localize(
+                datetime.combine(
+                    self.instance.start, datetime.min.replace(hour=12).time()
+                )
+            )
+            self.instance.efforts.update(
+                start=start,
+            )

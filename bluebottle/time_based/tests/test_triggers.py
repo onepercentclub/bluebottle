@@ -1,11 +1,10 @@
 import time
-import mock
 from datetime import timedelta, date
 
+import mock
 from django.core import mail
 from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
-
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
@@ -784,7 +783,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
                     defaultfilters.date(slot.start),
                     defaultfilters.time(slot.start.astimezone(get_current_timezone())),
                     defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                    self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                    slot.start.astimezone(get_current_timezone()).strftime('%Z'),
                 )
 
                 self.assertTrue(expected in mail.outbox[0].body)
@@ -812,6 +811,49 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             self.assertEqual(duration.start, self.slot.start)
             self.assertEqual(duration.end, self.slot.start + self.slot.duration)
             self.assertEqual(duration.value, self.slot.duration)
+
+    def test_cancel(self):
+        DateParticipantFactory.create(activity=self.activity)
+        mail.outbox = []
+        self.slot.title = 'Session 1'
+        self.slot.states.cancel(save=True)
+        self.assertEqual(self.slot.status, 'cancelled')
+        self.assertEqual(
+            len(mail.outbox),
+            2
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'Your activity "{}" has been cancelled'.format(self.activity.title)
+        )
+
+        self.assertTrue(
+            'Session 1' in
+            mail.outbox[1].body
+        )
+
+    def test_cancel_with_cancelled_activity(self):
+        DateParticipantFactory.create(activity=self.activity)
+        self.activity.states.cancel(save=True)
+        mail.outbox = []
+        self.slot.title = 'Session 3'
+        self.slot.states.cancel(save=True)
+        self.assertEqual(self.slot.status, 'cancelled')
+        self.assertEqual(
+            len(mail.outbox),
+            1
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your activity "{}" has been cancelled'.format(self.activity.title)
+        )
+
+        self.assertTrue(
+            'Session 3' in
+            mail.outbox[0].body
+        )
 
 
 class ParticipantTriggerTestCase():
@@ -1603,6 +1645,13 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'full')
+
+    def test_fill_slot_ignores_activity_capacity(self):
+        self.activity.capacity = 1
+        self.activity.save()
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.assertStatus(self.slot1, 'open')
+        self.assertStatus(self.activity, 'open')
 
     def test_unfill_slot(self):
         self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)

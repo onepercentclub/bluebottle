@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-29 16:43+0100\n"
-"PO-Revision-Date: 2021-11-29 16:26\n"
+"PO-Revision-Date: 2022-03-09 08:41\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -1427,8 +1427,8 @@ msgstr "Zoek"
 #, python-format
 msgid "%(counter)s result"
 msgid_plural "%(counter)s results"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(counter)s resultaat"
+msgstr[1] "%(counter)s resultaten"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:13
 #, python-format

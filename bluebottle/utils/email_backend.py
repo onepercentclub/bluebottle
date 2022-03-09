@@ -24,6 +24,12 @@ from tenant_extras.utils import TenantLanguage
 
 logger = logging.getLogger(__name__)
 
+try:
+    import cssutils
+    cssutils.log.setLevel(logging.CRITICAL)
+except ModuleNotFoundError:
+    pass
+
 
 class TenantAwareBackend(EmailBackend):
     """

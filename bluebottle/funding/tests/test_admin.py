@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.template import defaultfilters
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from djmoney.money import Money
 from rest_framework import status
 
@@ -155,15 +155,16 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.assertFalse(third.title in response.content.decode('utf-8'))
 
     def test_contribution_date(self):
+        start_time = now().astimezone(get_current_timezone())
+        reported_time = f'{defaultfilters.date(start_time)}, {defaultfilters.time(start_time)}'
         donation = DonorFactory.create(
             activity=self.funding,
             amount=Money(100, 'EUR')
         )
+
         donation.states.succeed(save=True)
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
-        curr_time = now()
-        reported_time = f'{defaultfilters.date(curr_time)}, {defaultfilters.time(curr_time)}'
         self.assertTrue(reported_time in response.content.decode('utf-8'))
 
 

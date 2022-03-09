@@ -163,6 +163,22 @@ class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
 
     serializer_class = SCIMMemberSerializer
 
+    def perform_create(self, serializer):
+        try:
+            # If a user with the correct remote id but without an external id
+            # exists, allow the create for once.
+            # In this case the provisioning client does not know about the member, and
+            # can continue as normal
+            if 'remote_id' in serializer.validated_data:
+                serializer.instance = Member.objects.get(
+                    remote_id=serializer.validated_data['remote_id'],
+                    scim_external_id__isnull=True
+                )
+        except Member.DoesNotExist:
+            pass
+
+        return super().perform_create(serializer)
+
 
 class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Member.objects.filter(

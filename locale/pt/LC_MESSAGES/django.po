@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-09 09:52+0100\n"
-"PO-Revision-Date: 2022-03-09 08:53\n"
+"PO-Revision-Date: 2022-03-09 09:52\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -1149,7 +1149,7 @@ msgstr "Esporte"
 
 #: bluebottle/bb_accounts/models.py:139
 msgid "Office location is verified by the user"
-msgstr ""
+msgstr "Localização do escritório é verificada pelo usuário"
 
 #: bluebottle/bb_accounts/models.py:144
 msgid "phone number"
@@ -5001,7 +5001,7 @@ msgstr "Está ativo"
 
 #: bluebottle/members/admin.py:116
 msgid "Login"
-msgstr ""
+msgstr "Login"
 
 #: bluebottle/members/admin.py:126 bluebottle/members/admin.py:338
 msgid "Profile"
@@ -5009,15 +5009,15 @@ msgstr "Perfil"
 
 #: bluebottle/members/admin.py:135
 msgid "Privacy"
-msgstr ""
+msgstr "Privacidade"
 
 #: bluebottle/members/admin.py:155
 msgid "Required fields"
-msgstr ""
+msgstr "Campos de preenchimento obrigatório"
 
 #: bluebottle/members/admin.py:157
 msgid "After logging in members are required to fill out or confirm the  fields listed below."
-msgstr ""
+msgstr "Após entrar membros são obrigados a preencher ou confirmar os campos listados abaixo."
 
 #: bluebottle/members/admin.py:282
 msgid "Deleted"
@@ -5138,7 +5138,7 @@ msgstr "Exigir que os usuários dêem consentimento a cookies"
 
 #: bluebottle/members/models.py:47
 msgid "Link more information about the platforms cookie policy"
-msgstr ""
+msgstr "Vincular mais informações sobre a política de cookies das plataformas"
 
 #: bluebottle/members/models.py:63
 msgid "Show gender question in profile form"
@@ -5171,7 +5171,7 @@ msgstr "Obrigatório"
 
 #: bluebottle/members/models.py:100
 msgid "Let users verify their office location"
-msgstr ""
+msgstr "Permitir que os usuários verifiquem a sua localização no escritório"
 
 #: bluebottle/members/models.py:104 bluebottle/members/models.py:105
 msgid "member platform settings"
@@ -5287,7 +5287,15 @@ msgid "\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"<h1>Olá </h1>\n"
+"<p class=\"lead\">Bem-vindo à comunidade %(site_name)s.<p> \n"
+"<p>\n"
+"    Clique no link abaixo para criar uma senha e ativar a sua conta.\n"
+"</p>\n"
+"<p>\n"
+"    O link irá expirar em 24 horas.\n"
+"</p>\n"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:19
 msgctxt "email"
@@ -5783,19 +5791,19 @@ msgstr "Reset token"
 
 #: bluebottle/segments/admin.py:81
 msgid "SSO"
-msgstr ""
+msgstr "SSO"
 
 #: bluebottle/segments/admin.py:99
 msgid "Members"
-msgstr ""
+msgstr "Membros"
 
 #: bluebottle/segments/admin.py:105
 msgid "Segment type"
-msgstr ""
+msgstr "Tipo de segmento"
 
 #: bluebottle/segments/admin.py:110
 msgid "Text colour"
-msgstr ""
+msgstr "Cor do texto"
 
 #: bluebottle/segments/admin.py:124
 msgid "Number of segments"
@@ -5803,27 +5811,27 @@ msgstr "Número de segmentos"
 
 #: bluebottle/segments/models.py:24
 msgid "Inherit"
-msgstr ""
+msgstr "Herdar"
 
 #: bluebottle/segments/models.py:26
 msgid "Newly created activities will inherit the segments set on the activity owner."
-msgstr ""
+msgstr "Atividades recém criadas herdarão os segmentos definidos no proprietário da atividade."
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
-msgstr ""
+msgstr "Necessário para membros"
 
 #: bluebottle/segments/models.py:34
 msgid "Enable to require members to enter their segment type after logging in"
-msgstr ""
+msgstr "Habilite para exigir que membros entrem no tipo de segmento após logar"
 
 #: bluebottle/segments/models.py:40
 msgid "Needs verification"
-msgstr ""
+msgstr "Precisa de verificação"
 
 #: bluebottle/segments/models.py:42
 msgid "Enable to require members to verify their segment type data that was provided by SSO"
-msgstr ""
+msgstr "Permitir que os membros exijam que verifiquem os dados do tipo de segmento fornecidos por SSO"
 
 #: bluebottle/segments/models.py:52
 msgid "Editable in user profile"
@@ -5831,71 +5839,71 @@ msgstr "Editável no perfil do usuário"
 
 #: bluebottle/segments/models.py:56
 msgid "Enable search filters"
-msgstr ""
+msgstr "Ativar filtros de busca"
 
 #: bluebottle/segments/models.py:99
 msgid "Email domains"
-msgstr ""
+msgstr "Domínios de E-mail"
 
 #: bluebottle/segments/models.py:102
 msgid "Users with email addresses for this domain are automatically added to this segment."
-msgstr ""
+msgstr "Usuários com endereços de email para este domínio são automaticamente adicionados a este segmento."
 
 #: bluebottle/segments/models.py:106
 msgid "Slogan"
-msgstr ""
+msgstr "Slogan"
 
 #: bluebottle/segments/models.py:108
 msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Uma pequena frase para explicar seu segmento. Esta frase é diretamente visível na página."
 
 #: bluebottle/segments/models.py:113
 msgid "Story"
-msgstr ""
+msgstr "História"
 
 #: bluebottle/segments/models.py:115
 msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Uma história mais detalhada para seu segmento. Esta história pode ser acessada através de um link na página."
 
 #: bluebottle/segments/models.py:122
 msgid "The uploaded image will be scaled so that it is fully visible."
-msgstr ""
+msgstr "A imagem carregada será dimensionada para que esteja totalmente visível."
 
 #: bluebottle/segments/models.py:133
 msgid "Background color"
-msgstr ""
+msgstr "Cor de fundo"
 
 #: bluebottle/segments/models.py:135
 msgid "Add a background colour to your segment page."
-msgstr ""
+msgstr "Adicione uma cor de fundo à sua página de segmento."
 
 #: bluebottle/segments/models.py:140
 msgid "cover image"
-msgstr ""
+msgstr "imagem de capa"
 
 #: bluebottle/segments/models.py:142
 msgid "The uploaded image will be cropped to fit a 4:3 rectangle."
-msgstr ""
+msgstr "A imagem carregada será cortada para caber um retângulo de 4:3."
 
 #: bluebottle/segments/models.py:153
 msgid "Restricted"
-msgstr ""
+msgstr "Restrito"
 
 #: bluebottle/segments/models.py:156
 msgid "Closed segments will only be accessible to members that belong to this segment."
-msgstr ""
+msgstr "Segmentos fechados só serão acessíveis a membros que pertencem a este segmento."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"
-msgstr ""
+msgstr "nenhum tipo de segmento é marcado como necessário"
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:16
 msgid "Mark segment types as required in "
-msgstr ""
+msgstr "Marcar tipos de segmento como obrigatórios em "
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:18
 msgid "segment type overview"
-msgstr ""
+msgstr "visão geral do tipo de grupo"
 
 #: bluebottle/settings/admin_dashboard.py:56
 msgid "Time Based"
@@ -5907,7 +5915,7 @@ msgstr ""
 
 #: bluebottle/settings/admin_dashboard.py:165
 msgid "All segment types"
-msgstr ""
+msgstr "Todos os tipos de conteúdo"
 
 #: bluebottle/settings/admin_dashboard.py:172
 msgid "Offices"
@@ -6589,7 +6597,7 @@ msgstr "Conclua uma atividade quando o tempo de término terminar."
 
 #: bluebottle/time_based/periodic_tasks.py:153
 msgid "Send a reminder five days before the activity slot."
-msgstr ""
+msgstr "Enviar lembrete cinco dias antes do slot da atividade."
 
 #: bluebottle/time_based/states.py:17 bluebottle/time_based/states.py:157
 msgid "full"
@@ -7261,7 +7269,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"A atividade está apenas a alguns dias!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_slot.html:19
 msgctxt "email"

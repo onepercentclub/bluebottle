@@ -169,6 +169,36 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
 
 class APITestCase(BluebottleTestCase):
+    """
+    Specialised testcase for testing JSON-API endpoints.
+
+    When testing detail endpoints, make sure `self.model` points to a correct model.
+
+    For doing updates and creates, make sure that `self.serializer` points to the correct serializer,
+    and set the correct data in `self.default`
+
+    class ModelListViewAPITestCase(APITestCase):
+        def setUp(self):
+            super().setUp()
+
+            self.url = reverse('<some-url-name>')
+            self.serializer = SomeSerializerClass
+            self.factory = SomeFactory
+
+            self.defaults = {
+                <attrbutes-and-relationships
+            }
+
+            self.fields = [... <list-of-relevant-fields>]
+
+
+        def test_create_complete(self):
+            self.perform_create(user=self.user)
+            self.assertStatus(status.HTTP_201_CREATED)
+            self.assertIncluded('some-related-field')
+            self.assertIncluded('some-related-field')
+    """
+
     factories = [BlueBottleUserFactory]
 
     def setUp(self):
@@ -177,6 +207,11 @@ class APITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
     def perform_get(self, user=None):
+        """
+        Perform a get request and save the result in `self.response`
+
+        If `user` is None, perform an anoymous request
+        """
         self.user = user
         self.response = self.client.get(
             self.url,
@@ -184,6 +219,13 @@ class APITestCase(BluebottleTestCase):
         )
 
     def perform_update(self, to_change=None, user=None):
+        """
+        Perform a put request and save the result in `self.response`
+
+        `to_change` should be a dictionary of fields to update
+
+        If `user` is None, perform an anoymous request
+        """
         data = {
             'type': self.serializer.JSONAPIMeta.resource_name,
             'id': str(self.model.pk),
@@ -212,6 +254,14 @@ class APITestCase(BluebottleTestCase):
             self.model.refresh_from_db()
 
     def perform_create(self, user=None, data=None):
+        """
+        Perform a put request and save the result in `self.response`
+
+        `data` should be a json api stucture containing the data for the new object
+        `self.model` will point to the newly created model
+
+        If `user` is None, perform an anoymous request
+        """
         if data is None:
             data = self.data
 
@@ -227,7 +277,21 @@ class APITestCase(BluebottleTestCase):
         ):
             self.model = self.serializer.Meta.model.objects.get(pk=self.response.json()['data']['id'])
 
+    def perform_delete(self, user=None):
+        """
+        Perform a delete request and save the result in `self.response`
+
+        If `user` is None, perform an anoymous request
+        """
+        self.response = self.client.delete(
+            self.url,
+            user=user
+        )
+
     def loadLinkedRelated(self, relationship, user=None):
+        """
+        Load a related view, and return the response data
+        """
         user = user or self.user
         url = self.response.json()['data']['relationships'][relationship]['links']['related']
         response = self.client.get(
@@ -238,43 +302,74 @@ class APITestCase(BluebottleTestCase):
 
     @contextmanager
     def closed_site(self):
+        """
+        Context manager that will make the platform closed, so that scenarios on closed platforms can
+        be tested
+        """
         group = Group.objects.get(name='Anonymous')
         model_name = self.serializer.Meta.model._meta.model_name
         try:
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')
-            group.permissions.remove(
-                Permission.objects.get(codename='api_read_{}'.format(model_name))
-            )
+            try:
+                group.permissions.remove(
+                    Permission.objects.get(codename='api_read_{}'.format(model_name))
+                )
+            except Permission.DoesNotExist:
+                pass
+
             yield
         finally:
             MemberPlatformSettings.objects.update(closed=False)
-            group.permissions.remove(
-                Permission.objects.get(codename='api_read_{}'.format(model_name))
-            )
 
     def assertStatus(self, status):
+        """
+        Assert that the status code of the reponse is as expected
+        """
         self.assertEqual(self.response.status_code, status)
 
     def assertTotal(self, count):
+        """
+        Assert that total the number of found objects is the same as expected
+        """
         if 'meta' in self.response.json():
             self.assertEqual(self.response.json()['meta']['count'], count)
         else:
             self.assertEqual(len(self.response.json()['data']), count)
 
     def assertIncluded(self, included, model=None):
+        """
+        Assert that a resource with type `included` is included in the response
+        """
         included_resources = [
             {'type': inc['type'], 'id': inc['id']}
             for inc in self.response.json()['included']
         ]
         relationship = self.response.json()['data']['relationships'][included]['data']
-
         self.assertTrue(
             {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
             in included_resources
         )
 
+    def assertNotIncluded(self, included):
+        """
+        Assert that a resource with type `included` is NOT included in the response
+        """
+        if 'included' not in self.response.json():
+            return
+
+        included_types = [
+            inc['type'] for inc in self.response.json()['included']
+        ]
+
+        self.assertTrue(
+            included not in included_types
+        )
+
     def assertRelationship(self, relation, models=None):
+        """
+        Assert that a resource with `relation` is linked in the response
+        """
         self.assertTrue(relation in self.response.json()['data']['relationships'])
         data = self.response.json()['data']['relationships'][relation]['data']
 
@@ -294,6 +389,9 @@ class APITestCase(BluebottleTestCase):
                 )
 
     def assertAttribute(self, attr, value=None):
+        """
+        Assert that an attriubte `attr` has `value`
+        """
         data = self.response.json()['data']
         if isinstance(data, (tuple, list)):
             for resource in data:
@@ -303,24 +401,50 @@ class APITestCase(BluebottleTestCase):
             self.assertTrue(attr in data['attributes'])
 
         if value:
-            self.assertEqual(getattr(self.model, attr), value)
+            self.assertEqual(getattr(self.model, attr.replace('-', '_')), value)
+
+    def assertNoAttribute(self, attr):
+        """
+        Assert that there is no attriubte `attr`
+        """
+        data = self.response.json()['data']
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertTrue(attr not in resource['attributes'])
+
+        else:
+            self.assertTrue(attr not in data['attributes'])
 
     def assertPermission(self, permission, value):
+        """
+        Assert that there is no attriubte `attr`
+        """
         self.assertEqual(self.response.json()['data']['meta']['permissions'][permission], value)
 
     def assertTransition(self, transition):
+        """
+        Assert that it is possible to perform the transition with the name `transition`
+        """
         self.assertIn(
             transition,
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
         )
 
     def assertMeta(self, attr, expected):
+        """
+        Assert that `attr` is present in the resource's meta
+
+        """
         self.assertEqual(
             self.response.json()['data']['meta'][attr],
             expected
         )
 
     def assertHasError(self, field, message):
+        """
+        Assert that the response has an error on `field` with `message`
+
+        """
         for error in self.response.json()['data']['meta']['errors']:
             if error['source']['pointer'] == '/data/attributes/{}'.format(field):
                 if error['title'] == message:
@@ -338,6 +462,10 @@ class APITestCase(BluebottleTestCase):
         )
 
     def assertRequired(self, field):
+        """
+        Assert that the resources has a missing field
+
+        """
         error_fields = [
             error['source']['pointer'].split('/')[-1]
             for error in self.response.json()['data']['meta']['required']
@@ -346,6 +474,9 @@ class APITestCase(BluebottleTestCase):
 
     @property
     def data(self):
+        """
+        randomly generated data that can be used to perform creates
+        """
         data = {
             'type': self.serializer.JSONAPIMeta.resource_name,
             'attributes': {},

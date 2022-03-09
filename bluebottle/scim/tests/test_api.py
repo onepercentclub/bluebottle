@@ -1,9 +1,9 @@
-
 from future import standard_library
 standard_library.install_aliases()
 
+import factory
+
 from urllib.parse import urlencode
-from builtins import range
 from builtins import object
 
 from django.contrib.auth.models import Group
@@ -273,14 +273,18 @@ class SCIMResourceTypeDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, Bluebot
         self.assertEqual(response.status_code, 404)
 
 
+class SCIMUserFactory(BlueBottleUserFactory):
+    remote_id = factory.Faker('uuid4')
+    scim_external_id = factory.Faker('uuid4')
+
+
 class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-user-list')
 
     def setUp(self):
-        for i in range(10):
-            BlueBottleUserFactory.create(is_superuser=False)
+        self.users = SCIMUserFactory.create_batch(10, is_superuser=False)
 
         super(SCIMUserListTest, self).setUp()
 
@@ -293,7 +297,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             token=self.token
         )
 
-        data = response.data
+        data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['totalResults'], 10)
         self.assertEqual(data['startIndex'], 1)
@@ -302,6 +306,38 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             data['schemas'],
             ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
         )
+
+        first = data['Resources'][0]
+        user = Member.objects.get(remote_id=first['userName'])
+
+        self.assertEqual(user.scim_external_id, first['externalId'])
+        self.assertEqual(user.first_name, first['name']['givenName'])
+        self.assertEqual(user.last_name, first['name']['familyName'])
+        self.assertEqual(user.email, first['emails'][0]['value'])
+        self.assertEqual(first['active'], True)
+        self.assertEqual(first['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User'])
+
+    def test_get_filtered(self):
+        response = self.client.get(
+            self.url + f"?filter=userName eq {self.users[0].remote_id}",
+            token=self.token
+        )
+        data = response.json()
+        self.assertEqual(data['totalResults'], 1)
+        self.assertEqual(data['startIndex'], 1)
+
+    def test_get_invalid_filter(self):
+        response = self.client.get(
+            self.url + f"?filter=userName ge {self.users[0].remote_id}",
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.get(
+            self.url + f"?filter=somefield eq {self.users[0].remote_id}",
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 400)
 
     def test_get_paged(self):
         params = urlencode({
@@ -468,6 +504,8 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'externalId': '123',
+            'userName': '123',
+            'active': True,
             'emails': [{
                 'type': 'work',
                 'primary': True,
@@ -490,8 +528,45 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             token=self.token
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['status'], 400)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['status'], 409)
+        self.assertEqual(response.data['scimType'], 'uniqueness')
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_remote_id(self):
+        """
+        Test creating a user twice request
+        """
+        remote_id = '123'
+        BlueBottleUserFactory.create(remote_id=remote_id)
+        mail.outbox = []
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': remote_id,
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['status'], 409)
+        self.assertEqual(response.data['scimType'], 'uniqueness')
         self.assertEqual(len(mail.outbox), 0)
 
 
@@ -578,6 +653,37 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.last_name, request_data['name']['familyName'])
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_put_deleted(self):
+        """
+        Test authenticated put request
+        """
+        request_data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'id': 'goodup-user-{}'.format(self.user.pk),
+            'externalId': '123',
+            'active': False,
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+        url = self.url
+        self.user.delete()
+
+        response = self.client.put(
+            url,
+            request_data,
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['status'], 404)
+        self.assertEqual(response.json()['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
     def test_delete(self):
         response = self.client.delete(

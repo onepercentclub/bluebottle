@@ -13,6 +13,8 @@ from django.contrib.auth.models import (
 )
 from django.core.mail.message import EmailMessage
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.functional import lazy, cached_property
 from django.utils.translation import gettext_lazy as _
@@ -26,6 +28,8 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import get_language_choices, get_default_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from .utils import send_welcome_mail
+from ..segments.models import Segment
 
 
 def generate_picture_filename(instance, filename):
@@ -55,24 +59,24 @@ def generate_picture_filename(instance, filename):
 
 
 class BlueBottleUserManager(UserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        return super().create_user(username, email, password, **extra_fields)
 
-        return super().create_user(username, password, **extra_fields)
-
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
-
-        return super().create_superuser(username, password, **extra_fields)
+        extra_fields['is_active'] = True
+        if not username:
+            username = email
+        return super().create_superuser(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):
         return self.get(**{
@@ -129,6 +133,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         'geo.Location', blank=True,
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
+
+    location_verified = models.BooleanField(
+        default=False,
+        help_text=_('Office location is verified by the user')
+    )
+
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
@@ -379,11 +389,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .utils import send_welcome_mail
-
-
 @receiver(post_save)
 def send_welcome_mail_callback(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
@@ -396,3 +401,14 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
             not instance.welcome_email_is_sent:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)
+
+
+@receiver(post_save)
+def connect_to_segments(sender, instance, created, **kwargs):
+    from django.contrib.auth import get_user_model
+
+    USER_MODEL = get_user_model()
+    if isinstance(instance, USER_MODEL) and created and '@' in instance.email:
+        user_email_domain = instance.email.split('@')[1]
+        for segment in Segment.objects.filter(email_domains__contains=[user_email_domain]).all():
+            instance.segments.add(segment)

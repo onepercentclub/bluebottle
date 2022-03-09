@@ -60,7 +60,7 @@ class ElasticSearchFilter(filters.SearchFilter):
         if terms:
             queries = []
             for field in self.search_fields:
-                boost = self.boost.get(field, 1)
+                boost = self.boost.get(field, 1) * 0.05
                 if '.' in field:
                     path = field.split('.')[0]
                     query = Nested(

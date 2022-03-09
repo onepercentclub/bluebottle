@@ -132,8 +132,8 @@ class TestExportAdmin(BluebottleTestCase):
         to_date = now() + timedelta(weeks=1)
         users = BlueBottleUserFactory.create_batch(5)
         segment_type = SegmentTypeFactory.create(name='Department')
-        engineering = SegmentFactory.create(type=segment_type, name='Engineering')
-        rubbish = SegmentFactory.create(type=segment_type, name='Rubbish')
+        engineering = SegmentFactory.create(segment_type=segment_type, name='Engineering')
+        rubbish = SegmentFactory.create(segment_type=segment_type, name='Rubbish')
         users[0].segments.add(engineering)
         initiative = InitiativeFactory.create(owner=users[0])
         activity = PeriodActivityFactory.create(

@@ -1,4 +1,5 @@
 from builtins import object
+import uuid
 
 from axes.handlers.proxy import AxesProxyHandler
 from django import forms
@@ -6,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
-from django.core.signing import TimestampSigner
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
@@ -19,8 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.messages import SignUptokenMessage
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -205,7 +204,11 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
-        read_only=True, source='partner_organization')
+        read_only=True, source='partner_organization'
+    )
+    segments = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Segment.objects
+    )
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -213,7 +216,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization'
+            'organization', 'segments', 'required'
         )
 
 
@@ -255,9 +258,25 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
         many=True, source='favourite_themes', queryset=Theme.objects)
 
     segments = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Segment.objects)
+        many=True, queryset=Segment.objects
+    )
 
     is_active = serializers.BooleanField(read_only=True)
+
+    def save(self, *args, **kwargs):
+
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -379,10 +398,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
+    segment_id = serializers.CharField(required=False, allow_blank=True)
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url',)
+        fields = ('id', 'email', 'url', 'segment_id')
 
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
@@ -396,21 +416,13 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             )
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
-            raise serializers.ValidationError('member with this email address already exists.')
-
+            raise serializers.ValidationError(
+                'a member with this email address already exists.', code='duplicate-facebook',
+            )
         return email
 
-    def create(self, validated_data):
-        (instance, _) = BB_USER_MODEL.objects.get_or_create(
-            email=validated_data['email'], defaults={'is_active': False}
-        )
-        token = TimestampSigner().sign(instance.pk)
-        SignUptokenMessage(
-            instance,
-            custom_message={'token': token, 'url': validated_data.get('url', '')}
-        ).compose_and_send()
-
-        return instance
+    class JSONAPIMeta:
+        resource_name = 'signup-tokens'
 
 
 class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
@@ -420,6 +432,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     editing or viewing users.
     """
     password = PasswordField(required=True, max_length=128)
+    token = serializers.CharField(required=True, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     first_name = serializers.CharField(max_length=100)
@@ -427,10 +440,13 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'password', 'jwt_token', 'first_name', 'last_name', )
+        fields = ('id', 'password', 'token', 'jwt_token', 'first_name', 'last_name', )
 
     def validate_password(self, password):
         return make_password(password)
+
+    class JSONAPIMeta:
+        resource_name = 'signup-token-confirmations'
 
 
 class PasswordStrengthSerializer(serializers.ModelSerializer):
@@ -541,6 +557,21 @@ class PasswordResetSerializer(serializers.Serializer):
     class Meta(object):
         fields = ('email',)
 
+    class JSONAPIMeta(object):
+        resource_name = 'reset-tokens'
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, max_length=254)
+    password = PasswordField(required=True, max_length=254)
+    jwt_token = serializers.CharField(read_only=True)
+
+    class Meta(object):
+        fields = ('token', 'jwt_token', )
+
+    class JSONAPIMeta(object):
+        resource_name = 'reset-token-confirmations'
+
 
 class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -616,6 +647,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_gender',
             'enable_address',
             'enable_birthdate',
+            'require_office',
+            'verify_office'
         )
 
 
@@ -626,3 +659,13 @@ class TokenLoginSerializer(serializers.Serializer):
 
 class CaptchaSerializer(serializers.Serializer):
     token = CaptchaField(required=True)
+    id = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return str(uuid.uuid4())
+
+    class Meta(object):
+        fields = ('id', 'token')
+
+    class JSONAPIMeta:
+        resource_name = 'captcha-tokens'

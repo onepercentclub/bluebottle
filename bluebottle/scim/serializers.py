@@ -102,14 +102,25 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     resource_type = 'User'
     detail_view_name = 'scim-user-detail'
 
-    userName = serializers.CharField(source='remote_id', required=False)
+    userName = serializers.CharField(
+        source='remote_id', required=False,
+        validators=[
+            validators.UniqueValidator(
+                queryset=Member.objects.all()
+            )
+        ]
+    )
     externalId = serializers.CharField(source='scim_external_id')
 
     name = NameSerializer()
     emails = EmailsField(
         source='email',
         allow_blank=False,
-        validators=[validators.UniqueValidator(queryset=Member.objects.all())]
+        validators=[
+            validators.UniqueValidator(
+                queryset=Member.objects.all(), lookup='iexact'
+            )
+        ]
     )
     active = serializers.BooleanField(source='is_active')
     groups = serializers.SerializerMethodField(read_only=True)

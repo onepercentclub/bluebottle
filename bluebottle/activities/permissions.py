@@ -1,8 +1,8 @@
 from rest_framework import permissions
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.activities.models import Activity
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -43,6 +43,28 @@ class ActivityStatusPermission(ResourcePermission):
             obj.status in ('rejected', 'deleted')
         ):
             return False
+        else:
+            return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
+class ActivitySegmentPermission(BasePermission):
+
+    def has_object_action_permission(self, action, user, obj):
+        activity_segments = obj.segments.filter(closed=True)
+        if activity_segments:
+            if not user.is_authenticated:
+                return False
+            elif user.is_staff:
+                return True
+            elif any(
+                    segment in activity_segments for segment in user.segments.filter(closed=True)
+            ):
+                return True
+            else:
+                return False
         else:
             return True
 

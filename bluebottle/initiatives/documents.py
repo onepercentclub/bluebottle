@@ -68,9 +68,17 @@ class InitiativeDocument(Document):
         'id': fields.KeywordField(),
     })
     categories = fields.NestedField(properties={
-        'id': fields.LongField(),
+        'id': fields.KeywordField(),
         'slug': fields.KeywordField(),
     })
+
+    segments = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'segment_type': fields.KeywordField(attr='segment_type.slug'),
+            'name': fields.TextField()
+        }
+    )
 
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
@@ -110,7 +118,9 @@ class InitiativeDocument(Document):
         return super(InitiativeDocument, self).get_queryset().select_related(
             'theme', 'place', 'owner', 'promoter', 'reviewer', 'activity_manager',
             'location'
-        ).prefetch_related('activities', 'categories')
+        ).prefetch_related(
+            'activities', 'categories', 'activities__segments', 'activities__segments__segment_type'
+        )
 
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):
@@ -137,6 +147,21 @@ class InitiativeDocument(Document):
                 )
             )
         ]
+
+    def prepare_segments(self, instance):
+        segments = []
+
+        for activity in instance.activities.all():
+            segments += [
+                {
+                    'id': segment.id,
+                    'name': segment.name,
+                    'segment_type': segment.segment_type.slug
+                }
+                for segment in activity.segments.all()
+            ]
+
+        return segments
 
     def prepare_location(self, instance):
         if instance.is_global:

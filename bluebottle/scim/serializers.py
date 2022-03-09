@@ -106,7 +106,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         source='remote_id', required=False,
         validators=[
             validators.UniqueValidator(
-                queryset=Member.objects.all()
+                queryset=Member.objects.filter(scim_external_id__isnull=False)
             )
         ]
     )

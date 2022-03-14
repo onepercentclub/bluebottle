@@ -1,3 +1,9 @@
 [run]
 include = apps*
-omit = **/migrations/**
+omit =
+    **/migrations/**
+    *migrations*
+[report]
+omit =
+    **/migrations/**
+    *migrations*

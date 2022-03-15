@@ -6,6 +6,7 @@ from django.utils.timezone import now
 from djmoney.money import Money
 from rest_framework import status
 
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
     FundingFactory, BankAccountFactory, DonorFactory,
     BudgetLineFactory, RewardFactory
@@ -171,3 +172,27 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
     def test_bank_account_admin(self):
         response = self.client.get(self.bank_account_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class FundingPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super(FundingPlatformSettingsAdminTestCase, self).setUp()
+        self.app.set_user(self.superuser)
+        self.client.force_login(self.superuser)
+
+    def test_anonymous_donations(self):
+        funding_settings = FundingPlatformSettings.load()
+        self.assertFalse(funding_settings.anonymous_donations)
+        url = reverse('admin:funding_fundingplatformsettings_change')
+        page = self.app.get(url)
+        page = page.click('Funding settings')
+        form = page.forms[0]
+        form["anonymous_donations"] = True
+        form.submit()
+
+        funding_settings = FundingPlatformSettings.load()
+        self.assertTrue(funding_settings.anonymous_donations)

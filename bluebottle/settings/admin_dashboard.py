@@ -269,6 +269,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['initiatives.change_initiativeplatformsettings']
             },
             {
+                'name': 'funding.fundingplatformsettings',
+                'permissions': ['funding.change_fundingplatformsettings']
+            },
+            {
                 'name': 'notifications.notificationplatformsettings',
                 'permissions': ['notifications.notificationplatformsettings']
             },

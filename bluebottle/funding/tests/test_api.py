@@ -1,6 +1,4 @@
 import json
-from builtins import range
-from builtins import str
 from datetime import timedelta
 
 import mock
@@ -13,7 +11,7 @@ from moneyed import Money
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
     FundingFactory, RewardFactory, DonorFactory,
     BudgetLineFactory
@@ -1737,3 +1735,51 @@ class FundingAPITestCase(APITestCase):
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
+
+
+class FundingPlatformSettingsAPITestCase(APITestCase):
+
+    def setUp(self):
+        super(FundingPlatformSettingsAPITestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+    def test_anonymous_donations_setting(self):
+        funding_settings = FundingPlatformSettings.load()
+        funding_settings.anonymous_donations = True
+        funding_settings.allow_anonymous_rewards = True
+        funding_settings.save()
+        response = self.client.get('/api/config', user=self.user)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEquals(
+            data['platform']['funding'],
+            {
+                'anonymous_donations': True,
+                'allow_anonymous_rewards': True
+            }
+        )
+
+
+class FundingAnonymousDonationsTestCase(APITestCase):
+
+    def setUp(self):
+        super(FundingAnonymousDonationsTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+        donation = DonorFactory.create(
+            user=BlueBottleUserFactory.create(),
+            status='succeeded'
+        )
+
+        self.url = reverse('funding-donation-detail', args=(donation.id,))
+
+    def test_donation(self):
+        self.perform_get()
+        self.assertTrue('user' in self.response.json()['data']['relationships'])
+        self.assertRelationship('user', self.user)
+
+    def test_anonymous_donation(self):
+        funding_settings = FundingPlatformSettings.load()
+        funding_settings.anonymous_donations = True
+        funding_settings.save()
+        self.perform_get()
+        self.assertFalse('user' in self.response.json()['data']['relationships'])

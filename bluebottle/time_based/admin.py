@@ -16,6 +16,7 @@ from pytz import timezone
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
@@ -254,24 +255,29 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'deadline',
-        'registration_deadline',
+    def get_detail_fields(self, request, obj):
+        fields = ActivityChildAdmin.detail_fields + (
+            'start',
+            'deadline',
+            'registration_deadline',
 
-        'duration',
-        'duration_period',
-        'preparation',
+            'duration',
+            'duration_period',
+            'preparation',
 
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url',
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
 
-        'expertise',
-        'capacity',
-        'review',
-    )
+            'expertise',
+            'capacity',
+            'review',
+        )
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.team_activities:
+            fields += ('team_activity',)
+        return fields
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),

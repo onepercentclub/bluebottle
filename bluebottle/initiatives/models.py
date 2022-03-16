@@ -274,7 +274,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
-    require_organization = models.BooleanField(default=False)
+    team_activities = models.BooleanField(
+        default=False,
+        help_text=_("Enable team activities where teams sign-up instead of individuals.")
+    )
+    require_organization = models.BooleanField(
+        default=False,
+        help_text=_("Require initiators to specify a partner organisation when creating an initiative.")
+    )
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')

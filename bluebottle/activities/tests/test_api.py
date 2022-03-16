@@ -646,6 +646,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][1]['id'], str(second.pk))
 
+    def test_search_team_activity(self):
+        first = DateActivityFactory.create(
+            team_activity=True,
+            status='open'
+        )
+        DateActivityFactory.create_batch(
+            2,
+            team_activity=False,
+            status='open'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[team_activity]=true',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+
+        response = self.client.get(
+            self.url + '?filter[team_activity]=false',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
     def test_search_page_size(self):
         DateActivityFactory.create_batch(
             12,

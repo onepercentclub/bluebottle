@@ -4,6 +4,7 @@ from django.contrib.admin import AdminSite
 from django.urls import reverse
 from django.utils.timezone import now
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -17,6 +18,13 @@ from bluebottle.time_based.tests.factories import (
 
 
 class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
 
     def test_list_shows_duration(self):
         PeriodActivityFactory.create(duration_period='weeks', duration=timedelta(hours=4))
@@ -33,9 +41,31 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertFalse('1 hours' in response.text)
         self.assertTrue('10 hours' in response.text)
 
+    def test_team_activity_disabled(self):
+        activity = PeriodActivityFactory.create()
+        url = reverse('admin:time_based_periodactivity_change', args=(activity.id,))
+        page = self.app.get(url, user=self.staff_member)
+        form = page.forms[0]
+        self.assertFalse('team_activity' in form.fields)
+        self.assertFalse(activity.team_activity)
+
+    def test_team_activity_enabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.team_activities = True
+        initiative_settings.save()
+        activity = PeriodActivityFactory.create()
+        self.assertFalse(activity.team_activity)
+        url = reverse('admin:time_based_periodactivity_change', args=(activity.id,))
+        page = self.app.get(url, user=self.staff_member)
+        form = page.forms[0]
+        self.assertTrue('team_activity' in form.fields)
+        form['team_activity'] = True
+        form.submit()
+        activity.refresh_from_db()
+        self.assertTrue(activity.team_activity)
+
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -75,7 +105,6 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -131,7 +160,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         participant = DateParticipantFactory.create(activity=activity)
         self.assertEqual(len(participant.slot_participants.all()), 0)
 
-        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk, ))
+        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk,))
 
         page = self.app.get(url)
         form = page.forms['dateparticipant_form']
@@ -148,7 +177,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
     def test_add_participants(self):
         activity = DateActivityFactory.create(initiative=self.initiative, status='open')
         DateParticipantFactory.create(activity=activity)
-        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk, ))
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
         self.assertFalse(
             'First complete and submit the activity before managing participants.' in
@@ -168,7 +197,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
 
 class DateParticipantAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -212,7 +240,6 @@ class TestSkillAdmin(BluebottleAdminTestCase):
 
 
 class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

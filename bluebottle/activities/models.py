@@ -22,6 +22,7 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('activity manager'),
@@ -57,7 +58,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     description = models.TextField(
         _('Description'), blank=True
     )
-
+    team_activity = models.BooleanField(
+        _('Team acticity'),
+        default=False,
+        help_text=_("Only teams can sign-up for this activity.")
+    )
     image = ImageField(blank=True, null=True)
 
     video_url = models.URLField(

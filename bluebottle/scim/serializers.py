@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers, validators
+from rest_framework import serializers, validators, fields
 
 from bluebottle.members.models import Member
 
@@ -42,11 +42,12 @@ class EmailsField(serializers.CharField):
         return super(EmailsField, self).to_internal_value(value[0]['value'])
 
     def run_validation(self, data=None):
-        if not isinstance(data, list) or not isinstance(data[0], dict) or 'value' not in data[0]:
-            self.fail('invalid')
+        if not data == fields.empty:
+            if not isinstance(data, list) or not isinstance(data[0], dict) or 'value' not in data[0]:
+                self.fail('invalid')
 
-        if not data[0].get('value'):
-            self.fail('blank')
+            if not data[0].get('value'):
+                self.fail('blank')
 
         return super(EmailsField, self).run_validation(data)
 

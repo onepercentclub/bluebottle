@@ -166,7 +166,8 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
-            'segments'
+            'segments',
+            'team_activity'
         )
 
         meta_fields = (
@@ -241,6 +242,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
+            'team_activity'
         )
 
         meta_fields = (

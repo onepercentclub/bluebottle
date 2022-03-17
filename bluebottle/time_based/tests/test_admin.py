@@ -54,7 +54,7 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
         initiative_settings.team_activities = True
         initiative_settings.save()
         activity = PeriodActivityFactory.create()
-        self.assertFalse(activity.team_activity)
+        self.assertEqual(activity.team_activity, 'individuals')
         url = reverse('admin:time_based_periodactivity_change', args=(activity.id,))
         page = self.app.get(url, user=self.staff_member)
         form = page.forms[0]

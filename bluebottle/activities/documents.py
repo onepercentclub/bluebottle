@@ -76,7 +76,7 @@ class ActivityDocument(Document):
     )
 
     is_online = fields.BooleanField()
-    team_activity = fields.BooleanField()
+    team_activity = fields.KeywordField()
 
     location = fields.NestedField(
         attr='location',

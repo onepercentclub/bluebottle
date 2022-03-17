@@ -648,17 +648,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_team_activity(self):
         first = DateActivityFactory.create(
-            team_activity=True,
+            team_activity='teams',
             status='open'
         )
         DateActivityFactory.create_batch(
             2,
-            team_activity=False,
+            team_activity='individuals',
             status='open'
         )
 
         response = self.client.get(
-            self.url + '?filter[team_activity]=true',
+            self.url,
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        response = self.client.get(
+            self.url + '?filter[team_activity]=teams',
             user=self.owner
         )
 
@@ -667,7 +675,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
         response = self.client.get(
-            self.url + '?filter[team_activity]=false',
+            self.url + '?filter[team_activity]=individuals',
             user=self.owner
         )
 

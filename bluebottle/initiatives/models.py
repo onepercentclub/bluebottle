@@ -257,6 +257,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('date', _('Date')),
         ('skill', _('Skill')),
         ('type', _('Type')),
+        ('team_activity', _('Team activities')),
         ('theme', _('Theme')),
         ('category', _('Category')),
         ('status', _('Status')),

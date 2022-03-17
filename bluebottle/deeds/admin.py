@@ -50,6 +50,7 @@ class DeedAdmin(ActivityChildAdmin):
     inlines = (DeedParticipantInline,) + ActivityChildAdmin.inlines
     list_filter = ['status']
     search_fields = ['title', 'description']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',
@@ -67,7 +68,7 @@ class DeedAdmin(ActivityChildAdmin):
         'start',
         'end',
         'enable_impact',
-        'target'
+        'target',
     )
 
     export_as_csv_fields = (

@@ -200,6 +200,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
     inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter),

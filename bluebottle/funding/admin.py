@@ -153,7 +153,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donors_link', 'started',
+        'donors_link', 'started', 'team_activity'
     ]
 
     list_display = ActivityChildAdmin.list_display + [

@@ -303,7 +303,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     detail_fields = (
         'title',
         'initiative',
-        'owner',
+        'owner'
     )
 
     description_fields = (

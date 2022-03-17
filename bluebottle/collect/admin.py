@@ -52,6 +52,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
 
     list_display = ActivityChildAdmin.list_display + [
         'start',

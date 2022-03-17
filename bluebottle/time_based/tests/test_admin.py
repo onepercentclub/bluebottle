@@ -47,7 +47,7 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.staff_member)
         form = page.forms[0]
         self.assertFalse('team_activity' in form.fields)
-        self.assertFalse(activity.team_activity)
+        self.assertEqual(activity.team_activity, 'individuals')
 
     def test_team_activity_enabled(self):
         initiative_settings = InitiativePlatformSettings.load()
@@ -59,10 +59,10 @@ class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.staff_member)
         form = page.forms[0]
         self.assertTrue('team_activity' in form.fields)
-        form['team_activity'] = True
+        form['team_activity'] = 'teams'
         form.submit()
         activity.refresh_from_db()
-        self.assertTrue(activity.team_activity)
+        self.assertEqual(activity.team_activity, 'teams')
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):

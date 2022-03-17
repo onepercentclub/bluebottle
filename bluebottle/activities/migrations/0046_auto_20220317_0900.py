@@ -13,11 +13,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='activity',
             name='team_activity',
-            field=models.CharField(choices=[('teams', 'Teams'), ('individuals', 'Individuals')], default='individuals', help_text='Is this activity open for individuals or can only teams sign up?', max_length=100, verbose_name='Team acticity'),
-        ),
-        migrations.AlterField(
-            model_name='effortcontribution',
-            name='contribution_type',
-            field=models.CharField(choices=[('organizer', 'Activity Organizer'), ('deed', 'Deed particpant')], max_length=20, verbose_name='Contribution type'),
+            field=models.CharField(
+                choices=[('teams', 'Teams'), ('individuals', 'Individuals')],
+                default='individuals',
+                help_text='Is this activity open for individuals or can only teams sign up?',
+                max_length=100,
+                verbose_name='Team activity'
+            ),
         ),
     ]

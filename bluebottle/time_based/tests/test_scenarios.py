@@ -318,8 +318,8 @@ class PeriodActivityScenarioTestCase(BluebottleAdminTestCase):
             'slot_selection': 'all',
             'registration-deadline': str(date.today() + timedelta(days=1)),
             'capacity': 10,
-            'team_activity': True,
+            'team_activity': 'teams',
             'description': 'We will clean up the beach south of Katwijk'
         }
         activity = api_create_date_activity(self, self.initiative, activity_data)
-        self.assertEqual(activity.team_activity, True)
+        self.assertEqual(activity.team_activity, 'teams')

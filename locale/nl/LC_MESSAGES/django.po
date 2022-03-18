@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 08:55+0100\n"
-"PO-Revision-Date: 2022-03-18 08:07\n"
+"PO-Revision-Date: 2022-03-18 09:29\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -387,7 +387,7 @@ msgstr "Teams"
 
 #: bluebottle/activities/models.py:28
 msgid "Individuals"
-msgstr ""
+msgstr "Individuen"
 
 #: bluebottle/activities/models.py:32
 #: build/lib/bluebottle/activities/models.py:27
@@ -442,11 +442,11 @@ msgstr "Slug"
 
 #: bluebottle/activities/models.py:66
 msgid "Team activity"
-msgstr ""
+msgstr "Team activiteit"
 
 #: bluebottle/activities/models.py:70
 msgid "Is this activity open for individuals or can only teams sign up?"
-msgstr ""
+msgstr "Is deze activiteit open voor individuen of kan alleen door teams aangemeld worden?"
 
 #: bluebottle/activities/models.py:75 bluebottle/categories/models.py:34
 #: bluebottle/initiatives/models.py:94
@@ -2275,15 +2275,15 @@ msgstr "Sociaal"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Links als button weergeven"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Link in een nieuw tabblad openen"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Link"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"
@@ -4035,7 +4035,7 @@ msgstr "Standaard KYC accounts"
 
 #: bluebottle/funding/models.py:731
 msgid "Hide names from all donations"
-msgstr ""
+msgstr "Verberg namen voor alle donaties"
 
 #: bluebottle/funding/models.py:734 build/lib/bluebottle/funding/models.py:731
 msgid "Allow guests to donate rewards"
@@ -5713,15 +5713,15 @@ msgstr "Stappen om initiatief compleet te maken"
 
 #: bluebottle/initiatives/admin.py:265
 msgid "Activity types"
-msgstr ""
+msgstr "Activiteitstypen"
 
 #: bluebottle/initiatives/admin.py:270
 msgid "Search filters"
-msgstr ""
+msgstr "Zoekfilters"
 
 #: bluebottle/initiatives/admin.py:276
 msgid "Options"
-msgstr ""
+msgstr "Opties"
 
 #: bluebottle/initiatives/dashboard.py:11
 #: build/lib/bluebottle/initiatives/dashboard.py:11
@@ -5934,7 +5934,7 @@ msgstr "Type"
 
 #: bluebottle/initiatives/models.py:260
 msgid "Team activities"
-msgstr ""
+msgstr "Team activiteiten"
 
 #: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
 #: build/lib/bluebottle/initiatives/models.py:260
@@ -5960,11 +5960,11 @@ msgstr "Telefoon"
 
 #: bluebottle/initiatives/models.py:280
 msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
+msgstr "Schakel teamactiviteiten in waarbij teams zich aanmelden in plaats van individuen."
 
 #: bluebottle/initiatives/models.py:284
 msgid "Require initiators to specify a partner organisation when creating an initiative."
-msgstr ""
+msgstr "Verplicht initiatiefnemers om een partnerorganisatie op te geven bij het maken van een initiatief."
 
 #: bluebottle/initiatives/models.py:292
 #: build/lib/bluebottle/initiatives/models.py:284
@@ -8966,7 +8966,7 @@ msgctxt "email"
 msgid "\n"
 "<p>%(applicant_name)s has withdrawn from you activity \"%(title)s\"!</p>\n"
 msgstr "\n"
-"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n"
+"<p>%(applicant_name)s heeft zich afgemeld voor je activiteit \"%(title)s\"!</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_slot.html:5
 #: build/lib/bluebottle/time_based/templates/mails/messages/reminder_slot.html:5

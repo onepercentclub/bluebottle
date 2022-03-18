@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 08:55+0100\n"
-"PO-Revision-Date: 2022-03-18 08:07\n"
+"PO-Revision-Date: 2022-03-18 09:30\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -387,7 +387,7 @@ msgstr ""
 
 #: bluebottle/activities/models.py:28
 msgid "Individuals"
-msgstr ""
+msgstr "Individuales"
 
 #: bluebottle/activities/models.py:32
 #: build/lib/bluebottle/activities/models.py:27
@@ -442,11 +442,11 @@ msgstr ""
 
 #: bluebottle/activities/models.py:66
 msgid "Team activity"
-msgstr ""
+msgstr "Actividad del equipo"
 
 #: bluebottle/activities/models.py:70
 msgid "Is this activity open for individuals or can only teams sign up?"
-msgstr ""
+msgstr "¿Está abierta esta actividad para los individuos o sólo pueden registrarse equipos?"
 
 #: bluebottle/activities/models.py:75 bluebottle/categories/models.py:34
 #: bluebottle/initiatives/models.py:94
@@ -3967,7 +3967,7 @@ msgstr ""
 
 #: bluebottle/funding/models.py:731
 msgid "Hide names from all donations"
-msgstr ""
+msgstr "Ocultar nombres de todas las donaciones"
 
 #: bluebottle/funding/models.py:734 build/lib/bluebottle/funding/models.py:731
 msgid "Allow guests to donate rewards"
@@ -5548,15 +5548,15 @@ msgstr ""
 
 #: bluebottle/initiatives/admin.py:265
 msgid "Activity types"
-msgstr ""
+msgstr "Tipos de actividades"
 
 #: bluebottle/initiatives/admin.py:270
 msgid "Search filters"
-msgstr ""
+msgstr "Filtros de búsqueda"
 
 #: bluebottle/initiatives/admin.py:276
 msgid "Options"
-msgstr ""
+msgstr "Opciones"
 
 #: bluebottle/initiatives/dashboard.py:11
 #: build/lib/bluebottle/initiatives/dashboard.py:11
@@ -5769,7 +5769,7 @@ msgstr ""
 
 #: bluebottle/initiatives/models.py:260
 msgid "Team activities"
-msgstr ""
+msgstr "Actividad del equipo"
 
 #: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
 #: build/lib/bluebottle/initiatives/models.py:260
@@ -5795,11 +5795,11 @@ msgstr ""
 
 #: bluebottle/initiatives/models.py:280
 msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
+msgstr "Activar actividades de equipo donde los equipos se registren en lugar de individuos."
 
 #: bluebottle/initiatives/models.py:284
 msgid "Require initiators to specify a partner organisation when creating an initiative."
-msgstr ""
+msgstr "Requiere que los iniciadores especifiquen una organización asociada a la hora de crear una iniciativa."
 
 #: bluebottle/initiatives/models.py:292
 #: build/lib/bluebottle/initiatives/models.py:284

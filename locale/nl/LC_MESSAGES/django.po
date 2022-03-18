@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-18 09:32\n"
+"PO-Revision-Date: 2022-03-18 11:53\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -5112,19 +5112,19 @@ msgstr "Maak een nieuw segment aan als een user inlogt met een onbekend segment.
 
 #: bluebottle/members/models.py:89
 msgid "Require members to enter or verify the fields below once after logging in."
-msgstr ""
+msgstr "Verplicht leden om na het inloggen eenmalig onderstaande velden in te voeren of te verifiëren."
 
 #: bluebottle/members/models.py:95
 msgid "Require members to enter their office location once after logging in."
-msgstr ""
+msgstr "Verplicht leden om hun kantoor locatie eenmalig in te voeren na het inloggen."
 
 #: bluebottle/members/models.py:99
 msgid "Verify SSO data office location"
-msgstr ""
+msgstr "Verify SSO data office location"
 
 #: bluebottle/members/models.py:101
 msgid "Require members to verify their office location once if it is filled via SSO."
-msgstr ""
+msgstr "Verplicht leden om hun kantoor locatie eenmalig te verifiëren als die via SSO is gevuld."
 
 #: bluebottle/members/models.py:105 bluebottle/members/models.py:106
 msgid "member platform settings"
@@ -5767,7 +5767,7 @@ msgstr "Overerven"
 
 #: bluebottle/segments/models.py:26
 msgid "Newly created activities inherit the segments of the activity creator."
-msgstr ""
+msgstr "Nieuw aangemaakte activiteiten erven de segmenten van de maker van de activiteit."
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
@@ -5775,11 +5775,11 @@ msgstr "Verplicht voor gebruikers"
 
 #: bluebottle/segments/models.py:34
 msgid "Require members to enter their segment type once after logging in."
-msgstr ""
+msgstr "Verplicht leden om hun segment type eenmalig in te voeren na het inloggen."
 
 #: bluebottle/segments/models.py:40
 msgid "Verify SSO data"
-msgstr ""
+msgstr "Verifieer SSO-gegevens"
 
 #: bluebottle/segments/models.py:53
 msgid "Editable in user profile"

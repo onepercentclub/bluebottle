@@ -2,6 +2,7 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.members.models import Member
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -179,7 +180,11 @@ class LivePayoutAccountRejected(TransitionMessage):
 
     def get_recipients(self):
         """platform support email addresses"""
-        return settings.SUPPORT_EMAIL_ADDRESSES
+        members = []
+        for email in settings.SUPPORT_EMAIL_ADDRESSES:
+            member, _c = Member.objects.get_or_create(email=email)
+            members.append(member)
+        return members
 
 
 class PayoutAccountVerified(TransitionMessage):

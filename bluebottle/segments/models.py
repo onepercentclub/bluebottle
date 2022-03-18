@@ -23,7 +23,7 @@ class SegmentType(models.Model):
     inherit = models.BooleanField(
         _('Inherit'),
         help_text=_(
-            'Newly created activities will inherit the segments set on the activity owner.'
+            'Newly created activities inherit the segments of the activity creator.'
         ),
         default=True
     )
@@ -31,16 +31,17 @@ class SegmentType(models.Model):
     required = models.BooleanField(
         _('Required for members'),
         help_text=_(
-            'Enable to require members to enter their segment type after logging in'
+            'Require members to enter their segment type once after logging in.'
         ),
         default=False
     )
 
     needs_verification = models.BooleanField(
-        _('Needs verification'),
-        help_text=_(
-            'Enable to require members to verify their segment type data that was provided by SSO'
-        ),
+        _('Verify SSO data'),
+        help_text=_((
+            'Require members to verify their segment type once if it is filled via SSO.'
+            'Only works if "Required for members" is enabled.'
+        )),
         default=False
     )
 

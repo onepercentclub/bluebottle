@@ -86,18 +86,19 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     anonymization_age = models.IntegerField(
         default=0,
-        help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
+        help_text=_("Require members to enter or verify the fields below once after logging in.")
     )
 
     require_office = models.BooleanField(
         _('Office location'),
         default=False,
-        help_text=_('Required')
+        help_text=_('Require members to enter their office location once after logging in.')
     )
 
     verify_office = models.BooleanField(
+        _('Verify SSO data office location'),
         default=False,
-        help_text=_('Let users verify their office location')
+        help_text=_('Require members to verify their office location once if it is filled via SSO.')
     )
 
     class Meta(object):

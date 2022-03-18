@@ -2480,15 +2480,15 @@ msgstr "Sociaal"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Links als button weergeven"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Link in een nieuw tabblad openen"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Link"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"
@@ -9886,10 +9886,8 @@ msgctxt "email"
 msgid ""
 "\n"
 "<p>%(applicant_name)s has withdrawn from you activity \"%(title)s\"!</p>\n"
-msgstr ""
-"\n"
-"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!"
-"</p>\n"
+msgstr "\n"
+"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_slot.html:5
 #: build/lib/bluebottle/time_based/templates/mails/messages/reminder_slot.html:5

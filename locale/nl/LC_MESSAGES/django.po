@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-05 14:14+0100\n"
-"PO-Revision-Date: 2022-03-09 09:52\n"
+"PO-Revision-Date: 2022-03-18 08:06\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -7115,7 +7115,7 @@ msgstr "Bestand is geïnfecteerd met een virus."
 #: bluebottle/utils/widgets.py:50
 msgid "Hour"
 msgid_plural "Hours"
-msgstr[0] "uur"
+msgstr[0] "Uur"
 msgstr[1] "Uren"
 
 #: bluebottle/utils/widgets.py:52

@@ -914,7 +914,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payout_account.status, 'rejected')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
-        self.assertEqual(mail.outbox[0].bcc, ['support@example.com', 'helpdesk@example.com'])
 
         # Missing fields
         self.connect_account.individual.requirements.eventually_due = []
@@ -963,6 +962,40 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(payout_account.status, u'verified')
         self.assertEqual(mail.outbox[1].subject, 'Your identity has been verified')
         self.assertEqual(mail.outbox[1].bcc, [])
+
+    def test_incomplete_open(self):
+        mail.outbox = []
+        self.funding.status = 'open'
+        self.funding.save()
+        data = {
+            "object": {
+                "id": self.payout_account.account_id,
+                "object": "account"
+            }
+        }
+        # Missing fields
+        self.connect_account.individual.requirements.eventually_due = ['dob.day']
+        self.connect_account.individual.requirements.currently_due = []
+        self.connect_account.individual.requirements.past_due = []
+        self.connect_account.individual.requirements.pending_verification = False
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, 'rejected')
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
+        self.assertEqual(mail.outbox[1].subject, 'Live campaign identity verification failed!')
+        self.assertEqual(mail.outbox[2].subject, 'Live campaign identity verification failed!')
 
     def test_pending(self):
         data = {

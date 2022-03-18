@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-15 10:46+0100\n"
-"PO-Revision-Date: 2022-03-18 09:29\n"
+"POT-Creation-Date: 2022-03-18 10:31+0100\n"
+"PO-Revision-Date: 2022-03-18 09:32\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -310,7 +310,7 @@ msgstr "Vidéo"
 msgid "Do you have a video pitch or a short movie that explains your activity? Cool! We can't wait to see it! You can paste the link to YouTube or Vimeo video here"
 msgstr "Vous avez un pitch vidéo ou un court métrage qui explique votre activité? Nous avons hâte de le voir ! Vous pouvez coller le lien vers la vidéo YouTube ou Vimeo ici"
 
-#: bluebottle/activities/models.py:77 bluebottle/members/models.py:138
+#: bluebottle/activities/models.py:77 bluebottle/members/models.py:139
 msgid "Segment"
 msgstr "Segment"
 
@@ -1475,7 +1475,7 @@ msgstr "initiatives"
 #: bluebottle/categories/models.py:19 bluebottle/geo/models.py:131
 #: bluebottle/impact/models.py:35 bluebottle/initiatives/models.py:80
 #: bluebottle/initiatives/models.py:326 bluebottle/organizations/models.py:22
-#: bluebottle/segments/models.py:21 bluebottle/segments/models.py:83
+#: bluebottle/segments/models.py:21 bluebottle/segments/models.py:84
 msgid "slug"
 msgstr "Slug"
 
@@ -1493,7 +1493,7 @@ msgid "This video will autoplay at the background. Allowed types are mp4, ogg, 3
 msgstr "Cette vidéo sera lue automatiquement en arrière-plan. Les types autorisés sont mp4, ogg, 3gp, avi, mov et webm. Le fichier doit être plus petit que 10 Mo."
 
 #: bluebottle/categories/models.py:49 bluebottle/organizations/models.py:34
-#: bluebottle/segments/models.py:120
+#: bluebottle/segments/models.py:121
 msgid "logo"
 msgstr "Logo"
 
@@ -1508,7 +1508,7 @@ msgstr "Image du logo de la catégorie"
 #: bluebottle/initiatives/models.py:330 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:8 bluebottle/offices/models.py:21
 #: bluebottle/organizations/models.py:21 bluebottle/organizations/models.py:69
-#: bluebottle/segments/models.py:20 bluebottle/segments/models.py:82
+#: bluebottle/segments/models.py:20 bluebottle/segments/models.py:83
 #: bluebottle/time_based/models.py:673
 msgid "name"
 msgstr "Nom"
@@ -3053,10 +3053,14 @@ msgid "Plain KYC accounts"
 msgstr "Comptes simples KYC"
 
 #: bluebottle/funding/models.py:731
+msgid "Hide names from all donations"
+msgstr "Masquer les noms de tous les dons"
+
+#: bluebottle/funding/models.py:734
 msgid "Allow guests to donate rewards"
 msgstr "Autoriser les invités à donner des récompenses"
 
-#: bluebottle/funding/models.py:735 bluebottle/funding/models.py:736
+#: bluebottle/funding/models.py:738 bluebottle/funding/models.py:739
 msgid "funding settings"
 msgstr "paramètres de financement"
 
@@ -4461,7 +4465,7 @@ msgid "impact types"
 msgstr "Types d'impact"
 
 #: bluebottle/impact/models.py:99 bluebottle/looker/models.py:14
-#: bluebottle/segments/models.py:92
+#: bluebottle/segments/models.py:93
 msgid "type"
 msgstr "Type de type"
 
@@ -4948,7 +4952,7 @@ msgstr "Adresse e-mail"
 msgid "A valid, unique email address."
 msgstr "Une adresse email valide et unique."
 
-#: bluebottle/members/admin.py:94 bluebottle/segments/models.py:48
+#: bluebottle/members/admin.py:94 bluebottle/segments/models.py:49
 msgid "Is active"
 msgstr "Est actif"
 
@@ -5114,55 +5118,58 @@ msgid "Create new segments when a user logs in. Leave unchecked if only priorly 
 msgstr "Créer de nouveaux segments lorsqu'un utilisateur se connecte. Laisser décoché si seulement ceux préalablement spécifiés doivent être utilisés."
 
 #: bluebottle/members/models.py:89
-msgid "The number of days after which user data should be anonymised. 0 for no anonymisation"
-msgstr "Le nombre de jours après lesquels les données de l'utilisateur doivent être anonymisées. 0 pour aucune anonymisation"
+msgid "Require members to enter or verify the fields below once after logging in."
+msgstr ""
 
-#: bluebottle/members/models.py:95 bluebottle/time_based/admin.py:442
-#: bluebottle/time_based/admin.py:497 bluebottle/time_based/admin.py:498
-msgid "Required"
-msgstr "Requis"
+#: bluebottle/members/models.py:95
+msgid "Require members to enter their office location once after logging in."
+msgstr ""
 
-#: bluebottle/members/models.py:100
-msgid "Let users verify their office location"
-msgstr "Autoriser les utilisateurs à vérifier leur emplacement de bureau"
+#: bluebottle/members/models.py:99
+msgid "Verify SSO data office location"
+msgstr ""
 
-#: bluebottle/members/models.py:104 bluebottle/members/models.py:105
+#: bluebottle/members/models.py:101
+msgid "Require members to verify their office location once if it is filled via SSO."
+msgstr ""
+
+#: bluebottle/members/models.py:105 bluebottle/members/models.py:106
 msgid "member platform settings"
 msgstr "paramètres de la plateforme des membres"
 
-#: bluebottle/members/models.py:110
+#: bluebottle/members/models.py:111
 msgid "Was verified for voting by recaptcha."
 msgstr "A été vérifié pour le vote par recaptcha."
 
-#: bluebottle/members/models.py:112
+#: bluebottle/members/models.py:113
 msgid "Matching"
 msgstr "Correspondance"
 
-#: bluebottle/members/models.py:114
+#: bluebottle/members/models.py:115
 msgid "Monthly overview of activities that match this person's profile"
 msgstr "Aperçu mensuel des activités qui correspondent au profil de cette personne"
 
-#: bluebottle/members/models.py:117 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:118 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr "id distant"
 
-#: bluebottle/members/models.py:121
+#: bluebottle/members/models.py:122
 msgid "Last Logout"
 msgstr "Dernière déconnexion"
 
-#: bluebottle/members/models.py:124
+#: bluebottle/members/models.py:125
 msgid "external SCIM id"
 msgstr "id SCIM externe"
 
-#: bluebottle/members/models.py:133
+#: bluebottle/members/models.py:134
 msgid "When the user updated their matching preferences."
 msgstr "Quand l'utilisateur a mis à jour ses préférences de correspondance."
 
-#: bluebottle/members/models.py:234
+#: bluebottle/members/models.py:235
 msgid "User activity"
 msgstr "Activité de l'utilisateur"
 
-#: bluebottle/members/models.py:235
+#: bluebottle/members/models.py:236
 msgid "User activities"
 msgstr "Activités de l'utilisateur"
 
@@ -5767,82 +5774,78 @@ msgid "Inherit"
 msgstr "Hériter"
 
 #: bluebottle/segments/models.py:26
-msgid "Newly created activities will inherit the segments set on the activity owner."
-msgstr "Les activités nouvellement créées hériteront des segments définis sur le propriétaire de l'activité."
+msgid "Newly created activities inherit the segments of the activity creator."
+msgstr ""
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
 msgstr "Requis pour les membres"
 
 #: bluebottle/segments/models.py:34
-msgid "Enable to require members to enter their segment type after logging in"
-msgstr "Activer pour demander aux membres d'entrer leur type de segment après la connexion"
+msgid "Require members to enter their segment type once after logging in."
+msgstr ""
 
 #: bluebottle/segments/models.py:40
-msgid "Needs verification"
-msgstr "Vérification nécessaire"
+msgid "Verify SSO data"
+msgstr ""
 
-#: bluebottle/segments/models.py:42
-msgid "Enable to require members to verify their segment type data that was provided by SSO"
-msgstr "Activer pour demander aux membres de vérifier les données de leur type de segment qui ont été fournies par SSO"
-
-#: bluebottle/segments/models.py:52
+#: bluebottle/segments/models.py:53
 msgid "Editable in user profile"
 msgstr "Modifiable dans le profil utilisateur"
 
-#: bluebottle/segments/models.py:56
+#: bluebottle/segments/models.py:57
 msgid "Enable search filters"
 msgstr "Activer les filtres de recherche"
 
-#: bluebottle/segments/models.py:99
+#: bluebottle/segments/models.py:100
 msgid "Email domains"
 msgstr "Domaines Email"
 
-#: bluebottle/segments/models.py:102
+#: bluebottle/segments/models.py:103
 msgid "Users with email addresses for this domain are automatically added to this segment."
 msgstr "Les utilisateurs ayant des adresses e-mail pour ce domaine sont automatiquement ajoutés à ce segment."
 
-#: bluebottle/segments/models.py:106
+#: bluebottle/segments/models.py:107
 msgid "Slogan"
 msgstr "Slogan"
 
-#: bluebottle/segments/models.py:108
+#: bluebottle/segments/models.py:109
 msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
 msgstr "Une courte phrase pour expliquer votre segment. Cette phrase est directement visible sur la page."
 
-#: bluebottle/segments/models.py:113
+#: bluebottle/segments/models.py:114
 msgid "Story"
 msgstr "Story"
 
-#: bluebottle/segments/models.py:115
+#: bluebottle/segments/models.py:116
 msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
 msgstr "Une histoire plus détaillée pour votre segment. Cette histoire peut être consultée via un lien sur la page."
 
-#: bluebottle/segments/models.py:122
+#: bluebottle/segments/models.py:123
 msgid "The uploaded image will be scaled so that it is fully visible."
 msgstr "L'image téléchargée sera mise à l'échelle pour qu'elle soit pleinement visible."
 
-#: bluebottle/segments/models.py:133
+#: bluebottle/segments/models.py:134
 msgid "Background color"
 msgstr "Couleur de fond"
 
-#: bluebottle/segments/models.py:135
+#: bluebottle/segments/models.py:136
 msgid "Add a background colour to your segment page."
 msgstr "Ajoutez une couleur de fond à votre page de segment."
 
-#: bluebottle/segments/models.py:140
+#: bluebottle/segments/models.py:141
 msgid "cover image"
 msgstr "image de présentation"
 
-#: bluebottle/segments/models.py:142
+#: bluebottle/segments/models.py:143
 msgid "The uploaded image will be cropped to fit a 4:3 rectangle."
 msgstr "L'image téléchargée sera recadrée pour s'adapter à un rectangle 4:3."
 
-#: bluebottle/segments/models.py:153
+#: bluebottle/segments/models.py:154
 msgid "Restricted"
 msgstr "Restreint"
 
-#: bluebottle/segments/models.py:156
+#: bluebottle/segments/models.py:157
 msgid "Closed segments will only be accessible to members that belong to this segment."
 msgstr "Les segments fermés ne seront accessibles qu'aux membres qui appartiennent à ce segment."
 
@@ -5902,7 +5905,7 @@ msgstr "Rapports"
 msgid "Settings"
 msgstr "Réglages"
 
-#: bluebottle/settings/admin_dashboard.py:306
+#: bluebottle/settings/admin_dashboard.py:310
 msgid "Manage Reporting"
 msgstr "Gérer les rapports"
 
@@ -6155,6 +6158,11 @@ msgstr "Réussi"
 #: bluebottle/time_based/admin.py:436
 msgid "Slot required"
 msgstr "Emplacement requis"
+
+#: bluebottle/time_based/admin.py:442 bluebottle/time_based/admin.py:497
+#: bluebottle/time_based/admin.py:498
+msgid "Required"
+msgstr "Requis"
 
 #: bluebottle/time_based/admin.py:443 bluebottle/time_based/admin.py:496
 msgid "Optional"

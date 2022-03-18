@@ -44,7 +44,7 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 
 
 def has_live_campaign(effect):
-    """connected payout account is verified"""
+    """has connected funding activity that is open"""
     live_statuses = ['open']
     return Funding.objects.filter(
         bank_account__connect_account=effect.instance

@@ -2,7 +2,7 @@ from bluebottle.funding.messages import PayoutAccountRejected, LivePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
-from build.lib.bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory
 
 
 class PayoutAccountTriggersTestCase(TriggerTestCase):

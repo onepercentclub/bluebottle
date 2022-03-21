@@ -7754,11 +7754,6 @@ msgstr ""
 msgid "Slot required"
 msgstr ""
 
-#: bluebottle/time_based/admin.py:442 bluebottle/time_based/admin.py:497
-#: bluebottle/time_based/admin.py:498
-msgid "Required"
-msgstr ""
-
 #: bluebottle/time_based/admin.py:443 bluebottle/time_based/admin.py:496
 #: build/lib/bluebottle/time_based/admin.py:443
 #: build/lib/bluebottle/time_based/admin.py:496

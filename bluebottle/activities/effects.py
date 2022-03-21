@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.activities.models import Organizer, EffortContribution
+from bluebottle.activities.models import Organizer, EffortContribution, Activity, Team
 
 
 class CreateOrganizer(Effect):
@@ -46,6 +46,7 @@ class SetContributionDateEffect(Effect):
 
     conditions = []
     display = False
+    template = 'admin/create_preparation_time_contribution.html'
 
     def pre_save(self, **kwargs):
         if self.instance.contribution_type == 'organizer':
@@ -53,3 +54,26 @@ class SetContributionDateEffect(Effect):
 
     def __str__(self):
         return _('Set the contribution date.')
+
+
+class CreateTeamEffect(Effect):
+    "Set the contribution date"
+
+    display = True
+    title = _('Create a team')
+    template = 'admin/create_team.html'
+
+    @property
+    def is_valid(self):
+        return (
+            super().is_valid and
+            self.instance.activity.team_activity == Activity.TeamActivityChoices.teams
+        )
+
+    def post_save(self, **kwargs):
+        if not self.instance.team:
+            self.instance.team = Team.objects.create(
+                owner=self.instance.user,
+                activity=self.instance.activity
+            )
+            self.instance.save()

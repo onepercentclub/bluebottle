@@ -9,6 +9,9 @@ from bluebottle.activities.states import OrganizerStateMachine, EffortContributi
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
+
+from bluebottle.activities.effects import CreateTeamEffect
+
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -269,7 +272,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantJoinedNotification,
                     conditions=[is_user]
-                )
+                ),
+                CreateTeamEffect
             ]
         ),
         TransitionTrigger(

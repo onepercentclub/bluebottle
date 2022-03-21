@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-21 11:37\n"
+"PO-Revision-Date: 2022-03-21 15:11\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -7623,11 +7623,6 @@ msgstr "Réussi"
 #: build/lib/bluebottle/time_based/admin.py:436
 msgid "Slot required"
 msgstr "Emplacement requis"
-
-#: bluebottle/time_based/admin.py:442 bluebottle/time_based/admin.py:497
-#: bluebottle/time_based/admin.py:498
-msgid "Required"
-msgstr "Requis"
 
 #: bluebottle/time_based/admin.py:443 bluebottle/time_based/admin.py:496
 #: build/lib/bluebottle/time_based/admin.py:443

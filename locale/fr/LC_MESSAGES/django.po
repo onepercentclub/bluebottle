@@ -8367,10 +8367,6 @@ msgstr "Réussi"
 msgid "Slot required"
 msgstr "Emplacement requis"
 
-#: bluebottle/time_based/admin.py:442 bluebottle/time_based/admin.py:497
-#: bluebottle/time_based/admin.py:498
-msgid "Required"
-msgstr "Requis"
 
 #: bluebottle/time_based/admin.py:443 bluebottle/time_based/admin.py:496
 #: build/lib/bluebottle/time_based/admin.py:443

@@ -7054,11 +7054,6 @@ msgstr ""
 msgid "The number of days after which user data should be anonymised. 0 for no anonymisation"
 msgstr "Het aantal dagen waarna de gebruikers data geanonimiseerd moet worden. 0 om nooit te anonimiseren"
 
-#: bluebottle/members/models.py:95 bluebottle/time_based/admin.py:442
-#: bluebottle/time_based/admin.py:497 bluebottle/time_based/admin.py:498
-msgid "Required"
-msgstr "Vereist"
-
 #: bluebottle/members/models.py:99
 msgid "Verify SSO data office location"
 msgstr ""

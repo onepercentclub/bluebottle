@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: nl\n"
-"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 233\n"
+"X-Crowdin-File: /ticket.BB-19683-profile-questions-bo-copy-translate/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 824\n"
 
 #: bluebottle/activities/admin.py:60 bluebottle/activities/admin.py:528
 #: bluebottle/activities/admin.py:618 bluebottle/contact/models.py:24
@@ -460,8 +460,6 @@ msgstr ""
 "link in"
 
 #: bluebottle/activities/models.py:77 bluebottle/members/models.py:138
-#: build/lib/bluebottle/activities/models.py:77
-#: build/lib/bluebottle/members/models.py:126
 msgid "Segment"
 msgstr "Segment"
 
@@ -2195,14 +2193,6 @@ msgstr "initiatieven"
 #: bluebottle/impact/models.py:35 bluebottle/initiatives/models.py:80
 #: bluebottle/initiatives/models.py:326 bluebottle/organizations/models.py:22
 #: bluebottle/segments/models.py:21 bluebottle/segments/models.py:83
-#: build/lib/bluebottle/categories/models.py:19
-#: build/lib/bluebottle/geo/models.py:131
-#: build/lib/bluebottle/impact/models.py:35
-#: build/lib/bluebottle/initiatives/models.py:80
-#: build/lib/bluebottle/initiatives/models.py:326
-#: build/lib/bluebottle/organizations/models.py:22
-#: build/lib/bluebottle/segments/models.py:21
-#: build/lib/bluebottle/segments/models.py:66
 msgid "slug"
 msgstr "url"
 
@@ -2231,9 +2221,6 @@ msgstr ""
 
 #: bluebottle/categories/models.py:49 bluebottle/organizations/models.py:34
 #: bluebottle/segments/models.py:120
-#: build/lib/bluebottle/categories/models.py:49
-#: build/lib/bluebottle/organizations/models.py:34
-#: build/lib/bluebottle/segments/models.py:103
 msgid "logo"
 msgstr "logo"
 
@@ -2249,7 +2236,7 @@ msgstr "Categorielogo afbeelding"
 #: bluebottle/initiatives/models.py:330 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:8 bluebottle/offices/models.py:21
 #: bluebottle/organizations/models.py:21 bluebottle/organizations/models.py:69
-#: bluebottle/segments/models.py:20 bluebottle/segments/models.py:82
+#: bluebottle/segments/models.py:20 bluebottle/segments/models.py:83
 #: bluebottle/time_based/models.py:673
 #: build/lib/bluebottle/categories/models.py:62
 #: build/lib/bluebottle/collect/models.py:25
@@ -3385,7 +3372,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/models.py:23 build/lib/bluebottle/deeds/models.py:23
 msgid "The number of users you want to participate."
-msgstr "Het aantal gebruikers dat jij wilt dat deelnemen."
+msgstr "Het aantal gebruikers dat jij wilt dat deelneemt."
 
 #: bluebottle/deeds/models.py:33 bluebottle/initiatives/models.py:250
 #: build/lib/bluebottle/deeds/models.py:33
@@ -4317,18 +4304,14 @@ msgid "Plain KYC accounts"
 msgstr "Standaard KYC accounts"
 
 #: bluebottle/funding/models.py:731
-#, fuzzy
-#| msgid "Create a donation"
 msgid "Hide names from all donations"
-msgstr "Genereer een donatie"
+msgstr "Verberg namen voor alle donaties"
 
-#: bluebottle/funding/models.py:734 build/lib/bluebottle/funding/models.py:731
+#: bluebottle/funding/models.py:734
 msgid "Allow guests to donate rewards"
 msgstr "Sta gasten toe om giften te doneren"
 
-#: bluebottle/funding/models.py:738 bluebottle/funding/models.py:739
-#: build/lib/bluebottle/funding/models.py:735
-#: build/lib/bluebottle/funding/models.py:736
+#: bluebottle/funding/models.py:735 bluebottle/funding/models.py:736
 msgid "funding settings"
 msgstr "crowdfunding instellingen"
 
@@ -6085,7 +6068,7 @@ msgstr "Eenheid"
 #: build/lib/bluebottle/impact/effects.py:8
 #: build/lib/bluebottle/impact/effects.py:26
 msgid "Update impact goals"
-msgstr "Pas impact resultaten aan"
+msgstr "Update impact doelen"
 
 #: bluebottle/impact/models.py:12 build/lib/bluebottle/impact/models.py:12
 msgid "People"
@@ -6188,9 +6171,7 @@ msgid "impact types"
 msgstr "impact types"
 
 #: bluebottle/impact/models.py:99 bluebottle/looker/models.py:14
-#: bluebottle/segments/models.py:92 build/lib/bluebottle/impact/models.py:99
-#: build/lib/bluebottle/looker/models.py:14
-#: build/lib/bluebottle/segments/models.py:75
+#: bluebottle/segments/models.py:92
 msgid "type"
 msgstr "type"
 
@@ -6204,7 +6185,7 @@ msgstr "Zet een doel voor de impact die je verwacht te maken"
 
 #: bluebottle/impact/models.py:119 build/lib/bluebottle/impact/models.py:119
 msgid "realized from contributions"
-msgstr "gerealiseerde door bijdragen"
+msgstr "gerealiseerd door bijdragen"
 
 #: bluebottle/impact/models.py:125 build/lib/bluebottle/impact/models.py:125
 msgid "realized"
@@ -6319,13 +6300,13 @@ msgstr "Je bent aangewezen als beoordelaar voor \"{title}\"."
 #: build/lib/bluebottle/initiatives/messages.py:118
 #, python-brace-format
 msgid "You have a new post on '{title}'"
-msgstr "Je hebt een nieuwe reactie op '{title}'"
+msgstr "Je hebt een nieuw bericht op '{title}'"
 
 #: bluebottle/initiatives/messages.py:134
 #: build/lib/bluebottle/initiatives/messages.py:134
 #, python-brace-format
 msgid "Update from '{title}'"
-msgstr "Nieuwe update van '{title}'"
+msgstr "Update van '{title}'"
 
 #: bluebottle/initiatives/models.py:44
 #: build/lib/bluebottle/initiatives/models.py:44
@@ -6890,8 +6871,6 @@ msgid "A valid, unique email address."
 msgstr "Een geldig, uniek e-mailadres."
 
 #: bluebottle/members/admin.py:94 bluebottle/segments/models.py:48
-#: build/lib/bluebottle/members/admin.py:93
-#: build/lib/bluebottle/segments/models.py:31
 msgid "Is active"
 msgstr "Is actief"
 
@@ -7071,69 +7050,58 @@ msgstr ""
 "Maak een nieuw segment aan als een user inlogt met een onbekend segment. "
 "Laat open als alleen eerder ingevoerde segmenten moeten worden gebruikt."
 
-#: bluebottle/members/models.py:89 build/lib/bluebottle/members/models.py:88
-msgid ""
-"The number of days after which user data should be anonymised. 0 for no "
-"anonymisation"
-msgstr ""
-"Het aantal dagen waarna de gebruikers data geanonimiseerd moet worden. 0 om "
-"nooit te anonimiseren"
+#: bluebottle/members/models.py:89
+msgid "The number of days after which user data should be anonymised. 0 for no anonymisation"
+msgstr "Het aantal dagen waarna de gebruikers data geanonimiseerd moet worden. 0 om nooit te anonimiseren"
 
 #: bluebottle/members/models.py:95 bluebottle/time_based/admin.py:442
 #: bluebottle/time_based/admin.py:497 bluebottle/time_based/admin.py:498
-#: build/lib/bluebottle/time_based/admin.py:442
-#: build/lib/bluebottle/time_based/admin.py:497
-#: build/lib/bluebottle/time_based/admin.py:498
 msgid "Required"
 msgstr "Vereist"
 
-#: bluebottle/members/models.py:100
-msgid "Let users verify their office location"
-msgstr "Laat gebruikers hun kantoorlocatie verifiëren"
+#: bluebottle/members/models.py:99
+msgid "Verify SSO data office location"
+msgstr ""
 
 #: bluebottle/members/models.py:104 bluebottle/members/models.py:105
-#: build/lib/bluebottle/members/models.py:92
-#: build/lib/bluebottle/members/models.py:93
 msgid "member platform settings"
 msgstr "gebruiker instellingen"
 
-#: bluebottle/members/models.py:110 build/lib/bluebottle/members/models.py:98
+#: bluebottle/members/models.py:110
 msgid "Was verified for voting by recaptcha."
 msgstr "Is geverifieerd voor het stemmen door recaptcha."
 
-#: bluebottle/members/models.py:112 build/lib/bluebottle/members/models.py:100
+#: bluebottle/members/models.py:112
 msgid "Matching"
 msgstr "Matching"
 
-#: bluebottle/members/models.py:114 build/lib/bluebottle/members/models.py:102
+#: bluebottle/members/models.py:114
 msgid "Monthly overview of activities that match this person's profile"
 msgstr ""
 "Maandelijks overzicht van de activiteiten die overeenkomen met het profiel "
 "van deze persoon"
 
 #: bluebottle/members/models.py:117 bluebottle/token_auth/tests/models.py:12
-#: build/lib/bluebottle/members/models.py:105
-#: build/lib/bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr "remote_id"
 
-#: bluebottle/members/models.py:121 build/lib/bluebottle/members/models.py:109
+#: bluebottle/members/models.py:121
 msgid "Last Logout"
 msgstr "Laatste keer uitgelogd"
 
-#: bluebottle/members/models.py:124 build/lib/bluebottle/members/models.py:112
+#: bluebottle/members/models.py:124
 msgid "external SCIM id"
 msgstr "externe SCIM id"
 
-#: bluebottle/members/models.py:133 build/lib/bluebottle/members/models.py:121
+#: bluebottle/members/models.py:133
 msgid "When the user updated their matching preferences."
 msgstr "Wanneer de matching voorkeuren zijn opgegeven."
 
-#: bluebottle/members/models.py:234 build/lib/bluebottle/members/models.py:196
+#: bluebottle/members/models.py:234
 msgid "User activity"
 msgstr "Gebruikersactiviteit"
 
-#: bluebottle/members/models.py:235 build/lib/bluebottle/members/models.py:197
+#: bluebottle/members/models.py:235
 msgid "User activities"
 msgstr "Gebruikersactiviteiten"
 
@@ -7917,118 +7885,88 @@ msgstr "Aantal segmenten"
 msgid "Inherit"
 msgstr "Overerven"
 
-#: bluebottle/segments/models.py:26 build/lib/bluebottle/segments/models.py:26
-msgid ""
-"Newly created activities will inherit the segments set on the activity owner."
-msgstr ""
-"Nieuw gecreëerde activiteiten erven de segmenten van de eigenaar van de "
-"activiteit."
+#: bluebottle/segments/models.py:26
+msgid "Newly created activities will inherit the segments set on the activity owner."
+msgstr "Nieuw gecreëerde activiteiten erven de segmenten van de eigenaar van de activiteit."
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
 msgstr "Verplicht voor gebruikers"
 
 #: bluebottle/segments/models.py:34
-msgid "Enable to require members to enter their segment type after logging in"
-msgstr "Schakel in om leden hun segment type in te voeren na het inloggen"
+msgid "Require members to enter their segment type once after logging in."
+msgstr ""
 
 #: bluebottle/segments/models.py:40
-msgid "Needs verification"
-msgstr "Verificatie vereist"
+msgid "Verify SSO data"
+msgstr ""
 
 #: bluebottle/segments/models.py:42
-msgid ""
-"Enable to require members to verify their segment type data that was "
-"provided by SSO"
-msgstr ""
-"Inschakelen om leden te verplichten hun segment type gegevens te verifiëren "
-"die door SSO zijn verstrekt"
+msgid "Enable to require members to verify their segment type data that was provided by SSO"
+msgstr "Inschakelen om leden te verplichten hun segment type gegevens te verifiëren die door SSO zijn verstrekt"
 
-#: bluebottle/segments/models.py:52 build/lib/bluebottle/segments/models.py:35
+#: bluebottle/segments/models.py:52
 msgid "Editable in user profile"
 msgstr "Bewerkbaar in gebruikersprofiel"
 
-#: bluebottle/segments/models.py:56 build/lib/bluebottle/segments/models.py:39
+#: bluebottle/segments/models.py:56
 msgid "Enable search filters"
 msgstr "Zoekfilters activeren"
 
-#: bluebottle/segments/models.py:99 build/lib/bluebottle/segments/models.py:82
+#: bluebottle/segments/models.py:99
 msgid "Email domains"
 msgstr "E-maildomeinen"
 
-#: bluebottle/segments/models.py:102 build/lib/bluebottle/segments/models.py:85
-msgid ""
-"Users with email addresses for this domain are automatically added to this "
-"segment."
-msgstr ""
-"Gebruikers met e-mailadressen voor dit domein worden automatisch aan dit "
-"segment toegevoegd."
+#: bluebottle/segments/models.py:102
+msgid "Users with email addresses for this domain are automatically added to this segment."
+msgstr "Gebruikers met e-mailadressen voor dit domein worden automatisch aan dit segment toegevoegd."
 
-#: bluebottle/segments/models.py:106 build/lib/bluebottle/segments/models.py:89
+#: bluebottle/segments/models.py:106
 msgid "Slogan"
 msgstr "Slogan"
 
-#: bluebottle/segments/models.py:108 build/lib/bluebottle/segments/models.py:91
-msgid ""
-"A short sentence to explain your segment. This sentence is directly visible "
-"on the page."
-msgstr ""
-"Een korte zin om je segment uit te leggen. Deze zin is direct zichtbaar op "
-"de pagina."
+#: bluebottle/segments/models.py:108
+msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
+msgstr "Een korte zin om je segment uit te leggen. Deze zin is direct zichtbaar op de pagina."
 
-#: bluebottle/segments/models.py:113 build/lib/bluebottle/segments/models.py:96
+#: bluebottle/segments/models.py:113
 msgid "Story"
 msgstr "Verhaal"
 
-#: bluebottle/segments/models.py:115 build/lib/bluebottle/segments/models.py:98
-msgid ""
-"A more detailed story for your segment. This story can be accessed via a "
-"link on the page."
-msgstr ""
-"Een meer gedetailleerd verhaal voor jouw segment. Dit verhaal kan worden "
-"geopend via een link op de pagina."
+#: bluebottle/segments/models.py:115
+msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
+msgstr "Een meer gedetailleerd verhaal voor jouw segment. Dit verhaal kan worden geopend via een link op de pagina."
 
 #: bluebottle/segments/models.py:122
-#: build/lib/bluebottle/segments/models.py:105
 msgid "The uploaded image will be scaled so that it is fully visible."
 msgstr ""
 "De geüploade afbeelding zal worden geschaald zodat deze volledig zichtbaar "
 "is."
 
 #: bluebottle/segments/models.py:133
-#: build/lib/bluebottle/segments/models.py:116
 msgid "Background color"
 msgstr "Achtergrondkleur"
 
 #: bluebottle/segments/models.py:135
-#: build/lib/bluebottle/segments/models.py:118
 msgid "Add a background colour to your segment page."
 msgstr "Voeg een achtergrondkleur toe aan je segment pagina."
 
 #: bluebottle/segments/models.py:140
-#: build/lib/bluebottle/segments/models.py:123
 msgid "cover image"
 msgstr "omslagfoto"
 
 #: bluebottle/segments/models.py:142
-#: build/lib/bluebottle/segments/models.py:125
 msgid "The uploaded image will be cropped to fit a 4:3 rectangle."
 msgstr ""
 "De geüploade afbeelding wordt bijgesneden om in een 4:3 rechthoek te passen."
 
 #: bluebottle/segments/models.py:153
-#: build/lib/bluebottle/segments/models.py:136
 msgid "Restricted"
 msgstr "Beperkt"
 
 #: bluebottle/segments/models.py:156
-#: build/lib/bluebottle/segments/models.py:139
-msgid ""
-"Closed segments will only be accessible to members that belong to this "
-"segment."
-msgstr ""
-"Gesloten segmenten zijn alleen toegankelijk voor leden die tot dit segment "
-"behoren."
+msgid "Closed segments will only be accessible to members that belong to this segment."
+msgstr "Gesloten segmenten zijn alleen toegankelijk voor leden die tot dit segment behoren."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"
@@ -8099,8 +8037,7 @@ msgstr "Rapportage"
 msgid "Settings"
 msgstr "Instellingen"
 
-#: bluebottle/settings/admin_dashboard.py:310
-#: build/lib/bluebottle/settings/admin_dashboard.py:306
+#: bluebottle/settings/admin_dashboard.py:306
 msgid "Manage Reporting"
 msgstr "Rapportage beheren"
 
@@ -8373,6 +8310,11 @@ msgstr "Gepasseerd"
 #: build/lib/bluebottle/time_based/admin.py:436
 msgid "Slot required"
 msgstr "Slot vereist"
+
+#: bluebottle/time_based/admin.py:442 bluebottle/time_based/admin.py:497
+#: bluebottle/time_based/admin.py:498
+msgid "Required"
+msgstr "Vereist"
 
 #: bluebottle/time_based/admin.py:443 bluebottle/time_based/admin.py:496
 #: build/lib/bluebottle/time_based/admin.py:443

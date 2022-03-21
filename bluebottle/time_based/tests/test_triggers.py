@@ -708,6 +708,22 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.start = now() + timedelta(days=1)
         self.slot.save()
         self.assertStatus(self.slot, 'open')
+        self.assertStatus(self.slot.activity, 'open')
+
+    def test_reschedule_new_slot(self):
+        self.test_finish_one_slot_with_participants()
+
+        self.activity.refresh_from_db()
+        self.assertStatus(self.activity, 'succeeded')
+
+        slot = DateActivitySlotFactory.create(
+            activity=self.activity, start=now() + timedelta(days=1)
+        )
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(slot, 'open')
+
+        self.activity.refresh_from_db()
+        self.assertStatus(self.activity, 'open')
 
     def test_reschedule_running(self):
         self.test_finish_one_slot_with_participants()

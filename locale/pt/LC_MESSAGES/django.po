@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-21 15:12\n"
+"PO-Revision-Date: 2022-03-22 12:30\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -2243,15 +2243,15 @@ msgstr "Sócio"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Exibir o link como um botão"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Abrir o link em uma nova aba do navegador"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Link"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"
@@ -3849,7 +3849,7 @@ msgstr "Sua verificação de identidade não pôde ser verificada!"
 
 #: bluebottle/funding/messages.py:173
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "Falha na verificação de identidade da campanha ao vivo!"
 
 #: bluebottle/funding/messages.py:186
 #: build/lib/bluebottle/funding/messages.py:177
@@ -4922,7 +4922,12 @@ msgid "\n"
 "            A live campaign has a problem with their KYC validation. <br/>\n"
 "            Please check this soonest!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Olá gerente de plataforma,<br/>\n"
+"            <br/>\n"
+"            Uma campanha ao vivo tem um problema com sua validação KYC. <br/>\n"
+"            Por favor, verifique isso em breve!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:15
 msgctxt "email"
@@ -4930,12 +4935,15 @@ msgid "\n"
 "            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.\n"
 "            All donations will be returned to your supporters!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Se você não concluir a verificação de identidade, não poderemos pagar a campanha de crowdfunding.\n"
+"            Todas as doações serão retornadas para seus apoiadores!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:24
 msgctxt "email"
 msgid "Check payout account"
-msgstr ""
+msgstr "Verificar conta de pagamento"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:5
 #: bluebottle/wallposts/models.py:79

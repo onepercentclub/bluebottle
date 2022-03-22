@@ -7,7 +7,7 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.models import Organizer
+from bluebottle.activities.models import Organizer, Activity
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase
@@ -915,6 +915,19 @@ class ParticipantTriggerTestCase():
             'succeeded'
         )
 
+    def test_initial_added_through_admin_team(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+
+        participant = self.participant_factory.build(
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
+        )
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
+
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 
@@ -968,6 +981,18 @@ class ParticipantTriggerTestCase():
             'succeeded'
         )
 
+    def test_accept_team(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.review_activity
+        )
+
+        participant.states.accept(save=True)
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
+
     def test_initial_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
@@ -1001,6 +1026,15 @@ class ParticipantTriggerTestCase():
             'new'
         )
 
+    def test_initial_review_no_team_yet(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+        participant = self.participant_factory.create(
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertIsNone(participant.team)
+
     def test_initial_no_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
@@ -1031,6 +1065,21 @@ class ParticipantTriggerTestCase():
             prep.status,
             'succeeded'
         )
+
+    def test_initial_no_review_team(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        participant.execute_triggers(user=participant.user, send_messages=True)
+        participant.save()
+
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
 
     def test_no_review_fill(self):
         self.participant_factory.create_batch(

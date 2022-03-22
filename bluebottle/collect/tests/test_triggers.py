@@ -5,6 +5,9 @@ from bluebottle.activities.messages import (
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification
 )
+from bluebottle.activities.models import Activity
+from bluebottle.activities.effects import CreateTeamEffect
+
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     ParticipantAddedNotification, ParticipantAddedOwnerNotification, NewParticipantNotification
@@ -311,6 +314,22 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ParticipantAddedOwnerNotification)
+
+    def test_initiate_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateTeamEffect)
+
+        self.model.save()
+        self.assertTrue(self.model.team.id)
+        self.assertEqual(self.model.team.owner, self.model.user)
+
+    def test_initiate_individual(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.individuals
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertNoEffect(CreateTeamEffect)
 
     def test_withdraw(self):
         self.create()

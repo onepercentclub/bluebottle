@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 08:55+0100\n"
-"PO-Revision-Date: 2022-03-18 09:29\n"
+"PO-Revision-Date: 2022-03-21 11:37\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -16,7 +16,7 @@ msgstr ""
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: de\n"
 "X-Crowdin-File: /release.team-activities-translate/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 780\n"
+"X-Crowdin-File-ID: 834\n"
 
 #: bluebottle/activities/admin.py:60 bluebottle/activities/admin.py:528
 #: bluebottle/activities/admin.py:618 bluebottle/contact/models.py:24

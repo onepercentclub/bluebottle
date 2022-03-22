@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 08:55+0100\n"
-"PO-Revision-Date: 2022-03-21 11:37\n"
+"PO-Revision-Date: 2022-03-22 12:15\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -2273,15 +2273,15 @@ msgstr "Sócio"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Exibir o link como um botão"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Abrir o link em uma nova aba do navegador"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Link"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"

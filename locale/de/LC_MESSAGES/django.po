@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-18 14:48\n"
+"PO-Revision-Date: 2022-03-22 12:15\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -1584,7 +1584,7 @@ msgstr "Büro"
 
 #: bluebottle/bb_accounts/models.py:139
 msgid "Office location is verified by the user"
-msgstr ""
+msgstr "Bürostandort wird vom Benutzer überprüft"
 
 #: bluebottle/bb_accounts/models.py:144
 #: build/lib/bluebottle/bb_accounts/models.py:138
@@ -2243,15 +2243,15 @@ msgstr "Soziale"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Links als Button darstellen"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Link in neuem Tab öffnen"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Link"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"
@@ -3848,7 +3848,7 @@ msgstr "Ihre Identitätsüberprüfung konnte nicht verifiziert werden!"
 
 #: bluebottle/funding/messages.py:173
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "Identitätsüberprüfung der Live-Kampagne fehlgeschlagen!"
 
 #: bluebottle/funding/messages.py:186
 #: build/lib/bluebottle/funding/messages.py:177
@@ -4921,7 +4921,12 @@ msgid "\n"
 "            A live campaign has a problem with their KYC validation. <br/>\n"
 "            Please check this soonest!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo Plattform-Manager,<br/>\n"
+"            <br/>\n"
+"            Eine Live-Kampagne hat ein Problem mit ihrer KYC-Validierung. <br/>\n"
+"            Bitte überprüfen Sie dies baldmöglich!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:15
 msgctxt "email"
@@ -4929,12 +4934,15 @@ msgid "\n"
 "            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.\n"
 "            All donations will be returned to your supporters!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Wenn Sie Ihre Identitätsüberprüfung nicht abschließen, können wir die Crowdfunding Kampagne nicht auszahlen.\n"
+"            Alle Spenden werden an deine Unterstützer zurückgeschickt!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:24
 msgctxt "email"
 msgid "Check payout account"
-msgstr ""
+msgstr "Auszahlungskonto prüfen"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:5
 #: bluebottle/wallposts/models.py:79
@@ -6258,7 +6266,7 @@ msgstr "Ist aktiv"
 
 #: bluebottle/members/admin.py:116
 msgid "Login"
-msgstr ""
+msgstr "Login"
 
 #: bluebottle/members/admin.py:126 bluebottle/members/admin.py:338
 #: build/lib/bluebottle/members/admin.py:265
@@ -6267,15 +6275,15 @@ msgstr "Profil"
 
 #: bluebottle/members/admin.py:135
 msgid "Privacy"
-msgstr ""
+msgstr "Privatsphäre"
 
 #: bluebottle/members/admin.py:155
 msgid "Required fields"
-msgstr ""
+msgstr "Pflichtfelder"
 
 #: bluebottle/members/admin.py:157
 msgid "After logging in members are required to fill out or confirm the  fields listed below."
-msgstr ""
+msgstr "Nach der Anmeldung sind Mitglieder erforderlich, um die unten aufgeführten Felder auszufüllen oder zu bestätigen."
 
 #: bluebottle/members/admin.py:282 build/lib/bluebottle/members/admin.py:209
 msgid "Deleted"
@@ -6401,7 +6409,7 @@ msgstr "Erfordert die Zustimmung der Benutzer zu Cookies"
 
 #: bluebottle/members/models.py:47
 msgid "Link more information about the platforms cookie policy"
-msgstr ""
+msgstr "Verknüpfen Sie weitere Informationen über die Cookie-Richtlinie der Plattformen"
 
 #: bluebottle/members/models.py:63 build/lib/bluebottle/members/models.py:62
 msgid "Show gender question in profile form"
@@ -6563,7 +6571,15 @@ msgid "\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"<h1>Hallo </h1>\n"
+"<p class=\"lead\">Willkommen in der %(site_name)s Community.<p> \n"
+"<p>\n"
+"    Klicken Sie auf den Link unten, um ein Passwort zu erstellen und Ihr Konto zu aktivieren.\n"
+"</p>\n"
+"<p>\n"
+"    Der Link läuft in 24 Stunden ab.\n"
+"</p>\n"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:19
 #: build/lib/bluebottle/members/templates/mails/messages/sign_up_token.html:14
@@ -7172,19 +7188,19 @@ msgstr "Reset token"
 
 #: bluebottle/segments/admin.py:81 build/lib/bluebottle/segments/admin.py:81
 msgid "SSO"
-msgstr ""
+msgstr "SSO"
 
 #: bluebottle/segments/admin.py:99 build/lib/bluebottle/segments/admin.py:99
 msgid "Members"
-msgstr ""
+msgstr "Mitglieder"
 
 #: bluebottle/segments/admin.py:105 build/lib/bluebottle/segments/admin.py:105
 msgid "Segment type"
-msgstr ""
+msgstr "Segmenttyp"
 
 #: bluebottle/segments/admin.py:110 build/lib/bluebottle/segments/admin.py:110
 msgid "Text colour"
-msgstr ""
+msgstr "Textfarbe"
 
 #: bluebottle/segments/admin.py:124 build/lib/bluebottle/segments/admin.py:124
 msgid "Number of segments"
@@ -7192,7 +7208,7 @@ msgstr "Anzahl der Segmente"
 
 #: bluebottle/segments/models.py:24 build/lib/bluebottle/segments/models.py:24
 msgid "Inherit"
-msgstr ""
+msgstr "Vererben"
 
 #: bluebottle/segments/models.py:26
 msgid "Newly created activities inherit the segments of the activity creator."
@@ -7200,7 +7216,7 @@ msgstr ""
 
 #: bluebottle/segments/models.py:32
 msgid "Required for members"
-msgstr ""
+msgstr "Erforderlich für Mitglieder"
 
 #: bluebottle/segments/models.py:34
 msgid "Require members to enter their segment type once after logging in."
@@ -7212,7 +7228,7 @@ msgstr ""
 
 #: bluebottle/segments/models.py:42
 msgid "Enable to require members to verify their segment type data that was provided by SSO"
-msgstr ""
+msgstr "Aktivieren, um Mitglieder zur Überprüfung ihrer von SSO bereitgestellten Segmenttypdaten zu verpflichten"
 
 #: bluebottle/segments/models.py:52 build/lib/bluebottle/segments/models.py:35
 msgid "Editable in user profile"
@@ -7220,71 +7236,71 @@ msgstr "Bearbeitbar im Benutzerprofil"
 
 #: bluebottle/segments/models.py:56
 msgid "Enable search filters"
-msgstr ""
+msgstr "Suchfilter aktivieren"
 
 #: bluebottle/segments/models.py:99
 msgid "Email domains"
-msgstr ""
+msgstr "E-Mail-Domains"
 
 #: bluebottle/segments/models.py:102
 msgid "Users with email addresses for this domain are automatically added to this segment."
-msgstr ""
+msgstr "Benutzer mit E-Mail-Adressen für diese Domain werden diesem Segment automatisch hinzugefügt."
 
 #: bluebottle/segments/models.py:106
 msgid "Slogan"
-msgstr ""
+msgstr "Slogan"
 
 #: bluebottle/segments/models.py:108
 msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
-msgstr ""
+msgstr "Ein kurzer Satz zur Erläuterung Ihres Segments. Dieser Satz ist direkt auf der Seite sichtbar."
 
 #: bluebottle/segments/models.py:113
 msgid "Story"
-msgstr ""
+msgstr "Geschichte"
 
 #: bluebottle/segments/models.py:115
 msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
-msgstr ""
+msgstr "Eine detailliertere Geschichte für dein Segment. Diese Geschichte kann über einen Link auf der Seite aufgerufen werden."
 
 #: bluebottle/segments/models.py:122
 msgid "The uploaded image will be scaled so that it is fully visible."
-msgstr ""
+msgstr "Das hochgeladene Bild wird so skaliert, dass es vollständig sichtbar ist."
 
 #: bluebottle/segments/models.py:133
 msgid "Background color"
-msgstr ""
+msgstr "Hintergrundfarbe"
 
 #: bluebottle/segments/models.py:135
 msgid "Add a background colour to your segment page."
-msgstr ""
+msgstr "Fügen Sie Ihrer Segmentseite eine Hintergrundfarbe hinzu."
 
 #: bluebottle/segments/models.py:140
 msgid "cover image"
-msgstr ""
+msgstr "titelbild"
 
 #: bluebottle/segments/models.py:142
 msgid "The uploaded image will be cropped to fit a 4:3 rectangle."
-msgstr ""
+msgstr "Das hochgeladene Bild wird auf ein 4:3 Rechteck zugeschnitten."
 
 #: bluebottle/segments/models.py:153
 msgid "Restricted"
-msgstr ""
+msgstr "Limitiert"
 
 #: bluebottle/segments/models.py:156
 msgid "Closed segments will only be accessible to members that belong to this segment."
-msgstr ""
+msgstr "Geschlossene Segmente sind nur Mitgliedern dieses Segments zugänglich."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"
-msgstr ""
+msgstr "keine Segmenttypen sind als erforderlich markiert"
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:16
 msgid "Mark segment types as required in "
-msgstr ""
+msgstr "Segmenttypen als erforderlich markieren "
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:18
 msgid "segment type overview"
-msgstr ""
+msgstr "übersicht des Segmenttyps"
 
 #: bluebottle/settings/admin_dashboard.py:56
 #: build/lib/bluebottle/settings/admin_dashboard.py:56
@@ -7299,7 +7315,7 @@ msgstr ""
 #: bluebottle/settings/admin_dashboard.py:165
 #: build/lib/bluebottle/settings/admin_dashboard.py:165
 msgid "All segment types"
-msgstr ""
+msgstr "Alle Segmenttypen"
 
 #: bluebottle/settings/admin_dashboard.py:172
 #: build/lib/bluebottle/settings/admin_dashboard.py:172
@@ -8126,7 +8142,7 @@ msgstr "Schließe eine Aktivität ab, wenn die Endzeit abgelaufen ist."
 #: bluebottle/time_based/periodic_tasks.py:153
 #: build/lib/bluebottle/time_based/periodic_tasks.py:153
 msgid "Send a reminder five days before the activity slot."
-msgstr ""
+msgstr "Fünf Tage vor dem Aktivitätsfeld eine Erinnerung senden."
 
 #: bluebottle/time_based/states.py:17 bluebottle/time_based/states.py:157
 #: build/lib/bluebottle/time_based/states.py:17
@@ -8933,7 +8949,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"Die Aktivität ist nur wenige Tage entfernt!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_slot.html:19
 #: build/lib/bluebottle/time_based/templates/mails/messages/reminder_slot.html:19

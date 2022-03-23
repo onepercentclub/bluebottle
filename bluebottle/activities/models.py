@@ -180,7 +180,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
     team = models.ForeignKey(
-        'activities.Team', null=True, related_name='teams', on_delete=models.SET_NULL
+        'activities.Team', blank=True, null=True, related_name='teams', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE

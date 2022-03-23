@@ -109,7 +109,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
-    raw_id_fields = ('user', 'activity')
+    raw_id_fields = ('user', 'activity', 'team')
 
     date_hierarchy = 'contributor_date'
 
@@ -122,6 +122,8 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
+        if InitiativePlatformSettings.team_activities and 'team' not in self.fields:
+            self.fields += ('team',)
         fieldsets = (
             (_('Details'), {'fields': self.fields}),
         )

@@ -248,3 +248,20 @@ class RelatedActivityImageContentSerializer(ImageSerializer):
     }
     content_view_name = 'related-activity-image-content'
     relationship = 'relatedimage_set'
+
+
+class TeamSerializer(ModelSerializer):
+    class Meta(object):
+        model = RelatedImage
+        fields = ('owner', 'acitivity', )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'owner',
+        ]
+
+        resource_name = 'activity-teams'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }

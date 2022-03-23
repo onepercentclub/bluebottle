@@ -1,17 +1,18 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor
+from bluebottle.activities.models import Activity, Contributor, Team
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributorListSerializer
+    ContributorListSerializer,
+    TeamSerializer
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
@@ -151,3 +152,31 @@ class RelatedActivityImageContent(ImageContentView):
 class ActivityTransitionList(TransitionList):
     serializer_class = ActivityTransitionSerializer
     queryset = Activity.objects.all()
+
+
+class RelatedTeamList(JsonApiViewMixin, ListAPIView):
+    model = Team
+    serializer = TeamSerializer
+
+    related_permission_classes = {
+        'content_object': [
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+        ]
+    }
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = self.queryset.filter(
+                Q(owner=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_managers=self.request.user) |
+                Q(status='accepted')
+            )
+        else:
+            queryset = self.queryset.filter(
+                status='accepted'
+            )
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )

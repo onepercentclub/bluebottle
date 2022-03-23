@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-21 15:12\n"
+"PO-Revision-Date: 2022-03-23 14:24\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -3848,7 +3848,7 @@ msgstr "Uw identiteitsverificatie kon niet worden geverifieerd!"
 
 #: bluebottle/funding/messages.py:173
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "Identiteitsverificatie van live campagne mislukt!"
 
 #: bluebottle/funding/messages.py:186
 #: build/lib/bluebottle/funding/messages.py:177
@@ -4657,8 +4657,9 @@ msgid "\n"
 msgstr "\n"
 "            Hi %(recipient_name)s,\n"
 "            <br><br>\n"
-"            Unfortunately, the campaign \"%(title)s\" did not reach its goal.             Therefore, all donations will be fully refunded within 10 days.            <br><br>\n"
-"            If you have any questions, you can contact the platform manager by replying to this email.\n"
+"            Helaas, heeft de campagne \"%(title)s\" zijn doel niet bereikt. Daarom zullen alle donaties binnen 10 dagen volledig worden terugbetaald.\n"
+"            <br><br>\n"
+"            Als je vragen hebt je kunt contact opnemen met de platformmanager door deze e-mail te beantwoorden.\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/donation_refunded_donor.html:7
@@ -4916,7 +4917,12 @@ msgid "\n"
 "            A live campaign has a problem with their KYC validation. <br/>\n"
 "            Please check this soonest!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hi platform manager,<br/>\n"
+"            <br/>\n"
+"            Een live campagne heeft een probleem met hun KYC validatie. <br/>\n"
+"            Controleer dit binnenkort!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:15
 msgctxt "email"
@@ -4924,12 +4930,15 @@ msgid "\n"
 "            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.\n"
 "            All donations will be returned to your supporters!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Als u uw identiteitsverificatie niet kunt voltooien, kunnen we uw crowdfunding campagne niet uitbetalen.\n"
+"            Alle donaties zullen teruggegeven worden aan uw supporters!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:24
 msgctxt "email"
 msgid "Check payout account"
-msgstr ""
+msgstr "Uitbetaling account controleren"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:5
 #: bluebottle/wallposts/models.py:79

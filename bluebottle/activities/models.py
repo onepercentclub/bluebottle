@@ -271,6 +271,9 @@ class Team(models.Model):
         ordering = ('-created',)
         verbose_name = _("Team")
 
+    def __str__(self):
+        return f'{self._meta.verbose_name} {self.owner}'
+
 
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa

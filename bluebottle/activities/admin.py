@@ -705,3 +705,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
         PaginationFormSet.request = request
         PaginationFormSet.per_page = self.per_page
         return PaginationFormSet
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    pass

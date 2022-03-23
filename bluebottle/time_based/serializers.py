@@ -52,7 +52,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise',
             'review',
             'contributors',
-            'teams'
+            'teams',
+            'my_contributor'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -656,6 +657,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
+            'team'
         )
 
         validators = [
@@ -670,10 +672,12 @@ class ParticipantSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'document',
+            'team'
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'team': 'bluebottle.activities.serializers.TeamSerializer',
     }
 
 
@@ -697,11 +701,9 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        included_resources = [
-            'user',
-            'document',
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'slots',
-            'activity'
+            'activity',
         ]
         resource_name = 'contributors/time-based/date-participants'
 
@@ -748,6 +750,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         resource_name = 'contributors/time-based/period-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'contributions',
+            'team'
         ]
 
     included_serializers = dict(

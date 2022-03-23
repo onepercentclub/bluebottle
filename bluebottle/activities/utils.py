@@ -11,7 +11,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution
+from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution, Team
 from bluebottle.clients import properties
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -22,6 +22,23 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+
+
+class TeamSerializer(ModelSerializer):
+    class Meta(object):
+        model = Team
+        fields = ('owner', 'activity', )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'owner',
+        ]
+
+        resource_name = 'activities/teams'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -334,7 +351,7 @@ class BaseContributorListSerializer(ModelSerializer):
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-
+    team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
@@ -344,7 +361,7 @@ class BaseContributorSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', )
+        fields = ('user', 'activity', 'status', 'team')
         meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):

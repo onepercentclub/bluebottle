@@ -180,7 +180,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
     team = models.ForeignKey(
-        'activities.Team', null=True, related_name='members', on_delete=models.SET_NULL
+        'activities.Team', blank=True, null=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE
@@ -270,6 +270,9 @@ class Team(models.Model):
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _("Team")
+
+    def __str__(self):
+        return f'{self._meta.verbose_name} {self.owner}'
 
 
 from bluebottle.activities.signals import *  # noqa

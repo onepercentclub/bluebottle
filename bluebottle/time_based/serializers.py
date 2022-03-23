@@ -62,6 +62,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'my_contributor.user',
             'my_contributor.contributions',
             'my_contributor.document',
+            'my_contributor.team',
+            'my_contributor.team.owner',
         ]
 
     included_serializers = dict(
@@ -70,6 +72,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
+            'my_contributor.team': 'bluebottle.activities.serializers.TeamSerializer',
+            'my_contributor.team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 

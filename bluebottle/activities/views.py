@@ -155,26 +155,29 @@ class ActivityTransitionList(TransitionList):
 
 
 class RelatedTeamList(JsonApiViewMixin, ListAPIView):
-    model = Team
-    serializer = TeamSerializer
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
 
     related_permission_classes = {
         'content_object': [
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
+    pagination_class = None
 
-    def get_queryset(self):
+    def get_queryset(self, *args, **kwargs):
+        queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
+        open_statuses = ['accepted', 'succeeded']
         if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(owner=self.request.user) |
-                Q(activity__owner=self.request.user) |
+            queryset = queryset.filter(
                 Q(activity__initiative__activity_managers=self.request.user) |
-                Q(status='accepted')
+                Q(activity__owner=self.request.user) |
+                Q(owner=self.request.user) |
+                Q(members__status__in=open_statuses)
             )
         else:
             queryset = self.queryset.filter(
-                status='accepted'
+                members__status__in=open_statuses
             )
 
         return queryset.filter(

@@ -42,6 +42,6 @@ urlpatterns = [
     url(
         r'^/(?P<activity_id>\d+)/teams/$',
         RelatedTeamList.as_view(),
-        name='related-activity-image-content'
+        name='related-activity-team'
     ),
 ]

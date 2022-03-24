@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from io import BytesIO
 
 import mock
 import munch
@@ -8,6 +9,7 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
+from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
@@ -34,6 +36,7 @@ from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -397,6 +400,9 @@ class FundingDetailTestCase(BluebottleTestCase):
         }
 
     def test_view_funding_owner(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
         DonorFactory.create(
             user=co_financer,
@@ -458,11 +464,42 @@ class FundingDetailTestCase(BluebottleTestCase):
         # Test that geolocation is included too
         geolocation = self.included_by_type(response, 'geolocations')[0]
         self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
+        self.assertIsNotNone(data['data']['attributes']['supporters-export-url'])
 
-        export_url = data['data']['attributes']['supporters-export-url']['url']
+    def test_get_owner_export_disabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = False
+        initiative_settings.save()
+        DonorFactory.create_batch(
+            4,
+            amount=Money(200, 'EUR'),
+            activity=self.funding,
+            status='succeeded')
+        DonorFactory.create_batch(
+            2,
+            amount=Money(100, 'EUR'),
+            activity=self.funding,
+            status='new')
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']
+        self.assertIsNone(export_url)
 
+    def test_get_owner_export_enabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']['url']
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Donor Date' in export_response.content)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(sheet['A1'].value, 'Email')
+        self.assertEqual(sheet['B1'].value, 'Name')
+        self.assertEqual(sheet['C1'].value, 'Date')
+        self.assertEqual(sheet['D1'].value, 'Amount')
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(

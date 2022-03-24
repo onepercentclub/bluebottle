@@ -61,10 +61,10 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     inlines = [StripeBankAccountInline]
     readonly_fields = PayoutAccountChildAdmin.readonly_fields + [
         'reviewed', 'account_details', 'stripe_link',
-        'eventually_due'
+        'eventually_due', 'funding'
     ]
     search_fields = ['account_id']
-    fields = ['created', 'owner', 'status', 'account_id', 'country', 'account_details']
+    fields = ['created', 'owner', 'status', 'account_id', 'country', 'account_details', 'funding']
     list_display = ['id', 'account_id', 'status']
 
     def get_fields(self, request, obj=None):

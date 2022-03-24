@@ -615,6 +615,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_superuser=False)
+        self.user.remote_id = '1243'
         self.user.groups.add(Group.objects.get(name='Staff'))
 
         super(SCIMUserDetailTest, self).setUp()
@@ -659,12 +660,13 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         request_data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'id': 'goodup-user-{}'.format(self.user.pk),
+            'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
             'emails': [{
                 'type': 'work',
                 'primary': True,
-                'value': 'test@example.com'
+                'value': 'OostrumA@delagelanden.com'
             }],
             'name': {
                 'givenName': 'Tester',
@@ -692,6 +694,42 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_patch_without_email(self):
+        """
+        Test authenticated put request
+        """
+        request_data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'id': 'goodup-user-{}'.format(self.user.pk),
+            'userName': self.user.remote_id,
+            'externalId': '123',
+            'active': False,
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['id'], request_data['id'])
+        self.assertEqual(data['active'], False)
+        self.assertEqual(data['name']['givenName'], request_data['name']['givenName'])
+        self.assertEqual(data['name']['familyName'], request_data['name']['familyName'])
+        self.assertEqual(len(data['emails']), 1)
+        self.assertEqual(data['emails'][0]['value'], self.user.email)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, request_data['name']['givenName'])
+        self.assertEqual(self.user.last_name, request_data['name']['familyName'])
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_put_deleted(self):
         """
         Test authenticated put request
@@ -699,6 +737,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         request_data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'id': 'goodup-user-{}'.format(self.user.pk),
+            'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
             'emails': [{

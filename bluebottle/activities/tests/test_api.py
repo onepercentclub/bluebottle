@@ -17,18 +17,21 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectContributorFactory
 
+from bluebottle.activities.tests.factories import TeamFactory
+from bluebottle.activities.utils import TeamSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 @override_settings(
@@ -1645,3 +1648,83 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             data['data'][1]['relationships']['user']['data']['id'],
             str(new_participant.user.pk)
         )
+
+
+class RelatedTeamListViewAPITestCase(APITestCase):
+    serializer = TeamSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.activity = PeriodActivityFactory.create(status='open')
+
+        self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
+        self.cancelled_teams = TeamFactory.create_batch(
+            5, activity=self.activity, status='cancelled'
+        )
+
+        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+
+        settings = InitiativePlatformSettings.objects.get()
+        settings.team_activities = True
+        settings.save()
+
+    def test_get_activivty_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(self.cancelled_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_cancelled_owner(self):
+        team = self.cancelled_teams[0]
+        self.perform_get(user=team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + 1)
+        self.assertObjectList(self.approved_teams + [team])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_pagination(self):
+
+        extra_teams = TeamFactory.create_batch(
+            10, activity=self.activity
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(extra_teams))
+        self.assertSize(8)
+        self.assertPages(2)
+
+    def test_other_user_anonymous(self):
+        self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_user_closed_site(self):
+        with self.closed_site():
+            self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)

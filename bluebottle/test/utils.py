@@ -333,9 +333,18 @@ class APITestCase(BluebottleTestCase):
         Assert that total the number of found objects is the same as expected
         """
         if 'meta' in self.response.json():
-            self.assertEqual(self.response.json()['meta']['count'], count)
+            self.assertEqual(self.response.json()['meta']['pagination']['count'], count)
         else:
             self.assertEqual(len(self.response.json()['data']), count)
+
+    def assertPages(self, num_pages):
+        """
+        Assert that total the number of found objects is the same as expected
+        """
+        self.assertEqual(self.response.json()['meta']['pagination']['pages'], num_pages)
+
+    def assertSize(self, size):
+        self.assertEqual(len(self.response.json()['data']), size)
 
     def assertIncluded(self, included, model=None):
         """
@@ -366,19 +375,28 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
-    def assertRelationship(self, relation, models=None):
+    def assertRelationship(self, relation, models=None, data=None):
         """
         Assert that a resource with `relation` is linked in the response
         """
-        self.assertTrue(relation in self.response.json()['data']['relationships'])
-        data = self.response.json()['data']['relationships'][relation]['data']
+        data = data or self.response.json()['data']
 
-        if models:
-            ids = [resource['id'] for resource in data]
-            for model in models:
-                self.assertTrue(
-                    str(model.pk) in ids
-                )
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertRelationship(relation, models, resource)
+        else:
+            self.assertTrue(relation in data['relationships'])
+
+            if models:
+                relation_data = data['relationships'][relation]['data']
+                if not isinstance(relation_data, (tuple, list)):
+                    relation_data = (relation_data, )
+
+                ids = [resource['id'] for resource in relation_data]
+                for model in models:
+                    self.assertTrue(
+                        str(model.pk) in ids
+                    )
 
     def assertObjectList(self, data, models=None):
         if models:

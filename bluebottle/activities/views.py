@@ -158,26 +158,20 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
-    related_permission_classes = {
-        'content_object': [
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-        ]
-    }
-    pagination_class = None
+    pemrission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
 
     def get_queryset(self, *args, **kwargs):
         queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
-        open_statuses = ['accepted', 'succeeded']
         if self.request.user.is_authenticated:
             queryset = queryset.filter(
                 Q(activity__initiative__activity_managers=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(owner=self.request.user) |
-                Q(members__status__in=open_statuses)
+                Q(status='open')
             )
         else:
             queryset = self.queryset.filter(
-                members__status__in=open_statuses
+                status='open'
             )
 
         return queryset.filter(

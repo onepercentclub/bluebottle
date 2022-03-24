@@ -73,7 +73,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
-            'my_contributor.team': 'bluebottle.activities.serializers.TeamSerializer',
+            'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
             'my_contributor.team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
@@ -677,7 +677,7 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'team': 'bluebottle.activities.serializers.TeamSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
 

@@ -3,7 +3,7 @@ from builtins import object
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Contributor, Activity, Team
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
@@ -248,20 +248,3 @@ class RelatedActivityImageContentSerializer(ImageSerializer):
     }
     content_view_name = 'related-activity-image-content'
     relationship = 'relatedimage_set'
-
-
-class TeamSerializer(ModelSerializer):
-    class Meta(object):
-        model = Team
-        fields = ('owner', 'activity', )
-
-    class JSONAPIMeta(object):
-        included_resources = [
-            'owner',
-        ]
-
-        resource_name = 'activities/teams'
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-24 08:55+0100\n"
-"PO-Revision-Date: 2022-03-24 07:59\n"
+"PO-Revision-Date: 2022-03-24 10:22\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -237,7 +237,7 @@ msgstr "Stel de datum van bijdrage in."
 
 #: bluebottle/activities/effects.py:63
 msgid "Create a team"
-msgstr ""
+msgstr "Team aanmaken"
 
 #: bluebottle/activities/forms.py:6 build/lib/bluebottle/activities/forms.py:6
 msgid "Send impact reminder message"
@@ -446,7 +446,7 @@ msgstr "Slug"
 
 #: bluebottle/activities/models.py:66
 msgid "Team activity"
-msgstr "Team activiteit"
+msgstr "Teamactiviteit"
 
 #: bluebottle/activities/models.py:70
 msgid "Is this activity open for individuals or can only teams sign up?"
@@ -568,7 +568,7 @@ msgstr "Inzet"
 
 #: bluebottle/activities/models.py:272
 msgid "Team"
-msgstr ""
+msgstr "Team"
 
 #: bluebottle/activities/states.py:9 bluebottle/initiatives/states.py:13
 #: bluebottle/time_based/states.py:145 bluebottle/utils/transitions.py:10
@@ -1049,12 +1049,13 @@ msgstr "bedrag"
 
 #: bluebottle/activities/templates/admin/create_team.html:3
 msgid "Create team"
-msgstr ""
+msgstr "Team aanmaken"
 
 #: bluebottle/activities/templates/admin/create_team.html:6
 msgid "\n"
 "    Create a team for the contributor. Make the user the owner of the team, and allow him/her to invite other users.\n"
-msgstr ""
+msgstr "\n"
+"    Creëer een team voor de medewerker. Maak de gebruiker de eigenaar van het team en laat hem/haar andere gebruikers uitnodigen.\n"
 
 #: bluebottle/activities/templates/admin/validation_steps.html:4
 #: build/lib/bluebottle/activities/templates/admin/validation_steps.html:4
@@ -5987,7 +5988,7 @@ msgstr "Type"
 
 #: bluebottle/initiatives/models.py:260
 msgid "Team activities"
-msgstr "Team activiteiten"
+msgstr "Teamactiviteiten"
 
 #: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
 #: build/lib/bluebottle/initiatives/models.py:260
@@ -6513,11 +6514,11 @@ msgstr "Verplicht leden om na het inloggen eenmalig onderstaande velden in te vo
 
 #: bluebottle/members/models.py:95
 msgid "Require members to enter their office location once after logging in."
-msgstr ""
+msgstr "Verplicht leden om hun kantoor locatie eenmalig in te voeren na het inloggen."
 
 #: bluebottle/members/models.py:99
 msgid "Verify SSO data office location"
-msgstr ""
+msgstr "Controleer SSO locatie het kantoor"
 
 #: bluebottle/members/models.py:101
 msgid "Require members to verify their office location once if it is filled via SSO."

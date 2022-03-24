@@ -12,7 +12,7 @@ from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
-from moneyed import Money
+from djmoney.money import Money
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
@@ -50,6 +50,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
+
+    if isinstance(attr, Money):
+        attr = str(attr)
 
     if isinstance(attr, datetime.datetime):
         attr = attr.strftime('%d-%m-%y %H:%M')

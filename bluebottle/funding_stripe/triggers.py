@@ -1,7 +1,8 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
 from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
-from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected
+from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected, LivePayoutAccountRejected
+from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.models import StripeSourcePayment, StripePayoutAccount, ExternalAccount
@@ -42,6 +43,14 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
     ]
 
 
+def has_live_campaign(effect):
+    """has connected funding activity that is open"""
+    live_statuses = ['open']
+    return Funding.objects.filter(
+        bank_account__connect_account=effect.instance
+    ).filter(status__in=live_statuses).exists()
+
+
 @register(StripePayoutAccount)
 class StripePayoutAccountTriggers(TriggerManager):
     triggers = [
@@ -59,7 +68,13 @@ class StripePayoutAccountTriggers(TriggerManager):
         TransitionTrigger(
             PayoutAccountStateMachine.reject,
             effects=[
-                NotificationEffect(PayoutAccountRejected),
+                NotificationEffect(
+                    PayoutAccountRejected
+                ),
+                NotificationEffect(
+                    LivePayoutAccountRejected,
+                    conditions=[has_live_campaign]
+                ),
                 RelatedTransitionEffect(
                     'external_accounts',
                     StripeBankAccountStateMachine.reject

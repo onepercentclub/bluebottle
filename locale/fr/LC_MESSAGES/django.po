@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-21 15:11\n"
+"PO-Revision-Date: 2022-03-24 08:13\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -2243,15 +2243,15 @@ msgstr "Réseaux sociaux"
 
 #: bluebottle/cms/models.py:115
 msgid "Display the link as a button"
-msgstr ""
+msgstr "Afficher le lien sous forme de bouton"
 
 #: bluebottle/cms/models.py:116
 msgid "Open the link in a new browser tab"
-msgstr ""
+msgstr "Ouvrir le lien dans un nouvel onglet"
 
 #: bluebottle/cms/models.py:118
 msgid "Link"
-msgstr ""
+msgstr "Lien"
 
 #: bluebottle/cms/models.py:130 build/lib/bluebottle/cms/models.py:158
 msgid "Manual input"
@@ -3849,7 +3849,7 @@ msgstr "Votre vérification d'identité n'a pas pu être vérifiée !"
 
 #: bluebottle/funding/messages.py:173
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "La vérification d'identité de la campagne en direct a échoué!"
 
 #: bluebottle/funding/messages.py:186
 #: build/lib/bluebottle/funding/messages.py:177
@@ -4922,7 +4922,12 @@ msgid "\n"
 "            A live campaign has a problem with their KYC validation. <br/>\n"
 "            Please check this soonest!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Bonjour gestionnaire de plate-forme,<br/>\n"
+"            <br/>\n"
+"            Une campagne en direct a un problème avec leur validation KYC. <br/>\n"
+"            Veuillez vérifier le plus tôt !\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:15
 msgctxt "email"
@@ -4930,12 +4935,15 @@ msgid "\n"
 "            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.\n"
 "            All donations will be returned to your supporters!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Si vous ne parvenez pas à compléter votre vérification d'identité, nous ne pourrons pas rembourser la campagne de financement participatif.\n"
+"            Tous les dons seront retournés à vos supporters!\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:24
 msgctxt "email"
 msgid "Check payout account"
-msgstr ""
+msgstr "Vérifier le compte de paiement"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:5
 #: bluebottle/wallposts/models.py:79

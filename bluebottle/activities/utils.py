@@ -127,6 +127,7 @@ class BaseActivitySerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
+    team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -163,6 +164,9 @@ class BaseActivitySerializer(ModelSerializer):
             status__in=['accepted', 'succeeded', 'activity_refunded']
         ).count()
 
+    def get_team_count(self, instance):
+        return instance.teams.count()
+
     class Meta(object):
         model = Activity
         fields = (
@@ -195,7 +199,8 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
-            'contributor_count'
+            'contributor_count',
+            'team_count'
         )
 
     class JSONAPIMeta(object):

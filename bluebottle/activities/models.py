@@ -180,7 +180,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
     team = models.ForeignKey(
-        'activities.Team', blank=True, null=True, related_name='teams', on_delete=models.SET_NULL
+        'activities.Team', blank=True, null=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE
@@ -256,7 +256,9 @@ class EffortContribution(Contribution):
         verbose_name_plural = _("Contributions")
 
 
-class Team(models.Model):
+class Team(TriggerMixin, models.Model):
+    status = models.CharField(max_length=40)
+
     activity = models.ForeignKey(
         Activity, related_name='teams', on_delete=NON_POLYMORPHIC_CASCADE
     )
@@ -270,6 +272,12 @@ class Team(models.Model):
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _("Team")
+
+        permissions = (
+            ('api_read_team', 'Can view team through the API'),
+            ('api_change_team', 'Can change team through the API'),
+            ('api_change_own_team', 'Can change own team through the API'),
+        )
 
     def __str__(self):
         return f'{self._meta.verbose_name} {self.owner}'

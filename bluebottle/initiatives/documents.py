@@ -102,6 +102,14 @@ class InitiativeDocument(Document):
         }
     )
 
+    initiative_location = fields.NestedField(
+        properties={
+            'id': fields.LongField(),
+            'name': fields.TextField(),
+            'city': fields.TextField(),
+        }
+    )
+
     class Django:
         model = Initiative
         related_models = (
@@ -163,7 +171,7 @@ class InitiativeDocument(Document):
 
         return segments
 
-    def prepare_location(self, instance):
+    def prepare_initiative_location(self, instance):
         if instance.is_global:
             return [{
                 'id': activity.office_location.id,

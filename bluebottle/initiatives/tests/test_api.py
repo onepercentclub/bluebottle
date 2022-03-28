@@ -914,7 +914,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create(status='approved')
 
         response = self.client.get(
-            self.url + '?filter[location.id]={}'.format(location.pk),
+            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -933,7 +933,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create(status='approved')
 
         response = self.client.get(
-            self.url + '?filter[location.id]={}'.format(location.pk),
+            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

@@ -38,14 +38,14 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'country',
         'categories.id',
         'categories.slug',
-        'location.id',
+        'initiative_location.id',
         'segment',
     )
 
     search_fields = (
         'status', 'title', 'story', 'pitch',
         'place.locality', 'place.postal_code', 'place.formatted_address',
-        'location.name', 'location.city', 'theme.name',
+        'initiative_location.name', 'initiative_location.city', 'theme.name',
         'owner.full_name', 'promoter.full_name',
     )
 

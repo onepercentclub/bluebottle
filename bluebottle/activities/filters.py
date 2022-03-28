@@ -33,6 +33,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'status',
         'initiative_location.id',
         'segment',
+        'team_activity'
     )
 
     search_fields = (

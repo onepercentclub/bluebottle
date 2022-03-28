@@ -300,3 +300,26 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
             self, self.slot2, 'open',
             'Slot2 should now be '
         )
+
+
+class PeriodActivityScenarioTestCase(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.owner = BlueBottleUserFactory.create()
+        self.supporter = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
+        self.client = JSONAPITestClient()
+
+    def test_create_team_activity(self):
+        activity_data = {
+            'title': 'Beach clean-up Katwijk',
+            'review': False,
+            'slot_selection': 'all',
+            'registration-deadline': str(date.today() + timedelta(days=1)),
+            'capacity': 10,
+            'team_activity': 'teams',
+            'description': 'We will clean up the beach south of Katwijk'
+        }
+        activity = api_create_date_activity(self, self.initiative, activity_data)
+        self.assertEqual(activity.team_activity, 'teams')

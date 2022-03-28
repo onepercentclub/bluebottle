@@ -1,23 +1,24 @@
 import json
-from builtins import range
 import time
-from datetime import datetime, timedelta
+from builtins import range
 from calendar import timegm
-from bluebottle.clients import properties
+from datetime import datetime, timedelta
 
 import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
+from django.urls import reverse
 from rest_framework import status
-
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.auth.middleware import authorization_logger
+from bluebottle.clients import properties
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
@@ -262,7 +263,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'member with this email address already exists.')
+        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_already_active_different_case(self):
@@ -276,7 +277,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'member with this email address already exists.')
+        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_correct_domain(self):
@@ -939,3 +940,79 @@ class RefreshTokenTest(BluebottleTestCase):
         response = self.client.get(reverse('user-current'), token=new_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['id'], self.user.pk)
+
+
+class UserAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.current_user_url = reverse('user-current')
+        self.segment_type = SegmentTypeFactory.create(required=False)
+        self.segments = SegmentFactory.create_batch(3, segment_type=self.segment_type)
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.current_user_url = reverse('user-current')
+        self.logout_url = reverse('user-logout')
+
+    def test_get_current_user_no_required_segments(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_required_location(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+    def test_get_current_user_required_location_set(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        self.user.location = LocationFactory.create()
+        self.user.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_required_segments_defined(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': True})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_unverified_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.needs_verification = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': False})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_unverified_required_location(self):
+        MemberPlatformSettings.objects.update_or_create(
+            require_office=True,
+            verify_office=True,
+        )
+        self.user.location = LocationFactory.create()
+        self.user.location_verified = False
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+        self.user.location_verified = True
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])

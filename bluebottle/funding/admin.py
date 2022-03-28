@@ -166,6 +166,7 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_donated.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+    # Translators: xgettext:no-python-format
     percentage_donated.short_description = _('% donated')
 
     def percentage_matching(self, obj):
@@ -173,6 +174,7 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_matching.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+    # Translators: xgettext:no-python-format
     percentage_matching.short_description = _('% matching')
 
     def amount_raised(self, obj):

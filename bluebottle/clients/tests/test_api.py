@@ -287,3 +287,13 @@ class TestPlatformSettingsApi(BluebottleTestCase):
                 }
             }
         )
+
+    def test_member_platform_required_settings(self):
+        MemberPlatformSettings.objects.create(
+            require_office=True,
+            verify_office=False
+        )
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['members']['require_office'], True)
+        self.assertEqual(response.data['platform']['members']['verify_office'], False)

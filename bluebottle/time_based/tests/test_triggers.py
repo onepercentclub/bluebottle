@@ -783,7 +783,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
                     defaultfilters.date(slot.start),
                     defaultfilters.time(slot.start.astimezone(get_current_timezone())),
                     defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                    self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                    slot.start.astimezone(get_current_timezone()).strftime('%Z'),
                 )
 
                 self.assertTrue(expected in mail.outbox[0].body)
@@ -1645,6 +1645,13 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'full')
+
+    def test_fill_slot_ignores_activity_capacity(self):
+        self.activity.capacity = 1
+        self.activity.save()
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.assertStatus(self.slot1, 'open')
+        self.assertStatus(self.activity, 'open')
 
     def test_unfill_slot(self):
         self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)

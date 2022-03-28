@@ -10,5 +10,6 @@ class OpenSegmentOrMember(BasePermission):
 
         return (
             not obj.closed or
+            user.is_staff or
             (user.is_authenticated and obj in user.segments.all())
         )

@@ -19,7 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -216,7 +216,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments',
+            'organization', 'segments', 'required'
         )
 
 
@@ -262,6 +262,21 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     )
 
     is_active = serializers.BooleanField(read_only=True)
+
+    def save(self, *args, **kwargs):
+
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -383,10 +398,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
+    segment_id = serializers.CharField(required=False, allow_blank=True)
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url',)
+        fields = ('id', 'email', 'url', 'segment_id')
 
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
@@ -400,8 +416,9 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             )
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
-            raise serializers.ValidationError('member with this email address already exists.')
-
+            raise serializers.ValidationError(
+                'a member with this email address already exists.', code='duplicate-facebook',
+            )
         return email
 
     class JSONAPIMeta:
@@ -630,6 +647,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_gender',
             'enable_address',
             'enable_birthdate',
+            'require_office',
+            'verify_office'
         )
 
 

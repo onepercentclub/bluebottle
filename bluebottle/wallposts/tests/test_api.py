@@ -509,19 +509,19 @@ class TestDonationWallpost(BluebottleTestCase):
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-        donation = DonorFactory.create(
+        self.donation = DonorFactory.create(
             user=self.user,
             activity=self.funding,
             fundraiser=None
         )
-        donation.states.succeed(save=True)
+        self.donation.states.succeed(save=True)
 
         self.data = {
             "title": "",
             "text": "What a nice initiative!",
             "parent_id": self.funding.id,
             "parent_type": "funding",
-            "donation": donation.id,
+            "donation": self.donation.id,
             "email_followers": False
         }
 
@@ -538,6 +538,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'system')
+        self.assertTrue('author' in response.json()['results'][0])
 
         # Now create a text wallpost for this donation (user enters text in thank you modal)
         response = self.client.post(self.text_wallpost_url, self.data, token=self.user_token)
@@ -553,6 +554,22 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(response.data['results'][0]['type'], 'text')
         self.assertEqual(response.data['results'][0]['text'], 'What a nice initiative!')
         self.assertEqual(response.data['results'][0]['author']['about_me'], 'I like to give away all my moneys!')
+
+    def test_donation_wallposts_hide_name(self):
+        self.donation.anonymous = True
+        self.donation.save()
+
+        # Create a donation and set it to settled to trigger wallpost
+        # There should be one system wallpost now
+        response = self.client.get(
+            self.wallpost_url,
+            {
+                'parent_id': self.funding.id,
+                'parent_type': 'funding'
+            },
+            token=self.user_token
+        )
+        self.assertFalse('author' in response.json()['results'][0])
 
     def test_donation_wallposts_other_user(self):
         other_user = BlueBottleUserFactory.create()

@@ -460,6 +460,32 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 DeedParticipantStateMachine.succeed
             )
 
+    def test_reapply_cancelled_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+
+        self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].states.submit(save=True)
+
+        self.create()
+
+        self.model.states.withdraw(save=True)
+        self.model.team.states.cancel(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertNoTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertNoTransitionEffect(
+                DeedParticipantStateMachine.succeed
+            )
+
+        self.model.save()
+        self.model.team.states.reopen(save=True)
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
+
     def test_reapply_to_new(self):
         self.create()
         self.model.activity.states.submit(save=True)

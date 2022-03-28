@@ -1,4 +1,5 @@
 from django.utils.timezone import now
+from django.template.loader import render_to_string
 
 from django.utils.translation import gettext_lazy as _
 
@@ -77,3 +78,67 @@ class CreateTeamEffect(Effect):
                 activity=self.instance.activity
             )
             self.instance.save()
+
+
+class BaseTeamContributionTransitionEffect(Effect):
+    display = True
+    template = 'admin/team_contribution_transition_effect.html'
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, BaseTeamContributionTransitionEffect) and
+            self.transition == other.transition and
+            self.instance == other.instance
+        )
+
+    @classmethod
+    def render(cls, effects):
+        effect = effects[0]
+        users = [member.user for member in effect.instance.members]
+        context = {
+            'users': users,
+            'transition': cls.transition.name
+        }
+        return render_to_string(cls.template, context)
+
+    @property
+    def contributions(self):
+        for contributor in self.instance.members.all():
+            for contribution in contributor.contributions.all():
+                yield contribution
+
+    @property
+    def is_valid(self):
+        return (
+            super().is_valid and
+            any(
+                self.transition in contribution.states.possible_transitions() for
+                contribution in self.contributions
+            ) and
+            any(
+                all(condition(contribution) for condition in self.contribution_conditions)
+                for contribution in self.contributions
+            )
+        )
+
+    def pre_save(self, effects):
+        self.transitioned_conributions = []
+        for contribution in self.contributions:
+            if self.transition in contribution.states.possible_transitions():
+                self.transitioned_conributions.append(contribution)
+                self.transition.execute(contribution.states)
+
+    def post_save(self):
+        for duration in self.transitioned_conributions:
+            duration.save()
+
+
+def TeamContributionTransitionEffect(transition, contribution_conditions=None):
+    _transition = transition
+    _contribution_conditions = contribution_conditions or []
+
+    class _TeamContributionTransitionEffect(BaseTeamContributionTransitionEffect):
+        transition = _transition
+        contribution_conditions = _contribution_conditions
+
+    return _TeamContributionTransitionEffect

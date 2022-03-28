@@ -1698,7 +1698,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertRelationship('owner')
 
     def test_pagination(self):
-
         extra_teams = TeamFactory.create_batch(
             10, activity=self.activity
         )

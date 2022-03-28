@@ -448,15 +448,24 @@ class APITestCase(BluebottleTestCase):
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
         )
 
-    def assertMeta(self, attr, expected):
+    def assertMeta(self, attr, expected=None, data=None):
         """
         Assert that `attr` is present in the resource's meta
 
         """
-        self.assertEqual(
-            self.response.json()['data']['meta'][attr],
-            expected
-        )
+        data = data or self.response.json()['data']
+
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertMeta(attr, expected, resource)
+        else:
+            if expected:
+                self.assertEqual(
+                    data['meta'][attr],
+                    expected
+                )
+            else:
+                self.assertTrue(attr in data['meta'])
 
     def assertHasError(self, field, message):
         """

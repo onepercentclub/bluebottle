@@ -25,9 +25,17 @@ from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedReso
 
 
 class TeamSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    transitions = AvailableTransitionsField(source='states')
+
     class Meta(object):
         model = Team
         fields = ('owner', 'activity', )
+        meta_fields = (
+            'status',
+            'transitions',
+            'created',
+        )
 
     class JSONAPIMeta(object):
         included_resources = [

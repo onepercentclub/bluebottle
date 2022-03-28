@@ -368,9 +368,21 @@ class TeamStateMachine(ModelStateMachine):
         name=_('Create'),
         description=_('The acivity will be created.'),
     )
+
+    def can_transition(self, user):
+        return (
+            user == self.instance.owner or
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
+
     cancel = Transition(
         open,
         cancelled,
+        automatic=False,
+        permission=can_transition,
         name=_('cancel'),
         description=_('The team is cancelled. Contributors can no longer apply')
     )
@@ -378,6 +390,8 @@ class TeamStateMachine(ModelStateMachine):
     reopen = Transition(
         cancelled,
         open,
+        automatic=False,
+        permission=can_transition,
         name=_('reopen'),
         description=_('The team is opened. Contributors can apply again')
     )

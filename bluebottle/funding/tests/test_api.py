@@ -490,6 +490,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
+        DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
+        DonorFactory.create(activity=self.funding, amount=Money(35, 'EUR'), status='succeeded')
         response = self.client.get(self.funding_url, user=self.funding.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
@@ -500,6 +502,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
+        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(

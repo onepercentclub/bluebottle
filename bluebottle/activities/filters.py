@@ -31,7 +31,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
-        'initiative_location.id',
+        'location.id',
         'segment',
         'team_activity'
     )
@@ -43,9 +43,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'owner.full_name',
         'initiative.title',
         'initiative.pitch',
-        'initiative.pitch',
-        'initiative_location.name',
-        'initiative_location.city',
+        'location.name',
+        'location.city',
         'location.formatted_address',
         'segments.name',
     )
@@ -54,8 +53,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'title': 2,
         'initiative.pitch': 0.5,
         'initiative.story': 0.5,
-        'initiative_location.name': 0.5,
-        'initiative_location.city': 0.5,
+        'location.name': 0.5,
+        'location.city': 0.5,
     }
 
     def get_sort_relevancy(self, request):

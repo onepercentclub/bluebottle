@@ -249,10 +249,12 @@ def activity_has_no_end(effect):
 
 
 def contributor_is_active(effect):
+    """Contributor status is new"""
     return effect.instance.status == DeedParticipantStateMachine.new.value
 
 
 def team_is_active(effect):
+    """Team status is open, or there is no team"""
     return (
         effect.instance.team.status == TeamStateMachine.open.value
         if effect.instance.team

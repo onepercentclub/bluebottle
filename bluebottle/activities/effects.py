@@ -3,7 +3,7 @@ from django.template.loader import render_to_string
 
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.effects import Effect, TransitionEffect
 from bluebottle.activities.models import Organizer, EffortContribution, Activity, Team
 
 
@@ -81,8 +81,7 @@ class CreateTeamEffect(Effect):
 
 
 class BaseTeamContributionTransitionEffect(Effect):
-    display = True
-    template = 'admin/team_contribution_transition_effect.html'
+    display = False
 
     def __eq__(self, other):
         return (
@@ -124,13 +123,18 @@ class BaseTeamContributionTransitionEffect(Effect):
     def pre_save(self, effects):
         self.transitioned_conributions = []
         for contribution in self.contributions:
-            if self.transition in contribution.states.possible_transitions():
+            effect = TransitionEffect(self.transition)(contribution)
+
+            if effect.is_valid:
                 self.transitioned_conributions.append(contribution)
-                self.transition.execute(contribution.states)
+                effect.pre_save(effects=effects)
+                effects.append(effect)
+
+                contribution.execute_triggers(effects=effects)
 
     def post_save(self):
-        for duration in self.transitioned_conributions:
-            duration.save()
+        for contribution in self.transitioned_conributions:
+            contribution.save()
 
 
 def TeamContributionTransitionEffect(transition, contribution_conditions=None):

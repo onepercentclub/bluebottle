@@ -189,6 +189,7 @@ class EffortContributionTriggers(TriggerManager):
 
 
 def activity_is_active(contribution):
+    """activity is not cancelled, expired or rejected"""
     return contribution.contributor.activity.status not in [
         ActivityStateMachine.cancelled.value,
         ActivityStateMachine.expired.value,
@@ -197,6 +198,7 @@ def activity_is_active(contribution):
 
 
 def contributor_is_active(contribution):
+    """contributor is accepted"""
     return contribution.contributor.status in [
         ParticipantStateMachine.accepted.value
     ]

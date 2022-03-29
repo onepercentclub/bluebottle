@@ -1175,6 +1175,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(date.pk))
         self.assertEqual(data['data'][2]['id'], str(first.pk))
 
+    def test_filter_mixed_country(self):
+        country1 = CountryFactory.create()
+        country2 = CountryFactory.create()
+        office1 = LocationFactory.create(country=country1)
+        office2 = LocationFactory.create(country=country2)
+        location1 = GeolocationFactory(country=country1)
+
+        initiative1 = InitiativeFactory.create(location=office1, place=None)
+        initiative2 = InitiativeFactory.create(location=office2, place=None)
+        initiative3 = InitiativeFactory.create(is_global=True, place=None)
+        initiative4 = InitiativeFactory.create(place=location1)
+
+        PeriodActivityFactory.create(status='full', initiative=initiative1, is_online=True)
+        date1 = DateActivityFactory.create(status='open', initiative=initiative2)
+        date2 = DateActivityFactory.create(status='open', initiative=initiative3, office_location=office1)
+        PeriodActivityFactory.create(status='full', initiative=initiative4, is_online=True)
+
+        DateActivitySlotFactory.create(activity=date1, status='open', is_online=False, location=location1)
+        DateActivitySlotFactory.create(activity=date2, status='open', is_online=True)
+
+        response = self.client.get(
+            self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
         self.owner.save()

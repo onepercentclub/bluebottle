@@ -44,11 +44,16 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         )
 
     def prepare_location(self, instance):
-        return [
-            {'id': slot.location.id, 'formatted_address': slot.location.formatted_address}
+        locations = super(DateActivityDocument, self).prepare_location(instance)
+        locations += [
+            {
+                'name': slot.location.formatted_address,
+                'city': slot.location.locality
+            }
             for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]
+        return locations
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all()]

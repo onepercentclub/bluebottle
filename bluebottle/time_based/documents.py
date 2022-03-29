@@ -45,7 +45,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
-        locations + [
+        locations += [
             {
                 'name': slot.location.formatted_address,
                 'city': slot.location.locality

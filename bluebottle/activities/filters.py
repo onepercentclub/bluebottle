@@ -45,7 +45,6 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'initiative.pitch',
         'location.name',
         'location.city',
-        'location.formatted_address',
         'segments.name',
     )
 

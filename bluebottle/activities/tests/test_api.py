@@ -250,14 +250,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
-    def test_initiative_location_filter(self):
+    def test_location_filter(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
         activity = DateActivityFactory.create(status='open', initiative=initiative)
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            self.url + '?filter[location.id]={}'.format(location.pk),
             user=self.owner
         )
 
@@ -265,7 +265,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(activity.pk))
 
-    def test_initiative_location_global_filter(self):
+    def test_location_global_filter(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
         activity = DateActivityFactory.create(
@@ -279,7 +279,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            self.url + '?filter[location.id]={}'.format(location.pk),
             user=self.owner
         )
 

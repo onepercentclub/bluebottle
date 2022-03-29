@@ -11,7 +11,8 @@ from bluebottle.activities.serializers import (
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributorListSerializer
+    ContributorListSerializer,
+    TeamTransitionSerializer,
 )
 from bluebottle.activities.utils import TeamSerializer
 from bluebottle.collect.models import CollectContributor
@@ -177,3 +178,8 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
         )
+
+
+class TeamTransitionList(TransitionList):
+    serializer_class = TeamTransitionSerializer
+    queryset = Team.objects.all()

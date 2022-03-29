@@ -4,7 +4,7 @@ from bluebottle.activities.views import (
     ActivityList, ActivityDetail, ActivityTransitionList,
     ContributorList, RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
-    RelatedTeamList
+    RelatedTeamList, TeamTransitionList
 )
 
 urlpatterns = [
@@ -44,4 +44,9 @@ urlpatterns = [
         RelatedTeamList.as_view(),
         name='related-activity-team'
     ),
+
+    url(
+        r'^/teams/transitions$',
+        TeamTransitionList.as_view(),
+        name='team-transition-list'),
 ]

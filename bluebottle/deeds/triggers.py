@@ -5,7 +5,9 @@ from bluebottle.activities.messages import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification
 )
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.states import (
+    OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
+)
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
@@ -246,6 +248,20 @@ def activity_has_no_end(effect):
     return not effect.instance.activity.end
 
 
+def contributor_is_active(effect):
+    """Contributor status is new"""
+    return effect.instance.status == DeedParticipantStateMachine.new.value
+
+
+def team_is_active(effect):
+    """Team status is open, or there is no team"""
+    return (
+        effect.instance.team.status == TeamStateMachine.open.value
+        if effect.instance.team
+        else True
+    )
+
+
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -301,7 +317,11 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.succeed,
                     conditions=[activity_is_finished]
                 ),
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed),
+                RelatedTransitionEffect(
+                    'contributions',
+                    EffortContributionStateMachine.succeed,
+                    conditions=[contributor_is_active, team_is_active]
+                ),
             ]
         ),
 

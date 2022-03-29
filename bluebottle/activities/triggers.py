@@ -1,11 +1,19 @@
-from bluebottle.activities.models import Organizer, EffortContribution
+from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.fsm.triggers import (
     TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
-from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
-from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
+from bluebottle.activities.states import (
+    ActivityStateMachine, OrganizerStateMachine, ContributionStateMachine,
+    EffortContributionStateMachine, TeamStateMachine
+)
+from bluebottle.activities.effects import (
+    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
+    TeamContributionTransitionEffect
+)
+
+from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 
 
@@ -175,6 +183,44 @@ class EffortContributionTriggers(TriggerManager):
         ModelDeletedTrigger(
             effects=[
                 UpdateImpactGoalEffect
+            ]
+        ),
+    ]
+
+
+def activity_is_active(contribution):
+    """activity is not cancelled, expired or rejected"""
+    return contribution.contributor.activity.status not in [
+        ActivityStateMachine.cancelled.value,
+        ActivityStateMachine.expired.value,
+        ActivityStateMachine.rejected.value
+    ]
+
+
+def contributor_is_active(contribution):
+    """contributor is accepted"""
+    return contribution.contributor.status in [
+        ParticipantStateMachine.accepted.value
+    ]
+
+
+@register(Team)
+class TeamTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                TeamContributionTransitionEffect(ContributionStateMachine.fail)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reopen,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.succeed,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                )
             ]
         ),
     ]

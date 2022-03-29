@@ -19,6 +19,7 @@ from bluebottle.collect.tests.factories import CollectContributorFactory
 
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
@@ -1669,7 +1670,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         settings.team_activities = True
         settings.save()
 
-    def test_get_activivty_owner(self):
+    def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -1677,6 +1678,9 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertObjectList(self.approved_teams)
         self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
+
+        self.assertMeta('status')
+        self.assertMeta('transitions')
 
     def test_get_cancelled_owner(self):
         team = self.cancelled_teams[0]
@@ -1698,7 +1702,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertRelationship('owner')
 
     def test_pagination(self):
-
         extra_teams = TeamFactory.create_batch(
             10, activity=self.activity
         )
@@ -1728,3 +1731,51 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             self.perform_get(BlueBottleUserFactory.create())
 
         self.assertStatus(status.HTTP_200_OK)
+
+
+class TeamTranistionListViewAPITestCase(APITestCase):
+    url = reverse('team-transition-list')
+    serializer = TeamTransitionSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.team = TeamFactory.create()
+
+        self.defaults = {
+            'resource': self.team,
+            'transition': 'cancel',
+        }
+
+        self.fields = ['resource', 'transition', ]
+
+    def test_cancel(self):
+        self.perform_create(user=self.team.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'cancelled')
+
+    def test_cancel_activity_manager(self):
+        self.perform_create(user=self.team.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'cancelled')
+
+    def test_cancel_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_cancel_no_user(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')

@@ -312,7 +312,7 @@ class SupportersExportView(PrivateFileView):
         sheet.append(title_row)
 
         for t, donor in enumerate(
-            activity.contributors.instance_of(Donor).prefetch_related('user__segments')
+            activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
         ):
             row = [prep_field(request, donor, field[0]) for field in self.fields]
             for segment_type in self.get_segment_types():

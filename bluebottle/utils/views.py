@@ -1,6 +1,5 @@
 import mimetypes
 import os
-from builtins import object
 
 import icalendar
 
@@ -59,14 +58,14 @@ class TagSearch(views.APIView):
         return response.Response(data)
 
 
-class ModelTranslationViewMixin(object):
+class ModelTranslationViewMixin():
     def get(self, request, *args, **kwargs):
         language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-class ViewPermissionsMixin(object):
+class ViewPermissionsMixin():
     """ View mixin with permission checks added from the DRF APIView """
     @property
     def model(self):
@@ -111,7 +110,7 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     permission_classes = (ResourcePermission,)
 
 
-class RelatedPermissionMixin(object):
+class RelatedPermissionMixin():
     related_permission_classes = {}
 
     def check_object_permissions(self, request, obj):

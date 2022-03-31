@@ -2,7 +2,7 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from django.db.models import Q
+from django.db.models import Q, BooleanField, ExpressionWrapper
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
@@ -174,11 +174,16 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
+            queryset = self.queryset.order_by('-current_user', '-id').filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(user=self.request.user),
+                    output_field=BooleanField()
+                )
             )
         else:
             queryset = self.queryset.filter(

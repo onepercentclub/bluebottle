@@ -22,6 +22,11 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+
+    class TeamActivityChoices(DjangoChoices):
+        teams = ChoiceItem('teams', label=_("Teams"))
+        individuals = ChoiceItem('individuals', label=_("Individuals"))
+
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('activity manager'),
@@ -57,7 +62,13 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     description = models.TextField(
         _('Description'), blank=True
     )
-
+    team_activity = models.CharField(
+        _('Team activity'),
+        max_length=100,
+        default=TeamActivityChoices.individuals,
+        choices=TeamActivityChoices.choices,
+        help_text=_("Is this activity open for individuals or can only teams sign up?")
+    )
     image = ImageField(blank=True, null=True)
 
     video_url = models.URLField(
@@ -168,8 +179,13 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     activity = models.ForeignKey(
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
+    team = models.ForeignKey(
+        'activities.Team', verbose_name=_('team'),
+        null=True, blank=True, related_name='members', on_delete=models.SET_NULL
+    )
     user = models.ForeignKey(
-        'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE
+        'members.Member', verbose_name=_('user'),
+        null=True, blank=True, on_delete=models.CASCADE
     )
 
     @property
@@ -240,6 +256,33 @@ class EffortContribution(Contribution):
     class Meta(object):
         verbose_name = _("Effort")
         verbose_name_plural = _("Contributions")
+
+
+class Team(TriggerMixin, models.Model):
+    status = models.CharField(max_length=40)
+
+    activity = models.ForeignKey(
+        Activity, related_name='teams', on_delete=NON_POLYMORPHIC_CASCADE
+    )
+
+    created = models.DateTimeField(default=timezone.now)
+
+    owner = models.ForeignKey(
+        'members.Member', related_name='teams', null=True, on_delete=models.SET_NULL
+    )
+
+    class Meta(object):
+        ordering = ('-created',)
+        verbose_name = _("Team")
+
+        permissions = (
+            ('api_read_team', 'Can view team through the API'),
+            ('api_change_team', 'Can change team through the API'),
+            ('api_change_own_team', 'Can change own team through the API'),
+        )
+
+    def __str__(self):
+        return f'{self._meta.verbose_name} {self.owner}'
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -395,6 +395,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'require_organization',
+            'team_activities',
             'contact_method',
             'enable_impact',
             'enable_office_regions',

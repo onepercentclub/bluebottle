@@ -23,7 +23,6 @@ from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
 
-from builtins import object
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -532,7 +531,7 @@ class DateParticipant(Participant):
     motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
-    class Meta(object):
+    class Meta():
         verbose_name = _("Participant on a date")
         verbose_name_plural = _("Participants on a date")
         permissions = (
@@ -557,7 +556,7 @@ class PeriodParticipant(Participant, Contributor):
 
     current_period = models.DateField(null=True, blank=True)
 
-    class Meta(object):
+    class Meta():
         verbose_name = _("Participant during a period")
         verbose_name_plural = _("Participants during a period")
         permissions = (
@@ -607,7 +606,7 @@ class SlotParticipant(TriggerMixin, models.Model):
     def activity(self):
         return self.slot.activity
 
-    class Meta(object):
+    class Meta():
         verbose_name = _("Slot participant")
         verbose_name_plural = _("Slot participants")
         permissions = (
@@ -677,7 +676,7 @@ class Skill(TranslatableModel):
     def __str__(self):
         return self.name
 
-    class Meta(object):
+    class Meta():
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )

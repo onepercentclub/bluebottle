@@ -17,18 +17,22 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectContributorFactory
 
+from bluebottle.activities.tests.factories import TeamFactory
+from bluebottle.activities.utils import TeamSerializer
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 @override_settings(
@@ -250,14 +254,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
-    def test_initiative_location_filter(self):
+    def test_location_filter(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
         activity = DateActivityFactory.create(status='open', initiative=initiative)
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            self.url + '?filter[location.id]={}'.format(location.pk),
             user=self.owner
         )
 
@@ -265,7 +269,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(activity.pk))
 
-    def test_initiative_location_global_filter(self):
+    def test_location_global_filter(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
         activity = DateActivityFactory.create(
@@ -279,7 +283,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            self.url + '?filter[location.id]={}'.format(location.pk),
             user=self.owner
         )
 
@@ -646,6 +650,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][1]['id'], str(second.pk))
 
+    def test_search_team_activity(self):
+        first = DateActivityFactory.create(
+            team_activity='teams',
+            status='open'
+        )
+        DateActivityFactory.create_batch(
+            2,
+            team_activity='individuals',
+            status='open'
+        )
+
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        response = self.client.get(
+            self.url + '?filter[team_activity]=teams',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+
+        response = self.client.get(
+            self.url + '?filter[team_activity]=individuals',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
     def test_search_page_size(self):
         DateActivityFactory.create_batch(
             12,
@@ -680,7 +720,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             description="Lorem ipsum",
             status='open'
         )
-        second = FundingFactory.create(title='Lorem ipsum dolor sit amet', status='open')
+        second = PeriodActivityFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -693,7 +733,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/time-based/dates')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['type'], 'activities/fundings')
+        self.assertEqual(data['data'][1]['type'], 'activities/time-based/periods')
 
     def test_search_boost(self):
         first = DateActivityFactory.create(
@@ -1138,6 +1178,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(second.pk))
         self.assertEqual(data['data'][1]['id'], str(date.pk))
         self.assertEqual(data['data'][2]['id'], str(first.pk))
+
+    def test_filter_mixed_country(self):
+        country1 = CountryFactory.create()
+        country2 = CountryFactory.create()
+        office1 = LocationFactory.create(country=country1)
+        office2 = LocationFactory.create(country=country2)
+        location1 = GeolocationFactory(country=country1)
+
+        initiative1 = InitiativeFactory.create(location=office1, place=None)
+        initiative2 = InitiativeFactory.create(location=office2, place=None)
+        initiative3 = InitiativeFactory.create(is_global=True, place=None)
+        initiative4 = InitiativeFactory.create(place=location1)
+
+        PeriodActivityFactory.create(status='full', initiative=initiative1, is_online=True)
+        date1 = DateActivityFactory.create(status='open', initiative=initiative2)
+        date2 = DateActivityFactory.create(status='open', initiative=initiative3, office_location=office1)
+        PeriodActivityFactory.create(status='full', initiative=initiative4, is_online=True)
+
+        DateActivitySlotFactory.create(activity=date1, status='open', is_online=False, location=location1)
+        DateActivitySlotFactory.create(activity=date2, status='open', is_online=True)
+
+        response = self.client.get(
+            self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
 
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
@@ -1609,3 +1677,133 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             data['data'][1]['relationships']['user']['data']['id'],
             str(new_participant.user.pk)
         )
+
+
+class RelatedTeamListViewAPITestCase(APITestCase):
+    serializer = TeamSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.activity = PeriodActivityFactory.create(status='open')
+
+        self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
+        self.cancelled_teams = TeamFactory.create_batch(
+            5, activity=self.activity, status='cancelled'
+        )
+
+        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+
+        settings = InitiativePlatformSettings.objects.get()
+        settings.team_activities = True
+        settings.save()
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(self.cancelled_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+        self.assertMeta('status')
+        self.assertMeta('transitions')
+
+    def test_get_cancelled_owner(self):
+        team = self.cancelled_teams[0]
+        self.perform_get(user=team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + 1)
+        self.assertObjectList(self.approved_teams + [team])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_pagination(self):
+        extra_teams = TeamFactory.create_batch(
+            10, activity=self.activity
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(extra_teams))
+        self.assertSize(8)
+        self.assertPages(2)
+
+    def test_other_user_anonymous(self):
+        self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_user_closed_site(self):
+        with self.closed_site():
+            self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+
+
+class TeamTranistionListViewAPITestCase(APITestCase):
+    url = reverse('team-transition-list')
+    serializer = TeamTransitionSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.team = TeamFactory.create()
+
+        self.defaults = {
+            'resource': self.team,
+            'transition': 'cancel',
+        }
+
+        self.fields = ['resource', 'transition', ]
+
+    def test_cancel(self):
+        self.perform_create(user=self.team.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'cancelled')
+
+    def test_cancel_activity_manager(self):
+        self.perform_create(user=self.team.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'cancelled')
+
+    def test_cancel_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_cancel_no_user(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')

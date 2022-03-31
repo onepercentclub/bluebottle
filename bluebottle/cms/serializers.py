@@ -196,6 +196,8 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
             activities = Activity.objects.filter(
                 highlight=True
             ).exclude(
+                segments__closed=True
+            ).exclude(
                 status__in=[
                     'draft', 'needs_work', 'submitted',
                     'deleted', 'cancelled', 'rejected',

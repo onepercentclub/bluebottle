@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PhotoSerializer)
-from bluebottle.funding.models import Funding, Donor
+from bluebottle.funding.models import Funding, Donor, FundingPlatformSettings
 from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -80,7 +80,11 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
         If the donation is anonymous, we do not return the user.
         """
         fields = super(WallpostDonationSerializer, self).get_fields()
-        if isinstance(self.instance, Donor) and self.instance.anonymous:
+        funding_settings = FundingPlatformSettings.load()
+        if isinstance(self.instance, Donor) and (
+            self.instance.anonymous or
+            funding_settings.anonymous_donations
+        ):
             del fields['user']
         return fields
 
@@ -104,7 +108,11 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         # but reading we want an embedded object, so we do a little trick here.
         response = super(WallpostSerializerBase, self).to_representation(instance)
         if instance.donation:
+            funding_settings = FundingPlatformSettings.load()
             response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
+            if response['donation']['anonymous'] or funding_settings.anonymous_donations:
+                del response['author']
+
         return response
 
     class Meta(object):

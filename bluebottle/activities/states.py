@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.models import Organizer, EffortContribution
+from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -347,3 +347,51 @@ class OrganizerStateMachine(ContributorStateMachine):
 @register(EffortContribution)
 class EffortContributionStateMachine(ContributionStateMachine):
     pass
+
+
+@register(Team)
+class TeamStateMachine(ModelStateMachine):
+    open = State(
+        _('open'),
+        'open',
+        _('The team is open for contributors')
+    )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The team is cancelled. Contributors can no longer register')
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        open,
+        name=_('Create'),
+        description=_('The acivity will be created.'),
+    )
+
+    def can_transition(self, user):
+        return (
+            user == self.instance.owner or
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
+
+    cancel = Transition(
+        open,
+        cancelled,
+        automatic=False,
+        permission=can_transition,
+        name=_('cancel'),
+        description=_('The team is cancelled. Contributors can no longer apply')
+    )
+
+    reopen = Transition(
+        cancelled,
+        open,
+        automatic=False,
+        permission=can_transition,
+        name=_('reopen'),
+        description=_('The team is opened. Contributors can apply again')
+    )

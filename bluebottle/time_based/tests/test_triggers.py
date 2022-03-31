@@ -7,7 +7,7 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.models import Organizer
+from bluebottle.activities.models import Organizer, Activity
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase
@@ -783,7 +783,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
                     defaultfilters.date(slot.start),
                     defaultfilters.time(slot.start.astimezone(get_current_timezone())),
                     defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                    self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                    slot.start.astimezone(get_current_timezone()).strftime('%Z'),
                 )
 
                 self.assertTrue(expected in mail.outbox[0].body)
@@ -915,6 +915,19 @@ class ParticipantTriggerTestCase():
             'succeeded'
         )
 
+    def test_initial_added_through_admin_team(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+
+        participant = self.participant_factory.build(
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
+        )
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
+
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 
@@ -968,6 +981,18 @@ class ParticipantTriggerTestCase():
             'succeeded'
         )
 
+    def test_accept_team(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.review_activity
+        )
+
+        participant.states.accept(save=True)
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
+
     def test_initial_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
@@ -1001,6 +1026,15 @@ class ParticipantTriggerTestCase():
             'new'
         )
 
+    def test_initial_review_no_team_yet(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+        participant = self.participant_factory.create(
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertIsNone(participant.team)
+
     def test_initial_no_review(self):
         mail.outbox = []
         participant = self.participant_factory.build(
@@ -1031,6 +1065,21 @@ class ParticipantTriggerTestCase():
             prep.status,
             'succeeded'
         )
+
+    def test_initial_no_review_team(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        participant.execute_triggers(user=participant.user, send_messages=True)
+        participant.save()
+
+        self.assertTrue(participant.team)
+        self.assertEqual(participant.team.owner, participant.user)
 
     def test_no_review_fill(self):
         self.participant_factory.create_batch(
@@ -1645,6 +1694,13 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'full')
+
+    def test_fill_slot_ignores_activity_capacity(self):
+        self.activity.capacity = 1
+        self.activity.save()
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        self.assertStatus(self.slot1, 'open')
+        self.assertStatus(self.activity, 'open')
 
     def test_unfill_slot(self):
         self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)

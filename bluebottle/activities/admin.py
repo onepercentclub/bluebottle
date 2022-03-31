@@ -14,7 +14,9 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, EffortContribution
+from bluebottle.activities.models import (
+    Activity, Contributor, Organizer, Contribution, EffortContribution, Team
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -107,7 +109,7 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
-    raw_id_fields = ('user', 'activity')
+    raw_id_fields = ('user', 'activity', 'team')
 
     date_hierarchy = 'contributor_date'
 
@@ -120,6 +122,8 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
+        if InitiativePlatformSettings.team_activities and 'team' not in self.fields:
+            self.fields += ('team',)
         fieldsets = (
             (_('Details'), {'fields': self.fields}),
         )
@@ -263,10 +267,19 @@ class ActivityForm(StateMachineModelForm):
         return activity
 
 
+class TeamInline(admin.TabularInline):
+    model = Team
+    raw_id_fields = ('owner',)
+    readonly_fields = ('created', )
+    fields = ('owner', 'created', )
+
+    extra = 0
+
+
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline, WallpostInline,)
+    inlines = (FollowAdminInline, WallpostInline, TeamInline)
     form = ActivityForm
 
     def lookup_allowed(self, key, value):
@@ -303,7 +316,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     detail_fields = (
         'title',
         'initiative',
-        'owner',
+        'owner'
     )
 
     description_fields = (
@@ -331,6 +344,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
                     impact_goal_inline.has_delete_permission(request, obj)
             ):
                 inlines.append(impact_goal_inline)
+
+        if obj and (
+            obj.team_activity != Activity.TeamActivityChoices.teams or
+            obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+        ):
+            inlines = [
+                inline for inline in inlines if not isinstance(inline, TeamInline)
+            ]
 
         return inlines
 
@@ -684,3 +705,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
         PaginationFormSet.request = request
         PaginationFormSet.per_page = self.per_page
         return PaginationFormSet
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    pass

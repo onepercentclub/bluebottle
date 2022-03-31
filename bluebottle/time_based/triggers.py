@@ -12,6 +12,8 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
+from bluebottle.activities.effects import CreateTeamEffect
+
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
@@ -58,6 +60,13 @@ def is_full(effect):
     """
     the activity is full
     """
+    if (
+        isinstance(effect.instance, DateActivity) and
+        effect.instance.slots.count() > 1 and
+        effect.instance.slot_selection == 'free'
+    ):
+        return False
+
     return (
         effect.instance.capacity and
         effect.instance.capacity <= len(effect.instance.accepted_participants)
@@ -872,6 +881,14 @@ def activity_will_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+
+    if (
+        isinstance(activity, DateActivity) and
+        activity.slots.count() > 1 and
+        activity.slot_selection == 'free'
+    ):
+        return False
+
     return (
         activity.capacity and
         activity.capacity == len(activity.accepted_participants) + 1
@@ -1013,6 +1030,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
+                CreateTeamEffect
             ]
         ),
 
@@ -1053,7 +1071,8 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                FollowActivityEffect
+                FollowActivityEffect,
+                CreateTeamEffect
             ]
         ),
 
@@ -1361,4 +1380,5 @@ class TimeContributionTriggers(ContributionTriggers):
                     ]),
             ]
         ),
+
     ]

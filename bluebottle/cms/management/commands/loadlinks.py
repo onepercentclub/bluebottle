@@ -38,10 +38,9 @@ class Command(BaseCommand):
                     for link in group['links']:
                         Link.objects.update_or_create(
                             link_group=lg,
-                            component=link['component'],
-                            component_id=link['component_id'],
-                            external_link=link['external_link'],
+                            link=link['link'],
                             defaults={
+                                'open_in_new_tab': link['open_in_new_tab'],
                                 'title': link['title'],
                                 'link_order': link['link_order'],
                                 'highlight': link['highlight']

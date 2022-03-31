@@ -201,7 +201,8 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             initiative_search_filters=['category', 'location'],
             activity_search_filters=['type', 'skill', 'status'],
             contact_method='phone',
-            require_organization=True
+            require_organization=True,
+            team_activities=True
         )
 
         response = self.client.get(self.settings_url)
@@ -216,6 +217,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         )
         self.assertEqual(response.data['platform']['initiatives']['require_organization'], True)
         self.assertEqual(response.data['platform']['initiatives']['contact_method'], 'phone')
+        self.assertEqual(response.data['platform']['initiatives']['team_activities'], True)
 
     def test_notification_platform_settings(self):
         # Create notification platform settings and confirm they end up correctly in settings api
@@ -287,3 +289,13 @@ class TestPlatformSettingsApi(BluebottleTestCase):
                 }
             }
         )
+
+    def test_member_platform_required_settings(self):
+        MemberPlatformSettings.objects.create(
+            require_office=True,
+            verify_office=False
+        )
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['members']['require_office'], True)
+        self.assertEqual(response.data['platform']['members']['verify_office'], False)

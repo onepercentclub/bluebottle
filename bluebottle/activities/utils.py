@@ -11,7 +11,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution
+from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution, Team
 from bluebottle.clients import properties
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -22,6 +22,31 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+
+
+class TeamSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    transitions = AvailableTransitionsField(source='states')
+
+    class Meta(object):
+        model = Team
+        fields = ('owner', 'activity', )
+        meta_fields = (
+            'status',
+            'transitions',
+            'created',
+        )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'owner',
+        ]
+
+        resource_name = 'activities/teams'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -110,6 +135,7 @@ class BaseActivitySerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
+    team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -146,6 +172,9 @@ class BaseActivitySerializer(ModelSerializer):
             status__in=['accepted', 'succeeded', 'activity_refunded']
         ).count()
 
+    def get_team_count(self, instance):
+        return instance.teams.count()
+
     class Meta(object):
         model = Activity
         fields = (
@@ -166,7 +195,8 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
-            'segments'
+            'segments',
+            'team_activity'
         )
 
         meta_fields = (
@@ -177,7 +207,8 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
-            'contributor_count'
+            'contributor_count',
+            'team_count'
         )
 
     class JSONAPIMeta(object):
@@ -241,6 +272,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
+            'team_activity'
         )
 
         meta_fields = (
@@ -332,7 +364,7 @@ class BaseContributorListSerializer(ModelSerializer):
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-
+    team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
@@ -342,7 +374,7 @@ class BaseContributorSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', )
+        fields = ('user', 'activity', 'status', 'team')
         meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):

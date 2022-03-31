@@ -1,18 +1,20 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor
+from bluebottle.activities.models import Activity, Contributor, Team
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributorListSerializer
+    ContributorListSerializer,
+    TeamTransitionSerializer,
 )
+from bluebottle.activities.utils import TeamSerializer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
@@ -151,3 +153,33 @@ class RelatedActivityImageContent(ImageContentView):
 class ActivityTransitionList(TransitionList):
     serializer_class = ActivityTransitionSerializer
     queryset = Activity.objects.all()
+
+
+class RelatedTeamList(JsonApiViewMixin, ListAPIView):
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+
+    pemrission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
+        if self.request.user.is_authenticated:
+            queryset = queryset.filter(
+                Q(activity__initiative__activity_managers=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(owner=self.request.user) |
+                Q(status='open')
+            )
+        else:
+            queryset = self.queryset.filter(
+                status='open'
+            )
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
+
+
+class TeamTransitionList(TransitionList):
+    serializer_class = TeamTransitionSerializer
+    queryset = Team.objects.all()

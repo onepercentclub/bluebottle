@@ -13,6 +13,7 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
+from bluebottle.activities.models import Team
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
     BaseContributorSerializer, BaseContributionSerializer
@@ -36,13 +37,23 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
+    teams = SerializerMethodHyperlinkedRelatedField(
+        model=Team,
+        many=True,
+        related_link_view_name='related-activity-team',
+        related_link_url_kwarg='activity_id'
+
+    )
+
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
             'registration_deadline',
             'expertise',
             'review',
-            'contributors'
+            'contributors',
+            'teams',
+            'my_contributor'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -52,6 +63,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'my_contributor.user',
             'my_contributor.contributions',
             'my_contributor.document',
+            'my_contributor.team',
+            'my_contributor.team.owner',
         ]
 
     included_serializers = dict(
@@ -60,6 +73,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
+            'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
+            'my_contributor.team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
 
@@ -214,6 +229,7 @@ class DateActivitySlotInfoMixin():
         return {
             'total': total,
             'has_multiple': total > 1,
+            'is_full': all(slot.status == 'full' for slot in slots),
             'count': count,
             'first': first,
             'duration': duration
@@ -641,6 +657,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
+            'team'
         )
 
         validators = [
@@ -655,10 +672,12 @@ class ParticipantSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'document',
+            'team'
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
 
@@ -682,11 +701,9 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        included_resources = [
-            'user',
-            'document',
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'slots',
-            'activity'
+            'activity',
         ]
         resource_name = 'contributors/time-based/date-participants'
 
@@ -733,6 +750,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         resource_name = 'contributors/time-based/period-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'contributions',
+            'team'
         ]
 
     included_serializers = dict(

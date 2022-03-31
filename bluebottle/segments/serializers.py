@@ -20,7 +20,8 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = SegmentType
         fields = (
-            'id', 'name', 'slug', 'inherit', 'enable_search', 'user_editable', 'segments'
+            'id', 'name', 'slug', 'inherit', 'required',
+            'enable_search', 'user_editable', 'segments'
         )
 
     class JSONAPIMeta(object):
@@ -88,7 +89,10 @@ class SegmentPublicDetailSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Segment
-        fields = ('id', 'name', 'logo', 'cover_image', 'email_domains', 'closed')
+        fields = (
+            'id', 'name', 'logo', 'cover_image', 'email_domains', 'background_color', 'closed',
+            'text_color'
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'segment-previews'

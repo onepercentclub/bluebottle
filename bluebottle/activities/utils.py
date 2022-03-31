@@ -56,7 +56,7 @@ class TeamSerializer(ModelSerializer):
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'members')
+        fields = ('owner', 'members', 'activity')
         meta_fields = (
             'status',
             'transitions',

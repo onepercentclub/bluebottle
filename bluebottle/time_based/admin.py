@@ -95,8 +95,14 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
     model = PeriodParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
-    readonly_fields = BaseParticipantAdminInline.readonly_fields + ('team',)
-    fields = ('edit', 'user', 'status', 'team')
+    raw_id_fields = BaseParticipantAdminInline.raw_id_fields + ('team',)
+    fields = ('edit', 'user', 'status')
+
+    def get_fields(self, request, obj=None):
+        fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)
+        if obj.team_activity == 'teams':
+            fields += ('team',)
+        return fields
 
 
 class TimeBasedAdmin(ActivityChildAdmin):

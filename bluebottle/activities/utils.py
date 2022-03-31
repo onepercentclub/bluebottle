@@ -6,7 +6,7 @@ from django.db.models import Count, Sum, Q
 from django.utils.translation import gettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodHyperlinkedRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from geopy.distance import distance, lonlat
@@ -17,7 +17,8 @@ from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.models import TimeContribution, PeriodParticipant
+from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
@@ -28,9 +29,36 @@ class TeamSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
+    members = SerializerMethodHyperlinkedRelatedField(
+        model=PeriodParticipant,
+        many=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id'
+    )
+
+    def get_members(self, instance):
+        user = self.context['request'].user
+        return [
+            contributor for contributor in instance.members.all() if (
+                isinstance(contributor, PeriodParticipant) and (
+                    contributor.status in [
+                        ParticipantStateMachine.new.value,
+                        ParticipantStateMachine.accepted.value,
+                        ParticipantStateMachine.succeeded.value
+                    ] or
+                    user in (
+                        instance.owner,
+                        instance.activity.owner,
+                        instance.activity.initiative.owner,
+                        contributor.user
+                    )
+                )
+            )
+        ]
+
     class Meta(object):
         model = Team
-        fields = ('owner', 'activity', )
+        fields = ('owner', 'activity', 'members')
         meta_fields = (
             'status',
             'transitions',

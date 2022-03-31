@@ -290,7 +290,9 @@ class CollectContributorTriggers(ContributorTriggers):
                 ),
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
+                    conditions=[team_is_active]
                 ),
+
                 NotificationEffect(ParticipantJoinedNotification)
             ]
         ),

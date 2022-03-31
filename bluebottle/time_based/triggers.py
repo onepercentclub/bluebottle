@@ -8,7 +8,7 @@ from bluebottle.activities.messages import (
     ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification
 )
-from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
@@ -929,6 +929,15 @@ def activity_is_finished(effect):
         return False
 
 
+def team_is_active(effect):
+    """Team status is open, or there is no team"""
+    return (
+        effect.instance.team.status == TeamStateMachine.open.value
+        if effect.instance.team
+        else True
+    )
+
+
 class ParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -990,6 +999,7 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
+                    conditions=[team_is_active]
                 ),
                 FollowActivityEffect,
             ]
@@ -1062,10 +1072,12 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,
+                    conditions=[team_is_active]
                 ),
                 RelatedTransitionEffect(
                     'finished_contributions',
                     TimeContributionStateMachine.succeed,
+                    conditions=[team_is_active]
                 ),
                 RelatedTransitionEffect(
                     'preparation_contributions',

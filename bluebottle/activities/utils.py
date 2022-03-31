@@ -1,27 +1,25 @@
-from bluebottle.collect.models import CollectContribution
-from django.conf import settings
 from builtins import object
 
+from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.utils.translation import gettext_lazy as _
+from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodHyperlinkedRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from geopy.distance import distance, lonlat
-
 from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution, Team
 from bluebottle.clients import properties
+from bluebottle.collect.models import CollectContribution
+from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
-from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.time_based.models import TimeContribution, PeriodParticipant
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
-
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
@@ -30,10 +28,10 @@ class TeamSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
 
     members = SerializerMethodHyperlinkedRelatedField(
-        model=PeriodParticipant,
+        model=Contributor,
         many=True,
-        related_link_view_name='period-participants',
-        related_link_url_kwarg='activity_id'
+        related_link_view_name='team-members',
+        related_link_url_kwarg='team_id'
     )
 
     def get_members(self, instance):
@@ -58,7 +56,7 @@ class TeamSerializer(ModelSerializer):
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'activity', 'members')
+        fields = ('owner', 'members')
         meta_fields = (
             'status',
             'transitions',

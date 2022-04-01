@@ -67,6 +67,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         max_length=100,
         default=TeamActivityChoices.individuals,
         choices=TeamActivityChoices.choices,
+        blank=True,
         help_text=_("Is this activity open for individuals or can only teams sign up?")
     )
     image = ImageField(blank=True, null=True)

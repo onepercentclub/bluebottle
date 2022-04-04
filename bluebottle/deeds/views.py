@@ -67,7 +67,6 @@ class DeedRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     queryset = DeedParticipant.objects.prefetch_related('user')
     serializer_class = DeedParticipantSerializer

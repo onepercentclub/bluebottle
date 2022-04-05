@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-18 10:31+0100\n"
-"PO-Revision-Date: 2022-03-21 15:12\n"
+"PO-Revision-Date: 2022-03-29 13:25\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: es-EM\n"
-"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 233\n"
+"X-Crowdin-File: /release.team-activities-2-translate/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 854\n"
 
 #: bluebottle/activities/admin.py:60 bluebottle/activities/admin.py:528
 #: bluebottle/activities/admin.py:618 bluebottle/contact/models.py:24
@@ -431,15 +431,7 @@ msgstr "Título"
 msgid "Slug"
 msgstr "Slug"
 
-#: bluebottle/activities/models.py:66
-msgid "Team activity"
-msgstr "Actividad del equipo"
-
-#: bluebottle/activities/models.py:70
-msgid "Is this activity open for individuals or can only teams sign up?"
-msgstr "¿Está abierta esta actividad para los individuos o sólo pueden registrarse equipos?"
-
-#: bluebottle/activities/models.py:75 bluebottle/categories/models.py:34
+#: bluebottle/activities/models.py:64 bluebottle/categories/models.py:34
 #: bluebottle/initiatives/models.py:94
 #: build/lib/bluebottle/activities/models.py:64
 #: build/lib/bluebottle/categories/models.py:34
@@ -3720,73 +3712,73 @@ msgstr ""
 msgid "Paid donations"
 msgstr ""
 
-#: bluebottle/funding/messages.py:9 build/lib/bluebottle/funding/messages.py:9
+#: bluebottle/funding/messages.py:10 build/lib/bluebottle/funding/messages.py:9
 msgid "You have a new donation!💰"
 msgstr ""
 
-#: bluebottle/funding/messages.py:18
+#: bluebottle/funding/messages.py:19
 #: build/lib/bluebottle/funding/messages.py:18
 msgid "Thanks for your donation!"
 msgstr ""
 
-#: bluebottle/funding/messages.py:34 bluebottle/funding/messages.py:50
+#: bluebottle/funding/messages.py:35 bluebottle/funding/messages.py:51
 #: build/lib/bluebottle/funding/messages.py:34
 #: build/lib/bluebottle/funding/messages.py:50
 #, python-brace-format
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr ""
 
-#: bluebottle/funding/messages.py:66
+#: bluebottle/funding/messages.py:67
 #: build/lib/bluebottle/funding/messages.py:66
 msgid "Your crowdfunding campaign deadline passed"
 msgstr ""
 
-#: bluebottle/funding/messages.py:75
+#: bluebottle/funding/messages.py:76
 #: build/lib/bluebottle/funding/messages.py:75
 #, python-brace-format
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
 msgstr ""
 
-#: bluebottle/funding/messages.py:88
+#: bluebottle/funding/messages.py:89
 #: build/lib/bluebottle/funding/messages.py:88
 msgid "Your crowdfunding campaign has been rejected."
 msgstr ""
 
-#: bluebottle/funding/messages.py:97
+#: bluebottle/funding/messages.py:98
 #: build/lib/bluebottle/funding/messages.py:97
 msgid "Your crowdfunding campaign has expired"
 msgstr ""
 
-#: bluebottle/funding/messages.py:110
+#: bluebottle/funding/messages.py:111
 #: build/lib/bluebottle/funding/messages.py:110
 #, python-brace-format
 msgid "The donations received for your campaign \"{title}\" will be refunded"
 msgstr ""
 
-#: bluebottle/funding/messages.py:124
+#: bluebottle/funding/messages.py:125
 #: build/lib/bluebottle/funding/messages.py:124
 #, python-brace-format
 msgid "Your campaign \"{title}\" is approved and is now open for donations 💸"
 msgstr ""
 
-#: bluebottle/funding/messages.py:138
+#: bluebottle/funding/messages.py:139
 #: build/lib/bluebottle/funding/messages.py:138
 #, python-brace-format
 msgid "Your campaign \"{title}\" is open for new donations 💸"
 msgstr ""
 
-#: bluebottle/funding/messages.py:151
+#: bluebottle/funding/messages.py:152
 #: build/lib/bluebottle/funding/messages.py:151
 #, python-brace-format
 msgid "Your campaign \"{title}\" has been cancelled"
 msgstr ""
 
-#: bluebottle/funding/messages.py:164
+#: bluebottle/funding/messages.py:165
 #: build/lib/bluebottle/funding/messages.py:164
 msgid "Your identity verification could not be verified!"
 msgstr ""
 
-#: bluebottle/funding/messages.py:173
+#: bluebottle/funding/messages.py:174
 msgid "Live campaign identity verification failed!"
 msgstr ""
 
@@ -5759,6 +5751,17 @@ msgid "Theme"
 msgstr ""
 
 #: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
+#: bluebottle/initiatives/models.py:260
+msgid "Team activities"
+msgstr "Actividad del equipo"
+
+#: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
+#: build/lib/bluebottle/initiatives/models.py:260
+#: build/lib/bluebottle/initiatives/models.py:268
+msgid "Theme"
+msgstr ""
+
+#: bluebottle/initiatives/models.py:262 bluebottle/initiatives/models.py:270
 #: build/lib/bluebottle/initiatives/models.py:261
 #: build/lib/bluebottle/initiatives/models.py:269
 msgid "Category"
@@ -5775,6 +5778,10 @@ msgid "Phone"
 msgstr ""
 
 #: bluebottle/initiatives/models.py:284
+msgid "Require initiators to specify a partner organisation when creating an initiative."
+msgstr "Requiere que los iniciadores especifiquen una organización asociada a la hora de crear una iniciativa."
+
+#: bluebottle/initiatives/models.py:292
 #: build/lib/bluebottle/initiatives/models.py:284
 msgid "Allow activity managers to indicate the impact they make."
 msgstr ""
@@ -6231,13 +6238,21 @@ msgstr ""
 msgid "Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr ""
 
-#: bluebottle/members/models.py:89 build/lib/bluebottle/members/models.py:88
+#: bluebottle/members/models.py:89
 msgid "Require members to enter or verify the fields below once after logging in."
 msgstr ""
 
 #: bluebottle/members/models.py:95 bluebottle/time_based/admin.py:442
 #: bluebottle/time_based/admin.py:497 bluebottle/time_based/admin.py:498
 msgid "Required"
+msgstr ""
+
+#: bluebottle/members/models.py:95
+msgid "Require members to enter their office location once after logging in."
+msgstr ""
+
+#: bluebottle/members/models.py:99
+msgid "Verify SSO data office location"
 msgstr ""
 
 #: bluebottle/members/models.py:101
@@ -6260,7 +6275,7 @@ msgstr ""
 msgid "Monthly overview of activities that match this person's profile"
 msgstr ""
 
-#: bluebottle/members/models.py:117 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:118 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr ""
 
@@ -7005,11 +7020,7 @@ msgstr ""
 msgid "Verify SSO data"
 msgstr ""
 
-#: bluebottle/segments/models.py:42
-msgid "Enable to require members to verify their segment type data that was provided by SSO"
-msgstr ""
-
-#: bluebottle/segments/models.py:52 build/lib/bluebottle/segments/models.py:35
+#: bluebottle/segments/models.py:53 build/lib/bluebottle/segments/models.py:35
 msgid "Editable in user profile"
 msgstr ""
 
@@ -7719,7 +7730,7 @@ msgstr ""
 msgid "review participants"
 msgstr ""
 
-#: bluebottle/time_based/models.py:71
+#: bluebottle/time_based/models.py:70
 #: build/lib/bluebottle/time_based/models.py:71
 msgid "Preparation time"
 msgstr ""
@@ -9059,10 +9070,18 @@ msgstr ""
 msgid "Link more information about the platforms policy"
 msgstr ""
 
+#: build/lib/bluebottle/members/models.py:88
+msgid "The number of days after which user data should be anonymised. 0 for no anonymisation"
+msgstr ""
+
 #: build/lib/bluebottle/members/templates/mails/messages/sign_up_token.html:5
 msgid "\n"
 "Click the link below to create a password and activate your account. <br>\n\n"
 "The link will expire in 2 hours.\n"
+msgstr ""
+
+#: build/lib/bluebottle/segments/models.py:26
+msgid "Newly created activities will inherit the segments set on the activity owner."
 msgstr ""
 
 #, fuzzy

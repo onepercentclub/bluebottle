@@ -5934,12 +5934,6 @@ msgstr "Thema"
 msgid "Team activities"
 msgstr "Teamaktivitäten"
 
-#: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
-#: build/lib/bluebottle/initiatives/models.py:260
-#: build/lib/bluebottle/initiatives/models.py:268
-msgid "Theme"
-msgstr "Thema"
-
 #: bluebottle/initiatives/models.py:262 bluebottle/initiatives/models.py:270
 #: build/lib/bluebottle/initiatives/models.py:261
 #: build/lib/bluebottle/initiatives/models.py:269

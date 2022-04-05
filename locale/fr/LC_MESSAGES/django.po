@@ -243,10 +243,8 @@ msgid "Set the contribution date."
 msgstr "Définissez la date de la présentation."
 
 #: bluebottle/activities/effects.py:64
-#, fuzzy
-#| msgid "Create a donation"
 msgid "Create a team"
-msgstr "Créer un don"
+msgstr ""
 
 #: bluebottle/activities/forms.py:6 build/lib/bluebottle/activities/forms.py:6
 msgid "Send impact reminder message"
@@ -405,7 +403,7 @@ msgstr "Équipes"
 
 #: bluebottle/activities/models.py:28
 msgid "Individuals"
-msgstr ""
+msgstr "Individus"
 
 #: bluebottle/activities/models.py:32
 #: build/lib/bluebottle/activities/models.py:27
@@ -463,14 +461,12 @@ msgid "Slug"
 msgstr "Limace"
 
 #: bluebottle/activities/models.py:66
-#, fuzzy
-#| msgid "Team activities"
 msgid "Team activity"
 msgstr "Activités d'équipe"
 
 #: bluebottle/activities/models.py:71
 msgid "Is this activity open for individuals or can only teams sign up?"
-msgstr ""
+msgstr "Cette activité est-elle ouverte aux personnes ou les équipes peuvent-elles seulement s'inscrire ?"
 
 #: bluebottle/activities/models.py:76 bluebottle/categories/models.py:34
 #: bluebottle/initiatives/models.py:94
@@ -597,15 +593,13 @@ msgid "Effort"
 msgstr "Effort"
 
 #: bluebottle/activities/models.py:277
-#, fuzzy
-#| msgid "Teams"
 msgid "Team"
-msgstr "Équipes"
+msgstr "Équipe"
 
 #: bluebottle/activities/models.py:286
 #, python-brace-format
 msgid "{name}'s team"
-msgstr ""
+msgstr "Équipe {name}"
 
 #: bluebottle/activities/states.py:9 bluebottle/initiatives/states.py:13
 #: bluebottle/time_based/states.py:145 bluebottle/utils/transitions.py:10
@@ -1068,36 +1062,24 @@ msgid "The organizer is still busy setting up the activity."
 msgstr "L'organisateur est toujours occupé à mettre en place l'activité."
 
 #: bluebottle/activities/states.py:357
-#, fuzzy
-#| msgid "Create effort contribution"
 msgid "The team is open for contributors"
-msgstr "Créer une contribution d'effort"
+msgstr ""
 
 #: bluebottle/activities/states.py:362
-#, fuzzy
-#| msgid ""
-#| "The participant (temporarily) stopped. Contributions will no longer be "
-#| "created."
 msgid "The team is cancelled. Contributors can no longer register"
 msgstr ""
-"Le participant (temporairement) s'est arrêté. Les contributions ne seront "
-"plus créées."
 
 #: bluebottle/activities/states.py:386
-#, fuzzy
-#| msgid "canceled"
 msgid "cancel"
-msgstr "annulé"
+msgstr ""
 
 #: bluebottle/activities/states.py:387
 msgid "The team is cancelled. Contributors can no longer apply"
 msgstr ""
 
 #: bluebottle/activities/states.py:395
-#, fuzzy
-#| msgid "Reopen"
 msgid "reopen"
-msgstr "Rouvrir"
+msgstr ""
 
 #: bluebottle/activities/states.py:396
 msgid "The team is opened. Contributors can apply again"
@@ -1196,16 +1178,12 @@ msgid "amount"
 msgstr "montant"
 
 #: bluebottle/activities/templates/admin/create_team.html:3
-#, fuzzy
-#| msgid "Create the payout"
 msgid "Create team"
-msgstr "Créer le paiement"
+msgstr ""
 
 #: bluebottle/activities/templates/admin/create_team.html:6
-msgid ""
-"\n"
-"    Create a team for the contributor. Make the user the owner of the team, "
-"and allow him/her to invite other users.\n"
+msgid "\n"
+"    Create a team for the contributor. Make the user the owner of the team, and allow him/her to invite other users.\n"
 msgstr ""
 
 #: bluebottle/activities/templates/admin/validation_steps.html:4
@@ -4406,10 +4384,8 @@ msgid "Plain KYC accounts"
 msgstr "Comptes simples KYC"
 
 #: bluebottle/funding/models.py:731
-#, fuzzy
-#| msgid "Create a donation"
 msgid "Hide names from all donations"
-msgstr "Créer un don"
+msgstr "Masquer les noms de tous les dons"
 
 #: bluebottle/funding/models.py:734 build/lib/bluebottle/funding/models.py:731
 msgid "Allow guests to donate rewards"
@@ -6337,22 +6313,16 @@ msgid "Steps to complete initiative"
 msgstr "Étapes pour terminer l'initiative"
 
 #: bluebottle/initiatives/admin.py:265
-#, fuzzy
-#| msgid "Activity slots"
 msgid "Activity types"
-msgstr "Emplacements d'activité"
+msgstr "Types d'activités"
 
 #: bluebottle/initiatives/admin.py:270
-#, fuzzy
-#| msgid "Enable search filters"
 msgid "Search filters"
-msgstr "Activer les filtres de recherche"
+msgstr "Filtres de recherche"
 
 #: bluebottle/initiatives/admin.py:276
-#, fuzzy
-#| msgid "Optional"
 msgid "Options"
-msgstr "Optionnel"
+msgstr ""
 
 #: bluebottle/initiatives/dashboard.py:11
 #: build/lib/bluebottle/initiatives/dashboard.py:11
@@ -6612,7 +6582,7 @@ msgstr "Téléphone"
 
 #: bluebottle/initiatives/models.py:280
 msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
+msgstr "Activer les activités d'équipe où les équipes s'inscrivent au lieu d'individus."
 
 #: bluebottle/initiatives/models.py:284
 msgid ""
@@ -8081,36 +8051,24 @@ msgid "Email domains"
 msgstr "Domaines Email"
 
 #: bluebottle/segments/models.py:103 build/lib/bluebottle/segments/models.py:85
-msgid ""
-"Users with email addresses for this domain are automatically added to this "
-"segment."
-msgstr ""
-"Les utilisateurs ayant des adresses e-mail pour ce domaine sont "
-"automatiquement ajoutés à ce segment."
+msgid "Users with email addresses for this domain are automatically added to this segment."
+msgstr "Les utilisateurs ayant des adresses e-mail pour ce domaine sont automatiquement ajoutés à ce segment."
 
 #: bluebottle/segments/models.py:107 build/lib/bluebottle/segments/models.py:89
 msgid "Slogan"
 msgstr "Slogan"
 
 #: bluebottle/segments/models.py:109 build/lib/bluebottle/segments/models.py:91
-msgid ""
-"A short sentence to explain your segment. This sentence is directly visible "
-"on the page."
-msgstr ""
-"Une courte phrase pour expliquer votre segment. Cette phrase est directement "
-"visible sur la page."
+msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
+msgstr "Une courte phrase pour expliquer votre segment. Cette phrase est directement visible sur la page."
 
 #: bluebottle/segments/models.py:114 build/lib/bluebottle/segments/models.py:96
 msgid "Story"
 msgstr "Story"
 
 #: bluebottle/segments/models.py:116 build/lib/bluebottle/segments/models.py:98
-msgid ""
-"A more detailed story for your segment. This story can be accessed via a "
-"link on the page."
-msgstr ""
-"Une histoire plus détaillée pour votre segment. Cette histoire peut être "
-"consultée via un lien sur la page."
+msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
+msgstr "Une histoire plus détaillée pour votre segment. Cette histoire peut être consultée via un lien sur la page."
 
 #: bluebottle/segments/models.py:123
 #: build/lib/bluebottle/segments/models.py:105
@@ -8146,12 +8104,8 @@ msgstr "Restreint"
 
 #: bluebottle/segments/models.py:157
 #: build/lib/bluebottle/segments/models.py:139
-msgid ""
-"Closed segments will only be accessible to members that belong to this "
-"segment."
-msgstr ""
-"Les segments fermés ne seront accessibles qu'aux membres qui appartiennent à "
-"ce segment."
+msgid "Closed segments will only be accessible to members that belong to this segment."
+msgstr "Les segments fermés ne seront accessibles qu'aux membres qui appartiennent à ce segment."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"

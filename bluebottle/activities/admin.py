@@ -270,8 +270,8 @@ class ActivityForm(StateMachineModelForm):
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)
-    readonly_fields = ('created', )
-    fields = ('owner', 'created', )
+    readonly_fields = ('created', 'status')
+    fields = ('owner',) + readonly_fields
 
     extra = 0
 

@@ -168,7 +168,6 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
             queryset = queryset.filter(
                 Q(activity__initiative__activity_managers=self.request.user) |
                 Q(activity__owner=self.request.user) |
-                Q(owner=self.request.user) |
                 Q(status='open')
             )
         else:

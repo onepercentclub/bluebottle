@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-05 14:15+0200\n"
-"PO-Revision-Date: 2022-03-29 13:25\n"
+"PO-Revision-Date: 2022-04-05 12:41\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -244,10 +244,8 @@ msgid "Set the contribution date."
 msgstr "Stel de datum van bijdrage in."
 
 #: bluebottle/activities/effects.py:64
-#, fuzzy
-#| msgid "Create a donation"
 msgid "Create a team"
-msgstr "Genereer een donatie"
+msgstr "Team aanmaken"
 
 #: bluebottle/activities/forms.py:6 build/lib/bluebottle/activities/forms.py:6
 msgid "Send impact reminder message"
@@ -405,7 +403,7 @@ msgstr "Teams"
 
 #: bluebottle/activities/models.py:28
 msgid "Individuals"
-msgstr ""
+msgstr "Individuen"
 
 #: bluebottle/activities/models.py:32
 #: build/lib/bluebottle/activities/models.py:27
@@ -463,14 +461,12 @@ msgid "Slug"
 msgstr "Slug"
 
 #: bluebottle/activities/models.py:66
-#, fuzzy
-#| msgid "Team activities"
 msgid "Team activity"
-msgstr "Teamactiviteiten"
+msgstr "Teamactiviteit"
 
 #: bluebottle/activities/models.py:71
 msgid "Is this activity open for individuals or can only teams sign up?"
-msgstr ""
+msgstr "Is deze activiteit open voor individuen of kan alleen door teams aangemeld worden?"
 
 #: bluebottle/activities/models.py:76 bluebottle/categories/models.py:34
 #: bluebottle/initiatives/models.py:94
@@ -596,15 +592,13 @@ msgid "Effort"
 msgstr "Inzet"
 
 #: bluebottle/activities/models.py:277
-#, fuzzy
-#| msgid "Teams"
 msgid "Team"
-msgstr "Teams"
+msgstr "Team"
 
 #: bluebottle/activities/models.py:286
 #, python-brace-format
 msgid "{name}'s team"
-msgstr ""
+msgstr "Team {name}"
 
 #: bluebottle/activities/states.py:9 bluebottle/initiatives/states.py:13
 #: bluebottle/time_based/states.py:145 bluebottle/utils/transitions.py:10
@@ -1066,36 +1060,24 @@ msgid "The organizer is still busy setting up the activity."
 msgstr "De organisator is nog bezig met het opzetten van de activiteit."
 
 #: bluebottle/activities/states.py:357
-#, fuzzy
-#| msgid "Create overall contributor"
 msgid "The team is open for contributors"
-msgstr "Creëer een algemene bijdrager"
+msgstr ""
 
 #: bluebottle/activities/states.py:362
-#, fuzzy
-#| msgid ""
-#| "The participant (temporarily) stopped. Contributions will no longer be "
-#| "created."
 msgid "The team is cancelled. Contributors can no longer register"
 msgstr ""
-"De deelnemer is (tijdelijk) gestopt. Er worden geen nieuwe contributies "
-"aangemaakt."
 
 #: bluebottle/activities/states.py:386
-#, fuzzy
-#| msgid "canceled"
 msgid "cancel"
-msgstr "geannuleerd"
+msgstr ""
 
 #: bluebottle/activities/states.py:387
 msgid "The team is cancelled. Contributors can no longer apply"
 msgstr ""
 
 #: bluebottle/activities/states.py:395
-#, fuzzy
-#| msgid "Reopen"
 msgid "reopen"
-msgstr "Heropen"
+msgstr ""
 
 #: bluebottle/activities/states.py:396
 msgid "The team is opened. Contributors can apply again"
@@ -1194,17 +1176,14 @@ msgid "amount"
 msgstr "bedrag"
 
 #: bluebottle/activities/templates/admin/create_team.html:3
-#, fuzzy
-#| msgid "Create the payout"
 msgid "Create team"
-msgstr "Maak uitbetaling aan"
+msgstr "Team aanmaken"
 
 #: bluebottle/activities/templates/admin/create_team.html:6
-msgid ""
-"\n"
-"    Create a team for the contributor. Make the user the owner of the team, "
-"and allow him/her to invite other users.\n"
-msgstr ""
+msgid "\n"
+"    Create a team for the contributor. Make the user the owner of the team, and allow him/her to invite other users.\n"
+msgstr "\n"
+"    Creëer een team voor de medewerker. Maak de gebruiker de eigenaar van het team en laat hem/haar andere gebruikers uitnodigen.\n"
 
 #: bluebottle/activities/templates/admin/validation_steps.html:4
 #: build/lib/bluebottle/activities/templates/admin/validation_steps.html:4
@@ -4412,10 +4391,8 @@ msgid "Plain KYC accounts"
 msgstr "Standaard KYC accounts"
 
 #: bluebottle/funding/models.py:731
-#, fuzzy
-#| msgid "Create a donation"
 msgid "Hide names from all donations"
-msgstr "Genereer een donatie"
+msgstr "Verberg namen voor alle donaties"
 
 #: bluebottle/funding/models.py:734 build/lib/bluebottle/funding/models.py:731
 msgid "Allow guests to donate rewards"
@@ -6330,22 +6307,16 @@ msgid "Steps to complete initiative"
 msgstr "Stappen om initiatief compleet te maken"
 
 #: bluebottle/initiatives/admin.py:265
-#, fuzzy
-#| msgid "Activity slots"
 msgid "Activity types"
-msgstr "Vergrendel tijdsblokken"
+msgstr "Activiteitstypen"
 
 #: bluebottle/initiatives/admin.py:270
-#, fuzzy
-#| msgid "Enable search filters"
 msgid "Search filters"
-msgstr "Zoekfilters activeren"
+msgstr "Zoekfilters"
 
 #: bluebottle/initiatives/admin.py:276
-#, fuzzy
-#| msgid "Optional"
 msgid "Options"
-msgstr "Optioneel"
+msgstr "Opties"
 
 #: bluebottle/initiatives/dashboard.py:11
 #: build/lib/bluebottle/initiatives/dashboard.py:11
@@ -6603,7 +6574,7 @@ msgstr "Telefoon"
 
 #: bluebottle/initiatives/models.py:280
 msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
+msgstr "Schakel teamactiviteiten in waarbij teams zich aanmelden in plaats van individuen."
 
 #: bluebottle/initiatives/models.py:284
 msgid ""
@@ -7198,11 +7169,8 @@ msgstr ""
 "Laat open als alleen eerder ingevoerde segmenten moeten worden gebruikt."
 
 #: bluebottle/members/models.py:89
-msgid ""
-"Require members to enter or verify the fields below once after logging in."
-msgstr ""
-"Verplicht leden om na het inloggen eenmalig onderstaande velden in te voeren "
-"of te verifiëren."
+msgid "Require members to enter or verify the fields below once after logging in."
+msgstr "Verplicht leden om na het inloggen eenmalig onderstaande velden in te voeren of te verifiëren."
 
 #: bluebottle/members/models.py:95
 msgid "Require members to enter their office location once after logging in."
@@ -8073,36 +8041,24 @@ msgid "Email domains"
 msgstr "E-maildomeinen"
 
 #: bluebottle/segments/models.py:103 build/lib/bluebottle/segments/models.py:85
-msgid ""
-"Users with email addresses for this domain are automatically added to this "
-"segment."
-msgstr ""
-"Gebruikers met e-mailadressen voor dit domein worden automatisch aan dit "
-"segment toegevoegd."
+msgid "Users with email addresses for this domain are automatically added to this segment."
+msgstr "Gebruikers met e-mailadressen voor dit domein worden automatisch aan dit segment toegevoegd."
 
 #: bluebottle/segments/models.py:107 build/lib/bluebottle/segments/models.py:89
 msgid "Slogan"
 msgstr "Slogan"
 
 #: bluebottle/segments/models.py:109 build/lib/bluebottle/segments/models.py:91
-msgid ""
-"A short sentence to explain your segment. This sentence is directly visible "
-"on the page."
-msgstr ""
-"Een korte zin om je segment uit te leggen. Deze zin is direct zichtbaar op "
-"de pagina."
+msgid "A short sentence to explain your segment. This sentence is directly visible on the page."
+msgstr "Een korte zin om je segment uit te leggen. Deze zin is direct zichtbaar op de pagina."
 
 #: bluebottle/segments/models.py:114 build/lib/bluebottle/segments/models.py:96
 msgid "Story"
 msgstr "Verhaal"
 
 #: bluebottle/segments/models.py:116 build/lib/bluebottle/segments/models.py:98
-msgid ""
-"A more detailed story for your segment. This story can be accessed via a "
-"link on the page."
-msgstr ""
-"Een meer gedetailleerd verhaal voor jouw segment. Dit verhaal kan worden "
-"geopend via een link op de pagina."
+msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
+msgstr "Een meer gedetailleerd verhaal voor jouw segment. Dit verhaal kan worden geopend via een link op de pagina."
 
 #: bluebottle/segments/models.py:123
 #: build/lib/bluebottle/segments/models.py:105
@@ -8139,12 +8095,8 @@ msgstr "Beperkt"
 
 #: bluebottle/segments/models.py:157
 #: build/lib/bluebottle/segments/models.py:139
-msgid ""
-"Closed segments will only be accessible to members that belong to this "
-"segment."
-msgstr ""
-"Gesloten segmenten zijn alleen toegankelijk voor leden die tot dit segment "
-"behoren."
+msgid "Closed segments will only be accessible to members that belong to this segment."
+msgstr "Gesloten segmenten zijn alleen toegankelijk voor leden die tot dit segment behoren."
 
 #: bluebottle/segments/templates/segments/admin/required_segment_types.html:10
 msgid "no segment types are marked as required"

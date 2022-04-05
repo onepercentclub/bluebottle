@@ -358,6 +358,27 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantJoinedNotification)
 
+    def test_reapply_cancelled_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        self.create()
+
+        self.model.states.withdraw(save=True)
+        self.model.team.states.cancel(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertNoTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertNoTransitionEffect(
+                CollectContributorStateMachine.succeed
+            )
+
+        self.model.save()
+        self.model.team.states.reopen(save=True)
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
+
     def test_reapply_finished(self):
         self.defaults['activity'].end = date.today() - timedelta(days=2)
         self.defaults['activity'].save()

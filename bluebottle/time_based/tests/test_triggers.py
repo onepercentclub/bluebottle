@@ -1246,6 +1246,29 @@ class ParticipantTriggerTestCase():
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
+    def test_reapply_cancelled_team(self):
+        self.activity.team_activity = 'teams'
+        self.test_withdraw()
+        self.participants[0].team.states.cancel(save=True)
+
+        self.assertEqual(
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'failed'
+        )
+
+        self.participants[0].states.reapply(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(
+            self.participants[0].contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'failed'
+        )
+        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
+
 
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = DateActivityFactory

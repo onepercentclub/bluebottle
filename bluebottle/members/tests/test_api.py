@@ -251,6 +251,24 @@ class SignUpTokenTestCase(BluebottleTestCase):
         member = Member.objects.get(email=email)
         self.assertFalse(member.is_active)
 
+    def test_create_twice_different_case(self):
+        email = 'test@example.com'
+
+        self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email.title()}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        member = Member.objects.get(email__iexact=email)
+        self.assertFalse(member.is_active)
+
     def test_create_already_active(self):
         email = 'test@example.com'
 

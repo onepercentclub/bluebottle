@@ -359,7 +359,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             effects=[
                 TransitionEffect(
                     DeedParticipantStateMachine.succeed,
-                    conditions=[activity_did_start]
+                    conditions=[activity_did_start, team_is_active]
                 ),
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
             ]

@@ -67,6 +67,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         max_length=100,
         default=TeamActivityChoices.individuals,
         choices=TeamActivityChoices.choices,
+        blank=True,
         help_text=_("Is this activity open for individuals or can only teams sign up?")
     )
     image = ImageField(blank=True, null=True)
@@ -282,7 +283,7 @@ class Team(TriggerMixin, models.Model):
         )
 
     def __str__(self):
-        return f'{self._meta.verbose_name} {self.owner}'
+        return _("{name}'s team").format(name=self.owner.full_name)
 
 
 from bluebottle.activities.signals import *  # noqa

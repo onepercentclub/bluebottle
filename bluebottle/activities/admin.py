@@ -270,10 +270,19 @@ class ActivityForm(StateMachineModelForm):
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)
-    readonly_fields = ('created', )
-    fields = ('owner', 'created', )
+    readonly_fields = ('team_link', 'created', 'status')
+    fields = readonly_fields + ('owner',)
 
     extra = 0
+
+    def team_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:activities_team_change', args=(obj.id,)),
+            obj
+        )
+
+    team_link.short_description = _('Edit')
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -539,7 +548,7 @@ class ContributorInline(admin.TabularInline):
     raw_id_fields = ('user',)
     readonly_fields = ('contributor_date', 'created', 'edit', 'state_name',)
     fields = ('edit', 'user', 'created', 'state_name',)
-
+    model = Contributor
     extra = 0
 
     def state_name(self, obj):
@@ -708,5 +717,30 @@ class ActivityAdminInline(StackedPolymorphicInline):
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
-    pass
+class TeamAdmin(StateMachineAdmin):
+    raw_id_fields = ['owner', 'activity']
+    readonly_fields = ['created', 'activity_link']
+    inlines = [ContributorInline]
+    fields = ['activity', 'created', 'owner', 'states']
+    superadmin_fields = ['force_status']
+    list_display = ['__str__', 'activity_link', 'status']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Details'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
+
+    def activity_link(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj.activity._meta.app_label,
+            obj.activity._meta.model_name),
+            args=(obj.activity.id,)
+        )
+        return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
+
+    activity_link.short_description = _('Activity')

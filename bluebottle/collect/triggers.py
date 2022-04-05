@@ -10,7 +10,7 @@ from bluebottle.time_based.messages import (
     NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantAddedNotification
 )
-from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
@@ -208,6 +208,15 @@ def is_not_owner(effect):
     return True
 
 
+def team_is_active(effect):
+    """Team status is open, or there is no team"""
+    return (
+        effect.instance.team.status == TeamStateMachine.open.value
+        if effect.instance.team
+        else True
+    )
+
+
 @register(CollectContributor)
 class CollectContributorTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -281,7 +290,9 @@ class CollectContributorTriggers(ContributorTriggers):
                 ),
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
+                    conditions=[team_is_active]
                 ),
+
                 NotificationEffect(ParticipantJoinedNotification)
             ]
         ),
@@ -289,7 +300,11 @@ class CollectContributorTriggers(ContributorTriggers):
         TransitionTrigger(
             CollectContributorStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contributions', CollectContributionStateMachine.succeed),
+                RelatedTransitionEffect(
+                    'contributions',
+                    CollectContributionStateMachine.succeed,
+                    conditions=[team_is_active]
+                ),
             ]
         ),
     ]

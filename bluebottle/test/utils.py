@@ -257,10 +257,10 @@ class APITestCase(BluebottleTestCase):
         """
         Perform a put request and save the result in `self.response`
 
-        `data` should be a json api stucture containing the data for the new object
+        `data` should be a json api structure containing the data for the new object
         `self.model` will point to the newly created model
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         if data is None:
             data = self.data

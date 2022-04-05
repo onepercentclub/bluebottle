@@ -362,13 +362,6 @@ class TeamStateMachine(ModelStateMachine):
         _('The team is cancelled. Contributors can no longer register')
     )
 
-    initiate = Transition(
-        EmptyState(),
-        open,
-        name=_('Create'),
-        description=_('The acivity will be created.'),
-    )
-
     def can_transition(self, user):
         return (
             user == self.instance.owner or
@@ -377,6 +370,13 @@ class TeamStateMachine(ModelStateMachine):
             user in self.instance.activity.initiative.activity_managers.all() or
             user.is_staff
         )
+
+    initiate = Transition(
+        EmptyState(),
+        open,
+        name=_('Create'),
+        description=_('The acivity will be created.'),
+    )
 
     cancel = Transition(
         open,

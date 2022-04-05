@@ -1,5 +1,7 @@
 from builtins import str
 from builtins import object
+import uuid
+
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
@@ -260,6 +262,7 @@ class EffortContribution(Contribution):
 
 
 class Team(TriggerMixin, models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     status = models.CharField(max_length=40)
 
     activity = models.ForeignKey(

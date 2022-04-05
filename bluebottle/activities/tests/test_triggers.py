@@ -1,3 +1,4 @@
+import uuid
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -41,6 +42,7 @@ class TeamTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertEqual(self.model.status, 'open')
             self.assertNotificationEffect(TeamAddedMessage)
+            self.assertTrue(isinstance(self.model.id, uuid.UUID))
 
     def test_cancel(self):
         self.create()

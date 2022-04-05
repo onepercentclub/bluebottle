@@ -539,7 +539,7 @@ class ContributorInline(admin.TabularInline):
     raw_id_fields = ('user',)
     readonly_fields = ('contributor_date', 'created', 'edit', 'state_name',)
     fields = ('edit', 'user', 'created', 'state_name',)
-
+    model = Contributor
     extra = 0
 
     def state_name(self, obj):
@@ -708,5 +708,6 @@ class ActivityAdminInline(StackedPolymorphicInline):
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
-    pass
+class TeamAdmin(StateMachineAdmin):
+    raw_id_fields = ['owner']
+    inlines = [ContributorInline]

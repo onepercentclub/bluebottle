@@ -282,7 +282,7 @@ class Team(TriggerMixin, models.Model):
         )
 
     def __str__(self):
-        return f'{self._meta.verbose_name} {self.owner}'
+        return _("{name}'s team").format(name=self.owner.full_name)
 
 
 from bluebottle.activities.signals import *  # noqa

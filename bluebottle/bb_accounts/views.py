@@ -208,7 +208,8 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         (instance, _) = USER_MODEL.objects.get_or_create(
-            email=serializer.validated_data['email'], defaults={'is_active': False}
+            email__iexact=serializer.validated_data['email'],
+            defaults={'is_active': False, 'email': serializer.validated_data['email']}
         )
         token = TimestampSigner().sign(instance.pk)
         SignUptokenMessage(

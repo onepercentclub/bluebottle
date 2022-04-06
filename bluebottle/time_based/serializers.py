@@ -862,10 +862,12 @@ class PeriodParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=PeriodParticipant.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
+        'resource.team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/period-participant-transitions'
+        included_resources = ['resource', 'resource.team']
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -876,5 +878,5 @@ class SkillSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'expertise')
 
     class JSONAPIMeta(object):
-        included_resources = ['resource', ]
+        included_resources = ['resource']
         resource_name = 'skills'

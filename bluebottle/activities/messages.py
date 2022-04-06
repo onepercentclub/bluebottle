@@ -270,3 +270,30 @@ class MatchingActivitiesNotification(TransitionMessage):
             context['count'] = len(activities)
 
         return context
+
+
+class TeamAddedMessage(TransitionMessage):
+    subject = pgettext('email', "A new team was started")
+    template = 'messages/team_added'
+
+    def get_recipients(self):
+        """team participants"""
+        return [self.obj.activity.owner]
+
+
+class TeamCancelledMessage(TransitionMessage):
+    subject = pgettext('email', "Your team was cancelled")
+    template = 'messages/team_cancelled'
+
+    def get_recipients(self):
+        """team participants"""
+        return [contributor.user for contributor in self.obj.members.all()]
+
+
+class TeamReopenedMessage(TransitionMessage):
+    subject = pgettext('email', "Your team was accepted again")
+    template = 'messages/team_reopened'
+
+    def get_recipients(self):
+        """team participants"""
+        return [contributor.user for contributor in self.obj.members.all()]

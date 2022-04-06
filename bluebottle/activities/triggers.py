@@ -3,6 +3,7 @@ from bluebottle.fsm.triggers import (
     TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine, ContributionStateMachine,
@@ -11,6 +12,10 @@ from bluebottle.activities.states import (
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
     TeamContributionTransitionEffect
+)
+
+from bluebottle.activities.messages import (
+    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
 )
 
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -208,15 +213,24 @@ def contributor_is_active(contribution):
 class TeamTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
+            TeamStateMachine.initiate,
+            effects=[
+                NotificationEffect(TeamAddedMessage)
+            ]
+        ),
+
+        TransitionTrigger(
             TeamStateMachine.cancel,
             effects=[
-                TeamContributionTransitionEffect(ContributionStateMachine.fail)
+                TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                NotificationEffect(TeamCancelledMessage)
             ]
         ),
 
         TransitionTrigger(
             TeamStateMachine.reopen,
             effects=[
+                NotificationEffect(TeamReopenedMessage),
                 TeamContributionTransitionEffect(
                     ContributionStateMachine.succeed,
                     contribution_conditions=[activity_is_active, contributor_is_active]

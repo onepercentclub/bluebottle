@@ -12,7 +12,7 @@ from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers
 )
 
-from bluebottle.activities.effects import CreateTeamEffect
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
 from bluebottle.deeds.messages import (
@@ -289,7 +289,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     ParticipantJoinedNotification,
                     conditions=[is_user]
                 ),
-                CreateTeamEffect
+                CreateTeamEffect,
+                CreateInviteEffect
             ]
         ),
         TransitionTrigger(

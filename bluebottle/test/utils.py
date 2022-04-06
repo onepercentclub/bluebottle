@@ -401,6 +401,9 @@ class APITestCase(BluebottleTestCase):
                         str(model.pk) in ids
                     )
 
+    def assertNoRelationship(self, relation):
+        self.assertFalse(relation in self.response.json()['data']['relationships'])
+
     def assertObjectList(self, data, models=None):
         if models:
             ids = [resource['id'] for resource in data]
@@ -517,21 +520,29 @@ class APITestCase(BluebottleTestCase):
             if field in self.defaults:
                 value = self.defaults[field]
             else:
-                factory_field = getattr(self.factory, field)
                 try:
-                    value = factory_field.generate()
+                    factory_field = getattr(self.factory, field)
+                    try:
+                        value = factory_field.generate()
+                    except AttributeError:
+                        value = factory_field.function(len(self.factory._meta.model.objects.all()))
                 except AttributeError:
-                    value = factory_field.function(len(self.factory._meta.model.objects.all()))
+                    value = None
 
             if isinstance(self.serializer().get_fields()[field], RelatedField):
-                serializer_name = self.serializer.included_serializers[field]
-                (module, cls_name) = serializer_name.rsplit('.', 1)
-                resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                try:
+                    serializer_name = self.serializer.included_serializers[field]
+                    (module, cls_name) = serializer_name.rsplit('.', 1)
+                    resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                except KeyError:
+                    model = getattr(self.serializer.Meta.model, 'accepted_invite').get_queryset().model
+                    resource_name = model.JSONAPIMeta.resource_name
+
                 data['relationships'][field] = {
                     'data': {
                         'id': value.pk,
                         'type': resource_name
-                    }
+                    } if value else None
                 }
             else:
                 data['attributes'][field] = value

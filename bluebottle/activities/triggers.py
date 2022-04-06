@@ -215,7 +215,7 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[
-                NotificationEffect(TeamAddedMessage)
+                NotificationEffect(TeamAddedMessage),
             ]
         ),
 

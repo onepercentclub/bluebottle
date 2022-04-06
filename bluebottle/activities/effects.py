@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import Effect, TransitionEffect
-from bluebottle.activities.models import Organizer, EffortContribution, Activity, Team
+from bluebottle.activities.models import Organizer, EffortContribution, Activity, Team, Invite
 
 
 class CreateOrganizer(Effect):
@@ -72,6 +72,9 @@ class CreateTeamEffect(Effect):
         )
 
     def post_save(self, **kwargs):
+        if self.instance.accepted_invite:
+            self.instance.team = self.instance.accepted_invite.contributor.team
+
         if not self.instance.team:
             self.instance.team = Team.objects.create(
                 owner=self.instance.user,
@@ -146,3 +149,17 @@ def TeamContributionTransitionEffect(transition, contribution_conditions=None):
         contribution_conditions = _contribution_conditions
 
     return _TeamContributionTransitionEffect
+
+
+class CreateInviteEffect(Effect):
+    "Create an invite for the contributor"
+
+    display = False
+
+    def pre_save(self, **kwargs):
+        if not self.instance.invite_id:
+            self.instance.invite = Invite()
+            self.instance.invite.save()
+
+    def __str__(self):
+        return str(_('Create invite'))

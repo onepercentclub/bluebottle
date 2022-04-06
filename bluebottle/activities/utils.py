@@ -375,7 +375,7 @@ class BaseContributorListSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', 'created', 'updated', )
+        fields = ('user', 'activity', 'status', 'created', 'updated', 'accepted_invite', 'invite')
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(object):
@@ -398,9 +398,15 @@ class BaseContributorSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and not (self.instance.user == self.context['request'].user):
+            self.fields.pop('invite')
+
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', 'team')
+        fields = ('user', 'activity', 'status', 'team', 'accepted_invite', 'invite',)
         meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):

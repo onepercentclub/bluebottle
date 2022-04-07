@@ -358,6 +358,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(assignment.pk) not in found)
         self.assertTrue(str(funding.pk) not in found)
 
+        start = next_month + dateutil.relativedelta.relativedelta(days=2)
+        end = next_month - dateutil.relativedelta.relativedelta(days=2)
+        response = self.client.get(
+            self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
+                start.year, start.month, start.day,
+                end.year, end.month, end.day),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
     def test_activity_date_filter_slots(self):
         first = DateActivityFactory.create(
             status='open', slots=[]

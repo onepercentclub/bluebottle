@@ -176,18 +176,19 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                 status='open'
             )
 
-        # Make sure own team is always first
-        queryset = queryset.annotate(
-            has_members=Count('members')
-        ).annotate(
-            current_user=Case(
-                When(has_members=0, then=Value(False)),
-                default=ExpressionWrapper(
-                    Q(members__user=self.request.user),
-                    output_field=BooleanField()
+        if self.request.user.is_authenticated:
+            # Make sure own team is always first
+            queryset = queryset.annotate(
+                has_members=Count('members')
+            ).annotate(
+                current_user=Case(
+                    When(has_members=0, then=Value(False)),
+                    default=ExpressionWrapper(
+                        Q(members__user=self.request.user),
+                        output_field=BooleanField()
+                    )
                 )
-            )
-        ).order_by('-current_user', '-id')
+            ).order_by('-current_user', '-id')
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

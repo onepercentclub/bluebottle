@@ -157,6 +157,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         end = request.GET.get('filter[end]')
 
         try:
+            if dateutil.parser.parse(end) < dateutil.parser.parse(start):
+                return None
             return Range(
                 duration={
                     'gte': dateutil.parser.parse(start) if start else None,

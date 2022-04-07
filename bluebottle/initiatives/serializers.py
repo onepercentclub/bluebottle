@@ -187,6 +187,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         if user != instance.owner and user not in instance.activity_managers.all():
             if not user.is_authenticated:
                 return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
+            elif user.is_staff:
+                return activities.filter(
+                    Q(status__in=public_statuses) |
+                    Q(owner=user) |
+                    Q(initiative__activity_managers=user)
+                )
             else:
                 return activities.filter(
                     Q(status__in=public_statuses) |

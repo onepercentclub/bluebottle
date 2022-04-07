@@ -142,6 +142,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
         self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
 
+    def test_closed_segments_staff(self):
+        self.setup_closed_segments()
+
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        response = self.client.get(self.url, user=staff)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
+        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
+        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
+
     def test_filter_owner(self):
         DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')

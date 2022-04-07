@@ -318,10 +318,10 @@ class ParticipantStateMachine(ContributorStateMachine):
         """can accept participant"""
         return (
             user in [
-                self.instance.team.owner,
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or
+            (self.instance.team and self.instance.team.owner == user) or
             user.is_staff or
             user in self.instance.activity.initiative.activity_managers.all()
         )
@@ -483,7 +483,6 @@ class SlotParticipantStateMachine(ModelStateMachine):
         """can accept participant"""
         return (
             user in [
-                self.instance.team.owner,
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or

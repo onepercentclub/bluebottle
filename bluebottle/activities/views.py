@@ -1,5 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField
+from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Value, Count, Case, When
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -175,6 +175,19 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
             queryset = self.queryset.filter(
                 status='open'
             )
+
+        # Make sure own team is always first
+        queryset = queryset.annotate(
+            has_members=Count('members')
+        ).annotate(
+            current_user=Case(
+                When(has_members=0, then=Value(False)),
+                default=ExpressionWrapper(
+                    Q(members__user=self.request.user),
+                    output_field=BooleanField()
+                )
+            )
+        ).order_by('-current_user', '-id')
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

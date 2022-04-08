@@ -74,7 +74,7 @@ install_requires = [
     'djangorestframework-jsonapi==4.1.0',
     'djangorestframework==3.12.4',
     'dkimpy==1.0.5',
-    'dotted=0.1.8', 
+    'dotted==0.1.8', 
     'drf-jwt==1.19.0',
     'elasticsearch-dsl==6.4.0',
     'elasticsearch==6.8.2',

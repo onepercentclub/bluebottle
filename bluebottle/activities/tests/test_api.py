@@ -18,7 +18,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectContributorFactory
 
 from bluebottle.activities.tests.factories import TeamFactory
-from bluebottle.activities.utils import TeamSerializer
+from bluebottle.activities.utils import TeamSerializer, InviteSerializer
 from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
@@ -1807,3 +1807,33 @@ class TeamTranistionListViewAPITestCase(APITestCase):
 
         self.team.refresh_from_db()
         self.assertEqual(self.team.status, 'open')
+
+
+class InviteDetailViewAPITestCase(APITestCase):
+    serializer = InviteSerializer
+
+    def setUp(self):
+        super().setUp()
+        activity = PeriodActivityFactory.create(status='open', team_activity='teams')
+        self.contributor = PeriodParticipantFactory.create(activity=activity)
+
+        self.url = reverse('invite-detail', args=(self.contributor.invite.pk, ))
+
+    def test_get_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('team', self.contributor.team)
+        self.assertIncluded('team.owner', self.contributor.team.owner)
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_anonymous_user(self):
+        with self.closed_site():
+            self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)

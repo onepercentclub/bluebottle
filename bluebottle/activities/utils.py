@@ -7,10 +7,14 @@ from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodHyperlinkedRelatedField
+from rest_framework_json_api.relations import (
+    ResourceRelatedField, SerializerMethodHyperlinkedRelatedField, SerializerMethodResourceRelatedField
+)
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution, Team
+from bluebottle.activities.models import (
+    Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
+)
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -527,4 +531,31 @@ def get_stats_for_activities(activities):
         'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
         'contributors': contributor_count,
         'amount': amount
+    }
+
+
+class InviteSerializer(ModelSerializer):
+    team = SerializerMethodResourceRelatedField(
+        model=Team,
+        many=False,
+        read_only=True
+    )
+
+    def get_team(self, obj):
+        return obj.contributor.team
+
+    class Meta(object):
+        model = Invite
+        fields = ('id', 'team', )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'team', 'team.owner',
+        ]
+
+        resource_name = 'activities/invites'
+
+    included_serializers = {
+        'team': 'bluebottle.activities.utils.TeamSerializer',
+        'team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }

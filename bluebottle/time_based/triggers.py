@@ -12,7 +12,7 @@ from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.activities.effects import CreateTeamEffect
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
@@ -969,7 +969,8 @@ class ParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 FollowActivityEffect,
-                CreatePreparationTimeContributionEffect
+                CreatePreparationTimeContributionEffect,
+                CreateInviteEffect
             ]
         ),
 
@@ -1040,7 +1041,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                CreateTeamEffect
+                CreateTeamEffect,
             ]
         ),
 
@@ -1084,7 +1085,7 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect,
-                CreateTeamEffect
+                CreateTeamEffect,
             ]
         ),
 

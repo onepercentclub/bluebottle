@@ -1,5 +1,5 @@
-from builtins import str
-from builtins import object
+from builtins import str, object
+import uuid
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
@@ -188,6 +188,12 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         'members.Member', verbose_name=_('user'),
         null=True, blank=True, on_delete=models.CASCADE
     )
+    invite = models.OneToOneField(
+        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
+    )
+    accepted_invite = models.ForeignKey(
+        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
+    )
 
     @property
     def owner(self):
@@ -257,6 +263,13 @@ class EffortContribution(Contribution):
     class Meta(object):
         verbose_name = _("Effort")
         verbose_name_plural = _("Contributions")
+
+
+class Invite(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/organizers'
 
 
 class Team(TriggerMixin, models.Model):

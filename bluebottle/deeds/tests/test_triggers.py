@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta, date
 
 from bluebottle.activities.effects import SetContributionDateEffect
@@ -8,7 +9,7 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
-from bluebottle.activities.effects import CreateTeamEffect
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
@@ -314,6 +315,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(NewParticipantNotification)
             self.assertNotificationEffect(ParticipantJoinedNotification)
+            self.assertEffect(CreateInviteEffect)
             self.model.save()
             self.assertEqual(
                 self.model.status,
@@ -323,6 +325,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 self.model.contributions.first().status,
                 'new'
             )
+            self.assertTrue(isinstance(self.model.invite.pk, uuid.UUID))
 
     def test_initiate_passed_start(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
@@ -345,6 +348,21 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model.save()
         self.assertTrue(self.model.team.id)
         self.assertEqual(self.model.team.owner, self.model.user)
+
+    def test_initiate_by_invite(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateTeamEffect)
+
+        self.model.save()
+        self.assertEqual(self.model.team, team_captain.team)
+        self.assertEqual(self.model.team.owner, team_captain.user)
 
     def test_initiate_individual(self):
         self.defaults['activity'].team_activity = Activity.TeamActivityChoices.individuals

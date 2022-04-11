@@ -14,7 +14,7 @@ from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.activities.effects import CreateTeamEffect
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 
 from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
 from bluebottle.collect.messages import (
@@ -243,7 +243,8 @@ class CollectContributorTriggers(ContributorTriggers):
                     NewParticipantNotification,
                     conditions=[is_user]
                 ),
-                CreateTeamEffect
+                CreateTeamEffect,
+                CreateInviteEffect
             ]
         ),
         TransitionTrigger(

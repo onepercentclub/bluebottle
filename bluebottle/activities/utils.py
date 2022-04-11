@@ -1,4 +1,5 @@
 from builtins import object
+from collections.abc import Iterable
 
 from django.conf import settings
 from django.db.models import Count, Sum, Q
@@ -402,7 +403,7 @@ class BaseContributorSerializer(ModelSerializer):
         super().__init__(*args, **kwargs)
 
         if (
-            isinstance(self.instance, list) or
+            isinstance(self.instance, Iterable) or
             self.instance and not (self.instance.user == self.context['request'].user)
         ):
             self.fields.pop('invite')

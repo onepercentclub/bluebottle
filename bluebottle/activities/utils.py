@@ -401,7 +401,10 @@ class BaseContributorSerializer(ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.instance and not (self.instance.user == self.context['request'].user):
+        if (
+            isinstance(self.instance, list) or
+            self.instance and not (self.instance.user == self.context['request'].user)
+        ):
             self.fields.pop('invite')
 
     class Meta(object):

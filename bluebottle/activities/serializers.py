@@ -1,6 +1,8 @@
 from builtins import object
 
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField, ResourceRelatedField
+from rest_framework_json_api.relations import (
+    PolymorphicResourceRelatedField, ResourceRelatedField
+)
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.models import Contributor, Activity, Team

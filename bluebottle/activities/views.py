@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor, Team
+from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
@@ -14,7 +14,7 @@ from bluebottle.activities.serializers import (
     ContributorListSerializer,
     TeamTransitionSerializer,
 )
-from bluebottle.activities.utils import TeamSerializer
+from bluebottle.activities.utils import TeamSerializer, InviteSerializer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
@@ -24,11 +24,11 @@ from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView
+    CreateAPIView, RetrieveAPIView
 )
 
 
@@ -216,3 +216,10 @@ class TeamMembersList(JsonApiViewMixin, ListAPIView):
         )
 
     serializer_class = PeriodParticipantSerializer
+
+
+class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = Invite.objects.all()
+
+    serializer_class = InviteSerializer

@@ -357,7 +357,20 @@ class APITestCase(BluebottleTestCase):
             {'type': inc['type'], 'id': inc['id']}
             for inc in self.response.json()['included']
         ]
-        relationship = self.response.json()['data']['relationships'][included]['data']
+        parts = included.split('.')
+
+        relationship = self.response.json()['data']['relationships'][parts[0]]['data']
+
+        try:
+            for part in parts[1:]:
+                included = [
+                    resource for resource in self.response.json()['included']
+                    if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
+                ][0]
+                relationship = included['relationships'][part]['data']
+        except IndexError:
+            return self.fail('Included relation not found')
+
         self.assertTrue(
             {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
             in included_resources

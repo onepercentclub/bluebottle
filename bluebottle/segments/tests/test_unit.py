@@ -159,3 +159,10 @@ class MemberSegmentTestCase(BluebottleTestCase):
         )
         user.segments.add(new_segment)
         self.assertEqual(len(activity.segments.all()), 0)
+
+        activity.segments.add(segment)
+        self.assertTrue(segment in activity.segments.all())
+
+        user.segments.remove(segment)
+
+        self.assertTrue(segment in activity.segments.all())

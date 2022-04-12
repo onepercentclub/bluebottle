@@ -1,26 +1,23 @@
-from bluebottle.collect.models import CollectContribution
 from django.conf import settings
-from builtins import object
-
 from django.db.models import Count, Sum, Q
 from django.utils.translation import gettext_lazy as _
+from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from geopy.distance import distance, lonlat
-
 from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution
 from bluebottle.clients import properties
+from bluebottle.collect.models import CollectContribution
+from bluebottle.fsm.serializers import AvailableTransitionsField
+from bluebottle.funding.models import Donor
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
-from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.time_based.models import TimeContribution
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
-
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
@@ -146,7 +143,7 @@ class BaseActivitySerializer(ModelSerializer):
             status__in=['accepted', 'succeeded', 'activity_refunded']
         ).count()
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'type',  # Needed for old style API endpoints like pages / page blocks
@@ -181,7 +178,7 @@ class BaseActivitySerializer(ModelSerializer):
             'contributor_count'
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'image',
@@ -227,7 +224,7 @@ class BaseActivityListSerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'type',  # Needed for old style API endpoints like pages / page blocks
@@ -252,7 +249,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'matching_properties',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'initiative',
@@ -270,7 +267,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     slug = serializers.CharField(read_only=True)
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'slug',
@@ -283,7 +280,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
             'updated',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         pass
 
 
@@ -298,7 +295,7 @@ class ActivitySubmitSerializer(ModelSerializer):
         }
     )
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'owner',
@@ -317,12 +314,12 @@ class BaseContributorListSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Contributor
         fields = ('user', 'activity', 'status', 'created', 'updated', )
         meta_fields = ('created', 'updated', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',
@@ -342,12 +339,12 @@ class BaseContributorSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Contributor
         fields = ('user', 'activity', 'status', )
         meta_fields = ('transitions', 'created', 'updated', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',
@@ -359,12 +356,12 @@ class BaseContributorSerializer(ModelSerializer):
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
 
-    class Meta(object):
+    class Meta:
         model = Contribution
         fields = ('value', 'status', )
         meta_fields = ('created', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'contributors'
 
 
@@ -409,13 +406,13 @@ def get_stats_for_activities(activities):
         activities=Count('contributor__activity', distinct=True)
     )
 
-    amounts = MoneyContribution.objects.filter(
+    amounts = Donor.objects.filter(
         status='succeeded',
-        contributor__activity__id__in=ids
+        activity__id__in=ids
     ).values(
-        'value_currency'
+        'amount_currency'
     ).annotate(
-        amount=Sum('value')
+        total=Sum('amount')
     ).order_by()
 
     contributor_count = Contributor.objects.filter(
@@ -446,10 +443,10 @@ def get_stats_for_activities(activities):
     amount = {
         'amount': sum(
             convert(
-                Money(c['amount'], c['value_currency']),
+                Money(c['total'], c['amount_currency']),
                 default_currency
             ).amount
-            for c in amounts if c['amount']
+            for c in amounts if c['total']
         ),
         'currency': default_currency
     }

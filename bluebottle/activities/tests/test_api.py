@@ -388,9 +388,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         for days in (6, 8, 10):
             DateActivitySlotFactory.create(
                 activity=second,
+                status='full',
                 start=now() + timedelta(days=days)
             )
 
+        third = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        for days in (2, 4, 6):
+            DateActivitySlotFactory.create(
+                activity=third,
+                status='cancelled',
+                start=now() + timedelta(days=days)
+
+            )
         start = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
         end = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
         data = json.loads(

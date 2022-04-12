@@ -56,20 +56,20 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return locations
 
     def prepare_start(self, instance):
-        return [slot.start for slot in instance.slots.all()]
+        return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finishd', )]
 
     def prepare_end(self, instance):
         return [
             slot.start + slot.duration
             for slot in instance.slots.all()
-            if slot.start and slot.duration
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finishd', )
         ]
 
     def prepare_duration(self, instance):
         return [
             {'gte': slot.start, 'lte': slot.end}
             for slot in instance.slots.all()
-            if slot.start and slot.duration
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
         ]
 
     def prepare_country(self, instance):

@@ -5,7 +5,7 @@ from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.utils import NotificationTestCase
 
 from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
-from build.lib.bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class ActivityNotificationTestCase(NotificationTestCase):

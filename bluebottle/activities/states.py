@@ -351,6 +351,11 @@ class EffortContributionStateMachine(ContributionStateMachine):
 
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
+    new = State(
+        _('new'),
+        'new',
+        _('The team has yet to be accepted')
+    )
     open = State(
         _('open'),
         'open',
@@ -373,9 +378,16 @@ class TeamStateMachine(ModelStateMachine):
 
     initiate = Transition(
         EmptyState(),
-        open,
+        new,
         name=_('Create'),
-        description=_('The acivity will be created.'),
+        description=_('The activity will be created.'),
+    )
+
+    accept = Transition(
+        new,
+        open,
+        name=_('Accept'),
+        description=_('The activity will be accepted.'),
     )
 
     cancel = Transition(

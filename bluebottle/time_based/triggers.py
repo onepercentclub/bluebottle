@@ -1322,6 +1322,13 @@ class SlotParticipantTriggers(TriggerManager):
     ]
 
 
+def has_team(effect):
+    """
+    Participant belongs to a team
+    """
+    return effect.instance.team
+
+
 @register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
@@ -1339,6 +1346,11 @@ class PeriodParticipantTriggers(ParticipantTriggers):
                 RelatedTransitionEffect(
                     'finished_contributions',
                     TimeContributionStateMachine.succeed
+                ),
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.accept,
+                    conditions=[has_team]
                 )
             ]
         ),

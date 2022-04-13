@@ -237,6 +237,11 @@ class TeamTriggers(TriggerManager):
                     TeamAddedMessage,
                     conditions=[needs_review]
                 ),
+                TransitionEffect(
+                    TeamStateMachine.accept,
+                    conditions=[automatically_accept]
+                )
+
             ]
         ),
 
@@ -245,6 +250,15 @@ class TeamTriggers(TriggerManager):
             effects=[
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamCancelledMessage)
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                # NotificationEffect(
+                #     TeamAcceptedMessage,
+                #     conditions=[needs_review]
+                # )
             ]
         ),
 

@@ -932,7 +932,7 @@ def activity_is_finished(effect):
 def team_is_active(effect):
     """Team status is open, or there is no team"""
     return (
-        effect.instance.team.status == TeamStateMachine.open.value
+        effect.instance.team.status in [TeamStateMachine.open.value, TeamStateMachine.new.value]
         if effect.instance.team
         else True
     )

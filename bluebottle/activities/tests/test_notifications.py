@@ -1,5 +1,6 @@
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
-    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification, TeamAddedMessage
+    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification, TeamAddedMessage, \
+    TeamAppliedMessage
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.utils import NotificationTestCase
 
@@ -90,4 +91,18 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertTextBodyContains("William Shatner's team has joined your activity 'Save the world!'.")
         self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
         self.assertActionLink(self.obj.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
+
+    def test_team_applied_notification(self):
+        self.activity.review = True
+        self.activity.save()
+        self.message_class = TeamAppliedMessage
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject("A new team has applied to 'Save the world!'")
+        self.assertTextBodyContains("William Shatner's team has applied to your activity 'Save the world!'.")
+        self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
+        self.assertBodyContains('You can accept or reject the team on the activity page.')
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')

@@ -209,13 +209,34 @@ def contributor_is_active(contribution):
     ]
 
 
+def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not effect.instance.activity.review
+
+
+def needs_review(effect):
+    """
+    needs review
+    """
+    return effect.instance.activity.review
+
+
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[
-                NotificationEffect(TeamAddedMessage),
+                NotificationEffect(
+                    TeamAddedMessage,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    TeamAddedMessage,
+                    conditions=[needs_review]
+                ),
             ]
         ),
 

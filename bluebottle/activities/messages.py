@@ -283,6 +283,8 @@ class TeamNotification(ActivityNotification):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
+    action_title = pgettext('email', 'View activity')
+
     def get_recipients(self):
         """acitvity mananager"""
         return [self.obj.activity.owner]
@@ -291,6 +293,11 @@ class TeamNotification(ActivityNotification):
 class TeamAddedMessage(TeamNotification):
     subject = pgettext('email', "A new team has joined '{title}'")
     template = 'messages/team_added'
+
+
+class TeamAppliedMessage(TeamNotification):
+    subject = pgettext('email', "A new team has applied to '{title}'")
+    template = 'messages/team_applied'
 
 
 class TeamCancelledMessage(TeamNotification):

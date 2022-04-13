@@ -1,8 +1,10 @@
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
-    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
+    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification, TeamAddedMessage
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.utils import NotificationTestCase
 
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
+from build.lib.bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class ActivityNotificationTestCase(NotificationTestCase):
@@ -60,4 +62,32 @@ class ActivityNotificationTestCase(NotificationTestCase):
             'You did it! Your activity "Save the world!" has succeeded, '
             'that calls for a celebration!')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+
+class TeamNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.activity = PeriodActivityFactory.create(
+            title="Save the world!"
+        )
+        self.captain = BlueBottleUserFactory.create(
+            first_name='William',
+            last_name='Shatner',
+            email='kirk@enterprise.com',
+            username='shatner'
+        )
+        self.obj = TeamFactory.create(
+            activity=self.activity,
+            owner=self.captain
+        )
+
+    def test_team_added_notification(self):
+        self.message_class = TeamAddedMessage
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject("A new team has joined 'Save the world!'")
+        self.assertTextBodyContains("William Shatner's team has joined your activity 'Save the world!'.")
+        self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
+        self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

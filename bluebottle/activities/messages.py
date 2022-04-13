@@ -272,16 +272,28 @@ class MatchingActivitiesNotification(TransitionMessage):
         return context
 
 
-class TeamAddedMessage(TransitionMessage):
-    subject = pgettext('email', "A new team was started")
-    template = 'messages/team_added'
+class TeamNotification(ActivityNotification):
+    context = {
+        'title': 'activity.title',
+        'team_captain_email': 'owner.email',
+        'team_name': 'name'
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
 
     def get_recipients(self):
-        """team participants"""
+        """acitvity mananager"""
         return [self.obj.activity.owner]
 
 
-class TeamCancelledMessage(TransitionMessage):
+class TeamAddedMessage(TeamNotification):
+    subject = pgettext('email', "A new team has joined '{title}'")
+    template = 'messages/team_added'
+
+
+class TeamCancelledMessage(TeamNotification):
     subject = pgettext('email', "Your team was cancelled")
     template = 'messages/team_cancelled'
 
@@ -290,7 +302,7 @@ class TeamCancelledMessage(TransitionMessage):
         return [contributor.user for contributor in self.obj.members.all()]
 
 
-class TeamReopenedMessage(TransitionMessage):
+class TeamReopenedMessage(TeamNotification):
     subject = pgettext('email', "Your team was accepted again")
     template = 'messages/team_reopened'
 

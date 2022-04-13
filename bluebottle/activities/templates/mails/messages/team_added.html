@@ -3,6 +3,9 @@
 
 {% block message%}
     <p>
-        {% blocktrans context 'email' %}A team was added to your activity{% endblocktrans %}
+        {% blocktrans context 'email' %}{{team_name}} has joined your activity '{{title}}'.{% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans context 'email' %}Please contact them to sort out any details via {{team_captain_email}}.{% endblocktrans %}
     </p>
 {% endblock %}

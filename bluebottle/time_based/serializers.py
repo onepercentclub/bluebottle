@@ -602,15 +602,6 @@ class ParticipantListSerializer(BaseContributorSerializer):
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/participants'
-        included_resources = [
-            'user',
-            'activity',
-        ]
-
-    included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
 
 
 class DateParticipantListSerializer(ParticipantListSerializer):
@@ -669,16 +660,14 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/participants'
-        included_resources = [
-            'user',
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
             'document',
             'team'
         ]
 
-    included_serializers = {
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    included_serializers = dict(**BaseContributorSerializer.included_serializers, **{
         'team': 'bluebottle.activities.utils.TeamSerializer',
-    }
+    })
 
 
 class DateParticipantSerializer(ParticipantSerializer):

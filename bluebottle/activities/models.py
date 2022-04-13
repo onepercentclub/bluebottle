@@ -269,7 +269,7 @@ class Invite(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/organizers'
+        resource_name = 'activities/invites'
 
 
 class Team(TriggerMixin, models.Model):

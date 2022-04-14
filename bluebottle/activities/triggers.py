@@ -213,14 +213,14 @@ def automatically_accept(effect):
     """
     automatically accept participants
     """
-    return not effect.instance.activity.review
+    return not hasattr(effect.instance.activity, 'review') or not effect.instance.activity.review
 
 
 def needs_review(effect):
     """
     needs review
     """
-    return effect.instance.activity.review
+    return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
 
 
 @register(Team)

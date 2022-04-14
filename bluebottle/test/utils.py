@@ -666,10 +666,16 @@ class TriggerTestCase(BluebottleTestCase):
         if self._hasEffect(effect_cls, model):
             self.fail('Transition effect "{}" triggered'.format(effect_cls))
 
-    def assertNotificationEffect(self, message_cls, model=None):
+    def assertNotificationEffect(self, message_cls, recipients=None):
         for effect in self.effects:
             if hasattr(effect, 'message') and effect.message == message_cls:
+                if recipients:
+                    self.assertEqual(
+                        set(recipients), set(effect.message(effect.instance).get_recipients())
+                    )
+
                 return effect.message
+
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
 
     def assertNoNotificationEffect(self, message_cls, model=None):

@@ -16,6 +16,7 @@ from bluebottle.activities.effects import (
 
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamCancelledTeamCaptainMessage,
 )
 
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -248,7 +249,17 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.cancel,
             effects=[
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
-                NotificationEffect(TeamCancelledMessage)
+                NotificationEffect(TeamCancelledMessage),
+                NotificationEffect(TeamCancelledTeamCaptainMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                NotificationEffect(TeamWithdrawnMessage),
+                NotificationEffect(TeamWithdrawnActivityOwnerMessage)
             ]
         ),
         TransitionTrigger(

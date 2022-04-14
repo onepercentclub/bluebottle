@@ -300,6 +300,15 @@ class TeamAppliedMessage(TeamNotification):
     template = 'messages/team_applied'
 
 
+class TeamAcceptedMessage(TeamNotification):
+    subject = pgettext('email', "Your team has been accepted for '{title}'")
+    template = 'messages/team_accepted'
+
+    def get_recipients(self):
+        """team captain"""
+        return [self.obj.owner]
+
+
 class TeamCancelledMessage(TeamNotification):
     subject = pgettext('email', "Your team was cancelled")
     template = 'messages/team_cancelled'

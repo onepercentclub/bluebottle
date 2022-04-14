@@ -1,7 +1,8 @@
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.activities.messages import TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage
+from bluebottle.activities.messages import TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, \
+    TeamAppliedMessage, TeamAcceptedMessage
 from bluebottle.activities.effects import TeamContributionTransitionEffect
 from bluebottle.activities.tests.factories import TeamFactory
 
@@ -23,6 +24,7 @@ class TeamTriggersTestCase(TriggerTestCase):
 
         self.defaults = {
             'activity': self.activity,
+            'owner': self.owner
         }
         super().setUp()
 
@@ -41,6 +43,26 @@ class TeamTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertEqual(self.model.status, 'open')
             self.assertNotificationEffect(TeamAddedMessage)
+
+    def test_apply(self):
+        self.activity.review = True
+        self.activity.save()
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute():
+            self.assertEqual(self.model.status, 'new')
+            self.assertNotificationEffect(TeamAppliedMessage)
+
+    def test_accept(self):
+        self.activity.review = True
+        self.activity.save()
+        self.model = self.factory.build(**self.defaults)
+        self.model.save()
+        self.model.states.accept()
+
+        with self.execute():
+            self.assertEqual(self.model.status, 'open')
+            self.assertNotificationEffect(TeamAcceptedMessage)
 
     def test_cancel(self):
         self.create()

@@ -15,7 +15,7 @@ from bluebottle.activities.effects import (
 )
 
 from bluebottle.activities.messages import (
-    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
+    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
 )
 
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -234,14 +234,13 @@ class TeamTriggers(TriggerManager):
                     conditions=[automatically_accept]
                 ),
                 NotificationEffect(
-                    TeamAddedMessage,
+                    TeamAppliedMessage,
                     conditions=[needs_review]
                 ),
                 TransitionEffect(
                     TeamStateMachine.accept,
                     conditions=[automatically_accept]
                 )
-
             ]
         ),
 
@@ -255,10 +254,10 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
-                # NotificationEffect(
-                #     TeamAcceptedMessage,
-                #     conditions=[needs_review]
-                # )
+                NotificationEffect(
+                    TeamAcceptedMessage,
+                    conditions=[needs_review]
+                )
             ]
         ),
 

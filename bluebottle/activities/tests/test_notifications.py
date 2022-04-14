@@ -86,8 +86,8 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamAddedMessage
         self.create()
         self.assertRecipients([self.activity.owner])
-        self.assertSubject("A new team has joined 'Save the world!'")
-        self.assertTextBodyContains("William Shatner's team has joined your activity 'Save the world!'.")
+        self.assertSubject("A new team has joined \"Save the world!\"")
+        self.assertTextBodyContains("William Shatner's team has joined your activity \"Save the world!\".")
         self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
         self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('View activity')
@@ -98,8 +98,8 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamAppliedMessage
         self.create()
         self.assertRecipients([self.activity.owner])
-        self.assertSubject("A new team has applied to 'Save the world!'")
-        self.assertTextBodyContains("William Shatner's team has applied to your activity 'Save the world!'.")
+        self.assertSubject("A new team has applied to \"Save the world!\"")
+        self.assertTextBodyContains("William Shatner's team has applied to your activity \"Save the world!\".")
         self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
         self.assertBodyContains('You can accept or reject the team on the activity page.')
 
@@ -112,7 +112,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamAcceptedMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject("Your team has been accepted for 'Save the world!'")
+        self.assertSubject("Your team has been accepted for \"Save the world!\"")
         self.assertBodyContains('On the activity page you will find the link to invite your team members.')
 
         self.assertActionLink(self.obj.activity.get_absolute_url())

@@ -291,17 +291,17 @@ class TeamNotification(ActivityNotification):
 
 
 class TeamAddedMessage(TeamNotification):
-    subject = pgettext('email', "A new team has joined '{title}'")
+    subject = pgettext('email', 'A new team has joined "{title}"')
     template = 'messages/team_added'
 
 
 class TeamAppliedMessage(TeamNotification):
-    subject = pgettext('email', "A new team has applied to '{title}'")
+    subject = pgettext('email', 'A new team has applied to "{title}"')
     template = 'messages/team_applied'
 
 
 class TeamAcceptedMessage(TeamNotification):
-    subject = pgettext('email', "Your team has been accepted for '{title}'")
+    subject = pgettext('email', 'Your team has been accepted for "{title}"')
     template = 'messages/team_accepted'
 
     def get_recipients(self):

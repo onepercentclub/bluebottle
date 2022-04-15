@@ -840,6 +840,13 @@ def needs_review(effect):
     return effect.instance.activity.review
 
 
+def not_team_captain(effect):
+    """
+    not a team captain
+    """
+    return not effect.instance.team or effect.instance.team.owner != effect.instance.user
+
+
 def is_not_user(effect):
     """
     User is not the participant
@@ -943,6 +950,7 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
+                CreateTeamEffect,
                 NotificationEffect(
                     ParticipantAppliedNotification,
                     conditions=[
@@ -954,6 +962,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantCreatedNotification,
                     conditions=[
                         needs_review,
+                        not_team_captain,
                         is_user
                     ]
                 ),
@@ -1041,7 +1050,6 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                CreateTeamEffect,
             ]
         ),
 
@@ -1050,7 +1058,10 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     NewParticipantNotification,
-                    conditions=[automatically_accept]
+                    conditions=[
+                        not_team_captain,
+                        automatically_accept
+                    ]
                 ),
                 NotificationEffect(
                     ParticipantJoinedNotification,
@@ -1058,7 +1069,10 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantAcceptedNotification,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                        not_team_captain
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1085,7 +1099,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect,
-                CreateTeamEffect,
             ]
         ),
 

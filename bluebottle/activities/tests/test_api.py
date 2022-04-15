@@ -1777,13 +1777,12 @@ class TeamTranistionListViewAPITestCase(APITestCase):
 
         self.fields = ['resource', 'transition', ]
 
-    def test_cancel(self):
+    def test_cancel_owner(self):
         self.perform_create(user=self.team.owner)
-        self.assertStatus(status.HTTP_201_CREATED)
-        self.assertIncluded('resource', self.team)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.team.refresh_from_db()
-        self.assertEqual(self.team.status, 'cancelled')
+        self.assertEqual(self.team.status, 'open')
 
     def test_cancel_activity_manager(self):
         self.perform_create(user=self.team.activity.owner)
@@ -1802,6 +1801,45 @@ class TeamTranistionListViewAPITestCase(APITestCase):
         self.assertEqual(self.team.status, 'open')
 
     def test_cancel_no_user(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_owner(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=self.team.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'withdrawn')
+
+    def test_withdraw_activity_manager(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=self.team.activity.owner)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.team.refresh_from_db()
+
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_other_user(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_no_user(self):
+        self.defaults['transition'] = 'withdraw'
+
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 

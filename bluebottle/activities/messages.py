@@ -310,12 +310,39 @@ class TeamAcceptedMessage(TeamNotification):
 
 
 class TeamCancelledMessage(TeamNotification):
-    subject = pgettext('email', "Your team was cancelled")
+    subject = pgettext('email', "Team cancellation for '{title}'")
     template = 'messages/team_cancelled'
 
     def get_recipients(self):
         """team participants"""
         return [contributor.user for contributor in self.obj.members.all()]
+
+
+class TeamCancelledTeamCaptainMessage(TeamNotification):
+    subject = pgettext('email', "Your team has been rejected for '{title}'")
+    template = 'messages/team_cancelled_team_captain'
+
+    def get_recipients(self):
+        """team captain"""
+        return [self.obj.owner]
+
+
+class TeamWithdrawnMessage(TeamNotification):
+    subject = pgettext('email', "Team cancellation for '{title}'")
+    template = 'messages/team_withdrawn'
+
+    def get_recipients(self):
+        """team participants"""
+        return [contributor.user for contributor in self.obj.members.all()]
+
+
+class TeamWithdrawnActivityOwnerMessage(TeamNotification):
+    subject = pgettext('email', "Team cancellation for '{title}'")
+    template = 'messages/team_withdrawn_activity_owner'
+
+    def get_recipients(self):
+        """team participants"""
+        return [self.obj.activity.owner]
 
 
 class TeamReopenedMessage(TeamNotification):

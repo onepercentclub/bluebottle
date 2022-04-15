@@ -361,15 +361,23 @@ class TeamStateMachine(ModelStateMachine):
         'open',
         _('The team is open for contributors')
     )
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _('The team caption has withdrawn the team. Contributors can no longer register')
+    )
+
     cancelled = State(
         _('cancelled'),
         'cancelled',
         _('The team is cancelled. Contributors can no longer register')
     )
 
-    def can_transition(self, user):
+    def is_team_captain(self, user):
+        return user == self.instance.owner
+
+    def is_activity_owner(self, user):
         return (
-            user == self.instance.owner or
             user == self.instance.activity.owner or
             user == self.instance.activity.initiative.owner or
             user in self.instance.activity.initiative.activity_managers.all() or
@@ -390,12 +398,30 @@ class TeamStateMachine(ModelStateMachine):
         description=_('The activity will be accepted.'),
     )
 
+    withdraw = Transition(
+        open,
+        withdrawn,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('cancel'),
+        description=_('The team captian has withdrawn. Contributors can no longer apply')
+    )
+
+    reapply = Transition(
+        withdrawn,
+        open,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('reopen'),
+        description=_('The team caption has reapplied. Contributors can apply again')
+    )
+
     cancel = Transition(
         open,
         cancelled,
         automatic=False,
-        permission=can_transition,
-        name=_('cancel'),
+        permission=is_activity_owner,
+        name=_('reject'),
         description=_('The team is cancelled. Contributors can no longer apply')
     )
 
@@ -403,7 +429,7 @@ class TeamStateMachine(ModelStateMachine):
         cancelled,
         open,
         automatic=False,
-        permission=can_transition,
-        name=_('reopen'),
-        description=_('The team is opened. Contributors can apply again')
+        permission=is_activity_owner,
+        name=_('accept'),
+        description=_('The team is cancelled. Contributors can apply again')
     )

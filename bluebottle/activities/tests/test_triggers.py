@@ -1,8 +1,11 @@
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
-from bluebottle.activities.messages import TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, \
-    TeamAppliedMessage, TeamAcceptedMessage
+from bluebottle.activities.messages import (
+    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
+    TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
+    TeamWithdrawnActivityOwnerMessage
+)
 from bluebottle.activities.effects import TeamContributionTransitionEffect
 from bluebottle.activities.tests.factories import TeamFactory
 
@@ -71,7 +74,32 @@ class TeamTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.fail))
-            self.assertNotificationEffect(TeamCancelledMessage)
+            self.assertNotificationEffect(
+                TeamCancelledMessage, [member.user for member in self.model.members.all()]
+            )
+            self.assertNotificationEffect(
+                TeamCancelledTeamCaptainMessage, [self.model.owner]
+            )
+
+        self.model.save()
+        self.participant.refresh_from_db()
+
+        for contribution in self.participant.contributions.all():
+            self.assertEqual(contribution.status, TimeContributionStateMachine.failed.value)
+
+    def test_withdrawn(self):
+        self.create()
+
+        self.model.states.withdraw()
+
+        with self.execute():
+            self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.fail))
+            self.assertNotificationEffect(
+                TeamWithdrawnMessage, [member.user for member in self.model.members.all()]
+            )
+            self.assertNotificationEffect(
+                TeamWithdrawnActivityOwnerMessage, [self.model.activity.owner]
+            )
 
         self.model.save()
         self.participant.refresh_from_db()

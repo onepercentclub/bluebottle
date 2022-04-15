@@ -1,10 +1,17 @@
-from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
-    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification, TeamAddedMessage, \
-    TeamAppliedMessage, TeamAcceptedMessage
+from bluebottle.activities.messages import (
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivitySucceededNotification, ActivityRestoredNotification,
+    ActivityExpiredNotification, TeamAddedMessage,
+    TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledMessage,
+    TeamCancelledTeamCaptainMessage, TeamWithdrawnActivityOwnerMessage,
+    TeamWithdrawnMessage
+)
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, PeriodActivityFactory, PeriodParticipantFactory
+)
 
 
 class ActivityNotificationTestCase(NotificationTestCase):
@@ -114,6 +121,55 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject("Your team has been accepted for \"Save the world!\"")
         self.assertBodyContains('On the activity page you will find the link to invite your team members.')
+
+    def test_team_cancelled_notification(self):
+        PeriodParticipantFactory.create_batch(10, activity=self.activity, team=self.obj)
+
+        self.message_class = TeamCancelledMessage
+        self.create()
+        self.assertRecipients([participant.user for participant in self.obj.members.all()])
+        self.assertSubject("Team cancellation for 'Save the world!'")
+        self.assertHtmlBodyContains(
+            "Your team 'William Shatner&#39;s team' is no longer participating in the activity 'Save the world!'."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_cancelled_team_captain_notification(self):
+        self.message_class = TeamCancelledTeamCaptainMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject("Your team has been rejected for 'Save the world!'")
+        self.assertHtmlBodyContains(
+            "Unfortunately, your team has been rejected for the activity 'Save the world!'."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_withdrawn_notification(self):
+        PeriodParticipantFactory.create_batch(10, activity=self.activity, team=self.obj)
+
+        self.message_class = TeamWithdrawnMessage
+        self.create()
+        self.assertRecipients([participant.user for participant in self.obj.members.all()])
+        self.assertSubject("Team cancellation for 'Save the world!'")
+        self.assertHtmlBodyContains(
+            "Your team 'William Shatner&#39;s team' is no longer participating in the activity 'Save the world!'."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_withdrawn_activity_manager_notification(self):
+        self.message_class = TeamWithdrawnActivityOwnerMessage
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject("Team cancellation for 'Save the world!'")
+        self.assertHtmlBodyContains(
+            "William Shatner&#39;s team has cancelled its participation in your activity 'Save the world!'."
+        )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('View activity')

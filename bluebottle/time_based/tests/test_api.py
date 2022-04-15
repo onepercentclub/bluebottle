@@ -597,6 +597,18 @@ class TimeBasedDetailAPIViewTestCase():
             False
         )
 
+    def test_get_my_contributor(self):
+        participant = self.participant_factory.create(activity=self.activity)
+        response = self.client.get(self.url, user=participant.user)
+
+        included_participant = get_first_included_by_type(
+            response, self.participant_factory._meta.model.JSONAPIMeta.resource_name
+        )
+        self.assertEqual(str(participant.pk), included_participant['id'])
+
+        invite = get_first_included_by_type(response, 'activities/invites')
+        self.assertEqual(str(participant.invite.pk), invite['id'])
+
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -724,12 +736,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
                 reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
             )
         )
-
-    def test_get_my_contributor(self):
-        participant = DateParticipantFactory.create(activity=self.activity)
-        response = self.client.get(self.url, user=participant.user)
-        included_participant = get_first_included_by_type(response, 'contributors/time-based/date-participants')
-        self.assertEqual(str(participant.pk), included_participant['id'])
 
     def test_matching_all(self):
         self.activity.initiative.states.submit(save=True)

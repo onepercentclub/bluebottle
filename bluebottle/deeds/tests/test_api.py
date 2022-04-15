@@ -247,6 +247,21 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.accepted_participants + [participant]
         )
 
+    def test_get_with_participant_team(self):
+        self.model.team_activity = 'teams'
+        self.model.save()
+
+        participant = DeedParticipantFactory.create(
+            activity=self.model,
+            user=self.user
+        )
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('my-contributor', participant)
+        self.assertIncluded('my-contributor.invite', participant.invite)
+
     def test_get_anonymous(self):
         self.perform_get()
 

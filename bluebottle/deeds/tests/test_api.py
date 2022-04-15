@@ -487,6 +487,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', True)
 
         self.assertTransition('withdraw')
+        self.assertIncluded('invite')
 
     def test_create_with_team_invite(self):
         self.activity.team_activity = 'teams'

@@ -4,7 +4,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, TeamAddedMessage,
     TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledMessage,
     TeamCancelledTeamCaptainMessage, TeamWithdrawnActivityOwnerMessage,
-    TeamWithdrawnMessage
+    TeamWithdrawnMessage, TeamMemberAddedMessage
 )
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -76,7 +76,8 @@ class TeamNotificationTestCase(NotificationTestCase):
 
     def setUp(self):
         self.activity = PeriodActivityFactory.create(
-            title="Save the world!"
+            title="Save the world!",
+            team_activity='teams'
         )
         self.captain = BlueBottleUserFactory.create(
             first_name='William',
@@ -169,6 +170,23 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertSubject("Team cancellation for 'Save the world!'")
         self.assertHtmlBodyContains(
             "William Shatner&#39;s team has cancelled its participation in your activity 'Save the world!'."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_member_added_notification(self):
+        team_captain = PeriodParticipantFactory.create(activity=self.activity, user=self.captain)
+
+        self.obj = PeriodParticipantFactory.create(
+            activity=self.activity, accepted_invite=team_captain.invite
+        )
+        self.message_class = TeamMemberAddedMessage
+        self.create()
+        self.assertRecipients([self.captain])
+        self.assertSubject("New team member")
+        self.assertHtmlBodyContains(
+            f"{self.obj.user.full_name} is now part of your team for the activity ‘Save the world!’."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())

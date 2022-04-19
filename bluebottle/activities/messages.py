@@ -352,3 +352,25 @@ class TeamReopenedMessage(TeamNotification):
     def get_recipients(self):
         """team participants"""
         return [contributor.user for contributor in self.obj.members.all()]
+
+
+class TeamMemberAddedMessage(ActivityNotification):
+    subject = pgettext('email', "New team member")
+    template = 'messages/team_member_added'
+
+    context = {
+        'name': 'user.full_name',
+        'title': 'activity.title',
+    }
+    action_title = pgettext('email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        """team captain"""
+        if self.obj.accepted_invite and self.obj.accepted_invite.contributor.team:
+            return [self.obj.accepted_invite.contributor.team.owner]
+        else:
+            return []

@@ -5,7 +5,7 @@ from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
@@ -344,6 +344,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.user):
             self.assertEffect(CreateTeamEffect)
+            self.assertNoNotificationEffect(TeamMemberAddedMessage)
 
         self.model.save()
         self.assertTrue(self.model.team.id)
@@ -359,6 +360,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.user):
             self.assertEffect(CreateTeamEffect)
+            self.assertNotificationEffect(TeamMemberAddedMessage, [team_captain.user])
 
         self.model.save()
         self.assertEqual(self.model.team, team_captain.team)

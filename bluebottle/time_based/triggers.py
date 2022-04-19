@@ -6,7 +6,8 @@ from bluebottle.activities.messages import (
     ActivitySucceededNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification,
+    TeamMemberAddedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
@@ -945,6 +946,11 @@ def team_is_active(effect):
     )
 
 
+def is_team_activity(effect):
+    """Team status is open, or there is no team"""
+    return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
+
+
 class ParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -964,6 +970,12 @@ class ParticipantTriggers(ContributorTriggers):
                         needs_review,
                         not_team_captain,
                         is_user
+                    ]
+                ),
+                NotificationEffect(
+                    TeamMemberAddedMessage,
+                    conditions=[
+                        is_team_activity
                     ]
                 ),
                 TransitionEffect(

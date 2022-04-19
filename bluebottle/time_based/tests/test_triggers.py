@@ -928,6 +928,24 @@ class ParticipantTriggerTestCase():
         self.assertTrue(participant.team)
         self.assertEqual(participant.team.owner, participant.user)
 
+    def test_initiate_team_invite(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        team_captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            accepted_invite=team_captain.invite,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(participant.team, team_captain.team)
+        'New team member' in [message.subject for message in mail.outbox]
+
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 

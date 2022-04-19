@@ -100,7 +100,7 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
 
     def get_fields(self, request, obj=None):
         fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)
-        if obj.team_activity == 'teams':
+        if obj and obj.team_activity == 'teams':
             fields += ('team',)
         return fields
 

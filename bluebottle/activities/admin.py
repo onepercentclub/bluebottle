@@ -366,13 +366,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def get_list_filter(self, request):
         filters = list(self.list_filter)
+        settings = InitiativePlatformSettings.objects.get()
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
+            if settings.enable_office_regions:
                 filters = filters + [
                     'initiative__location__subregion',
                     'initiative__location__subregion__region']
+
+        if settings.team_activities:
+            filters = filters + ['team_activity']
+
         return filters
 
     def get_list_display(self, request):
@@ -582,7 +587,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status', 'location_link']
-    list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight']
+    list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -594,14 +599,21 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
+        settings = InitiativePlatformSettings.objects.get()
         filters = list(self.list_filter)
+
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + ['initiative__location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
+            if settings.enable_office_regions:
                 filters = filters + [
                     'initiative__location__subregion',
-                    'initiative__location__subregion__region']
+                    'initiative__location__subregion__region'
+                ]
+
+        if settings.team_activities:
+            filters = filters + ['team_activity']
+
         return filters
 
     list_editable = ('highlight',)

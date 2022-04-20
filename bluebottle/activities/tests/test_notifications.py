@@ -4,7 +4,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, TeamAddedMessage,
     TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledMessage,
     TeamCancelledTeamCaptainMessage, TeamWithdrawnActivityOwnerMessage,
-    TeamWithdrawnMessage, TeamMemberAddedMessage
+    TeamWithdrawnMessage, TeamMemberAddedMessage, TeamMemberWithdrewMessage
 )
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -187,6 +187,23 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertSubject("New team member")
         self.assertHtmlBodyContains(
             f"{self.obj.user.full_name} is now part of your team for the activity ‘Save the world!’."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_member_withdrew_notification(self):
+        team_captain = PeriodParticipantFactory.create(activity=self.activity, user=self.captain)
+
+        self.obj = PeriodParticipantFactory.create(
+            activity=self.activity, accepted_invite=team_captain.invite
+        )
+        self.message_class = TeamMemberWithdrewMessage
+        self.create()
+        self.assertRecipients([self.captain])
+        self.assertSubject("Withdrawal for 'Save the world!'")
+        self.assertHtmlBodyContains(
+            f"{self.obj.user.full_name} has withdrawn from your team for the activity ‘Save the world!’."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())

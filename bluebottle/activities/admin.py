@@ -731,9 +731,9 @@ class ActivityAdminInline(StackedPolymorphicInline):
 @admin.register(Team)
 class TeamAdmin(StateMachineAdmin):
     raw_id_fields = ['owner', 'activity']
-    readonly_fields = ['created', 'activity_link']
+    readonly_fields = ['created', 'activity_link', 'invite_link']
     inlines = [ContributorInline]
-    fields = ['activity', 'created', 'owner', 'states']
+    fields = ['activity', 'invite_link', 'created', 'owner', 'states']
     superadmin_fields = ['force_status']
     list_display = ['__str__', 'activity_link', 'status']
 
@@ -756,3 +756,12 @@ class TeamAdmin(StateMachineAdmin):
         return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
 
     activity_link.short_description = _('Activity')
+
+    def invite_link(self, obj):
+        url = obj.activity.get_absolute_url()
+        contributor = obj.members.filter(user=obj.owner).first()
+
+        if contributor.invite:
+            return f'{url}?invite_id={contributor.invite.pk}'
+
+    invite_link.short_description = _('Shareable link')

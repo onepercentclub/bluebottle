@@ -58,7 +58,7 @@ class SetContributionDateEffect(Effect):
 
 
 class CreateTeamEffect(Effect):
-    "Set the contribution date"
+    "Create a team"
 
     display = True
     title = _('Create a team')

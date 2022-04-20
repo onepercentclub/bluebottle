@@ -928,6 +928,24 @@ class ParticipantTriggerTestCase():
         self.assertTrue(participant.team)
         self.assertEqual(participant.team.owner, participant.user)
 
+    def test_initiate_team_invite(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        team_captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            accepted_invite=team_captain.invite,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(participant.team, team_captain.team)
+        'New team member' in [message.subject for message in mail.outbox]
+
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 
@@ -1026,14 +1044,14 @@ class ParticipantTriggerTestCase():
             'new'
         )
 
-    def test_initial_review_no_team_yet(self):
+    def test_initial_team_created(self):
         self.review_activity.team_activity = Activity.TeamActivityChoices.teams
         self.review_activity.save()
         participant = self.participant_factory.create(
             activity=self.review_activity,
             user=BlueBottleUserFactory.create()
         )
-        self.assertIsNone(participant.team)
+        self.assertIsNotNone(participant.team)
 
     def test_initial_no_review(self):
         mail.outbox = []
@@ -1247,7 +1265,7 @@ class ParticipantTriggerTestCase():
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_reapply_cancelled_team(self):
-        self.activity.team_activity = 'teams'
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.test_withdraw()
         self.participants[0].team.states.cancel(save=True)
 
@@ -1483,6 +1501,32 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             'succeeded'
         )
 
+    def test_team_join(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.activity
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A new team has joined "{self.activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have joined the activity "{self.activity.title}"'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
+        )
+
     def test_apply(self):
         mail.outbox = []
         participant = self.participant_factory.create(
@@ -1505,6 +1549,61 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
         self.assertEqual(
             prep.status,
             'new'
+        )
+
+    def test_team_apply(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.review_activity
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'You have applied to the activity "{self.review_activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A new team has applied to "{self.review_activity.title}"'
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'new'
+        )
+
+    def test_team_accept(self):
+        self.review_activity.team_activity = Activity.TeamActivityChoices.teams
+        self.review_activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.review_activity
+        )
+
+        mail.outbox = []
+        participant.states.accept(save=True)
+
+        self.assertEqual(participant.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your team has been accepted for "{}"'.format(
+                self.review_activity.title
+            )
+        )
+        prep = participant.preparation_contributions.first()
+        self.assertEqual(
+            prep.value,
+            self.review_activity.preparation
+        )
+        self.assertEqual(
+            prep.status,
+            'succeeded'
         )
 
     def test_no_review_succeed(self):

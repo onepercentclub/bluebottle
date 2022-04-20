@@ -295,8 +295,12 @@ class Team(TriggerMixin, models.Model):
             ('api_change_own_team', 'Can change own team through the API'),
         )
 
+    @property
+    def name(self):
+        return str(_("{name}'s team").format(name=self.owner.full_name))
+
     def __str__(self):
-        return _("{name}'s team").format(name=self.owner.full_name)
+        return self.name
 
 
 from bluebottle.activities.signals import *  # noqa

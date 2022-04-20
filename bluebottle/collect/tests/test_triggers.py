@@ -3,7 +3,7 @@ from datetime import timedelta, date
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage
 )
 from bluebottle.activities.models import Activity
 from bluebottle.activities.effects import CreateTeamEffect
@@ -324,6 +324,22 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.model.save()
         self.assertTrue(self.model.team.id)
         self.assertEqual(self.model.team.owner, self.model.user)
+
+    def test_initiate_by_invite(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateTeamEffect)
+            self.assertNotificationEffect(TeamMemberAddedMessage, [team_captain.user])
+
+        self.model.save()
+        self.assertEqual(self.model.team, team_captain.team)
+        self.assertEqual(self.model.team.owner, team_captain.user)
 
     def test_initiate_individual(self):
         self.defaults['activity'].team_activity = Activity.TeamActivityChoices.individuals

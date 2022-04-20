@@ -3,7 +3,8 @@ from datetime import date
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification
+    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
+    TeamMemberAddedMessage
 )
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
@@ -217,6 +218,11 @@ def team_is_active(effect):
     )
 
 
+def is_team_activity(effect):
+    """Team status is open, or there is no team"""
+    return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
+
+
 @register(CollectContributor)
 class CollectContributorTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -230,6 +236,12 @@ class CollectContributorTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_user]
+                ),
+                NotificationEffect(
+                    TeamMemberAddedMessage,
+                    conditions=[
+                        is_team_activity
+                    ]
                 ),
                 NotificationEffect(
                     ParticipantAddedOwnerNotification,

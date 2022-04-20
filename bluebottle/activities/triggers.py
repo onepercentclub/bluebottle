@@ -15,7 +15,8 @@ from bluebottle.activities.effects import (
 )
 
 from bluebottle.activities.messages import (
-    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
+    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamCancelledTeamCaptainMessage,
 )
 
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -209,13 +210,38 @@ def contributor_is_active(contribution):
     ]
 
 
+def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not hasattr(effect.instance.activity, 'review') or not effect.instance.activity.review
+
+
+def needs_review(effect):
+    """
+    needs review
+    """
+    return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
+
+
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[
-                NotificationEffect(TeamAddedMessage),
+                NotificationEffect(
+                    TeamAddedMessage,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    TeamAppliedMessage,
+                    conditions=[needs_review]
+                ),
+                TransitionEffect(
+                    TeamStateMachine.accept,
+                    conditions=[automatically_accept]
+                )
             ]
         ),
 
@@ -223,7 +249,26 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.cancel,
             effects=[
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
-                NotificationEffect(TeamCancelledMessage)
+                NotificationEffect(TeamCancelledMessage),
+                NotificationEffect(TeamCancelledTeamCaptainMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                NotificationEffect(TeamWithdrawnMessage),
+                NotificationEffect(TeamWithdrawnActivityOwnerMessage)
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    TeamAcceptedMessage,
+                    conditions=[needs_review]
+                )
             ]
         ),
 

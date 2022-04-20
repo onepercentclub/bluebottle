@@ -6,7 +6,8 @@ from bluebottle.activities.messages import (
     ActivitySucceededNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification,
+    TeamMemberAddedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
@@ -840,6 +841,13 @@ def needs_review(effect):
     return effect.instance.activity.review
 
 
+def not_team_captain(effect):
+    """
+    not a team captain
+    """
+    return not effect.instance.team or effect.instance.team.owner != effect.instance.user
+
+
 def is_not_user(effect):
     """
     User is not the participant
@@ -932,10 +940,15 @@ def activity_is_finished(effect):
 def team_is_active(effect):
     """Team status is open, or there is no team"""
     return (
-        effect.instance.team.status == TeamStateMachine.open.value
+        effect.instance.team.status in [TeamStateMachine.open.value, TeamStateMachine.new.value]
         if effect.instance.team
         else True
     )
+
+
+def is_team_activity(effect):
+    """Team status is open, or there is no team"""
+    return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -943,6 +956,7 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
+                CreateTeamEffect,
                 NotificationEffect(
                     ParticipantAppliedNotification,
                     conditions=[
@@ -954,7 +968,14 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantCreatedNotification,
                     conditions=[
                         needs_review,
+                        not_team_captain,
                         is_user
+                    ]
+                ),
+                NotificationEffect(
+                    TeamMemberAddedMessage,
+                    conditions=[
+                        is_team_activity
                     ]
                 ),
                 TransitionEffect(
@@ -1041,7 +1062,6 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                CreateTeamEffect,
             ]
         ),
 
@@ -1050,7 +1070,10 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     NewParticipantNotification,
-                    conditions=[automatically_accept]
+                    conditions=[
+                        not_team_captain,
+                        automatically_accept
+                    ]
                 ),
                 NotificationEffect(
                     ParticipantJoinedNotification,
@@ -1058,7 +1081,10 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantAcceptedNotification,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                        not_team_captain
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1085,7 +1111,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeContributionStateMachine.succeed,
                 ),
                 FollowActivityEffect,
-                CreateTeamEffect,
             ]
         ),
 
@@ -1322,6 +1347,13 @@ class SlotParticipantTriggers(TriggerManager):
     ]
 
 
+def has_team(effect):
+    """
+    Participant belongs to a team
+    """
+    return effect.instance.team
+
+
 @register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
@@ -1339,6 +1371,11 @@ class PeriodParticipantTriggers(ParticipantTriggers):
                 RelatedTransitionEffect(
                     'finished_contributions',
                     TimeContributionStateMachine.succeed
+                ),
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.accept,
+                    conditions=[has_team]
                 )
             ]
         ),

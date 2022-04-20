@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-05 14:15+0200\n"
-"PO-Revision-Date: 2022-04-05 12:41\n"
+"PO-Revision-Date: 2022-04-20 07:54\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -6033,6 +6033,12 @@ msgstr "Typ"
 #: bluebottle/initiatives/models.py:260
 msgid "Team activities"
 msgstr "Teamaktivitäten"
+
+#: bluebottle/initiatives/models.py:261 bluebottle/initiatives/models.py:269
+#: build/lib/bluebottle/initiatives/models.py:260
+#: build/lib/bluebottle/initiatives/models.py:268
+msgid "Theme"
+msgstr "Thema"
 
 #: bluebottle/initiatives/models.py:262 bluebottle/initiatives/models.py:270
 #: build/lib/bluebottle/initiatives/models.py:261

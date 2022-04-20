@@ -177,6 +177,7 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
             queryset = self.queryset.order_by('-current_user', '-id').filter(
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
+                Q(team__owner=self.request.user) |
                 Q(activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
             ).annotate(

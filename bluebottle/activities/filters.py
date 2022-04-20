@@ -157,6 +157,11 @@ class ActivitySearchFilter(ElasticSearchFilter):
         end = request.GET.get('filter[end]')
 
         try:
+            start_date = dateutil.parser.parse(start) if start else None
+            end_date = datetime.combine(dateutil.parser.parse(end), time.max) if end else None
+            if start_date and end_date and end_date < start_date:
+                # If start end date if before start date, the return no results
+                return Term(id=0)
             return Range(
                 duration={
                     'gte': dateutil.parser.parse(start) if start else None,

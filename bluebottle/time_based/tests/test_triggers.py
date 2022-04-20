@@ -1249,6 +1249,42 @@ class ParticipantTriggerTestCase():
             f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
         )
 
+    def test_withdraw_team(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        team_captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        mail.outbox = []
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            accepted_invite=team_captain.invite,
+            user=BlueBottleUserFactory.create()
+        )
+        participant.states.withdraw(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'failed'
+        )
+
+        subjects = [mail.subject for mail in mail.outbox]
+        self.assertTrue(
+            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
+        )
+        self.assertTrue(
+            f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
+        )
+
+        self.assertTrue(
+            f"Withdrawal for '{self.activity.title}'" in subjects
+        )
+
     def test_reapply(self):
         self.test_withdraw()
 

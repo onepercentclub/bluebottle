@@ -4,7 +4,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage
+    TeamMemberAddedMessage, TeamMemberWithdrewMessage
 )
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
@@ -290,6 +290,7 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
+                NotificationEffect(TeamMemberWithdrewMessage),
             ]
         ),
 

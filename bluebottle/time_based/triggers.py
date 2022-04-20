@@ -1283,7 +1283,7 @@ class SlotParticipantTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'contributions',
-                    TimeContributionStateMachine.fail,
+                    TimeContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
                     'slot',

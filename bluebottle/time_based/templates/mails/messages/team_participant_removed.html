@@ -1,0 +1,6 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>Your participation has been cancelled for {{team_name}} in the activity '{{title}}'.</p>
+{% endblocktrans %}{% endblock %}

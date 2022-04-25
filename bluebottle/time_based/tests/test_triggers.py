@@ -825,7 +825,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[1].subject,
-            'Your activity "{}" has been cancelled'.format(self.activity.title)
+            'A slot for your activity "{}" has been cancelled'.format(self.activity.title)
         )
 
         self.assertTrue(
@@ -847,7 +847,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            'Your activity "{}" has been cancelled'.format(self.activity.title)
+            'A slot for your activity "{}" has been cancelled'.format(self.activity.title)
         )
 
         self.assertTrue(

@@ -4,7 +4,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage, TeamMemberWithdrewMessage
+    TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
 from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
@@ -316,7 +316,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
                     conditions=[is_not_owner]
-                )
+                ),
+                NotificationEffect(TeamMemberRemovedMessage),
             ]
         ),
 

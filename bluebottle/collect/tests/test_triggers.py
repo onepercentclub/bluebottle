@@ -3,7 +3,8 @@ from datetime import timedelta, date
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
+    TeamMemberRemovedMessage
 )
 from bluebottle.activities.models import Activity
 from bluebottle.activities.effects import CreateTeamEffect
@@ -444,6 +445,23 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_remove_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.fail, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+            self.assertNotificationEffect(TeamMemberRemovedMessage)
 
     def test_remove_finished(self):
         self.create()

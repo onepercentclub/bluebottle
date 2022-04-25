@@ -7,7 +7,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage, TeamMemberWithdrewMessage
+    TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
@@ -1152,6 +1152,7 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
+                NotificationEffect(TeamMemberRemovedMessage),
                 UnFollowActivityEffect
             ]
         ),

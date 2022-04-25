@@ -420,6 +420,9 @@ class DateParticipantStateMachine(ParticipantStateMachine):
 
 @register(PeriodParticipant)
 class PeriodParticipantStateMachine(ParticipantStateMachine):
+    def is_not_team(self):
+        return not self.instance.team
+
     stopped = State(
         _('stopped'),
         'stopped',
@@ -433,7 +436,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant stopped contributing."),
         automatic=False,
-        conditions=[ParticipantStateMachine.activity_is_open]
+        conditions=[ParticipantStateMachine.activity_is_open, is_not_team]
     )
 
     start = Transition(

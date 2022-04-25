@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message%}
+    <p>
+        {% blocktrans context 'email' %}{{name}} has been removed from your team for the activity ‘{{title}}’ by the activity manager.{% endblocktrans %}
+    </p>
+{% endblock %}

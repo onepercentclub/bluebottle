@@ -165,7 +165,9 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     # This fixing deleting related polymorphic objects through admin
-    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+    if hasattr(sub_objs, 'non_polymorphic'):
+        sub_objs = sub_objs.non_polymorphic()
+    return models.CASCADE(collector, field, sub_objs, using)
 
 
 @python_2_unicode_compatible

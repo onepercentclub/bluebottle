@@ -1208,7 +1208,7 @@ class ParticipantTriggerTestCase():
 
         subjects = [mail.subject for mail in mail.outbox]
         self.assertTrue(
-            f"Your team participation in ‘{participant.team.name}’ has been cancelled" in subjects
+            f"Your team participation in ‘{self.activity.title}’ has been cancelled" in subjects
         )
         self.assertTrue(
             f'A participant has been removed from your activity "{self.activity.title}"' in subjects

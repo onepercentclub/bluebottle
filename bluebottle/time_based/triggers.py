@@ -37,7 +37,7 @@ from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    ParticipantRemovedNotification, NewParticipantNotification,
+    ParticipantRemovedNotification, TeamParticipantRemovedNotification, NewParticipantNotification,
     ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
@@ -947,8 +947,13 @@ def team_is_active(effect):
 
 
 def is_team_activity(effect):
-    """Team status is open, or there is no team"""
+    """Contribtor is part of a team"""
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
+
+
+def is_not_team_activity(effect):
+    """Contribtor is not part of a team"""
+    return not effect.instance.team
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -1137,7 +1142,12 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.remove,
             effects=[
                 NotificationEffect(
-                    ParticipantRemovedNotification
+                    ParticipantRemovedNotification,
+                    conditions=[is_not_team_activity]
+                ),
+                NotificationEffect(
+                    TeamParticipantRemovedNotification,
+                    conditions=[is_team_activity]
                 ),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,

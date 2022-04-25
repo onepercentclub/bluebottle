@@ -11,7 +11,8 @@ from bluebottle.activities.effects import CreateTeamEffect
 
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    ParticipantAddedNotification, ParticipantAddedOwnerNotification, NewParticipantNotification
+    TeamParticipantRemovedNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification,
+    NewParticipantNotification
 )
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -459,7 +460,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 CollectContributionStateMachine.fail, self.model.contributions.first()
             )
-            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(TeamParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
             self.assertNotificationEffect(TeamMemberRemovedMessage)
 

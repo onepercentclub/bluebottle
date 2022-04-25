@@ -24,8 +24,8 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+    TeamParticipantRemovedNotification, ParticipantRemovedNotification, NewParticipantNotification,
+    ParticipantAddedNotification, ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
 
@@ -558,7 +558,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
-            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(TeamParticipantRemovedNotification)
             self.assertNotificationEffect(TeamMemberRemovedMessage)
 
     def test_expire_remove(self):

@@ -31,7 +31,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, ParticipantWithdrewNotification,
+    ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
     NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
@@ -268,6 +268,11 @@ def is_team_activity(effect):
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
 
 
+def is_not_team_activity(effect):
+    """Team status is open, or there is no team"""
+    return not effect.instance.team
+
+
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -312,7 +317,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
-                NotificationEffect(ParticipantRemovedNotification),
+                NotificationEffect(ParticipantRemovedNotification, conditions=[is_not_team_activity]),
+                NotificationEffect(TeamParticipantRemovedNotification, conditions=[is_team_activity]),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
                     conditions=[is_not_owner]

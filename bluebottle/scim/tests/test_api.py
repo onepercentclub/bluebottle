@@ -576,7 +576,9 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         Test creating a user twice request
         """
         remote_id = '123'
-        user = BlueBottleUserFactory.create(remote_id=remote_id, scim_external_id=None)
+        user = BlueBottleUserFactory.create(
+            email='test@example.com', remote_id=remote_id, scim_external_id=None
+        )
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],

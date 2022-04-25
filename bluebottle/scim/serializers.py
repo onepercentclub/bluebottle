@@ -154,7 +154,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         allow_blank=False,
         validators=[
             validators.UniqueValidator(
-                queryset=Member.objects.all(), lookup='iexact'
+                queryset=Member.objects.filter(scim_external_id__isnull=False), lookup='iexact'
             )
         ]
     )

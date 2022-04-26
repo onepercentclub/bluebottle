@@ -491,6 +491,28 @@ class ParticipantRemovedNotification(TransitionMessage):
         return [self.obj.user]
 
 
+class TeamParticipantRemovedNotification(TransitionMessage):
+    """
+    The participant was removed from the activity
+    """
+    subject = pgettext('email', 'Your team participation in ‘{title}’ has been cancelled')
+    template = 'messages/team_participant_removed'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
 class ParticipantFinishedNotification(TransitionMessage):
     """
     The participant was finished

@@ -5,7 +5,8 @@ from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
+    TeamMemberRemovedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
@@ -23,8 +24,8 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+    TeamParticipantRemovedNotification, ParticipantRemovedNotification, NewParticipantNotification,
+    ParticipantAddedNotification, ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
 
@@ -542,6 +543,23 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
+
+    def test_remove_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(TeamParticipantRemovedNotification)
+            self.assertNotificationEffect(TeamMemberRemovedMessage)
 
     def test_expire_remove(self):
         self.create()

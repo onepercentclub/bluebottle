@@ -1180,6 +1180,44 @@ class ParticipantTriggerTestCase():
         )
         self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
 
+    def test_remove_team(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.activity.save()
+
+        team_captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            accepted_invite=team_captain.invite,
+            user=BlueBottleUserFactory.create()
+        )
+
+        mail.outbox = []
+
+        participant.states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(
+            participant.contributions.
+            exclude(timecontribution__contribution_type='preparation').get().status,
+            'failed'
+        )
+
+        subjects = [mail.subject for mail in mail.outbox]
+        self.assertTrue(
+            f"Your team participation in ‘{self.activity.title}’ has been cancelled" in subjects
+        )
+        self.assertTrue(
+            f'A participant has been removed from your activity "{self.activity.title}"' in subjects
+        )
+
+        self.assertTrue(
+            f"Team member removed for ‘{self.activity.title}’" in subjects
+        )
+
     def test_reject(self):
         self.participants = self.participant_factory.create_batch(
             self.activity.capacity, activity=self.review_activity

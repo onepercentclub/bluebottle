@@ -5,7 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline, ActivityForm, TeamInline
+)
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -47,7 +49,7 @@ class DeedParticipantInline(TabularInlinePaginated):
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
-    inlines = ActivityChildAdmin.inlines + (DeedParticipantInline,)
+    inlines = (TeamInline, DeedParticipantInline,) + ActivityChildAdmin.inlines
     list_filter = ['status']
     search_fields = ['title', 'description']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']

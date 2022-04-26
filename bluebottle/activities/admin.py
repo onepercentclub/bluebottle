@@ -288,7 +288,7 @@ class TeamInline(admin.TabularInline):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (TeamInline, FollowAdminInline, WallpostInline, )
+    inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
 
     def lookup_allowed(self, key, value):

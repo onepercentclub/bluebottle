@@ -5,7 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline
+)
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -48,7 +50,7 @@ class CollectContributorInline(admin.TabularInline):
 class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
     form = CollectAdminForm
-    inlines = ActivityChildAdmin.inlines + (CollectContributorInline,)
+    inlines = (TeamInline, CollectContributorInline,) + ActivityChildAdmin.inlines
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']

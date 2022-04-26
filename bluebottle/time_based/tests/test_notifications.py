@@ -2,9 +2,12 @@ from bluebottle.activities.messages import ActivityRejectedNotification, Activit
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
-from bluebottle.time_based.messages import ParticipantRemovedNotification, ParticipantFinishedNotification, \
-    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification, \
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification
+from bluebottle.time_based.messages import (
+    ParticipantRemovedNotification, ParticipantFinishedNotification,
+    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
+    SlotCancelledNotification
+)
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory,\
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory
 
@@ -174,3 +177,26 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have applied to the activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
+
+
+class DateSlotNotificationTestCase(NotificationTestCase):
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+        self.activity = DateActivityFactory.create(
+            title="Save the world!"
+        )
+
+        self.obj = DateActivitySlotFactory.create(
+            activity=self.activity
+        )
+
+    def test_new_participant_notification(self):
+        self.message_class = SlotCancelledNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')

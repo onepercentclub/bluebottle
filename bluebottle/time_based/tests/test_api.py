@@ -467,11 +467,11 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Motivation')
 
-        self.assertEqual(sheet['F1'].value, 'Department')
-        self.assertEqual(sheet['G1'].value, 'Music')
+        self.assertEqual(sheet['G1'].value, 'Department')
+        self.assertEqual(sheet['H1'].value, 'Music')
 
-        self.assertEqual(sheet['F2'].value, 'Workshop')
-        self.assertEqual(sheet['G2'].value, 'Classical, Metal')
+        self.assertEqual(sheet['G2'].value, 'Workshop')
+        self.assertEqual(sheet['H2'].value, 'Classical, Metal')
 
     def test_get_other_user_export(self):
         response = self.client.get(self.url, user=self.user)

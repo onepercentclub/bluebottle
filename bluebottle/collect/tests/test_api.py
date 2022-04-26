@@ -508,7 +508,9 @@ class ContributorExportViewAPITestCase(APITestCase):
         self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
         reader = csv.DictReader(io.StringIO(response.content.decode()))
-        self.assertEqual(reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status'])
+        self.assertEqual(
+            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team']
+        )
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

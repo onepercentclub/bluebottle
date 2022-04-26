@@ -206,7 +206,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = TimeBasedAdmin.inlines + (DateActivityASlotInline, DateParticipantAdminInline,)
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
@@ -252,7 +252,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
-    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = TimeBasedAdmin.inlines + (PeriodParticipantAdminInline,)
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [

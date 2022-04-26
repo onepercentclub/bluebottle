@@ -48,7 +48,7 @@ class CollectContributorInline(admin.TabularInline):
 class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
     form = CollectAdminForm
-    inlines = (CollectContributorInline,) + ActivityChildAdmin.inlines
+    inlines = ActivityChildAdmin.inlines + (CollectContributorInline,)
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']

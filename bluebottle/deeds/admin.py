@@ -47,7 +47,7 @@ class DeedParticipantInline(TabularInlinePaginated):
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
-    inlines = (DeedParticipantInline,) + ActivityChildAdmin.inlines
+    inlines = ActivityChildAdmin.inlines + (DeedParticipantInline,)
     list_filter = ['status']
     search_fields = ['title', 'description']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']

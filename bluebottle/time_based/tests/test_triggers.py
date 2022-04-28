@@ -833,6 +833,29 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             mail.outbox[1].body
         )
 
+    def test_cancel_multiple_slots(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot.states.cancel(save=True)
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.activity, 'open')
+
+        self.slot2.states.cancel(save=True)
+        self.assertStatus(self.slot2, 'cancelled')
+        self.assertStatus(self.activity, 'cancelled')
+
+    def test_cancel_multiple_slots_succeed(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+
+        DateParticipantFactory.create(activity=self.activity)
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.activity, 'open')
+
+        self.slot2.states.cancel(save=True)
+        self.assertStatus(self.slot2, 'cancelled')
+        self.assertStatus(self.activity, 'succeeded')
+
     def test_cancel_with_cancelled_activity(self):
         DateParticipantFactory.create(activity=self.activity)
         self.activity.states.cancel(save=True)

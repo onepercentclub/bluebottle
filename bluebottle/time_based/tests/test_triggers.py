@@ -1378,13 +1378,13 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
 
 
 @mock.patch.object(
-    ParticipantJoinedNotification, 'delay', 1
+    ParticipantJoinedNotification, 'delay', 2
 )
 @mock.patch.object(
     ParticipantChangedNotification, 'delay', 1
 )
 @mock.patch.object(
-    ParticipantAppliedNotification, 'delay', 1
+    ParticipantAppliedNotification, 'delay', 2
 )
 class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     factory = DateActivityFactory
@@ -1427,7 +1427,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             activity=self.activity
         )
 
-        time.sleep(2)
+        time.sleep(3)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1460,7 +1460,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             for slot in self.slots
         ]
 
-        time.sleep(2)
+        time.sleep(3)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1490,7 +1490,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             for slot in self.slots
         ]
 
-        time.sleep(2)
+        time.sleep(3)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1505,13 +1505,13 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     def test_change_free(self):
         self.test_join_free()
 
-        time.sleep(2)
+        time.sleep(3)
         mail.outbox = []
 
         for slot_participant in self.slot_participants[:-1]:
             slot_participant.states.withdraw(save=True)
 
-        time.sleep(2)
+        time.sleep(3)
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
@@ -1527,13 +1527,13 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     def test_withdraw_free(self):
         self.test_join_free()
 
-        time.sleep(2)
+        time.sleep(3)
         mail.outbox = []
 
         for slot_participant in self.slot_participants:
             slot_participant.states.withdraw(save=True)
 
-        time.sleep(2)
+        time.sleep(3)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(

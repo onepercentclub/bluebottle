@@ -374,7 +374,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     def is_team_captain(self, user):
-        return user == self.instance.owner
+        return user == self.instance.owner or user.is_staff
 
     def is_activity_owner(self, user):
         return (
@@ -388,14 +388,14 @@ class TeamStateMachine(ModelStateMachine):
         EmptyState(),
         new,
         name=_('Create'),
-        description=_('The activity will be created.'),
+        description=_('The team will be created.'),
     )
 
     accept = Transition(
         new,
         open,
         name=_('Accept'),
-        description=_('The activity will be accepted.'),
+        description=_('The team will be accepted.'),
     )
 
     withdraw = Transition(
@@ -431,5 +431,5 @@ class TeamStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_activity_owner,
         name=_('accept'),
-        description=_('The team is cancelled. Contributors can apply again')
+        description=_('The team is reopened. Contributors can apply again')
     )

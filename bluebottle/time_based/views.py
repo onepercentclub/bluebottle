@@ -453,7 +453,8 @@ class DateParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status')
+        ('status', 'Status'),
+        ('team__name', 'Team'),
     )
 
     model = DateActivity
@@ -499,7 +500,8 @@ class PeriodParticipantExportView(PrivateFileView):
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status')
+        ('status', 'Status'),
+        ('team__name', 'Team'),
     )
 
     model = PeriodActivity

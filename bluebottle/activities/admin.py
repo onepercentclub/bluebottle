@@ -574,6 +574,9 @@ class ContributorInline(admin.TabularInline):
 
     edit.short_description = _('edit')
 
+    verbose_name = _('team member')
+    verbose_name_plural = _('team members')
+
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):

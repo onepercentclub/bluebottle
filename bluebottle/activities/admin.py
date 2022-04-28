@@ -762,6 +762,6 @@ class TeamAdmin(StateMachineAdmin):
         contributor = obj.members.filter(user=obj.owner).first()
 
         if contributor.invite:
-            return f'{url}?invite_id={contributor.invite.pk}'
+            return f'{url}?inviteId={contributor.invite.pk}'
 
     invite_link.short_description = _('Shareable link')

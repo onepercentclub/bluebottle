@@ -4,7 +4,9 @@ from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import Effect, TransitionEffect
-from bluebottle.activities.models import Organizer, EffortContribution, Activity, Team, Invite
+from bluebottle.activities.models import (
+    Contributor, Organizer, EffortContribution, Activity, Team, Invite
+)
 
 
 class CreateOrganizer(Effect):
@@ -138,7 +140,12 @@ class BaseTeamContributionTransitionEffect(Effect):
 
     def post_save(self):
         for contribution in self.transitioned_conributions:
-            contribution.save()
+            try:
+                contribution.contributor.refresh_from_db()
+                contribution.save()
+            except Contributor.DoesNotExist:
+                # Contributor does not exist anymore. Do not save contribution
+                pass
 
 
 def TeamContributionTransitionEffect(transition, contribution_conditions=None):
@@ -164,3 +171,15 @@ class CreateInviteEffect(Effect):
 
     def __str__(self):
         return str(_('Create invite'))
+
+
+class ResetTeamParticipantsEffect(Effect):
+    "Remove all contributors from the team"
+    display = True
+
+    def post_save(self, **kwargs):
+        for contributor in self.instance.members.exclude(user=self.instance.owner):
+            contributor.delete()
+
+    def __str__(self):
+        return str(_('Reset Team'))

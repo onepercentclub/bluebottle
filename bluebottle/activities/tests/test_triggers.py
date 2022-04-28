@@ -6,7 +6,8 @@ from bluebottle.activities.messages import (
     TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
     TeamWithdrawnActivityOwnerMessage
 )
-from bluebottle.activities.effects import TeamContributionTransitionEffect
+from bluebottle.activities.effects import TeamContributionTransitionEffect, ResetTeamParticipantsEffect
+from bluebottle.time_based.models import PeriodParticipant
 from bluebottle.activities.tests.factories import TeamFactory
 
 from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
@@ -70,12 +71,16 @@ class TeamTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
 
+        other_participant = PeriodParticipantFactory.create(
+            team=self.model, activity=self.activity
+        )
+
         self.model.states.cancel()
 
         with self.execute():
             self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.fail))
             self.assertNotificationEffect(
-                TeamCancelledMessage, [member.user for member in self.model.members.all()]
+                TeamCancelledMessage, [other_participant.user]
             )
             self.assertNotificationEffect(
                 TeamCancelledTeamCaptainMessage, [self.model.owner]
@@ -107,6 +112,47 @@ class TeamTriggersTestCase(TriggerTestCase):
         for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, TimeContributionStateMachine.failed.value)
 
+    def test_reapply(self):
+        self.create()
+
+        for contribution in self.participant.contributions.all():
+            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+
+        self.model.states.withdraw(save=True)
+
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))
+
+        self.model.save()
+        self.participant.refresh_from_db()
+
+        for contribution in self.participant.contributions.all():
+            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+
+    def test_reset(self):
+        self.create()
+        other_participant = PeriodParticipantFactory.create(
+            team=self.model, activity=self.activity
+        )
+
+        self.model.states.withdraw(save=True)
+
+        self.model.states.reset()
+
+        with self.execute():
+            self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))
+            self.assertEffect(ResetTeamParticipantsEffect)
+
+        self.model.save()
+
+        with self.assertRaises(PeriodParticipant.DoesNotExist):
+            other_participant.refresh_from_db()
+
+        for contribution in self.participant.contributions.all():
+            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+
     def test_reopen(self):
         self.create()
 
@@ -115,7 +161,7 @@ class TeamTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNotificationEffect(TeamReopenedMessage)
-            self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.succeed))
+            self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))
 
     def test_reopen_withdrawn(self):
         self.create()
@@ -135,4 +181,4 @@ class TeamTriggersTestCase(TriggerTestCase):
         self.model.states.reopen()
 
         with self.execute():
-            self.assertNoEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.succeed))
+            self.assertNoEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))

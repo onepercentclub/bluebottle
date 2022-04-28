@@ -14,7 +14,9 @@ from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
 from pytz import timezone
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
+)
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -206,7 +208,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
@@ -252,7 +254,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
-    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [

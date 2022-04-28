@@ -376,7 +376,7 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
 
-    delay = 60
+    delay = 55
 
     @property
     def action_link(self):

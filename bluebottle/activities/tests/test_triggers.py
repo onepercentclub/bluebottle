@@ -72,9 +72,9 @@ class TeamTriggersTestCase(TriggerTestCase):
         self.create()
 
         other_participant = PeriodParticipantFactory.create(
-            team=self.model, activity=self.activity
+            activity=self.activity,
+            team=self.model
         )
-
         self.model.states.cancel()
 
         with self.execute():

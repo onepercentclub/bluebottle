@@ -10,7 +10,7 @@ from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
 )
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers
+    ActivityTriggers, ContributorTriggers, TeamTriggers
 )
 
 from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
@@ -233,6 +233,7 @@ def activity_expired(effect):
 
 def activity_did_start(effect):
     """activity start date in the past"""
+
     return (
         not effect.instance.activity.start or
         effect.instance.activity.start < date.today()
@@ -376,11 +377,11 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.reapply,
             effects=[
+                RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
                 TransitionEffect(
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_did_start, team_is_active]
                 ),
-                RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
             ]
         ),
 
@@ -391,3 +392,16 @@ class DeedParticipantTriggers(ContributorTriggers):
             ]
         ),
     ]
+
+
+TeamTriggers.triggers += [
+    TransitionTrigger(
+        TeamStateMachine.reopen,
+        effects=[
+            RelatedTransitionEffect(
+                'members', DeedParticipantStateMachine.succeed,
+                conditions=[activity_did_start]
+            )
+        ]
+    )
+]

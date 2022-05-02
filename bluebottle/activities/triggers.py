@@ -280,7 +280,8 @@ class TeamTriggers(TriggerManager):
                 TeamContributionTransitionEffect(
                     ContributionStateMachine.reset,
                     contribution_conditions=[activity_is_active, contributor_is_active]
-                )
+                ),
+
             ]
         ),
 

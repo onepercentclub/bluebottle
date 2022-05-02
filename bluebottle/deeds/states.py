@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, TeamStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -113,12 +113,6 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         _('This person has been signed up for the activity and was accepted automatically.')
     )
 
-    def can_succeed(self):
-        if self.instance.team:
-            return self.instance.team.status == TeamStateMachine.open.value
-        else:
-            return True
-
     def is_user(self, user):
         """is participant"""
         return self.instance.user == user
@@ -148,7 +142,6 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
-        conditions=[can_succeed]
     )
 
     re_accept = Transition(

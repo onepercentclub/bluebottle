@@ -13,7 +13,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers, TeamTriggers
 )
 from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 
@@ -328,6 +328,7 @@ class CollectContributorTriggers(ContributorTriggers):
                 ),
             ]
         ),
+
     ]
 
 
@@ -341,5 +342,26 @@ class CollectContributionTriggers(ContributionTriggers):
                     CollectContributionStateMachine.succeed,
                 ),
             ]
-        )
+        ),
+
+        TransitionTrigger(
+            CollectContributionStateMachine.reset,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
     ]
+
+
+TeamTriggers.triggers += [
+    TransitionTrigger(
+        TeamStateMachine.reopen,
+        effects=[
+            RelatedTransitionEffect(
+                'members', CollectContributorStateMachine.succeed
+            )
+        ]
+    )
+]

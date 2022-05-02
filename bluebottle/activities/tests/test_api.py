@@ -1696,6 +1696,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True
+        settings.enable_participant_exports = True
         settings.save()
 
     def test_get_activity_owner(self):
@@ -1709,6 +1710,8 @@ class RelatedTeamListViewAPITestCase(APITestCase):
 
         self.assertMeta('status')
         self.assertMeta('transitions')
+        for resource in self.response.json()['data']:
+            self.assertTrue(resource['meta']['participants-export-url'] is not None)
 
     def test_get_cancelled_owner(self):
         team = self.cancelled_teams[0]
@@ -1720,6 +1723,22 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
+    def test_get_team_captain(self):
+        team = self.approved_teams[0]
+        self.perform_get(user=team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+        for resource in self.response.json()['data']:
+            if resource['relationships']['owner']['data']['id'] == str(team.owner.pk):
+                self.assertTrue(resource['meta']['participants-export-url'] is not None)
+            else:
+                self.assertTrue(resource['meta']['participants-export-url'] is None)
+
     def test_get_anonymous(self):
         self.perform_get()
 
@@ -1728,6 +1747,8 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertObjectList(self.approved_teams)
         self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
+        for resource in self.response.json()['data']:
+            self.assertTrue(resource['meta']['participants-export-url'] is None)
 
     def test_pagination(self):
         extra_teams = TeamFactory.create_batch(

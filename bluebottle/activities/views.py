@@ -28,7 +28,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView
+    CreateAPIView, RetrieveAPIView, ExportView
 )
 
 
@@ -237,3 +237,18 @@ class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):
     queryset = Invite.objects.all()
 
     serializer_class = InviteSerializer
+
+
+class TeamMembersExportView(ExportView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+    )
+
+    file_name = 'participants'
+    model = Team
+
+    def get_queryset(self):
+        return self.get_object().members.all()

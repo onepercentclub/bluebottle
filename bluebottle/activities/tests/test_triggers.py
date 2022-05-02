@@ -70,12 +70,16 @@ class TeamTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
 
+        other_participant = PeriodParticipantFactory.create(
+            activity=self.activity,
+            team=self.model
+        )
         self.model.states.cancel()
 
         with self.execute():
             self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.fail))
             self.assertNotificationEffect(
-                TeamCancelledMessage, [member.user for member in self.model.members.all()]
+                TeamCancelledMessage, [other_participant.user]
             )
             self.assertNotificationEffect(
                 TeamCancelledTeamCaptainMessage, [self.model.owner]

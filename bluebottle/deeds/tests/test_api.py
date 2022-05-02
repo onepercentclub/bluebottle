@@ -642,6 +642,20 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
         self.assertNoRelationship('invite')
         self.assertRelationship('accepted-invite')
 
+    def test_get_accepted_invite(self):
+        invite = DeedParticipantFactory.create().invite
+        self.participant.accepted_invite = invite
+        self.participant.save()
+
+        self.perform_get(user=self.participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('activity', self.activity)
+        self.assertIncluded('user', self.participant.user)
+        self.assertNoRelationship('invite')
+        self.assertRelationship('accepted-invite')
+
     def test_get_anonymous(self):
         self.perform_get()
 

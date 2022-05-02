@@ -409,8 +409,12 @@ class BaseContributorSerializer(ModelSerializer):
 
         if (
             isinstance(self.instance, Iterable) or
-            self.instance.accepted_invite or
-            (self.instance and self.instance.user != self.context['request'].user)
+            (
+                self.instance and (
+                    self.instance.accepted_invite or
+                    self.instance.user != self.context['request'].user
+                )
+            )
         ):
             self.fields.pop('invite')
 

@@ -315,7 +315,9 @@ class TeamCancelledMessage(TeamNotification):
 
     def get_recipients(self):
         """team participants"""
-        return [contributor.user for contributor in self.obj.members.all()]
+        return [
+            contributor.user for contributor in self.obj.members.all() if not contributor.user == self.obj.owner
+        ]
 
 
 class TeamCancelledTeamCaptainMessage(TeamNotification):

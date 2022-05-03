@@ -15,6 +15,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
+from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -26,6 +27,7 @@ from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 
 
 class TeamSerializer(ModelSerializer):
@@ -37,6 +39,14 @@ class TeamSerializer(ModelSerializer):
         many=True,
         related_link_view_name='team-members',
         related_link_url_kwarg='team_id'
+    )
+
+    participants_export_url = PrivateFileSerializer(
+        'team-members-export',
+        url_args=('pk', ),
+        filename='participants.csv',
+        permission=CanExportTeamParticipantsPermission,
+        read_only=True
     )
 
     def get_members(self, instance):
@@ -66,6 +76,7 @@ class TeamSerializer(ModelSerializer):
             'status',
             'transitions',
             'created',
+            'participants_export_url',
         )
 
     class JSONAPIMeta(object):

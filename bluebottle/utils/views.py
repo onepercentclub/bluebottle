@@ -1,3 +1,4 @@
+import csv
 import mimetypes
 import os
 
@@ -26,6 +27,7 @@ from taggit.models import Tag
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
@@ -338,5 +340,26 @@ class IcalView(PrivateFileView):
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
+
+        return response
+
+
+class ExportView(PrivateFileView):
+    file_name = 'exports'
+
+    def get(self, request, *args, **kwargs):
+
+        response = HttpResponse()
+        response['Content-Disposition'] = f'attachment; filename="{self.file_name}.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+
+        row = [field[1] for field in self.fields]
+        writer.writerow(row)
+
+        for instance in self.get_instances():
+            row = [prep_field(request, instance, field[0]) for field in self.fields]
+            writer.writerow(row)
 
         return response

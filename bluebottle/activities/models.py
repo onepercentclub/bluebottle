@@ -63,7 +63,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         _('Description'), blank=True
     )
     team_activity = models.CharField(
-        _('Team activity'),
+        _('participation'),
         max_length=100,
         default=TeamActivityChoices.individuals,
         choices=TeamActivityChoices.choices,

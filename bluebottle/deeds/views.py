@@ -131,7 +131,7 @@ class ParticipantExportView(ExportView):
     model = Deed
     file_name = 'participants'
 
-    def get_queryset(self):
+    def get_instances(self):
         return self.get_object().contributors.instance_of(
             DeedParticipant
         )

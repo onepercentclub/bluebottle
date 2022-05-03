@@ -1,3 +1,5 @@
+import csv
+import io
 from builtins import str
 import json
 from datetime import timedelta, date
@@ -1896,3 +1898,89 @@ class InviteDetailViewAPITestCase(APITestCase):
             self.perform_get(user=BlueBottleUserFactory.create())
 
         self.assertStatus(status.HTTP_200_OK)
+
+
+class TeamMemberExportViewAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        settings = InitiativePlatformSettings.load()
+        settings.team_activities = True
+        settings.enable_participant_exports = True
+        settings.save()
+
+        self.activity = PeriodActivityFactory.create(team_activity='teams')
+
+        self.team_captain = PeriodParticipantFactory(activity=self.activity)
+
+        self.team_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+
+        self.non_team_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+        )
+
+        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+
+    @property
+    def export_url(self):
+        for team in self.response.json()['data']:
+            if team['id'] == str(self.team_captain.team.pk) and team['meta']['participants-export-url']:
+                return team['meta']['participants-export-url']['url']
+
+    def test_get_owner(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.export_url)
+        response = self.client.get(self.export_url)
+        reader = csv.DictReader(io.StringIO(response.content.decode()))
+
+        self.assertEqual(
+            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team Captain']
+        )
+
+        lines = [line for line in reader]
+        self.assertEqual(len(lines), 4)
+
+        for team_member in self.team_members:
+            self.assertTrue(team_member.user.email in [line['Email'] for line in lines])
+
+        self.assertEqual(
+            [
+                line['Team Captain'] for line in lines
+                if line['Email'] == self.team_captain.user.email
+            ][0],
+            'True'
+        )
+
+    def test_team_captain(self):
+        self.perform_get(user=self.team_captain.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.export_url)
+        response = self.client.get(self.export_url)
+        reader = csv.DictReader(io.StringIO(response.content.decode()))
+        self.assertEqual(
+            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team Captain']
+        )
+
+    def test_get_owner_incorrect_hash(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url + 'test')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_contributor(self):
+        self.perform_get(user=self.team_members[0].user)
+        self.assertIsNone(self.export_url)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertIsNone(self.export_url)
+
+    def test_get_no_user(self):
+        self.perform_get()
+        self.assertIsNone(self.export_url)

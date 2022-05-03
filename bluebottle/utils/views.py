@@ -358,7 +358,7 @@ class ExportView(PrivateFileView):
         row = [field[1] for field in self.fields]
         writer.writerow(row)
 
-        for instance in self.get_queryset():
+        for instance in self.get_instances():
             row = [prep_field(request, instance, field[0]) for field in self.fields]
             writer.writerow(row)
 

@@ -202,6 +202,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         return self.user
 
     @property
+    def is_team_captain(self):
+        return self.user == self.team.owner
+
+    @property
     def date(self):
         return self.activity.contributor_date
 

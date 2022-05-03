@@ -129,7 +129,7 @@ class CollectContributorExportView(ExportView):
 
     model = CollectActivity
 
-    def get_queryset(self):
+    def get_instances(self):
         return self.get_object().contributors.instance_of(
             CollectContributor
         )

@@ -245,10 +245,11 @@ class TeamMembersExportView(ExportView):
         ('user__full_name', 'Name'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
+        ('is_team_captain', 'Team Captain'),
     )
 
     file_name = 'participants'
     model = Team
 
-    def get_queryset(self):
+    def get_instances(self):
         return self.get_object().members.all()

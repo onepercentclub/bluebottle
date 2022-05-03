@@ -416,6 +416,17 @@ class TeamStateMachine(ModelStateMachine):
         description=_('The team caption has reapplied. Contributors can apply again')
     )
 
+    reset = Transition(
+        withdrawn,
+        open,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('reset'),
+        description=_(
+            'The team caption has reset the team. All participants are removed, and the team start over fresh'
+        )
+    )
+
     cancel = Transition(
         open,
         cancelled,

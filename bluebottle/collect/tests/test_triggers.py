@@ -397,6 +397,9 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
         self.create()
 
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
+        self.assertEqual(self.model.status, 'succeeded')
+
         self.model.states.withdraw(save=True)
         self.model.team.states.cancel(save=True)
         self.model.states.reapply()
@@ -412,6 +415,9 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
         self.model.save()
         self.model.team.states.reopen(save=True)
+        self.model.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'succeeded')
         self.assertEqual(self.model.contributions.first().status, 'succeeded')
 
     def test_reapply_finished(self):

@@ -44,7 +44,7 @@ class TeamSerializer(ModelSerializer):
     participants_export_url = PrivateFileSerializer(
         'team-members-export',
         url_args=('pk', ),
-        filename='participants.csv',
+        filename='team-participants.csv',
         permission=CanExportTeamParticipantsPermission,
         read_only=True
     )

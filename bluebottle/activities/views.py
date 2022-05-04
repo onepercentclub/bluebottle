@@ -248,7 +248,7 @@ class TeamMembersExportView(ExportView):
         ('is_team_captain', 'Team Captain'),
     )
 
-    file_name = 'participants'
+    file_name = 'team-participants'
     model = Team
 
     def get_instances(self):

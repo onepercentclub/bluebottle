@@ -12,7 +12,7 @@ from rest_framework import (
 from bluebottle.members.models import Member
 
 from bluebottle.scim.models import SCIMPlatformSettings
-from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer
+from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer, SCIMPatchSerializer
 from bluebottle.scim import scim_data
 from bluebottle.scim.filters import SCIMFilter
 
@@ -113,6 +113,19 @@ class SCIMViewMixin(object):
                 raise exc
 
         return response.Response(data, status=status_code)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.get_serializer(instance).data
+
+        patch_serializer = SCIMPatchSerializer(data=request.data)
+
+        serializer = self.get_serializer(instance, data=patch_serializer.patch(data), partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+
+        return response.Response(serializer.data)
 
 
 class StaticRetrieveAPIView(SCIMViewMixin, generics.RetrieveAPIView):

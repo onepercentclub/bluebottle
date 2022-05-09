@@ -655,6 +655,14 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         all_slots_cancelled
                     ]
                 ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                        activity_has_accepted_participants
+                    ]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
@@ -1337,7 +1345,7 @@ class SlotParticipantTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'contributions',
-                    TimeContributionStateMachine.fail,
+                    TimeContributionStateMachine.reset,
                 ),
                 RelatedTransitionEffect(
                     'slot',

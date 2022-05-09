@@ -607,7 +607,7 @@ class SlotCancelledNotification(TransitionMessage):
     """
     The activity slot got cancelled
     """
-    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
+    subject = pgettext('email', 'A slot for your activity "{title}" has been cancelled')
     template = 'messages/slot_cancelled'
 
     context = {
@@ -622,5 +622,11 @@ class SlotCancelledNotification(TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.accepted_participants
+            self.obj.activity.owner
         ]
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')

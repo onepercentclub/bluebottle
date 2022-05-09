@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -575,7 +576,9 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         Test creating a user twice request
         """
         remote_id = '123'
-        user = BlueBottleUserFactory.create(remote_id=remote_id, scim_external_id=None)
+        user = BlueBottleUserFactory.create(
+            email='test@example.com', remote_id=remote_id, scim_external_id=None
+        )
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
@@ -607,6 +610,79 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(user.first_name, data['name']['givenName'])
         self.assertEqual(user.last_name, data['name']['familyName'])
 
+    def test_post_location(self):
+        """
+        Create a user with a location
+        """
+        location = LocationFactory.create()
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': '123',
+            'externalId': 'some-external-id',
+            'addresses': [{
+                'type': 'work',
+                'locality': location.name,
+            }],
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(response.json()['addresses'][0]['locality'], location.name)
+        user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
+        self.assertEqual(user.location, location)
+
+    def test_post_new_location(self):
+        """
+        Create a user with a location that does not exist yet.
+        """
+        location_name = 'New test location'
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': '123',
+            'externalId': 'some-external-id',
+            'addresses': [{
+                'type': 'work',
+                'locality': location_name,
+            }],
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(response.json()['addresses'][0]['locality'], location_name)
+        user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
+        self.assertEqual(user.location.name, location_name)
+
 
 class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
@@ -616,6 +692,8 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_superuser=False)
         self.user.remote_id = '1243'
+        self.user.scim_external_id = '1243'
+        self.user.save()
         self.user.groups.add(Group.objects.get(name='Staff'))
 
         super(SCIMUserDetailTest, self).setUp()
@@ -639,6 +717,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(data['emails'][0]['value'], self.user.email)
         self.assertEqual(data['emails'][0]['primary'], True)
         self.assertEqual(data['emails'][0]['type'], 'work')
+        self.assertEqual(data['addresses'], [])
         self.assertEqual(
             data['schemas'], ['urn:ietf:params:scim:schemas:core:2.0:User']
         )
@@ -694,41 +773,81 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_patch_without_email(self):
+    def test_put_location(self):
         """
         Test authenticated put request
         """
+        location = LocationFactory.create()
         request_data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'id': 'goodup-user-{}'.format(self.user.pk),
             'userName': self.user.remote_id,
             'externalId': '123',
             'active': False,
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': self.user.email
+            }],
             'name': {
-                'givenName': 'Tester',
-                'familyName': 'Example'
-            }
+                'givenName': self.user.first_name,
+                'familyName': self.user.first_name
+            },
+            'addresses': [{
+                'type': 'work',
+                'locality': location.name
+            }],
         }
 
-        response = self.client.patch(
+        response = self.client.put(
             self.url,
             request_data,
             token=self.token
         )
-
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data['id'], request_data['id'])
-        self.assertEqual(data['active'], False)
-        self.assertEqual(data['name']['givenName'], request_data['name']['givenName'])
-        self.assertEqual(data['name']['familyName'], request_data['name']['familyName'])
-        self.assertEqual(len(data['emails']), 1)
-        self.assertEqual(data['emails'][0]['value'], self.user.email)
 
+        data = response.json()
+        self.assertEqual(data['addresses'][0]['locality'], location.name)
         self.user.refresh_from_db()
-        self.assertEqual(self.user.first_name, request_data['name']['givenName'])
-        self.assertEqual(self.user.last_name, request_data['name']['familyName'])
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(self.user.location, location)
+
+    def test_put_new_location(self):
+        """
+        Test authenticated put request
+        """
+        location_name = 'Test Location'
+        request_data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'id': 'goodup-user-{}'.format(self.user.pk),
+            'userName': self.user.remote_id,
+            'externalId': '123',
+            'active': False,
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': self.user.email
+            }],
+            'name': {
+                'givenName': self.user.first_name,
+                'familyName': self.user.first_name
+            },
+            'addresses': [{
+                'type': 'work',
+                'locality': location_name
+            }],
+        }
+
+        response = self.client.put(
+            self.url,
+            request_data,
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(data['addresses'][0]['locality'], location_name)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.location.name, location_name)
 
     def test_put_deleted(self):
         """
@@ -761,6 +880,120 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['status'], 404)
         self.assertEqual(response.json()['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
+
+    def test_patch(self):
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "Replace",
+                    "path": "name/givenName",
+                    "value": "Tester"
+                },
+                {
+                    "op": "Replace",
+                    "path": "name/familyName",
+                    "value": "Example"
+                },
+                {
+                    "op": "Add",
+                    "path": 'emails[type eq "work"].value',
+                    "value": 'test@example.com'
+                }
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.user.refresh_from_db()
+        self.assertEqual(data['emails'][0]['value'], 'test@example.com')
+        self.assertEqual(data['name']['givenName'], 'Tester')
+        self.assertEqual(data['name']['familyName'], 'Example')
+
+        self.assertEqual(self.user.first_name, 'Tester')
+        self.assertEqual(self.user.last_name, 'Example')
+        self.assertEqual(self.user.email, 'test@example.com')
+
+    def test_patch_deactivate(self):
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "Replace",
+                    "path": "active",
+                    "value": "False"
+                },
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.is_active, False)
+
+    def test_patch_location(self):
+        location = LocationFactory.create()
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    'op': 'Add',
+                    'path': 'addresses[type eq "work"].locality',
+                    'value': location.name
+                },
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['addresses'][0]['locality'], location.name)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.location, location)
+
+    def test_patch_new_location(self):
+        location_name = 'Test Location'
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    'op': 'Add',
+                    'path': 'addresses[type eq "work"].locality',
+                    'value': location_name
+                },
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['addresses'][0]['locality'], location_name)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.location.name, location_name)
 
     def test_delete(self):
         response = self.client.delete(

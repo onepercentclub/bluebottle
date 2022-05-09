@@ -157,6 +157,11 @@ class ActivitySearchFilter(ElasticSearchFilter):
         end = request.GET.get('filter[end]')
 
         try:
+            start_date = dateutil.parser.parse(start) if start else None
+            end_date = datetime.combine(dateutil.parser.parse(end), time.max) if end else None
+            if start_date and end_date and end_date < start_date:
+                # If start end date if before start date, the return no results
+                return Term(id=0)
             return Range(
                 duration={
                     'gte': dateutil.parser.parse(start) if start else None,
@@ -195,27 +200,33 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_default_filters(self, request):
         permission = 'activities.api_read_activity'
+
         filters = [
             ~Terms(status=[
                 'draft', 'needs_work', 'submitted', 'deleted',
                 'closed', 'cancelled', 'rejected'
             ]),
-            ~Nested(
-                path='segments',
-                query=(
-                    Term(segments__closed=True)
-                )
-            ) | Nested(
-                path='segments',
-                query=(
-                    Terms(
-                        segments__id=[
-                            segment.id for segment in request.user.segments.filter(closed=True)
-                        ] if request.user.is_authenticated else []
+
+        ]
+        if not request.user.is_staff:
+            filters += [
+                ~Nested(
+                    path='segments',
+                    query=(
+                        Term(segments__closed=True)
+                    )
+                ) | Nested(
+                    path='segments',
+                    query=(
+                        Terms(
+                            segments__id=[
+                                segment.id for segment in request.user.segments.filter(closed=True)
+                            ] if request.user.is_authenticated else []
+                        )
                     )
                 )
-            )
-        ]
+            ]
+
         if not request.user.has_perm(permission):
             return filters + [
                 Nested(

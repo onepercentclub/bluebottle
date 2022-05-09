@@ -148,6 +148,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
         self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
 
+    def test_closed_segments_staff(self):
+        self.setup_closed_segments()
+
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        response = self.client.get(self.url, user=staff)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
+        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
+        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
+
     def test_filter_owner(self):
         DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')
@@ -364,6 +378,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(assignment.pk) not in found)
         self.assertTrue(str(funding.pk) not in found)
 
+        start = next_month + dateutil.relativedelta.relativedelta(days=2)
+        end = next_month - dateutil.relativedelta.relativedelta(days=2)
+        response = self.client.get(
+            self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
+                start.year, start.month, start.day,
+                end.year, end.month, end.day),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
     def test_activity_date_filter_slots(self):
         first = DateActivityFactory.create(
             status='open', slots=[]
@@ -380,9 +406,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         for days in (6, 8, 10):
             DateActivitySlotFactory.create(
                 activity=second,
+                status='full',
                 start=now() + timedelta(days=days)
             )
 
+        third = DateActivityFactory.create(
+            status='open', slots=[]
+        )
+        for days in (2, 4, 6):
+            DateActivitySlotFactory.create(
+                activity=third,
+                status='cancelled',
+                start=now() + timedelta(days=days)
+
+            )
         start = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
         end = (now() + timedelta(days=2)).strftime('%Y-%m-%d')
         data = json.loads(

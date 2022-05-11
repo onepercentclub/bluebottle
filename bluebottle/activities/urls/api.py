@@ -24,7 +24,6 @@ urlpatterns = [
         TeamMembersList.as_view(),
         name='team-members'),
 
-
     url(r'^/team/(?P<pk>\d+)/members/export$',
         TeamMembersExportView.as_view(),
         name='team-members-export'),

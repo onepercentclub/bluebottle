@@ -23,6 +23,7 @@ from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
 from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory
@@ -1727,9 +1728,13 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.activity = PeriodActivityFactory.create(status='open')
 
         self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
+        for team in self.approved_teams:
+            PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
         self.cancelled_teams = TeamFactory.create_batch(
             5, activity=self.activity, status='cancelled'
         )
+        for team in self.cancelled_teams:
+            PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
 
         self.url = reverse('related-activity-team', args=(self.activity.pk, ))
 
@@ -1752,7 +1757,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         for resource in self.response.json()['data']:
             self.assertTrue(resource['meta']['participants-export-url'] is not None)
 
-    def test_get_cancelled_owner(self):
+    def test_get_cancelled_team_captain(self):
         team = self.cancelled_teams[0]
         self.perform_get(user=team.owner)
 
@@ -1761,6 +1766,11 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertObjectList(self.approved_teams + [team])
         self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['owner']['data']['id'],
+            str(team.owner.pk)
+        )
 
     def test_get_team_captain(self):
         team = self.approved_teams[0]
@@ -1771,6 +1781,11 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertObjectList(self.approved_teams)
         self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['owner']['data']['id'],
+            str(team.owner.pk)
+        )
 
         for resource in self.response.json()['data']:
             if resource['relationships']['owner']['data']['id'] == str(team.owner.pk):
@@ -2026,3 +2041,97 @@ class TeamMemberExportViewAPITestCase(APITestCase):
     def test_get_no_user(self):
         self.perform_get()
         self.assertIsNone(self.export_url)
+
+
+class TeamMemberListViewAPITestCase(APITestCase):
+    serializer = PeriodParticipantSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        settings = InitiativePlatformSettings.objects.get()
+        settings.team_activities = True
+        settings.save()
+
+        self.activity = PeriodActivityFactory.create(status='open', team_activity='teams')
+
+        self.team_captain = PeriodParticipantFactory.create(
+            activity=self.activity
+        )
+        self.team = self.team_captain.team
+
+        self.accepted_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+        self.withdrawn_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+
+        for member in self.withdrawn_members:
+            member.states.withdraw(save=True)
+
+        self.url = reverse('team-members', args=(self.team.pk, ))
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_team_captain(self):
+        self.perform_get(user=self.team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['user']['data']['id'],
+            str(self.team.owner.pk)
+        )
+
+    def test_get_team_member(self):
+        self.perform_get(user=self.accepted_members[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + 1)
+
+        self.assertObjectList(self.accepted_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + 1)
+
+        self.assertObjectList(self.accepted_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)

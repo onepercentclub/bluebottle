@@ -1,8 +1,8 @@
-import csv
 from datetime import timedelta, date
 import io
 
 from rest_framework import status
+from openpyxl import load_workbook
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -580,13 +580,12 @@ class ParticipantExportViewAPITestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
 
-        for row in reader:
-            self.assertTrue('Email' in row)
-            self.assertTrue('Name' in row)
-            self.assertTrue('Registration Date' in row)
-            self.assertTrue('Status' in row)
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+        self.assertEqual(
+            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
+        )
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

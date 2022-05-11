@@ -125,11 +125,10 @@ class ParticipantExportView(ExportView):
         ('user__full_name', 'Name'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
-        ('team__name', 'Team'),
     )
 
     model = Deed
-    file_name = 'participants'
+    filename = 'participants'
 
     def get_instances(self):
         return self.get_object().contributors.instance_of(

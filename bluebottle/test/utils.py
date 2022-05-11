@@ -627,9 +627,9 @@ class TriggerTestCase(BluebottleTestCase):
         self.model = self.factory.create(**self.defaults)
 
     @contextmanager
-    def execute(self, user=None):
+    def execute(self, user=None, **kwargs):
         try:
-            self.effects = self.model.execute_triggers(effects=None, user=user)
+            self.effects = self.model.execute_triggers(user=user, **kwargs)
             yield self.effects
         finally:
             self.effects = None
@@ -690,8 +690,8 @@ class TriggerTestCase(BluebottleTestCase):
 
 class NotificationTestCase(BluebottleTestCase):
 
-    def create(self):
-        self.message = self.message_class(self.obj)
+    def create(self, **kwargs):
+        self.message = self.message_class(self.obj, **kwargs)
 
     @property
     def _html(self):

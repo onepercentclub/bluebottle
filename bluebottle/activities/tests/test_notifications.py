@@ -123,6 +123,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject("Your team has been accepted for \"Save the world!\"")
         self.assertBodyContains('On the activity page you will find the link to invite your team members.')
+        self.assertBodyContains(f"Your team has been accepted for the activity '{self.activity.title}'.")
 
     def test_team_cancelled_notification(self):
         PeriodParticipantFactory.create_batch(10, activity=self.activity, team=self.obj)

@@ -1,3 +1,5 @@
+from django.core import mail
+
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -64,9 +66,18 @@ class TeamTriggersTestCase(TriggerTestCase):
         self.model.save()
         self.model.states.accept()
 
-        with self.execute():
+        message = 'You were accepted, because you were great'
+
+        with self.execute(message=message):
             self.assertEqual(self.model.status, 'open')
+
             self.assertNotificationEffect(TeamAcceptedMessage)
+            self.assertEqual(
+                self.effects[0].options['message'], message
+            )
+
+        self.model.save()
+        self.assertTrue(message in mail.outbox[-1].body)
 
     def test_cancel(self):
         self.create()

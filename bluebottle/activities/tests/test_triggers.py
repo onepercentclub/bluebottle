@@ -6,7 +6,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
     TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
-    TeamWithdrawnActivityOwnerMessage
+    TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage
 )
 from bluebottle.activities.effects import TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 from bluebottle.time_based.models import PeriodParticipant
@@ -126,6 +126,11 @@ class TeamTriggersTestCase(TriggerTestCase):
     def test_reapply(self):
         self.create()
 
+        PeriodParticipantFactory.create(
+            activity=self.activity,
+            team=self.model
+        )
+
         for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
 
@@ -135,6 +140,10 @@ class TeamTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))
+            self.assertNotificationEffect(
+                TeamReappliedMessage,
+                [member.user for member in self.model.members.all() if member.user != self.model.owner]
+            )
 
         self.model.save()
         self.participant.refresh_from_db()
@@ -155,6 +164,10 @@ class TeamTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertEffect(TeamContributionTransitionEffect(TimeContributionStateMachine.reset))
             self.assertEffect(ResetTeamParticipantsEffect)
+            self.assertNotificationEffect(
+                TeamAddedMessage,
+                [self.activity.owner]
+            )
 
         self.model.save()
 

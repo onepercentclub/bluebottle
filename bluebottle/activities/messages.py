@@ -338,6 +338,18 @@ class TeamWithdrawnMessage(TeamNotification):
         return [contributor.user for contributor in self.obj.members.all()]
 
 
+class TeamReappliedMessage(TeamNotification):
+    subject = pgettext('email', "You’re added to a team for '{title}'")
+    template = 'messages/team_reapplied'
+
+    def get_recipients(self):
+        """team participants"""
+        return [
+            contributor.user for contributor in self.obj.members.all()
+            if contributor.user != contributor.team.owner
+        ]
+
+
 class TeamWithdrawnActivityOwnerMessage(TeamNotification):
     subject = pgettext('email', "Team cancellation for '{title}'")
     template = 'messages/team_withdrawn_activity_owner'

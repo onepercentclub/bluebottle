@@ -312,7 +312,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def is_user(self, user):
         """is participant"""
-        return self.instance.user == user or user.is_staff
+        return self.instance.user == user
 
     def can_accept_participant(self, user):
         """can accept participant"""

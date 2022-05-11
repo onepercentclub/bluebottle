@@ -1,9 +1,9 @@
-import csv
 import io
 from builtins import str
 import json
 from datetime import timedelta, date
 import dateutil
+from openpyxl import load_workbook
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -1974,24 +1974,26 @@ class TeamMemberExportViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
+
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
 
         self.assertEqual(
-            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team Captain']
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team Captain')
         )
 
-        lines = [line for line in reader]
-        self.assertEqual(len(lines), 4)
+        self.assertEqual(len(rows), 5)
 
         for team_member in self.team_members:
-            self.assertTrue(team_member.user.email in [line['Email'] for line in lines])
+            self.assertTrue(team_member.user.email in [row[0] for row in rows[1:]])
 
         self.assertEqual(
             [
-                line['Team Captain'] for line in lines
-                if line['Email'] == self.team_captain.user.email
+                row[4] for row in rows
+                if row[0] == self.team_captain.user.email
             ][0],
-            'True'
+            True
         )
 
     def test_team_captain(self):
@@ -1999,9 +2001,12 @@ class TeamMemberExportViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+
         self.assertEqual(
-            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team Captain']
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team Captain')
         )
 
     def test_get_owner_incorrect_hash(self):

@@ -6,7 +6,7 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ContributionAdminInline, ActivityForm, TeamInline
+    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline
 )
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.utils.admin import export_as_csv_action
@@ -27,7 +27,6 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
-    inlines = [ContributionAdminInline]
 
 
 class DeedParticipantInline(TabularInlinePaginated):

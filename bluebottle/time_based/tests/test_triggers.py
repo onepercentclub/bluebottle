@@ -8,6 +8,7 @@ from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer, Activity
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase
@@ -1573,6 +1574,41 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_initial_added_with_team_through_admin(self):
+        captain = BlueBottleUserFactory.create(email='captain@example.com')
+        team = TeamFactory.create(
+            activity=self.activity,
+            owner=captain
+        )
+        PeriodParticipantFactory.create(
+            user=captain,
+            activity=self.activity,
+            team=team
+        )
+
+        mail.outbox = []
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            team=team
+        )
+        participant.execute_triggers(user=self.admin_user, send_messages=True)
+        participant.save()
+
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has been added to your activity "{}" 🎉'.format(self.activity.title)
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to a team for "{}" 🎉'.format(self.activity.title)
+        )
 
     def test_join(self):
         mail.outbox = []

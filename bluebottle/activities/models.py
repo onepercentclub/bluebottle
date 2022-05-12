@@ -1,21 +1,19 @@
-from builtins import str, object
 import uuid
+from builtins import str, object
+
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.contrib.contenttypes.fields import GenericRelation
+from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-
 from future.utils import python_2_unicode_compatible
-
-from bluebottle.fsm.triggers import TriggerMixin
-
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
-from bluebottle.initiatives.models import Initiative
 from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -182,6 +180,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     activity = models.ForeignKey(
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
+
     team = models.ForeignKey(
         'activities.Team', verbose_name=_('team'),
         null=True, blank=True, related_name='members', on_delete=models.SET_NULL

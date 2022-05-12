@@ -278,6 +278,31 @@ class ParticipantAddedNotification(TransitionMessage):
             return []
 
 
+class TeamParticipantAddedNotification(TransitionMessage):
+    """
+    A participant was added to a team manually (through back-office)
+    """
+    subject = pgettext('email', 'You have been added to a team for "{title}" 🎉')
+    template = 'messages/team_participant_added'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
+
+
 class ParticipantCreatedNotification(TransitionMessage):
     """
     A participant applied  for the activity and should be reviewed

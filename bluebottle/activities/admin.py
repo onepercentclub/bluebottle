@@ -73,36 +73,6 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit contributor')
 
 
-class ContributionAdminInline(StackedPolymorphicInline):
-    model = Contribution
-    readonly_fields = ['created']
-    fields = readonly_fields
-    extra = 0
-    can_delete = False
-    ordering = ['-created']
-
-    class EffortContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'start']
-        fields = readonly_fields
-        model = EffortContribution
-
-    class TimeContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'start', 'end', 'value']
-        fields = readonly_fields
-        model = TimeContribution
-
-    class MoneyContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'value']
-        fields = readonly_fields
-        model = MoneyContribution
-
-    child_inlines = (
-        EffortContributionInline,
-        TimeContributionInline,
-        MoneyContributionInline
-    )
-
-
 class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
@@ -549,35 +519,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
-class ContributorInline(admin.TabularInline):
-    raw_id_fields = ('user',)
-    readonly_fields = ('contributor_date', 'created', 'edit', 'state_name',)
-    fields = ('edit', 'user', 'created', 'state_name',)
-    model = Contributor
-    extra = 0
-
-    def state_name(self, obj):
-        if obj.states.current_state:
-            return obj.states.current_state.name
-
-    state_name.short_description = _('status')
-
-    def edit(self, obj):
-        url = reverse(
-            'admin:{}_{}_change'.format(
-                obj._meta.app_label,
-                obj._meta.model_name,
-            ),
-            args=(obj.id,)
-        )
-        return format_html('<a href="{}">{}</a>', url, obj.id)
-
-    edit.short_description = _('edit')
-
-    verbose_name = _('team member')
-    verbose_name_plural = _('team members')
-
-
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
@@ -735,10 +676,16 @@ class ActivityAdminInline(StackedPolymorphicInline):
 class TeamAdmin(StateMachineAdmin):
     raw_id_fields = ['owner', 'activity']
     readonly_fields = ['created', 'activity_link', 'invite_link']
-    inlines = [ContributorInline]
     fields = ['activity', 'invite_link', 'created', 'owner', 'states']
     superadmin_fields = ['force_status']
     list_display = ['__str__', 'activity_link', 'status']
+
+    def get_inline_instances(self, request, obj=None):
+        self.inlines = []
+        if isinstance(obj.activity, PeriodActivity):
+            from bluebottle.time_based.admin import PeriodParticipantAdminInline
+            self.inlines = [PeriodParticipantAdminInline]
+        return super(TeamAdmin, self).get_inline_instances(request, obj)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

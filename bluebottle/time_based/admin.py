@@ -95,14 +95,16 @@ class DateParticipantAdminInline(BaseParticipantAdminInline):
 
 
 class PeriodParticipantForm(ModelForm):
+
+    activity = None
+
     class Meta:
         model = PeriodParticipant
         exclude = []
 
     def __init__(self, *args, **kwargs):
         super(PeriodParticipantForm, self).__init__(*args, **kwargs)
-        if self.instance.id and 'team' in self.fields:
-            self.fields['team'].queryset = Team.objects.filter(activity=self.instance.activity)
+        self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
 
     def full_clean(self):
         data = super(PeriodParticipantForm, self).full_clean()
@@ -118,6 +120,21 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
     raw_id_fields = BaseParticipantAdminInline.raw_id_fields
     fields = ('edit', 'user', 'status')
     form = PeriodParticipantForm
+
+    def get_parent_object_from_request(self, request):
+        """
+        Returns the parent object from the request or None.
+        """
+        resolved = resolve(request.path_info)
+        if resolved.kwargs:
+            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
+        return None
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # Set activity on form so we can filter teams for new participants too
+        formset = super(PeriodParticipantAdminInline, self).get_formset(request, obj, **kwargs)
+        formset.form.activity = self.get_parent_object_from_request(request)
+        return formset
 
     def get_fields(self, request, obj=None):
         fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)

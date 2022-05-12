@@ -104,7 +104,8 @@ class PeriodParticipantForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PeriodParticipantForm, self).__init__(*args, **kwargs)
-        self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
+        if self.activity:
+            self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
 
     def full_clean(self):
         data = super(PeriodParticipantForm, self).full_clean()
@@ -133,7 +134,9 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
     def get_formset(self, request, obj=None, **kwargs):
         # Set activity on form so we can filter teams for new participants too
         formset = super(PeriodParticipantAdminInline, self).get_formset(request, obj, **kwargs)
-        formset.form.activity = self.get_parent_object_from_request(request)
+        parent = self.get_parent_object_from_request(request)
+        if isinstance(parent, PeriodActivity):
+            formset.form.activity = parent
         return formset
 
     def get_fields(self, request, obj=None):

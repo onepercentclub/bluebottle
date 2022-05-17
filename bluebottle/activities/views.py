@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -20,8 +20,9 @@ from bluebottle.funding.models import Donor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.transitions.views import TransitionList
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission
+    OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
@@ -151,3 +152,42 @@ class RelatedActivityImageContent(ImageContentView):
 class ActivityTransitionList(TransitionList):
     serializer_class = ActivityTransitionSerializer
     queryset = Activity.objects.all()
+
+
+class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+    pagination_class = None
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+
+        if self.request.user:
+            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+
+            if (
+                activity.owner == self.request.user or
+                self.request.user in activity.initiative.activity_managers.all()
+            ):
+                context['display_member_names'] = 'full_name'
+
+        return context
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=('accepted', 'succeeded', ))
+            )
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded', )
+            )
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )

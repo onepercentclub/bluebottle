@@ -107,7 +107,13 @@ class MemberSerializer(ModelSerializer):
         if instance.is_anonymous:
             return {'id': 'anonymous', "is_anonymous": True}
 
-        return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
+        representation = BaseMemberSerializer(instance, context=self.context).to_representation(instance)
+
+        if self.context.get('display_member_names') == 'first_name':
+            del representation['last_name']
+            representation['full_name'] = representation['first_name']
+
+        return representation
 
 
 class InitiativeImageSerializer(ImageSerializer):

@@ -416,14 +416,21 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         )
 
     def test_get_user_hide_first_name(self):
+        DeedParticipantFactory.create(
+            activity=self.activity, status='accepted', user=self.activity.owner
+        )
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
 
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
 
         for member in self.get_included('user'):
-            self.assertIsNone(member['attributes']['last-name'])
-            self.assertEqual(member['attributes']['full-name'], member['attributes']['first-name'])
+            if member['id'] == str(self.activity.owner.pk):
+                self.assertIsNotNone(member['attributes']['last-name'])
+                self.assertEqual(member['attributes']['full-name'], self.activity.owner.full_name)
+            else:
+                self.assertIsNone(member['attributes']['last-name'])
+                self.assertEqual(member['attributes']['full-name'], member['attributes']['first-name'])
 
     def test_get_user_succeeded(self):
         self.activity.start = date.today() - timedelta(days=10)

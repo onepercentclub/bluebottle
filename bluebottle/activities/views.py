@@ -164,14 +164,11 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         context = super().get_serializer_context(**kwargs)
         context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
 
-        if self.request.user:
-            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+        activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+        context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
 
-            if (
-                activity.owner == self.request.user or
-                self.request.user in activity.initiative.activity_managers.all()
-            ):
-                context['display_member_names'] = 'full_name'
+        if self.request.user and self.request.user in context['owners']:
+            context['display_member_names'] = 'full_name'
 
         return context
 

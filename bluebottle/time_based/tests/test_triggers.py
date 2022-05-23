@@ -1612,7 +1612,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
         )
         self.assertEqual(
             mail.outbox[1].subject,
-            f'You have joined the activity "{self.activity.title}"'
+            f'You have registered your team for "{self.activity.title}"'
         )
         prep = participant.preparation_contributions.first()
         self.assertEqual(
@@ -1658,7 +1658,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[1].subject,
-            f'You have applied to the activity "{self.review_activity.title}"'
+            f'You have registered your team for "{self.review_activity.title}"'
         )
         self.assertEqual(
             mail.outbox[0].subject,

@@ -42,8 +42,8 @@ from bluebottle.time_based.messages import (
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
-    ParticipantAppliedNotification, SlotCancelledNotification
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
+    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -954,9 +954,14 @@ def team_is_active(effect):
     )
 
 
-def is_team_activity(effect):
+def has_accepted_invite(effect):
     """Contribtor is part of a team"""
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
+
+
+def is_team_activity(effect):
+    """Contribtor is part of a team"""
+    return effect.instance.activity.team_activity == 'teams'
 
 
 def is_not_team_activity(effect):
@@ -974,6 +979,15 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantAppliedNotification,
                     conditions=[
                         needs_review,
+                        not_team_captain,
+                        is_user
+                    ]
+                ),
+                NotificationEffect(
+                    TeamParticipantAppliedNotification,
+                    conditions=[
+                        needs_review,
+                        is_team_activity,
                         is_user
                     ]
                 ),
@@ -988,7 +1002,7 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     TeamMemberAddedMessage,
                     conditions=[
-                        is_team_activity
+                        has_accepted_invite
                     ]
                 ),
                 TransitionEffect(
@@ -1015,7 +1029,16 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantAppliedNotification,
                     conditions=[
                         needs_review,
-                        is_user
+                        is_user,
+                        not_team_captain
+                    ]
+                ),
+                NotificationEffect(
+                    TeamParticipantAppliedNotification,
+                    conditions=[
+                        needs_review,
+                        is_user,
+                        is_team_activity
                     ]
                 ),
                 NotificationEffect(
@@ -1090,7 +1113,11 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantJoinedNotification,
-                    conditions=[automatically_accept]
+                    conditions=[automatically_accept, not_team_captain]
+                ),
+                NotificationEffect(
+                    TeamParticipantJoinedNotification,
+                    conditions=[automatically_accept, is_team_activity]
                 ),
                 NotificationEffect(
                     ParticipantAcceptedNotification,
@@ -1155,7 +1182,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     TeamParticipantRemovedNotification,
-                    conditions=[is_team_activity]
+                    conditions=[has_accepted_invite]
                 ),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,

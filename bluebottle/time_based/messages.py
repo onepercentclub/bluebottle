@@ -366,6 +366,29 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
+class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have registered your team for "{title}"')
+    template = 'messages/team_participant_joined'
+    context = {
+        'title': 'activity.title',
+    }
+
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
 class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant withdrew or applied to a slot when already applied to other slots
@@ -412,6 +435,28 @@ class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     subject = pgettext('email', 'You have applied to the activity "{title}"')
     template = 'messages/participant_applied'
+    context = {
+        'title': 'activity.title',
+    }
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined as a team joined
+    """
+    subject = pgettext('email', 'You have registered your team for "{title}"')
+    template = 'messages/team_participant_applied'
     context = {
         'title': 'activity.title',
     }

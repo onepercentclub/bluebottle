@@ -366,6 +366,16 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
+    def get_included(self, relationship):
+        relations = []
+        for resource in self.response.json()['data']:
+            relations.append(resource['relationships'][relationship]['data'])
+
+        return [
+            included for included in self.response.json()['included']
+            if {'type': included['type'], 'id': included['id']} in relations
+        ]
+
     def assertRelationship(self, relation, models=None):
         """
         Assert that a resource with `relation` is linked in the response

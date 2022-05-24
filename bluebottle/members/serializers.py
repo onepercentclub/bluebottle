@@ -146,6 +146,10 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
     User preview serializer that respects anonymization_age
     """
+    def __init__(self, *args, **kwargs):
+        self.hide_last_name = kwargs.pop('hide_last_name', None)
+
+        super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         if self.parent.__class__.__name__ == 'ReactionSerializer':
@@ -159,7 +163,16 @@ class UserPreviewSerializer(serializers.ModelSerializer):
                     return {"id": 0, "is_anonymous": True}
         if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
             return {"id": 0, "is_anonymous": True}
-        return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
+
+        representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
+        if (
+            self.hide_last_name and
+            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+        ):
+            del representation['last_name']
+            representation['full_name'] = representation['first_name']
+
+        return representation
 
     class Meta(object):
         model = BB_USER_MODEL

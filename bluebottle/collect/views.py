@@ -1,6 +1,5 @@
 import csv
 
-from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
@@ -15,6 +14,7 @@ from bluebottle.collect.serializers import (
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -64,7 +64,7 @@ class CollectActivityTransitionList(TransitionList):
     queryset = CollectActivity.objects.all()
 
 
-class CollectActivityRelatedCollectContributorList(JsonApiViewMixin, ListAPIView):
+class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -72,23 +72,6 @@ class CollectActivityRelatedCollectContributorList(JsonApiViewMixin, ListAPIView
 
     queryset = CollectContributor.objects.prefetch_related('user')
     serializer_class = CollectContributorSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded', ))
-            )
-        else:
-            queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded', )
-            )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
 
 
 class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):

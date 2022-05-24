@@ -727,9 +727,26 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_get(self):
+        self.test_create_initiative_wallpost()
+
         params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
         response = self.client.get(self.wallpost_url, params)
         self.assertEqual(response.data['count'], 2)
+
+        for wallpost in response.data['results']:
+            self.assertIsNotNone(wallpost['author']['last_name'])
+
+    def test_get_only_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.test_create_initiative_wallpost()
+
+        params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
+        response = self.client.get(self.wallpost_url, params)
+
+        for wallpost in response.data['results']:
+            self.assertFalse('last_name' in wallpost['author'])
+            self.assertEqual(wallpost['author']['full_name'], wallpost['author']['first_name'])
 
     def test_create_on_a_date_wallpost(self):
         """

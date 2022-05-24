@@ -954,6 +954,15 @@ def team_is_active(effect):
     )
 
 
+def team_is_open(effect):
+    """Team status is open, or there is no team"""
+    return (
+        effect.instance.accepted_invite.contributor.team.status == TeamStateMachine.open.value
+        if effect.instance.accepted_invite
+        else False
+    )
+
+
 def has_accepted_invite(effect):
     """Contribtor is part of a team"""
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
@@ -1016,6 +1025,13 @@ class ParticipantTriggers(ContributorTriggers):
                         is_user
                     ]
                 ),
+                TransitionEffect(
+                    ParticipantStateMachine.accept,
+                    conditions=[
+                        has_accepted_invite,
+                        team_is_open
+                    ]
+                ),
                 FollowActivityEffect,
                 CreatePreparationTimeContributionEffect,
                 CreateInviteEffect
@@ -1052,6 +1068,13 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantStateMachine.accept,
                     conditions=[
                         automatically_accept
+                    ]
+                ),
+                TransitionEffect(
+                    ParticipantStateMachine.accept,
+                    conditions=[
+                        has_accepted_invite,
+                        team_is_open
                     ]
                 ),
                 RelatedTransitionEffect(

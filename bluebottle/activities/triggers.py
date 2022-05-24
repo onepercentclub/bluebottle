@@ -252,6 +252,10 @@ class TeamTriggers(TriggerManager):
                 NotificationEffect(
                     TeamAcceptedMessage,
                     conditions=[needs_review]
+                ),
+                RelatedTransitionEffect(
+                    'members',
+                    ParticipantStateMachine.accept
                 )
             ]
         ),

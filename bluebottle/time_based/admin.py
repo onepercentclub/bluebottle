@@ -1,15 +1,20 @@
+from django import forms
+from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import SimpleListFilter, widgets
 from django.db import models
 from django.db.models import Sum
 from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
+from django.http import HttpResponseRedirect
 from django.template import loader, defaultfilters
+from django.template.response import TemplateResponse
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
+from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
 from pytz import timezone
@@ -23,6 +28,7 @@ from bluebottle.time_based.models import (
     SlotParticipant, Skill
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
+from bluebottle.time_based.utils import nth_weekday, duplicate_slot
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -160,6 +166,8 @@ class TimeBasedActivityAdminForm(ActivityForm):
 class DateActivityASlotInline(TabularInlinePaginated):
     model = DateActivitySlot
     per_page = 20
+    can_delete = True
+
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -171,7 +179,6 @@ class DateActivityASlotInline(TabularInlinePaginated):
     }
     ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
-
     fields = [
         'link',
         'title',
@@ -465,11 +472,33 @@ class RequiredSlotFilter(SimpleListFilter):
             return queryset
 
 
+class SlotDuplicateForm(forms.Form):
+
+    INTERVAL_CHOICES = (
+        ('day', _('day')),
+        ('week', _('week')),
+        ('month', _('xth weekday of the month')),
+        ('monthday', _('day x of the month')),
+    )
+
+    interval = forms.ChoiceField(
+        label=_('Repeat'),
+        choices=INTERVAL_CHOICES,
+    )
+    end = forms.DateField(
+        label=_('End date'),
+        help_text=_('Date until which the slot should be repeated'),
+        widget=widgets.AdminDateWidget()
+    )
+    title = _('Duplicate slot')
+
+
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
 
     raw_id_fields = ['activity', 'location']
+    readonly_fields = SlotAdmin.readonly_fields + ['duplicate_link']
 
     def lookup_allowed(self, lookup, value):
         if lookup == 'activity__slot_selection__exact':
@@ -538,7 +567,52 @@ class DateSlotAdmin(SlotAdmin):
         'location',
         'location_hint',
         'online_meeting_url',
+        'duplicate_link'
     ]
+
+    def get_urls(self):
+        urls = super(DateSlotAdmin, self).get_urls()
+
+        extra_urls = [
+            url(r'^(?P<pk>\d+)/duplicate/$',
+                self.admin_site.admin_view(self.duplicate_slot),
+                name='time_based_dateactivityslot_duplicate'
+                ),
+        ]
+        return extra_urls + urls
+
+    def duplicate_slot(self, request, pk, *args, **kwargs):
+        slot = DateActivitySlot.objects.get(pk=pk)
+        if request.method == "POST":
+            form = SlotDuplicateForm(request.POST)
+            if form.is_valid():
+                data = form.cleaned_data
+                duplicate_slot(slot, data['interval'], data['end'])
+                slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
+                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
+
+        start = slot.start.astimezone(timezone(slot.location.timezone))
+        context = {
+            'opts': self.model._meta,
+            'slot': slot,
+            'weekday': slot.start.strftime('%A'),
+            'monthday': ordinalize(slot.start.strftime('%-d')),
+            'time': start.strftime('%H:%M %Z'),
+            'nth': ordinalize(nth_weekday(slot.start)),
+            'form': SlotDuplicateForm
+        }
+        return TemplateResponse(
+            request, 'admin/time_based/duplicate_slot.html', context
+        )
+
+    def duplicate_link(self, obj):
+        url = reverse('admin:time_based_dateactivityslot_duplicate', args=(obj.id,))
+        return format_html(
+            '<a href={} class="button_select_option button">{}</a>',
+            url,
+            _('Duplicate slot')
+        )
+    duplicate_link.short_description = _('Repeat')
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

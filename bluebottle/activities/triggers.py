@@ -255,7 +255,8 @@ class TeamTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'members',
-                    ParticipantStateMachine.accept
+                    ParticipantStateMachine.accept,
+                    conditions=[needs_review]
                 )
             ]
         ),

@@ -978,6 +978,13 @@ def is_not_team_activity(effect):
     return not effect.instance.team
 
 
+def has_team(effect):
+    """
+    Participant belongs to a team
+    """
+    return effect.instance.team
+
+
 class ParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -1133,6 +1140,11 @@ class ParticipantTriggers(ContributorTriggers):
                         not_team_captain,
                         automatically_accept
                     ]
+                ),
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.accept,
+                    conditions=[has_team]
                 ),
                 NotificationEffect(
                     ParticipantJoinedNotification,
@@ -1417,13 +1429,6 @@ class SlotParticipantTriggers(TriggerManager):
     ]
 
 
-def has_team(effect):
-    """
-    Participant belongs to a team
-    """
-    return effect.instance.team
-
-
 @register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
@@ -1442,11 +1447,6 @@ class PeriodParticipantTriggers(ParticipantTriggers):
                     'finished_contributions',
                     TimeContributionStateMachine.succeed
                 ),
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.accept,
-                    conditions=[has_team]
-                )
             ]
         ),
 

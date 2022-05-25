@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from django.template.defaultfilters import slugify
 
 import dateutil
 import icalendar
@@ -453,7 +454,7 @@ class DateParticipantExportView(PrivateFileView):
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
         slots = activity.active_slots.order_by('start')
-        filename = 'participants for {}.xlsx'.format(activity.title)
+        filename = 'participants-for-{}.xlsx'.format(slugify(activity.title))
         title_row = [field[1] for field in self.fields]
         for segment_type in self.get_segment_types():
             title_row.append(segment_type.name)
@@ -498,7 +499,7 @@ class PeriodParticipantExportView(PrivateFileView):
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-        filename = 'participants for {}.xlsx'.format(activity.title)
+        filename = 'participants-for-{}.xlsx'.format(slugify(activity.title))
 
         sheet = []
         title_row = [field[1] for field in self.fields]

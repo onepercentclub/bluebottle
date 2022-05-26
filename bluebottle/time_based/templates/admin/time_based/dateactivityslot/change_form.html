@@ -1,0 +1,9 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    <a href="{% url 'admin:time_based_dateactivityslot_duplicate' object_id %}" class="button default">
+       {% trans 'Repeat this slot' %}
+    </a>
+{{ block.super }}
+{% endblock %}

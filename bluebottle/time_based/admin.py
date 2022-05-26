@@ -491,6 +491,7 @@ class SlotDuplicateForm(forms.Form):
         help_text=_('Date until which the slot should be repeated'),
         widget=widgets.AdminDateWidget()
     )
+
     title = _('Duplicate slot')
 
     def __init__(self, slot, data=None, *args, **kwargs):
@@ -527,7 +528,6 @@ class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
 
     raw_id_fields = ['activity', 'location']
-    readonly_fields = SlotAdmin.readonly_fields + ['duplicate_link']
 
     def lookup_allowed(self, lookup, value):
         if lookup == 'activity__slot_selection__exact':
@@ -595,8 +595,7 @@ class DateSlotAdmin(SlotAdmin):
         'is_online',
         'location',
         'location_hint',
-        'online_meeting_url',
-        'duplicate_link'
+        'online_meeting_url'
     ]
 
     def get_urls(self):
@@ -634,15 +633,6 @@ class DateSlotAdmin(SlotAdmin):
         return TemplateResponse(
             request, 'admin/time_based/duplicate_slot.html', context
         )
-
-    def duplicate_link(self, obj):
-        url = reverse('admin:time_based_dateactivityslot_duplicate', args=(obj.id,))
-        return format_html(
-            '<a href={} class="button_select_option button">{}</a>',
-            url,
-            _('Duplicate slot')
-        )
-    duplicate_link.short_description = _('Repeat')
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

@@ -322,7 +322,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
     def test_duplicate_daily(self):
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
-        page = page.click('Duplicate slot')
+        page = page.click('Repeat this slot')
         h3 = page.html.find('h3')
         self.assertEqual(h3.text.strip(), 'Warning')
         form = page.forms[0]

@@ -14,8 +14,7 @@ def duplicate_slot(slot, interval, end):
     dates = []
 
     start = slot.start
-    for n in range(int((end - start.date() + timedelta(days=1)).days)):
-
+    for n in range(int((end - start.date()).days)):
         date = start + timedelta(days=n + 1)
         if interval == 'day':
             dates.append(date)

@@ -120,5 +120,12 @@ div.system-message {
 .description {
   padding: 12px 12px 12px 36px;
   border-radius: 4px;
-  background: #ececec 8px 50% url('/static/assets/admin/images/icons/info.svg') no-repeat;
+  background: #ececec 8px 24px url('/static/assets/admin/images/icons/info.svg') no-repeat;
+
+  &.warning {
+    color: #B96500;
+    background: #f8f0e6 8px 24px url('/static/assets/admin/images/icons/warning.svg') no-repeat;
+  }
+
 }
+

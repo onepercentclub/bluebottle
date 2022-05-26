@@ -485,12 +485,41 @@ class SlotDuplicateForm(forms.Form):
         label=_('Repeat'),
         choices=INTERVAL_CHOICES,
     )
+
     end = forms.DateField(
         label=_('End date'),
         help_text=_('Date until which the slot should be repeated'),
         widget=widgets.AdminDateWidget()
     )
     title = _('Duplicate slot')
+
+    def __init__(self, slot, data=None, *args, **kwargs):
+        if data:
+            super(SlotDuplicateForm, self).__init__(data)
+        else:
+            super(SlotDuplicateForm, self).__init__()
+        interval_day = _('Every day')
+        interval_week = _('Each week on {weekday}').format(
+            weekday=slot.start.strftime('%A')
+        )
+        interval_month = _('Monthly every {nth} {weekday}').format(
+            nth=ordinalize(nth_weekday(slot.start)),
+            weekday=slot.start.strftime('%A')
+        )
+        interval_monthday = _('Monthly every {monthday}').format(
+            monthday=ordinalize(slot.start.strftime('%-d'))
+        )
+        interval_choices = (
+            ('day', interval_day),
+            ('week', interval_week),
+            ('monthday', interval_monthday),
+            ('month', interval_month),
+        )
+        self.fields['interval'].choices = interval_choices
+        start = slot.start.strftime('%A %-d %B %Y %H:%M %Z')
+        self.fields['interval'].help_text = _(
+            'We selected these choices because this slot takes place {start}'
+        ).format(start=start)
 
 
 @admin.register(DateActivitySlot)
@@ -584,22 +613,23 @@ class DateSlotAdmin(SlotAdmin):
     def duplicate_slot(self, request, pk, *args, **kwargs):
         slot = DateActivitySlot.objects.get(pk=pk)
         if request.method == "POST":
-            form = SlotDuplicateForm(request.POST)
+            form = SlotDuplicateForm(data=request.POST, slot=slot)
             if form.is_valid():
                 data = form.cleaned_data
                 duplicate_slot(slot, data['interval'], data['end'])
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
-        start = slot.start.astimezone(timezone(slot.location.timezone))
+        if slot.location:
+            start = slot.start.astimezone(timezone(slot.location.timezone))
+        else:
+            start = slot.start
+
         context = {
             'opts': self.model._meta,
             'slot': slot,
-            'weekday': slot.start.strftime('%A'),
-            'monthday': ordinalize(slot.start.strftime('%-d')),
             'time': start.strftime('%H:%M %Z'),
-            'nth': ordinalize(nth_weekday(slot.start)),
-            'form': SlotDuplicateForm
+            'form': SlotDuplicateForm(slot=slot)
         }
         return TemplateResponse(
             request, 'admin/time_based/duplicate_slot.html', context

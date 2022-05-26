@@ -13,36 +13,34 @@
 {% block content %}
 
     <h2>{% trans "Repeat slot" %}</h2>
-    <form action="" method="post">{% csrf_token %}
+    <form action="" method="post">
+        {% csrf_token %}
         <fieldset class="module aligned  module_0 initialized selected">
-            <p>
-                {% blocktrans %}
-                    Create duplicates for this slot.
-                {% endblocktrans %}
-            </p>
-            <ul>
-                <li>
+            <div class="description warning">
+                <h3 class="warning">
+                    {% trans "Warning" %}</h3>
+                <p>
                     {% blocktrans %}
-                        Every day at {{ time }}
+                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the lock has been entered completely and correctly before you repeat the lock.
                     {% endblocktrans %}
-                </li>
-                <li>
-                    {% blocktrans %}
-                        Every week on {{ weekday }} at {{ time }}
-                    {% endblocktrans %}
-                </li>
-                <li>
-                    {% blocktrans %}
-                        Every month on the {{ nth }} {{ weekday }} at {{ time }}
-                    {% endblocktrans %}
-                </li>
-                <li>
-                    {% blocktrans %}
-                        Every {{ monthday }} of the month at {{ time }}
-                    {% endblocktrans %}
-                </li>
-            </ul>
-            {{ form.as_p }}
+                </p>
+            </div>
+            {% for field in form %}
+                <div class="form-row{% if field.errors %} errors{% endif %}">
+                    <div{% if field.is_checkbox %} class="checkbox-row"{% endif %}>
+                        {{ field.errors }}
+                        {{ field.label_tag }}
+                        {% if field.is_readonly %}
+                            <p>{{ field.contents|linebreaksbr }}</p>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         </fieldset>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}"/>
         <div class="submit-row">

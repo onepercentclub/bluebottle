@@ -1485,12 +1485,8 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 )
             )
 
-            if contributor['type'] in (
-                'activities/time-based/date-participant',
-                'activities/time-based/period-participant',
-            ):
-                self.assertTrue('total-duration' in contributor['attributes'])
-                self.assertTrue('slots' in contributor['relationships'])
+            if contributor['type'] == 'activities/time-based/date-participants':
+                self.assertTrue('related' in contributor['relationships']['slots']['links'])
 
         self.assertEqual(
             len([
@@ -1520,14 +1516,6 @@ class ContributorListAPITestCase(BluebottleTestCase):
             len([
                 resource for resource in data['included']
                 if resource['type'] == 'activities/fundings'
-            ]),
-            2
-        )
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'contributors/time-based/slot-participants'
             ]),
             2
         )

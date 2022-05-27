@@ -345,11 +345,18 @@ class APITestCase(BluebottleTestCase):
             {'type': inc['type'], 'id': inc['id']}
             for inc in self.response.json()['included']
         ]
-        relationship = self.response.json()['data']['relationships'][included]['data']
-        self.assertTrue(
-            {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
-            in included_resources
-        )
+        if isinstance(self.response.json()['data'], (list, tuple)):
+            relationship = [
+                resource['relationships'][included]['data'] for resource in self.response.json()['data']
+            ]
+        else:
+            relationship = [self.response.json()['data']['relationships'][included]['data']]
+
+        for rel in relationship:
+            self.assertTrue(
+                {'type': rel['type'], 'id': str(model.pk) if model else rel['id']}
+                in included_resources
+            )
 
     def assertNotIncluded(self, included):
         """

@@ -495,17 +495,20 @@ class SlotDuplicateForm(forms.Form):
     title = _('Duplicate slot')
 
     def __init__(self, slot, data=None, *args, **kwargs):
+        start = slot.start
+        if slot.location:
+            start = start.astimezone(timezone(slot.location.timezone))
         if data:
             super(SlotDuplicateForm, self).__init__(data)
         else:
             super(SlotDuplicateForm, self).__init__()
         interval_day = _('Every day')
         interval_week = _('Each week on {weekday}').format(
-            weekday=slot.start.strftime('%A')
+            weekday=start.strftime('%A')
         )
         interval_month = _('Monthly every {nth} {weekday}').format(
-            nth=ordinalize(nth_weekday(slot.start)),
-            weekday=slot.start.strftime('%A')
+            nth=ordinalize(nth_weekday(start)),
+            weekday=start.strftime('%A')
         )
         interval_monthday = _('Monthly every {monthday}').format(
             monthday=ordinalize(slot.start.strftime('%-d'))
@@ -517,10 +520,9 @@ class SlotDuplicateForm(forms.Form):
             ('month', interval_month),
         )
         self.fields['interval'].choices = interval_choices
-        start = slot.start.strftime('%A %-d %B %Y %H:%M %Z')
         self.fields['interval'].help_text = _(
             'We selected these choices because this slot takes place {start}'
-        ).format(start=start)
+        ).format(start=start.strftime('%A %-d %B %Y %H:%M %Z'))
 
 
 @admin.register(DateActivitySlot)

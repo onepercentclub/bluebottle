@@ -167,7 +167,11 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         activity = Activity.objects.get(pk=self.kwargs['activity_id'])
         context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
 
-        if self.request.user and self.request.user in context['owners']:
+        if self.request.user and self.request.user.is_authenticated and (
+            self.request.user in context['owners'] or
+            self.request.user.is_staff or
+            self.request.user.is_superuser
+        ):
             context['display_member_names'] = 'full_name'
 
         return context

@@ -192,7 +192,9 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
             if (
                 activity.owner == self.request.user or
-                self.request.user in activity.initiative.activity_managers.all()
+                self.request.user in activity.initiative.activity_managers.all() or
+                self.request.is_staff or
+                self.request.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
 

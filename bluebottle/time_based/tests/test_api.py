@@ -2101,7 +2101,17 @@ class RelatedParticipantsAPIViewTestCase():
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
         for member in self.included_by_type(self.response, 'members'):
-            self.assertIsNotNone(member['attributes']['last-name'])
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_owner_disable_last_name_staff(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.response = self.client.get(self.url, user=staff)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
 
     def test_get_with_duplicate_files(self):
         file = PrivateDocumentFactory.create(owner=self.participants[2].user)
@@ -2133,6 +2143,17 @@ class RelatedParticipantsAPIViewTestCase():
 
         for member in self.included_by_type(self.response, 'members'):
             self.assertIsNone(member['attributes']['last-name'])
+
+    def test_get_anonymous_disable_last_name_staff(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.response = self.client.get(self.url, user=staff)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 8)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
 
     def test_get_removed_participant(self):
         self.response = self.client.get(self.url, user=self.participants[0].user)

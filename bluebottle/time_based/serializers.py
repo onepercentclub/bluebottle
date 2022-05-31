@@ -615,6 +615,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
 
     included_serializers = dict(**ParticipantListSerializer.included_serializers, **{
         'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'slots.slot': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
     })
 
 

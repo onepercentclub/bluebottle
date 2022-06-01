@@ -667,10 +667,6 @@ class ParticipantSerializer(BaseContributorSerializer):
             'team'
         ]
 
-    included_serializers = dict(**BaseContributorSerializer.included_serializers, **{
-        'team': 'bluebottle.activities.utils.TeamSerializer',
-    })
-
 
 class DateParticipantSerializer(ParticipantSerializer):
     slots = ResourceRelatedField(

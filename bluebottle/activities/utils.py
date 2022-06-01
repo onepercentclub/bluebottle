@@ -421,6 +421,7 @@ class BaseContributorSerializer(ModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'invite': 'bluebottle.activities.utils.InviteSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
     def __init__(self, *args, **kwargs):
@@ -447,6 +448,7 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'invite',
+            'team'
         ]
         resource_name = 'contributors'
 

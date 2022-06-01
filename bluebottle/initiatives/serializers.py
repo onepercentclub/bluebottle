@@ -112,7 +112,7 @@ class MemberSerializer(ModelSerializer):
 
         if (
             self.context.get('display_member_names') == 'first_name' and
-            instance not in self.context.get('owners') and
+            instance not in self.context.get('owners', []) and
             not user.is_staff and
             not user.is_superuser
         ):

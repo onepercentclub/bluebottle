@@ -599,9 +599,17 @@ class ParticipantListSerializer(BaseContributorSerializer):
 
 
 class DateParticipantListSerializer(ParticipantListSerializer):
+    slots = HyperlinkedRelatedField(
+        read_only=True,
+        many=True,
+        related_link_view_name='related-slot-participant-list',
+        related_link_url_kwarg='participant_id',
+        source='slot_participants',
+    )
 
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
+        fields = ParticipantListSerializer.Meta.fields + ('slots', )
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'

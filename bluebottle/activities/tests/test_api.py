@@ -1485,33 +1485,40 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 )
             )
 
-            if contributor['type'] in (
-                'activities/time-based/date-participant',
-                'activities/time-based/period-participant',
-            ):
-                self.assertTrue('total-duration' in contributor['attributes'])
+            if contributor['type'] == 'activities/time-based/date-participants':
+                self.assertTrue('related' in contributor['relationships']['slots']['links'])
 
-        for i in data['included']:
-            if i['type'] == 'activities/time-based/date':
-                self.assertTrue('start' in i['attributes'])
-                self.assertTrue('duration' in i['attributes'])
-                self.assertTrue('slug' in i['attributes'])
-                self.assertTrue('title' in i['attributes'])
+        self.assertEqual(
+            len([
+                resource for resource in data['included']
+                if resource['type'] == 'activities/time-based/periods'
+            ]),
+            2
+        )
 
-            if i['type'] == 'activities/time-based/period':
-                self.assertTrue('deadline' in i['attributes'])
-                self.assertTrue('duration-type' in i['attributes'])
-                self.assertTrue('duration' in i['attributes'])
-                self.assertTrue('slug' in i['attributes'])
-                self.assertTrue('title' in i['attributes'])
+        self.assertEqual(
+            len([
+                resource for resource in data['included']
+                if resource['type'] == 'activities/time-based/dates'
+            ]),
+            2
+        )
 
-            if i['type'] == 'activities/funding':
-                self.assertTrue('slug' in i['attributes'])
-                self.assertTrue('title' in i['attributes'])
+        self.assertEqual(
+            len([
+                resource for resource in data['included']
+                if resource['type'] == 'activities/deeds'
+            ]),
+            2
+        )
 
-            if i['type'] == 'activities/deeds':
-                self.assertTrue('slug' in i['attributes'])
-                self.assertTrue('title' in i['attributes'])
+        self.assertEqual(
+            len([
+                resource for resource in data['included']
+                if resource['type'] == 'activities/fundings'
+            ]),
+            2
+        )
 
     def test_get_anonymous(self):
         response = self.client.get(

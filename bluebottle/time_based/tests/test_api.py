@@ -19,7 +19,10 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
+from bluebottle.test.utils import (
+    BluebottleTestCase, JSONAPITestClient, get_first_included_by_type,
+    APITestCase
+)
 from bluebottle.time_based.models import SlotParticipant, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -1663,6 +1666,8 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
         super().test_get_participants()
         types = [included['type'] for included in self.response.json()['included']]
         self.assertFalse('contributors/time-based/slot-participants' in types)
+        self.assertTrue('activities/time-based/dates' in types)
+        self.assertTrue('members' in types)
 
 
 class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
@@ -2810,3 +2815,48 @@ class SkillApiTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
         response = self.client.get(old_url, user=user)
         self.assertEqual(response.status_code, 200)
+
+
+class RelatedSlotParticipantListViewTestCase(APITestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.slots = DateActivitySlotFactory.create_batch(5, activity=self.activity)
+
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(participant=self.participant, slot=slot)
+            for slot in self.slots[:3]
+        ]
+
+        self.slot_participants[0].states.remove(save=True)
+
+        self.url = reverse('related-slot-participant-list', args=(self.participant.pk,))
+
+    def test_get_user(self):
+        self.perform_get(user=self.participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+        self.assertIncluded('slot')
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_get_other_user_rejected_participant(self):
+        self.participant.states.withdraw(save=True)
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(0)

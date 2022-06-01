@@ -111,7 +111,7 @@ class MemberSerializer(ModelSerializer):
 
         if (
             self.context.get('display_member_names') == 'first_name' and
-            instance not in self.context.get('owners')
+            instance not in self.context.get('owners', [])
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']

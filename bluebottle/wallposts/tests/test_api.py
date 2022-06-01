@@ -748,6 +748,22 @@ class InitiativeWallpostTest(BluebottleTestCase):
             self.assertFalse('last_name' in wallpost['author'])
             self.assertEqual(wallpost['author']['full_name'], wallpost['author']['first_name'])
 
+    def test_get_only_first_name_staff(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.test_create_initiative_wallpost()
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        staff_token = "JWT {0}".format(staff.get_jwt_token())
+        params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
+        response = self.client.get(
+            self.wallpost_url, params, token=staff_token)
+
+        for wallpost in response.data['results']:
+            self.assertTrue('last_name' in wallpost['author'])
+            self.assertEqual(
+                wallpost['author']['full_name'],
+                wallpost['author']['first_name'] + ' ' + wallpost['author']['last_name']
+            )
+
     def test_create_on_a_date_wallpost(self):
         """
         Tests that only the date activity creator can share a wallpost.

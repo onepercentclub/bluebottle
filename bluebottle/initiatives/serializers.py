@@ -104,6 +104,7 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'members'
 
     def to_representation(self, instance):
+        user = self.context['request'].user
         if instance.is_anonymous:
             return {'id': 'anonymous', "is_anonymous": True}
 
@@ -111,7 +112,9 @@ class MemberSerializer(ModelSerializer):
 
         if (
             self.context.get('display_member_names') == 'first_name' and
-            instance not in self.context.get('owners', [])
+            instance not in self.context.get('owners', []) and
+            not user.is_staff and
+            not user.is_superuser
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']

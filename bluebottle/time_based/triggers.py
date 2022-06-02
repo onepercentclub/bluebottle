@@ -1212,8 +1212,7 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.remove,
             effects=[
                 NotificationEffect(
-                    ParticipantRemovedNotification,
-                    conditions=[is_not_team_activity]
+                    ParticipantRemovedNotification
                 ),
                 NotificationEffect(
                     TeamParticipantRemovedNotification,
@@ -1221,7 +1220,10 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
-                    conditions=[is_not_owner]
+                    conditions=[
+                        is_not_owner,
+                        is_not_team_activity
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',

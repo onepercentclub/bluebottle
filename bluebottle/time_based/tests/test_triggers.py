@@ -7,13 +7,15 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.activities.messages import TeamMemberRemovedMessage
 from bluebottle.activities.models import Organizer, Activity
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase
+from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
 from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
-    ParticipantAppliedNotification
+    ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -879,7 +881,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         )
 
 
-class ParticipantTriggerTestCase():
+class ParticipantTriggerTestCase(TriggerTestCase):
 
     def setUp(self):
         super().setUp()
@@ -1783,6 +1785,33 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             mail.outbox[-1].subject,
             'Your contribution to the activity "{}" is successful 🎉'.format(self.activity.title)
         )
+
+    def test_remove_participant(self):
+        self.model = self.participant_factory.create(
+            activity=self.activity,
+            status='accepted'
+        )
+        self.model.states.remove()
+        with self.execute():
+            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_remove_team_participant(self):
+        self.activity.team_activity = 'teams'
+        team = TeamFactory.create(
+            owner=BlueBottleUserFactory.create(),
+            activity=self.activity
+        )
+        self.model = self.participant_factory.create(
+            activity=self.activity,
+            team=team,
+            status='accepted'
+        )
+        self.model.states.remove()
+        with self.execute():
+            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNotificationEffect(TeamMemberRemovedMessage)
+            self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
 
 
 class AllSlotParticipantTriggerTestCase(BluebottleTestCase):

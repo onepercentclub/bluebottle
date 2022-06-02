@@ -2,8 +2,9 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from django.db.models import Q, BooleanField, ExpressionWrapper
+from django.db.models import Q
 from django.http import HttpResponse
+from django.template.defaultfilters import slugify
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
@@ -13,8 +14,9 @@ from bluebottle.activities.permissions import (
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.clients import properties
-from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
@@ -49,8 +51,9 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
-    PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
+    PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
+from bluebottle.utils.xlsx import generate_xlsx_response
 
 
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
@@ -167,36 +170,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = DateActivitySlotSerializer
 
 
-class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.order_by('-current_user', '-id').filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(team__owner=self.request.user) |
-                Q(activity__initiative__activity_managers=self.request.user) |
-                Q(status='accepted')
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user),
-                    output_field=BooleanField()
-                )
-            )
-        else:
-            queryset = self.queryset.filter(
-                status='accepted'
-            )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
-
-
-class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+class DateActivityRelatedParticipantList(RelatedContributorListView):
     queryset = DateParticipant.objects.prefetch_related(
         'user', 'slot_participants', 'slot_participants__slot'
     )
@@ -207,6 +181,21 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+
+        if self.request.user:
+            activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+
+            if (
+                activity.owner == self.request.user or
+                self.request.user in activity.initiative.activity_managers.all()
+            ):
+                context['display_member_names'] = 'full_name'
+
+        return context
 
     def get_queryset(self, *args, **kwargs):
         user = self.request.user
@@ -236,7 +225,7 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     serializer_class = SlotParticipantSerializer
 
 
-class PeriodActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+class PeriodActivityRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
 
@@ -447,108 +436,90 @@ class ActivitySlotIcalView(PrivateFileView):
         return response
 
 
-class DateParticipantExportView(ExportView):
-    filename = "participants"
-
+class DateParticipantExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = DateActivity
 
-    def get_row(self, instance):
-        row = []
-        slots = dict(
-            (str(slot_participant.slot.pk), slot_participant.status)
-            for slot_participant in instance.slot_participants.all()
-        )
+    def get_segment_types(self):
+        return SegmentType.objects.all()
 
-        for (field, name) in self.get_fields():
-            if field.startswith('segment.'):
-                row.append(
-                    ", ".join(
-                        instance.user.segments.filter(
-                            segment_type_id=field.split('.')[-1]
-                        ).values_list('name', flat=True)
-                    )
+    def get(self, request, *args, **kwargs):
+        activity = self.get_object()
+        slots = activity.active_slots.order_by('start')
+        filename = 'participants-for-{}.xlsx'.format(slugify(activity.title))
+        title_row = [field[1] for field in self.fields]
+        for segment_type in self.get_segment_types():
+            title_row.append(segment_type.name)
+        for slot in slots:
+            title_row.append(
+                "{}\n{}".format(slot.title or str(slot), slot.start.strftime('%d-%m-%y %H:%M %Z'))
+            )
+        sheet = [title_row]
+        for participant in activity.contributors.instance_of(DateParticipant).prefetch_related('user__segments'):
+            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            for segment_type in self.get_segment_types():
+                segments = ", ".join(
+                    participant.user.segments.filter(
+                        segment_type=segment_type
+                    ).values_list('name', flat=True)
                 )
-            elif field.startswith('slot.'):
-                row.append(slots.get(field.split('.')[-1], '-'))
-            else:
-                row.append(prep_field(self.request, instance, field))
+                row.append(segments)
+            for slot in slots:
+                slot_participant = slot.slot_participants.filter(participant=participant).first()
+                if slot_participant:
+                    row.append(slot_participant.status)
+                else:
+                    row.append('-')
+            sheet.append(row)
 
-        return row
-
-    def get_fields(self):
-        fields = super().get_fields()
-
-        slots = tuple(
-            (f"slot.{slot.pk}", f"{slot.title or str(slot)}\n{slot.start.strftime('%d-%m-%y %H:%M %Z')}")
-            for slot in self.get_object().active_slots.order_by('start')
-        )
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-
-        return fields + segments + slots
-
-    def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            DateParticipant
-        ).prefetch_related('user__segments')
+        return generate_xlsx_response(filename=filename, data=sheet)
 
 
-class PeriodParticipantExportView(ExportView):
+class PeriodParticipantExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('status', 'Status')
     )
 
     model = PeriodActivity
 
-    def get_filename(self):
-        return 'participants for {}.xlsx'.format(self.get_object().title)
+    def get_segment_types(self):
+        return SegmentType.objects.all()
 
-    def get_row(self, instance):
-        row = []
+    def get(self, request, *args, **kwargs):
+        activity = self.get_object()
+        filename = 'participants-for-{}.xlsx'.format(slugify(activity.title))
 
-        for (field, name) in self.get_fields():
-            if field.startswith('segment.'):
-                row.append(
-                    ", ".join(
-                        instance.user.segments.filter(
-                            segment_type_id=field.split('.')[-1]
-                        ).values_list('name', flat=True)
-                    )
+        sheet = []
+        title_row = [field[1] for field in self.fields]
+        for segment_type in self.get_segment_types():
+            title_row.append(segment_type.name)
+        sheet.append(title_row)
+
+        for t, participant in enumerate(
+            activity.contributors.instance_of(PeriodParticipant).prefetch_related('user__segments')
+        ):
+            row = [prep_field(request, participant, field[0]) for field in self.fields]
+            for segment_type in self.get_segment_types():
+                segments = ", ".join(
+                    participant.user.segments.filter(
+                        segment_type=segment_type
+                    ).values_list('name', flat=True)
                 )
-            else:
-                row.append(prep_field(self.request, instance, field))
+                row.append(segments)
+            sheet.append(row)
 
-        return row
-
-    def get_fields(self):
-        fields = super().get_fields()
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-        if InitiativePlatformSettings.objects.get().team_activities:
-            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
-
-        return fields + segments
-
-    def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            PeriodParticipant
-        ).prefetch_related('user__segments')
+        return generate_xlsx_response(filename=filename, data=sheet)
 
 
 class SkillPagination(JsonApiPagination):

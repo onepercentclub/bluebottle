@@ -135,7 +135,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Privacy'),
             {
                 'fields': (
-                    'session_only', 'require_consent', 'consent_link', 'anonymization_age'
+                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
+                    'display_member_names'
                 )
             }
         ),

@@ -256,16 +256,6 @@ class ActivityForm(StateMachineModelForm):
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
 
-    def save(self, commit=True):
-        activity = super(ActivityForm, self).save(commit=commit)
-        segments = []
-        for segment_type in SegmentType.objects.all():
-            segments += self.cleaned_data.get(segment_type.field_name, [])
-        if segments:
-            activity.segments.set(segments)
-            del self.cleaned_data['segments']
-        return activity
-
 
 class TeamInline(admin.TabularInline):
     model = Team
@@ -305,6 +295,15 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             obj.states.auto_submit()
 
         super().save_model(request, obj, form, change)
+
+        segments = []
+        for segment_type in SegmentType.objects.all():
+            segments += form.cleaned_data.get(segment_type.field_name, [])
+
+        if segments:
+            del form.cleaned_data['segments']
+            obj.segments.set(segments)
+            obj.save()
 
     show_in_index = True
     date_hierarchy = 'created'

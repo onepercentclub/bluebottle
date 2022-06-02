@@ -1,10 +1,10 @@
-from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
@@ -60,30 +60,13 @@ class CollectActivityTransitionList(TransitionList):
     queryset = CollectActivity.objects.all()
 
 
-class CollectActivityRelatedCollectContributorList(JsonApiViewMixin, ListAPIView):
+class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
     queryset = CollectContributor.objects.prefetch_related('user')
     serializer_class = CollectContributorSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded', ))
-            )
-        else:
-            queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded', )
-            )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
 
 
 class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):

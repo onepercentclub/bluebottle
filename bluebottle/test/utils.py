@@ -391,28 +391,29 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
-    def assertRelationship(self, relation, models=None, data=None):
+    def get_included(self, relationship):
+        relations = []
+        for resource in self.response.json()['data']:
+            relations.append(resource['relationships'][relationship]['data'])
+
+        return [
+            included for included in self.response.json()['included']
+            if {'type': included['type'], 'id': included['id']} in relations
+        ]
+
+    def assertRelationship(self, relation, models=None):
         """
         Assert that a resource with `relation` is linked in the response
         """
-        data = data or self.response.json()['data']
+        self.assertTrue(relation in self.response.json()['data']['relationships'])
+        data = self.response.json()['data']['relationships'][relation]['data']
 
-        if isinstance(data, (tuple, list)):
-            for resource in data:
-                self.assertRelationship(relation, models, resource)
-        else:
-            self.assertTrue(relation in data['relationships'])
-
-            if models:
-                relation_data = data['relationships'][relation]['data']
-                if not isinstance(relation_data, (tuple, list)):
-                    relation_data = (relation_data, )
-
-                ids = [resource['id'] for resource in relation_data]
-                for model in models:
-                    self.assertTrue(
-                        str(model.pk) in ids
-                    )
+        if models:
+            ids = [resource['id'] for resource in data]
+            for model in models:
+                self.assertTrue(
+                    str(model.pk) in ids
+                )
 
     def assertNoRelationship(self, relation):
         self.assertFalse(relation in self.response.json()['data']['relationships'])

@@ -856,6 +856,13 @@ def not_team_captain(effect):
     return not effect.instance.team or effect.instance.team.owner != effect.instance.user
 
 
+def user_is_not_team_captain(effect):
+    """
+    current user is not team captain
+    """
+    return not effect.instance.team or effect.instance.team.owner != effect.options['user']
+
+
 def is_not_user(effect):
     """
     User is not the participant
@@ -1234,7 +1241,12 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                NotificationEffect(TeamMemberRemovedMessage),
+                NotificationEffect(
+                    TeamMemberRemovedMessage,
+                    conditions=[
+                        user_is_not_team_captain,
+                    ]
+                ),
                 UnFollowActivityEffect
             ]
         ),

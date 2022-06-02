@@ -1813,6 +1813,24 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTes
             self.assertNotificationEffect(TeamMemberRemovedMessage)
             self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
 
+    def test_remove_team_participant_by_captain(self):
+        self.activity.team_activity = 'teams'
+        captain = BlueBottleUserFactory.create()
+        team = TeamFactory.create(
+            owner=captain,
+            activity=self.activity
+        )
+        self.model = self.participant_factory.create(
+            activity=self.activity,
+            team=team,
+            status='accepted'
+        )
+        self.model.states.remove()
+        with self.execute(user=captain):
+            self.assertNotificationEffect(ParticipantRemovedNotification)
+            self.assertNoNotificationEffect(TeamMemberRemovedMessage)
+            self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
+
 
 class AllSlotParticipantTriggerTestCase(BluebottleTestCase):
 

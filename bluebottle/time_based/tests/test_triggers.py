@@ -883,7 +883,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         )
 
 
-class ParticipantTriggerTestCase(TriggerTestCase):
+class ParticipantTriggerTestCase(object):
 
     def setUp(self):
         super().setUp()
@@ -1616,7 +1616,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         )
 
 
-class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
+class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 

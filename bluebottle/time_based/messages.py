@@ -59,6 +59,7 @@ class TimeBasedInfoMixin(object):
                 slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
+
         elif isinstance(participant, PeriodParticipant):
             context.update({
                 'start': participant.activity.start,

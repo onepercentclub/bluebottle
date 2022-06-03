@@ -1,12 +1,8 @@
-import csv
-
-from django.http import HttpResponse
-
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
@@ -14,13 +10,12 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView, IcalView
+    ExportView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    JsonApiViewMixin, IcalView
 )
 
 
@@ -67,7 +62,6 @@ class DeedRelatedParticipantList(RelatedContributorListView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     queryset = DeedParticipant.objects.prefetch_related('user')
     serializer_class = DeedParticipantSerializer
@@ -107,7 +101,7 @@ class ParticipantTransitionList(TransitionList):
     queryset = DeedParticipant.objects.all()
 
 
-class ParticipantExportView(PrivateFileView):
+class ParticipantExportView(ExportView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
@@ -116,26 +110,12 @@ class ParticipantExportView(PrivateFileView):
     )
 
     model = Deed
+    filename = 'participants'
 
-    def get(self, request, *args, **kwargs):
-        activity = self.get_object()
-
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="participants.csv"'
-        response['Content-Type'] = 'text/csv'
-
-        writer = csv.writer(response)
-
-        row = [field[1] for field in self.fields]
-        writer.writerow(row)
-
-        for participant in activity.contributors.instance_of(
+    def get_instances(self):
+        return self.get_object().contributors.instance_of(
             DeedParticipant
-        ):
-            row = [prep_field(request, participant, field[0]) for field in self.fields]
-            writer.writerow(row)
-
-        return response
+        )
 
 
 class DeedIcalView(IcalView):

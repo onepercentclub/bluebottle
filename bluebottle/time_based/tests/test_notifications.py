@@ -3,7 +3,7 @@ from bluebottle.activities.messages import ActivityRejectedNotification, Activit
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, ParticipantFinishedNotification,
+    ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification
@@ -104,6 +104,22 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('You have been removed as participant for the activity "Save the world!"')
         self.assertActionLink('https://testserver/initiatives/activities/list')
         self.assertActionTitle('View all activities')
+
+    def test_team_participant_removed_notification(self):
+        self.message_class = TeamParticipantRemovedNotification
+        self.activity.team_activity = 'teams'
+
+        self.obj = DateParticipantFactory.create(activity=self.activity, user=self.supporter)
+
+        self.create()
+
+        self.assertRecipients([self.supporter])
+        self.assertSubject('Your team participation in ‘Save the world!’ has been cancelled')
+        self.assertTextBodyContains(
+            f"Your participation has been cancelled for {self.obj.team.name} in the activity 'Save the world!'."
+        )
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
 
     def test_participant_finished_notification(self):
         self.message_class = ParticipantFinishedNotification

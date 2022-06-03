@@ -1,10 +1,10 @@
 from datetime import datetime, time
-from django.template.defaultfilters import slugify
 
 import dateutil
 import icalendar
 from django.db.models import Q
 from django.http import HttpResponse
+from django.template.defaultfilters import slugify
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
@@ -16,6 +16,7 @@ from bluebottle.activities.permissions import (
 )
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.clients import properties
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
@@ -181,7 +182,6 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
@@ -505,6 +505,9 @@ class PeriodParticipantExportView(PrivateFileView):
         title_row = [field[1] for field in self.fields]
         for segment_type in self.get_segment_types():
             title_row.append(segment_type.name)
+        if InitiativePlatformSettings.objects.get().team_activities:
+            title_row.append('Team')
+            title_row.append('Team Captain')
         sheet.append(title_row)
 
         for t, participant in enumerate(
@@ -518,6 +521,10 @@ class PeriodParticipantExportView(PrivateFileView):
                     ).values_list('name', flat=True)
                 )
                 row.append(segments)
+            if InitiativePlatformSettings.objects.get().team_activities:
+                title_row.append(participant.team.name)
+                title_row.append(participant.is_team_captain)
+
             sheet.append(row)
 
         return generate_xlsx_response(filename=filename, data=sheet)

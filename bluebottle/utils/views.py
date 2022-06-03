@@ -1,6 +1,8 @@
-from builtins import object
 import mimetypes
 import os
+from io import BytesIO
+
+import xlsxwriter
 
 import icalendar
 
@@ -27,6 +29,7 @@ from taggit.models import Tag
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
@@ -59,14 +62,14 @@ class TagSearch(views.APIView):
         return response.Response(data)
 
 
-class ModelTranslationViewMixin(object):
+class ModelTranslationViewMixin():
     def get(self, request, *args, **kwargs):
         language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-class ViewPermissionsMixin(object):
+class ViewPermissionsMixin():
     """ View mixin with permission checks added from the DRF APIView """
     @property
     def model(self):
@@ -111,7 +114,7 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     permission_classes = (ResourcePermission,)
 
 
-class RelatedPermissionMixin(object):
+class RelatedPermissionMixin():
     related_permission_classes = {}
 
     def check_object_permissions(self, request, obj):
@@ -339,5 +342,44 @@ class IcalView(PrivateFileView):
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
+
+        return response
+
+
+class ExportView(PrivateFileView):
+    filename = 'exports'
+
+    def get_fields(self):
+        return self.fields
+
+    def get_filename(self):
+        return f'{self.filename} for {self.get_object()}.xlsx'
+
+    def get_row(self, instance):
+        return [prep_field(self.request, instance, field[0]) for field in self.get_fields()]
+
+    def get_data(self):
+        return [self.get_row(instance) for instance in self.get_instances()]
+
+    def get_instances(self):
+        raise NotImplementedError()
+
+    def get(self, request, *args, **kwargs):
+        output = BytesIO()
+
+        workbook = xlsxwriter.Workbook(output, {'remove_timezone': True})
+        worksheet = workbook.add_worksheet()
+
+        worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
+
+        for (index, row) in enumerate(self.get_data()):
+            worksheet.write_row(index + 1, 0, row)
+
+        workbook.close()
+        output.seek(0)
+
+        response = HttpResponse(output.read())
+        response['Content-Disposition'] = f'attachment; filename="{self.get_filename()}"'
+        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         return response

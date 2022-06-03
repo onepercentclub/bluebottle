@@ -161,7 +161,6 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)

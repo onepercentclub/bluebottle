@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
 from django.http import Http404, HttpResponse
+from django.template.defaultfilters import slugify
 from django.utils import translation
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
@@ -353,7 +354,7 @@ class ExportView(PrivateFileView):
         return self.fields
 
     def get_filename(self):
-        return f'{self.filename} for {self.get_object()}.xlsx'
+        return f'{self.filename} for {slugify(self.get_object())}.xlsx'
 
     def get_row(self, instance):
         return [prep_field(self.request, instance, field[0]) for field in self.get_fields()]

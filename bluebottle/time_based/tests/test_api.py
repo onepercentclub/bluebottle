@@ -2167,8 +2167,12 @@ class RelatedParticipantsAPIViewTestCase():
         self.response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
         self.assertTotal(10)
+
+        self.response = self.client.get(
+            self.response.json()['links']['next'], user=self.activity.owner
+        )
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 6)
+        self.assertEqual(len(included_documents), 1)
 
     def test_get_anonymous(self):
         self.response = self.client.get(self.url)
@@ -2192,6 +2196,11 @@ class RelatedParticipantsAPIViewTestCase():
         self.response = self.client.get(self.url, user=self.participants[0].user)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
         self.assertTotal(9)
+
+        self.response = self.client.get(
+            self.response.json()['links']['next'], user=self.participants[0].user
+        )
+
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 1)
 
@@ -2251,10 +2260,6 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         super().test_get_anonymous()
         self.assertTotal(8)
         self.assertEqual(self.response.data['results'][0]['permissions']['PUT'], False)
-
-    def test_get_removed_participant(self):
-        super().test_get_removed_participant()
-        self.assertTotal(9)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):

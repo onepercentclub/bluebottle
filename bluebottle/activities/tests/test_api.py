@@ -1709,13 +1709,14 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             activity_data['data']['relationships']['contributors']['links']['related'],
             user=self.owner
         ).json()
-        self.assertEqual(
-            data['data'][1]['relationships']['user']['data']['id'],
-            'anonymous'
-        )
+
         self.assertEqual(
             data['data'][0]['relationships']['user']['data']['id'],
             str(new_participant.user.pk)
+        )
+        self.assertEqual(
+            data['data'][1]['relationships']['user']['data']['id'],
+            'anonymous'
         )
 
 

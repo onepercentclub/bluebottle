@@ -162,6 +162,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                     'fields': required_fields
                 }
             ), )
+
         return fieldsets
 
     readonly_fields = ('segment_types',)

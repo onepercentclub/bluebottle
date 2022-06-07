@@ -211,6 +211,12 @@ class Place(models.Model):
 
         super().save(*args, **kwargs)
 
+    @property
+    def complete(self):
+        return (
+            self.street and self.street_number and self.postal_code and self.locality and self.country
+        )
+
     def __str__(self):
         return "{0}, {1}".format(self.locality, self.country)
 

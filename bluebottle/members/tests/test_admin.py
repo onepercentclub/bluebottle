@@ -311,6 +311,20 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         settings_platform = MemberPlatformSettings.load()
         self.assertTrue(settings_platform.require_office)
 
+    def test_require_profile_fields(self):
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['require_address'].checked = True
+        form['require_birthdate'].checked = True
+        form['require_phone_number'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.require_phone_number)
+        self.assertTrue(settings_platform.require_address)
+        self.assertTrue(settings_platform.require_birthdate)
+
 
 class MemberAdminExportTest(BluebottleTestCase):
     """

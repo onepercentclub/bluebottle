@@ -144,10 +144,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
-        required_fields = []
+        required_fields = ['require_birthdate', 'require_address', 'require_phone_number']
+
         if Location.objects.count():
             required_fields.append('require_office')
             required_fields.append('verify_office')
+
         if SegmentType.objects.count():
             required_fields.append('segment_types')
 
@@ -159,7 +161,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                                      'fill out or confirm the  fields listed below.'),
                     'fields': required_fields
                 }
-            ),)
+            ), )
+
         return fieldsets
 
     readonly_fields = ('segment_types',)

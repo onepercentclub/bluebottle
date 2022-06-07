@@ -13,7 +13,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, SlotParticipantFactory, PeriodParticipantFactory
 )
 
 
@@ -298,3 +298,47 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('3 slots' in page.text)
         page = page.click('Required')
         self.assertTrue('1 slot' in page.text)
+
+
+class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
+
+    def test_add_team_participants(self):
+        user1 = BlueBottleUserFactory.create()
+        activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            team_activity='teams'
+        )
+        PeriodParticipantFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity
+        )
+        self.assertEqual(activity.contributors.count(), 1)
+        url = reverse('admin:time_based_periodactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        form = page.forms[0]
+
+        form.fields['contributors-1-user'] = form.fields["contributors-__prefix__-user"]
+        form.fields['contributors-1-user'][0].name = 'contributors-1-user'
+        form['contributors-1-user'] = user1.id
+        form['contributors-TOTAL_FORMS'] = 2
+        page = form.submit()
+        self.assertContains(
+            page,
+            "Create a team for the contributor. Make the user the owner "
+            "of the team, and allow him/her to invite other users",
+        )
+        page.forms[0].submit().follow()

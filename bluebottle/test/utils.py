@@ -627,9 +627,9 @@ class TriggerTestCase(BluebottleTestCase):
         self.model = self.factory.create(**self.defaults)
 
     @contextmanager
-    def execute(self, user=None):
+    def execute(self, user=None, **kwargs):
         try:
-            self.effects = self.model.execute_triggers(effects=None, user=user)
+            self.effects = self.model.execute_triggers(user=user, **kwargs)
             yield self.effects
         finally:
             self.effects = None
@@ -690,8 +690,8 @@ class TriggerTestCase(BluebottleTestCase):
 
 class NotificationTestCase(BluebottleTestCase):
 
-    def create(self):
-        self.message = self.message_class(self.obj)
+    def create(self, **kwargs):
+        self.message = self.message_class(self.obj, **kwargs)
 
     @property
     def _html(self):
@@ -722,6 +722,18 @@ class NotificationTestCase(BluebottleTestCase):
     def assertHtmlBodyContains(self, text):
         if text not in self.html_content:
             self.fail("HTML body does not contain '{}'".format(text))
+
+    def assertBodyNotContains(self, text):
+        self.assertHtmlBodyNotContains(text)
+        self.assertTextBodyNotContains(text)
+
+    def assertTextBodyNotContains(self, text):
+        if text in self.text_content:
+            self.fail("Text body does contain '{}'".format(text))
+
+    def assertHtmlBodyNotContains(self, text):
+        if text in self.html_content:
+            self.fail("HTML body does contain '{}'".format(text))
 
     @property
     def text_content(self):

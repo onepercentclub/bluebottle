@@ -9,7 +9,7 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory,\
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, \
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory
 
 
@@ -184,6 +184,17 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
+    def test_participant_joined_notification(self):
+        self.message_class = ParticipantJoinedNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have joined the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+        self.assertBodyContains(
+            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
+        )
+
 
 class PeriodParticipantNotificationTestCase(NotificationTestCase):
 
@@ -212,6 +223,9 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have joined the activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
+        self.assertBodyNotContains(
+            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
+        )
 
     def test_new_participant_notification(self):
         self.message_class = ParticipantAppliedNotification

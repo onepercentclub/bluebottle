@@ -124,7 +124,6 @@ class CollectContributorExportView(ExportView):
         ('user__full_name', 'Name'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
-        ('team__name', 'Team'),
     )
 
     model = CollectActivity

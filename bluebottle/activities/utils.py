@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodHyperlinkedRelatedField, SerializerMethodResourceRelatedField
 )
@@ -21,6 +22,7 @@ from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import TimeContribution, PeriodParticipant
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -285,6 +287,12 @@ class BaseActivityListSerializer(ModelSerializer):
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
+    team_activity = SerializerMethodField()
+
+    def get_team_activity(self, instance):
+        if InitiativePlatformSettings.load().team_activities:
+            return instance.team_activity
+        return 'individuals'
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
@@ -413,6 +421,7 @@ class BaseContributorSerializer(ModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'invite': 'bluebottle.activities.utils.InviteSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
     def __init__(self, *args, **kwargs):
@@ -439,6 +448,7 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'invite',
+            'team'
         ]
         resource_name = 'contributors'
 

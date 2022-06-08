@@ -1,8 +1,8 @@
-import csv
 from datetime import timedelta, date
 import io
 
 from rest_framework import status
+from openpyxl import load_workbook
 
 from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
@@ -507,9 +507,10 @@ class ContributorExportViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
         self.assertEqual(
-            reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status', 'Team']
+            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
         )
 
     def test_get_owner_incorrect_hash(self):

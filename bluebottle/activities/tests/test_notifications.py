@@ -5,7 +5,7 @@ from bluebottle.activities.messages import (
     TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledMessage,
     TeamCancelledTeamCaptainMessage, TeamWithdrawnActivityOwnerMessage,
     TeamWithdrawnMessage, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
-    TeamMemberRemovedMessage
+    TeamMemberRemovedMessage, TeamReappliedMessage
 )
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -123,6 +123,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject("Your team has been accepted for \"Save the world!\"")
         self.assertBodyContains('On the activity page you will find the link to invite your team members.')
+        self.assertBodyContains(f"Your team has been accepted for the activity '{self.activity.title}'.")
 
     def test_team_cancelled_notification(self):
         PeriodParticipantFactory.create_batch(10, activity=self.activity, team=self.obj)
@@ -171,6 +172,23 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertSubject("Team cancellation for 'Save the world!'")
         self.assertHtmlBodyContains(
             "William Shatner&#39;s team has cancelled its participation in your activity 'Save the world!'."
+        )
+
+        self.assertActionLink(self.obj.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_reapplied_notification(self):
+        PeriodParticipantFactory.create_batch(10, activity=self.activity, team=self.obj)
+
+        self.message_class = TeamReappliedMessage
+        self.create()
+        self.assertRecipients(
+            [participant.user for participant in self.obj.members.all()
+                if participant.user != self.obj.owner]
+        )
+        self.assertSubject(f"You’re added to a team for '{self.activity.title}'")
+        self.assertHtmlBodyContains(
+            "You’re added to team ‘William Shatner&#39;s team’ for the activity ‘Save the world!’."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())

@@ -189,12 +189,16 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(object):
         included_resources = [
             'user',
             'activity',
+            'slots',
+            'slots.slot',
         ]
 
     class Meta(object):

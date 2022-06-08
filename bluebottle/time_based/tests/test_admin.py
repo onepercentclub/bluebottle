@@ -312,7 +312,7 @@ class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
 
     def test_add_team_participants(self):
-        user1 = BlueBottleUserFactory.create()
+        user = BlueBottleUserFactory.create()
         activity = PeriodActivityFactory.create(
             initiative=self.initiative,
             status='open',
@@ -331,10 +331,8 @@ class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         )
         form = page.forms[0]
 
-        form.fields['contributors-1-user'] = form.fields["contributors-__prefix__-user"]
-        form.fields['contributors-1-user'][0].name = 'contributors-1-user'
-        form['contributors-1-user'] = user1.id
-        form['contributors-TOTAL_FORMS'] = 2
+        self.admin_add_inline_form_entry(form, 'contributors')
+        form['contributors-1-user'] = user.id
         page = form.submit()
         self.assertContains(
             page,
@@ -342,3 +340,50 @@ class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
             "of the team, and allow him/her to invite other users",
         )
         page.forms[0].submit().follow()
+        activity.refresh_from_db()
+        self.assertEqual(activity.contributors.count(), 2)
+
+
+class TeamAdminScenarioTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
+
+    def test_add_team_participants(self):
+        user1 = BlueBottleUserFactory.create()
+        activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            team_activity='teams'
+        )
+        captain = PeriodParticipantFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity
+        )
+        self.assertEqual(activity.contributors.count(), 1)
+        url = reverse('admin:activities_team_change', args=(captain.team.pk,))
+        page = self.app.get(url)
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        form = page.forms[0]
+
+        self.admin_add_inline_form_entry(form, 'members')
+        form['members-1-user'] = user1.id
+
+        page = form.submit()
+        self.assertContains(
+            page,
+            "Create a team for the contributor. Make the user the owner "
+            "of the team, and allow him/her to invite other users",
+        )
+        page.forms[0].submit().follow()
+        activity.refresh_from_db()
+        self.assertEqual(activity.contributors.count(), 2)

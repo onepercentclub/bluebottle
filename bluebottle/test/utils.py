@@ -775,8 +775,9 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         for field in fields:
             if field[0].startswith('{}-__prefix__-'.format(inlines)):
                 name = field[0].replace('__prefix__', str(number))
-                new = Text(form, 'input', name, None)
+                new = Text(form, 'input', name, len(form.fields))
                 form.fields[name] = [new]
+                form.field_order.append((name, new))
 
 
 @override_settings(

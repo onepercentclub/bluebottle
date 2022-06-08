@@ -2860,3 +2860,65 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(0)
+
+
+class SlotRelatedParticipantListTestCase(APITestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+
+        self.participants = DateParticipantFactory.create_batch(5, activity=self.activity)
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(participant=participant, slot=self.slot)
+            for participant in self.participants
+        ]
+
+        self.url = reverse('slot-participants', args=(self.slot.pk,))
+
+    def test_get_user(self):
+        self.perform_get(user=self.participants[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+
+    def test_get_useri_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=self.participants[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertIsNone(member['attributes']['last-name'])
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+
+    def test_get_activity_owner_only_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_staff_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_activity_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)

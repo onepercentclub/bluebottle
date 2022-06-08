@@ -251,7 +251,6 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
@@ -280,4 +279,9 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
-        )
+        ).annotate(
+            current_user=ExpressionWrapper(
+                Q(user=self.request.user if self.request.user.is_authenticated else None),
+                output_field=BooleanField()
+            )
+        ).order_by('-current_user', '-id')

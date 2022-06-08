@@ -856,6 +856,15 @@ def not_team_captain(effect):
     return not effect.instance.team or effect.instance.team.owner != effect.instance.user
 
 
+def user_is_not_team_captain(effect):
+    """
+    current user is not team captain
+    """
+    if 'user' not in effect.options:
+        return True
+    return not effect.instance.team or effect.instance.team.owner != effect.options['user']
+
+
 def is_not_user(effect):
     """
     User is not the participant
@@ -964,18 +973,18 @@ def team_is_open(effect):
 
 
 def has_accepted_invite(effect):
-    """Contribtor is part of a team"""
+    """Contributor is part of a team"""
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
 
 
 def is_team_activity(effect):
-    """Contribtor is part of a team"""
+    """Contributor is part of a team"""
     return effect.instance.activity.team_activity == 'teams'
 
 
 def is_not_team_activity(effect):
-    """Contribtor is not part of a team"""
-    return not effect.instance.team
+    """Contributor is not part of a team"""
+    return effect.instance.activity.team_activity != 'teams'
 
 
 def has_team(effect):
@@ -1137,7 +1146,7 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     NewParticipantNotification,
                     conditions=[
-                        not_team_captain,
+                        is_not_team_activity,
                         automatically_accept
                     ]
                 ),
@@ -1148,11 +1157,17 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantJoinedNotification,
-                    conditions=[automatically_accept, not_team_captain]
+                    conditions=[
+                        automatically_accept,
+                        not_team_captain
+                    ]
                 ),
                 NotificationEffect(
                     TeamParticipantJoinedNotification,
-                    conditions=[automatically_accept, is_team_activity]
+                    conditions=[
+                        automatically_accept,
+                        is_team_activity
+                    ]
                 ),
                 NotificationEffect(
                     ParticipantAcceptedNotification,
@@ -1212,8 +1227,7 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.remove,
             effects=[
                 NotificationEffect(
-                    ParticipantRemovedNotification,
-                    conditions=[is_not_team_activity]
+                    ParticipantRemovedNotification
                 ),
                 NotificationEffect(
                     TeamParticipantRemovedNotification,
@@ -1221,7 +1235,10 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
-                    conditions=[is_not_owner]
+                    conditions=[
+                        is_not_owner,
+                        is_not_team_activity
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1232,7 +1249,12 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                NotificationEffect(TeamMemberRemovedMessage),
+                NotificationEffect(
+                    TeamMemberRemovedMessage,
+                    conditions=[
+                        user_is_not_team_captain,
+                    ]
+                ),
                 UnFollowActivityEffect
             ]
         ),

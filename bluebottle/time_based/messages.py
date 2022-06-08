@@ -59,6 +59,7 @@ class TimeBasedInfoMixin(object):
                 slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
+
         elif isinstance(participant, PeriodParticipant):
             context.update({
                 'start': participant.activity.start,
@@ -496,7 +497,7 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
 
 class ParticipantRejectedNotification(TransitionMessage):
     """
-    The participant got rejected after revie
+    The participant got rejected after review
     """
     subject = pgettext('email', 'You have not been selected for the activity "{title}"')
     template = 'messages/participant_rejected'

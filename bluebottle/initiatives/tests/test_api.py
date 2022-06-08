@@ -559,6 +559,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         user.segments.add(closed_segment)
         another_user = BlueBottleUserFactory.create()
         another_user.segments.add(open_segment)
+        staff_member = BlueBottleUserFactory.create(is_staff=True)
 
         act1 = DateActivityFactory.create(
             status='open',
@@ -590,6 +591,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 1)
+        response = self.client.get(self.url, user=staff_member)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 3)
 
     def test_deleted_activities(self):
         DateActivityFactory.create(initiative=self.initiative, status='deleted')

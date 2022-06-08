@@ -4,7 +4,7 @@
 {% block message %}
     <p>
         {% blocktrans context 'email' %}
-            You joined an activity on <b>{{ site_name }}!</b>
+            You have registered your team on <b>{{ site_name }}!</b>
         {% endblocktrans %}
     </p>
 
@@ -14,9 +14,18 @@
 
     {% if duration %}
         {% include 'mails/messages/partial/period.html' %}
-    {% elif slots %}
+    {% else %}
         {% include 'mails/messages/partial/slots.html' %}
+
     {%  endif %}
+
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                You can now invite your team members to the activity!
+            {% endblocktrans %}
+        </i>
+    </p>
 {% endblock %}
 
 
@@ -24,7 +33,7 @@
     <p>
         <i>
             {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+                If your team is unable to participate, please withdraw via the activity page so that another team can take your place. 
             {% endblocktrans %}
         </i>
     </p>

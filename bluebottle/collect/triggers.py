@@ -4,16 +4,16 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage
+    TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    NewParticipantNotification, ParticipantAddedOwnerNotification,
+    TeamParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantAddedNotification
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers, TeamTriggers
 )
 from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 
@@ -223,6 +223,11 @@ def is_team_activity(effect):
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
 
 
+def is_not_team_activity(effect):
+    """Team status is open, or there is no team"""
+    return not effect.instance.team
+
+
 @register(CollectContributor)
 class CollectContributorTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -268,8 +273,10 @@ class CollectContributorTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
-                NotificationEffect(ParticipantRemovedNotification),
+                NotificationEffect(ParticipantRemovedNotification, conditions=[is_not_team_activity]),
+                NotificationEffect(TeamParticipantRemovedNotification, conditions=[is_team_activity]),
                 NotificationEffect(ParticipantRemovedOwnerNotification),
+                NotificationEffect(TeamMemberRemovedMessage),
             ]
         ),
 
@@ -290,6 +297,7 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
+                NotificationEffect(TeamMemberWithdrewMessage),
             ]
         ),
 
@@ -320,6 +328,7 @@ class CollectContributorTriggers(ContributorTriggers):
                 ),
             ]
         ),
+
     ]
 
 
@@ -333,5 +342,26 @@ class CollectContributionTriggers(ContributionTriggers):
                     CollectContributionStateMachine.succeed,
                 ),
             ]
-        )
+        ),
+
+        TransitionTrigger(
+            CollectContributionStateMachine.reset,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
     ]
+
+
+TeamTriggers.triggers += [
+    TransitionTrigger(
+        TeamStateMachine.reopen,
+        effects=[
+            RelatedTransitionEffect(
+                'members', CollectContributorStateMachine.succeed
+            )
+        ]
+    )
+]

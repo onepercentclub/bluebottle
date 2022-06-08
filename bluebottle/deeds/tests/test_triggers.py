@@ -5,7 +5,8 @@ from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
+    TeamMemberRemovedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
@@ -23,8 +24,8 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+    TeamParticipantRemovedNotification, ParticipantRemovedNotification, NewParticipantNotification,
+    ParticipantAddedNotification, ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
 
@@ -440,6 +441,20 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+            self.assertNoNotificationEffect(TeamMemberWithdrewMessage)
+
+    def test_withdraw_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.create()
+
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertNotificationEffect(TeamMemberWithdrewMessage)
 
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None
@@ -489,6 +504,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         self.create()
 
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
+        self.assertEqual(self.model.status, 'succeeded')
+
         self.model.states.withdraw(save=True)
         self.model.team.states.cancel(save=True)
         self.model.states.reapply()
@@ -504,6 +522,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         self.model.save()
         self.model.team.states.reopen(save=True)
+
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.status, 'succeeded')
         self.assertEqual(self.model.contributions.first().status, 'succeeded')
 
     def test_reapply_to_new(self):
@@ -528,6 +549,23 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
+
+    def test_remove_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(TeamParticipantRemovedNotification)
+            self.assertNotificationEffect(TeamMemberRemovedMessage)
 
     def test_expire_remove(self):
         self.create()

@@ -59,7 +59,11 @@ class TransitionMessage(object):
             'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
-            context[key] = attrgetter(item)(self.obj)
+            try:
+                context[key] = attrgetter(item)(self.obj)
+            except AttributeError:
+                logger.error(f'Missing attribute in message context: {item}')
+                context[key] = item
 
         if 'context' in self.options:
             context.update(self.options['context'])

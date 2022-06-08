@@ -11,12 +11,13 @@ from bluebottle.activities.states import (
 )
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
-    TeamContributionTransitionEffect
+    TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 )
 
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
     TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamCancelledTeamCaptainMessage,
+    TeamReappliedMessage
 )
 
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -246,6 +247,21 @@ class TeamTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    TeamAcceptedMessage,
+                    conditions=[needs_review]
+                ),
+                RelatedTransitionEffect(
+                    'members',
+                    ParticipantStateMachine.accept,
+                    conditions=[needs_review]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
             TeamStateMachine.cancel,
             effects=[
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
@@ -262,24 +278,39 @@ class TeamTriggers(TriggerManager):
                 NotificationEffect(TeamWithdrawnActivityOwnerMessage)
             ]
         ),
-        TransitionTrigger(
-            TeamStateMachine.accept,
-            effects=[
-                NotificationEffect(
-                    TeamAcceptedMessage,
-                    conditions=[needs_review]
-                )
-            ]
-        ),
 
         TransitionTrigger(
             TeamStateMachine.reopen,
             effects=[
                 NotificationEffect(TeamReopenedMessage),
                 TeamContributionTransitionEffect(
-                    ContributionStateMachine.succeed,
+                    ContributionStateMachine.reset,
                     contribution_conditions=[activity_is_active, contributor_is_active]
-                )
+                ),
+
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reapply,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.reset,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                ),
+                NotificationEffect(TeamReappliedMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reset,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.reset,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                ),
+                ResetTeamParticipantsEffect,
+                NotificationEffect(TeamAddedMessage)
             ]
         ),
     ]

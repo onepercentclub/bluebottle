@@ -1,5 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Value, Count, Case, When
+from django.db.models import Sum, Q, ExpressionWrapper, BooleanField
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -28,7 +28,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView
+    CreateAPIView, RetrieveAPIView, ExportView
 )
 
 
@@ -170,25 +170,16 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                 Q(activity__owner=self.request.user) |
                 Q(owner=self.request.user) |
                 Q(status='open')
-            )
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(members__user=self.request.user),
+                    output_field=BooleanField()
+                )
+            ).order_by('-current_user', '-id')
         else:
             queryset = self.queryset.filter(
                 status='open'
             )
-
-        if self.request.user.is_authenticated:
-            # Make sure own team is always first
-            queryset = queryset.annotate(
-                has_members=Count('members')
-            ).annotate(
-                current_user=Case(
-                    When(has_members=0, then=Value(False)),
-                    default=ExpressionWrapper(
-                        Q(members__user=self.request.user),
-                        output_field=BooleanField()
-                    )
-                )
-            ).order_by('-current_user', '-id')
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
@@ -237,3 +228,19 @@ class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):
     queryset = Invite.objects.all()
 
     serializer_class = InviteSerializer
+
+
+class TeamMembersExportView(ExportView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('is_team_captain', 'Team Captain'),
+    )
+
+    filename = 'team participants'
+    model = Team
+
+    def get_instances(self):
+        return self.get_object().members.all()

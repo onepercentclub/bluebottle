@@ -288,7 +288,7 @@ class TeamInline(admin.TabularInline):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline, WallpostInline, TeamInline)
+    inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
 
     def lookup_allowed(self, key, value):
@@ -574,6 +574,9 @@ class ContributorInline(admin.TabularInline):
 
     edit.short_description = _('edit')
 
+    verbose_name = _('team member')
+    verbose_name_plural = _('team members')
+
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
@@ -762,6 +765,6 @@ class TeamAdmin(StateMachineAdmin):
         contributor = obj.members.filter(user=obj.owner).first()
 
         if contributor.invite:
-            return f'{url}?invite_id={contributor.invite.pk}'
+            return f'{url}?inviteId={contributor.invite.pk}'
 
     invite_link.short_description = _('Shareable link')

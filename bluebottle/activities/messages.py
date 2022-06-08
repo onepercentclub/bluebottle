@@ -315,7 +315,9 @@ class TeamCancelledMessage(TeamNotification):
 
     def get_recipients(self):
         """team participants"""
-        return [contributor.user for contributor in self.obj.members.all()]
+        return [
+            contributor.user for contributor in self.obj.members.all() if not contributor.user == self.obj.owner
+        ]
 
 
 class TeamCancelledTeamCaptainMessage(TeamNotification):
@@ -334,6 +336,18 @@ class TeamWithdrawnMessage(TeamNotification):
     def get_recipients(self):
         """team participants"""
         return [contributor.user for contributor in self.obj.members.all()]
+
+
+class TeamReappliedMessage(TeamNotification):
+    subject = pgettext('email', "You’re added to a team for '{title}'")
+    template = 'messages/team_reapplied'
+
+    def get_recipients(self):
+        """team participants"""
+        return [
+            contributor.user for contributor in self.obj.members.all()
+            if contributor.user != contributor.team.owner
+        ]
 
 
 class TeamWithdrawnActivityOwnerMessage(TeamNotification):
@@ -372,5 +386,49 @@ class TeamMemberAddedMessage(ActivityNotification):
         """team captain"""
         if self.obj.accepted_invite and self.obj.accepted_invite.contributor.team:
             return [self.obj.accepted_invite.contributor.team.owner]
+        else:
+            return []
+
+
+class TeamMemberWithdrewMessage(ActivityNotification):
+    subject = pgettext('email', "Withdrawal for '{title}'")
+    template = 'messages/team_member_withdrew'
+
+    context = {
+        'name': 'user.full_name',
+        'title': 'activity.title',
+    }
+    action_title = pgettext('email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        """team captain"""
+        if self.obj.team and self.obj.user != self.obj.team.owner:
+            return [self.obj.team.owner]
+        else:
+            return []
+
+
+class TeamMemberRemovedMessage(ActivityNotification):
+    subject = pgettext('email', "Team member removed for ‘{title}’")
+    template = 'messages/team_member_removed'
+
+    context = {
+        'name': 'user.full_name',
+        'title': 'activity.title',
+    }
+    action_title = pgettext('email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        """team captain"""
+        if self.obj.team and self.obj.user != self.obj.team.owner:
+            return [self.obj.team.owner]
         else:
             return []

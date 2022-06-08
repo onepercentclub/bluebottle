@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from bluebottle.exports.exporter import ExportModelResource
 from bluebottle.impact.models import ImpactType
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 
 
@@ -64,6 +65,14 @@ class PeriodParticipantResource(SegmentMixin, DateRangeResource):
     select_related = (
         'activity', 'activity__initiative',
     )
+
+    def get_extra_fields(self):
+        fields = super().get_extra_fields()
+
+        if InitiativePlatformSettings.objects.get().team_activities:
+            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
+
+        return fields
 
 
 class DateActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):

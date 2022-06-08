@@ -14,6 +14,7 @@ from bluebottle.activities.permissions import (
     ActivitySegmentPermission
 )
 from bluebottle.clients import properties
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
@@ -48,9 +49,8 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
-    PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
+    PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
-from bluebottle.utils.xlsx import generate_xlsx_response
 
 
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
@@ -447,90 +447,108 @@ class ActivitySlotIcalView(PrivateFileView):
         return response
 
 
-class DateParticipantExportView(PrivateFileView):
+class DateParticipantExportView(ExportView):
+    filename = "participants"
+
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status')
+        ('status', 'Status'),
     )
 
     model = DateActivity
 
-    def get_segment_types(self):
-        return SegmentType.objects.all()
+    def get_row(self, instance):
+        row = []
+        slots = dict(
+            (str(slot_participant.slot.pk), slot_participant.status)
+            for slot_participant in instance.slot_participants.all()
+        )
 
-    def get(self, request, *args, **kwargs):
-        activity = self.get_object()
-        slots = activity.active_slots.order_by('start')
-        filename = 'participants for {}.xlsx'.format(activity.title)
-        title_row = [field[1] for field in self.fields]
-        for segment_type in self.get_segment_types():
-            title_row.append(segment_type.name)
-        for slot in slots:
-            title_row.append(
-                "{}\n{}".format(slot.title or str(slot), slot.start.strftime('%d-%m-%y %H:%M %Z'))
-            )
-        sheet = [title_row]
-        for participant in activity.contributors.instance_of(DateParticipant).prefetch_related('user__segments'):
-            row = [prep_field(request, participant, field[0]) for field in self.fields]
-            for segment_type in self.get_segment_types():
-                segments = ", ".join(
-                    participant.user.segments.filter(
-                        segment_type=segment_type
-                    ).values_list('name', flat=True)
+        for (field, name) in self.get_fields():
+            if field.startswith('segment.'):
+                row.append(
+                    ", ".join(
+                        instance.user.segments.filter(
+                            segment_type_id=field.split('.')[-1]
+                        ).values_list('name', flat=True)
+                    )
                 )
-                row.append(segments)
-            for slot in slots:
-                slot_participant = slot.slot_participants.filter(participant=participant).first()
-                if slot_participant:
-                    row.append(slot_participant.status)
-                else:
-                    row.append('-')
-            sheet.append(row)
+            elif field.startswith('slot.'):
+                row.append(slots.get(field.split('.')[-1], '-'))
+            else:
+                row.append(prep_field(self.request, instance, field))
 
-        return generate_xlsx_response(filename=filename, data=sheet)
+        return row
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        slots = tuple(
+            (f"slot.{slot.pk}", f"{slot.title or str(slot)}\n{slot.start.strftime('%d-%m-%y %H:%M %Z')}")
+            for slot in self.get_object().active_slots.order_by('start')
+        )
+
+        segments = tuple(
+            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
+        )
+
+        return fields + segments + slots
+
+    def get_instances(self):
+        return self.get_object().contributors.instance_of(
+            DateParticipant
+        ).prefetch_related('user__segments')
 
 
-class PeriodParticipantExportView(PrivateFileView):
+class PeriodParticipantExportView(ExportView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
         ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
-        ('status', 'Status')
+        ('status', 'Status'),
     )
 
     model = PeriodActivity
 
-    def get_segment_types(self):
-        return SegmentType.objects.all()
+    def get_filename(self):
+        return 'participants for {}.xlsx'.format(self.get_object().title)
 
-    def get(self, request, *args, **kwargs):
-        activity = self.get_object()
-        filename = 'participants for {}.xlsx'.format(activity.title)
+    def get_row(self, instance):
+        row = []
 
-        sheet = []
-        title_row = [field[1] for field in self.fields]
-        for segment_type in self.get_segment_types():
-            title_row.append(segment_type.name)
-        sheet.append(title_row)
-
-        for t, participant in enumerate(
-            activity.contributors.instance_of(PeriodParticipant).prefetch_related('user__segments')
-        ):
-            row = [prep_field(request, participant, field[0]) for field in self.fields]
-            for segment_type in self.get_segment_types():
-                segments = ", ".join(
-                    participant.user.segments.filter(
-                        segment_type=segment_type
-                    ).values_list('name', flat=True)
+        for (field, name) in self.get_fields():
+            if field.startswith('segment.'):
+                row.append(
+                    ", ".join(
+                        instance.user.segments.filter(
+                            segment_type_id=field.split('.')[-1]
+                        ).values_list('name', flat=True)
+                    )
                 )
-                row.append(segments)
-            sheet.append(row)
+            else:
+                row.append(prep_field(self.request, instance, field))
 
-        return generate_xlsx_response(filename=filename, data=sheet)
+        return row
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        segments = tuple(
+            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
+        )
+        if InitiativePlatformSettings.objects.get().team_activities:
+            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
+
+        return fields + segments
+
+    def get_instances(self):
+        return self.get_object().contributors.instance_of(
+            PeriodParticipant
+        ).prefetch_related('user__segments')
 
 
 class SkillPagination(JsonApiPagination):

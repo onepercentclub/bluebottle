@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodHyperlinkedRelatedField, SerializerMethodResourceRelatedField
 )
@@ -15,17 +16,20 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
+from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import TimeContribution, PeriodParticipant
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 
 
 class TeamSerializer(ModelSerializer):
@@ -37,6 +41,14 @@ class TeamSerializer(ModelSerializer):
         many=True,
         related_link_view_name='team-members',
         related_link_url_kwarg='team_id'
+    )
+
+    participants_export_url = PrivateFileSerializer(
+        'team-members-export',
+        url_args=('pk', ),
+        filename='participants.csv',
+        permission=CanExportTeamParticipantsPermission,
+        read_only=True
     )
 
     def get_members(self, instance):
@@ -66,6 +78,7 @@ class TeamSerializer(ModelSerializer):
             'status',
             'transitions',
             'created',
+            'participants_export_url',
         )
 
     class JSONAPIMeta(object):
@@ -274,6 +287,12 @@ class BaseActivityListSerializer(ModelSerializer):
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
+    team_activity = SerializerMethodField()
+
+    def get_team_activity(self, instance):
+        if InitiativePlatformSettings.load().team_activities:
+            return instance.team_activity
+        return 'individuals'
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
@@ -402,6 +421,7 @@ class BaseContributorSerializer(ModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'invite': 'bluebottle.activities.utils.InviteSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
 
     def __init__(self, *args, **kwargs):
@@ -409,7 +429,12 @@ class BaseContributorSerializer(ModelSerializer):
 
         if (
             isinstance(self.instance, Iterable) or
-            self.instance and not (self.instance.user == self.context['request'].user)
+            (
+                self.instance and (
+                    self.instance.accepted_invite or
+                    self.instance.user != self.context['request'].user
+                )
+            )
         ):
             self.fields.pop('invite')
 
@@ -423,6 +448,7 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'invite',
+            'team'
         ]
         resource_name = 'contributors'
 

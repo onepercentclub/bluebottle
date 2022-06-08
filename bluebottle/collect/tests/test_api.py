@@ -18,6 +18,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.test.utils import APITestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
@@ -347,6 +348,18 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
             )
         )
 
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
+    def test_get_hide_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
     def test_get_user(self):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
@@ -359,6 +372,15 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
                 for contributor in self.response.json()['data']
             )
         )
+
+    def test_get_user_hide_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            self.assertIsNone(member['attributes']['last-name'])
 
     def test_get_user_succeeded(self):
         self.activity.start = date.today() - timedelta(days=10)
@@ -389,6 +411,15 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
                 for contributor in self.response.json()['data']
             )
         )
+
+    def test_get_anonymous_hide_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            self.assertIsNone(member['attributes']['last-name'])
 
     def test_get_closed_site(self):
         with self.closed_site():

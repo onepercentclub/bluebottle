@@ -443,6 +443,22 @@ class TimeBasedDetailAPIViewTestCase():
             wrong_signature_response.status_code, 404
         )
 
+    def test_export_invalid_charachter(self):
+        self.activity.title = 'test/* - *)'
+        self.activity.save()
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']['url']
+        export_response = self.client.get(export_url)
+
+        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
+
     def test_export_with_segments(self):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
@@ -2131,6 +2147,15 @@ class RelatedParticipantsAPIViewTestCase():
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 8)
 
+    def test_get_owner_disable_last_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
     def test_get_with_duplicate_files(self):
         file = PrivateDocumentFactory.create(owner=self.participants[2].user)
         self.participants[2].document = file
@@ -2152,6 +2177,16 @@ class RelatedParticipantsAPIViewTestCase():
         self.assertTotal(8)
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
+
+    def test_get_anonymous_disable_last_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.response = self.client.get(self.url)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 8)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertIsNone(member['attributes']['last-name'])
 
     def test_get_removed_participant(self):
         self.response = self.client.get(self.url, user=self.participants[0].user)

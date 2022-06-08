@@ -492,6 +492,7 @@ class DateParticipantExportView(ExportView):
 
 
 class PeriodParticipantExportView(ExportView):
+    filename = "participants"
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
@@ -501,9 +502,6 @@ class PeriodParticipantExportView(ExportView):
     )
 
     model = PeriodActivity
-
-    def get_filename(self):
-        return 'participants for {}.xlsx'.format(self.get_object().title)
 
     def get_row(self, instance):
         row = []

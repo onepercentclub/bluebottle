@@ -20,13 +20,28 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
     def setUp(self):
         super(WallpostPermissionsTest, self).setUp()
 
-        self.owner = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
+        self.owner = BlueBottleUserFactory.create()
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.manager = BlueBottleUserFactory.create()
 
-        self.initiative = InitiativeFactory.create(owner=self.owner)
-        self.activity = DateActivityFactory.create(owner=self.owner)
-        self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
-        self.period_activity = PeriodActivityFactory.create(owner=self.owner)
+        self.initiative = InitiativeFactory.create(
+            owner=self.owner,
+            activity_managers=[
+                self.manager
+            ]
+        )
+        self.activity = DateActivityFactory.create(
+            owner=self.owner,
+            initiative=self.initiative
+        )
+        self.on_a_data_activity = DateActivityFactory.create(
+            owner=self.owner,
+            initiative=self.initiative
+        )
+        self.period_activity = PeriodActivityFactory.create(
+            owner=self.owner,
+            initiative=self.initiative
+        )
 
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
@@ -76,6 +91,15 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             'Random user can nog share wallpost.'
         )
 
+        # Activity managers can share a post
+        manager_token = "JWT {0}".format(self.manager.get_jwt_token())
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=manager_token)
+
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_201_CREATED)
+
     def test_permissions_on_period_activity_wallpost_sharing(self):
         """
         Tests that only the period activity creator can share a wallpost.
@@ -103,11 +127,21 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
+
         # Promoters users can share a post
         promoter_token = "JWT {0}".format(self.period_activity.initiative.promoter.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)
+
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_201_CREATED)
+
+        # Activity managers can share a post
+        manager_token = "JWT {0}".format(self.manager.get_jwt_token())
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=manager_token)
 
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
@@ -693,9 +727,26 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_get(self):
+        self.test_create_initiative_wallpost()
+
         params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
         response = self.client.get(self.wallpost_url, params)
         self.assertEqual(response.data['count'], 2)
+
+        for wallpost in response.data['results']:
+            self.assertIsNotNone(wallpost['author']['last_name'])
+
+    def test_get_only_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.test_create_initiative_wallpost()
+
+        params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
+        response = self.client.get(self.wallpost_url, params)
+
+        for wallpost in response.data['results']:
+            self.assertFalse('last_name' in wallpost['author'])
+            self.assertEqual(wallpost['author']['full_name'], wallpost['author']['first_name'])
 
     def test_create_on_a_date_wallpost(self):
         """

@@ -295,7 +295,6 @@ SHARED_APPS = (
     'parler',
     'daterange_filter',
     'adminsortable',
-    'django_summernote',
     'solo',
     'django_filters',
     'multiselectfield',
@@ -437,6 +436,7 @@ TENANT_APPS = (
     'axes',
     'captcha',
     'colorfield',
+    'django_summernote',
 )
 
 

@@ -2,7 +2,7 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from django.db.models import Q, BooleanField, ExpressionWrapper
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
@@ -13,8 +13,10 @@ from bluebottle.activities.permissions import (
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.clients import properties
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
@@ -167,36 +169,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = DateActivitySlotSerializer
 
 
-class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.order_by('-current_user', '-id').filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(team__owner=self.request.user) |
-                Q(activity__initiative__activity_managers=self.request.user) |
-                Q(status='accepted')
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user),
-                    output_field=BooleanField()
-                )
-            )
-        else:
-            queryset = self.queryset.filter(
-                status='accepted'
-            )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
-
-
-class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+class DateActivityRelatedParticipantList(RelatedContributorListView):
     queryset = DateParticipant.objects.prefetch_related(
         'user', 'slot_participants', 'slot_participants__slot'
     )
@@ -207,6 +180,21 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+
+        if self.request.user:
+            activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+
+            if (
+                activity.owner == self.request.user or
+                self.request.user in activity.initiative.activity_managers.all()
+            ):
+                context['display_member_names'] = 'full_name'
+
+        return context
 
     def get_queryset(self, *args, **kwargs):
         user = self.request.user
@@ -236,7 +224,7 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     serializer_class = SlotParticipantSerializer
 
 
-class PeriodActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
+class PeriodActivityRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
 

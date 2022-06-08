@@ -19,7 +19,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = UserPreviewSerializer(read_only=True)
+    author = UserPreviewSerializer(read_only=True, hide_last_name=True)
     text = serializers.CharField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
@@ -57,7 +57,7 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
 
 class WallpostDonationSerializer(serializers.ModelSerializer):
     amount = MoneySerializer()
-    user = UserPreviewSerializer()
+    user = UserPreviewSerializer(hide_last_name=True)
     type = serializers.SerializerMethodField()
 
     class Meta(object):
@@ -95,7 +95,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     please subclass it.
     """
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
-    author = UserPreviewSerializer(read_only=True)
+    author = UserPreviewSerializer(read_only=True, hide_last_name=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')
     parent_id = serializers.IntegerField(source='object_id')
@@ -207,7 +207,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
 
 class WallpostSerializer(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
-    author = UserPreviewSerializer()
+    author = UserPreviewSerializer(hide_last_name=True)
 
     def to_representation(self, obj):
         """

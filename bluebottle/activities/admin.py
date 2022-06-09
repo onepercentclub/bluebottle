@@ -2,7 +2,6 @@ from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.db import connection
-from django.forms import BaseInlineFormSet
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
@@ -72,44 +71,6 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
         return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
     contributor_link.short_description = _('Edit contributor')
-
-
-class ContributionAdminInline(StackedPolymorphicInline):
-    model = Contribution
-    readonly_fields = ['created']
-    fields = readonly_fields
-    extra = 0
-    can_delete = False
-    ordering = ['-created']
-    child_models = (
-        Donor,
-        Organizer,
-        DateParticipant,
-        PeriodParticipant,
-        DeedParticipant,
-        CollectContributor
-    )
-
-    class EffortContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'start']
-        fields = readonly_fields
-        model = EffortContribution
-
-    class TimeContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'start', 'end', 'value']
-        fields = readonly_fields
-        model = TimeContribution
-
-    class MoneyContributionInline(ContributionInlineChild):
-        readonly_fields = ['contributor_link', 'status', 'value']
-        fields = readonly_fields
-        model = MoneyContribution
-
-    child_inlines = (
-        EffortContributionInline,
-        TimeContributionInline,
-        MoneyContributionInline
-    )
 
 
 class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -555,14 +516,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             }
         })
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
-
-
-class ContributorInlineFormset(BaseInlineFormSet):
-
-    def save_new(self, form, commit=True):
-        """Save and return a new model instance for the given form."""
-        form.instance.activity = self.instance.activity
-        return form.save(commit=commit)
 
 
 @admin.register(Activity)

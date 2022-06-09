@@ -1,8 +1,8 @@
-import csv
 from datetime import timedelta, date
 import io
 
 from rest_framework import status
+from openpyxl import load_workbook
 
 from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
@@ -127,10 +127,10 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.model = self.factory.create(**self.defaults)
 
         self.active_contributors = CollectContributorFactory.create_batch(
-            5, activity=self.model
+            4, activity=self.model
         )
         self.withdrawn_contributors = CollectContributorFactory.create_batch(
-            5, activity=self.model, status='withdrawn'
+            4, activity=self.model, status='withdrawn'
         )
 
         self.url = reverse('collect-activity-detail', args=(self.model.pk, ))
@@ -181,7 +181,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.perform_get(user=self.user)
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertMeta('contributor-count', 5)
+        self.assertMeta('contributor-count', 4)
 
     def test_get_with_contributor(self):
         contributor = CollectContributorFactory.create(activity=self.model, user=self.user)
@@ -192,6 +192,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
         self.assertIncluded('my-contributor', contributor)
+        self.assertIncluded('my-contributor.invite', contributor.invite)
 
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)
@@ -537,8 +538,11 @@ class ContributorExportViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTrue(self.export_url)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
-        self.assertEqual(reader.fieldnames, ['Email', 'Name', 'Registration Date', 'Status'])
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+        self.assertEqual(
+            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
+        )
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)

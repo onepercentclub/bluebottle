@@ -1,6 +1,3 @@
-import csv
-
-from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
@@ -15,13 +12,12 @@ from bluebottle.collect.serializers import (
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    JsonApiViewMixin, PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    JsonApiViewMixin, ExportView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
     IcalView
 )
 
@@ -68,7 +64,6 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     queryset = CollectContributor.objects.prefetch_related('user')
     serializer_class = CollectContributorSerializer
@@ -106,7 +101,7 @@ class CollectContributorTransitionList(TransitionList):
     queryset = CollectContributor.objects.all()
 
 
-class CollectContributorExportView(PrivateFileView):
+class CollectContributorExportView(ExportView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
@@ -116,25 +111,10 @@ class CollectContributorExportView(PrivateFileView):
 
     model = CollectActivity
 
-    def get(self, request, *args, **kwargs):
-        activity = self.get_object()
-
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
-        response['Content-Type'] = 'text/csv'
-
-        writer = csv.writer(response)
-
-        row = [field[1] for field in self.fields]
-        writer.writerow(row)
-
-        for contributor in activity.contributors.instance_of(
+    def get_instances(self):
+        return self.get_object().contributors.instance_of(
             CollectContributor
-        ):
-            row = [prep_field(request, contributor, field[0]) for field in self.fields]
-            writer.writerow(row)
-
-        return response
+        )
 
 
 class CollectTypeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):

@@ -5,10 +5,14 @@ from django.utils.timezone import now
 from bluebottle.activities.models import Organizer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
 )
-from bluebottle.time_based.states import TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine
+from bluebottle.time_based.states import (
+    TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
+    PeriodParticipantStateMachine
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -246,4 +250,31 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
         self.assertTrue(
             DateActivitySlotStateMachine.cancel in
             self.slot.states.possible_transitions()
+        )
+
+
+class PeriodParticipantStatesTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user, status='approved')
+        self.activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            status='open'
+        )
+        self.participant = PeriodParticipantFactory.create(activity=self.activity)
+
+    def test_stop(self):
+        self.assertTrue(
+            PeriodParticipantStateMachine.stop in
+            self.participant.states.possible_transitions()
+        )
+
+    def test_stop_team(self):
+        self.participant.team = TeamFactory.create()
+        self.participant.save()
+
+        self.assertTrue(
+            PeriodParticipantStateMachine.stop not in
+            self.participant.states.possible_transitions()
         )

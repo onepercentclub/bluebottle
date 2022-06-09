@@ -14,7 +14,10 @@ from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
 from pytz import timezone
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
+)
+from bluebottle.activities.models import Team
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -91,11 +94,37 @@ class DateParticipantAdminInline(BaseParticipantAdminInline):
     fields = ('edit', 'user', 'status')
 
 
+class PeriodParticipantForm(ModelForm):
+    class Meta:
+        model = PeriodParticipant
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        super(PeriodParticipantForm, self).__init__(*args, **kwargs)
+        if self.instance.id and 'team' in self.fields:
+            self.fields['team'].queryset = Team.objects.filter(activity=self.instance.activity)
+
+    def full_clean(self):
+        data = super(PeriodParticipantForm, self).full_clean()
+        if not self.instance.activity_id and self.instance.team_id:
+            self.instance.activity = self.instance.team.activity
+        return data
+
+
 class PeriodParticipantAdminInline(BaseParticipantAdminInline):
     model = PeriodParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
+    raw_id_fields = BaseParticipantAdminInline.raw_id_fields
     fields = ('edit', 'user', 'status')
+    form = PeriodParticipantForm
+
+    def get_fields(self, request, obj=None):
+        fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)
+        if isinstance(obj, PeriodActivity):
+            if obj and obj.team_activity == 'teams':
+                fields += ('team',)
+        return fields
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -199,7 +228,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
@@ -245,7 +274,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
-    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [

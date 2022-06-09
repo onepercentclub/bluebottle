@@ -3,11 +3,16 @@ from datetime import timedelta, date
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
+    TeamMemberRemovedMessage
 )
+from bluebottle.activities.models import Activity
+from bluebottle.activities.effects import CreateTeamEffect
+
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    ParticipantAddedNotification, ParticipantAddedOwnerNotification, NewParticipantNotification
+    TeamParticipantRemovedNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification,
+    NewParticipantNotification
 )
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -312,6 +317,38 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ParticipantAddedOwnerNotification)
 
+    def test_initiate_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateTeamEffect)
+
+        self.model.save()
+        self.assertTrue(self.model.team.id)
+        self.assertEqual(self.model.team.owner, self.model.user)
+
+    def test_initiate_by_invite(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(CreateTeamEffect)
+            self.assertNotificationEffect(TeamMemberAddedMessage, [team_captain.user])
+
+        self.model.save()
+        self.assertEqual(self.model.team, team_captain.team)
+        self.assertEqual(self.model.team.owner, team_captain.user)
+
+    def test_initiate_individual(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.individuals
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertNoEffect(CreateTeamEffect)
+
     def test_withdraw(self):
         self.create()
 
@@ -322,6 +359,23 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+
+    def test_withdrawn_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+        self.create()
+
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.fail, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
+            self.assertNotificationEffect(TeamMemberWithdrewMessage)
 
     def test_reapply(self):
         self.create()
@@ -338,6 +392,33 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
                 CollectContributorStateMachine.succeed
             )
             self.assertNotificationEffect(ParticipantJoinedNotification)
+
+    def test_reapply_cancelled_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        self.create()
+
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
+        self.assertEqual(self.model.status, 'succeeded')
+
+        self.model.states.withdraw(save=True)
+        self.model.team.states.cancel(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertNoTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+
+            self.assertNoTransitionEffect(
+                CollectContributorStateMachine.succeed
+            )
+
+        self.model.save()
+        self.model.team.states.reopen(save=True)
+        self.model.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'succeeded')
+        self.assertEqual(self.model.contributions.first().status, 'succeeded')
 
     def test_reapply_finished(self):
         self.defaults['activity'].end = date.today() - timedelta(days=2)
@@ -371,6 +452,23 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_remove_team(self):
+        self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams
+        team_captain = self.factory.create(**self.defaults)
+
+        self.defaults['user'] = BlueBottleUserFactory.create()
+        self.defaults['accepted_invite'] = team_captain.invite
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.fail, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(TeamParticipantRemovedNotification)
+            self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+            self.assertNotificationEffect(TeamMemberRemovedMessage)
 
     def test_remove_finished(self):
         self.create()

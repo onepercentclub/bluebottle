@@ -1,0 +1,9 @@
+
+{% load i18n %}
+<h3>{%trans "Create team" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Create a team for the contributor. Make the user the owner of the team, and allow him/her to invite other users.
+{% endblocktrans %}
+</p>

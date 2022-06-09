@@ -1,32 +1,35 @@
-from django.db.models import Sum, Q
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum, Q, ExpressionWrapper, BooleanField
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor
+from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributorListSerializer
+    ContributorListSerializer,
+    TeamTransitionSerializer,
 )
+from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.collect.models import CollectContributor
+from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.collect.models import CollectContributor
 from bluebottle.funding.models import Donor
-from bluebottle.deeds.models import DeedParticipant
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.transitions.views import TransitionList
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView
+    CreateAPIView, RetrieveAPIView, ExportView
 )
 
 
@@ -154,11 +157,100 @@ class ActivityTransitionList(TransitionList):
     queryset = Activity.objects.all()
 
 
+class RelatedTeamList(JsonApiViewMixin, ListAPIView):
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+
+    pemrission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
+        if self.request.user.is_authenticated:
+            queryset = queryset.filter(
+                Q(activity__initiative__activity_managers=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(owner=self.request.user) |
+                Q(status='open')
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(members__user=self.request.user),
+                    output_field=BooleanField()
+                )
+            ).order_by('-current_user', '-id')
+        else:
+            queryset = self.queryset.filter(
+                status='open'
+            )
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
+
+
+class TeamTransitionList(TransitionList):
+    serializer_class = TeamTransitionSerializer
+    queryset = Team.objects.all()
+
+
+class TeamMembersList(JsonApiViewMixin, ListAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+    queryset = PeriodParticipant.objects
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = self.queryset.order_by('-current_user', '-id').filter(
+                Q(user=self.request.user) |
+                Q(team__owner=self.request.user) |
+                Q(team__activity__owner=self.request.user) |
+                Q(team__activity__initiative__activity_managers=self.request.user) |
+                Q(status='accepted')
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(user=self.request.user),
+                    output_field=BooleanField()
+                )
+            )
+        else:
+            queryset = self.queryset.filter(
+                status='accepted'
+            )
+
+        return queryset.filter(
+            team_id=self.kwargs['team_id']
+        )
+
+    serializer_class = PeriodParticipantSerializer
+
+
+class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = Invite.objects.all()
+
+    serializer_class = InviteSerializer
+
+
+class TeamMembersExportView(ExportView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('is_team_captain', 'Team Captain'),
+    )
+
+    filename = 'team participants'
+    model = Team
+
+    def get_instances(self):
+        return self.get_object().members.all()
+
+
 class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-    pagination_class = None
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
@@ -187,4 +279,9 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
-        )
+        ).annotate(
+            current_user=ExpressionWrapper(
+                Q(user=self.request.user if self.request.user.is_authenticated else None),
+                output_field=BooleanField()
+            )
+        ).order_by('-current_user', '-id')

@@ -257,10 +257,10 @@ class APITestCase(BluebottleTestCase):
         """
         Perform a put request and save the result in `self.response`
 
-        `data` should be a json api stucture containing the data for the new object
+        `data` should be a json api structure containing the data for the new object
         `self.model` will point to the newly created model
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         if data is None:
             data = self.data
@@ -333,9 +333,21 @@ class APITestCase(BluebottleTestCase):
         Assert that total the number of found objects is the same as expected
         """
         if 'meta' in self.response.json():
-            self.assertEqual(self.response.json()['meta']['count'], count)
+            if 'count' in self.response.json()['meta']:
+                self.assertEqual(self.response.json()['meta']['count'], count)
+            else:
+                self.assertEqual(self.response.json()['meta']['pagination']['count'], count)
         else:
             self.assertEqual(len(self.response.json()['data']), count)
+
+    def assertPages(self, num_pages):
+        """
+        Assert that total the number of found objects is the same as expected
+        """
+        self.assertEqual(self.response.json()['meta']['pagination']['pages'], num_pages)
+
+    def assertSize(self, size):
+        self.assertEqual(len(self.response.json()['data']), size)
 
     def assertIncluded(self, included, model=None):
         """
@@ -345,7 +357,20 @@ class APITestCase(BluebottleTestCase):
             {'type': inc['type'], 'id': inc['id']}
             for inc in self.response.json()['included']
         ]
-        relationship = self.response.json()['data']['relationships'][included]['data']
+        parts = included.split('.')
+
+        relationship = self.response.json()['data']['relationships'][parts[0]]['data']
+
+        try:
+            for part in parts[1:]:
+                included = [
+                    resource for resource in self.response.json()['included']
+                    if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
+                ][0]
+                relationship = included['relationships'][part]['data']
+        except IndexError:
+            return self.fail('Included relation not found')
+
         self.assertTrue(
             {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
             in included_resources
@@ -376,19 +401,31 @@ class APITestCase(BluebottleTestCase):
             if {'type': included['type'], 'id': included['id']} in relations
         ]
 
-    def assertRelationship(self, relation, models=None):
+    def assertRelationship(self, relation, models=None, data=None):
         """
         Assert that a resource with `relation` is linked in the response
         """
-        self.assertTrue(relation in self.response.json()['data']['relationships'])
-        data = self.response.json()['data']['relationships'][relation]['data']
+        data = data or self.response.json()['data']
 
-        if models:
-            ids = [resource['id'] for resource in data]
-            for model in models:
-                self.assertTrue(
-                    str(model.pk) in ids
-                )
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertRelationship(relation, models, resource)
+        else:
+            self.assertTrue(relation in data['relationships'])
+
+            if models:
+                relation_data = data['relationships'][relation]['data']
+                if not isinstance(relation_data, (tuple, list)):
+                    relation_data = (relation_data, )
+
+                ids = [resource['id'] for resource in relation_data]
+                for model in models:
+                    self.assertTrue(
+                        str(model.pk) in ids
+                    )
+
+    def assertNoRelationship(self, relation):
+        self.assertFalse(relation in self.response.json()['data']['relationships'])
 
     def assertObjectList(self, data, models=None):
         if models:
@@ -440,15 +477,24 @@ class APITestCase(BluebottleTestCase):
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
         )
 
-    def assertMeta(self, attr, expected):
+    def assertMeta(self, attr, expected=None, data=None):
         """
         Assert that `attr` is present in the resource's meta
 
         """
-        self.assertEqual(
-            self.response.json()['data']['meta'][attr],
-            expected
-        )
+        data = data or self.response.json()['data']
+
+        if isinstance(data, (tuple, list)):
+            for resource in data:
+                self.assertMeta(attr, expected, resource)
+        else:
+            if expected:
+                self.assertEqual(
+                    data['meta'][attr],
+                    expected
+                )
+            else:
+                self.assertTrue(attr in data['meta'])
 
     def assertHasError(self, field, message):
         """
@@ -497,21 +543,29 @@ class APITestCase(BluebottleTestCase):
             if field in self.defaults:
                 value = self.defaults[field]
             else:
-                factory_field = getattr(self.factory, field)
                 try:
-                    value = factory_field.generate()
+                    factory_field = getattr(self.factory, field)
+                    try:
+                        value = factory_field.generate()
+                    except AttributeError:
+                        value = factory_field.function(len(self.factory._meta.model.objects.all()))
                 except AttributeError:
-                    value = factory_field.function(len(self.factory._meta.model.objects.all()))
+                    value = None
 
             if isinstance(self.serializer().get_fields()[field], RelatedField):
-                serializer_name = self.serializer.included_serializers[field]
-                (module, cls_name) = serializer_name.rsplit('.', 1)
-                resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                try:
+                    serializer_name = self.serializer.included_serializers[field]
+                    (module, cls_name) = serializer_name.rsplit('.', 1)
+                    resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                except KeyError:
+                    model = getattr(self.serializer.Meta.model, 'accepted_invite').get_queryset().model
+                    resource_name = model.JSONAPIMeta.resource_name
+
                 data['relationships'][field] = {
                     'data': {
                         'id': value.pk,
                         'type': resource_name
-                    }
+                    } if value else None
                 }
             else:
                 data['attributes'][field] = value
@@ -583,9 +637,9 @@ class TriggerTestCase(BluebottleTestCase):
         self.model = self.factory.create(**self.defaults)
 
     @contextmanager
-    def execute(self, user=None):
+    def execute(self, user=None, **kwargs):
         try:
-            self.effects = self.model.execute_triggers(effects=None, user=user)
+            self.effects = self.model.execute_triggers(user=user, **kwargs)
             yield self.effects
         finally:
             self.effects = None
@@ -622,10 +676,16 @@ class TriggerTestCase(BluebottleTestCase):
         if self._hasEffect(effect_cls, model):
             self.fail('Transition effect "{}" triggered'.format(effect_cls))
 
-    def assertNotificationEffect(self, message_cls, model=None):
+    def assertNotificationEffect(self, message_cls, recipients=None):
         for effect in self.effects:
             if hasattr(effect, 'message') and effect.message == message_cls:
+                if recipients:
+                    self.assertEqual(
+                        set(recipients), set(effect.message(effect.instance).get_recipients())
+                    )
+
                 return effect.message
+
         self.fail('Notification effect "{}" not triggered'.format(message_cls))
 
     def assertNoNotificationEffect(self, message_cls, model=None):
@@ -640,8 +700,8 @@ class TriggerTestCase(BluebottleTestCase):
 
 class NotificationTestCase(BluebottleTestCase):
 
-    def create(self):
-        self.message = self.message_class(self.obj)
+    def create(self, **kwargs):
+        self.message = self.message_class(self.obj, **kwargs)
 
     @property
     def _html(self):
@@ -672,6 +732,18 @@ class NotificationTestCase(BluebottleTestCase):
     def assertHtmlBodyContains(self, text):
         if text not in self.html_content:
             self.fail("HTML body does not contain '{}'".format(text))
+
+    def assertBodyNotContains(self, text):
+        self.assertHtmlBodyNotContains(text)
+        self.assertTextBodyNotContains(text)
+
+    def assertTextBodyNotContains(self, text):
+        if text in self.text_content:
+            self.fail("Text body does contain '{}'".format(text))
+
+    def assertHtmlBodyNotContains(self, text):
+        if text in self.html_content:
+            self.fail("HTML body does contain '{}'".format(text))
 
     @property
     def text_content(self):
@@ -725,8 +797,9 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         for field in fields:
             if field[0].startswith('{}-__prefix__-'.format(inlines)):
                 name = field[0].replace('__prefix__', str(number))
-                new = Text(form, 'input', name, None)
+                new = Text(form, 'input', name, len(form.fields))
                 form.fields[name] = [new]
+                form.field_order.append((name, new))
 
 
 @override_settings(

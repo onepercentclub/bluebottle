@@ -5865,14 +5865,6 @@ msgstr ""
 msgid "Enable team activities where teams sign-up instead of individuals."
 msgstr ""
 
-#: bluebottle/initiatives/models.py:280
-msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
-
-#: bluebottle/initiatives/models.py:280
-msgid "Enable team activities where teams sign-up instead of individuals."
-msgstr ""
-
 #: bluebottle/initiatives/models.py:284
 msgid "Require initiators to specify a partner organisation when creating an initiative."
 msgstr ""

@@ -391,6 +391,16 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
+    def get_included(self, relationship):
+        relations = []
+        for resource in self.response.json()['data']:
+            relations.append(resource['relationships'][relationship]['data'])
+
+        return [
+            included for included in self.response.json()['included']
+            if {'type': included['type'], 'id': included['id']} in relations
+        ]
+
     def assertRelationship(self, relation, models=None, data=None):
         """
         Assert that a resource with `relation` is linked in the response
@@ -787,8 +797,9 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         for field in fields:
             if field[0].startswith('{}-__prefix__-'.format(inlines)):
                 name = field[0].replace('__prefix__', str(number))
-                new = Text(form, 'input', name, None)
+                new = Text(form, 'input', name, len(form.fields))
                 form.fields[name] = [new]
+                form.field_order.append((name, new))
 
 
 @override_settings(

@@ -22,6 +22,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         ('SSO', _('Company SSO')),
     )
 
+    DISPLAY_MEMBER_OPTIONS = (
+        ('full_name', _('Full name')),
+        ('first_name', _('First name')),
+    )
+
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
@@ -99,6 +104,19 @@ class MemberPlatformSettings(BasePlatformSettings):
         _('Verify SSO data office location'),
         default=False,
         help_text=_('Require members to verify their office location once if it is filled via SSO.')
+    )
+
+    display_member_names = models.CharField(
+        _('Display member names'),
+        choices=DISPLAY_MEMBER_OPTIONS,
+        max_length=12,
+        default='full_name',
+        help_text=_(
+            'How names of members will be displayed for visitors and other members.'
+            'If first name is selected, then the names of initiators and activity manager '
+            'will remain displayed in full and Activity managers and initiators will see '
+            'the full names of their participants. And staff members will see all names in full.'
+        )
     )
 
     class Meta(object):

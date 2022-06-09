@@ -2,6 +2,7 @@ from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.db import connection
+from django.forms import BaseInlineFormSet
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
@@ -71,6 +72,44 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
         return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
     contributor_link.short_description = _('Edit contributor')
+
+
+class ContributionAdminInline(StackedPolymorphicInline):
+    model = Contribution
+    readonly_fields = ['created']
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+    ordering = ['-created']
+    child_models = (
+        Donor,
+        Organizer,
+        DateParticipant,
+        PeriodParticipant,
+        DeedParticipant,
+        CollectContributor
+    )
+
+    class EffortContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'status', 'start']
+        fields = readonly_fields
+        model = EffortContribution
+
+    class TimeContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'status', 'start', 'end', 'value']
+        fields = readonly_fields
+        model = TimeContribution
+
+    class MoneyContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'status', 'value']
+        fields = readonly_fields
+        model = MoneyContribution
+
+    child_inlines = (
+        EffortContributionInline,
+        TimeContributionInline,
+        MoneyContributionInline
+    )
 
 
 class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -226,16 +265,6 @@ class ActivityForm(StateMachineModelForm):
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
 
-    def save(self, commit=True):
-        activity = super(ActivityForm, self).save(commit=commit)
-        segments = []
-        for segment_type in SegmentType.objects.all():
-            segments += self.cleaned_data.get(segment_type.field_name, [])
-        if segments:
-            activity.segments.set(segments)
-            del self.cleaned_data['segments']
-        return activity
-
 
 class TeamInline(admin.TabularInline):
     model = Team
@@ -275,6 +304,15 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             obj.states.auto_submit()
 
         super().save_model(request, obj, form, change)
+
+        segments = []
+        for segment_type in SegmentType.objects.all():
+            segments += form.cleaned_data.get(segment_type.field_name, [])
+
+        if segments:
+            del form.cleaned_data['segments']
+            obj.segments.set(segments)
+            obj.save()
 
     show_in_index = True
     date_hierarchy = 'created'
@@ -519,6 +557,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
+class ContributorInlineFormset(BaseInlineFormSet):
+
+    def save_new(self, form, commit=True):
+        """Save and return a new model instance for the given form."""
+        form.instance.activity = self.instance.activity
+        return form.save(commit=commit)
+
+
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
@@ -684,7 +730,9 @@ class TeamAdmin(StateMachineAdmin):
         self.inlines = []
         if isinstance(obj.activity, PeriodActivity):
             from bluebottle.time_based.admin import PeriodParticipantAdminInline
-            self.inlines = [PeriodParticipantAdminInline]
+            self.inlines = [
+                PeriodParticipantAdminInline
+            ]
         return super(TeamAdmin, self).get_inline_instances(request, obj)
 
     def get_fieldsets(self, request, obj=None):

@@ -1,5 +1,4 @@
-from django.db.models import Q
-
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
@@ -15,7 +14,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     JsonApiViewMixin, ExportView, IcalView
 )
 
@@ -59,30 +58,13 @@ class DeedTransitionList(TransitionList):
     queryset = Deed.objects.all()
 
 
-class DeedRelatedParticipantList(JsonApiViewMixin, ListAPIView):
+class DeedRelatedParticipantList(RelatedContributorListView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
     queryset = DeedParticipant.objects.prefetch_related('user')
     serializer_class = DeedParticipantSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded', ))
-            )
-        else:
-            queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded', )
-            )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
 
 
 class ParticipantList(JsonApiViewMixin, ListCreateAPIView):

@@ -23,6 +23,7 @@ from bluebottle.funding.models import Donor
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.transitions.views import TransitionList
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
@@ -244,3 +245,43 @@ class TeamMembersExportView(ExportView):
 
     def get_instances(self):
         return self.get_object().members.all()
+
+
+class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+
+        activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+        context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+
+        if self.request.user and self.request.user in context['owners']:
+            context['display_member_names'] = 'full_name'
+
+        return context
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=('accepted', 'succeeded', ))
+            )
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded', )
+            )
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        ).annotate(
+            current_user=ExpressionWrapper(
+                Q(user=self.request.user if self.request.user.is_authenticated else None),
+                output_field=BooleanField()
+            )
+        ).order_by('-current_user', '-id')

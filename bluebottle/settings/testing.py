@@ -145,7 +145,7 @@ PAYOUT_SERVICE = {
 }
 
 
-TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
+TEST_RUNNER = 'django_slowtests.testrunner.DiscoverSlowestTestsRunner'
 NUM_SLOW_TESTS = 50
 
 DEBUG = False

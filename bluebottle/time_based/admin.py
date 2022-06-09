@@ -105,7 +105,7 @@ class PeriodParticipantForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(PeriodParticipantForm, self).__init__(*args, **kwargs)
         if self.activity and 'team' in self.fields:
-            self.fields['team'].queryset = Team.objects.filter(activity=self.instance.activity)
+            self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
 
     def full_clean(self):
         data = super(PeriodParticipantForm, self).full_clean()

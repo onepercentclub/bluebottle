@@ -130,7 +130,7 @@ install_requires = [
 ]
 
 tests_requires = [
-    'coveralls==3.2.0',
+    'coveralls==3.3.1',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',

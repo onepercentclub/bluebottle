@@ -1665,7 +1665,7 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     def test_get_participants(self):
         super().test_get_participants()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertFalse('contributors/time-based/slot-participants' in types)
+        self.assertTrue('contributors/time-based/slot-participants' in types)
         self.assertTrue('activities/time-based/dates' in types)
         self.assertTrue('members' in types)
 

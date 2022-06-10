@@ -20,10 +20,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
-    BluebottleTestCase, JSONAPITestClient, get_first_included_by_type,
     APITestCase
 )
-from bluebottle.time_based.models import SlotParticipant, Skill
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
+from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
@@ -413,6 +413,8 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertIsNone(export_url)
 
     def test_get_owner_export_enabled(self):
+        self.participant_factory.create_batch(4, activity=self.activity)
+
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
@@ -421,10 +423,23 @@ class TimeBasedDetailAPIViewTestCase():
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
+
         sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
-        self.assertEqual(sheet['A1'].value, 'Email')
-        self.assertEqual(sheet['B1'].value, 'Name')
-        self.assertEqual(sheet['C1'].value, 'Motivation')
+
+        if isinstance(self.activity, PeriodActivity):
+            self.assertEqual(
+                tuple(sheet.values)[0],
+                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', )
+            )
+        else:
+            slot = self.activity.slots.first()
+            self.assertEqual(
+                tuple(sheet.values)[0],
+                (
+                    'Email', 'Name', 'Motivation', 'Registration Date', 'Status',
+                    f'{slot.title}\n{slot.start.strftime("%d-%m-%y %H:%M %Z")}'
+                )
+            )
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -616,6 +631,18 @@ class TimeBasedDetailAPIViewTestCase():
             False
         )
 
+    def test_get_my_contributor(self):
+        participant = self.participant_factory.create(activity=self.activity)
+        response = self.client.get(self.url, user=participant.user)
+
+        included_participant = get_first_included_by_type(
+            response, self.participant_factory._meta.model.JSONAPIMeta.resource_name
+        )
+        self.assertEqual(str(participant.pk), included_participant['id'])
+
+        invite = get_first_included_by_type(response, 'activities/invites')
+        self.assertEqual(str(participant.invite.pk), invite['id'])
+
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -743,12 +770,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
                 reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
             )
         )
-
-    def test_get_my_contributor(self):
-        participant = DateParticipantFactory.create(activity=self.activity)
-        response = self.client.get(self.url, user=participant.user)
-        included_participant = get_first_included_by_type(response, 'contributors/time-based/date-participants')
-        self.assertEqual(str(participant.pk), included_participant['id'])
 
     def test_matching_all(self):
         self.activity.initiative.states.submit(save=True)
@@ -1025,6 +1046,37 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['skill'], None)
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], False)
+
+    def test_get_owner_export_teams_enabled(self):
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.team_activities = True
+        initiative_settings.save()
+
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        team_captain = self.participant_factory.create(activity=self.activity)
+
+        self.participant_factory.create_batch(
+            3, activity=self.activity, accepted_invite=team_captain.invite
+        )
+
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['participants-export-url']['url']
+        export_response = self.client.get(export_url)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
+        )
+
+        wrong_signature_response = self.client.get(export_url + '111')
+        self.assertEqual(
+            wrong_signature_response.status_code, 404
+        )
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -2089,15 +2141,16 @@ class RelatedParticipantsAPIViewTestCase():
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
+    def assertTotal(self, total):
+        return self.assertEqual(self.response.json()['meta']['pagination']['count'], total)
+
     def test_get_owner(self):
         self.response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(self.response.json()['data']), 10)
-
+        self.assertTotal(10)
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 10)
+        self.assertEqual(len(included_documents), 8)
 
     def test_get_owner_disable_last_name(self):
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
@@ -2124,18 +2177,19 @@ class RelatedParticipantsAPIViewTestCase():
         self.participants[2].save()
         self.participants[3].document = file
         self.participants[3].save()
+        self.participants[4].document = file
+        self.participants[4].save()
         self.response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 10)
+        self.assertTotal(10)
         included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 9)
+        self.assertEqual(len(included_documents), 6)
 
     def test_get_anonymous(self):
         self.response = self.client.get(self.url)
 
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 8)
-
+        self.assertTotal(8)
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 0)
 
@@ -2162,10 +2216,8 @@ class RelatedParticipantsAPIViewTestCase():
 
     def test_get_removed_participant(self):
         self.response = self.client.get(self.url, user=self.participants[0].user)
-
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.response.json()['data']), 9)
-
+        self.assertTotal(9)
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 1)
 
@@ -2218,17 +2270,17 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
 
     def test_get_owner(self):
         super().test_get_owner()
-        self.assertEqual(len(self.response.data), 10)
-        self.assertEqual(self.response.data[0]['permissions']['PUT'], True)
+        self.assertTotal(10)
+        self.assertEqual(self.response.data['results'][0]['permissions']['PUT'], True)
 
     def test_get_anonymous(self):
         super().test_get_anonymous()
-        self.assertEqual(len(self.response.data), 8)
-        self.assertEqual(self.response.data[0]['permissions']['PUT'], False)
+        self.assertTotal(8)
+        self.assertEqual(self.response.data['results'][0]['permissions']['PUT'], False)
 
     def test_get_removed_participant(self):
         super().test_get_removed_participant()
-        self.assertEqual(len(self.response.data), 9)
+        self.assertTotal(9)
 
 
 class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
@@ -2242,7 +2294,7 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
         super().test_get_owner()
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
-        self.assertEqual(len(included_contributions), 10)
+        self.assertEqual(len(included_contributions), 8)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

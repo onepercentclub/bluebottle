@@ -1,7 +1,9 @@
+import io
 from builtins import str
 import json
 from datetime import timedelta, date
 import dateutil
+from openpyxl import load_workbook
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -17,18 +19,23 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.collect.tests.factories import CollectContributorFactory
 
+from bluebottle.activities.tests.factories import TeamFactory
+from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 @override_settings(
@@ -1710,10 +1717,428 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             user=self.owner
         ).json()
         self.assertEqual(
-            data['data'][0]['relationships']['user']['data']['id'],
+            data['data'][1]['relationships']['user']['data']['id'],
             'anonymous'
         )
         self.assertEqual(
-            data['data'][1]['relationships']['user']['data']['id'],
+            data['data'][0]['relationships']['user']['data']['id'],
             str(new_participant.user.pk)
         )
+
+
+class RelatedTeamListViewAPITestCase(APITestCase):
+    serializer = TeamSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.activity = PeriodActivityFactory.create(status='open')
+
+        self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
+        for team in self.approved_teams:
+            PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
+        self.cancelled_teams = TeamFactory.create_batch(
+            5, activity=self.activity, status='cancelled'
+        )
+        for team in self.cancelled_teams:
+            PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
+
+        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+
+        settings = InitiativePlatformSettings.objects.get()
+        settings.team_activities = True
+        settings.enable_participant_exports = True
+        settings.save()
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(self.cancelled_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+        self.assertMeta('status')
+        self.assertMeta('transitions')
+        for resource in self.response.json()['data']:
+            self.assertTrue(resource['meta']['participants-export-url'] is not None)
+
+    def test_get_cancelled_team_captain(self):
+        team = self.cancelled_teams[0]
+        self.perform_get(user=team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + 1)
+        self.assertObjectList(self.approved_teams + [team])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['owner']['data']['id'],
+            str(team.owner.pk)
+        )
+
+    def test_get_team_captain(self):
+        team = self.approved_teams[0]
+        self.perform_get(user=team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['owner']['data']['id'],
+            str(team.owner.pk)
+        )
+
+        for resource in self.response.json()['data']:
+            if resource['relationships']['owner']['data']['id'] == str(team.owner.pk):
+                self.assertTrue(resource['meta']['participants-export-url'] is not None)
+            else:
+                self.assertTrue(resource['meta']['participants-export-url'] is None)
+
+    def test_get_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+        for resource in self.response.json()['data']:
+            self.assertTrue(resource['meta']['participants-export-url'] is None)
+
+    def test_pagination(self):
+        extra_teams = TeamFactory.create_batch(
+            10, activity=self.activity
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams) + len(extra_teams))
+        self.assertSize(8)
+        self.assertPages(2)
+
+    def test_other_user_anonymous(self):
+        self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.approved_teams))
+        self.assertObjectList(self.approved_teams)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('owner')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_user_closed_site(self):
+        with self.closed_site():
+            self.perform_get(BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+
+
+class TeamTranistionListViewAPITestCase(APITestCase):
+    url = reverse('team-transition-list')
+    serializer = TeamTransitionSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.team = TeamFactory.create()
+
+        self.defaults = {
+            'resource': self.team,
+            'transition': 'cancel',
+        }
+
+        self.fields = ['resource', 'transition', ]
+
+    def test_cancel_owner(self):
+        self.perform_create(user=self.team.owner)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_cancel_activity_manager(self):
+        self.perform_create(user=self.team.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'cancelled')
+
+    def test_cancel_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_cancel_no_user(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_owner(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=self.team.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('resource', self.team)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'withdrawn')
+
+    def test_withdraw_activity_manager(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=self.team.activity.owner)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.team.refresh_from_db()
+
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_other_user(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+    def test_withdraw_no_user(self):
+        self.defaults['transition'] = 'withdraw'
+
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, 'open')
+
+
+class InviteDetailViewAPITestCase(APITestCase):
+    serializer = InviteSerializer
+
+    def setUp(self):
+        super().setUp()
+        activity = PeriodActivityFactory.create(status='open', team_activity='teams')
+        self.contributor = PeriodParticipantFactory.create(activity=activity)
+
+        self.url = reverse('invite-detail', args=(self.contributor.invite.pk, ))
+
+    def test_get_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('team', self.contributor.team)
+        self.assertIncluded('team.owner', self.contributor.team.owner)
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_anonymous_user(self):
+        with self.closed_site():
+            self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+
+
+class TeamMemberExportViewAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        settings = InitiativePlatformSettings.load()
+        settings.team_activities = True
+        settings.enable_participant_exports = True
+        settings.save()
+
+        self.activity = PeriodActivityFactory.create(team_activity='teams')
+
+        self.team_captain = PeriodParticipantFactory(activity=self.activity)
+
+        self.team_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+
+        self.non_team_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+        )
+
+        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+
+    @property
+    def export_url(self):
+        for team in self.response.json()['data']:
+            if team['id'] == str(self.team_captain.team.pk) and team['meta']['participants-export-url']:
+                return team['meta']['participants-export-url']['url']
+
+    def test_get_owner(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.export_url)
+        response = self.client.get(self.export_url)
+
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+
+        self.assertEqual(
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team Captain')
+        )
+
+        self.assertEqual(len(rows), 5)
+
+        for team_member in self.team_members:
+            self.assertTrue(team_member.user.email in [row[0] for row in rows[1:]])
+
+        self.assertEqual(
+            [
+                row[4] for row in rows
+                if row[0] == self.team_captain.user.email
+            ][0],
+            True
+        )
+
+    def test_team_captain(self):
+        self.perform_get(user=self.team_captain.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.export_url)
+        response = self.client.get(self.export_url)
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+
+        self.assertEqual(
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team Captain')
+        )
+
+    def test_get_owner_incorrect_hash(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url + 'test')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_contributor(self):
+        self.perform_get(user=self.team_members[0].user)
+        self.assertIsNone(self.export_url)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertIsNone(self.export_url)
+
+    def test_get_no_user(self):
+        self.perform_get()
+        self.assertIsNone(self.export_url)
+
+
+class TeamMemberListViewAPITestCase(APITestCase):
+    serializer = PeriodParticipantSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        settings = InitiativePlatformSettings.objects.get()
+        settings.team_activities = True
+        settings.save()
+
+        self.activity = PeriodActivityFactory.create(status='open', team_activity='teams')
+
+        self.team_captain = PeriodParticipantFactory.create(
+            activity=self.activity
+        )
+        self.team = self.team_captain.team
+
+        self.accepted_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+        self.withdrawn_members = PeriodParticipantFactory.create_batch(
+            3,
+            activity=self.activity,
+            accepted_invite=self.team_captain.invite
+        )
+
+        for member in self.withdrawn_members:
+            member.states.withdraw(save=True)
+
+        self.url = reverse('team-members', args=(self.team.pk, ))
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_team_captain(self):
+        self.perform_get(user=self.team.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['user']['data']['id'],
+            str(self.team.owner.pk)
+        )
+
+    def test_get_team_member(self):
+        self.perform_get(user=self.accepted_members[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + 1)
+
+        self.assertObjectList(self.accepted_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.accepted_members) + 1)
+
+        self.assertObjectList(self.accepted_members + [self.team_captain])
+        self.assertRelationship('activity', [self.activity])
+        self.assertRelationship('user')
+
+        self.assertAttribute('status')
+        self.assertMeta('transitions')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)

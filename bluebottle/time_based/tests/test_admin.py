@@ -15,7 +15,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, SlotParticipantFactory, PeriodParticipantFactory
 )
 
 
@@ -151,7 +151,9 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-1-duration_1'] = 0
         form['slots-1-is_online'] = True
 
-        page = form.submit().follow()
+        page = form.submit()
+        self.assertContains(page, 'That will have these effects')
+        page.forms[0].submit().follow()
         self.assertEqual(page.status, '200 OK', 'Slots added to the activity')
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)
@@ -343,3 +345,92 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
                 '2022-05-18', '2022-05-19', '2022-05-20',
             ]
         )
+
+
+class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
+
+    def test_add_team_participants(self):
+        user = BlueBottleUserFactory.create()
+        activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            team_activity='teams'
+        )
+        PeriodParticipantFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity
+        )
+        self.assertEqual(activity.contributors.count(), 1)
+        url = reverse('admin:time_based_periodactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        form = page.forms[0]
+
+        self.admin_add_inline_form_entry(form, 'contributors')
+        form['contributors-1-user'] = user.id
+
+        page = form.submit()
+        self.assertContains(
+            page,
+            "Create a team for the contributor. Make the user the owner "
+            "of the team, and allow him/her to invite other users",
+        )
+        page.forms[0].submit().follow()
+        activity.refresh_from_db()
+        self.assertEqual(activity.contributors.count(), 2)
+
+
+class TeamAdminScenarioTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
+
+    def test_add_team_participants(self):
+        user1 = BlueBottleUserFactory.create()
+        activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            team_activity='teams'
+        )
+        captain = PeriodParticipantFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity
+        )
+        self.assertEqual(activity.contributors.count(), 1)
+        url = reverse('admin:activities_team_change', args=(captain.team.pk,))
+        page = self.app.get(url)
+        self.assertTrue(
+            'Add another Participant' in
+            page.text
+        )
+        form = page.forms[0]
+
+        self.admin_add_inline_form_entry(form, 'members')
+        form['members-1-user'] = user1.id
+
+        page = form.submit()
+        self.assertContains(
+            page,
+            "You have been added to a team for",
+        )
+        page.forms[0].submit().follow()
+        activity.refresh_from_db()
+        self.assertEqual(activity.contributors.count(), 2)

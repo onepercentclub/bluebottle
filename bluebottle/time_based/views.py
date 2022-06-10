@@ -51,8 +51,8 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
-    ExportView, PrivateFileView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination,
-    RelatedPermissionMixin
+    RelatedPermissionMixin,
+    PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
 
 

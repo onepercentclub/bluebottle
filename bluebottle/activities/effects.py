@@ -70,6 +70,7 @@ class CreateTeamEffect(Effect):
     def is_valid(self):
         return (
             super().is_valid and
+            not self.instance.team and
             self.instance.activity.team_activity == Activity.TeamActivityChoices.teams
         )
 

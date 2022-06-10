@@ -25,7 +25,7 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.create()
 
         self.assertTransition('withdraw', self.team_captain)
-        self.assertTransition('withdraw', self.staff_user)
+        self.assertNoTransition('withdraw', self.staff_user)
         self.assertNoTransition('withdraw', self.activity_owner)
         self.assertNoTransition('withdraw', BlueBottleUserFactory.create())
 
@@ -39,7 +39,7 @@ class DeedStateMachineTestCase(StateMachineTestCase):
         self.create()
 
         self.assertTransition('reapply', self.team_captain)
-        self.assertTransition('reapply', self.staff_user)
+        self.assertNoTransition('reapply', self.staff_user)
         self.assertNoTransition('reapply', self.activity_owner)
         self.assertNoTransition('reapply', BlueBottleUserFactory.create())
 

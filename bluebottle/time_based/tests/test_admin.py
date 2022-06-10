@@ -335,6 +335,7 @@ class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.admin_add_inline_form_entry(form, 'contributors')
         form['contributors-1-user'] = user.id
+
         page = form.submit()
         self.assertContains(
             page,
@@ -383,8 +384,7 @@ class TeamAdminScenarioTestCase(BluebottleAdminTestCase):
         page = form.submit()
         self.assertContains(
             page,
-            "Create a team for the contributor. Make the user the owner "
-            "of the team, and allow him/her to invite other users",
+            "You have been added to a team for",
         )
         page.forms[0].submit().follow()
         activity.refresh_from_db()

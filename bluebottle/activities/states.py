@@ -364,7 +364,7 @@ class TeamStateMachine(ModelStateMachine):
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('The team caption has withdrawn the team. Contributors can no longer register')
+        _('The team captain has withdrawn the team. Contributors can no longer register')
     )
 
     cancelled = State(
@@ -374,7 +374,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     def is_team_captain(self, user):
-        return user == self.instance.owner or user.is_staff
+        return user == self.instance.owner
 
     def is_activity_owner(self, user):
         return (

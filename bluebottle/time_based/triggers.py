@@ -2,6 +2,7 @@ from datetime import date
 
 from django.utils.timezone import now
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivitySucceededNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
@@ -13,8 +14,6 @@ from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
@@ -42,6 +41,7 @@ from bluebottle.time_based.messages import (
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
+    TeamParticipantAddedNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification
 )
@@ -963,6 +963,15 @@ def team_is_active(effect):
     )
 
 
+def is_team_activity(effect):
+    """Contributor is part of a team activity"""
+    return effect.instance.activity.team_activity == 'teams'
+
+
+def is_added_to_team(effect):
+    """Contributor is part of a team"""
+
+
 def team_is_open(effect):
     """Team status is open, or there is no team"""
     return (
@@ -975,11 +984,6 @@ def team_is_open(effect):
 def has_accepted_invite(effect):
     """Contributor is part of a team"""
     return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
-
-
-def is_team_activity(effect):
-    """Contributor is part of a team"""
-    return effect.instance.activity.team_activity == 'teams'
 
 
 def is_not_team_activity(effect):
@@ -1027,7 +1031,7 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     TeamMemberAddedMessage,
                     conditions=[
-                        has_accepted_invite
+                        is_added_to_team
                     ]
                 ),
                 TransitionEffect(
@@ -1106,7 +1110,8 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.add,
             effects=[
                 NotificationEffect(
-                    ParticipantAddedNotification
+                    ParticipantAddedNotification,
+                    conditions=[is_not_team_activity]
                 ),
                 NotificationEffect(
                     ParticipantAddedOwnerNotification
@@ -1136,6 +1141,20 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'team',
+            effects=[
+                NotificationEffect(
+                    TeamParticipantAddedNotification,
+                    conditions=[
+                        is_team_activity,
+                        is_not_user,
+                        has_team
+                    ]
                 ),
             ]
         ),
@@ -1231,7 +1250,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     TeamParticipantRemovedNotification,
-                    conditions=[has_accepted_invite]
+                    conditions=[has_team]
                 ),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
@@ -1277,6 +1296,7 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(TeamMemberWithdrewMessage),
             ]
         ),
+
     ]
 
 

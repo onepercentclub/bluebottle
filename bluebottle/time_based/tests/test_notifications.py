@@ -1,12 +1,13 @@
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
-    SlotCancelledNotification
+    SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification
 )
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, \
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory
@@ -147,6 +148,32 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Frans Beckenbauer has been added to your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
+
+    def test_participant_added_notification(self):
+        self.message_class = ParticipantAddedNotification
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter,
+            team=TeamFactory.create()
+        )
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have been added to the activity "Save the world!" 🎉')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_team_participant_added_notification(self):
+        self.message_class = TeamParticipantAddedNotification
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter,
+            team=TeamFactory.create()
+        )
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have been added to a team for "Save the world!" 🎉')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
 
     def test_participant_removed_owner_notification(self):
         self.message_class = ParticipantRemovedOwnerNotification

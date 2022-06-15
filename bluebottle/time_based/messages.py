@@ -59,6 +59,7 @@ class TimeBasedInfoMixin(object):
                 slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
+
         elif isinstance(participant, PeriodParticipant):
             context.update({
                 'start': participant.activity.start,
@@ -278,6 +279,31 @@ class ParticipantAddedNotification(TransitionMessage):
             return []
 
 
+class TeamParticipantAddedNotification(TransitionMessage):
+    """
+    A participant was added to a team manually (through back-office)
+    """
+    subject = pgettext('email', 'You have been added to a team for "{title}" 🎉')
+    template = 'messages/team_participant_added'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
+
+
 class ParticipantCreatedNotification(TransitionMessage):
     """
     A participant applied  for the activity and should be reviewed
@@ -366,6 +392,29 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
+class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined
+    """
+    subject = pgettext('email', 'You have registered your team for "{title}"')
+    template = 'messages/team_participant_joined'
+    context = {
+        'title': 'activity.title',
+    }
+
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
 class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant withdrew or applied to a slot when already applied to other slots
@@ -428,6 +477,28 @@ class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
+class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined as a team joined
+    """
+    subject = pgettext('email', 'You have registered your team for "{title}"')
+    template = 'messages/team_participant_applied'
+    context = {
+        'title': 'activity.title',
+    }
+    delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
 class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant got accepted after review
@@ -451,7 +522,7 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
 
 class ParticipantRejectedNotification(TransitionMessage):
     """
-    The participant got rejected after revie
+    The participant got rejected after review
     """
     subject = pgettext('email', 'You have not been selected for the activity "{title}"')
     template = 'messages/participant_rejected'
@@ -485,6 +556,28 @@ class ParticipantRemovedNotification(TransitionMessage):
         return tenant_url('/initiatives/activities/list')
 
     action_title = pgettext('email', 'View all activities')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class TeamParticipantRemovedNotification(TransitionMessage):
+    """
+    The participant was removed from the activity
+    """
+    subject = pgettext('email', 'Your team participation in ‘{title}’ has been cancelled')
+    template = 'messages/team_participant_removed'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participant"""

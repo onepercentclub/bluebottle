@@ -1,11 +1,26 @@
-from bluebottle.activities.models import Organizer, EffortContribution
+from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.fsm.triggers import (
     TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.notifications.effects import NotificationEffect
 
-from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, EffortContributionStateMachine
-from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect
+from bluebottle.activities.states import (
+    ActivityStateMachine, OrganizerStateMachine, ContributionStateMachine,
+    EffortContributionStateMachine, TeamStateMachine
+)
+from bluebottle.activities.effects import (
+    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
+    TeamContributionTransitionEffect, ResetTeamParticipantsEffect
+)
+
+from bluebottle.activities.messages import (
+    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamCancelledTeamCaptainMessage,
+    TeamReappliedMessage
+)
+
+from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 
 
@@ -175,6 +190,127 @@ class EffortContributionTriggers(TriggerManager):
         ModelDeletedTrigger(
             effects=[
                 UpdateImpactGoalEffect
+            ]
+        ),
+    ]
+
+
+def activity_is_active(contribution):
+    """activity is not cancelled, expired or rejected"""
+    return contribution.contributor.activity.status not in [
+        ActivityStateMachine.cancelled.value,
+        ActivityStateMachine.expired.value,
+        ActivityStateMachine.rejected.value
+    ]
+
+
+def contributor_is_active(contribution):
+    """contributor is accepted"""
+    return contribution.contributor.status in [
+        ParticipantStateMachine.accepted.value
+    ]
+
+
+def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not hasattr(effect.instance.activity, 'review') or not effect.instance.activity.review
+
+
+def needs_review(effect):
+    """
+    needs review
+    """
+    return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
+
+
+@register(Team)
+class TeamTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            TeamStateMachine.initiate,
+            effects=[
+                NotificationEffect(
+                    TeamAddedMessage,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    TeamAppliedMessage,
+                    conditions=[needs_review]
+                ),
+                TransitionEffect(
+                    TeamStateMachine.accept,
+                    conditions=[automatically_accept]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    TeamAcceptedMessage,
+                    conditions=[needs_review]
+                ),
+                RelatedTransitionEffect(
+                    'members',
+                    ParticipantStateMachine.accept,
+                    conditions=[needs_review]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                NotificationEffect(TeamCancelledMessage),
+                NotificationEffect(TeamCancelledTeamCaptainMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                NotificationEffect(TeamWithdrawnMessage),
+                NotificationEffect(TeamWithdrawnActivityOwnerMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reopen,
+            effects=[
+                NotificationEffect(TeamReopenedMessage),
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.reset,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                ),
+
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reapply,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.reset,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                ),
+                NotificationEffect(TeamReappliedMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            TeamStateMachine.reset,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.reset,
+                    contribution_conditions=[activity_is_active, contributor_is_active]
+                ),
+                ResetTeamParticipantsEffect,
+                NotificationEffect(TeamAddedMessage)
             ]
         ),
     ]

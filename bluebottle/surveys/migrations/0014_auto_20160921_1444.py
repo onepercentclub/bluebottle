@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-import django_extensions.db.fields.json
+import django.contrib.postgres.fields
 
 
 class Migration(migrations.Migration):
@@ -11,16 +11,15 @@ class Migration(migrations.Migration):
     dependencies = [
         ('surveys', '0013_auto_20160921_1410'),
     ]
-
     operations = [
         migrations.AddField(
             model_name='aggregateanswer',
             name='list',
-            field=django_extensions.db.fields.json.JSONField(default='[]', null=True),
+            field=django.contrib.postgres.fields.JSONField(default='[]', null=True),
         ),
         migrations.AddField(
             model_name='aggregateanswer',
             name='options',
-            field=django_extensions.db.fields.json.JSONField(null=True),
+            field=django.contrib.postgres.fields.JSONField(null=True),
         ),
     ]

@@ -1447,13 +1447,13 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
 
 
 @mock.patch.object(
-    ParticipantJoinedNotification, 'delay', 2
+    ParticipantJoinedNotification, 'delay', 3
+)
+@mock.patch.object(
+    ParticipantAppliedNotification, 'delay', 3
 )
 @mock.patch.object(
     ParticipantChangedNotification, 'delay', 1
-)
-@mock.patch.object(
-    ParticipantAppliedNotification, 'delay', 2
 )
 class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     factory = DateActivityFactory
@@ -1496,7 +1496,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             activity=self.activity
         )
 
-        time.sleep(3)
+        time.sleep(4)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(

@@ -359,22 +359,28 @@ class APITestCase(BluebottleTestCase):
         ]
         parts = included.split('.')
 
-        relationship = self.response.json()['data']['relationships'][parts[0]]['data']
+        if not isinstance(self.response.json()['data'], (tuple, list)):
+            data = [self.response.json()['data']]
+        else:
+            data = self.response.json()['data']
 
-        try:
-            for part in parts[1:]:
-                included = [
-                    resource for resource in self.response.json()['included']
-                    if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
-                ][0]
-                relationship = included['relationships'][part]['data']
-        except IndexError:
-            return self.fail('Included relation not found')
+        for resource in data:
+            relationship = resource['relationships'][parts[0]]['data']
 
-        self.assertTrue(
-            {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
-            in included_resources
-        )
+            try:
+                for part in parts[1:]:
+                    included = [
+                        resource for resource in self.response.json()['included']
+                        if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
+                    ][0]
+                    relationship = included['relationships'][part]['data']
+            except IndexError:
+                return self.fail('Included relation not found')
+
+            self.assertTrue(
+                {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
+                in included_resources
+            )
 
     def assertNotIncluded(self, included):
         """

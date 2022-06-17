@@ -537,7 +537,9 @@ class SlotDuplicateForm(forms.Form):
 
     end = forms.DateField(
         label=_('End date'),
-        help_text=_('Date until which the slot should be repeated'),
+        help_text=_('Select a date until which the series runs. If you plan '
+                    'further than 6 months in the future, '
+                    'the loading time can be quite long.'),
         widget=widgets.AdminDateWidget()
     )
 

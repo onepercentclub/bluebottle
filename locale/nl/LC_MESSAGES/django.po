@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-24 08:59+0100\n"
-"PO-Revision-Date: 2022-06-01 12:46\n"
+"POT-Creation-Date: 2022-04-05 14:15+0200\n"
+"PO-Revision-Date: 2022-06-17 08:43\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: nl\n"
-"X-Crowdin-File: /release.team-activities-2/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 864\n"
+"X-Crowdin-File: /demo.nlcares-improvements/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 976\n"
 
 #: bluebottle/activities/admin.py:62 bluebottle/activities/admin.py:558
 #: bluebottle/activities/admin.py:648 bluebottle/contact/models.py:24
@@ -85,7 +85,7 @@ msgstr "Supporter"
 
 #: bluebottle/activities/admin.py:285
 msgid "Edit"
-msgstr ""
+msgstr "Pas aan"
 
 #: bluebottle/activities/admin.py:421 bluebottle/initiatives/models.py:143
 #: build/lib/bluebottle/activities/admin.py:391
@@ -497,7 +497,7 @@ msgstr "-leeg-"
 
 #: bluebottle/activities/models.py:184
 msgid "team"
-msgstr ""
+msgstr "team"
 
 #: bluebottle/activities/models.py:188
 #: build/lib/bluebottle/activities/models.py:172
@@ -975,27 +975,27 @@ msgstr "De organisator is nog bezig met het opzetten van de activiteit."
 
 #: bluebottle/activities/states.py:357
 msgid "The team is open for contributors"
-msgstr ""
+msgstr "Het team is open voor gebruikers"
 
 #: bluebottle/activities/states.py:362
 msgid "The team is cancelled. Contributors can no longer register"
-msgstr ""
+msgstr "Het team is geannuleerd. Gebruikers kunnen zich niet meer registreren"
 
 #: bluebottle/activities/states.py:386
 msgid "cancel"
-msgstr ""
+msgstr "annuleer"
 
 #: bluebottle/activities/states.py:387
 msgid "The team is cancelled. Contributors can no longer apply"
-msgstr ""
+msgstr "Het team is geannuleerd. Gebruikers kunnen zich niet langer aanmelden"
 
 #: bluebottle/activities/states.py:395
 msgid "reopen"
-msgstr ""
+msgstr "heropen"
 
 #: bluebottle/activities/states.py:396
 msgid "The team is opened. Contributors can apply again"
-msgstr ""
+msgstr "Het team is geopend. Gebruikers kunnen zich opnieuw aanmelden"
 
 #: bluebottle/activities/templates/admin/activities/send_impact_reminder_message.html:5
 #: bluebottle/members/templates/admin/members/login_as.html:5

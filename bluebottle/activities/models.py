@@ -202,7 +202,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     @property
     def is_team_captain(self):
-        return self.user == self.team.owner
+        return self.team and self.user == self.team.owner
 
     @property
     def date(self):

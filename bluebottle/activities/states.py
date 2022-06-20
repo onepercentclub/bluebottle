@@ -100,14 +100,14 @@ class ActivityStateMachine(ModelStateMachine):
         )
 
     def should_auto_approve(self):
-        """the activity should approved automatically"""
+        """the activity should be approved automatically"""
         return self.instance.auto_approve
 
     initiate = Transition(
         EmptyState(),
         draft,
         name=_('Create'),
-        description=_('The acivity will be created.'),
+        description=_('The activity will be created.'),
     )
 
     auto_submit = Transition(
@@ -116,7 +116,7 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         submitted,
-        description=_('The acivity will be submitted for review.'),
+        description=_('The activity will be submitted for review.'),
         automatic=True,
         name=_('Submit'),
         conditions=[is_complete, is_valid],
@@ -404,7 +404,7 @@ class TeamStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_team_captain,
         name=_('cancel'),
-        description=_('The team captian has withdrawn. Contributors can no longer apply')
+        description=_('The team captain has withdrawn. Contributors can no longer apply')
     )
 
     reapply = Transition(
@@ -413,7 +413,7 @@ class TeamStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_team_captain,
         name=_('reopen'),
-        description=_('The team caption has reapplied. Contributors can apply again')
+        description=_('The team captain has reapplied. Contributors can apply again')
     )
 
     reset = Transition(
@@ -423,7 +423,7 @@ class TeamStateMachine(ModelStateMachine):
         permission=is_team_captain,
         name=_('reset'),
         description=_(
-            'The team caption has reset the team. All participants are removed, and the team start over fresh'
+            'The team captain has reset the team. All participants are removed, and the team start over fresh'
         )
     )
 

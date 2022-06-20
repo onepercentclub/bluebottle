@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-17 12:36+0200\n"
-"PO-Revision-Date: 2022-06-17 10:40\n"
+"PO-Revision-Date: 2022-06-20 06:42\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -795,7 +795,7 @@ msgstr "annuleer"
 
 #: bluebottle/activities/states.py:407
 msgid "The team captain has withdrawn. Contributors can no longer apply"
-msgstr ""
+msgstr "De teamcaptain heeft het team teruggetrokken. Deelnemers kunnen zich niet meer registreren"
 
 #: bluebottle/activities/states.py:415
 msgid "reopen"
@@ -803,11 +803,11 @@ msgstr "heropen"
 
 #: bluebottle/activities/states.py:416
 msgid "The team captain has reapplied. Contributors can apply again"
-msgstr ""
+msgstr "De teamcaptain heeft het team is heropend. Gebruikers kunnen zich opnieuw aanmelden"
 
 #: bluebottle/activities/states.py:426
 msgid "The team captain has reset the team. All participants are removed, and the team start over fresh"
-msgstr ""
+msgstr "De teamcaptain heeft het team gereset. Alle deelnemers zijn verwijderd en het team begint opnieuw"
 
 #: bluebottle/activities/states.py:435
 msgid "reject"

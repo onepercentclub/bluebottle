@@ -1450,10 +1450,10 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
     ParticipantJoinedNotification, 'delay', 2
 )
 @mock.patch.object(
-    ParticipantChangedNotification, 'delay', 1
+    ParticipantAppliedNotification, 'delay', 1
 )
 @mock.patch.object(
-    ParticipantAppliedNotification, 'delay', 2
+    ParticipantChangedNotification, 'delay', 2
 )
 class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     factory = DateActivityFactory
@@ -1492,11 +1492,15 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         self.activity.slot_selection = 'all'
         self.activity.save()
 
-        self.participant = self.participant_factory.create(
-            activity=self.activity
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=user
         )
+        participant.execute_triggers(user=user, send_messages=True)
+        participant.save()
 
-        time.sleep(3)
+        time.sleep(4)
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1520,9 +1524,13 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     def test_join_free(self):
         mail.outbox = []
 
-        participant = self.participant_factory.create(
-            activity=self.activity
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=user
         )
+        participant.execute_triggers(user=user, send_messages=True)
+        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)
@@ -1550,9 +1558,13 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 
         mail.outbox = []
 
-        participant = self.participant_factory.create(
-            activity=self.activity
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.build(
+            activity=self.activity,
+            user=user
         )
+        participant.execute_triggers(user=user, send_messages=True)
+        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)

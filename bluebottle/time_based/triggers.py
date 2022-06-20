@@ -853,7 +853,7 @@ def not_team_captain(effect):
     """
     not a team captain
     """
-    return not effect.instance.team or effect.instance.team.owner != effect.instance.user
+    return not effect.instance.team_id or effect.instance.team.owner != effect.instance.user
 
 
 def user_is_not_team_captain(effect):
@@ -862,7 +862,7 @@ def user_is_not_team_captain(effect):
     """
     if 'user' not in effect.options:
         return True
-    return not effect.instance.team or effect.instance.team.owner != effect.options['user']
+    return not effect.instance.team_id or effect.instance.team.owner != effect.options['user']
 
 
 def is_not_user(effect):
@@ -1036,7 +1036,9 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 TransitionEffect(
                     ParticipantStateMachine.add,
-                    conditions=[is_not_user]
+                    conditions=[
+                        is_not_user
+                    ]
                 ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
@@ -1111,7 +1113,9 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
-                    conditions=[is_not_team_activity]
+                    conditions=[
+                        is_not_team_activity
+                    ]
                 ),
                 NotificationEffect(
                     ParticipantAddedOwnerNotification

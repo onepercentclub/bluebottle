@@ -5422,12 +5422,12 @@ msgstr "Je bent aangewezen als beoordelaar voor \"{title}\"."
 #: bluebottle/initiatives/messages.py:118
 #, python-brace-format
 msgid "You have a new post on '{title}'"
-msgstr "Je hebt een nieuw bericht op '{title}'"
+msgstr "Je hebt een nieuwe reactie op '{title}'"
 
 #: bluebottle/initiatives/messages.py:134
 #, python-brace-format
 msgid "Update from '{title}'"
-msgstr "Update van '{title}'"
+msgstr "Nieuwe update van '{title}'"
 
 #: bluebottle/initiatives/models.py:44
 msgid "reviewer"

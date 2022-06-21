@@ -152,6 +152,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
+        user = self.context['request'].user
         if self.parent.__class__.__name__ == 'ReactionSerializer':
             # For some reason self.parent.instance doesn't work on ReactionSerializer
             if self.parent.instance:
@@ -165,7 +166,10 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             return {"id": 0, "is_anonymous": True}
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
-        if (
+        if not (
+            user.is_staff or
+            user.is_superuser
+        ) and (
             self.hide_last_name and
             MemberPlatformSettings.objects.get().display_member_names == 'first_name'
         ):
@@ -661,7 +665,10 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_address',
             'enable_birthdate',
             'require_office',
-            'verify_office'
+            'verify_office',
+            'require_address',
+            'require_birthdate',
+            'require_phone_number',
         )
 
 

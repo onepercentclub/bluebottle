@@ -51,6 +51,7 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     CreateAPIView, ListAPIView, JsonApiViewMixin,
+    RelatedPermissionMixin,
     PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
 
@@ -101,6 +102,38 @@ class DateActivityDetailView(TimeBasedActivityDetailView):
 class PeriodActivityDetailView(TimeBasedActivityDetailView):
     queryset = PeriodActivity.objects.all()
     serializer_class = PeriodActivitySerializer
+
+
+class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+    permission_classes = [
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    ]
+
+    pagination_class = None
+
+    queryset = SlotParticipant.objects.select_related(
+        'slot', 'participant', 'participant__user'
+    )
+    model = DateParticipant
+
+    def get_queryset(self, *args, **kwargs):
+        participant = DateParticipant.objects.select_related(
+            'activity', 'activity__initiative'
+        ).get(pk=self.kwargs['participant_id'])
+        queryset = super().get_queryset()
+
+        if not self.request.user.is_authenticated or (
+            self.request.user != participant.user and
+            self.request.user != participant.activity.owner and
+            self.request.user != participant.activity.initiative.owner
+        ):
+            queryset = queryset.filter(status='registered', participant__status='accepted')
+
+        return queryset.filter(
+            participant_id=self.kwargs['participant_id']
+        )
+
+    serializer_class = SlotParticipantSerializer
 
 
 class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
@@ -190,7 +223,9 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
             if (
                 activity.owner == self.request.user or
-                self.request.user in activity.initiative.activity_managers.all()
+                self.request.user in activity.initiative.activity_managers.all() or
+                self.request.user.is_staff or
+                self.request.user.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
 

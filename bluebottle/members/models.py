@@ -99,6 +99,21 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=False,
         help_text=_('Require members to enter their office location once after logging in.')
     )
+    require_address = models.BooleanField(
+        _('Address'),
+        default=False,
+        help_text=_('Require members to enter their address once after logging in.')
+    )
+    require_phone_number = models.BooleanField(
+        _('Phone number'),
+        default=False,
+        help_text=_('Require members to enter their phone number once after logging in.')
+    )
+    require_birthdate = models.BooleanField(
+        _('Birthdate'),
+        default=False,
+        help_text=_('Require members to enter their date of birth once after logging in.')
+    )
 
     verify_office = models.BooleanField(
         _('Verify SSO data office location'),
@@ -225,6 +240,13 @@ class Member(BlueBottleBaseUser):
             (settings.verify_office and not self.location_verified)
         ):
             required.append('location')
+
+        for attr in ['birthdate', 'phone_number']:
+            if getattr(settings, f'require_{attr}') and not getattr(self, attr):
+                required.append(attr)
+
+        if settings.require_address and not (self.place and self.place.complete):
+            required.append('address')
 
         return required
 

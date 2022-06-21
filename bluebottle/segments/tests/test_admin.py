@@ -80,7 +80,7 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
     def test_required_segment_types_no_segments(self):
         member_settings_url = reverse('admin:members_memberplatformsettings_change')
         page = self.app.get(member_settings_url)
-        self.assertFalse('Required fields' in page.text)
+        self.assertFalse('Mark segment types as required' in page.text)
 
         SegmentTypeFactory.create(name='Department')
         SegmentTypeFactory.create(name='Hobbies')

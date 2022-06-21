@@ -2,7 +2,7 @@ import json
 import time
 from builtins import range
 from calendar import timegm
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 import mock
 from captcha import client
@@ -20,6 +20,7 @@ from bluebottle.members.models import MemberPlatformSettings, UserActivity, Memb
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -986,6 +987,31 @@ class UserAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], ['location'])
+
+    def test_get_current_user_required_fields(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_address = True
+        settings.require_phone_number = True
+        settings.require_birthdate = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertTrue('birthdate' in response.json()['required'])
+        self.assertTrue('phone_number' in response.json()['required'])
+        self.assertTrue('address' in response.json()['required'])
+
+        self.user.birthdate = date(1980, 1, 14)
+        self.user.phone_number = '+310612345678'
+        self.user.place = PlaceFactory.create(
+            street="test straat",
+            street_number=12,
+            postal_code='1024 BZ',
+            locality="Amsterdam",
+        )
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+
+        self.assertEqual(response.json()['required'], [])
 
     def test_get_current_user_required_location_set(self):
         settings = MemberPlatformSettings.load()

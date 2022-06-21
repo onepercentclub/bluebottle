@@ -19,6 +19,9 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import (
+    APITestCase
+)
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
 from bluebottle.time_based.tests.factories import (
@@ -1714,7 +1717,9 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     def test_get_participants(self):
         super().test_get_participants()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertFalse('contributors/time-based/slot-participants' in types)
+        self.assertTrue('contributors/time-based/slot-participants' in types)
+        self.assertTrue('activities/time-based/dates' in types)
+        self.assertTrue('members' in types)
 
 
 class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
@@ -2154,7 +2159,17 @@ class RelatedParticipantsAPIViewTestCase():
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
         for member in self.included_by_type(self.response, 'members'):
-            self.assertIsNotNone(member['attributes']['last-name'])
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_owner_disable_last_name_staff(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.response = self.client.get(self.url, user=staff)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
 
     def test_get_with_duplicate_files(self):
         file = PrivateDocumentFactory.create(owner=self.participants[2].user)
@@ -2187,6 +2202,17 @@ class RelatedParticipantsAPIViewTestCase():
 
         for member in self.included_by_type(self.response, 'members'):
             self.assertIsNone(member['attributes']['last-name'])
+
+    def test_get_anonymous_disable_last_name_staff(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.response = self.client.get(self.url, user=staff)
+
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 8)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
 
     def test_get_removed_participant(self):
         self.response = self.client.get(self.url, user=self.participants[0].user)
@@ -2841,3 +2867,110 @@ class SkillApiTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
         response = self.client.get(old_url, user=user)
         self.assertEqual(response.status_code, 200)
+
+
+class RelatedSlotParticipantListViewTestCase(APITestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.slots = DateActivitySlotFactory.create_batch(5, activity=self.activity)
+
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(participant=self.participant, slot=slot)
+            for slot in self.slots[:3]
+        ]
+
+        self.slot_participants[0].states.remove(save=True)
+
+        self.url = reverse('related-slot-participant-list', args=(self.participant.pk,))
+
+    def test_get_user(self):
+        self.perform_get(user=self.participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+        self.assertIncluded('slot')
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_get_other_user_rejected_participant(self):
+        self.participant.states.withdraw(save=True)
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(0)
+
+
+class SlotRelatedParticipantListTestCase(APITestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+
+        self.participants = DateParticipantFactory.create_batch(5, activity=self.activity)
+
+        self.slot_participants = [
+            SlotParticipantFactory.create(participant=participant, slot=self.slot)
+            for participant in self.participants
+        ]
+
+        self.url = reverse('slot-participants', args=(self.slot.pk,))
+
+    def test_get_user(self):
+        self.perform_get(user=self.participants[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+
+    def test_get_useri_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=self.participants[0].user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertIsNone(member['attributes']['last-name'])
+
+    def test_get_activity_owner(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+
+    def test_get_activity_owner_only_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_staff_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_activity_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(5)

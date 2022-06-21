@@ -1,8 +1,10 @@
+import datetime
 from datetime import timedelta
 
 from django.contrib.admin import AdminSite
 from django.urls import reverse
 from django.utils.timezone import now
+from pytz import UTC
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -248,38 +250,38 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super().setUp()
-        activity1 = DateActivityFactory.create(
+        self.activity1 = DateActivityFactory.create(
             slot_selection='free',
             capacity=None,
             slots=[]
         )
         DateActivitySlotFactory.create(
-            activity=activity1,
+            activity=self.activity1,
             start=now() + timedelta(days=4),
             capacity=2
         )
         DateActivitySlotFactory.create(
-            activity=activity1,
+            activity=self.activity1,
             start=now() + timedelta(days=4),
             capacity=3
         )
         DateActivitySlotFactory.create(
-            activity=activity1,
+            activity=self.activity1,
             start=now() - timedelta(days=3),
             capacity=None
         )
-        activity2 = DateActivityFactory.create(
+        self.activity2 = DateActivityFactory.create(
             slot_selection='all',
             capacity=5,
             slots=[]
         )
         DateActivitySlotFactory.create(
-            activity=activity2,
+            activity=self.activity2,
             start=now() + timedelta(days=5),
             capacity=None
         )
         DateActivitySlotFactory.create(
-            activity=activity2,
+            activity=self.activity2,
             start=now() - timedelta(days=1),
             capacity=None
         )
@@ -300,6 +302,49 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('3 slots' in page.text)
         page = page.click('Required')
         self.assertTrue('1 slot' in page.text)
+
+
+class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.activity = DateActivityFactory.create(
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=datetime.datetime(2022, 5, 15, tzinfo=UTC)
+        )
+        self.url = reverse('admin:time_based_dateactivityslot_change', args=(self.slot.id,))
+        self.app.set_user(self.staff_member)
+
+    def test_duplicate_daily(self):
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+        page = page.click('Repeat this slot')
+        h3 = page.html.find('h3')
+        self.assertEqual(h3.text.strip(), 'Warning')
+        form = page.forms[0]
+        form["interval"] = "day"
+        form["end"] = '2022-05-20'
+        page = form.submit()
+        self.assertEqual(
+            page.location,
+            f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
+        )
+        page = page.follow()
+        self.assertContains(page, '6 Results')
+        self.assertEqual(self.activity.slots.count(), 6)
+        self.assertEqual(
+            [str(s.start.date()) for s in self.activity.slots.all()],
+            [
+                '2022-05-15', '2022-05-16', '2022-05-17',
+                '2022-05-18', '2022-05-19', '2022-05-20',
+            ]
+        )
 
 
 class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):

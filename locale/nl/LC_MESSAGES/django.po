@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-17 12:36+0200\n"
-"PO-Revision-Date: 2022-06-20 06:42\n"
+"POT-Creation-Date: 2022-06-21 08:49+0200\n"
+"PO-Revision-Date: 2022-06-21 06:57\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -597,12 +597,12 @@ msgid "Create"
 msgstr "Aanmaken"
 
 #: bluebottle/activities/states.py:110
-msgid "The acivity will be created."
-msgstr "De activiteit wordt aangemaakt."
+msgid "The activity will be created."
+msgstr ""
 
 #: bluebottle/activities/states.py:119
-msgid "The acivity will be submitted for review."
-msgstr "Het initiatief zal worden ingediend te review."
+msgid "The activity will be submitted for review."
+msgstr ""
 
 #: bluebottle/activities/states.py:121 bluebottle/activities/states.py:149
 #: bluebottle/funding/states.py:574 bluebottle/initiatives/states.py:92
@@ -7346,11 +7346,9 @@ msgstr "Let op"
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:24
 msgid "\n"
-"                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the lock has been entered completely and correctly before you repeat the lock.\n"
+"                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the slot has been entered completely and correctly before you repeat the slot.\n"
 "                    "
-msgstr "\n"
-"                        Het is niet mogelijk om achteraf bulkwijzigingen aan te brengen in de gecreëerde slots. Dus zorg ervoor dat alle informatie over het slot volledig en correct is ingevoerd voordat u deze actie uitvoert.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:49
 msgid "Create duplicates"

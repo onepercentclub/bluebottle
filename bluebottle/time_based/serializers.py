@@ -24,7 +24,7 @@ from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransition
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill
+    SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -86,14 +86,17 @@ class ActivitySlotSerializer(ModelSerializer):
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
+    location = ResourceRelatedField(read_only=True)
 
     class Meta:
         fields = (
             'id',
             'activity',
             'start',
-            'duration',
             'transitions',
+            'is_online',
+            'location_hint',
+            'online_meeting_url',
         )
         meta_fields = (
             'status',
@@ -107,8 +110,14 @@ class ActivitySlotSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'activity', 'location'
+            'activity',
+            'location',
         ]
+
+    included_serializers = {
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
 
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
@@ -169,20 +178,37 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'links',
             'duration',
             'capacity',
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
             'participants',
         )
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
 
-    included_serializers = {
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
-    }
+
+class TeamSlotSerializer(ActivitySlotSerializer):
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+    # team = ResourceRelatedField(read_only=True)
+
+    class Meta(ActivitySlotSerializer.Meta):
+        model = TeamSlot
+        fields = ActivitySlotSerializer.Meta.fields + (
+            'start',
+
+        )
+
+    class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/team-slots'
+        included_resources = ActivitySlotSerializer.JSONAPIMeta.included_resources + [
+            'team',
+        ]
+
+    included_serializers = dict(
+        ActivitySlotSerializer.included_serializers,
+        **{
+            'team': 'bluebottle.activities.utils.TeamSerializer',
+        }
+    )
 
 
 class DateActivitySlotInfoMixin():

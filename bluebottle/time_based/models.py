@@ -531,6 +531,9 @@ class TeamSlot(ActivitySlot):
     def __str__(self):
         return str(_('Time slot for {}')).format(self.team)
 
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/team-slots'
+
 
 class Participant(Contributor):
 

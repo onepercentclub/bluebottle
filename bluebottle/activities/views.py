@@ -181,10 +181,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
             queryset = self.queryset.filter(
                 status='open'
             )
-
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset.filter(activity_id=self.kwargs['activity_id'])
 
 
 class TeamTransitionList(TransitionList):

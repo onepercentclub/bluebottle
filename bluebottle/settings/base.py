@@ -444,6 +444,7 @@ INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in S
 
 CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_AGE = 24 * 60 * 60
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"

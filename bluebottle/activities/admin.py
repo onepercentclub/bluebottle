@@ -230,10 +230,11 @@ class ActivityForm(StateMachineModelForm):
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)
-    readonly_fields = ('team_link', 'created', 'status')
+    readonly_fields = ('team_link', 'slot_link', 'created', 'status')
     fields = readonly_fields + ('owner',)
 
     extra = 0
+    ordering = ['slot__start']
 
     def team_link(self, obj):
         return format_html(
@@ -241,8 +242,15 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             obj
         )
-
     team_link.short_description = _('Edit')
+
+    def slot_link(self, obj):
+        return format_html(
+            '<a href="{}#/tab/inline_1/">{}</a>',
+            reverse('admin:activities_team_change', args=(obj.id,)),
+            obj.slot.start
+        )
+    slot_link.short_description = _('Time slot')
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

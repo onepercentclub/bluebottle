@@ -37,10 +37,10 @@ function replaceInlineActivityAddButton() {
 }
 
 function toggleDeleteButton() {
-  if (window.location.hash === "#/tab/module_0/") {
-    django.jQuery(".deletelink").show();
-  } else {
+  if (window.location.hash.startsWith("#/tab/inline")) {
     django.jQuery(".deletelink").hide();
+  } else {
+    django.jQuery(".deletelink").show();
   }
 }
 

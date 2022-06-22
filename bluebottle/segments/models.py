@@ -28,6 +28,14 @@ class SegmentType(models.Model):
         default=True
     )
 
+    visibility = models.BooleanField(
+        _('Visible'),
+        help_text=_(
+            'Show segment on the activity detail page'
+        ),
+        default=True
+    )
+
     required = models.BooleanField(
         _('Required for members'),
         help_text=_(
@@ -65,6 +73,8 @@ class SegmentType(models.Model):
     def save(self, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        if not self.name:
+            self.name = self.slug.replace('-', ' ').title()
 
         super(SegmentType, self).save(**kwargs)
 

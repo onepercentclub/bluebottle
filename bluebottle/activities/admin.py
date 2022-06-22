@@ -682,9 +682,10 @@ class TeamAdmin(StateMachineAdmin):
     def get_inline_instances(self, request, obj=None):
         self.inlines = []
         if isinstance(obj.activity, PeriodActivity):
-            from bluebottle.time_based.admin import PeriodParticipantAdminInline
+            from bluebottle.time_based.admin import PeriodParticipantAdminInline, TeamSlotInline
             self.inlines = [
-                PeriodParticipantAdminInline
+                PeriodParticipantAdminInline,
+                TeamSlotInline
             ]
         return super(TeamAdmin, self).get_inline_instances(request, obj)
 

@@ -79,9 +79,12 @@ class BlueBottleUserManager(UserManager):
         return super().create_superuser(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):
-        return self.get(**{
-            '{}__iexact'.format(self.model.USERNAME_FIELD): username
-        })
+        if isinstance(username, int):
+            return self.get(pk=username)
+        else:
+            return self.get(**{
+                '{}__iexact'.format(self.model.USERNAME_FIELD): username
+            })
 
 
 @python_2_unicode_compatible

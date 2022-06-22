@@ -97,6 +97,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'is_online',
             'location_hint',
             'online_meeting_url',
+            'location'
         )
         meta_fields = (
             'status',
@@ -188,7 +189,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 class TeamSlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
-    # team = ResourceRelatedField(read_only=True)
 
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot
@@ -197,10 +197,12 @@ class TeamSlotSerializer(ActivitySlotSerializer):
 
         )
 
-    class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
+    class JSONAPIMeta(object):
         resource_name = 'activities/time-based/team-slots'
-        included_resources = ActivitySlotSerializer.JSONAPIMeta.included_resources + [
+        included_resources = [
+            'activity'
             'team',
+            'location'
         ]
 
     included_serializers = dict(

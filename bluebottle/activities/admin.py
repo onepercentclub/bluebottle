@@ -1,3 +1,5 @@
+from pytz import timezone
+
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -245,10 +247,23 @@ class TeamInline(admin.TabularInline):
     team_link.short_description = _('Edit')
 
     def slot_link(self, obj):
+        if getattr(obj, 'slot', None):
+            if obj.slot.location:
+                return format_html(
+                    '<a href="{}#/tab/inline_1/">{}</a>',
+                    reverse('admin:activities_team_change', args=(obj.id,)),
+                    obj.slot.start.astimezone(timezone(obj.slot.location.timezone)).strftime('%c')
+                )
+            else:
+                return format_html(
+                    '<a href="{}#/tab/inline_1/">{}</a>',
+                    reverse('admin:activities_team_change', args=(obj.id,)),
+                    obj.slot.start.strftime('%c')
+                )
         return format_html(
             '<a href="{}#/tab/inline_1/">{}</a>',
             reverse('admin:activities_team_change', args=(obj.id,)),
-            obj.slot.start
+            _('Add time slot')
         )
     slot_link.short_description = _('Time slot')
 

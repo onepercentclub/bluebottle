@@ -170,7 +170,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                 Q(activity__initiative__activity_managers=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(owner=self.request.user) |
-                Q(activity__status='open')
+                Q(status='open')
             ).annotate(
                 current_user=ExpressionWrapper(
                     Q(members__user=self.request.user),

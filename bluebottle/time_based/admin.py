@@ -271,11 +271,22 @@ class TeamSlotInline(admin.StackedInline):
     verbose_name = _('Time slot')
     verbose_name_plural = _('Time slot')
 
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+    }
+
     ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
     raw_id_fields = ['location']
     fields = [
         'start',
+        'duration',
         'timezone',
         'is_online',
         'location'

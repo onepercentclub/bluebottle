@@ -194,7 +194,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
         model = TeamSlot
         fields = ActivitySlotSerializer.Meta.fields + (
             'start',
-
+            'duration',
         )
 
     class JSONAPIMeta(object):

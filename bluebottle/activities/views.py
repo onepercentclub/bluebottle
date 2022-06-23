@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField
+from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -111,7 +111,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
 
     pagination_class = None
 
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
 
 class ActivityImage(ImageContentView):
@@ -166,6 +166,9 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self, *args, **kwargs):
         queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
+        queryset = queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
         if self.request.user.is_authenticated:
             queryset = queryset.filter(
                 Q(activity__initiative__activity_managers=self.request.user) |
@@ -173,22 +176,27 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                 Q(owner=self.request.user) |
                 Q(status='open')
             ).annotate(
-                current_user=BoolOr(
-                    ExpressionWrapper(
-                        Q(members__user=self.request.user),
-                        output_field=BooleanField(),
+                has_members=Count('members')
+            ).annotate(
+                current_user=Case(
+                    When(
+                        has_members=0,
+                        then=Value(False)
+                    ),
+                    default=BoolOr(
+                        ExpressionWrapper(
+                            Q(members__user=self.request.user),
+                            output_field=BooleanField()
+                        )
                     )
                 )
             ).order_by('-current_user', '-id')
-
         else:
             queryset = self.queryset.filter(
                 status='open'
-            )
+            ).order_by('-id')
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset
 
 
 class TeamTransitionList(TransitionList):
@@ -264,9 +272,9 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
 
         if self.request.user and self.request.user.is_authenticated and (
-            self.request.user in context['owners'] or
-            self.request.user.is_staff or
-            self.request.user.is_superuser
+                self.request.user in context['owners'] or
+                self.request.user.is_staff or
+                self.request.user.is_superuser
         ):
             context['display_member_names'] = 'full_name'
 
@@ -278,7 +286,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 Q(user=self.request.user) |
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded', ))
+                Q(status__in=('accepted', 'succeeded',))
             ).annotate(
                 current_user=ExpressionWrapper(
                     Q(user=self.request.user if self.request.user.is_authenticated else None),
@@ -287,7 +295,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
             ).order_by('-current_user', '-id')
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded', )
+                status__in=('accepted', 'succeeded',)
             )
 
         return queryset.filter(

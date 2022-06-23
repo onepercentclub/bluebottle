@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, ExpressionWrapper, BooleanField
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -20,10 +21,10 @@ from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.transitions.views import TransitionList
-from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
@@ -172,11 +173,14 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                 Q(owner=self.request.user) |
                 Q(status='open')
             ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(members__user=self.request.user),
-                    output_field=BooleanField()
+                current_user=BoolOr(
+                    ExpressionWrapper(
+                        Q(members__user=self.request.user),
+                        output_field=BooleanField(),
+                    )
                 )
             ).order_by('-current_user', '-id')
+
         else:
             queryset = self.queryset.filter(
                 status='open'
@@ -275,7 +279,12 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_manager=self.request.user) |
                 Q(status__in=('accepted', 'succeeded', ))
-            )
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(user=self.request.user if self.request.user.is_authenticated else None),
+                    output_field=BooleanField()
+                )
+            ).order_by('-current_user', '-id')
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded', )
@@ -283,9 +292,4 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
-        ).annotate(
-            current_user=ExpressionWrapper(
-                Q(user=self.request.user if self.request.user.is_authenticated else None),
-                output_field=BooleanField()
-            )
-        ).order_by('-current_user', '-id')
+        )

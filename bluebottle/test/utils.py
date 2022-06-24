@@ -407,6 +407,13 @@ class APITestCase(BluebottleTestCase):
             if {'type': included['type'], 'id': included['id']} in relations
         ]
 
+    def getRelatedLink(self, relation, data=None):
+        """
+        Get the link to a relationship
+        """
+        data = data or self.response.json()['data']
+        return data['relationships'][relation]['links']['related']
+
     def assertRelationship(self, relation, models=None, data=None):
         """
         Assert that a resource with `relation` is linked in the response
@@ -418,7 +425,6 @@ class APITestCase(BluebottleTestCase):
                 self.assertRelationship(relation, models, resource)
         else:
             self.assertTrue(relation in data['relationships'])
-
             if models:
                 relation_data = data['relationships'][relation]['data']
                 if not isinstance(relation_data, (tuple, list)):
@@ -433,7 +439,8 @@ class APITestCase(BluebottleTestCase):
     def assertNoRelationship(self, relation):
         self.assertFalse(relation in self.response.json()['data']['relationships'])
 
-    def assertObjectList(self, data, models=None):
+    def assertObjectList(self, data=None, models=None):
+        data = data or self.response.json()['data']
         if models:
             ids = [resource['id'] for resource in data]
             for model in models:

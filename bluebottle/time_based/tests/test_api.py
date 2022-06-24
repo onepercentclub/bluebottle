@@ -24,6 +24,7 @@ from bluebottle.test.utils import (
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
+from bluebottle.time_based.serializers import PeriodActivitySerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
@@ -1048,7 +1049,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_get_owner_export_teams_enabled(self):
-
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.team_activities = True
@@ -1077,6 +1077,33 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(
             wrong_signature_response.status_code, 404
         )
+
+
+class TeamsActivityAPIViewTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.serializer = PeriodActivitySerializer
+        self.manager = BlueBottleUserFactory.create()
+        self.activity = PeriodActivityFactory.create(
+            team_activity='teams',
+            owner=self.manager
+        )
+        self.team_captain = PeriodParticipantFactory.create(activity=self.activity)
+        self.team = self.team_captain.team
+
+        PeriodParticipantFactory.create_batch(
+            3, activity=self.activity, team=self.team
+        )
+        self.activity_url = reverse('period-detail', args=(self.activity.pk,))
+
+    def test_activity_has_teams(self):
+        self.response = self.client.get(self.activity_url, user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        teams_url = self.getRelatedLink('teams')
+        self.response = self.client.get(teams_url, user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertObjectList(models=[self.team])
 
 
 class TimeBasedTransitionAPIViewTestCase():

@@ -21,6 +21,7 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField
+from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
@@ -86,7 +87,7 @@ class ActivitySlotSerializer(ModelSerializer):
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
-    location = ResourceRelatedField(read_only=True)
+    location = ResourceRelatedField(queryset=Geolocation.objects, required=False, allow_null=True)
 
     class Meta:
         fields = (
@@ -196,6 +197,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'team',
             'start',
             'duration',
+            'location'
         )
 
     class JSONAPIMeta(object):

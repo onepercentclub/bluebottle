@@ -237,7 +237,7 @@ class Geolocation(models.Model):
     anonymized = False
 
     class JSONAPIMeta(object):
-        resource_name = 'geo-locations'
+        resource_name = 'geolocations'
 
     def __str__(self):
         if self.locality:

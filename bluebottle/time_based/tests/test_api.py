@@ -17,7 +17,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
     APITestCase
@@ -1103,15 +1103,21 @@ class TeamSlotAPIViewTestCase(APITestCase):
         self.defaults = {
             'activity': self.activity,
             'team': self.team,
-            'start': (now() + timedelta(days=2)).replace(hour=11, minute=0, second=0.0),
+            'start': (now() + timedelta(days=2)).replace(hour=11, minute=0, second=0, microsecond=0),
             'duration': '2:00:00',
+            'location': None,
+            'is_online': True,
+            'location_hint': None
         }
 
         self.fields = [
             'activity',
             'team',
             'start',
-            'duration'
+            'duration',
+            'location',
+            'is_online',
+            'location_hint'
         ]
 
     def test_activity_has_teams(self):
@@ -1125,6 +1131,20 @@ class TeamSlotAPIViewTestCase(APITestCase):
     def test_create_team_slot(self):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_update_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.url = reverse('team-slot-detail', args=(self.model.id,))
+        location = GeolocationFactory.create()
+        to_change = {
+            'is_online': False,
+            'location_hint': 'Ring top bell',
+            'location': location
+        }
+        self.perform_update(to_change=to_change, user=self.manager)
+        self.assertEqual(self.model.location_hint, 'Ring top bell')
+        self.assertEqual(self.model.location, location)
 
 
 class TimeBasedTransitionAPIViewTestCase():

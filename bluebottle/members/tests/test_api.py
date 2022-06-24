@@ -55,6 +55,14 @@ class LoginTestCase(BluebottleTestCase):
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
+    def test_login_formencoded(self):
+        response = self.client.post(
+            reverse('token-auth'),
+            {'email': self.email, 'password': self.password},
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
     def test_login_different_case(self):
         response = self.client.post(
             reverse('token-auth'),

@@ -188,6 +188,7 @@ class Logout(generics.CreateAPIView):
 
     """
     permission_classes = (IsAuthenticated, )
+    parser_classes = (parsers.JSONParser, )
 
     def create(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:

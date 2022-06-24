@@ -24,11 +24,11 @@ from bluebottle.test.utils import (
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
-from bluebottle.time_based.serializers import PeriodActivitySerializer
+from bluebottle.time_based.serializers import TeamSlotSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory
+    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
 
 
@@ -1079,11 +1079,10 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         )
 
 
-class TeamsActivityAPIViewTestCase(APITestCase):
+class TeamSlotAPIViewTestCase(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.serializer = PeriodActivitySerializer
         self.manager = BlueBottleUserFactory.create()
         self.activity = PeriodActivityFactory.create(
             team_activity='teams',
@@ -1097,6 +1096,24 @@ class TeamsActivityAPIViewTestCase(APITestCase):
         )
         self.activity_url = reverse('period-detail', args=(self.activity.pk,))
 
+        self.url = reverse('team-slot-list')
+        self.serializer = TeamSlotSerializer
+        self.factory = TeamSlotFactory
+
+        self.defaults = {
+            'activity': self.activity,
+            'team': self.team,
+            'start': (now() + timedelta(days=2)).replace(hour=11, minute=0, second=0.0),
+            'duration': '2:00:00',
+        }
+
+        self.fields = [
+            'activity',
+            'team',
+            'start',
+            'duration'
+        ]
+
     def test_activity_has_teams(self):
         self.response = self.client.get(self.activity_url, user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
@@ -1104,6 +1121,10 @@ class TeamsActivityAPIViewTestCase(APITestCase):
         self.response = self.client.get(teams_url, user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
         self.assertObjectList(models=[self.team])
+
+    def test_create_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
 
 
 class TimeBasedTransitionAPIViewTestCase():

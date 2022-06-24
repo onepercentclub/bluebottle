@@ -193,6 +193,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot
         fields = ActivitySlotSerializer.Meta.fields + (
+            'team',
             'start',
             'duration',
         )

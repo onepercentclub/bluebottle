@@ -195,8 +195,6 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_ALLOW_TOKEN_RENEWAL': True,
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
-    # After the renewal limit it isn't possible to request a token refresh
-    # => time token first created + renewal limit.
     'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
     'JWT_PAYLOAD_HANDLER': 'bluebottle.members.utils.jwt_payload_handler',
 }

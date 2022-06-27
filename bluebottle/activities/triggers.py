@@ -225,6 +225,15 @@ def needs_review(effect):
     return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
 
 
+def is_not_user(effect):
+    """
+    User is not the participant
+    """
+    if 'user' in effect.options:
+        return effect.instance.user != effect.options['user']
+    return True
+
+
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
@@ -241,8 +250,16 @@ class TeamTriggers(TriggerManager):
                 ),
                 TransitionEffect(
                     TeamStateMachine.accept,
-                    conditions=[automatically_accept]
-                )
+                    conditions=[
+                        automatically_accept
+                    ]
+                ),
+                TransitionEffect(
+                    TeamStateMachine.accept,
+                    conditions=[
+                        is_not_user
+                    ]
+                ),
             ]
         ),
 

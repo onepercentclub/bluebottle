@@ -954,6 +954,8 @@ class ParticipantTriggerTestCase(object):
         participant.save()
         self.assertTrue(participant.team)
         self.assertEqual(participant.team.owner, participant.user)
+        participant.team.refresh_from_db()
+        self.assertEqual(participant.team.status, 'open')
 
     def test_initiate_team_invite(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams

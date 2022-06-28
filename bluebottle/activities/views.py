@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -158,17 +159,31 @@ class ActivityTransitionList(TransitionList):
     queryset = Activity.objects.all()
 
 
-class RelatedTeamList(JsonApiViewMixin, ListAPIView):
+class TeamList(JsonApiViewMixin, ListAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
     pemrission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
 
     def get_queryset(self, *args, **kwargs):
-        queryset = super(RelatedTeamList, self).get_queryset(*args, **kwargs)
-        queryset = queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        queryset = super(TeamList, self).get_queryset(*args, **kwargs)
+
+        activity_id = self.request.query_params.get('activity_id')
+        if activity_id:
+            queryset = queryset.filter(
+                activity_id=activity_id
+            )
+
+        has_slot = self.request.query_params.get('filter[has_slot]')
+        if has_slot is not None:
+            queryset = queryset.filter(slot__start__isnull=True)
+
+        start = self.request.query_params.get('filter[start]')
+        if start == 'future':
+            queryset = queryset.filter(slot__start__gt=timezone.now())
+        elif start == 'passed':
+            queryset = queryset.filter(slot__start__lt=timezone.now())
+
         if self.request.user.is_authenticated:
             queryset = queryset.filter(
                 Q(activity__initiative__activity_managers=self.request.user) |

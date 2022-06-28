@@ -13,7 +13,6 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Team
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
     BaseContributorSerializer, BaseContributionSerializer
@@ -38,14 +37,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
-    teams = SerializerMethodHyperlinkedRelatedField(
-        model=Team,
-        many=True,
-        related_link_view_name='related-activity-team',
-        related_link_url_kwarg='activity_id'
-
-    )
-
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
@@ -53,7 +44,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise',
             'review',
             'contributors',
-            'teams',
             'my_contributor'
         )
 

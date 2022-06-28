@@ -213,7 +213,7 @@ def contributor_is_active(contribution):
 
 def automatically_accept(effect):
     """
-    automatically accept participants
+    automatically accept team
     """
     return not hasattr(effect.instance.activity, 'review') or not effect.instance.activity.review
 
@@ -223,15 +223,6 @@ def needs_review(effect):
     needs review
     """
     return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
-
-
-def is_not_user(effect):
-    """
-    User is not the participant
-    """
-    if 'user' in effect.options:
-        return effect.instance.user != effect.options['user']
-    return True
 
 
 @register(Team)
@@ -252,12 +243,6 @@ class TeamTriggers(TriggerManager):
                     TeamStateMachine.accept,
                     conditions=[
                         automatically_accept
-                    ]
-                ),
-                TransitionEffect(
-                    TeamStateMachine.accept,
-                    conditions=[
-                        is_not_user
                     ]
                 ),
             ]

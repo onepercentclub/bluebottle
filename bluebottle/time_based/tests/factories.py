@@ -1,6 +1,8 @@
 from datetime import timedelta, date
 
 import factory.fuzzy
+
+from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.utils.models import Language
 from django.utils.timezone import now
 
@@ -82,7 +84,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     start = (now() + timedelta(weeks=2)).date()
 
 
-class DateParticipantFactory(factory.DjangoModelFactory):
+class DateParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DateParticipant
 
@@ -90,7 +92,7 @@ class DateParticipantFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class PeriodParticipantFactory(factory.DjangoModelFactory):
+class PeriodParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = PeriodParticipant
 

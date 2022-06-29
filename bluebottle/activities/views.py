@@ -182,7 +182,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
         if start == 'future':
             queryset = queryset.filter(slot__start__gt=timezone.now())
         elif start == 'passed':
-            queryset = queryset.filter(slot__start__lt=timezone.now())
+            queryset = queryset.filter(slot__start__lt=timezone.now()).exclude(slot__start__isnull=True)
 
         if self.request.user.is_authenticated:
             queryset = queryset.filter(

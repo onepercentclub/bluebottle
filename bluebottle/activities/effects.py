@@ -82,7 +82,7 @@ class CreateTeamEffect(Effect):
         if not self.instance.team:
             self.instance.team = Team.objects.create(
                 owner=self.instance.user,
-                activity=self.instance.activity
+                activity=self.instance.activity,
             )
             self.instance.save()
 

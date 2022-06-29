@@ -993,7 +993,6 @@ class ParticipantTriggerTestCase(object):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
         self.assertEqual(participant.status, 'accepted')
 
     def test_initiate_team_invite_review_after_signup(self):
@@ -1019,10 +1018,11 @@ class ParticipantTriggerTestCase(object):
         )
 
         self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
-
         team_captain.states.accept(save=True)
+
         self.assertEqual(team_captain.status, 'accepted')
+        self.assertEqual(team_captain.team.status, 'open')
+        participant.refresh_from_db()
         self.assertEqual(participant.status, 'accepted')
 
     def test_initial_removed_through_admin(self):

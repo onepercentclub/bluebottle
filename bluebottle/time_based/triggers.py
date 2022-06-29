@@ -1139,13 +1139,6 @@ class ParticipantTriggers(ContributorTriggers):
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.accept,
-                    conditions=[
-                        has_team
-                    ]
-                ),
             ]
         ),
 

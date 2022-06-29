@@ -1121,14 +1121,6 @@ class TeamSlotAPIViewTestCase(APITestCase):
             'location_hint'
         ]
 
-    def test_activity_has_teams(self):
-        self.response = self.client.get(self.activity_url, user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-        teams_url = self.getRelatedLink('teams')
-        self.response = self.client.get(teams_url, user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-        self.assertObjectList(models=[self.team])
-
     def test_create_team_slot(self):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)

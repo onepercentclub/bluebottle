@@ -208,12 +208,11 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'location'
         ]
 
-    included_serializers = dict(
-        ActivitySlotSerializer.included_serializers,
-        **{
-            'team': 'bluebottle.activities.utils.TeamSerializer',
-        }
-    )
+    included_serializers = {
+        'team': 'bluebottle.activities.utils.TeamSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
+    }
 
 
 class DateActivitySlotInfoMixin():

@@ -5,6 +5,7 @@ from builtins import str
 from builtins import zip
 from builtins import object
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
 
 
@@ -185,6 +186,7 @@ class TriggerMixin(object):
                         self._triggers.append(BoundTrigger(self, trigger))
 
     def execute_triggers(self, effects=None, **options):
+        options['user'] = getattr(options, 'user', get_current_user())
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)

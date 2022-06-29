@@ -188,6 +188,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(activity=serializer.validated_data['team'].activity)
+
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {

@@ -180,6 +180,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 class TeamSlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
+    activity = ResourceRelatedField(read_only=True)
 
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot

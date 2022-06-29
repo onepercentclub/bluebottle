@@ -168,7 +168,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
         queryset = super(TeamList, self).get_queryset(*args, **kwargs)
 
-        activity_id = self.request.query_params.get('activity_id')
+        activity_id = self.request.query_params.get('filter[activity_id]')
         if activity_id:
             queryset = queryset.filter(
                 activity_id=activity_id

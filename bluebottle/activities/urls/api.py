@@ -51,7 +51,7 @@ urlpatterns = [
     url(
         r'^/teams/$',
         TeamList.as_view(),
-        name='teams-list'
+        name='team-list'
     ),
 
     url(

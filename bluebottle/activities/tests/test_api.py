@@ -1744,7 +1744,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
             PeriodParticipantFactory.create(activity=self.activity, team=team)
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?activity_id={}".format(reverse('team-list'), self.activity.pk)
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True

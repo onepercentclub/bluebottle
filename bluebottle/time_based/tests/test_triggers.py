@@ -1518,12 +1518,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         self.activity.save()
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         time.sleep(4)
 
@@ -1550,12 +1549,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         mail.outbox = []
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)
@@ -1584,12 +1582,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         mail.outbox = []
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)
@@ -1695,7 +1692,9 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
     def test_join(self):
         mail.outbox = []
         participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1776,7 +1775,9 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.review_activity.save()
         mail.outbox = []
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(

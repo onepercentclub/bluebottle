@@ -215,11 +215,13 @@ def automatically_accept(effect):
     """
     automatically accept team
     """
-    captain = effect.instance.activity.participants.filter(user=effect.instance.owner).first()
+    captain = effect.instance.activity\
+        .contributors.not_instance_of(Organizer)\
+        .filter(user=effect.instance.owner).first()
     return (
         not hasattr(effect.instance.activity, 'review') or
         not effect.instance.activity.review or
-        captain.status == 'accepted'
+        (captain and captain.status == 'accepted')
     )
 
 

@@ -30,6 +30,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
+from bluebottle.activities.tests.factories import TeamFactory
 
 
 class TimeBasedListAPIViewTestCase():
@@ -2359,10 +2360,20 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
     participant_factory = PeriodParticipantFactory
 
     def test_get_owner(self):
+        self.participants[2].team = TeamFactory.create(activity=self.activity)
+        self.participants[2].save()
+        TeamSlotFactory.create(team=self.participants[2].team, activity=self.activity)
+
         super().test_get_owner()
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
         self.assertEqual(len(included_contributions), 8)
+
+        included_teams = self.included_by_type(self.response, 'activities/teams')
+        self.assertEqual(len(included_teams), 1)
+
+        included_team_slots = self.included_by_type(self.response, 'activities/time-based/team-slots')
+        self.assertEqual(len(included_team_slots), 1)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

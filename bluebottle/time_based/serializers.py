@@ -44,7 +44,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise',
             'review',
             'contributors',
-            'my_contributor'
+            'my_contributor',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -198,12 +198,11 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'location'
         ]
 
-    included_serializers = dict(
-        ActivitySlotSerializer.included_serializers,
-        **{
-            'team': 'bluebottle.activities.utils.TeamSerializer',
-        }
-    )
+    included_serializers = {
+        'team': 'bluebottle.activities.utils.TeamSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
 
 
 class DateActivitySlotInfoMixin():

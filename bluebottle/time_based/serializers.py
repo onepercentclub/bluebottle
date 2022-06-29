@@ -773,7 +773,8 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         resource_name = 'contributors/time-based/period-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'contributions',
-            'team'
+            'team',
+            'team.slot'
         ]
 
     included_serializers = dict(
@@ -781,6 +782,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         **{
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
         }
     )
 

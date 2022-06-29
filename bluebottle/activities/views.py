@@ -175,7 +175,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
             )
 
         has_slot = self.request.query_params.get('filter[has_slot]')
-        if has_slot is not None:
+        if has_slot == 'false':
             queryset = queryset.filter(slot__start__isnull=True)
 
         start = self.request.query_params.get('filter[start]')

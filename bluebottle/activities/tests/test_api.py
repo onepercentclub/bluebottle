@@ -1796,7 +1796,7 @@ class TeamListViewAPITestCase(APITestCase):
             )
 
     def test_get_filtered_passed(self):
-        self.perform_get(user=self.activity.owner, query={'filter[start]': 'future'})
+        self.perform_get(user=self.activity.owner, query={'filter[start]': 'passed'})
 
         self.assertStatus(status.HTTP_200_OK)
         for resource in self.response.json()['data']:

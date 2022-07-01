@@ -3,6 +3,9 @@ from builtins import object
 from builtins import str
 from contextlib import contextmanager
 from importlib import import_module
+from urllib.parse import (
+    urlencode, urlparse, parse_qsl, ParseResult
+)
 
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -206,15 +209,28 @@ class APITestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
 
-    def perform_get(self, user=None):
+    def perform_get(self, user=None, query=None):
         """
         Perform a get request and save the result in `self.response`
 
         If `user` is None, perform an anoymous request
         """
+
+        if query:
+            parsed_url = urlparse(self.url)
+            current_query = dict(parse_qsl(parsed_url.query))
+            current_query.update(query)
+
+            url = ParseResult(
+                parsed_url.scheme, parsed_url.netloc, parsed_url.path,
+                parsed_url.params, urlencode(query, doseq=True), parsed_url.fragment
+            ).geturl()
+        else:
+            url = self.url
+
         self.user = user
         self.response = self.client.get(
-            self.url,
+            url,
             user=user
         )
 

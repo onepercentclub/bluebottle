@@ -170,7 +170,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         start = self.request.GET.get('start')
         try:
-            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            queryset = queryset.filter(
+                start__gte=dateutil.parser.parse(start).astimezone(tz)
+            )
         except (ValueError, TypeError):
             pass
 

@@ -175,14 +175,19 @@ class TeamList(JsonApiViewMixin, ListAPIView):
             )
 
         has_slot = self.request.query_params.get('filter[has_slot]')
+        start = self.request.query_params.get('filter[start]')
         if has_slot == 'false':
             queryset = queryset.filter(slot__start__isnull=True)
-
-        start = self.request.query_params.get('filter[start]')
-        if start == 'future':
-            queryset = queryset.filter(slot__start__gt=timezone.now())
+        elif start == 'future':
+            queryset = queryset.filter(
+                slot__start__gt=timezone.now()
+            ).order_by('start')
         elif start == 'passed':
-            queryset = queryset.filter(slot__start__lt=timezone.now()).exclude(slot__start__isnull=True)
+            queryset = queryset.filter(
+                slot__start__lt=timezone.now()
+            ).exclude(
+                slot__start__isnull=True
+            ).order_by('-start')
 
         if self.request.user.is_authenticated:
             queryset = queryset.filter(
@@ -205,7 +210,14 @@ class TeamList(JsonApiViewMixin, ListAPIView):
                         )
                     )
                 )
-            ).distinct().order_by('-current_user', '-id')
+            ).distinct().order_by('-current_user')
+            if has_slot == 'false':
+                queryset = queryset.order_by('-current_user', 'id')
+            elif start == 'future':
+                queryset = queryset.order_by('-current_user', 'slot__start')
+            elif start == 'passed':
+                queryset = queryset.order_by('-current_user', '-slot__start')
+
         else:
             queryset = self.queryset.filter(
                 status='open'

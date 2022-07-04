@@ -13,6 +13,7 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
+from bluebottle.activities.models import Team
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
     BaseContributorSerializer, BaseContributionSerializer
@@ -33,9 +34,19 @@ from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
+class TeamsField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+        return f"{self.reverse('team-list')}?activity_id={kwargs['pk']}"
+
+
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
+
+    teams = TeamsField()
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -45,6 +56,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review',
             'contributors',
             'my_contributor',
+            'teams'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -199,11 +211,13 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'location'
         ]
 
-    included_serializers = {
-        'team': 'bluebottle.activities.utils.TeamSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
-    }
+    included_serializers = dict(
+        ActivitySlotSerializer.included_serializers,
+        **{
+            'team': 'bluebottle.activities.utils.TeamSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
+        }
+    )
 
 
 class DateActivitySlotInfoMixin():

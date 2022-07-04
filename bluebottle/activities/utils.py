@@ -292,7 +292,6 @@ class BaseActivityListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = AnonymizedResourceRelatedField(read_only=True)
-    contributor_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)

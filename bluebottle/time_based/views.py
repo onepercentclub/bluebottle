@@ -23,7 +23,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill
+    DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -41,7 +41,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -200,6 +200,26 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+
+class TeamSlotListView(DateSlotListView):
+    related_permission_classes = {
+        'activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
+    }
+
+    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
+
+
+class TeamSlotDetailView(DateSlotDetailView):
+    permission_classes = [DateSlotActivityStatusPermission, ]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
 
 
 class DateActivityRelatedParticipantList(RelatedContributorListView):

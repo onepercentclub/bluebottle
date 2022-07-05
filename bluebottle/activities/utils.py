@@ -25,7 +25,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, PeriodParticipant
+from bluebottle.time_based.models import TimeContribution, PeriodParticipant, TeamSlot
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
@@ -51,6 +51,7 @@ class TeamSerializer(ModelSerializer):
         permission=CanExportTeamParticipantsPermission,
         read_only=True
     )
+    slot = ResourceRelatedField(queryset=TeamSlot.objects)
 
     def get_members(self, instance):
         user = self.context['request'].user
@@ -74,7 +75,7 @@ class TeamSerializer(ModelSerializer):
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'members', 'activity')
+        fields = ('owner', 'members', 'activity', 'slot')
         meta_fields = (
             'status',
             'transitions',
@@ -85,12 +86,16 @@ class TeamSerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+            'slot',
+            'slot.location'
         ]
 
         resource_name = 'activities/teams'
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+        'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
 

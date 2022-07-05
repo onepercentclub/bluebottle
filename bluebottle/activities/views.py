@@ -190,7 +190,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView):
                         )
                     )
                 )
-            ).order_by('-current_user', '-id')
+            ).distinct().order_by('-current_user', '-id')
         else:
             queryset = self.queryset.filter(
                 status='open'

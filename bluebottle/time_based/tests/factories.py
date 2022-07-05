@@ -1,6 +1,8 @@
 from datetime import timedelta, date
 
 import factory.fuzzy
+
+from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.utils.models import Language
 from django.utils.timezone import now
 
@@ -9,7 +11,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 
 
@@ -82,7 +84,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     start = (now() + timedelta(weeks=2)).date()
 
 
-class DateParticipantFactory(factory.DjangoModelFactory):
+class DateParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DateParticipant
 
@@ -90,7 +92,7 @@ class DateParticipantFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class PeriodParticipantFactory(factory.DjangoModelFactory):
+class PeriodParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = PeriodParticipant
 
@@ -116,3 +118,13 @@ class SlotParticipantFactory(factory.DjangoModelFactory):
 
     slot = factory.SubFactory(DateActivitySlotFactory)
     participant = factory.SubFactory(DateParticipantFactory)
+
+
+class TeamSlotFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TeamSlot
+
+    is_online = False
+    location = factory.SubFactory(GeolocationFactory)
+    start = now() + timedelta(weeks=4)
+    duration = timedelta(hours=2)

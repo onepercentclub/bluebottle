@@ -1150,7 +1150,7 @@ class ParticipantTriggers(ContributorTriggers):
         ),
 
         ModelChangedTrigger(
-            'team',
+            'team_id',
             effects=[
                 NotificationEffect(
                     TeamParticipantAddedNotification,

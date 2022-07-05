@@ -190,15 +190,6 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 
-    def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        if 'team' in serializer.validated_data:
-            serializer.save(activity=serializer.validated_data['team'].activity)
-        serializer.save()
-
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
@@ -215,7 +206,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class TeamSlotListView(DateSlotListView):
     related_permission_classes = {
-        'activity': [
+        'team.activity': [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission),
             DeleteActivityPermission
@@ -225,6 +216,15 @@ class TeamSlotListView(DateSlotListView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        if 'team' in serializer.validated_data:
+            serializer.save(activity=serializer.validated_data['team'].activity)
+        serializer.save()
 
 
 class TeamSlotDetailView(DateSlotDetailView):

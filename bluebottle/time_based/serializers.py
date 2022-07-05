@@ -795,6 +795,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

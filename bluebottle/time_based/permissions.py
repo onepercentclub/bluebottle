@@ -31,23 +31,6 @@ class DateSlotActivityStatusPermission(BasePermission):
         )
 
 
-class TeamSlotActivityStatusPermission(BasePermission):
-    def has_object_action_permission(self, action, user, obj):
-        return (
-            action not in ('POST', 'DELETE') or
-            obj.team.activity.status in ['draft', 'needs_work', 'submitted']
-        )
-
-    def has_action_permission(self, action, user, model_cls):
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method not in ('POST', 'DELETE') or
-            obj.team.activity.status in ['draft', 'needs_work', 'submitted']
-        )
-
-
 class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):

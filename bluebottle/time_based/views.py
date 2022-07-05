@@ -26,7 +26,7 @@ from bluebottle.time_based.models import (
     DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
-    SlotParticipantPermission, DateSlotActivityStatusPermission, TeamSlotActivityStatusPermission
+    SlotParticipantPermission, DateSlotActivityStatusPermission
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -170,7 +170,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         start = self.request.GET.get('start')
         try:
-            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            queryset = queryset.filter(
+                start__gte=dateutil.parser.parse(start).astimezone(tz)
+            )
         except (ValueError, TypeError):
             pass
 
@@ -187,6 +189,15 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        if 'team' in serializer.validated_data:
+            serializer.save(activity=serializer.validated_data['team'].activity)
+        serializer.save()
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -211,13 +222,13 @@ class TeamSlotListView(DateSlotListView):
         ]
     }
 
-    permission_classes = [TenantConditionalOpenClose, TeamSlotActivityStatusPermission, ]
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 
 
 class TeamSlotDetailView(DateSlotDetailView):
-    permission_classes = [TeamSlotActivityStatusPermission, ]
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 

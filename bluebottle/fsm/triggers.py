@@ -200,6 +200,8 @@ class TriggerMixin(object):
             trigger = self._triggers.pop()
             trigger.execute(effects, **options)
 
+        self._triggers = []
+
         return effects
 
     def save(self, *args, **kwargs):
@@ -210,3 +212,11 @@ class TriggerMixin(object):
         while self._postponed_effects:
             effect = self._postponed_effects.pop()
             effect.post_save()
+
+        self._postponed_effects = []
+
+        self._initial_values = dict(
+            (field.name, getattr(self, field.name))
+            for field in self._meta.fields
+            if not field.is_relation
+        )

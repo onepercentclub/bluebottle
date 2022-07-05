@@ -170,7 +170,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         start = self.request.GET.get('start')
         try:
-            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            queryset = queryset.filter(
+                start__gte=dateutil.parser.parse(start).astimezone(tz)
+            )
         except (ValueError, TypeError):
             pass
 
@@ -187,6 +189,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(activity=serializer.validated_data['team'].activity)
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -211,13 +216,13 @@ class TeamSlotListView(DateSlotListView):
         ]
     }
 
-    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 
 
 class TeamSlotDetailView(DateSlotDetailView):
-    permission_classes = [DateSlotActivityStatusPermission, ]
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 

@@ -26,7 +26,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SkillFactory
+    DateActivitySlotFactory, SkillFactory, TeamSlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -1726,7 +1726,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         )
 
 
-class RelatedTeamListViewAPITestCase(APITestCase):
+class TeamListViewAPITestCase(APITestCase):
     serializer = TeamSerializer
 
     def setUp(self):
@@ -1737,6 +1737,14 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
         for team in self.approved_teams:
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
+
+        for team in self.approved_teams[:2]:
+            TeamSlotFactory.create(activity=self.activity, team=team, start=now() + timedelta(days=5))
+
+        TeamSlotFactory.create(
+            activity=self.activity, team=self.approved_teams[2], start=now() - timedelta(days=5)
+        )
+
         self.cancelled_teams = TeamFactory.create_batch(
             5, activity=self.activity, status='cancelled'
         )
@@ -1744,7 +1752,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
             PeriodParticipantFactory.create(activity=self.activity, team=team)
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = f"{reverse('team-list')}?activity_id={self.activity.pk}"
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True
@@ -1770,6 +1778,31 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             len(set(team_ids)),
             'We should have a unique list of team ids'
         )
+
+    def test_get_filtered_has_slot(self):
+        self.perform_get(user=self.activity.owner, query={'filter[has_slot]': 'false'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertIsNone(resource['relationships']['slot']['data'])
+
+    def test_get_filtered_future(self):
+        self.perform_get(user=self.activity.owner, query={'filter[start]': 'future'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['id'] in [str(team.pk) for team in self.approved_teams[:2]]
+            )
+
+    def test_get_filtered_passed(self):
+        self.perform_get(user=self.activity.owner, query={'filter[start]': 'passed'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertEqual(
+                resource['id'], str(self.approved_teams[2].pk)
+            )
 
     def test_get_cancelled_team_captain(self):
         team = self.cancelled_teams[0]
@@ -1991,7 +2024,7 @@ class TeamMemberExportViewAPITestCase(APITestCase):
             activity=self.activity,
         )
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?filter[activity_id]={}".format(reverse('team-list'), self.activity.pk)
 
     @property
     def export_url(self):

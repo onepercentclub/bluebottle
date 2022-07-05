@@ -34,17 +34,19 @@ from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
+class TeamsField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+        return f"{self.reverse('team-list')}?activity_id={kwargs['pk']}"
+
+
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
-    teams = SerializerMethodHyperlinkedRelatedField(
-        model=Team,
-        many=True,
-        related_link_view_name='related-activity-team',
-        related_link_url_kwarg='activity_id'
-
-    )
+    teams = TeamsField()
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -53,8 +55,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise',
             'review',
             'contributors',
-            'teams',
-            'my_contributor'
+            'my_contributor',
+            'teams'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -190,6 +192,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 class TeamSlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
+    activity = ResourceRelatedField(read_only=True)
 
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot
@@ -212,6 +215,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
         ActivitySlotSerializer.included_serializers,
         **{
             'team': 'bluebottle.activities.utils.TeamSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

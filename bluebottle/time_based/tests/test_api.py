@@ -951,6 +951,11 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             in self.data['meta']['transitions']
         )
 
+        self.assertEqual(
+            self.data['relationships']['teams']['links']['self'],
+            f"{reverse('teams-list')}?activity_id={self.activity.pk}"
+        )
+
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()
@@ -1120,14 +1125,6 @@ class TeamSlotAPIViewTestCase(APITestCase):
             'is_online',
             'location_hint'
         ]
-
-    def test_activity_has_teams(self):
-        self.response = self.client.get(self.activity_url, user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-        teams_url = self.getRelatedLink('teams')
-        self.response = self.client.get(teams_url, user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-        self.assertObjectList(models=[self.team])
 
     def test_create_team_slot(self):
         self.perform_create(user=self.manager)

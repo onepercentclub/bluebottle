@@ -865,10 +865,6 @@ def user_is_not_team_captain(effect):
     return not effect.instance.team_id or effect.instance.team.owner != effect.options['user']
 
 
-def always_false(effect):
-    return False
-
-
 def is_not_user(effect):
     """
     User is not the participant
@@ -1138,13 +1134,6 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'preparation_contributions',
                     TimeContributionStateMachine.succeed,
-                ),
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.accept,
-                    conditions=[
-                        has_team
-                    ]
                 ),
             ]
         ),

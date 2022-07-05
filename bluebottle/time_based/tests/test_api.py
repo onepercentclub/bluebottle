@@ -2088,9 +2088,12 @@ class ReviewParticipantTransitionAPIViewTestCase():
         super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
+        self.another_user = BlueBottleUserFactory()
         self.activity = self.factory.create(review=True)
         self.participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
         )
 
         self.url = reverse(self.url_name)
@@ -2116,7 +2119,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.participant.user
+            user=self.user
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2135,7 +2138,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.user
+            user=self.another_user
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

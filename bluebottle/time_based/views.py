@@ -26,7 +26,7 @@ from bluebottle.time_based.models import (
     DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
-    SlotParticipantPermission, DateSlotActivityStatusPermission
+    SlotParticipantPermission, DateSlotActivityStatusPermission, TeamSlotActivityStatusPermission
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -211,13 +211,13 @@ class TeamSlotListView(DateSlotListView):
         ]
     }
 
-    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
+    permission_classes = [TenantConditionalOpenClose, TeamSlotActivityStatusPermission, ]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 
 
 class TeamSlotDetailView(DateSlotDetailView):
-    permission_classes = [DateSlotActivityStatusPermission, ]
+    permission_classes = [TeamSlotActivityStatusPermission, ]
     queryset = TeamSlot.objects.all()
     serializer_class = TeamSlotSerializer
 

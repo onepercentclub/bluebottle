@@ -215,7 +215,14 @@ def automatically_accept(effect):
     """
     automatically accept team
     """
-    return not hasattr(effect.instance.activity, 'review') or not effect.instance.activity.review
+    captain = effect.instance.activity\
+        .contributors.not_instance_of(Organizer)\
+        .filter(user=effect.instance.owner).first()
+    return (
+        not hasattr(effect.instance.activity, 'review') or
+        not effect.instance.activity.review or
+        (captain and captain.status == 'accepted')
+    )
 
 
 def needs_review(effect):
@@ -244,7 +251,7 @@ class TeamTriggers(TriggerManager):
                     conditions=[
                         automatically_accept
                     ]
-                ),
+                )
             ]
         ),
 

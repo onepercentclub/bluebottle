@@ -393,8 +393,12 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             activity=self.activity,
         )
 
+        mail.outbox = []
+
         self.activity.start = date.today() + timedelta(days=4)
         self.activity.save()
+
+        self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
             'The activity starts on {start} and ends on {end}'.format(
                 start=defaultfilters.date(self.activity.start),
@@ -402,6 +406,9 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             )
             in mail.outbox[-1].body
         )
+
+        self.activity.save()
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_unset_start_notification(self):
         self.initiative.states.submit(save=True)
@@ -490,7 +497,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'full')
 
-        self.activity.registration_deadline = date.today() - timedelta(days=4)
         self.activity.start = date.today() - timedelta(days=2)
         self.activity.save()
         self.activity.refresh_from_db()

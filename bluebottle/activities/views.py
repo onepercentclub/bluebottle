@@ -24,7 +24,7 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.time_based.serializers import PeriodParticipantSerializer
+from bluebottle.time_based.serializers import TeamMemberSerializer
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -260,7 +260,7 @@ class TeamMembersList(JsonApiViewMixin, ListAPIView):
             team_id=self.kwargs['team_id']
         )
 
-    serializer_class = PeriodParticipantSerializer
+    serializer_class = TeamMemberSerializer
 
 
 class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):

@@ -9,7 +9,7 @@ from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodHyperlinkedRelatedField, SerializerMethodResourceRelatedField
+    ResourceRelatedField, SerializerMethodResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -17,6 +17,7 @@ from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -25,24 +26,15 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, PeriodParticipant, TeamSlot
-from bluebottle.time_based.states import ParticipantStateMachine
+from bluebottle.time_based.models import TimeContribution, TeamSlot
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 
 
 class TeamSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
-
-    members = SerializerMethodHyperlinkedRelatedField(
-        model=Contributor,
-        many=True,
-        related_link_view_name='team-members',
-        related_link_url_kwarg='team_id'
-    )
 
     participants_export_url = PrivateFileSerializer(
         'team-members-export',
@@ -53,29 +45,9 @@ class TeamSerializer(ModelSerializer):
     )
     slot = ResourceRelatedField(queryset=TeamSlot.objects)
 
-    def get_members(self, instance):
-        user = self.context['request'].user
-        return [
-            contributor for contributor in instance.members.all() if (
-                isinstance(contributor, PeriodParticipant) and (
-                    contributor.status in [
-                        ParticipantStateMachine.new.value,
-                        ParticipantStateMachine.accepted.value,
-                        ParticipantStateMachine.succeeded.value
-                    ] or
-                    user in (
-                        instance.owner,
-                        instance.activity.owner,
-                        instance.activity.initiative.owner,
-                        contributor.user
-                    )
-                )
-            )
-        ]
-
     class Meta(object):
         model = Team
-        fields = ('owner', 'members', 'activity', 'slot')
+        fields = ('owner', 'activity', 'slot')
         meta_fields = (
             'status',
             'transitions',

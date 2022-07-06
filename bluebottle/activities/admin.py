@@ -1,3 +1,5 @@
+from pytz import timezone
+
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -230,10 +232,11 @@ class ActivityForm(StateMachineModelForm):
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)
-    readonly_fields = ('team_link', 'created', 'status')
+    readonly_fields = ('team_link', 'slot_link', 'created', 'status')
     fields = readonly_fields + ('owner',)
 
     extra = 0
+    ordering = ['slot__start']
 
     def team_link(self, obj):
         return format_html(
@@ -241,8 +244,28 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             obj
         )
-
     team_link.short_description = _('Edit')
+
+    def slot_link(self, obj):
+        if getattr(obj, 'slot', None):
+            if obj.slot.location:
+                return format_html(
+                    '<a href="{}#/tab/inline_1/">{}</a>',
+                    reverse('admin:activities_team_change', args=(obj.id,)),
+                    obj.slot.start.astimezone(timezone(obj.slot.location.timezone)).strftime('%c')
+                )
+            else:
+                return format_html(
+                    '<a href="{}#/tab/inline_1/">{}</a>',
+                    reverse('admin:activities_team_change', args=(obj.id,)),
+                    obj.slot.start.strftime('%c')
+                )
+        return format_html(
+            '<a href="{}#/tab/inline_1/">{}</a>',
+            reverse('admin:activities_team_change', args=(obj.id,)),
+            _('Add time slot')
+        )
+    slot_link.short_description = _('Time slot')
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -682,9 +705,10 @@ class TeamAdmin(StateMachineAdmin):
     def get_inline_instances(self, request, obj=None):
         self.inlines = []
         if isinstance(obj.activity, PeriodActivity):
-            from bluebottle.time_based.admin import PeriodParticipantAdminInline
+            from bluebottle.time_based.admin import PeriodParticipantAdminInline, TeamSlotInline
             self.inlines = [
-                PeriodParticipantAdminInline
+                PeriodParticipantAdminInline,
+                TeamSlotInline
             ]
         return super(TeamAdmin, self).get_inline_instances(request, obj)
 

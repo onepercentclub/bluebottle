@@ -1,12 +1,11 @@
 import mimetypes
 import os
 from io import BytesIO
-
-import xlsxwriter
+from operator import attrgetter
 
 import icalendar
-
 import magic
+import xlsxwriter
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
@@ -129,7 +128,7 @@ class RelatedPermissionMixin():
         Raises an appropriate exception if the request is not permitted.
         """
         for related, permissions in list(self.related_permission_classes.items()):
-            related_obj = getattr(obj, related)
+            related_obj = attrgetter(related)(obj)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):
                     self.permission_denied(

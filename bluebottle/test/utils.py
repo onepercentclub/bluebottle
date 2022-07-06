@@ -3,6 +3,9 @@ from builtins import object
 from builtins import str
 from contextlib import contextmanager
 from importlib import import_module
+from urllib.parse import (
+    urlencode, urlparse, parse_qsl, ParseResult
+)
 
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -206,15 +209,28 @@ class APITestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.client = JSONAPITestClient()
 
-    def perform_get(self, user=None):
+    def perform_get(self, user=None, query=None):
         """
         Perform a get request and save the result in `self.response`
 
         If `user` is None, perform an anoymous request
         """
+
+        if query:
+            parsed_url = urlparse(self.url)
+            current_query = dict(parse_qsl(parsed_url.query))
+            current_query.update(query)
+
+            url = ParseResult(
+                parsed_url.scheme, parsed_url.netloc, parsed_url.path,
+                parsed_url.params, urlencode(query, doseq=True), parsed_url.fragment
+            ).geturl()
+        else:
+            url = self.url
+
         self.user = user
         self.response = self.client.get(
-            self.url,
+            url,
             user=user
         )
 
@@ -407,6 +423,13 @@ class APITestCase(BluebottleTestCase):
             if {'type': included['type'], 'id': included['id']} in relations
         ]
 
+    def getRelatedLink(self, relation, data=None):
+        """
+        Get the link to a relationship
+        """
+        data = data or self.response.json()['data']
+        return data['relationships'][relation]['links']['related']
+
     def assertRelationship(self, relation, models=None, data=None):
         """
         Assert that a resource with `relation` is linked in the response
@@ -418,7 +441,6 @@ class APITestCase(BluebottleTestCase):
                 self.assertRelationship(relation, models, resource)
         else:
             self.assertTrue(relation in data['relationships'])
-
             if models:
                 relation_data = data['relationships'][relation]['data']
                 if not isinstance(relation_data, (tuple, list)):
@@ -433,7 +455,8 @@ class APITestCase(BluebottleTestCase):
     def assertNoRelationship(self, relation):
         self.assertFalse(relation in self.response.json()['data']['relationships'])
 
-    def assertObjectList(self, data, models=None):
+    def assertObjectList(self, data=None, models=None):
+        data = data or self.response.json()['data']
         if models:
             ids = [resource['id'] for resource in data]
             for model in models:

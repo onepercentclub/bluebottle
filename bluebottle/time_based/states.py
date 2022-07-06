@@ -6,6 +6,7 @@ from bluebottle.activities.states import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
+    TeamSlot,
 )
 from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, AllStates, ModelStateMachine
@@ -279,6 +280,11 @@ class DateActivitySlotStateMachine(ActivitySlotStateMachine):
 
 @register(PeriodActivitySlot)
 class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
+    pass
+
+
+@register(TeamSlot)
+class TeamSlotStateMachine(ActivitySlotStateMachine):
     pass
 
 

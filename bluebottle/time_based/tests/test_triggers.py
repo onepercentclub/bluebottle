@@ -912,13 +912,11 @@ class ParticipantTriggerTestCase(object):
 
     def test_initial_added_through_admin(self):
         mail.outbox = []
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.review_activity,
-            user=BlueBottleUserFactory.create()
+            user=BlueBottleUserFactory.create(),
+            as_user=self.admin_user
         )
-        participant.execute_triggers(user=self.admin_user, send_messages=True)
-        participant.save()
-
         self.assertEqual(participant.status, 'accepted')
 
         self.assertEqual(len(mail.outbox), 2)
@@ -946,14 +944,15 @@ class ParticipantTriggerTestCase(object):
         self.review_activity.team_activity = Activity.TeamActivityChoices.teams
         self.review_activity.save()
 
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.review_activity,
-            user=BlueBottleUserFactory.create()
+            user=BlueBottleUserFactory.create(),
+            as_user=self.admin_user
         )
-        participant.execute_triggers(user=self.admin_user, send_messages=True)
-        participant.save()
         self.assertTrue(participant.team)
         self.assertEqual(participant.team.owner, participant.user)
+        self.assertEqual(participant.status, 'accepted')
+        self.assertEqual(participant.team.status, 'open')
 
     def test_initiate_team_invite(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams
@@ -978,10 +977,13 @@ class ParticipantTriggerTestCase(object):
         self.activity.review = True
         self.activity.save()
 
+        capt = BlueBottleUserFactory.create()
         team_captain = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=capt,
+            as_user=capt
         )
+
         team_captain.states.accept(save=True)
 
         mail.outbox = []
@@ -991,7 +993,6 @@ class ParticipantTriggerTestCase(object):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
         self.assertEqual(participant.status, 'accepted')
 
     def test_initiate_team_invite_review_after_signup(self):
@@ -999,34 +1000,39 @@ class ParticipantTriggerTestCase(object):
         self.activity.review = True
         self.activity.save()
 
+        capt = BlueBottleUserFactory.create()
+
         team_captain = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=capt,
+            as_user=capt
         )
 
         mail.outbox = []
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
             activity=self.activity,
             accepted_invite=team_captain.invite,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
-        self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
 
-        self.assertEqual(participant.status, 'new')
+        self.assertEqual(participant.team, team_captain.team)
         team_captain.states.accept(save=True)
+
+        self.assertEqual(team_captain.status, 'accepted')
+        self.assertEqual(team_captain.team.status, 'open')
         participant.refresh_from_db()
         self.assertEqual(participant.status, 'accepted')
 
     def test_initial_removed_through_admin(self):
         mail.outbox = []
 
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.review_activity,
-            user=BlueBottleUserFactory.create()
+            user=BlueBottleUserFactory.create(),
+            as_user=self.admin_user
         )
-        participant.execute_triggers(user=self.admin_user, send_messages=True)
-        participant.save()
         mail.outbox = []
         participant.states.remove()
         participant.execute_triggers(user=self.admin_user, send_messages=True)
@@ -1046,8 +1052,11 @@ class ParticipantTriggerTestCase(object):
         )
 
     def test_accept(self):
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=user,
+            as_user=user
         )
 
         mail.outbox = []
@@ -1075,8 +1084,11 @@ class ParticipantTriggerTestCase(object):
         self.review_activity.team_activity = Activity.TeamActivityChoices.teams
         self.review_activity.save()
 
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=user,
+            as_user=user
         )
 
         participant.states.accept(save=True)
@@ -1085,12 +1097,12 @@ class ParticipantTriggerTestCase(object):
 
     def test_initial_review(self):
         mail.outbox = []
-        participant = self.participant_factory.build(
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.create(
             activity=self.review_activity,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=participant.user, send_messages=True)
-        participant.save()
 
         self.assertEqual(participant.status, 'new')
         self.assertEqual(len(mail.outbox), 2)
@@ -1127,12 +1139,12 @@ class ParticipantTriggerTestCase(object):
 
     def test_initial_no_review(self):
         mail.outbox = []
-        participant = self.participant_factory.build(
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=participant.user, send_messages=True)
-        participant.save()
 
         self.assertEqual(participant.status, 'accepted')
         self.assertEqual(len(mail.outbox), 2)
@@ -1159,14 +1171,12 @@ class ParticipantTriggerTestCase(object):
     def test_initial_no_review_team(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.activity.save()
-
-        participant = self.participant_factory.build(
+        user = BlueBottleUserFactory.create()
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
-
-        participant.execute_triggers(user=participant.user, send_messages=True)
-        participant.save()
 
         self.assertTrue(participant.team)
         self.assertEqual(participant.team.owner, participant.user)
@@ -1176,7 +1186,6 @@ class ParticipantTriggerTestCase(object):
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
-
         self.assertEqual(self.activity.status, 'full')
 
     def test_no_review_fill_cancel(self):
@@ -1191,16 +1200,20 @@ class ParticipantTriggerTestCase(object):
         self.assertEqual(self.activity.status, 'cancelled')
 
     def test_review_fill(self):
-        participants = self.participant_factory.build_batch(
-            self.review_activity.capacity, activity=self.review_activity
+        participants = self.participant_factory.create_batch(
+            self.review_activity.capacity,
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.review_activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'open')
 
         for participant in participants:
-            participant.user.save()
-            participant.execute_triggers(user=participant.user, send_messages=True)
+            user = participant.user
+            user.save()
+            participant.execute_triggers(user=user, send_messages=True)
             participant.save()
             participant.states.accept(save=True)
 
@@ -1288,9 +1301,19 @@ class ParticipantTriggerTestCase(object):
         )
 
     def test_reject(self):
-        self.participants = self.participant_factory.create_batch(
-            self.activity.capacity, activity=self.review_activity
-        )
+        users = BlueBottleUserFactory.create_batch(self.activity.capacity)
+        self.participants = []
+        for user in users:
+            participant = self.participant_factory.build(
+                user=user,
+                activity=self.review_activity,
+            )
+            participant.execute_triggers(user=user)
+            participant.save()
+
+            self.participants.append(
+                participant
+            )
 
         mail.outbox = []
         participant = self.participants[0]
@@ -1328,7 +1351,9 @@ class ParticipantTriggerTestCase(object):
 
     def test_withdraw(self):
         self.participants = self.participant_factory.create_batch(
-            self.activity.capacity, activity=self.activity
+            self.activity.capacity,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
         )
         self.activity.refresh_from_db()
 
@@ -1493,12 +1518,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         self.activity.save()
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         time.sleep(4)
 
@@ -1525,12 +1549,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         mail.outbox = []
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)
@@ -1559,12 +1582,11 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         mail.outbox = []
 
         user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.build(
+        participant = self.participant_factory.create(
             activity=self.activity,
-            user=user
+            user=user,
+            as_user=user
         )
-        participant.execute_triggers(user=user, send_messages=True)
-        participant.save()
 
         self.slot_participants = [
             SlotParticipantFactory.create(slot=slot, participant=participant)
@@ -1670,7 +1692,9 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
     def test_join(self):
         mail.outbox = []
         participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1695,8 +1719,11 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.activity.save()
         mail.outbox = []
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=user,
+            as_user=user
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1720,7 +1747,9 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
     def test_apply(self):
         mail.outbox = []
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1746,7 +1775,9 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.review_activity.save()
         mail.outbox = []
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
@@ -1772,12 +1803,13 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.review_activity.save()
 
         participant = self.participant_factory.create(
-            activity=self.review_activity
+            activity=self.review_activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
         )
 
         mail.outbox = []
         participant.states.accept(save=True)
-
         self.assertEqual(participant.status, 'accepted')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(

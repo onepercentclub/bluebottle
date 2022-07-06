@@ -17,18 +17,20 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
     APITestCase
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
+from bluebottle.time_based.serializers import TeamSlotSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory
+    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
+from bluebottle.activities.tests.factories import TeamFactory
 
 
 class TimeBasedListAPIViewTestCase():
@@ -949,6 +951,11 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             in self.data['meta']['transitions']
         )
 
+        self.assertEqual(
+            self.data['relationships']['teams']['links']['self'],
+            f"{reverse('team-list')}?activity_id={self.activity.pk}"
+        )
+
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()
@@ -1048,7 +1055,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_get_owner_export_teams_enabled(self):
-
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.team_activities = True
@@ -1077,6 +1083,66 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(
             wrong_signature_response.status_code, 404
         )
+
+
+class TeamSlotAPIViewTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.activity = PeriodActivityFactory.create(
+            team_activity='teams',
+            owner=self.manager
+        )
+        self.team_captain = PeriodParticipantFactory.create(activity=self.activity)
+        self.team = self.team_captain.team
+
+        PeriodParticipantFactory.create_batch(
+            3, activity=self.activity, team=self.team
+        )
+        self.activity_url = reverse('period-detail', args=(self.activity.pk,))
+
+        self.url = reverse('team-slot-list')
+        self.serializer = TeamSlotSerializer
+        self.factory = TeamSlotFactory
+
+        self.defaults = {
+            'activity': self.activity,
+            'team': self.team,
+            'start': (now() + timedelta(days=2)).replace(hour=11, minute=0, second=0, microsecond=0),
+            'duration': '2:00:00',
+            'location': None,
+            'is_online': True,
+            'location_hint': None
+        }
+
+        self.fields = [
+            'activity',
+            'team',
+            'start',
+            'duration',
+            'location',
+            'is_online',
+            'location_hint'
+        ]
+
+    def test_create_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_update_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.url = reverse('team-slot-detail', args=(self.model.id,))
+        location = GeolocationFactory.create()
+        to_change = {
+            'is_online': False,
+            'location_hint': 'Ring top bell',
+            'location': location
+        }
+        self.perform_update(to_change=to_change, user=self.manager)
+        self.assertEqual(self.model.location_hint, 'Ring top bell')
+        self.assertEqual(self.model.location, location)
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -2020,9 +2086,12 @@ class ReviewParticipantTransitionAPIViewTestCase():
         super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
+        self.another_user = BlueBottleUserFactory()
         self.activity = self.factory.create(review=True)
         self.participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
         )
 
         self.url = reverse(self.url_name)
@@ -2048,7 +2117,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.participant.user
+            user=self.user
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2067,7 +2136,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.user
+            user=self.another_user
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2291,10 +2360,20 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
     participant_factory = PeriodParticipantFactory
 
     def test_get_owner(self):
+        self.participants[2].team = TeamFactory.create(activity=self.activity)
+        self.participants[2].save()
+        TeamSlotFactory.create(team=self.participants[2].team, activity=self.activity)
+
         super().test_get_owner()
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
         self.assertEqual(len(included_contributions), 8)
+
+        included_teams = self.included_by_type(self.response, 'activities/teams')
+        self.assertEqual(len(included_teams), 1)
+
+        included_team_slots = self.included_by_type(self.response, 'activities/time-based/team-slots')
+        self.assertEqual(len(included_team_slots), 1)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

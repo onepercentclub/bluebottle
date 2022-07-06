@@ -23,7 +23,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill
+    DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -41,7 +41,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -170,7 +170,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         start = self.request.GET.get('start')
         try:
-            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            queryset = queryset.filter(
+                start__gte=dateutil.parser.parse(start).astimezone(tz)
+            )
         except (ValueError, TypeError):
             pass
 
@@ -200,6 +202,35 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+
+class TeamSlotListView(DateSlotListView):
+    related_permission_classes = {
+        'team.activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
+    }
+
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        if 'team' in serializer.validated_data:
+            serializer.save(activity=serializer.validated_data['team'].activity)
+        serializer.save()
+
+
+class TeamSlotDetailView(DateSlotDetailView):
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
 
 
 class DateActivityRelatedParticipantList(RelatedContributorListView):

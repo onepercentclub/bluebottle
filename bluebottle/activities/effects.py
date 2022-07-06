@@ -82,7 +82,7 @@ class CreateTeamEffect(Effect):
         if not self.instance.team:
             self.instance.team = Team.objects.create(
                 owner=self.instance.user,
-                activity=self.instance.activity
+                activity=self.instance.activity,
             )
             self.instance.save()
 
@@ -128,19 +128,19 @@ class BaseTeamContributionTransitionEffect(Effect):
         )
 
     def pre_save(self, effects):
-        self.transitioned_conributions = []
+        self.transitioned_contributions = []
         for contribution in self.contributions:
             effect = TransitionEffect(self.transition)(contribution)
 
             if effect.is_valid:
-                self.transitioned_conributions.append(contribution)
+                self.transitioned_contributions.append(contribution)
                 effect.pre_save(effects=effects)
                 effects.append(effect)
 
                 contribution.execute_triggers(effects=effects)
 
     def post_save(self):
-        for contribution in self.transitioned_conributions:
+        for contribution in self.transitioned_contributions:
             try:
                 contribution.contributor.refresh_from_db()
                 contribution.save()

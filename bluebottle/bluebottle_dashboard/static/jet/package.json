@@ -22,7 +22,7 @@
     "merge-stream": "1.0.0",
     "perfect-scrollbar": "^1.5.3",
     "postcss-pxtorem": "3.3.1",
-    "select2": "4.0.0",
+    "select2": "4.0.6",
     "timepicker": "https://github.com/geex-arts/timepicker",
     "vinyl-buffer": "1.0.0",
     "vinyl-source-stream": "1.1.0"

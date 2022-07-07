@@ -183,10 +183,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         DateParticipantFactory.create(activity=activity)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
-        self.assertFalse(
-            'First complete and submit the activity before managing participants.' in
-            page.text
-        )
         self.assertTrue(
             'Add another Participant' in
             page.text
@@ -194,8 +190,8 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         activity.status = 'rejected'
         activity.save()
         page = self.app.get(url)
-        self.assertTrue(
-            'First complete and submit the activity before managing participants.' in
+        self.assertFalse(
+            'Add another Participant' in
             page.text
         )
 

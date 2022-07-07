@@ -40,23 +40,13 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     model = Participant
     per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
-                       'created', 'transition_date', 'status', 'disabled')
+                       'created', 'transition_date', 'status')
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']
 
-    def get_fields(self, request, obj=None):
-        if self.can_edit(obj):
-            return super().get_fields(request, obj)
-        else:
-            return ['disabled']
-
     def get_template(self):
         pass
-
-    def disabled(self, obj):
-        return format_html('<i>{}</i>', obj)
-    disabled.short_description = _('First complete and submit the activity before managing participants.')
 
     def can_edit(self, obj):
         return obj and obj.id and obj.status in ['open', 'succeeded', 'full', 'submitted']

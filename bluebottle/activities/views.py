@@ -163,7 +163,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
-    pemrission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
+    permission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
 
     def get_queryset(self, *args, **kwargs):
         queryset = super(TeamList, self).get_queryset(*args, **kwargs)
@@ -176,7 +176,10 @@ class TeamList(JsonApiViewMixin, ListAPIView):
 
         has_slot = self.request.query_params.get('filter[has_slot]')
         start = self.request.query_params.get('filter[start]')
-        if has_slot == 'false':
+        status = self.request.query_params.get('filter[status]')
+        if status:
+            queryset = queryset.filter(status=status)
+        elif has_slot == 'false':
             queryset = queryset.filter(slot__start__isnull=True)
         elif start == 'future':
             queryset = queryset.filter(

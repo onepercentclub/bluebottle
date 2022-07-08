@@ -30,6 +30,23 @@
 {% block sidebar %}{% endblock %}
 
 {% block footer %}
+<form id="admin-logout-form" method="POST" action="{% url 'admin:logout' %}">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+
+
+{% block userlinks %}
+    {% if site_url %}
+        <a href="{{ site_url }}">{% trans 'View site' %}</a> 
+    {% endif %}
+    {% if user.has_usable_password %}
+    <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+    {% endif %}
+
+
+    <a onclick="document.getElementById('admin-logout-form').submit()">{% trans 'Log out' %}</a>
 {% endblock %}
 
 {% block nav-global %}

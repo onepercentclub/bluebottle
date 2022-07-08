@@ -62,16 +62,3 @@ class UserTokenTestCase(BluebottleTestCase):
             self.assertTrue(
                 'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
             )
-
-    def test_login_failure_form_data_is_logged(self):
-        with patch.object(authorization_logger, 'error') as error:
-            response = self.client.post(
-                reverse("token-auth"),
-                {'email': self.user.email, 'password': 'wrong'},
-                format='multipart'
-            )
-            self.assertEqual(response.status_code, 400)
-
-            self.assertTrue(
-                'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
-            )

@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+import bluebottle.utils.monkey_patch_summernote  # noqa
+
 
 class UtilsConfig(AppConfig):
     name = 'bluebottle.utils'

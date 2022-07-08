@@ -405,3 +405,33 @@ class SegmentActivityDetailAPITestCase(APITestCase):
         user.segments.add(self.closed_segment)
         self.perform_get(user=user)
         self.assertStatus(status.HTTP_200_OK)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_retrieve_activity_with_segment(self):
+        self.model = DeedFactory.create()
+        segment = SegmentFactory.create(segment_type=self.segment_type)
+        self.model.segments.add(segment)
+        self.url = reverse('deed-detail', args=(self.model.pk,))
+        user = BlueBottleUserFactory.create()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            len(self.response.data["segments"]),
+            1
+        )
+
+    def test_retrieve_activity_with_invisible_segment(self):
+        self.model = DeedFactory.create()
+        segment = SegmentFactory.create(segment_type=self.segment_type)
+        self.model.segments.add(segment)
+        self.url = reverse('deed-detail', args=(self.model.pk,))
+        user = BlueBottleUserFactory.create()
+        self.segment_type.visibility = False
+        self.segment_type.save()
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            len(self.response.data["segments"]),
+            0
+        )

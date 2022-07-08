@@ -5,6 +5,7 @@ from django.forms.models import ModelFormMetaclass
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_summernote.widgets import SummernoteWidget
 
@@ -36,10 +37,11 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
         return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class SegmentInline(admin.TabularInline):
+class SegmentInline(TabularInlinePaginated):
     model = Segment
     fields = ('name', 'slug')
     show_change_link = True
+    can_delete = True
 
     extra = 0
 
@@ -123,5 +125,5 @@ class SegmentTypeAdmin(admin.ModelAdmin, DynamicArrayMixin):
 
     segments.short_description = _('Number of segments')
 
-    list_display = ['name', 'slug', 'segments', 'is_active', 'required']
-    list_editable = ['is_active', 'required']
+    list_display = ['name', 'slug', 'segments', 'is_active', 'required', 'visibility']
+    list_editable = ['is_active', 'required', 'visibility']

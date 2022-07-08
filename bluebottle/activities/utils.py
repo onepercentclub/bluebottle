@@ -24,6 +24,7 @@ from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
+from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, PeriodParticipant
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.exchange_rates import convert
@@ -185,6 +186,16 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+
+    segments = SerializerMethodResourceRelatedField(
+        source='segments',
+        model=Segment,
+        many=True,
+        read_only=True
+    )
+
+    def get_segments(self, obj):
+        return obj.segments.filter(segment_type__visibility=True)
 
     matching_properties = MatchingPropertiesField()
 

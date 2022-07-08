@@ -216,7 +216,16 @@ class FundingTriggers(ActivityTriggers):
 
         ModelChangedTrigger(
             'amount_matching',
-            effects=[]
+            effects=[
+                TransitionEffect(
+                    FundingStateMachine.succeed,
+                    conditions=[should_finish, target_reached]
+                ),
+                TransitionEffect(
+                    FundingStateMachine.partial,
+                    conditions=[should_finish, target_not_reached]
+                ),
+            ]
         )
     ]
 

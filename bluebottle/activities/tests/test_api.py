@@ -1742,6 +1742,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         )
         for team in self.cancelled_teams:
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
+            PeriodParticipantFactory.create(activity=self.activity, team=team)
 
         self.url = reverse('related-activity-team', args=(self.activity.pk, ))
 
@@ -1763,12 +1764,19 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertMeta('transitions')
         for resource in self.response.json()['data']:
             self.assertTrue(resource['meta']['participants-export-url'] is not None)
+        team_ids = [t["id"] for t in self.response.json()["data"]]
+        self.assertEqual(
+            len(team_ids),
+            len(set(team_ids)),
+            'We should have a unique list of team ids'
+        )
 
     def test_get_cancelled_team_captain(self):
         team = self.cancelled_teams[0]
         self.perform_get(user=team.owner)
 
         self.assertStatus(status.HTTP_200_OK)
+
         self.assertTotal(len(self.approved_teams) + 1)
         self.assertObjectList(self.approved_teams + [team])
         self.assertRelationship('activity', [self.activity])
@@ -1843,7 +1851,7 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
 
-class TeamTranistionListViewAPITestCase(APITestCase):
+class TeamTransitionListViewAPITestCase(APITestCase):
     url = reverse('team-transition-list')
     serializer = TeamTransitionSerializer
 

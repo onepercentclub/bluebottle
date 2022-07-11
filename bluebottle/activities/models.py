@@ -302,7 +302,7 @@ class Team(TriggerMixin, models.Model):
 
     @property
     def name(self):
-        return str(_("{name}'s team").format(name=self.owner.full_name))
+        return str(_("Team {name}").format(name=self.owner.full_name))
 
     def __str__(self):
         return self.name

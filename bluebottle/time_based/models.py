@@ -225,6 +225,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         _('title'),
         max_length=255,
         null=True, blank=True)
+
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
     is_online = models.NullBooleanField(
@@ -519,39 +520,11 @@ class TeamSlot(ActivitySlot):
         fields = super().required_fields + [
             'start',
             'duration',
-            'is_online',
         ]
 
         if not self.is_online:
             fields.append('location')
         return fields
-
-    @property
-    def end(self):
-        if self.start and self.duration:
-            return self.start + self.duration
-
-    @property
-    def sequence(self):
-        ids = list(self.activity.slots.values_list('id', flat=True))
-        if len(ids) and self.id and self.id in ids:
-            return ids.index(self.id) + 1
-        return '-'
-
-    @property
-    def local_timezone(self):
-        if self.location and self.location.position:
-            tz_name = tf.timezone_at(
-                lng=self.location.position.x,
-                lat=self.location.position.y
-            )
-            return pytz.timezone(tz_name)
-
-    @property
-    def utc_offset(self):
-        tz = self.local_timezone or timezone.get_current_timezone()
-        if self.start and tz:
-            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     class Meta:
         verbose_name = _('team slot')

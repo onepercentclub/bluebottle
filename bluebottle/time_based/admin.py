@@ -273,13 +273,10 @@ class TeamSlotInline(admin.StackedInline):
 
     ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
-    raw_id_fields = ['location']
     fields = [
         'start',
         'duration',
         'timezone',
-        'is_online',
-        'location'
     ]
 
     def timezone(self, obj):

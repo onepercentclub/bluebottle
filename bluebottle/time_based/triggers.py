@@ -43,12 +43,13 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
-    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification
+    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
+    TeamSlotChangedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    PeriodActivitySlot, SlotParticipant
+    PeriodActivitySlot, SlotParticipant, TeamSlot
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
@@ -718,6 +719,37 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
 
+    ]
+
+
+def has_future_date(effect):
+    """
+    team slot has a date set
+    """
+    return effect.instance.start and effect.instance.start > now()
+
+
+@register(TeamSlot)
+class TeamSlotTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            ActivitySlotStateMachine.initiate,
+            effects=[
+                NotificationEffect(
+                    TeamSlotChangedNotification,
+                    conditions=[has_future_date]
+                )
+            ]
+        ),
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                NotificationEffect(
+                    TeamSlotChangedNotification,
+                    conditions=[has_future_date]
+                )
+            ]
+        ),
     ]
 
 

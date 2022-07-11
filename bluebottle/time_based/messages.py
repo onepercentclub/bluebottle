@@ -232,6 +232,33 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
         ]
 
 
+class TeamSlotChangedNotification(TransitionMessage):
+    """
+    Notification when slot details (date, time or location) changed for a team activity
+    """
+    subject = pgettext('email', 'The details of the team activity "{title}" have changed')
+    template = 'messages/changed_team_date'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team',
+        'start': 'start',
+        'duration': 'duration',
+        'end': 'end',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """team members"""
+        return [
+            participant.user for participant in self.obj.team.accepted_participants
+        ]
+
+
 class ActivitySucceededManuallyNotification(TransitionMessage):
     """
     The activity was set to succeeded manually

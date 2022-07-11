@@ -516,6 +516,11 @@ class TeamSlot(ActivitySlot):
     team = models.OneToOneField(Team, related_name='slot', on_delete=models.CASCADE)
 
     @property
+    def end(self):
+        if self.start and self.duration:
+            return self.start + self.duration
+
+    @property
     def required_fields(self):
         fields = super().required_fields + [
             'start',
@@ -546,6 +551,10 @@ class TeamSlot(ActivitySlot):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/team-slots'
+
+    @property
+    def accepted_participants(self):
+        return self.team.members.filter(status='accepted')
 
 
 class Participant(Contributor):

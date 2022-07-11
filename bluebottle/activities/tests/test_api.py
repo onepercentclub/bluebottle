@@ -1779,6 +1779,16 @@ class TeamListViewAPITestCase(APITestCase):
             'We should have a unique list of team ids'
         )
 
+    def test_get_filtered_status(self):
+        new_teams = TeamFactory.create_batch(2, activity=self.activity, status='new')
+        self.perform_get(user=self.activity.owner, query={'filter[status]': 'new'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['id'] in [str(team.pk) for team in new_teams]
+            )
+
     def test_get_filtered_has_slot(self):
         self.perform_get(user=self.activity.owner, query={'filter[has_slot]': 'false'})
 

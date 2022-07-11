@@ -612,6 +612,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     ordering = ('-created',)
 
     def type(self, obj):
+        if obj.team_activity == 'teams':
+            return _('Team activity')
         return obj.get_real_instance_class()._meta.verbose_name
 
 

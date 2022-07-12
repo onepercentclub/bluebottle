@@ -1,5 +1,4 @@
-import time
-from datetime import timedelta, date
+from datetime import timedelta, date, time
 
 import mock
 from django.core import mail
@@ -17,12 +16,12 @@ from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification
+    ParticipantAddedOwnerNotification, TeamSlotChangedNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory
+    DateActivitySlotFactory, SlotParticipantFactory, TeamSlotFactory
 )
 
 
@@ -2242,3 +2241,43 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.test_unfill_slot_remove()
         self.slot_part.states.accept(save=True)
         self.assertStatus(self.slot2, 'full')
+
+
+class TeamSlotTriggerTestCase(TriggerTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            team_activity='teams',
+            status='approved',
+            review=False)
+        self.participant = PeriodParticipantFactory.create(
+            user=self.user,
+            activity=self.activity
+        )
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_set_date(self):
+        self.assertTrue(self.participant.team)
+        start = now() + timedelta(days=4)
+        self.model = TeamSlotFactory.build(
+            team=self.participant.team,
+            activity=self.activity,
+            start=start,
+            duration=timedelta(hours=2)
+        )
+        with self.execute():
+            self.assertNotificationEffect(TeamSlotChangedNotification)
+        self.assertEqual(self.model.status, 'open')
+
+        self.model.start = now() + timedelta(days=1)
+        with self.execute():
+            self.assertNotificationEffect(TeamSlotChangedNotification)
+        self.assertEqual(self.model.status, 'open')

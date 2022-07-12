@@ -54,7 +54,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
     ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine,
-    PeriodParticipantStateMachine
+    PeriodParticipantStateMachine, TeamSlotStateMachine
 )
 
 
@@ -733,7 +733,7 @@ def has_future_date(effect):
 class TeamSlotTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            ActivitySlotStateMachine.initiate,
+            TeamSlotStateMachine.initiate,
             effects=[
                 NotificationEffect(
                     TeamSlotChangedNotification,

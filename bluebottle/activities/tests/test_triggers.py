@@ -145,6 +145,11 @@ class TeamTriggersTestCase(TriggerTestCase):
                 [member.user for member in self.model.members.all() if member.user != self.model.owner]
             )
 
+            self.assertNotificationEffect(
+                TeamAddedMessage,
+                [self.model.activity.owner]
+            )
+
         self.model.save()
         self.participant.refresh_from_db()
 

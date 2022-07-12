@@ -1,4 +1,5 @@
-from datetime import timedelta, date, time
+import time
+from datetime import timedelta, date
 
 import mock
 from django.core import mail

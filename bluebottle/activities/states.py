@@ -449,7 +449,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     reopen = Transition(
-        cancelled,
+        [cancelled, running, finished],
         open,
         automatic=False,
         permission=is_activity_owner,

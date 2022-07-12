@@ -2282,3 +2282,24 @@ class TeamSlotTriggerTestCase(TriggerTestCase):
         with self.execute():
             self.assertNotificationEffect(TeamSlotChangedNotification)
         self.assertEqual(self.model.status, 'open')
+
+    def test_change_date(self):
+        self.assertTrue(self.participant.team)
+        start = now() + timedelta(days=4)
+        self.model = TeamSlotFactory.build(
+            team=self.participant.team,
+            activity=self.activity,
+            start=start,
+            duration=timedelta(hours=2)
+        )
+        self.model.start = now() - timedelta(days=1)
+        with self.execute():
+            self.assertNoNotificationEffect(TeamSlotChangedNotification)
+        self.assertEqual(self.model.status, 'finished')
+        self.assertEqual(self.model.team.status, 'finished')
+
+        self.model.start = now() + timedelta(days=3)
+        with self.execute():
+            self.assertNotificationEffect(TeamSlotChangedNotification)
+        self.assertEqual(self.model.status, 'open')
+        self.assertEqual(self.model.team.status, 'open')

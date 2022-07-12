@@ -759,12 +759,40 @@ class TeamSlotTriggers(TriggerManager):
                 )
             ]
         ),
+        TransitionTrigger(
+            TeamSlotStateMachine.reschedule,
+            effects=[
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.reopen
+                )
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[
                 NotificationEffect(
                     TeamSlotChangedNotification,
                     conditions=[has_future_date]
+                ),
+                TransitionEffect(
+                    TeamSlotStateMachine.reschedule,
+                    conditions=[
+                        slot_is_not_started
+                    ]
+                ),
+                TransitionEffect(
+                    TeamSlotStateMachine.finish,
+                    conditions=[
+                        slot_is_finished
+                    ]
+                ),
+                TransitionEffect(
+                    TeamSlotStateMachine.start,
+                    conditions=[
+                        slot_is_not_finished,
+                        slot_is_started
+                    ]
                 ),
             ]
         ),

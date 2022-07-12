@@ -741,13 +741,31 @@ class TeamSlotTriggers(TriggerManager):
                 )
             ]
         ),
+        TransitionTrigger(
+            TeamSlotStateMachine.start,
+            effects=[
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.start
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamSlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.finish
+                )
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[
                 NotificationEffect(
                     TeamSlotChangedNotification,
                     conditions=[has_future_date]
-                )
+                ),
             ]
         ),
     ]

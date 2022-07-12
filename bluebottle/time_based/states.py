@@ -245,7 +245,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     start = Transition(
-        [open, finished],
+        [open, finished, full],
         running,
         name=_("Start"),
         description=_(

@@ -531,6 +531,10 @@ class TeamSlot(ActivitySlot):
             fields.append('location')
         return fields
 
+    @property
+    def is_complete(self):
+        return self.start and self.duration
+
     class Meta:
         verbose_name = _('team slot')
         verbose_name_plural = _('team slots')

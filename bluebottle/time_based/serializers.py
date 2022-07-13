@@ -726,7 +726,6 @@ class TeamMemberSerializer(BaseContributorSerializer):
             'user',
             'status',
             'team',
-            'activity',
             'accepted_invite',
             'invite',
             'team'
@@ -746,7 +745,6 @@ class TeamMemberSerializer(BaseContributorSerializer):
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
-            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

@@ -68,7 +68,7 @@ class TeamSerializer(ModelSerializer):
         included_resources = [
             'owner',
             'slot',
-            'slot.location'
+            'slot.location',
         ]
 
         resource_name = 'activities/teams'

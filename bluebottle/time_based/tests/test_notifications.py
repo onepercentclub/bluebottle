@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from django.utils.timezone import now
+
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
 from bluebottle.activities.tests.factories import TeamFactory
@@ -7,10 +11,11 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
-    SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification
+    SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
+    TeamSlotChangedNotification
 )
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, \
-    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory
+    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory
 
 
 class DateActivityNotificationTestCase(NotificationTestCase):
@@ -257,3 +262,36 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
+
+
+class TeamSlotNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+        self.activity = PeriodActivityFactory.create(
+            title="Save the world!",
+            team_activity='teams'
+        )
+
+        self.participant = PeriodParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter
+        )
+
+        self.obj = TeamSlotFactory.create(
+            activity=self.activity,
+            team=self.participant.team,
+            start=(now() + timedelta(days=3)).replace(hour=20, minute=0, second=0, microsecond=0),
+            duration=timedelta(hours=1)
+        )
+
+    def test_slot_created(self):
+        self.message_class = TeamSlotChangedNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('The details of the team activity "Save the world!" have changed')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')

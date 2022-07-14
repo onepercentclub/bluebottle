@@ -245,7 +245,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     start = Transition(
-        [open, finished, full],
+        [open, finished],
         running,
         name=_("Start"),
         description=_(
@@ -285,14 +285,7 @@ class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
 
 @register(TeamSlot)
 class TeamSlotStateMachine(ActivitySlotStateMachine):
-    initiate = Transition(
-        EmptyState(),
-        ActivitySlotStateMachine.open,
-        name=_('Initiate'),
-        description=_(
-            'The slot was created.'
-        ),
-    )
+    pass
 
 
 class ParticipantStateMachine(ContributorStateMachine):

@@ -700,7 +700,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
 class TeamAdmin(StateMachineAdmin):
     raw_id_fields = ['owner', 'activity']
     readonly_fields = ['created', 'activity_link', 'invite_link']
-    fields = ['activity', 'invite_link', 'created', 'owner', 'status', 'states']
+    fields = ['activity', 'invite_link', 'created', 'owner', 'states']
     superadmin_fields = ['force_status']
     list_display = ['__str__', 'activity_link', 'status']
 

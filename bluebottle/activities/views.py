@@ -242,17 +242,12 @@ class TeamMembersList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = self.queryset.order_by('-current_user', '-id').filter(
+            queryset = self.queryset.order_by('-id').filter(
                 Q(user=self.request.user) |
                 Q(team__owner=self.request.user) |
                 Q(team__activity__owner=self.request.user) |
                 Q(team__activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user),
-                    output_field=BooleanField()
-                )
             )
         else:
             queryset = self.queryset.filter(

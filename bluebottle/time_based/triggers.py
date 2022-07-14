@@ -43,18 +43,17 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
-    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
-    TeamSlotChangedNotification
+    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    PeriodActivitySlot, SlotParticipant, TeamSlot
+    PeriodActivitySlot, SlotParticipant
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
     ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine,
-    PeriodParticipantStateMachine, TeamSlotStateMachine
+    PeriodParticipantStateMachine
 )
 
 
@@ -722,83 +721,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
     ]
 
 
-def has_future_date(effect):
-    """
-    team slot has a date set
-    """
-    return effect.instance.start and effect.instance.start > now()
-
-
-@register(TeamSlot)
-class TeamSlotTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            TeamSlotStateMachine.initiate,
-            effects=[
-                NotificationEffect(
-                    TeamSlotChangedNotification,
-                    conditions=[has_future_date]
-                )
-            ]
-        ),
-        TransitionTrigger(
-            TeamSlotStateMachine.start,
-            effects=[
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.start
-                )
-            ]
-        ),
-        TransitionTrigger(
-            TeamSlotStateMachine.finish,
-            effects=[
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.finish
-                )
-            ]
-        ),
-        TransitionTrigger(
-            TeamSlotStateMachine.reschedule,
-            effects=[
-                RelatedTransitionEffect(
-                    'team',
-                    TeamStateMachine.reopen
-                )
-            ]
-        ),
-        ModelChangedTrigger(
-            'start',
-            effects=[
-                NotificationEffect(
-                    TeamSlotChangedNotification,
-                    conditions=[has_future_date]
-                ),
-                TransitionEffect(
-                    TeamSlotStateMachine.reschedule,
-                    conditions=[
-                        slot_is_not_started
-                    ]
-                ),
-                TransitionEffect(
-                    TeamSlotStateMachine.finish,
-                    conditions=[
-                        slot_is_finished
-                    ]
-                ),
-                TransitionEffect(
-                    TeamSlotStateMachine.start,
-                    conditions=[
-                        slot_is_not_finished,
-                        slot_is_started
-                    ]
-                ),
-            ]
-        ),
-    ]
-
-
 @register(PeriodActivity)
 class PeriodActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
@@ -1217,7 +1139,7 @@ class ParticipantTriggers(ContributorTriggers):
         ),
 
         ModelChangedTrigger(
-            'team_id',
+            'team',
             effects=[
                 NotificationEffect(
                     TeamParticipantAddedNotification,

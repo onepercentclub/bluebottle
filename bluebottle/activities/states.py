@@ -373,18 +373,6 @@ class TeamStateMachine(ModelStateMachine):
         _('The team is cancelled. Contributors can no longer register')
     )
 
-    running = State(
-        _('running'),
-        'running',
-        _('The team is currently running the activity.')
-    )
-
-    finished = State(
-        _('finished'),
-        'finished',
-        _('The team has completed the activity.')
-    )
-
     def is_team_captain(self, user):
         return user == self.instance.owner
 
@@ -449,28 +437,10 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     reopen = Transition(
-        [cancelled, running, finished],
+        cancelled,
         open,
         automatic=False,
         permission=is_activity_owner,
         name=_('accept'),
         description=_('The team is reopened. Contributors can apply again')
-    )
-
-    start = Transition(
-        [open, finished],
-        running,
-        name=_("Start"),
-        description=_(
-            "The slot is currently taking place."
-        )
-    )
-    finish = Transition(
-        [open, running],
-        finished,
-        name=_("Finish"),
-        description=_(
-            "The slot has ended. "
-            "Triggered when slot has ended."
-        )
     )

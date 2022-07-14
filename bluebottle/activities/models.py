@@ -290,10 +290,6 @@ class Team(TriggerMixin, models.Model):
         'members.Member', related_name='teams', null=True, on_delete=models.SET_NULL
     )
 
-    @property
-    def accepted_participants(self):
-        return self.members.filter(status='accepted')
-
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _("Team")

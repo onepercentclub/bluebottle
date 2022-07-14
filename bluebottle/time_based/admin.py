@@ -260,6 +260,7 @@ class TeamSlotInline(admin.StackedInline):
     form = TeamSlotForm
     verbose_name = _('Time slot')
     verbose_name_plural = _('Time slot')
+    raw_id_fields = ('location', )
 
     formfield_overrides = {
         models.DurationField: {
@@ -277,6 +278,8 @@ class TeamSlotInline(admin.StackedInline):
         'start',
         'duration',
         'timezone',
+        'location',
+        'is_online'
     ]
 
     def timezone(self, obj):

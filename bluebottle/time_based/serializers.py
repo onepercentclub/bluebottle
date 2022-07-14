@@ -39,7 +39,8 @@ class TeamsField(HyperlinkedRelatedField):
         super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
 
     def get_url(self, name, view_name, kwargs, request):
-        return f"{self.reverse('team-list')}?activity_id={kwargs['pk']}"
+        if self.parent.instance.team_activity == 'teams':
+            return f"{self.reverse('team-list')}?filter[activity_id]={kwargs['pk']}"
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -193,6 +194,16 @@ class TeamSlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     activity = ResourceRelatedField(read_only=True)
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        if instance.start and instance.duration:
+            return {
+                'ical': reverse_signed('slot-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+            }
+        else:
+            return {}
 
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot
@@ -200,7 +211,8 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'team',
             'start',
             'duration',
-            'location'
+            'location',
+            'links'
         )
 
     class JSONAPIMeta(object):
@@ -424,6 +436,16 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     )
 
 
+class ParticipantsField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+
+        if self.parent.instance.team_activity != 'teams':
+            return f"{view_name}?activity_id={kwargs['pk']}"
+
+
 class PeriodActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('period-detail', view_args=('pk',))
 
@@ -433,28 +455,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodHyperlinkedRelatedField(
-        model=PeriodParticipant,
-        many=True,
-        related_link_view_name='period-participants',
-        related_link_url_kwarg='activity_id'
-
-    )
-
-    def get_contributors(self, instance):
-        user = self.context['request'].user
-        return [
-            contributor for contributor in instance.contributors.all() if (
-                isinstance(contributor, PeriodParticipant) and (
-                    contributor.status in [
-                        ParticipantStateMachine.new.value,
-                        ParticipantStateMachine.accepted.value,
-                        ParticipantStateMachine.succeeded.value
-                    ] or
-                    user in (instance.owner, instance.initiative.owner, contributor.user)
-                )
-            )
-        ]
+    contributors = ParticipantsField(related_link_view_name='period-participant')
 
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',
@@ -488,13 +489,17 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         resource_name = 'activities/time-based/periods'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_contributor.team',
+            'my_contributor.team.slot',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer'
+            'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
+            'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
+            'my_contributor.team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
         }
     )
 

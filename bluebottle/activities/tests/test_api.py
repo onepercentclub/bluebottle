@@ -1744,7 +1744,10 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
             PeriodParticipantFactory.create(activity=self.activity, team=team)
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?filter[activity_id]={}".format(
+            reverse('team-list'),
+            self.activity.pk
+        )
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True
@@ -2096,7 +2099,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2108,7 +2110,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
         self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2126,7 +2127,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertTotal(len(self.accepted_members) + 1)
 
         self.assertObjectList(self.accepted_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2139,7 +2139,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertTotal(len(self.accepted_members) + 1)
 
         self.assertObjectList(self.accepted_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')

@@ -279,7 +279,7 @@ class TeamSlotInline(admin.StackedInline):
         'duration',
         'timezone',
         'location',
-        'is_online'
+        'is_online',
         'status',
     ]
 

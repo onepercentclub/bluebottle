@@ -548,7 +548,6 @@ class TimeBasedDetailAPIViewTestCase():
             self.response_data['relationships']['contributors']['links']['related'],
             user=self.activity.owner
         )
-
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -944,6 +943,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         })
 
     def test_get_open(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
         super().test_get_open()
 
         self.assertFalse(
@@ -953,7 +955,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         self.assertEqual(
             self.data['relationships']['teams']['links']['self'],
-            f"{reverse('team-list')}?activity_id={self.activity.pk}"
+            f"{reverse('team-list')}?filter[activity_id]={self.activity.pk}"
         )
 
     def test_get_open_with_participant(self):

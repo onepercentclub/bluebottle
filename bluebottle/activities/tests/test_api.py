@@ -1991,7 +1991,7 @@ class TeamMemberExportViewAPITestCase(APITestCase):
             activity=self.activity,
         )
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?filter[activity_id]={}".format(reverse('team-list'), self.activity.pk)
 
     @property
     def export_url(self):

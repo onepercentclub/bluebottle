@@ -1477,7 +1477,10 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 
         self.user = BlueBottleUserFactory()
         self.admin_user = BlueBottleUserFactory(is_staff=True)
-        self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative = InitiativeFactory(
+            owner=self.user,
+            status='approved'
+        )
 
         self.activity = self.factory.create(
             preparation=timedelta(hours=1),
@@ -1486,9 +1489,6 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             review=False
         )
         self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
-
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
 
         self.activity.refresh_from_db()
         self.participant = None
@@ -1561,9 +1561,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     def test_join_free_review(self):
         self.activity.review = True
         self.activity.save()
-
         mail.outbox = []
-
         user = BlueBottleUserFactory.create()
         participant = self.participant_factory.build(
             activity=self.activity,

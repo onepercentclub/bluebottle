@@ -2,12 +2,13 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from django.db.models import Q
+from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
+from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
@@ -291,6 +292,53 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
         )
 
         serializer.save(user=self.request.user)
+
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+
+        if 'activity_id' in kwargs:
+            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+            context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+
+            if self.request.user and self.request.user.is_authenticated and (
+                    self.request.user in context['owners'] or
+                    self.request.user.is_staff or
+                    self.request.user.is_superuser
+            ):
+                context['display_member_names'] = 'full_name'
+        else:
+            if self.request.user and self.request.user.is_authenticated and (
+                    self.request.user.is_staff or
+                    self.request.user.is_superuser
+            ):
+                context['display_member_names'] = 'full_name'
+
+        return context
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=('accepted', 'succeeded',))
+            ).annotate(
+                current_user=ExpressionWrapper(
+                    Q(user=self.request.user if self.request.user.is_authenticated else None),
+                    output_field=BooleanField()
+                )
+            ).order_by('-current_user', '-id')
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded',)
+            )
+
+        if 'activity_id' in self.kwargs:
+            queryset = queryset.filter(
+                activity_id=self.kwargs['activity_id']
+            )
+        return queryset
 
 
 class DateParticipantList(ParticipantList):

@@ -63,7 +63,7 @@ install_requires = [
     'django-rest-swagger==2.1.2',
     'django-solo==1.1.5',
     'django-subquery==1.0.4',
-    'django-summernote==0.8.11.6',
+    'django-summernote==0.8.20.0',
     'django-taggit==1.3.0',
     'django-tenant-schemas==1.10.0',
     'django-tinymce==2.7.0',

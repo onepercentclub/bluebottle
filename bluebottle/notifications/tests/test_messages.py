@@ -43,6 +43,12 @@ class MessageTestCase(BluebottleTestCase):
         messages = list(message.get_messages())
         self.assertEqual(messages[0].subject, "Test message for Some title")
 
+    def test_message_body_escaped(self):
+        user = BlueBottleUserFactory.create(primary_language='en', first_name="<h1>First Name</h2>")
+        TestMessage(InitiativeFactory(title='Some title', owner=user)).compose_and_send()
+        message = mail.outbox[0]
+        self.assertTrue('Hi &lt;h1&gt;First Name&lt;/h2&gt;,' in message.alternatives[0][0])
+
     def test_message_subject_without_context(self):
         english = BlueBottleUserFactory.create(primary_language='en')
         message = AnotherTestMessage(InitiativeFactory(title='Some title', owner=english))

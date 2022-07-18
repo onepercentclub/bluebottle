@@ -2,6 +2,7 @@ from datetime import datetime, time
 
 import dateutil
 from django.db.models.functions import Trunc
+from django.urls import reverse
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -33,17 +34,20 @@ from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
+class TeamsField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+        if self.parent.instance.team_activity == 'teams':
+            return f"{self.reverse('team-list')}?filter[activity_id]={kwargs['pk']}"
+
+
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
-    teams = SerializerMethodHyperlinkedRelatedField(
-        model=Team,
-        many=True,
-        related_link_view_name='related-activity-team',
-        related_link_url_kwarg='activity_id'
-
-    )
+    teams = TeamsField()
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -391,6 +395,17 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     )
 
 
+class ParticipantsField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+
+        if self.parent.instance.team_activity != 'teams':
+            url = reverse(self.related_link_view_name)
+            return f"{url}?activity_id={kwargs['pk']}"
+
+
 class PeriodActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('period-detail', view_args=('pk',))
 
@@ -400,28 +415,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodHyperlinkedRelatedField(
-        model=PeriodParticipant,
-        many=True,
-        related_link_view_name='period-participants',
-        related_link_url_kwarg='activity_id'
-
-    )
-
-    def get_contributors(self, instance):
-        user = self.context['request'].user
-        return [
-            contributor for contributor in instance.contributors.all() if (
-                isinstance(contributor, PeriodParticipant) and (
-                    contributor.status in [
-                        ParticipantStateMachine.new.value,
-                        ParticipantStateMachine.accepted.value,
-                        ParticipantStateMachine.succeeded.value
-                    ] or
-                    user in (instance.owner, instance.initiative.owner, contributor.user)
-                )
-            )
-        ]
+    contributors = ParticipantsField(related_link_view_name='period-participant-list')
 
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',
@@ -683,6 +677,35 @@ class ParticipantSerializer(BaseContributorSerializer):
         ]
 
 
+class TeamMemberSerializer(BaseContributorSerializer):
+
+    class Meta(BaseContributorSerializer.Meta):
+        model = PeriodParticipant
+        fields = (
+            'user',
+            'status',
+            'team',
+            'accepted_invite',
+            'invite',
+            'team'
+        )
+
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/period-participants'
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
+            'contributions',
+            'team',
+        ]
+
+    included_serializers = dict(
+        BaseContributorSerializer.included_serializers,
+        **{
+            'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
+            'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+        }
+    )
+
+
 class DateParticipantSerializer(ParticipantSerializer):
     slots = ResourceRelatedField(
         source='slot_participants',
@@ -760,6 +783,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         **{
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

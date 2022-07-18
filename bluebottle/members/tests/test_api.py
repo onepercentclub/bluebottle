@@ -4,6 +4,7 @@ from builtins import range
 from calendar import timegm
 from datetime import datetime, timedelta, date
 
+import jwt
 import mock
 from captcha import client
 from django.core import mail
@@ -39,11 +40,28 @@ class LoginTestCase(BluebottleTestCase):
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+        decoded = jwt.decode(
+            token, algorithms='HS256', options=dict(verify_signature=False)
+        )
+
+        self.assertEquals(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
+        self.assertEqual(decoded['username'], self.user.pk)
+
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+            reverse('user-current'), token='JWT {}'.format(token)
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_login_formencoded(self):
+        response = self.client.post(
+            reverse('token-auth'),
+            {'email': self.email, 'password': self.password},
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_login_different_case(self):
         response = self.client.post(

@@ -1,6 +1,8 @@
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.forms import PasswordResetForm
 from django.db import connection
@@ -112,3 +114,24 @@ def admin_password_reset(request, is_admin_site=False,
     if extra_context is not None:
         context.update(extra_context)
     return TemplateResponse(request, template_name, context)
+
+
+@never_cache
+@require_http_methods(['POST'])
+@csrf_protect
+def admin_logout(request, extra_context=None):
+    """
+    Log out the user for the given HttpRequest.
+
+    This should *not* assume the user is already logged in.
+    """
+    from django.contrib.auth.views import LogoutView
+    defaults = {
+        'extra_context': {
+            # Since the user isn't logged out at this point, the value of
+            # has_permission must be overridden.
+            'has_permission': False,
+            **(extra_context or {})
+        },
+    }
+    return LogoutView.as_view(**defaults)(request)

@@ -363,21 +363,25 @@ class ExportView(PrivateFileView):
     def get_instances(self):
         raise NotImplementedError()
 
-    def get(self, request, *args, **kwargs):
-        output = BytesIO()
-
-        workbook = xlsxwriter.Workbook(output, {'remove_timezone': True})
-        worksheet = workbook.add_worksheet()
+    def write_data(self, workbook):
+        worksheet = workbook.add_worksheet(str(self.get_object())[:30])
 
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
 
         for (index, row) in enumerate(self.get_data()):
             worksheet.write_row(index + 1, 0, row)
 
+    def get(self, request, *args, **kwargs):
+        output = BytesIO()
+
+        workbook = xlsxwriter.Workbook(output, {'remove_timezone': True})
+        self.write_data(workbook)
         workbook.close()
+
         output.seek(0)
 
         response = HttpResponse(output.read())
+
         response['Content-Disposition'] = f'attachment; filename="{self.get_filename()}"'
         response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 

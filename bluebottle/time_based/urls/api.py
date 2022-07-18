@@ -11,10 +11,10 @@ from bluebottle.time_based.views import (
     PeriodParticipantTransitionList, PeriodParticipantDocumentDetail,
     TimeContributionDetail,
     DateSlotDetailView, DateSlotListView,
-    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
+    DateSlotParticipantListView, DateSlotParticipantDetailView, DateSlotParticipantTransitionList,
     DateActivityIcalView, ActivitySlotIcalView, DateParticipantExportView, PeriodParticipantExportView,
     SlotRelatedParticipantList, SkillList, SkillDetail,
-    RelatedSlotParticipantListView, TeamSlotListView, TeamSlotDetailView
+    RelatedDateSlotParticipantListView, TeamSlotListView, TeamSlotDetailView
 )
 
 urlpatterns = [
@@ -92,17 +92,17 @@ urlpatterns = [
         name='date-participant-document'),
 
     url(r'^/slot-participants$',
-        SlotParticipantListView.as_view(),
+        DateSlotParticipantListView.as_view(),
         name='slot-participant-list'),
     url(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
-        RelatedSlotParticipantListView.as_view(),
+        RelatedDateSlotParticipantListView.as_view(),
         name='related-slot-participant-list'),
 
     url(r'^/slot-participants/(?P<pk>\d+)$',
-        SlotParticipantDetailView.as_view(),
+        DateSlotParticipantDetailView.as_view(),
         name='slot-participant-detail'),
     url(r'^/slot-participants/transitions$',
-        SlotParticipantTransitionList.as_view(),
+        DateSlotParticipantTransitionList.as_view(),
         name='slot-participant-transition-list'),
 
     url(r'^/participants/period$',

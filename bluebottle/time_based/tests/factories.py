@@ -11,7 +11,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
+    DateSlotParticipant, Skill, TeamSlot
 )
 
 
@@ -112,9 +113,9 @@ class ParticipationFactory(factory.DjangoModelFactory):
     end = now() + timedelta(weeks=3)
 
 
-class SlotParticipantFactory(factory.DjangoModelFactory):
+class DateSlotParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = SlotParticipant
+        model = DateSlotParticipant
 
     slot = factory.SubFactory(DateActivitySlotFactory)
     participant = factory.SubFactory(DateParticipantFactory)

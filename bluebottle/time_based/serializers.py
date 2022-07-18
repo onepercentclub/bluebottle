@@ -25,7 +25,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, TeamSlot
+    DateSlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.states import ParticipantStateMachine
@@ -417,7 +417,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         TimeBasedBaseSerializer.included_serializers,
         **{
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
-            'my_contributor.slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'my_contributor.slots': 'bluebottle.time_based.serializers.DateSlotParticipantSerializer',
             'my_contributor.slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
@@ -657,7 +657,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
     included_serializers = dict(
         ParticipantListSerializer.included_serializers,
         **{
-            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'slots': 'bluebottle.time_based.serializers.DateSlotParticipantSerializer',
             'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
@@ -782,7 +782,7 @@ class DateParticipantSerializer(ParticipantSerializer):
         **{
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
-            'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'slots': 'bluebottle.time_based.serializers.DateSlotParticipantSerializer',
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
@@ -842,7 +842,7 @@ def activity_matches_participant_and_slot(value):
         )
 
 
-class SlotParticipantSerializer(ModelSerializer):
+class DateSlotParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
@@ -853,13 +853,13 @@ class SlotParticipantSerializer(ModelSerializer):
         return data
 
     class Meta:
-        model = SlotParticipant
+        model = DateSlotParticipant
         fields = ['id', 'slot', 'participant']
         meta_fields = ('status', 'transitions', )
 
         validators = [
             UniqueTogetherValidator(
-                queryset=SlotParticipant.objects.all(),
+                queryset=DateSlotParticipant.objects.all(),
                 fields=('slot', 'participant')
             ),
             activity_matches_participant_and_slot
@@ -880,10 +880,10 @@ class SlotParticipantSerializer(ModelSerializer):
     }
 
 
-class SlotParticipantTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=SlotParticipant.objects.all())
+class DateSlotParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateSlotParticipant.objects.all())
     included_serializers = {
-        'resource': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'resource': 'bluebottle.time_based.serializers.DateSlotParticipantSerializer',
         'resource.participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'resource.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }

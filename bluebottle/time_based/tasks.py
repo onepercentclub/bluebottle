@@ -7,7 +7,8 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
+    PeriodActivitySlot
 )
 
 logger = logging.getLogger('bluebottle')
@@ -72,4 +73,16 @@ def time_contribution_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in TimeContribution.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
+    name="time_contribution_tasks",
+    ignore_result=True
+)
+def period_activity_slot_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in PeriodActivitySlot.get_periodic_tasks():
                 task.execute()

@@ -23,7 +23,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill, TeamSlot
+    DateActivitySlot, DateSlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -40,8 +40,8 @@ from bluebottle.time_based.serializers import (
     PeriodParticipantTransitionSerializer,
     TimeContributionSerializer,
     DateActivitySlotSerializer,
-    SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
+    DateSlotParticipantSerializer,
+    DateSlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -104,14 +104,14 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+class RelatedDateSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
     permission_classes = [
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
     pagination_class = None
 
-    queryset = SlotParticipant.objects.select_related(
+    queryset = DateSlotParticipant.objects.select_related(
         'slot', 'participant', 'participant__user'
     )
     model = DateParticipant
@@ -133,7 +133,7 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
             participant_id=self.kwargs['participant_id']
         )
 
-    serializer_class = SlotParticipantSerializer
+    serializer_class = DateSlotParticipantSerializer
 
 
 class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
@@ -286,8 +286,8 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
         return queryset
 
-    queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
-    serializer_class = SlotParticipantSerializer
+    queryset = DateSlotParticipant.objects.prefetch_related('participant', 'participant__user')
+    serializer_class = DateSlotParticipantSerializer
 
 
 class PeriodActivityRelatedParticipantList(RelatedContributorListView):
@@ -375,10 +375,10 @@ class PeriodParticipantTransitionList(ParticipantTransitionList):
     queryset = PeriodParticipant.objects.all()
 
 
-class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
+class DateSlotParticipantListView(JsonApiViewMixin, CreateAPIView):
     permission_classes = [SlotParticipantPermission]
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
+    queryset = DateSlotParticipant.objects.all()
+    serializer_class = DateSlotParticipantSerializer
 
     def get_queryset(self, *args, **kwargs):
         return super().queryset(*args, **kwargs).filter(
@@ -386,16 +386,16 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         )
 
 
-class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+class DateSlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [SlotParticipantPermission]
 
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
+    queryset = DateSlotParticipant.objects.all()
+    serializer_class = DateSlotParticipantSerializer
 
 
-class SlotParticipantTransitionList(TransitionList):
-    serializer_class = SlotParticipantTransitionSerializer
-    queryset = SlotParticipant.objects.all()
+class DateSlotParticipantTransitionList(TransitionList):
+    serializer_class = DateSlotParticipantTransitionSerializer
+    queryset = DateSlotParticipant.objects.all()
 
 
 class ParticipantDocumentDetail(PrivateFileView):

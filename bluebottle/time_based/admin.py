@@ -28,9 +28,9 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot
+    DateSlotParticipant, Skill, PeriodActivitySlot, TeamSlot
 )
-from bluebottle.time_based.states import SlotParticipantStateMachine
+from bluebottle.time_based.states import DateSlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
@@ -202,10 +202,28 @@ class TimeBasedActivityAdminForm(ActivityForm):
         }
 
 
-class DateActivityASlotInline(TabularInlinePaginated):
-    model = DateActivitySlot
+class SlotInline(TabularInlinePaginated):
     per_page = 20
     can_delete = True
+
+    ordering = ['-start']
+    readonly_fields = ['link']
+
+    extra = 0
+
+    fields = [
+        'link',
+        'title',
+        'start',
+    ]
+
+    def link(self, obj):
+        url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+
+class DateActivitySlotInline(SlotInline):
+    model = DateActivitySlot
 
     formfield_overrides = {
         models.DurationField: {
@@ -216,22 +234,12 @@ class DateActivityASlotInline(TabularInlinePaginated):
                 show_seconds=False)
         },
     }
-    ordering = ['-start']
-    readonly_fields = ['link', 'timezone', ]
-    fields = [
-        'link',
-        'title',
-        'start',
+    fields = SlotInline.fields + [
         'timezone',
         'duration',
         'is_online',
     ]
-
-    extra = 0
-
-    def link(self, obj):
-        url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
+    readonly_fields = ['timezone'] + SlotInline.fields
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:
@@ -239,6 +247,14 @@ class DateActivityASlotInline(TabularInlinePaginated):
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
     timezone.short_description = _('Timezone')
+
+
+class PeriodActivitySlotInline(SlotInline):
+    model = PeriodActivitySlot
+
+    fields = SlotInline.fields + [
+        'end',
+    ]
 
 
 class TeamSlotForm(ModelForm):
@@ -291,7 +307,7 @@ class TeamSlotInline(admin.StackedInline):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivitySlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
@@ -337,7 +353,9 @@ class DateActivityAdmin(TimeBasedAdmin):
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
-    inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (
+        TeamInline, PeriodParticipantAdminInline, PeriodActivitySlotInline
+    ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
@@ -398,9 +416,9 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
 
-class SlotParticipantInline(admin.TabularInline):
+class DateSlotParticipantInline(admin.TabularInline):
 
-    model = SlotParticipant
+    model = DateSlotParticipant
     readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
 
@@ -653,7 +671,7 @@ class SlotDuplicateForm(forms.Form):
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
-    inlines = [SlotParticipantInline]
+    inlines = [DateSlotParticipantInline]
 
     def lookup_allowed(self, lookup, value):
         if lookup == 'activity__slot_selection__exact':
@@ -834,13 +852,13 @@ class ParticipantSlotForm(ModelForm):
         instance = kwargs.get('instance', None)
         if instance:
             slot = instance.slot
-            sm = SlotParticipantStateMachine
+            sm = DateSlotParticipantStateMachine
             self.fields['checked'].initial = instance.status in [sm.registered.value, sm.succeeded.value]
         self.fields['slot'].label = _('Slot')
         self.fields['slot'].widget = SlotWidget(attrs={'slot': slot})
 
     class Meta:
-        model = SlotParticipant
+        model = DateSlotParticipant
         fields = ['slot', 'checked']
 
     def save(self, commit=True):
@@ -876,7 +894,7 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
 
     def save_existing(self, form, instance, commit=True):
         """Transition the slot participant as needed before saving"""
-        sm = SlotParticipantStateMachine
+        sm = DateSlotParticipantStateMachine
         checked = form.cleaned_data['checked']
         form.instance.execute_triggers(send_messages=False)
         if form.instance.status in [sm.registered.value, sm.succeeded.value] and not checked:
@@ -888,7 +906,7 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
 
 class ParticipantSlotInline(admin.TabularInline):
     parent_object = None
-    model = SlotParticipant
+    model = DateSlotParticipant
     formset = ParticipantSlotFormSet
     form = ParticipantSlotForm
 
@@ -923,8 +941,8 @@ class DateParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
-@admin.register(SlotParticipant)
-class SlotParticipantAdmin(StateMachineAdmin):
+@admin.register(DateSlotParticipant)
+class DateSlotParticipantAdmin(StateMachineAdmin):
     raw_id_fields = ['participant', 'slot']
     list_display = ['participant', 'slot']
 

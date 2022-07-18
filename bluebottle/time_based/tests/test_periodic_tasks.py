@@ -21,7 +21,8 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tasks import (
     date_activity_tasks, with_a_deadline_tasks,
-    period_participant_tasks, time_contribution_tasks
+    period_participant_tasks, time_contribution_tasks,
+    period_activity_slot_tasks
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -843,3 +844,62 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
             len(self.participant.contributions.filter(status='new')),
             1
         )
+
+
+class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+
+        self.activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            start=now().date() - timedelta(days=1),
+            registration_deadline=now().date() - timedelta(days=7),
+            duration=timedelta(hours=2),
+            duration_period='weeks'
+        )
+        self.activity.states.submit(save=True)
+
+        self.participants = PeriodParticipantFactory.create_batch(3, activity=self.activity)
+        self.participants[0].states.withdraw(save=True)
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, 'now', return_value=when):
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+                with mock.patch(
+                    'bluebottle.time_based.triggers.now',
+                    return_value=when
+                ):
+                    period_activity_slot_tasks()
+                    time_contribution_tasks()
+
+    def test_create_new_slot(self):
+        self.assertEqual(len(self.activity.slots.all()), 1)
+
+        self.run_task(now() + timedelta(days=7))
+        self.run_task(now() + timedelta(days=7))
+        self.assertEqual(len(self.activity.slots.all()), 2)
+
+        self.run_task(now() + timedelta(days=14))
+        self.run_task(now() + timedelta(days=14))
+        self.assertEqual(len(self.activity.slots.all()), 3)
+
+        for participant in self.participants[1:]:
+            self.assertEqual(
+                len(participant.slot_participants.all()), 3
+            )
+            self.assertEqual(
+                len(participant.contributions.all()), 3
+            )
+
+            self.assertEqual(
+                len(participant.slot_participants.filter(status='registered')), 3
+            )
+
+            self.assertEqual(
+                len(participant.contributions.filter(status='new')), 1
+            )

@@ -19,10 +19,11 @@ from bluebottle.time_based.messages import (
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
     ParticipantAddedOwnerNotification
 )
+from bluebottle.time_based.models import DurationPeriodChoices
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory
+    DateActivitySlotFactory, DateSlotParticipantFactory
 )
 
 
@@ -627,6 +628,100 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         for duration in self.activity.durations:
             self.assertEqual(duration.start.astimezone(tz).date(), current_start)
             self.assertEqual(duration.end, None)
+
+
+class RecurringPeriodActivityTriggerTestCase(BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+    def create(self, **data):
+        defaults = {
+            'initiative': self.initiative,
+            'duration_period': DurationPeriodChoices.weeks,
+            'review': False,
+            'registration_deadline': now().date() - timedelta(days=10),
+            'start': now().date() - timedelta(days=1),
+        }
+
+        activity = self.factory.create(
+            **{**defaults, **data}
+        )
+        activity.states.submit(save=True)
+
+        return activity
+
+    def setUp(self):
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
+    def test_create_passed(self):
+        activity = self.create()
+        self.assertEqual(len(activity.slots.all()), 1)
+        slot = activity.slots.get()
+        self.assertEqual(
+            slot.start, activity.start
+        )
+
+        self.assertEqual(
+            slot.end, activity.start + timedelta(days=6)
+        )
+
+    def test_create_future(self):
+        activity = self.create(start=now().date() + timedelta(days=7))
+        self.assertEqual(len(activity.slots.all()), 1)
+        slot = activity.slots.get()
+        self.assertEqual(
+            slot.start, activity.start
+        )
+
+        self.assertEqual(
+            slot.end, activity.start + timedelta(days=6)
+        )
+
+    def test_create_no_start(self):
+        activity = self.create(start=None)
+        self.assertEqual(len(activity.slots.all()), 1)
+        slot = activity.slots.get()
+        self.assertEqual(
+            slot.start, now().date()
+        )
+
+        self.assertEqual(
+            slot.end, now().date() + timedelta(days=6)
+        )
+
+    def test_create_monthly(self):
+        activity = self.create(duration_period=DurationPeriodChoices.months)
+        self.assertEqual(len(activity.slots.all()), 1)
+        slot = activity.slots.get()
+        self.assertEqual(
+            slot.start, activity.start
+        )
+
+        self.assertEqual(
+            slot.end.day, activity.start.day - 1
+        )
+        self.assertEqual(
+            slot.end.month, activity.start.month + 1
+        )
+
+    def test_create_daily(self):
+        activity = self.create(duration_period=DurationPeriodChoices.days)
+        self.assertEqual(len(activity.slots.all()), 1)
+        slot = activity.slots.get()
+        self.assertEqual(
+            slot.start, activity.start
+        )
+
+        self.assertEqual(
+            slot.end, activity.start
+        )
 
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):
@@ -1556,7 +1651,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         )
 
         self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
+            DateSlotParticipantFactory.create(slot=slot, participant=participant)
             for slot in self.slots
         ]
 
@@ -1589,7 +1684,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         )
 
         self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
+            DateSlotParticipantFactory.create(slot=slot, participant=participant)
             for slot in self.slots
         ]
 
@@ -2073,7 +2168,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
             self.participant.slot_participants.count(),
             0
         )
-        slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant = DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.assertEqual(
             self.participant.slot_participants.count(),
             1
@@ -2081,13 +2176,13 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(slot_participant, 'registered')
 
     def test_withdraw_from_slot(self):
-        slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant = DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         slot_participant.states.withdraw(save=True)
         self.assertStatus(slot_participant, 'withdrawn')
 
     def test_withdraw_from_all_slots(self):
-        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        slot_participant1 = DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant2 = DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
 
         slot_participant1.states.withdraw(save=True)
         self.assertStatus(self.participant, 'accepted')
@@ -2107,8 +2202,8 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(slot_participant2, 'registered')
 
     def test_remove_from_all_slots(self):
-        slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
-        slot_participant2 = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        slot_participant1 = DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        slot_participant2 = DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
 
         slot_participant1.states.remove(save=True)
         self.assertStatus(self.participant, 'accepted')
@@ -2128,30 +2223,30 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(slot_participant2, 'registered')
 
     def test_fill_slot(self):
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.assertStatus(self.slot1, 'open')
         participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=participant2)
         self.assertStatus(self.slot1, 'full')
         self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'full')
 
     def test_fill_slot_ignores_activity_capacity(self):
         self.activity.capacity = 1
         self.activity.save()
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.assertStatus(self.slot1, 'open')
         self.assertStatus(self.activity, 'open')
 
     def test_unfill_slot(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.slot_part = DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=participant2)
         self.assertStatus(self.slot1, 'full')
         self.assertStatus(self.activity, 'full')
         self.slot_part.states.withdraw(save=True)
@@ -2159,12 +2254,12 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.activity, 'open')
 
     def test_fill_new_slot(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.slot_part = DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.assertStatus(self.activity, 'open')
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         participant2 = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=participant2)
         self.assertStatus(self.slot1, 'full')
         self.assertStatus(self.activity, 'full')
 
@@ -2204,13 +2299,13 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.activity, 'expired')
 
     def test_succeed_new_slot(self):
-        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         self.slot1.start = now() - timedelta(days=1)
         self.slot1.save()
         self.assertStatus(self.slot1, 'finished')
         self.assertStatus(self.activity, 'open')
 
-        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.slot2.start = now() - timedelta(days=1)
         self.slot2.save()
         self.assertStatus(self.slot2, 'finished')
@@ -2233,7 +2328,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, 'full')
 
     def test_unfill_slot_remove(self):
-        self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.slot_part = DateSlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')
         self.slot_part.states.remove(save=True)
         self.assertStatus(self.slot2, 'open')

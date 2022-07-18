@@ -11,7 +11,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, SlotParticipant,
+    DateParticipant, DateSlotParticipant,
     PeriodParticipant, DateActivitySlot
 )
 
@@ -46,7 +46,7 @@ class TimeBasedInfoMixin(object):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.get(user=recipient)
-        elif isinstance(self.obj, SlotParticipant):
+        elif isinstance(self.obj, DateSlotParticipant):
             participant = self.obj.participant
         else:
             participant = self.obj.participants.get(user=recipient)

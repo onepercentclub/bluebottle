@@ -9,7 +9,11 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Team
+from polymorphic.models import PolymorphicModel
+
+from bluebottle.activities.models import (
+    Activity, Contributor, Contribution, Team
+)
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
@@ -123,6 +127,12 @@ class TimeBasedActivity(Activity):
         return TimeContribution.objects.filter(
             contributor__activity=self,
             status='succeeded'
+        )
+
+    @property
+    def contributions(self):
+        return TimeContribution.objects.filter(
+            contributor__activity=self,
         )
 
     @property
@@ -300,7 +310,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     @property
     def durations(self):
         return TimeContribution.objects.filter(
-            slot_participant__slot=self
+            slot_participant__dateslotparticipant__slot=self
         )
 
     @property
@@ -358,6 +368,10 @@ class DateActivitySlot(ActivitySlot):
         tz = self.local_timezone or timezone.get_current_timezone()
         if self.start and tz:
             return self.start.astimezone(tz).utcoffset().total_seconds() / 60
+
+    @property
+    def contributions(self):
+        return TimeContribution.objects.filter(slot_participant__dateslotparticipant__slot=self)
 
     def __str__(self):
         return "{} {}".format(_("Slot"), self.sequence)
@@ -490,8 +504,8 @@ class PeriodActivity(TimeBasedActivity):
 
 class PeriodActivitySlot(ActivitySlot):
     activity = models.ForeignKey(PeriodActivity, related_name='slots', on_delete=models.CASCADE)
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
+    start = models.DateField(_('start date'))
+    end = models.DateField(_('end date'))
 
     class Meta:
         verbose_name = _('period activity slot')
@@ -506,6 +520,12 @@ class PeriodActivitySlot(ActivitySlot):
             ('api_add_own_periodactivityslot', 'Can add own over a period activity slots through the API'),
             ('api_change_own_periodactivityslot', 'Can change own over a period activity slots through the API'),
             ('api_delete_own_periodactivityslot', 'Can delete own over a period activity slots through the API'),
+        )
+
+    @property
+    def contributions(self):
+        return TimeContribution.objects.filter(
+            slot_participant__periodslotparticipant__slot_id=self.pk
         )
 
 
@@ -624,17 +644,8 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
-
-    slot = models.ForeignKey(
-        DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
-    )
-    participant = models.ForeignKey(
-        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
-    )
-
+class BaseSlotParticipant(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
-    auto_approve = True
 
     def __str__(self):
         return '{name} / {slot}'.format(name=self.participant.user, slot=self.slot)
@@ -650,6 +661,17 @@ class SlotParticipant(TriggerMixin, models.Model):
     class Meta():
         verbose_name = _("Slot participant")
         verbose_name_plural = _("Slot participants")
+
+
+class DateSlotParticipant(BaseSlotParticipant):
+    slot = models.ForeignKey(
+        DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
+    )
+    participant = models.ForeignKey(
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
+    )
+
+    class Meta(BaseSlotParticipant.Meta):
         permissions = (
             ('api_read_slotparticipant', 'Can view slot participant through the API'),
             ('api_add_slotparticipant', 'Can add slot participant through the API'),
@@ -665,6 +687,18 @@ class SlotParticipant(TriggerMixin, models.Model):
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'
+
+
+class PeriodSlotParticipant(BaseSlotParticipant):
+    slot = models.ForeignKey(
+        PeriodActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
+    )
+    participant = models.ForeignKey(
+        PeriodParticipant, related_name='slot_participants', on_delete=models.CASCADE
+    )
+
+    class Meta(BaseSlotParticipant.Meta):
+        unique_together = ['slot', 'participant']
 
 
 class ContributionTypeChoices(DjangoChoices):
@@ -686,7 +720,7 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        SlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
+        BaseSlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
     )
 
     class JSONAPIMeta:
@@ -700,6 +734,20 @@ class TimeContribution(Contribution):
         return _("Contribution {name} {date}").format(
             name=self.contributor.user,
             date=self.start.date() if self.start else ''
+        )
+
+    @property
+    def can_succeed(self):
+        return (
+            self.contributor.status == 'accepted' and
+            self.contributor.activity.status in ('succeeded', 'full', 'open') and
+            (
+                not self.slot_participant or
+                (
+                    self.slot_participant.status == 'registered' and
+                    self.slot_participant.slot.status in ('full', 'running', 'finished')
+                )
+            )
         )
 
 

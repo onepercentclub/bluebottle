@@ -5,7 +5,8 @@ from bluebottle.activities.states import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
+    DateParticipant, PeriodParticipant, TimeContribution,
+    DateActivitySlot, PeriodActivitySlot, DateSlotParticipant, PeriodSlotParticipant,
     TeamSlot,
 )
 from bluebottle.fsm.state import (
@@ -280,7 +281,15 @@ class DateActivitySlotStateMachine(ActivitySlotStateMachine):
 
 @register(PeriodActivitySlot)
 class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
-    pass
+    expire = Transition(
+        ActivitySlotStateMachine.running,
+        ActivitySlotStateMachine.cancelled,
+        name=_('Expire'),
+        automatic=False,
+        description=_(
+            'Expire the slot. People can no longer apply. Contributions are not counted anymore.'
+        ),
+    )
 
 
 @register(TeamSlot)
@@ -455,8 +464,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     )
 
 
-@register(SlotParticipant)
-class SlotParticipantStateMachine(ModelStateMachine):
+class BaseSlotParticipantStateMachine(ModelStateMachine):
     registered = State(
         _('registered'),
         'registered',
@@ -554,6 +562,16 @@ class SlotParticipantStateMachine(ModelStateMachine):
         conditions=[slot_is_open],
         permission=is_user,
     )
+
+
+@register(DateSlotParticipant)
+class DateSlotParticipantStateMachine(BaseSlotParticipantStateMachine):
+    pass
+
+
+@register(PeriodSlotParticipant)
+class PeriodSlotParticipantStateMachine(BaseSlotParticipantStateMachine):
+    pass
 
 
 @register(TimeContribution)

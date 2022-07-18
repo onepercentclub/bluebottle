@@ -184,3 +184,27 @@ class ResetTeamParticipantsEffect(Effect):
 
     def __str__(self):
         return str(_('Reset Team'))
+
+
+class UpdateContributionsEffect(Effect):
+    display = True
+
+    def pre_save(self, effects):
+        self.contributions = []
+        for contribution in self.instance.contributions.all():
+            if contribution.is_finished:
+                if contribution.can_succeed and contribution.status != 'succeeded':
+                    contribution.states.succeed()
+                elif contribution.status != 'failed':
+                    contribution.states.fail()
+            elif contribution.status != 'new':
+                contribution.states.reset()
+
+            self.contributions.append(contribution)
+
+    def post_save(self, **kwargs):
+        for contribution in self.contributions:
+            contribution.save()
+
+    def __str__(self):
+        return str(_('Update Contributions'))

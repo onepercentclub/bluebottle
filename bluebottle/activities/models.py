@@ -244,6 +244,10 @@ class Contribution(TriggerMixin, PolymorphicModel):
     def owner(self):
         return self.contributor.user
 
+    @property
+    def is_finished(self):
+        return self.start < timezone.now()
+
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _("Contribution amount")

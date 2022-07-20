@@ -192,8 +192,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
 
 class TeamSlotSerializer(ActivitySlotSerializer):
-    errors = ValidationErrorsField()
-    required = RequiredErrorsField()
     activity = ResourceRelatedField(read_only=True)
     links = serializers.SerializerMethodField()
 
@@ -214,6 +212,13 @@ class TeamSlotSerializer(ActivitySlotSerializer):
             'duration',
             'location',
             'links'
+        )
+        meta_fields = (
+            'status',
+            'permissions',
+            'transitions',
+            'created',
+            'updated',
         )
 
     class JSONAPIMeta(object):

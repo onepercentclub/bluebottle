@@ -511,21 +511,14 @@ class PeriodActivitySlot(ActivitySlot):
 
 class TeamSlot(ActivitySlot):
     activity = models.ForeignKey(PeriodActivity, related_name='team_slots', on_delete=models.CASCADE)
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
+    start = models.DateTimeField(_('start date and time'))
+    duration = models.DurationField(_('duration'))
     team = models.OneToOneField(Team, related_name='slot', on_delete=models.CASCADE)
 
     @property
     def end(self):
         if self.start and self.duration:
             return self.start + self.duration
-
-    @property
-    def required_fields(self):
-        return super().required_fields + [
-            'start',
-            'duration',
-        ]
 
     @property
     def is_complete(self):

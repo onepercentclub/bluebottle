@@ -27,8 +27,8 @@ from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    DateSlotParticipant, Skill, PeriodActivitySlot, TeamSlot
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution,
+    DateActivitySlot, DateSlotParticipant, Skill, PeriodActivitySlot, TeamSlot
 )
 from bluebottle.time_based.states import DateSlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
@@ -239,7 +239,7 @@ class DateActivitySlotInline(SlotInline):
         'duration',
         'is_online',
     ]
-    readonly_fields = ['timezone'] + SlotInline.fields
+    readonly_fields = ['timezone'] + SlotInline.readonly_fields
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:

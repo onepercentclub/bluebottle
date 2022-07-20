@@ -23,12 +23,12 @@ from bluebottle.test.utils import (
     APITestCase
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
-from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
+from bluebottle.time_based.models import DateSlotParticipant, Skill, PeriodActivity
 from bluebottle.time_based.serializers import TeamSlotSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory, TeamSlotFactory
+    DateActivitySlotFactory, DateSlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
 from bluebottle.activities.tests.factories import TeamFactory
 
@@ -1388,21 +1388,21 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
             activity=self.activity
         )
 
-        slot_participant = SlotParticipantFactory(slot=slot, participant=participant)
+        slot_participant = DateSlotParticipantFactory(slot=slot, participant=participant)
         slot_participant.states.withdraw(save=True)
 
         second = DateActivitySlotFactory.create(
             start=now() + timedelta(days=4),
             activity=self.activity
         )
-        slot_participant = SlotParticipantFactory(slot=second, participant=participant)
+        slot_participant = DateSlotParticipantFactory(slot=second, participant=participant)
 
         third = DateActivitySlotFactory.create(
             start=now() + timedelta(days=6),
             activity=self.activity
         )
         other_participant = DateParticipantFactory.create(activity=self.activity)
-        slot_participant = SlotParticipantFactory(slot=third, participant=other_participant)
+        slot_participant = DateSlotParticipantFactory(slot=third, participant=other_participant)
 
         response = self.client.get(
             self.url,
@@ -2322,7 +2322,7 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
                 document=PrivateDocumentFactory.create()
             )
             for slot in self.activity.slots.all():
-                SlotParticipantFactory.create(
+                DateSlotParticipantFactory.create(
                     participant=participant,
                     slot=slot
                 )
@@ -2425,7 +2425,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.slot.capacity = 1
         self.slot.save()
 
-        SlotParticipantFactory.create(slot=self.slot)
+        DateSlotParticipantFactory.create(slot=self.slot)
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2491,8 +2491,8 @@ class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
         )
         self.participant2.states.withdraw(save=True)
 
-        p1_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
-        p2_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant2)
+        p1_sl1 = DateSlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
+        p2_sl1 = DateSlotParticipant.objects.get(slot=self.slot, participant=self.participant2)
         self.url_part1_slot1 = reverse('slot-participant-detail', args=(p1_sl1.id,))
         self.url_part2_slot1 = reverse('slot-participant-detail', args=(p2_sl1.id,))
 
@@ -2869,7 +2869,7 @@ class DateIcalTestCase(BluebottleTestCase):
         self.activity.slot_selection = 'free'
         self.activity.save()
         participant = DateParticipantFactory.create(activity=self.activity, user=self.user)
-        SlotParticipantFactory.create(slot=self.slots[0], participant=participant)
+        DateSlotParticipantFactory.create(slot=self.slots[0], participant=participant)
 
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2958,7 +2958,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.participant = DateParticipantFactory.create(activity=self.activity)
 
         self.slot_participants = [
-            SlotParticipantFactory.create(participant=self.participant, slot=slot)
+            DateSlotParticipantFactory.create(participant=self.participant, slot=slot)
             for slot in self.slots[:3]
         ]
 
@@ -3003,7 +3003,7 @@ class SlotRelatedParticipantListTestCase(APITestCase):
         self.participants = DateParticipantFactory.create_batch(5, activity=self.activity)
 
         self.slot_participants = [
-            SlotParticipantFactory.create(participant=participant, slot=self.slot)
+            DateSlotParticipantFactory.create(participant=participant, slot=self.slot)
             for participant in self.participants
         ]
 

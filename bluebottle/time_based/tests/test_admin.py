@@ -15,7 +15,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory, PeriodParticipantFactory
+    DateParticipantFactory, DateSlotParticipantFactory, PeriodParticipantFactory
 )
 
 
@@ -203,7 +203,7 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.supporter = BlueBottleUserFactory.create()
         self.participant = DateParticipantFactory.create(status='participant')
         slot = self.participant.activity.slots.first()
-        SlotParticipantFactory.create(
+        DateSlotParticipantFactory.create(
             participant=self.participant,
             slot=slot
         )

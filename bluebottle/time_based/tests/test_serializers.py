@@ -5,7 +5,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateSlotParticipantFactory
 from bluebottle.time_based.serializers import DateActivityListSerializer
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -185,7 +185,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
         user = BlueBottleUserFactory.create()
         participant = DateParticipantFactory.create(user=user, activity=self.activity, status='accepted')
-        SlotParticipantFactory.create(participant=participant, slot=slots[0])
+        DateSlotParticipantFactory.create(participant=participant, slot=slots[0])
         self.assertAttribute(
             'location_info',
             {

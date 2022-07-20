@@ -205,8 +205,9 @@ class TriggerMixin(object):
 
         return effects
 
-    def save(self, *args, **kwargs):
-        self.execute_triggers()
+    def save(self, skip_triggers=False, *args, **kwargs):
+        if not skip_triggers:
+            self.execute_triggers()
 
         super(TriggerMixin, self).save(*args, **kwargs)
 

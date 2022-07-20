@@ -137,7 +137,7 @@ class BaseActiveDurationsTransitionEffect(Effect):
     @classmethod
     def render(cls, effects):
         effect = effects[0]
-        users = [duration.contributor.user for duration in effect.instance.active_durations]
+        users = [duration.contributor.user for duration in effect.durations]
         context = {
             'users': users,
             'transition': cls.transition.name
@@ -150,13 +150,13 @@ class BaseActiveDurationsTransitionEffect(Effect):
             super().is_valid and
             any(
                 self.transition in duration.states.possible_transitions() for
-                duration in self.instance.active_durations
+                duration in self.durations
             )
         )
 
     def pre_save(self, effects):
         self.transitioned_durations = []
-        for duration in self.instance.active_durations:
+        for duration in self.durations:
             if self.transition in duration.states.possible_transitions():
                 self.transitioned_durations.append(duration)
                 self.transition.execute(duration.states)
@@ -164,6 +164,12 @@ class BaseActiveDurationsTransitionEffect(Effect):
     def post_save(self):
         for duration in self.transitioned_durations:
             duration.save()
+
+    @property
+    def durations(self):
+        for duration in self.instance.durations:
+            if duration.contributor.status in ['new', 'accepted']:
+                yield duration
 
 
 def ActiveTimeContributionsTransitionEffect(transition, conditions=None):
@@ -437,3 +443,6 @@ class CreatePeriodSlotTimeContributionEffect(Effect):
             end=get_current_timezone().localize(datetime.combine(slot.end, time(23, 59)))
         )
         contribution.save()
+
+        if self.instance.participant.status not in ['new', 'accepted']:
+            contribution.states.fail(save=True)

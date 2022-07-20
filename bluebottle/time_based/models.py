@@ -117,12 +117,6 @@ class TimeBasedActivity(Activity):
         )
 
     @property
-    def active_durations(self):
-        return self.durations.filter(
-            contributor__status__in=('new', 'accepted')
-        )
-
-    @property
     def values(self):
         return TimeContribution.objects.filter(
             contributor__activity=self,
@@ -305,18 +299,15 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(status='registered', participant__status='accepted')
+        if hasattr(self, 'slot_participants'):
+            return self.slot_participants.filter(status='registered', participant__status='accepted')
+        else:
+            return []
 
     @property
     def durations(self):
         return TimeContribution.objects.filter(
             slot_participant__dateslotparticipant__slot=self
-        )
-
-    @property
-    def active_durations(self):
-        return self.durations.filter(
-            slot_participant__participant__status__in=('new', 'accepted')
         )
 
     class Meta:
@@ -673,15 +664,15 @@ class DateSlotParticipant(BaseSlotParticipant):
 
     class Meta(BaseSlotParticipant.Meta):
         permissions = (
-            ('api_read_slotparticipant', 'Can view slot participant through the API'),
-            ('api_add_slotparticipant', 'Can add slot participant through the API'),
-            ('api_change_slotparticipant', 'Can change slot participant through the API'),
-            ('api_delete_slotparticipant', 'Can delete slot participant through the API'),
+            ('api_read_dateslotparticipant', 'Can view slot participant through the API'),
+            ('api_add_dateslotparticipant', 'Can add slot participant through the API'),
+            ('api_change_dateslotparticipant', 'Can change slot participant through the API'),
+            ('api_delete_dateslotparticipant', 'Can delete slot participant through the API'),
 
-            ('api_read_own_slotparticipant', 'Can view own slot participant through the API'),
-            ('api_add_own_slotparticipant', 'Can add own slot participant through the API'),
-            ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
-            ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
+            ('api_read_own_dateslotparticipant', 'Can view own slot participant through the API'),
+            ('api_add_own_dateslotparticipant', 'Can add own slot participant through the API'),
+            ('api_change_own_dateslotparticipant', 'Can change own slot participant through the API'),
+            ('api_delete_own_dateslotparticipant', 'Can delete own slot participant through the API'),
         )
         unique_together = ['slot', 'participant']
 
@@ -734,20 +725,6 @@ class TimeContribution(Contribution):
         return _("Contribution {name} {date}").format(
             name=self.contributor.user,
             date=self.start.date() if self.start else ''
-        )
-
-    @property
-    def can_succeed(self):
-        return (
-            self.contributor.status == 'accepted' and
-            self.contributor.activity.status in ('succeeded', 'full', 'open') and
-            (
-                not self.slot_participant or
-                (
-                    self.slot_participant.status == 'registered' and
-                    self.slot_participant.slot.status in ('full', 'running', 'finished')
-                )
-            )
         )
 
 

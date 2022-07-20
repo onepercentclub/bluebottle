@@ -27,7 +27,7 @@ from bluebottle.time_based.tasks import (
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
-    SlotParticipantFactory
+    DateSlotParticipantFactory
 )
 
 
@@ -439,216 +439,6 @@ class OverallPeriodParticipantPeriodicTest(BluebottleTestCase):
         self.assertEqual(len(self.participant.contributions.all()), 1)
 
 
-class PeriodParticipantPeriodicTest(BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def setUp(self):
-        super().setUp()
-        self.initiative = InitiativeFactory.create(status='approved')
-        self.initiative.save()
-        start = date.today() + timedelta(days=10)
-        deadline = date.today() + timedelta(days=26)
-
-        self.activity = self.factory.create(
-            initiative=self.initiative,
-            review=False,
-            start=start,
-            deadline=deadline,
-            duration=timedelta(hours=2),
-            duration_period='weeks'
-        )
-        self.activity.states.submit(save=True)
-        self.participant = self.participant_factory.create(activity=self.activity)
-
-    def refresh(self):
-        with LocalTenant(self.tenant, clear_tenant=True):
-            self.participant.refresh_from_db()
-            self.activity.refresh_from_db()
-
-    def run_tasks(self, when):
-        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-            mock_date.today.return_value = when
-            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-            with mock.patch('bluebottle.time_based.triggers.date') as mock_date:
-                mock_date.today.return_value = when
-                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-                with mock.patch('bluebottle.time_based.effects.date') as mock_date:
-                    mock_date.today.return_value = when
-                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-                    with mock.patch.object(
-                            timezone, 'now',
-                            return_value=timezone.get_current_timezone().localize(
-                                datetime(when.year, when.month, when.day)
-                            )
-                    ):
-                        with_a_deadline_tasks()
-                        period_participant_tasks()
-                        time_contribution_tasks()
-
-    def test_contribution_value_is_created(self):
-        self.run_tasks(self.activity.start)
-        self.refresh()
-
-        self.assertEqual(
-            self.participant.contributions.get().status,
-            'new'
-        )
-
-    def test_contribution_value_is_succeeded(self):
-        self.run_tasks(self.activity.start)
-
-        self.run_tasks(self.activity.start + timedelta(weeks=1, days=1))
-        self.refresh()
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='succeeded')),
-            1
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            1
-        )
-
-    def test_contribution_value_is_succeeded_months(self):
-        activity = self.factory.create(
-            initiative=self.initiative,
-            duration=timedelta(hours=2),
-            duration_period='months',
-            deadline=None
-        )
-        activity.states.submit(save=True)
-        participant = self.participant_factory.create(activity=activity)
-
-        self.run_tasks(activity.start + timedelta(minutes=1))
-        self.run_tasks(activity.start + timedelta(weeks=1, days=1))
-
-        participant.refresh_from_db()
-
-        self.assertEqual(
-            len(participant.contributions.filter(status='succeeded')),
-            0
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            1
-        )
-
-        self.run_tasks(activity.start + timedelta(weeks=5))
-
-        participant.refresh_from_db()
-
-        self.assertEqual(
-            len(participant.contributions.filter(status='succeeded')),
-            1
-        )
-
-        self.assertEqual(
-            len(participant.contributions.filter(status='new')),
-            1
-        )
-
-    def test_running_time(self):
-        today = date.today()
-        while today <= self.activity.deadline + timedelta(days=1):
-            self.run_tasks(today)
-            self.refresh()
-            today += timedelta(days=1)
-
-        self.assertEqual(
-            len(self.participant.contributions.all()), 3
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='succeeded')),
-            3
-        )
-        tz = timezone.get_current_timezone()
-
-        first = self.participant.contributions.order_by('start').first()
-        self.assertEqual(first.start.astimezone(tz).date(), self.activity.start)
-
-        last = self.participant.contributions.order_by('start').last()
-        self.assertEqual(last.end.astimezone(tz).date(), self.activity.deadline)
-
-    def test_running_time_stop_and_start(self):
-        today = date.today()
-        while today <= self.activity.deadline + timedelta(days=1):
-            self.run_tasks(today)
-            if today == self.activity.start + timedelta(days=5):
-                self.participant.states.stop(save=True)
-
-            if today == self.activity.start + timedelta(days=10):
-                self.participant.states.start(save=True)
-
-            self.refresh()
-            today += timedelta(days=1)
-
-        self.assertEqual(
-            len(self.participant.contributions.all()), 2
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='succeeded')),
-            2
-        )
-        tz = timezone.get_current_timezone()
-
-        first = self.participant.contributions.order_by('start').first()
-        self.assertEqual(first.start.astimezone(tz).date(), self.activity.start)
-
-        last = self.participant.contributions.order_by('start').last()
-        self.assertEqual(last.end.astimezone(tz).date(), self.activity.deadline)
-
-    def test_running_time_no_start(self):
-        self.activity.start = None
-        self.activity.save()
-
-        self.participant = self.participant_factory.create(activity=self.activity)
-
-        today = date.today()
-        while today <= self.activity.deadline + timedelta(days=1):
-            self.run_tasks(today)
-            self.refresh()
-            today += timedelta(days=1)
-
-        self.assertEqual(
-            len(self.participant.contributions.all()), 4
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='succeeded')),
-            4
-        )
-        tz = timezone.get_current_timezone()
-
-        first = self.participant.contributions.order_by('start').first()
-        self.assertEqual(first.start.astimezone(tz).date(), date.today())
-
-        last = self.participant.contributions.order_by('start').last()
-        self.assertEqual(last.end.astimezone(tz).date(), self.activity.deadline)
-
-    def test_cancel(self):
-        today = date.today()
-        while today <= self.activity.deadline + timedelta(days=1):
-            self.run_tasks(today)
-            self.refresh()
-            today += timedelta(days=1)
-
-        self.assertEqual(
-            len(self.participant.contributions.all()), 3
-        )
-        self.activity.states.cancel(save=True)
-
-        for contribution in self.participant.contributions.all():
-            self.assertEqual(contribution.status, 'failed')
-
-
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):
 
     def setUp(self):
@@ -713,7 +503,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertEqual(self.slot.status, 'open')
         self.participant = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory(slot=self.slot, participant=self.participant)
+        DateSlotParticipantFactory(slot=self.slot, participant=self.participant)
 
         self.run_task(self.after)
 
@@ -758,94 +548,6 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'finished')
 
 
-class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def setUp(self):
-        super().setUp()
-        self.initiative = InitiativeFactory.create(status='approved')
-        self.initiative.save()
-
-        self.activity = self.factory.create(
-            initiative=self.initiative,
-            review=True,
-            duration=timedelta(hours=2),
-            duration_period='weeks'
-        )
-        self.activity.states.submit(save=True)
-        self.participant = self.participant_factory.build(activity=self.activity)
-        self.participant.user.save()
-        self.participant.execute_triggers(user=self.participant.user, send_messages=True)
-        self.participant.save()
-
-    def refresh(self):
-        with LocalTenant(self.tenant, clear_tenant=True):
-            self.participant.refresh_from_db()
-            self.activity.refresh_from_db()
-
-    def run_tasks(self, when):
-        with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-            mock_date.today.return_value = when
-            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-            with mock.patch('bluebottle.time_based.triggers.date') as mock_date:
-                mock_date.today.return_value = when
-                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-
-                with mock.patch('bluebottle.time_based.effects.date') as mock_date:
-                    mock_date.today.return_value = when
-                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                    with mock.patch.object(
-                            timezone, 'now',
-                            return_value=timezone.get_current_timezone().localize(
-                                datetime(when.year, when.month, when.day)
-                            )
-                    ):
-                        with_a_deadline_tasks()
-                        period_participant_tasks()
-                        time_contribution_tasks()
-
-    def test_start(self):
-        self.run_tasks(self.activity.start)
-        self.refresh()
-
-        self.assertEqual(
-            self.participant.contributions.get().status,
-            'new'
-        )
-
-    def test_contribution_value_is_succeeded(self):
-        today = date.today()
-        while today <= self.activity.deadline - timedelta(days=2):
-            self.run_tasks(today)
-            self.refresh()
-            today += timedelta(days=1)
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            2
-        )
-
-        with mock.patch.object(
-                timezone, 'now',
-                return_value=timezone.get_current_timezone().localize(
-                    datetime(today.year, today.month, today.day)
-                )
-        ):
-            self.participant.states.accept(save=True)
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='succeeded')),
-            1
-        )
-
-        self.assertEqual(
-            len(self.participant.contributions.filter(status='new')),
-            1
-        )
-
-
 class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
     def setUp(self):
         super().setUp()
@@ -863,6 +565,7 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
 
         self.participants = PeriodParticipantFactory.create_batch(3, activity=self.activity)
         self.participants[0].states.withdraw(save=True)
+        print(self.participants[0], self.participants[0].status)
 
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):
@@ -888,6 +591,16 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
         self.run_task(now() + timedelta(days=14))
         self.assertEqual(len(self.activity.slots.all()), 3)
 
+        self.assertEqual(
+            len(self.participants[0].slot_participants.all()), 3
+        )
+        self.assertEqual(
+            len(self.participants[0].contributions.all()), 3
+        )
+        self.assertEqual(
+            len(self.participants[0].contributions.filter(status='failed')), 3
+        )
+
         for participant in self.participants[1:]:
             self.assertEqual(
                 len(participant.slot_participants.all()), 3
@@ -903,3 +616,11 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
             self.assertEqual(
                 len(participant.contributions.filter(status='new')), 1
             )
+
+    def test_create_new_slot_rejected(self):
+        self.activity.states.reject(save=True)
+
+        self.run_task(now() + timedelta(days=7))
+        self.run_task(now() + timedelta(days=14))
+
+        self.assertEqual(len(self.activity.slots.all()), 1)

@@ -522,14 +522,10 @@ class TeamSlot(ActivitySlot):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + [
+        return super().required_fields + [
             'start',
             'duration',
         ]
-
-        if not self.is_online:
-            fields.append('location')
-        return fields
 
     @property
     def is_complete(self):

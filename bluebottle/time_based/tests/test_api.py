@@ -1090,7 +1090,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
 
         sheet = workbook.worksheets[0]
         self.assertEqual(
-            tuple(sheet)[0],
+            tuple(sheet.values)[0],
             ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
         )
 
@@ -1115,7 +1115,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
                 team_captain.team.pk, team_captain.team.status,
                 team_captain.team.accepted_participants_count,
                 team_captain.team.slot.start.strftime('%d-%m-%y %H:%M'),
-                team_captain.team.slot.duration.seconds / (60 * 60 * 24),
+                team_captain.team.slot.duration.seconds / (60 * 60),
             )
         )
 

@@ -58,6 +58,21 @@ class SegmentDetail(JsonApiViewMixin, RetrieveAPIView):
     ]
 
 
+class RelatedSegmentDetail(JsonApiViewMixin, ListAPIView):
+    serializer_class = SegmentDetailSerializer
+    queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')
+
+    permission_classes = [
+        OpenSegmentOrMember,
+        TenantConditionalOpenClose,
+    ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        return queryset.filter(segment_type_id=self.kwargs['segment_type'])
+
+
 class SegmentPublicDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = SegmentPublicDetailSerializer
     queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')

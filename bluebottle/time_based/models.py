@@ -519,6 +519,9 @@ class PeriodActivitySlot(ActivitySlot):
             slot_participant__periodslotparticipant__slot_id=self.pk
         )
 
+    def __str__(self):
+        return _('Slot: {start} - {end}').format(start=self.start, end=self.end)
+
 
 class TeamSlot(ActivitySlot):
     activity = models.ForeignKey(PeriodActivity, related_name='team_slots', on_delete=models.CASCADE)

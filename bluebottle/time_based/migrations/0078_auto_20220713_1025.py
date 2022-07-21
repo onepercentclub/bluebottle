@@ -6,11 +6,14 @@ from django.db import migrations
 def copy_slot_participants(apps, schema_editor):
     SlotParticipant = apps.get_model('time_based', 'SlotParticipant')
     DateSlotParticipant = apps.get_model('time_based', 'DateSlotParticipant')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    content_type = ContentType.objects.get_for_model(DateSlotParticipant)
 
     items = []
 
     for slot_participant in SlotParticipant.objects.all():
         DateSlotParticipant.objects.create(
+            polymorphic_ctype=content_type,
             slot_id=slot_participant.slot_id,
             participant_id=slot_participant.participant_id,
             status=slot_participant.status

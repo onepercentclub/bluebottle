@@ -28,7 +28,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution,
-    DateActivitySlot, DateSlotParticipant, Skill, PeriodActivitySlot, TeamSlot
+    DateActivitySlot, DateSlotParticipant, PeriodSlotParticipant, Skill, PeriodActivitySlot, TeamSlot
 )
 from bluebottle.time_based.states import DateSlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
@@ -217,10 +217,6 @@ class SlotInline(TabularInlinePaginated):
         'start',
     ]
 
-    def link(self, obj):
-        url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
-
 
 class DateActivitySlotInline(SlotInline):
     model = DateActivitySlot
@@ -248,13 +244,19 @@ class DateActivitySlotInline(SlotInline):
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
     timezone.short_description = _('Timezone')
 
+    def link(self, obj):
+        url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
 
 class PeriodActivitySlotInline(SlotInline):
     model = PeriodActivitySlot
 
-    fields = SlotInline.fields + [
-        'end',
-    ]
+    fields = ['link', 'start', 'end']
+
+    def link(self, obj):
+        url = reverse('admin:time_based_periodactivityslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class TeamSlotForm(ModelForm):
@@ -745,23 +747,48 @@ class DateSlotAdmin(SlotAdmin):
         )
 
 
+class PeriodSlotParticipantInline(admin.TabularInline):
+    model = PeriodSlotParticipant
+    readonly_fields = ['participant_link', 'smart_status', 'participant_status']
+    fields = readonly_fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    verbose_name = _('Participant')
+    verbose_name_plural = _('Participants')
+
+    def participant_link(self, obj):
+        url = reverse('admin:time_based_periodslotparticipant_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.participant)
+
+    def participant_status(self, obj):
+        return obj.participant.status
+
+    def smart_status(self, obj):
+        return obj.status
+    smart_status.short_description = _('Registered')
+
+
 @admin.register(PeriodActivitySlot)
-class PeriodSlotAdmin(SlotAdmin):
+class PeriodSlotAdmin(StateMachineAdmin):
     model = PeriodActivitySlot
+    inlines = [PeriodSlotParticipantInline]
 
     date_hierarchy = 'start'
     list_display = [
-        '__str__', 'start', 'activity_link',
+        '__str__', 'start', 'activity',
     ]
+    raw_id_fields = ['activity']
+    fields = ['activity', 'start', 'end', 'states']
+
     list_filter = [
         'status',
         SlotTimeFilter,
-        RequiredSlotFilter,
     ]
-
-    def participants(self, obj):
-        return obj.accepted_participants.count()
-    participants.short_description = _('Accepted participants')
 
 
 @admin.register(TeamSlot)
@@ -965,6 +992,30 @@ class DateSlotParticipantAdmin(StateMachineAdmin):
             )
         },
     }
+
+    detail_fields = ['participant', 'slot']
+    status_fields = ['status', 'states']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Detail'), {'fields': self.detail_fields}),
+            (_('Status'), {'fields': self.status_fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
+
+
+@admin.register(PeriodSlotParticipant)
+class PeriodSlotParticipantAdmin(StateMachineAdmin):
+    raw_id_fields = ['participant', 'slot']
+    list_display = ['participant', 'slot']
+
+    inlines = [TimeContributionInlineAdmin]
 
     detail_fields = ['participant', 'slot']
     status_fields = ['status', 'states']

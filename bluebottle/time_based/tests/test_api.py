@@ -1132,6 +1132,24 @@ class TeamSlotAPIViewTestCase(APITestCase):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)
 
+    def test_create_team_slot_missing_start(self):
+        self.defaults['start'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/start'
+        )
+
+    def test_create_team_slot_missing_duration(self):
+        self.defaults['duration'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/duration'
+        )
+
     def test_update_team_slot(self):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)

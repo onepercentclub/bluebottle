@@ -393,8 +393,12 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             activity=self.activity,
         )
 
+        mail.outbox = []
+
         self.activity.start = date.today() + timedelta(days=4)
         self.activity.save()
+
+        self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
             'The activity starts on {start} and ends on {end}'.format(
                 start=defaultfilters.date(self.activity.start),
@@ -402,6 +406,9 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
             )
             in mail.outbox[-1].body
         )
+
+        self.activity.save()
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_unset_start_notification(self):
         self.initiative.states.submit(save=True)
@@ -490,7 +497,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'full')
 
-        self.activity.registration_deadline = date.today() - timedelta(days=4)
         self.activity.start = date.today() - timedelta(days=2)
         self.activity.save()
         self.activity.refresh_from_db()
@@ -1496,7 +1502,10 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 
         self.user = BlueBottleUserFactory()
         self.admin_user = BlueBottleUserFactory(is_staff=True)
-        self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative = InitiativeFactory(
+            owner=self.user,
+            status='approved'
+        )
 
         self.activity = self.factory.create(
             preparation=timedelta(hours=1),
@@ -1505,9 +1514,6 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             review=False
         )
         self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
-
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
 
         self.activity.refresh_from_db()
         self.participant = None
@@ -1578,9 +1584,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
     def test_join_free_review(self):
         self.activity.review = True
         self.activity.save()
-
         mail.outbox = []
-
         user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
             activity=self.activity,

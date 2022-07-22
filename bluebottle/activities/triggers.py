@@ -307,7 +307,8 @@ class TeamTriggers(TriggerManager):
                     ContributionStateMachine.reset,
                     contribution_conditions=[activity_is_active, contributor_is_active]
                 ),
-                NotificationEffect(TeamReappliedMessage)
+                NotificationEffect(TeamReappliedMessage),
+                NotificationEffect(TeamAddedMessage)
             ]
         ),
 

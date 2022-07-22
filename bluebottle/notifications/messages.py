@@ -159,7 +159,7 @@ class TransitionMessage(object):
                     custom_template.set_current_language(recipient.primary_language)
                     try:
                         subject = custom_template.subject.format(**context)
-                        body_html = format_html(custom_template.body_html.format(**context))
+                        body_html = format_html(custom_template.body_html, **context)
                         body_txt = custom_template.body_txt.format(**context)
                     except custom_template.DoesNotExist:
                         # Translation for current language not set, use default.

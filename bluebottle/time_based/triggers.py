@@ -865,13 +865,19 @@ class PeriodActivityTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     PeriodStateMachine.reopen,
                     conditions=[
-                        is_not_full,
+                        is_not_full, registration_deadline_is_not_passed
                     ]
                 ),
                 TransitionEffect(
                     PeriodStateMachine.lock,
                     conditions=[
                         is_full,
+                    ]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.lock,
+                    conditions=[
+                        registration_deadline_is_passed,
                     ]
                 ),
             ]

@@ -306,7 +306,9 @@ class Team(TriggerMixin, models.Model):
 
     @property
     def name(self):
-        return str(_("{name}'s team").format(name=self.owner.full_name))
+        return _("Team {name}").format(
+            name=self.owner.full_name if self.owner_id else _("Anonymous")
+        )
 
     def __str__(self):
         return self.name

@@ -2,7 +2,6 @@ from datetime import datetime, time
 
 import dateutil
 from django.db.models.functions import Trunc
-from django.urls import reverse
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -439,12 +438,16 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
 class ParticipantsField(HyperlinkedRelatedField):
     def __init__(self, many=True, read_only=True, *args, **kwargs):
-        super().__init__(Team, many=many, read_only=read_only, *args, **kwargs)
+        super().__init__(
+            many=many,
+            read_only=read_only,
+            related_link_view_name='period-participants',
+            related_link_url_kwarg='activity_id',
+        )
 
     def get_url(self, name, view_name, kwargs, request):
         if self.parent.instance.team_activity != 'teams':
-            url = reverse(self.related_link_view_name)
-            return f"{url}?activity_id={kwargs['pk']}"
+            return super().get_url(name, view_name, kwargs, request)
 
 
 class PeriodActivitySerializer(TimeBasedBaseSerializer):
@@ -456,7 +459,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = ParticipantsField(related_link_view_name='period-participant-list')
+    contributors = ParticipantsField()
 
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',

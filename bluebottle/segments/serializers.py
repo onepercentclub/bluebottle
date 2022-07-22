@@ -14,7 +14,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
 
     included_serializers = {
-        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentDetailSerializer',
     }
 
     class Meta(object):

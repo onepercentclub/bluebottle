@@ -53,9 +53,6 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
         segment_type = SegmentType.objects.get(pk=result['id'])
 
         self.assertEqual(segment_type.name, result['attributes']['name'])
-        self.assertEqual(
-            result['relationships']['segments']['meta']['count'], 3
-        )
 
         self.assertTrue(
             result['relationships']['segments']['links']['related'].endswith(

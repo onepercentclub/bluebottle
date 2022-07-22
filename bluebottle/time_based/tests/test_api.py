@@ -543,7 +543,6 @@ class TimeBasedDetailAPIViewTestCase():
             self.response_data['meta']['contributor-count'],
             4
         )
-
         response = self.client.get(
             self.response_data['relationships']['contributors']['links']['related'],
             user=self.activity.owner

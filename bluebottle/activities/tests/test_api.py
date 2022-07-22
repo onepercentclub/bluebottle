@@ -1752,7 +1752,10 @@ class TeamListViewAPITestCase(APITestCase):
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
             PeriodParticipantFactory.create(activity=self.activity, team=team)
 
-        self.url = f"{reverse('team-list')}?activity_id={self.activity.pk}"
+        self.url = "{}?filter[activity_id]={}".format(
+            reverse('team-list'),
+            self.activity.pk
+        )
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True

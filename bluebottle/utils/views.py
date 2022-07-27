@@ -32,6 +32,7 @@ from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
+import re
 
 mime = magic.Magic(mime=True)
 
@@ -364,7 +365,8 @@ class ExportView(PrivateFileView):
         raise NotImplementedError()
 
     def write_data(self, workbook):
-        worksheet = workbook.add_worksheet(str(self.get_object())[:30])
+        title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
+        worksheet = workbook.add_worksheet(title)
 
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
 

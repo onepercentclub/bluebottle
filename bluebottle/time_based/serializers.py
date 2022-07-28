@@ -742,7 +742,8 @@ class TeamMemberSerializer(BaseContributorSerializer):
             'team',
             'accepted_invite',
             'invite',
-            'team'
+            'team',
+            'activity'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):

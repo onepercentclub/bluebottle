@@ -294,6 +294,10 @@ class Team(TriggerMixin, models.Model):
     def accepted_participants(self):
         return self.members.filter(status='accepted')
 
+    @property
+    def accepted_participants_count(self):
+        return len(self.accepted_participants)
+
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _("Team")

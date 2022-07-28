@@ -650,6 +650,29 @@ class PeriodParticipantExportView(ExportView):
             PeriodParticipant
         ).prefetch_related('user__segments')
 
+    def write_data(self, workbook):
+        """ Create extra tab with team info"""
+        super().write_data(workbook)
+        if self.get_object().team_activity == 'teams':
+            worksheet = workbook.add_worksheet('Teams')
+
+            fields = [
+                ('name', 'Name'),
+                ('owner__full_name', 'Owner'),
+                ('id', 'ID'),
+                ('status', 'Status'),
+                ('accepted_participants_count', '# Accepted Participants'),
+                ('slot__start', 'Start'),
+                ('slot__duration', 'duration'),
+            ]
+
+            worksheet.write_row(0, 0, [field[1] for field in fields])
+
+            for index, team in enumerate(self.get_object().teams.all()):
+                row = [prep_field(self.request, team, field[0]) for field in fields]
+
+                worksheet.write_row(index + 1, 0, row)
+
 
 class SkillPagination(JsonApiPagination):
     page_size = 100

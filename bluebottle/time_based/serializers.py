@@ -731,6 +731,11 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 class TeamMemberSerializer(BaseContributorSerializer):
 
+    activity = PolymorphicResourceRelatedField(
+        TimeBasedActivitySerializer,
+        queryset=TimeBasedActivity.objects.all()
+    )
+
     class Meta(BaseContributorSerializer.Meta):
         model = PeriodParticipant
         fields = (

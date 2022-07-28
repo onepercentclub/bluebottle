@@ -270,7 +270,6 @@ class BaseActivitySerializer(ModelSerializer):
             'segments',
             'segments.segment_type'
         ]
-        resource_name = 'activities'
 
 
 class BaseActivityListSerializer(ModelSerializer):
@@ -340,7 +339,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'goals',
             'goals.type',
         ]
-        resource_name = 'activities'
 
 
 class BaseTinyActivitySerializer(ModelSerializer):

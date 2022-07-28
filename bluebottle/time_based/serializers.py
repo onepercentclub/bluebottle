@@ -47,8 +47,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
-    teams = TeamsField()
-
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
@@ -57,7 +55,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review',
             'contributors',
             'my_contributor',
-            'teams'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -751,7 +748,7 @@ class TeamMemberSerializer(BaseContributorSerializer):
         included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'team',
-            'team.slot'
+            'team.slot',
         ]
 
     included_serializers = dict(

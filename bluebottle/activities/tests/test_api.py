@@ -1792,7 +1792,7 @@ class TeamListViewAPITestCase(APITestCase):
                 resource['id'] in [str(team.pk) for team in new_teams]
             )
 
-    def test_get_filtered_has_slot(self):
+    def test_get_filtered_has_no_slot(self):
         self.perform_get(user=self.activity.owner, query={'filter[has_slot]': 'false'})
 
         self.assertStatus(status.HTTP_200_OK)

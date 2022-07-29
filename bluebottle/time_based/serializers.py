@@ -686,11 +686,6 @@ class ParticipantSerializer(BaseContributorSerializer):
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
-    activity = PolymorphicResourceRelatedField(
-        TimeBasedActivitySerializer,
-        queryset=TimeBasedActivity.objects.all()
-    )
-
     def to_representation(self, instance):
         result = super().to_representation(instance)
 

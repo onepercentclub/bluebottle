@@ -955,11 +955,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             in self.data['meta']['transitions']
         )
 
-        self.assertEqual(
-            self.data['relationships']['teams']['links']['self'],
-            f"{reverse('team-list')}?filter[activity_id]={self.activity.pk}"
-        )
-
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()

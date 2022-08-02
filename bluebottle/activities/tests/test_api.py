@@ -1768,7 +1768,6 @@ class TeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams) + len(self.cancelled_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertMeta('status')
@@ -1825,7 +1824,6 @@ class TeamListViewAPITestCase(APITestCase):
 
         self.assertTotal(len(self.approved_teams) + 1)
         self.assertObjectList(self.approved_teams + [team])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertEqual(
@@ -1840,7 +1838,6 @@ class TeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertEqual(
@@ -1860,7 +1857,6 @@ class TeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
         for resource in self.response.json()['data']:
             self.assertTrue(resource['meta']['participants-export-url'] is None)
@@ -1881,7 +1877,6 @@ class TeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
     def test_get_anonymous_closed_site(self):

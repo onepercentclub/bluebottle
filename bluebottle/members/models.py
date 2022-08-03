@@ -27,6 +27,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         ('first_name', _('First name')),
     )
 
+    REQUIRED_QUESTIONS_OPTIONS = (
+        ('login', _('After log in')),
+        ('contribution', _('When making a contribution')),
+    )
+
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
@@ -42,6 +47,15 @@ class MemberPlatformSettings(BasePlatformSettings):
     session_only = models.BooleanField(
         default=False,
         help_text=_('Limit user session to browser session')
+    )
+
+    required_questions = models.CharField(
+        choices=REQUIRED_QUESTIONS_OPTIONS,
+        max_length=12,
+        default='login',
+        help_text=_(
+            'When should the user be asked to filled required fields?'
+        )
     )
 
     require_consent = models.BooleanField(

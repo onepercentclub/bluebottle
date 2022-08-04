@@ -940,6 +940,13 @@ def not_team_captain(effect):
     return not effect.instance.team_id or effect.instance.team.owner != effect.instance.user
 
 
+def is_team_captain(effect):
+    """
+    is the team captain
+    """
+    return effect.instance.team_id and effect.instance.team.owner == effect.instance.user
+
+
 def user_is_not_team_captain(effect):
     """
     current user is not team captain
@@ -1307,7 +1314,17 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.reject,
             effects=[
                 NotificationEffect(
-                    ParticipantRejectedNotification
+                    ParticipantRejectedNotification,
+                    conditions=[
+                        not_team_captain
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'team',
+                    TeamStateMachine.cancel,
+                    conditions=[
+                        is_team_captain
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',

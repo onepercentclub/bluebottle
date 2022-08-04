@@ -1464,28 +1464,8 @@ class ParticipantTriggerTestCase(object):
             f'You have withdrawn from the activity "{self.activity.title}"' in subjects
         )
         self.assertTrue(
-            f'A participant has withdrawn from your team for "{self.activity.title}"' in subjects
+            f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
         )
-
-        self.participants[0].team.states.cancel(save=True)
-
-        self.assertEqual(
-            self.participants[0].contributions.
-            exclude(timecontribution__contribution_type='preparation').get().status,
-            'failed'
-        )
-
-        self.participants[0].states.reapply(save=True)
-
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'full')
-        self.assertEqual(
-            self.participants[0].contributions.
-            exclude(timecontribution__contribution_type='preparation').get().status,
-            'failed'
-        )
-        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_withdraw_from_team(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams

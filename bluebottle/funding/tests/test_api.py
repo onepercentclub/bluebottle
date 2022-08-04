@@ -41,6 +41,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from build.lib.bluebottle.segments.tests.factories import SegmentTypeFactory
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -487,11 +488,12 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertIsNone(export_url)
 
     def test_get_owner_export_enabled(self):
+        SegmentTypeFactory.create()
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
         DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
-        DonorFactory.create(activity=self.funding, amount=Money(35, 'EUR'), status='succeeded')
+        DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
         response = self.client.get(self.funding_url, user=self.funding.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']

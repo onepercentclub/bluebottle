@@ -47,8 +47,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
-    teams = TeamsField()
-
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
@@ -57,7 +55,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review',
             'contributors',
             'my_contributor',
-            'teams'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -689,11 +686,6 @@ class ParticipantSerializer(BaseContributorSerializer):
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
-    activity = PolymorphicResourceRelatedField(
-        TimeBasedActivitySerializer,
-        queryset=TimeBasedActivity.objects.all()
-    )
-
     def to_representation(self, instance):
         result = super().to_representation(instance)
 
@@ -734,6 +726,11 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 class TeamMemberSerializer(BaseContributorSerializer):
 
+    activity = PolymorphicResourceRelatedField(
+        TimeBasedActivitySerializer,
+        queryset=TimeBasedActivity.objects.all()
+    )
+
     class Meta(BaseContributorSerializer.Meta):
         model = PeriodParticipant
         fields = (
@@ -742,7 +739,8 @@ class TeamMemberSerializer(BaseContributorSerializer):
             'team',
             'accepted_invite',
             'invite',
-            'team'
+            'team',
+            'activity'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -750,7 +748,7 @@ class TeamMemberSerializer(BaseContributorSerializer):
         included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'team',
-            'team.slot'
+            'team.slot',
         ]
 
     included_serializers = dict(

@@ -55,7 +55,7 @@ class TeamSerializer(ModelSerializer):
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'activity', 'slot', 'members')
+        fields = ('owner', 'slot', 'members')
         meta_fields = (
             'status',
             'transitions',
@@ -270,7 +270,6 @@ class BaseActivitySerializer(ModelSerializer):
             'segments',
             'segments.segment_type'
         ]
-        resource_name = 'activities'
 
 
 class BaseActivityListSerializer(ModelSerializer):
@@ -340,7 +339,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'goals',
             'goals.type',
         ]
-        resource_name = 'activities'
 
 
 class BaseTinyActivitySerializer(ModelSerializer):

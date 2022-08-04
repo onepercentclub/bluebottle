@@ -7,7 +7,8 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.messages import TeamMemberRemovedMessage
+from bluebottle.activities.messages import TeamMemberRemovedMessage, ParticipantWithdrewConfirmationNotification, \
+    TeamMemberWithdrewMessage
 from bluebottle.activities.models import Organizer, Activity
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -17,7 +18,7 @@ from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, TeamSlotChangedNotification
+    ParticipantAddedOwnerNotification, TeamSlotChangedNotification, ParticipantWithdrewNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -1929,6 +1930,24 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         with self.execute():
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_withdraw_team_participant(self):
+        self.activity.team_activity = 'teams'
+        captain = BlueBottleUserFactory.create()
+        team = TeamFactory.create(
+            owner=captain,
+            activity=self.activity
+        )
+        self.model = self.participant_factory.create(
+            activity=self.activity,
+            team=team,
+            status='accepted'
+        )
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertNoNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(TeamMemberWithdrewMessage)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_remove_team_participant(self):
         self.activity.team_activity = 'teams'

@@ -391,7 +391,7 @@ class TeamMemberAddedMessage(ActivityNotification):
 
 
 class TeamMemberWithdrewMessage(ActivityNotification):
-    subject = pgettext('email', "Withdrawal for '{title}'")
+    subject = pgettext('email', 'A participant has withdrawn from your team for "{title}"')
     template = 'messages/team_member_withdrew'
 
     context = {

@@ -41,7 +41,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from build.lib.bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory
 
 
 class BudgetLineListTestCase(BluebottleTestCase):

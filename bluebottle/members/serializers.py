@@ -664,7 +664,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_gender',
             'enable_address',
             'enable_birthdate',
-            'required_questions',
+            'required_questions_location',
             'require_office',
             'verify_office',
             'require_address',

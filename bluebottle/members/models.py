@@ -54,7 +54,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         max_length=12,
         default='login',
         help_text=_(
-            'When should the user be prompted to submit required profile fields?'
+            'When should the user be asked to complete their required profile fields?'
         )
     )
 

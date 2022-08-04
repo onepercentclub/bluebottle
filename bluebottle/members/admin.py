@@ -162,8 +162,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             fieldsets += ((
                 _('Required fields'),
                 {
-                    'description': _('The member is required to fill out specified profile fields, '
-                                     'either right after login or when joining an activity.'),
+                    'description': _('Members are required to fill out the fields listed '
+                                     'below after log in or when joining an activity.'),
                     'fields': required_fields
                 }
             ), )

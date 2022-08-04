@@ -145,7 +145,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
         required_fields = [
-            'required_questions',
+            'required_questions_location',
             'require_birthdate',
             'require_address',
             'require_phone_number'

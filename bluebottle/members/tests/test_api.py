@@ -1090,9 +1090,9 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
 
     def test_required_questions(self):
         response = self.client.get(self.url, token=self.user_token)
-        self.assertEqual(response.json()['platform']['members']['required_questions'], 'login')
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'login')
         settings = MemberPlatformSettings.load()
-        settings.required_questions = 'contribution'
+        settings.required_questions_location = 'contribution'
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
-        self.assertEqual(response.json()['platform']['members']['required_questions'], 'contribution')
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')

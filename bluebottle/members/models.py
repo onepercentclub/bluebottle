@@ -49,12 +49,12 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Limit user session to browser session')
     )
 
-    required_questions = models.CharField(
+    required_questions_location = models.CharField(
         choices=REQUIRED_QUESTIONS_OPTIONS,
         max_length=12,
         default='login',
         help_text=_(
-            'When should the user be asked to filled required fields?'
+            'When should the user be prompted to submit required profile fields?'
         )
     )
 

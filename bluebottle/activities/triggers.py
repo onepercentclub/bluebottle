@@ -1,27 +1,23 @@
-from bluebottle.activities.models import Organizer, EffortContribution, Team
-from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
-)
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.notifications.effects import NotificationEffect
-
-from bluebottle.activities.states import (
-    ActivityStateMachine, OrganizerStateMachine, ContributionStateMachine,
-    EffortContributionStateMachine, TeamStateMachine
-)
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
     TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 )
-
 from bluebottle.activities.messages import (
-    TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
-    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamCancelledTeamCaptainMessage,
-    TeamReappliedMessage
+    TeamAddedMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage
 )
-
-from bluebottle.time_based.states import ParticipantStateMachine
+from bluebottle.activities.models import Organizer, EffortContribution, Team
+from bluebottle.activities.states import (
+    ActivityStateMachine, OrganizerStateMachine, ContributionStateMachine,
+    EffortContributionStateMachine, TeamStateMachine
+)
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import (
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+)
 from bluebottle.impact.effects import UpdateImpactGoalEffect
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.states import ParticipantStateMachine, TimeBasedStateMachine
 
 
 def initiative_is_approved(effect):
@@ -232,6 +228,28 @@ def needs_review(effect):
     return hasattr(effect.instance.activity, 'review') and effect.instance.activity.review
 
 
+def team_activity_will_be_full(effect):
+    """
+    the activity is full
+    """
+    activity = effect.instance.activity
+    accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count() + 1
+    return (
+        activity.capacity and
+        activity.capacity <= accepted_teams
+    )
+
+
+def team_activity_will_not_be_full(effect):
+    """
+    the activity is full
+    """
+    activity = effect.instance.activity
+    accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count() - 1
+
+    return not activity.capacity or activity.capacity > accepted_teams
+
+
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
@@ -266,22 +284,45 @@ class TeamTriggers(TriggerManager):
                     'members',
                     ParticipantStateMachine.accept,
                     conditions=[needs_review]
-                )
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[team_activity_will_be_full]
+                ),
             ]
         ),
 
         TransitionTrigger(
             TeamStateMachine.cancel,
             effects=[
-                TeamContributionTransitionEffect(ContributionStateMachine.fail),
-                NotificationEffect(TeamCancelledMessage),
-                NotificationEffect(TeamCancelledTeamCaptainMessage)
+                # RelatedTransitionEffect(
+                #     'members',
+                #     ParticipantStateMachine.remove
+                # ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[team_activity_will_not_be_full]
+                ),
+                # TeamContributionTransitionEffect(ContributionStateMachine.fail),
+                # NotificationEffect(TeamCancelledMessage),
+                # NotificationEffect(TeamCancelledTeamCaptainMessage)
             ]
         ),
 
         TransitionTrigger(
             TeamStateMachine.withdraw,
             effects=[
+                RelatedTransitionEffect(
+                    'members',
+                    ParticipantStateMachine.remove
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[team_activity_will_not_be_full]
+                ),
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamWithdrawnMessage),
                 NotificationEffect(TeamWithdrawnActivityOwnerMessage)

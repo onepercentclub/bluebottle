@@ -123,6 +123,66 @@ class TeamTriggersTestCase(TriggerTestCase):
         for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, TimeContributionStateMachine.failed.value)
 
+    def test_fill_team_activity(self):
+        self.activity.capacity = 2
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
+        captain = PeriodParticipantFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        participant = PeriodParticipantFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+            team=captain.team
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(
+            self.activity.status,
+            'open'
+        )
+        PeriodParticipantFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        self.assertEqual(
+            self.activity.status,
+            'full'
+        )
+
+        captain.states.withdraw(save=True)
+        self.assertEqual(
+            captain.team.status,
+            'open',
+        )
+        self.assertEqual(
+            self.activity.status,
+            'full',
+        )
+        self.assertEqual(
+            participant.status,
+            'accepted',
+        )
+        self.model = captain.team
+        self.model.states.withdraw(save=True)
+
+        self.assertStatus(
+            captain.team,
+            'withdrawn',
+        )
+        self.assertStatus(
+            participant,
+            'rejected',
+        )
+        self.assertStatus(
+            self.activity,
+            'open',
+        )
+
     def test_reapply(self):
         self.create()
 

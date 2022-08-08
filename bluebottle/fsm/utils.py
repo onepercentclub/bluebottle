@@ -13,7 +13,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution, DateActivitySlot, SlotParticipant
+    TimeContribution, DateActivitySlot, DateSlotParticipant
 
 
 def get_doc(element):
@@ -91,7 +91,7 @@ def setup_instance(model):
     if isinstance(instance, DateActivitySlot):
         instance.activity = DateActivity(title="[activity title]")
 
-    if isinstance(instance, SlotParticipant):
+    if isinstance(instance, DateSlotParticipant):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
         instance.participant = DateParticipant(activity=activity)

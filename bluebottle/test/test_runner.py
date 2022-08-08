@@ -12,7 +12,7 @@ from bluebottle.test.utils import InitProjectDataMixin
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
-        self.keepdb = getattr(kwargs, 'keepdb', getattr(settings, 'KEEPDB', False))
+        self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)

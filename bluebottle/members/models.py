@@ -111,22 +111,22 @@ class MemberPlatformSettings(BasePlatformSettings):
     require_office = models.BooleanField(
         _('Office location'),
         default=False,
-        help_text=_('Require members to enter their office location once after logging in.')
+        help_text=_('Require members to enter their office location.')
     )
     require_address = models.BooleanField(
         _('Address'),
         default=False,
-        help_text=_('Require members to enter their address once after logging in.')
+        help_text=_('Require members to enter their address.')
     )
     require_phone_number = models.BooleanField(
         _('Phone number'),
         default=False,
-        help_text=_('Require members to enter their phone number once after logging in.')
+        help_text=_('Require members to enter their phone number.')
     )
     require_birthdate = models.BooleanField(
         _('Birthdate'),
         default=False,
-        help_text=_('Require members to enter their date of birth once after logging in.')
+        help_text=_('Require members to enter their date of birth.')
     )
 
     verify_office = models.BooleanField(

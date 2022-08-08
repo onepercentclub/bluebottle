@@ -62,7 +62,7 @@ def is_full(effect):
     """
     the activity is full
     """
-    if effect.instance.team_activity == 'teams':
+    if getattr(effect.instance, 'team_activity', None) == 'teams':
         accepted_teams = effect.instance.teams.filter(status__in=['open', 'running', 'finished']).count()
         return (
             effect.instance.capacity and
@@ -93,7 +93,7 @@ def is_not_full(effect):
     """
     the activity is not full
     """
-    if effect.instance.team_activity == 'teams':
+    if getattr(effect.instance, 'team_activity', None) == 'teams':
         accepted_teams = effect.instance.teams.filter(status__in=['open', 'running', 'finished']).count()
         return (
             not effect.instance.capacity or

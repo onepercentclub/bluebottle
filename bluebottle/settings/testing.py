@@ -327,7 +327,7 @@ CONFLUENCE = {
         },
         {
             'title': '[DEV] States - Time based - Slot participant',
-            'model': 'bluebottle.time_based.models.SlotParticipant',
+            'model': 'bluebottle.time_based.models.DateSlotParticipant',
             'page_id': ''
         },
         {

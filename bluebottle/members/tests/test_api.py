@@ -1089,9 +1089,12 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         self.url = reverse('settings')
 
     def test_required_questions(self):
+        settings = MemberPlatformSettings.load()
+        settings.required_questions_location = 'login'
+        settings.closed = True
+        settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'login')
-        settings = MemberPlatformSettings.load()
         settings.required_questions_location = 'contribution'
         settings.save()
         response = self.client.get(self.url, token=self.user_token)

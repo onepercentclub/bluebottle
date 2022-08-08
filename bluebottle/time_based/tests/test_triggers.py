@@ -7,8 +7,10 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.messages import TeamMemberRemovedMessage, ParticipantWithdrewConfirmationNotification, \
+from bluebottle.activities.messages import ParticipantWithdrewConfirmationNotification, \
     TeamMemberWithdrewMessage
+from bluebottle.activities.messages import TeamMemberRemovedMessage, TeamCancelledTeamCaptainMessage, \
+    TeamCancelledMessage
 from bluebottle.activities.models import Organizer, Activity
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -18,7 +20,8 @@ from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, TeamSlotChangedNotification, ParticipantWithdrewNotification
+    ParticipantRejectedNotification, ParticipantAddedOwnerNotification, TeamSlotChangedNotification,
+    ParticipantWithdrewNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -2355,3 +2358,41 @@ class TeamSlotTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(TeamSlotChangedNotification)
         self.assertEqual(self.model.status, 'open')
         self.assertEqual(self.model.team.status, 'open')
+
+
+class TeamReviewTriggerTestCase(TriggerTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.initiator = BlueBottleUserFactory()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.initiator)
+
+        self.activity = PeriodActivityFactory.create(
+            initiative=self.initiative,
+            team_activity='teams',
+            status='approved',
+            review=True
+        )
+        self.model = PeriodParticipantFactory.create(
+            user=self.user,
+            activity=self.activity,
+            as_relation='user'
+        )
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_reject(self):
+        self.assertTrue(self.model.team)
+        self.assertEqual(
+            self.model.team.owner,
+            self.user
+        )
+        self.model.states.reject()
+
+        with self.execute():
+            self.assertNoNotificationEffect(ParticipantRejectedNotification)
+            self.assertNoNotificationEffect(TeamCancelledMessage)
+            self.assertNotificationEffect(TeamCancelledTeamCaptainMessage)

@@ -440,7 +440,10 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        open,
+        [
+            open,
+            new
+        ],
         cancelled,
         automatic=False,
         permission=is_activity_owner,

@@ -234,7 +234,7 @@ def team_activity_will_be_full(effect):
     """
     activity = effect.instance.activity
     accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count() + 1
-    return (
+    return not hasattr(activity, 'capacity') or (
         activity.capacity and
         activity.capacity <= accepted_teams
     )
@@ -247,7 +247,10 @@ def team_activity_will_not_be_full(effect):
     activity = effect.instance.activity
     accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count() - 1
 
-    return not activity.capacity or activity.capacity > accepted_teams
+    return (
+        not getattr(activity, 'capacity', False) or
+        activity.capacity > accepted_teams
+    )
 
 
 @register(Team)

@@ -53,9 +53,11 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
         segment_type = SegmentType.objects.get(pk=result['id'])
 
         self.assertEqual(segment_type.name, result['attributes']['name'])
-        self.assertEqual(
-            set(relation['id'] for relation in result['relationships']['segments']['data']),
-            set(str(segment.pk) for segment in segment_type.segments.all())
+
+        self.assertTrue(
+            result['relationships']['segments']['links']['related'].endswith(
+                reverse('related-segment-detail', args=(segment_type.pk, ))
+            )
         )
 
     def test_list_anonymous(self):

@@ -1,6 +1,7 @@
 from builtins import object
 
 from rest_framework import serializers
+from rest_framework_json_api.relations import HyperlinkedRelatedField
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.utils import get_stats_for_activities
@@ -12,10 +13,12 @@ from bluebottle.utils.fields import SafeField
 
 class SegmentTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
-
-    included_serializers = {
-        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
-    }
+    segments = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name='related-segment-detail',
+        related_link_url_kwarg='segment_type',
+    )
 
     class Meta(object):
         model = SegmentType
@@ -25,7 +28,6 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
         )
 
     class JSONAPIMeta(object):
-        included_resources = ['segments', ]
         resource_name = 'segment-types'
 
 

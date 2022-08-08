@@ -276,7 +276,8 @@ class TeamNotification(ActivityNotification):
     context = {
         'title': 'activity.title',
         'team_captain_email': 'owner.email',
-        'team_name': 'name'
+        'team_name': 'name',
+        'team_captain_name': 'owner.full_name'
     }
 
     @property

@@ -181,7 +181,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
             queryset = queryset.filter(status=status)
         elif has_slot == 'false':
             queryset = queryset.filter(slot__start__isnull=True).exclude(
-                status_in=['new', 'withdrawn', 'cancelled']
+                status__in=['new', 'withdrawn', 'cancelled']
             )
         elif start == 'future':
             queryset = queryset.filter(

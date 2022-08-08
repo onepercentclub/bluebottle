@@ -220,7 +220,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamMemberWithdrewMessage
         self.create()
         self.assertRecipients([self.captain])
-        self.assertSubject("Withdrawal for 'Save the world!'")
+        self.assertSubject('A participant has withdrawn from your team for "Save the world!"')
         self.assertHtmlBodyContains(
             f"{self.obj.user.full_name} has withdrawn from your team for the activity ‘Save the world!’."
         )

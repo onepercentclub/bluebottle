@@ -1371,9 +1371,23 @@ class ParticipantTriggers(ContributorTriggers):
                     TimeContributionStateMachine.fail,
                 ),
                 UnFollowActivityEffect,
-                NotificationEffect(ParticipantWithdrewNotification),
-                NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                NotificationEffect(TeamMemberWithdrewMessage),
+                NotificationEffect(
+                    ParticipantWithdrewNotification,
+                    conditions=[
+                        is_not_team_activity
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantWithdrewConfirmationNotification
+                ),
+                NotificationEffect(
+                    TeamMemberWithdrewMessage,
+                    conditions=[
+                        is_team_activity,
+                        not_team_captain
+                    ]
+
+                ),
             ]
         ),
 

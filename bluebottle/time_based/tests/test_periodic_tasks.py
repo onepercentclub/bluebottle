@@ -565,7 +565,6 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
 
         self.participants = PeriodParticipantFactory.create_batch(3, activity=self.activity)
         self.participants[0].states.withdraw(save=True)
-        print(self.participants[0], self.participants[0].status)
 
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):

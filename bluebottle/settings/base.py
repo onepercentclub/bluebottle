@@ -801,7 +801,7 @@ EXPORTDB_EXPORT_CONF = {
             'title': _('Participants on a date'),
         }),
 
-        ('time_based.SlotParticipant', {
+        ('time_based.DateSlotParticipant', {
             'fields': (
                 ('id', 'Slot Participant ID'),
                 ('slot__id', 'Slot ID'),

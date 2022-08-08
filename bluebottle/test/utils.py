@@ -687,6 +687,10 @@ class TriggerTestCase(BluebottleTestCase):
             if effect == effect_cls(model):
                 return effect
 
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        return self.assertEqual(obj.status, status)
+
     def assertTransitionEffect(self, transition, model=None):
         if not self._hasTransitionEffect(transition, model):
             self.fail('Transition effect "{}" not triggered'.format(transition))

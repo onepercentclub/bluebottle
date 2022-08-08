@@ -62,6 +62,13 @@ def is_full(effect):
     """
     the activity is full
     """
+    if getattr(effect.instance, 'team_activity', None) == 'teams':
+        accepted_teams = effect.instance.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            effect.instance.capacity and
+            effect.instance.capacity <= accepted_teams
+        )
+
     if (
         isinstance(effect.instance, DateActivity) and
         effect.instance.slots.count() > 1 and
@@ -86,8 +93,15 @@ def is_not_full(effect):
     """
     the activity is not full
     """
+    if getattr(effect.instance, 'team_activity', None) == 'teams':
+        accepted_teams = effect.instance.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            not effect.instance.capacity or
+            effect.instance.capacity > accepted_teams
+        )
+
     return (
-        effect.instance.capacity and
+        not effect.instance.capacity or
         effect.instance.capacity > len(effect.instance.accepted_participants)
     )
 
@@ -190,14 +204,20 @@ class TimeBasedTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'capacity',
             effects=[
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    is_not_full,
-                    registration_deadline_is_not_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    is_full,
-                    registration_deadline_is_not_passed
-                ]),
+                TransitionEffect(
+                    TimeBasedStateMachine.reopen,
+                    conditions=[
+                        is_not_full,
+                        registration_deadline_is_not_passed
+                    ]
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        is_full,
+                        registration_deadline_is_not_passed
+                    ]
+                ),
             ]
         ),
 
@@ -997,6 +1017,12 @@ def activity_will_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+    if activity.team_activity == 'teams':
+        accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            activity.capacity and
+            activity.capacity <= accepted_teams
+        )
 
     if (
         isinstance(activity, DateActivity) and
@@ -1016,8 +1042,15 @@ def activity_will_not_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+    if activity.team_activity == 'teams':
+        accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            not activity.capacity or
+            activity.capacity > accepted_teams
+        )
+
     return (
-        activity.capacity and
+        not activity.capacity or
         activity.capacity >= len(activity.accepted_participants)
     )
 
@@ -1204,9 +1237,10 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
-                    conditions=[activity_will_be_full]
+                    conditions=[
+                        activity_will_be_full
+                    ]
                 ),
-
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,
@@ -1285,7 +1319,9 @@ class ParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
-                    conditions=[activity_will_be_full]
+                    conditions=[
+                        activity_will_be_full
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1407,7 +1443,6 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
             ]
         ),
-
     ]
 
 

@@ -163,10 +163,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         if len(required_fields):
             if obj.closed:
                 description = _('Members are required to fill out the fields listed '
-                                'below after log in or when joining an activity.')
+                                'below after log in or when contributing to an activity.')
             else:
                 description = _('Members are required to fill out the fields listed '
-                                'below when joining an activity.')
+                                'below when contributing to an activity.')
             fieldsets += ((
                 _('Required fields'),
                 {

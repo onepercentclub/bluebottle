@@ -175,10 +175,6 @@ class TeamTriggersTestCase(TriggerTestCase):
             'withdrawn',
         )
         self.assertStatus(
-            participant,
-            'rejected',
-        )
-        self.assertStatus(
             self.activity,
             'open',
         )

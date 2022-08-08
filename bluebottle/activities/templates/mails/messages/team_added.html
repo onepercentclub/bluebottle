@@ -6,6 +6,13 @@
         {% blocktrans context 'email' %}{{team_name}} has joined your activity "{{title}}".{% endblocktrans %}
     </p>
     <p>
+        {% blocktrans context 'email' %}Next steps{% endblocktrans %}
+    </p>
+    <ol>
+        <li>{% blocktrans context 'email' %}Contact team captain (name of captain) to settle on a date, time and location for when they will participate in this activity.{% endblocktrans %}</li>
+        <li>{% blocktrans context 'email' %}Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members.{% endblocktrans %}</li>
+    </ol>
+    <p>
         {% blocktrans context 'email' %}Please contact them to sort out any details via {{team_captain_email}}.{% endblocktrans %}
     </p>
 {% endblock %}

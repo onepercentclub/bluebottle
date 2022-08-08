@@ -96,7 +96,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.activity.owner])
         self.assertSubject("A new team has joined \"Save the world!\"")
-        self.assertTextBodyContains("William Shatner's team has joined your activity \"Save the world!\".")
+        self.assertTextBodyContains("Team William Shatner has joined your activity \"Save the world!\".")
         self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
         self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('View activity')
@@ -108,7 +108,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.activity.owner])
         self.assertSubject("A new team has applied to \"Save the world!\"")
-        self.assertTextBodyContains("William Shatner's team has applied to your activity \"Save the world!\".")
+        self.assertTextBodyContains("Team William Shatner has applied to your activity \"Save the world!\".")
         self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
         self.assertBodyContains('You can accept or reject the team on the activity page.')
 
@@ -133,7 +133,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([participant.user for participant in self.obj.members.all()])
         self.assertSubject("Team cancellation for 'Save the world!'")
         self.assertHtmlBodyContains(
-            "Your team 'William Shatner&#39;s team' is no longer participating in the activity 'Save the world!'."
+            "Your team 'Team William Shatner' is no longer participating in the activity 'Save the world!'."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
@@ -159,7 +159,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([participant.user for participant in self.obj.members.all()])
         self.assertSubject("Team cancellation for 'Save the world!'")
         self.assertHtmlBodyContains(
-            "Your team 'William Shatner&#39;s team' is no longer participating in the activity 'Save the world!'."
+            "Your team 'Team William Shatner' is no longer participating in the activity 'Save the world!'."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
@@ -171,7 +171,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject("Team cancellation for 'Save the world!'")
         self.assertHtmlBodyContains(
-            "William Shatner&#39;s team has cancelled its participation in your activity 'Save the world!'."
+            "Team William Shatner has cancelled its participation in your activity 'Save the world!'."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
@@ -188,7 +188,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         )
         self.assertSubject(f"You’re added to a team for '{self.activity.title}'")
         self.assertHtmlBodyContains(
-            "You’re added to team ‘William Shatner&#39;s team’ for the activity ‘Save the world!’."
+            "You’re added to team ‘Team William Shatner’ for the activity ‘Save the world!’."
         )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
@@ -220,7 +220,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamMemberWithdrewMessage
         self.create()
         self.assertRecipients([self.captain])
-        self.assertSubject("Withdrawal for 'Save the world!'")
+        self.assertSubject('A participant has withdrawn from your team for "Save the world!"')
         self.assertHtmlBodyContains(
             f"{self.obj.user.full_name} has withdrawn from your team for the activity ‘Save the world!’."
         )

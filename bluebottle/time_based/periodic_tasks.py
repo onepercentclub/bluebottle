@@ -7,14 +7,14 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.messages import ReminderSlotNotification
+from bluebottle.time_based.messages import ReminderSlotNotification, ReminderTeamSlotNotification
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, TimeContribution, DateActivitySlot,
-    PeriodActivitySlot
+    PeriodActivitySlot, TeamSlot
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine,
-    PeriodActivitySlotStateMachine
+    PeriodActivitySlotStateMachine, TeamSlotStateMachine
 )
 from bluebottle.time_based.triggers import has_participants, has_no_participants
 
@@ -177,6 +177,37 @@ class PeriodActivitySlotStartedTask(ModelPeriodicTask):
         return str(_("Start the period activity slot when it starts"))
 
 
+class TeamSlotReminderTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return TeamSlot.objects.filter(
+            start__lte=timezone.now() + timedelta(days=5),
+            start__gt=timezone.now(),
+            status__in=['open', 'full'],
+        )
+
+    effects = [
+        NotificationEffect(
+            ReminderTeamSlotNotification,
+        ),
+    ]
+
+    def __str__(self):
+        return str(_("Send a reminder five days before the team activity slot."))
+
+
+class TeamSlotStartedTask(SlotStartedTask):
+    effects = [
+        TransitionEffect(TeamSlotStateMachine.start),
+    ]
+
+
+class TeamSlotFinishedTask(SlotFinishedTask):
+    effects = [
+        TransitionEffect(TeamSlotStateMachine.finish),
+    ]
+
+
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
 ]
@@ -185,6 +216,12 @@ DateActivitySlot.periodic_tasks = [
     DateActivitySlotReminderTask,
     SlotStartedTask,
     SlotFinishedTask,
+]
+
+TeamSlot.periodic_tasks = [
+    TeamSlotReminderTask,
+    TeamSlotStartedTask,
+    TeamSlotFinishedTask,
 ]
 
 PeriodActivity.periodic_tasks = [

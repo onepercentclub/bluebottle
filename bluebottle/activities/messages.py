@@ -286,7 +286,7 @@ class TeamNotification(ActivityNotification):
     action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
-        """acitvity mananager"""
+        """activity mananager"""
         return [self.obj.activity.owner]
 
 
@@ -391,7 +391,7 @@ class TeamMemberAddedMessage(ActivityNotification):
 
 
 class TeamMemberWithdrewMessage(ActivityNotification):
-    subject = pgettext('email', "Withdrawal for '{title}'")
+    subject = pgettext('email', 'A participant has withdrawn from your team for "{title}"')
     template = 'messages/team_member_withdrew'
 
     context = {

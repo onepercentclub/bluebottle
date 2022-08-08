@@ -525,20 +525,18 @@ class PeriodActivitySlot(ActivitySlot):
 
 class TeamSlot(ActivitySlot):
     activity = models.ForeignKey(PeriodActivity, related_name='team_slots', on_delete=models.CASCADE)
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
+    start = models.DateTimeField(_('start date and time'))
+    duration = models.DurationField(_('duration'))
     team = models.OneToOneField(Team, related_name='slot', on_delete=models.CASCADE)
 
     @property
-    def required_fields(self):
-        fields = super().required_fields + [
-            'start',
-            'duration',
-        ]
+    def end(self):
+        if self.start and self.duration:
+            return self.start + self.duration
 
-        if not self.is_online:
-            fields.append('location')
-        return fields
+    @property
+    def is_complete(self):
+        return self.start and self.duration
 
     class Meta:
         verbose_name = _('team slot')
@@ -560,6 +558,10 @@ class TeamSlot(ActivitySlot):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/team-slots'
+
+    @property
+    def accepted_participants(self):
+        return self.team.members.filter(status='accepted')
 
 
 class Participant(Contributor):

@@ -55,7 +55,7 @@ class TeamSerializer(ModelSerializer):
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'activity', 'slot', 'members')
+        fields = ('owner', 'slot', 'members')
         meta_fields = (
             'status',
             'transitions',
@@ -68,7 +68,7 @@ class TeamSerializer(ModelSerializer):
         included_resources = [
             'owner',
             'slot',
-            'slot.location'
+            'slot.location',
         ]
 
         resource_name = 'activities/teams'
@@ -214,7 +214,7 @@ class BaseActivitySerializer(ModelSerializer):
         ).count()
 
     def get_team_count(self, instance):
-        return instance.teams.filter(status='open').count()
+        return instance.teams.filter(status__in=['open', 'finished']).count()
 
     class Meta(object):
         model = Activity
@@ -270,7 +270,6 @@ class BaseActivitySerializer(ModelSerializer):
             'segments',
             'segments.segment_type'
         ]
-        resource_name = 'activities'
 
 
 class BaseActivityListSerializer(ModelSerializer):
@@ -340,7 +339,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'goals',
             'goals.type',
         ]
-        resource_name = 'activities'
 
 
 class BaseTinyActivitySerializer(ModelSerializer):

@@ -54,7 +54,7 @@ class TimeBasedInfoMixin(object):
         if isinstance(participant, DateParticipant):
             slots = []
             for slot_participant in participant.slot_participants.filter(
-                status='registered'
+                    status='registered'
             ):
                 slots.append(get_slot_info(slot_participant.slot))
 
@@ -186,6 +186,43 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
         ]
 
 
+class ReminderTeamSlotNotification(TransitionMessage):
+    """
+    Reminder notification for a team activity slot
+    """
+    subject = pgettext('email', 'The team activity "{title}" will take place in a few days!')
+    template = 'messages/reminder_team_slot'
+    send_once = True
+
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team',
+        'start': 'start',
+        'duration': 'duration',
+        'end': 'end',
+    }
+
+    def already_send(self, recipient):
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            content_type=get_content_type_for_model(self.obj),
+            object_id=self.obj.id
+        ).count() > 0
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            participant.user for participant in self.obj.team.accepted_participants
+        ]
+
+
 class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
@@ -229,6 +266,33 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
         """participants that signed up"""
         return [
             participant.user for participant in self.obj.activity.accepted_participants
+        ]
+
+
+class TeamSlotChangedNotification(TransitionMessage):
+    """
+    Notification when slot details (date, time or location) changed for a team activity
+    """
+    subject = pgettext('email', 'The details of the team activity "{title}" have changed')
+    template = 'messages/changed_team_date'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team',
+        'start': 'start',
+        'duration': 'duration',
+        'end': 'end',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """team members"""
+        return [
+            participant.user for participant in self.obj.team.accepted_participants
         ]
 
 
@@ -446,9 +510,9 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
         participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
 
         if (
-            participant.status == 'withdrawn' or
-            joined_message.is_delayed or
-            changed_message.is_delayed or applied_message.is_delayed
+                participant.status == 'withdrawn' or
+                joined_message.is_delayed or
+                changed_message.is_delayed or applied_message.is_delayed
         ):
             return []
 

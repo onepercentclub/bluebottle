@@ -8,7 +8,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
-    PeriodActivitySlot
+    PeriodActivitySlot, TeamSlot
 )
 
 logger = logging.getLogger('bluebottle')
@@ -37,6 +37,18 @@ def with_a_deadline_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in PeriodActivity.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
+    name="team_slot_tasks",
+    ignore_result=True
+)
+def team_slot_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in TeamSlot.get_periodic_tasks():
                 task.execute()
 
 

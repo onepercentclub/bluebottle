@@ -426,7 +426,10 @@ class TimeBasedDetailAPIViewTestCase():
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
 
-        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
 
         if isinstance(self.activity, PeriodActivity):
             self.assertEqual(
@@ -543,12 +546,10 @@ class TimeBasedDetailAPIViewTestCase():
             self.response_data['meta']['contributor-count'],
             4
         )
-
         response = self.client.get(
             self.response_data['relationships']['contributors']['links']['related'],
             user=self.activity.owner
         )
-
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -944,16 +945,14 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         })
 
     def test_get_open(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
         super().test_get_open()
 
         self.assertFalse(
             {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
             in self.data['meta']['transitions']
-        )
-
-        self.assertEqual(
-            self.data['relationships']['teams']['links']['self'],
-            f"{reverse('team-list')}?activity_id={self.activity.pk}"
         )
 
     def test_get_open_with_participant(self):
@@ -1067,16 +1066,51 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.participant_factory.create_batch(
             3, activity=self.activity, accepted_invite=team_captain.invite
         )
+        team_captain.team.slot = TeamSlotFactory.create(
+            team=team_captain.team, activity=self.activity
+        )
+
+        # create another team
+        other_team_captain = self.participant_factory.create(activity=self.activity)
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
-        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+
+        self.assertEqual(len(workbook.worksheets), 2)
+
+        sheet = workbook.worksheets[0]
         self.assertEqual(
             tuple(sheet.values)[0],
             ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
+        )
+
+        teams_sheet = workbook.worksheets[1]
+
+        self.assertEqual(
+            tuple(teams_sheet.values)[0],
+            ('Name', 'Owner', 'ID', 'Status', '# Accepted Participants', 'Start', 'duration')
+        )
+        self.assertEqual(
+            tuple(teams_sheet.values)[1],
+            (
+                other_team_captain.team.name, other_team_captain.user.full_name,
+                other_team_captain.team.pk, other_team_captain.team.status,
+                1, None, None
+            )
+        )
+        self.assertEqual(
+            tuple(teams_sheet.values)[2],
+            (
+                team_captain.team.name, team_captain.user.full_name,
+                team_captain.team.pk, team_captain.team.status,
+                team_captain.team.accepted_participants_count,
+                team_captain.team.slot.start.strftime('%d-%m-%y %H:%M'),
+                team_captain.team.slot.duration.seconds / (60 * 60),
+            )
         )
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -1129,6 +1163,24 @@ class TeamSlotAPIViewTestCase(APITestCase):
     def test_create_team_slot(self):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_team_slot_missing_start(self):
+        self.defaults['start'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/start'
+        )
+
+    def test_create_team_slot_missing_duration(self):
+        self.defaults['duration'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/duration'
+        )
 
     def test_update_team_slot(self):
         self.perform_create(user=self.manager)

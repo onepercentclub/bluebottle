@@ -7,6 +7,8 @@ from django.template import defaultfilters
 from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.activities.messages import ParticipantWithdrewConfirmationNotification, \
+    TeamMemberWithdrewMessage
 from bluebottle.activities.messages import TeamMemberRemovedMessage, TeamCancelledTeamCaptainMessage, \
     TeamCancelledMessage
 from bluebottle.activities.models import Organizer, Activity
@@ -18,7 +20,8 @@ from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
-    ParticipantAddedOwnerNotification, TeamSlotChangedNotification, ParticipantRejectedNotification
+    ParticipantRejectedNotification, ParticipantAddedOwnerNotification, TeamSlotChangedNotification,
+    ParticipantWithdrewNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -1397,12 +1400,12 @@ class ParticipantTriggerTestCase(object):
             user=BlueBottleUserFactory.create()
         )
 
-        mail.outbox = []
         participant = self.participant_factory.create(
             activity=self.activity,
             accepted_invite=team_captain.invite,
             user=BlueBottleUserFactory.create()
         )
+        mail.outbox = []
         participant.states.withdraw(save=True)
 
         self.activity.refresh_from_db()
@@ -1417,11 +1420,7 @@ class ParticipantTriggerTestCase(object):
             f'You have withdrawn from the activity "{self.activity.title}"' in subjects
         )
         self.assertTrue(
-            f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
-        )
-
-        self.assertTrue(
-            f"Withdrawal for '{self.activity.title}'" in subjects
+            f'A participant has withdrawn from your team for "{self.activity.title}"' in subjects
         )
 
     def test_reapply(self):
@@ -1439,28 +1438,61 @@ class ParticipantTriggerTestCase(object):
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
-    def test_reapply_cancelled_team(self):
-        self.activity.team_activity = Activity.TeamActivityChoices.teams
-        self.test_withdraw()
-        self.participants[0].team.states.cancel(save=True)
-
-        self.assertEqual(
-            self.participants[0].contributions.
-            exclude(timecontribution__contribution_type='preparation').get().status,
-            'failed'
+    def test_reapply_cancelled(self):
+        self.participants = self.participant_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
         )
-
-        self.participants[0].states.reapply(save=True)
-
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+        mail.outbox = []
+
+        self.participants[0].states.withdraw(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
         self.assertEqual(
             self.participants[0].contributions.
             exclude(timecontribution__contribution_type='preparation').get().status,
             'failed'
         )
-        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
+
+        self.assertFalse(self.activity.followers.filter(user=self.participants[0].user).exists())
+
+        subjects = [mail.subject for mail in mail.outbox]
+        self.assertTrue(
+            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
+        )
+        self.assertTrue(
+            f'A participant has withdrawn from your activity "{self.activity.title}"' in subjects
+        )
+
+    def test_withdraw_from_team(self):
+        self.activity.team_activity = Activity.TeamActivityChoices.teams
+        self.captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+        self.participant = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            team=self.captain.team
+        )
+
+        mail.outbox = []
+
+        self.participant.states.withdraw(save=True)
+
+        subjects = [mail.subject for mail in mail.outbox]
+        self.assertTrue(
+            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
+        )
+        self.assertTrue(
+            f'A participant has withdrawn from your team for "{self.activity.title}"' in subjects
+        )
 
 
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
@@ -1930,6 +1962,24 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         with self.execute():
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_withdraw_team_participant(self):
+        self.activity.team_activity = 'teams'
+        captain = BlueBottleUserFactory.create()
+        team = TeamFactory.create(
+            owner=captain,
+            activity=self.activity
+        )
+        self.model = self.participant_factory.create(
+            activity=self.activity,
+            team=team,
+            status='accepted'
+        )
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertNoNotificationEffect(ParticipantWithdrewNotification)
+            self.assertNotificationEffect(TeamMemberWithdrewMessage)
+            self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_remove_team_participant(self):
         self.activity.team_activity = 'teams'

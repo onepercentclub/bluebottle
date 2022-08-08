@@ -423,6 +423,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
             'my_contributor.user',
+            'my_contributor.location',
             'my_contributor.slots',
             'my_contributor.slots.slot',
         ]
@@ -497,6 +498,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
             'location',
             'my_contributor.team',
             'my_contributor.team.slot',
+            'my_contributor.team.slot.location',
         ]
 
     included_serializers = dict(
@@ -506,6 +508,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
             'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
             'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
             'my_contributor.team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+            'my_contributor.team.slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 

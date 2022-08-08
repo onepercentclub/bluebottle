@@ -4,8 +4,8 @@ from django.db import migrations
 
 
 def open_platforms_required_questions_setting(apps, schema_editor):
-    MemberPlatforSettings = apps.get_model('members', 'MemberPlatforSettings')
-    MemberPlatforSettings.objects.filter(closed=False).update(required_questions_location='contribution')
+    MemberPlatformSettings = apps.get_model('members', 'MemberPlatformSettings')
+    MemberPlatformSettings.objects.filter(closed=False).update(required_questions_location='contribution')
 
 
 class Migration(migrations.Migration):

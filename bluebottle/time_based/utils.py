@@ -30,4 +30,5 @@ def duplicate_slot(slot, interval, end):
     for date in dates:
         slot.id = None
         slot.start = slot.start.replace(day=date.day, month=date.month, year=date.year)
+        slot.status = 'open'
         slot.save()

@@ -556,7 +556,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.refresh_from_db()
 
         self.activity.states.succeed_manually(save=True)
-        self.assertEqual(self.activity.deadline, date.today())
+        self.assertEqual(self.activity.deadline, date.today() - timedelta(days=1))
 
         for duration in self.activity.durations:
             self.assertEqual(duration.status, 'succeeded')
@@ -587,7 +587,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         mail.outbox = []
 
         self.activity.states.succeed_manually(save=True)
-        self.assertEqual(self.activity.deadline, date.today())
+        self.assertEqual(self.activity.deadline, date.today() - timedelta(days=1))
 
         for duration in self.activity.durations:
             self.assertEqual(duration.status, 'succeeded')

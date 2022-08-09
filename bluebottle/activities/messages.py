@@ -286,7 +286,7 @@ class TeamNotification(ActivityNotification):
     action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
-        """activity mananager"""
+        """activity manager"""
         return [self.obj.activity.owner]
 
 

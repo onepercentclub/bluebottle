@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.activities.permissions import ActivitySegmentPermission
@@ -62,15 +64,29 @@ class RelatedSegmentDetail(JsonApiViewMixin, ListAPIView):
     serializer_class = SegmentDetailSerializer
     queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')
 
+    pagination_class = None
+
     permission_classes = [
         OpenSegmentOrMember,
         TenantConditionalOpenClose,
     ]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().filter(
+            segment_type_id=self.kwargs['segment_type'],
+        )
 
-        return queryset.filter(segment_type_id=self.kwargs['segment_type'])
+        if not self.request.user.is_staff:
+            if self.request.user.is_authenticated:
+                user_segments = (segment.pk for segment in self.request.user.segments.all())
+            else:
+                user_segments = []
+
+            queryset = queryset.filter(
+                Q(closed=False) | Q(pk__in=user_segments)
+            )
+
+        return queryset
 
 
 class SegmentPublicDetail(JsonApiViewMixin, RetrieveAPIView):

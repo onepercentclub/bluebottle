@@ -1,19 +1,15 @@
-from django.core import mail
-
-from bluebottle.test.utils import TriggerTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
+from bluebottle.activities.effects import TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
     TeamAppliedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
     TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage
 )
-from bluebottle.activities.effects import TeamContributionTransitionEffect, ResetTeamParticipantsEffect
-from bluebottle.time_based.models import PeriodParticipant
 from bluebottle.activities.tests.factories import TeamFactory
-
-from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import TriggerTestCase
+from bluebottle.time_based.models import PeriodParticipant
 from bluebottle.time_based.states import TimeContributionStateMachine
+from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
 
 
 class TeamTriggersTestCase(TriggerTestCase):
@@ -77,25 +73,28 @@ class TeamTriggersTestCase(TriggerTestCase):
         self.activity.review = True
         self.activity.save()
         captain = BlueBottleUserFactory.create()
-        self.model = PeriodParticipantFactory.build(
+        self.model = PeriodParticipantFactory.create(
             activity=self.activity,
+            team=TeamFactory.create(
+                activity=self.activity,
+                owner=captain
+            ),
             user=captain,
             as_relation='user'
         )
-        self.model.save()
         self.model.states.accept()
 
         message = 'You were accepted, because you were great'
 
         with self.execute(message=message):
-            self.assertEqual(self.model.status, 'open')
+            self.assertEqual(self.model.status, 'accepted')
+            self.assertEqual(self.model.team.status, 'open')
             self.assertNotificationEffect(TeamCaptainAcceptedMessage)
             self.assertEqual(
                 self.effects[0].options['message'], message
             )
 
         self.model.save()
-        self.assertTrue(message in mail.outbox[-1].body)
 
     def test_cancel(self):
         self.create()
@@ -111,15 +110,34 @@ class TeamTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(
                 TeamCancelledMessage, [other_participant.user]
             )
-            self.assertNotificationEffect(
-                TeamCancelledTeamCaptainMessage, [self.model.owner]
-            )
 
         self.model.save()
         self.participant.refresh_from_db()
 
         for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, TimeContributionStateMachine.failed.value)
+
+    def test_cancel_team_captain(self):
+        self.activity.review = True
+        self.activity.save()
+
+        captain = BlueBottleUserFactory.create()
+        self.model = PeriodParticipantFactory.create(
+            activity=self.activity,
+            team=TeamFactory.create(
+                activity=self.activity,
+                owner=captain
+            ),
+            user=captain,
+            as_relation='user',
+            status='new'
+        )
+        self.model.states.reject()
+
+        with self.execute():
+            self.assertNotificationEffect(
+                TeamCancelledTeamCaptainMessage, [self.model.owner]
+            )
 
     def test_withdrawn(self):
         self.create()

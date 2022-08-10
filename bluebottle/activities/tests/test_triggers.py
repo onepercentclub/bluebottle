@@ -5,7 +5,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamCancelledMessage, TeamReopenedMessage,
-    TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
+    TeamAppliedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage, TeamWithdrawnMessage,
     TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage
 )
 from bluebottle.activities.effects import TeamContributionTransitionEffect, ResetTeamParticipantsEffect
@@ -71,7 +71,25 @@ class TeamTriggersTestCase(TriggerTestCase):
         with self.execute(message=message):
             self.assertEqual(self.model.status, 'open')
 
-            self.assertNotificationEffect(TeamAcceptedMessage)
+        self.model.save()
+
+    def test_accept_team_captain(self):
+        self.activity.review = True
+        self.activity.save()
+        captain = BlueBottleUserFactory.create()
+        self.model = PeriodParticipantFactory.build(
+            activity=self.activity,
+            user=captain,
+            as_relation='user'
+        )
+        self.model.save()
+        self.model.states.accept()
+
+        message = 'You were accepted, because you were great'
+
+        with self.execute(message=message):
+            self.assertEqual(self.model.status, 'open')
+            self.assertNotificationEffect(TeamCaptainAcceptedMessage)
             self.assertEqual(
                 self.effects[0].options['message'], message
             )

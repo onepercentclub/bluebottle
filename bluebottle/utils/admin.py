@@ -119,10 +119,18 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
 
             # Write extra field data
-            if queryset.model is Member or issubclass(queryset.model, Contributor):
+            if queryset.model is Member:
                 for segment_type in SegmentType.objects.all():
-                    segments = ", ".join(obj.segments.filter(
+                    segments = " | ".join(obj.segments.filter(
                         segment_type=segment_type).values_list('name', flat=True))
+                    row.append(segments)
+            if issubclass(queryset.model, Contributor):
+                for segment_type in SegmentType.objects.all():
+                    if obj.user:
+                        segments = " | ".join(obj.user.segments.filter(
+                            segment_type=segment_type).values_list('name', flat=True))
+                    else:
+                        segments = ''
                     row.append(segments)
             escaped_row = [escape_csv_formulas(item) for item in row]
             writer.writerow(escaped_row)

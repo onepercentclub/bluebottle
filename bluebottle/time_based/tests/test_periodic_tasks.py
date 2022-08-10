@@ -582,7 +582,9 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
     def test_create_new_slot(self):
         self.assertEqual(len(self.activity.slots.all()), 1)
 
+        print('Running tasks')
         self.run_task(now() + timedelta(days=7))
+        print('Running tasks again')
         self.run_task(now() + timedelta(days=7))
         self.assertEqual(len(self.activity.slots.all()), 2)
 

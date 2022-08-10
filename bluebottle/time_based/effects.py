@@ -363,6 +363,8 @@ class CreateRecurringSlotEffect(Effect):
     def post_save(self, **kwargs):
         start = self.instance.end + timedelta(days=1)
 
+        print(f'Creating new slot {start}')
+
         PeriodActivitySlot.objects.create(
             activity=self.instance.activity,
             start=start,

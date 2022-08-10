@@ -12,7 +12,7 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
-    TeamSlotChangedNotification
+    TeamSlotChangedNotification, TeamParticipantJoinedNotification
 )
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, \
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory
@@ -230,6 +230,24 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View activity')
         self.assertBodyNotContains(
             'Go to the activity page to see the times in your own timezone and add them to your calendar.'
+        )
+
+    def test_team_joined_notification(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        self.obj.team = TeamFactory.create()
+        self.obj.save()
+        self.message_class = TeamParticipantJoinedNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have registered your team for "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+        self.assertBodyNotContains(
+            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
+        )
+        self.assertBodyContains(
+            'The activity manager will be in touch to confirm details'
         )
 
     def test_new_participant_notification(self):

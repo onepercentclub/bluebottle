@@ -83,7 +83,7 @@ class SetEndDateEffect(Effect):
     template = 'admin/set_end_date.html'
 
     def pre_save(self, **kwargs):
-        self.instance.deadline = date.today()
+        self.instance.deadline = date.today() - timedelta(days=1)
 
 
 class ClearDeadlineEffect(Effect):

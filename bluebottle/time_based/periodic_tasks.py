@@ -141,6 +141,16 @@ def period_activity_slot_has_no_participants(effect):
 class PeriodActivitySlotFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
+
+        if len(PeriodActivitySlot.objects.all()):
+            print('finishing slots')
+            print(
+                PeriodActivitySlot.objects.filter(
+                    end__lt=timezone.now().date(),
+                    status='running',
+                    activity__status__in=['open', 'full']
+                )
+            )
         return PeriodActivitySlot.objects.filter(
             end__lt=timezone.now().date(),
             status='running',

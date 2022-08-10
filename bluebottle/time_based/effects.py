@@ -83,7 +83,7 @@ class SetEndDateEffect(Effect):
     template = 'admin/set_end_date.html'
 
     def pre_save(self, **kwargs):
-        self.instance.deadline = date.today()
+        self.instance.deadline = date.today() - timedelta(days=1)
 
 
 class ClearDeadlineEffect(Effect):
@@ -362,6 +362,8 @@ class CreateRecurringSlotEffect(Effect):
 
     def post_save(self, **kwargs):
         start = self.instance.end + timedelta(days=1)
+
+        print(f'Creating new slot {start}')
 
         PeriodActivitySlot.objects.create(
             activity=self.instance.activity,

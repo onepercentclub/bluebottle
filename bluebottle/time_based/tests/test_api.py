@@ -11,6 +11,7 @@ from django.utils.timezone import now, utc
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -30,7 +31,6 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, DateSlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
-from bluebottle.activities.tests.factories import TeamFactory
 
 
 class TimeBasedListAPIViewTestCase():
@@ -955,6 +955,20 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             in self.data['meta']['transitions']
         )
 
+    def test_owner_succeed_manually(self):
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity.initiative = self.initiative
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.states.submit(save=True)
+        PeriodParticipantFactory.create(activity=self.activity)
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.data = response.json()['data']
+        self.assertTrue(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()
@@ -1286,6 +1300,26 @@ class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Bluebo
     type = 'period'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_succeed_manually(self):
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+        PeriodParticipantFactory.create(activity=self.activity)
+
+        self.data['data']['attributes']['transition'] = 'succeed_manually'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertIsNotNone(self.activity.deadline)
 
 
 class DateActivitySlotListAPITestCase(BluebottleTestCase):

@@ -1178,6 +1178,10 @@ class TeamSlotAPIViewTestCase(APITestCase):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)
 
+        ical_response = self.client.get(self.response.json()['links']['ical'])
+
+        self.assertEqual(ical_response.status_code, status.HTTP_200_OK)
+
     def test_create_team_slot_missing_start(self):
         self.defaults['start'] = None
         self.perform_create(user=self.manager)

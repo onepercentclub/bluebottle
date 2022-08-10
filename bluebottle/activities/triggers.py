@@ -4,8 +4,7 @@ from bluebottle.activities.effects import (
 )
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamReopenedMessage, TeamAppliedMessage,
-    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage, TeamCancelledMessage,
-    TeamCancelledTeamCaptainMessage
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage, TeamCancelledMessage
 )
 from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.activities.states import (
@@ -303,7 +302,6 @@ class TeamTriggers(TriggerManager):
                 ),
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamCancelledMessage),
-                NotificationEffect(TeamCancelledTeamCaptainMessage)
             ]
         ),
 

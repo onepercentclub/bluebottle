@@ -1,6 +1,7 @@
 import locale
 from builtins import range
 
+from django.conf import settings
 from django.db import connection, IntegrityError
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 from djmoney.contrib.exchange.models import Rate, ExchangeBackend
@@ -11,7 +12,7 @@ from bluebottle.test.utils import InitProjectDataMixin
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
-
+        self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)

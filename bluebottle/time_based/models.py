@@ -37,7 +37,10 @@ class TimeBasedActivity(Activity):
         (True, 'Yes, anywhere/online'),
         (False, 'No, enter a location')
     )
-    capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
+    capacity = models.PositiveIntegerField(
+        _('attendee limit'),
+        help_text=_('Number of participants or teams that can join'),
+        null=True, blank=True)
 
     old_is_online = models.NullBooleanField(
         _('is online'),
@@ -68,7 +71,10 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
-    review = models.NullBooleanField(_('review participants'), null=True, default=None)
+    review = models.NullBooleanField(
+        _('review participants'),
+        help_text=_('Activity manager accepts or rejects participants or teams'),
+        null=True, default=None)
 
     preparation = models.DurationField(
         _('Preparation time'),

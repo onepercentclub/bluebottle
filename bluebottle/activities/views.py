@@ -180,7 +180,9 @@ class TeamList(JsonApiViewMixin, ListAPIView):
         if status:
             queryset = queryset.filter(status=status)
         elif has_slot == 'false':
-            queryset = queryset.filter(slot__start__isnull=True)
+            queryset = queryset.filter(slot__start__isnull=True).exclude(
+                status__in=['new', 'withdrawn', 'cancelled']
+            )
         elif start == 'future':
             queryset = queryset.filter(
                 slot__start__gt=timezone.now()

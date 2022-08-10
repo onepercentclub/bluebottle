@@ -6,6 +6,7 @@ from io import BytesIO
 import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
+from django.core import mail
 from django.urls import reverse
 from django.utils.timezone import now, utc
 from openpyxl import load_workbook
@@ -1178,6 +1179,10 @@ class TeamSlotAPIViewTestCase(APITestCase):
         self.perform_create(user=self.manager)
         self.assertStatus(status.HTTP_201_CREATED)
 
+        ical_response = self.client.get(self.response.json()['links']['ical'])
+
+        self.assertEqual(ical_response.status_code, status.HTTP_200_OK)
+
     def test_create_team_slot_missing_start(self):
         self.defaults['start'] = None
         self.perform_create(user=self.manager)
@@ -2165,6 +2170,164 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
 
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_accept_by_owner(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        mail.outbox = []
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have been selected for the activity "{self.activity.title}" 🎉'
+        )
+
+    def test_accept_with_custom_message(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        self.data['data']['attributes']['message'] = 'Great to have you!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have been selected for the activity "{self.activity.title}" 🎉'
+        )
+        self.assertTrue('Great to have you!' in message.body)
+
+    def test_accept_team_with_custom_message(self):
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+        self.participant.team = TeamFactory.create(
+            activity=self.activity,
+            owner=self.participant.user
+        )
+        self.participant.status = 'new'
+        self.participant.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        self.data['data']['attributes']['message'] = 'Great to have you!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][1]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'Your team has been accepted for "{self.activity.title}"'
+        )
+        self.assertTrue('Great to have you!' in message.body)
+
+    def test_reject_by_owner(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        mail.outbox = []
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have not been selected for the activity "{self.activity.title}"'
+        )
+
+    def test_reject_with_custom_message(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        self.data['data']['attributes']['message'] = 'Go away!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have not been selected for the activity "{self.activity.title}"'
+        )
+        self.assertTrue('Go away!' in message.body)
+
+    def test_reject_team_with_custom_message(self):
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+        self.participant.team = TeamFactory.create(
+            activity=self.activity,
+            owner=self.participant.user
+        )
+        self.participant.status = 'new'
+        self.participant.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        self.data['data']['attributes']['message'] = 'Go away!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'Your team has been rejected for "{self.activity.title}"'
+        )
+        self.assertTrue('Go away!' in message.body)
 
 
 class ReviewParticipantTransitionAPIViewTestCase():

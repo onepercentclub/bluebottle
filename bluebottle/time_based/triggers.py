@@ -8,7 +8,7 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification,
-    TeamMemberWithdrewMessage, TeamMemberRemovedMessage
+    TeamMemberWithdrewMessage, TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
@@ -1369,7 +1369,14 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantAcceptedNotification,
                     conditions=[
                         needs_review,
-                        not_team_captain
+                        is_not_team_activity
+                    ]
+                ),
+                NotificationEffect(
+                    TeamCaptainAcceptedMessage,
+                    conditions=[
+                        needs_review,
+                        is_team_captain
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -1411,6 +1418,13 @@ class ParticipantTriggers(ContributorTriggers):
                         not_team_captain
                     ]
                 ),
+                NotificationEffect(
+                    TeamCancelledTeamCaptainMessage,
+                    conditions=[
+                        is_team_captain
+                    ]
+                ),
+
                 RelatedTransitionEffect(
                     'team',
                     TeamStateMachine.cancel,

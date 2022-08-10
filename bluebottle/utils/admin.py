@@ -96,12 +96,11 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 field_names = [field for field in fields]
                 labels = field_names
 
-        response = HttpResponse(content_type='text/csv')
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             str(opts).replace('.', '_')
         )
-
-        writer = csv.writer(response)
+        writer = csv.writer(response, delimiter=';', dialect='excel')
 
         if header:
             row = labels if labels else field_names

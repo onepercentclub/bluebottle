@@ -437,3 +437,53 @@ class SegmentActivityDetailAPITestCase(APITestCase):
             len(self.response.data["segments"]),
             0
         )
+
+
+class RelatedSegmentListAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = SegmentDetailSerializer
+
+        self.segment_type = SegmentTypeFactory.create()
+        self.segments = SegmentFactory.create_batch(10, segment_type=self.segment_type)
+
+        self.url = reverse('related-segment-detail', args=(self.segment_type.pk, ))
+
+    def test_get(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertSize(10)
+
+        self.assertAttribute('name')
+        self.assertAttribute('logo')
+        self.assertAttribute('story')
+
+    def test_get_closed_segment(self):
+        self.segments[0].closed = True
+        self.segments[0].save()
+
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertSize(9)
+
+    def test_get_closed_segments_user(self):
+        self.segments[0].closed = True
+        self.segments[0].save()
+        self.user.segments.add(self.segments[0])
+        self.user.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertSize(10)
+
+    def test_get_closed_platform(self):
+        with self.closed_site():
+            self.perform_get()
+            self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_logged_in(self):
+        with self.closed_site():
+            self.perform_get(user=self.user)
+            self.assertStatus(status.HTTP_200_OK)

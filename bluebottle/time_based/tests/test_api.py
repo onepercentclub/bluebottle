@@ -2152,7 +2152,10 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['attributes']['status'], 'accepted')
         message = mail.outbox[0]
-        self.assertEqual(message.subject, 'Yea')
+        self.assertEqual(
+            message.subject,
+            f'You have been selected for the activity "{self.activity.title}" 🎉'
+        )
 
     def test_accept_with_custom_message(self):
         self.participant.status = 'new'
@@ -2184,7 +2187,8 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
         self.activity.review = True
         self.activity.save()
         self.participant.team = TeamFactory.create(
-            activity=self.activity
+            activity=self.activity,
+            owner=self.participant.user
         )
         self.participant.status = 'new'
         self.participant.save()

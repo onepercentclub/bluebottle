@@ -3,7 +3,7 @@ from bluebottle.activities.effects import (
     TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 )
 from bluebottle.activities.messages import (
-    TeamAddedMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
+    TeamAddedMessage, TeamReopenedMessage, TeamAppliedMessage,
     TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage, TeamCancelledMessage,
     TeamCancelledTeamCaptainMessage
 )
@@ -280,10 +280,6 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
-                NotificationEffect(
-                    TeamAcceptedMessage,
-                    conditions=[needs_review]
-                ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,

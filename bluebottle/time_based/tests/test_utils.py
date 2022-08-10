@@ -16,11 +16,15 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         )
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
-            start=datetime.datetime(2022, 5, 15, tzinfo=UTC)
+            start=datetime.datetime(2022, 5, 15, tzinfo=UTC),
+            status='cancelled'
         )
 
     def _get_slot_dates(self):
         return [str(s.start.date()) for s in self.activity.slots.all()]
+
+    def _get_slot_statuses(self):
+        return [s.status for s in self.activity.slots.all()]
 
     def test_duplicate_every_day(self):
         end = datetime.datetime(2022, 5, 20, tzinfo=UTC).date()
@@ -30,6 +34,13 @@ class DuplicateSlotTestCase(BluebottleTestCase):
             [
                 '2022-05-15', '2022-05-16', '2022-05-17',
                 '2022-05-18', '2022-05-19', '2022-05-20',
+            ]
+        )
+        self.assertEqual(
+            self._get_slot_statuses(),
+            [
+                'cancelled', 'finished', 'finished',
+                'finished', 'finished', 'finished'
             ]
         )
 

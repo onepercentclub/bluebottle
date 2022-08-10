@@ -2,10 +2,10 @@ from bluebottle.activities.messages import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivitySucceededNotification, ActivityRestoredNotification,
     ActivityExpiredNotification, TeamAddedMessage,
-    TeamAppliedMessage, TeamAcceptedMessage, TeamCancelledMessage,
+    TeamAppliedMessage, TeamCancelledMessage,
     TeamCancelledTeamCaptainMessage, TeamWithdrawnActivityOwnerMessage,
     TeamWithdrawnMessage, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
-    TeamMemberRemovedMessage, TeamReappliedMessage
+    TeamMemberRemovedMessage, TeamReappliedMessage, TeamCaptainAcceptedMessage
 )
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -116,11 +116,16 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View activity')
 
     def test_team_accepted_notification(self):
+        self.obj = PeriodParticipantFactory.create(
+            user=self.captain,
+            activity=self.activity,
+            team=self.obj
+        )
         self.activity.review = True
         self.activity.save()
-        self.message_class = TeamAcceptedMessage
+        self.message_class = TeamCaptainAcceptedMessage
         self.create()
-        self.assertRecipients([self.obj.owner])
+        self.assertRecipients([self.obj.user])
         self.assertSubject("Your team has been accepted for \"Save the world!\"")
         self.assertBodyContains('On the activity page you will find the link to invite your team members.')
         self.assertBodyContains(f"Your team has been accepted for the activity '{self.activity.title}'.")
@@ -140,10 +145,15 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View activity')
 
     def test_team_cancelled_team_captain_notification(self):
+        self.obj = PeriodParticipantFactory.create(
+            user=self.captain,
+            activity=self.activity,
+            team=self.obj
+        )
         self.message_class = TeamCancelledTeamCaptainMessage
         self.create()
-        self.assertRecipients([self.obj.owner])
-        self.assertSubject("Your team has been rejected for 'Save the world!'")
+        self.assertRecipients([self.obj.user])
+        self.assertSubject('Your team has been rejected for "Save the world!"')
         self.assertHtmlBodyContains(
             "Unfortunately, your team has been rejected for the activity 'Save the world!'."
         )

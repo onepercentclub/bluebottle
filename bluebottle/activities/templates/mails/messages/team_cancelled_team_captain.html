@@ -3,6 +3,10 @@
 
 {% block message%}
     <p>
-        {% blocktrans context 'email' %}Unfortunately, your team has been rejected for the activity '{{title}}'.{% endblocktrans %}
+        {% if custom_message %}
+            {{custom_message|linebreaks}}
+        {% else %}
+            {% blocktrans context 'email' %}Unfortunately, your team has been rejected for the activity '{{title}}'.{% endblocktrans %}
+        {% endif %}
     </p>
 {% endblock %}

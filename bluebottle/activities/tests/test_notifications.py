@@ -97,7 +97,10 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject("A new team has joined \"Save the world!\"")
         self.assertTextBodyContains("Team William Shatner has joined your activity \"Save the world!\".")
-        self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
+        self.assertBodyContains(
+            'Add this information to the team via the unscheduled team list on the activity '
+            'page so it is visible for the team members.'
+        )
         self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('View activity')
 
@@ -109,8 +112,10 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject("A new team has applied to \"Save the world!\"")
         self.assertTextBodyContains("Team William Shatner has applied to your activity \"Save the world!\".")
-        self.assertBodyContains('Please contact them to sort out any details via kirk@enterprise.com.')
-        self.assertBodyContains('You can accept or reject the team on the activity page.')
+        self.assertBodyContains(
+            'Add this information to the team via the unscheduled team list on the activity '
+            'page so it is visible for the team members.'
+        )
 
         self.assertActionLink(self.obj.activity.get_absolute_url())
         self.assertActionTitle('View activity')

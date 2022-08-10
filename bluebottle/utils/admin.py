@@ -119,7 +119,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
 
             # Write extra field data
-            if queryset.model is Member:
+            if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
                     segments = ", ".join(obj.segments.filter(
                         segment_type=segment_type).values_list('name', flat=True))

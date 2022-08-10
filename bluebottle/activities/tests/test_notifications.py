@@ -145,10 +145,15 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View activity')
 
     def test_team_cancelled_team_captain_notification(self):
+        self.obj = PeriodParticipantFactory.create(
+            user=self.captain,
+            activity=self.activity,
+            team=self.obj
+        )
         self.message_class = TeamCancelledTeamCaptainMessage
         self.create()
-        self.assertRecipients([self.obj.owner])
-        self.assertSubject("Your team has been rejected for 'Save the world!'")
+        self.assertRecipients([self.obj.user])
+        self.assertSubject('Your team has been rejected for "Save the world!"')
         self.assertHtmlBodyContains(
             "Unfortunately, your team has been rejected for the activity 'Save the world!'."
         )

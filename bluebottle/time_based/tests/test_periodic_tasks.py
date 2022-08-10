@@ -576,10 +576,10 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
-                with mock.patch(
-                    'bluebottle.time_based.triggers.now',
-                    return_value=when
-                ):
+                with mock.patch('bluebottle.time_based.triggers.now') as mock_now:
+                    mock_now.today.return_value = when
+                    mock_now.side_effect = lambda *args, **kw: when
+
                     period_activity_slot_tasks()
                     time_contribution_tasks()
 

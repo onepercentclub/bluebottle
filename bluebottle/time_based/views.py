@@ -507,11 +507,7 @@ class DateActivityIcalView(PrivateFileView):
         return response
 
 
-class ActivitySlotIcalView(PrivateFileView):
-    queryset = DateActivitySlot.objects.exclude(
-        status__in=['cancelled', 'deleted', 'rejected'],
-        activity__status__in=['cancelled', 'deleted', 'rejected'],
-    )
+class BaseSlotIcalView(PrivateFileView):
 
     max_age = 30 * 60  # half an hour
 
@@ -547,6 +543,20 @@ class ActivitySlotIcalView(PrivateFileView):
         )
 
         return response
+
+
+class ActivitySlotIcalView(BaseSlotIcalView):
+    queryset = DateActivitySlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
+
+
+class TeamSlotIcalView(BaseSlotIcalView):
+    queryset = TeamSlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
 
 
 class DateParticipantExportView(ExportView):

@@ -3,9 +3,8 @@ from bluebottle.activities.effects import (
     TeamContributionTransitionEffect, ResetTeamParticipantsEffect
 )
 from bluebottle.activities.messages import (
-    TeamAddedMessage, TeamReopenedMessage, TeamAcceptedMessage, TeamAppliedMessage,
-    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage, TeamCancelledMessage,
-    TeamCancelledTeamCaptainMessage
+    TeamAddedMessage, TeamReopenedMessage, TeamAppliedMessage,
+    TeamWithdrawnMessage, TeamWithdrawnActivityOwnerMessage, TeamReappliedMessage, TeamCancelledMessage
 )
 from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.activities.states import (
@@ -280,10 +279,6 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
-                NotificationEffect(
-                    TeamAcceptedMessage,
-                    conditions=[needs_review]
-                ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,
@@ -307,7 +302,6 @@ class TeamTriggers(TriggerManager):
                 ),
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamCancelledMessage),
-                NotificationEffect(TeamCancelledTeamCaptainMessage)
             ]
         ),
 

@@ -194,7 +194,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                'ical': reverse_signed('slot-ical', args=(instance.pk, )),
+                'ical': reverse_signed('team-ical', args=(instance.pk, )),
                 'google': instance.google_calendar_link,
             }
         else:

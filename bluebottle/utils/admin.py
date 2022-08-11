@@ -96,12 +96,11 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 field_names = [field for field in fields]
                 labels = field_names
 
-        response = HttpResponse(content_type='text/csv')
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             str(opts).replace('.', '_')
         )
-
-        writer = csv.writer(response)
+        writer = csv.writer(response, delimiter=';', dialect='excel')
 
         if header:
             row = labels if labels else field_names
@@ -119,10 +118,18 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
 
             # Write extra field data
-            if queryset.model is Member or issubclass(queryset.model, Contributor):
+            if queryset.model is Member:
                 for segment_type in SegmentType.objects.all():
-                    segments = ", ".join(obj.segments.filter(
+                    segments = " | ".join(obj.segments.filter(
                         segment_type=segment_type).values_list('name', flat=True))
+                    row.append(segments)
+            if issubclass(queryset.model, Contributor):
+                for segment_type in SegmentType.objects.all():
+                    if obj.user:
+                        segments = " | ".join(obj.user.segments.filter(
+                            segment_type=segment_type).values_list('name', flat=True))
+                    else:
+                        segments = ''
                     row.append(segments)
             escaped_row = [escape_csv_formulas(item) for item in row]
             writer.writerow(escaped_row)

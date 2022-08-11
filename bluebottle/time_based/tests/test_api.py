@@ -2567,11 +2567,16 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         self.participants = []
         for i in range(10):
             participant = self.participant_factory.create(
+                skip_triggers=True,
+                user=BlueBottleUserFactory.create(),
+                status='accepted',
                 activity=self.activity,
                 document=PrivateDocumentFactory.create()
             )
             for slot in self.activity.slots.all():
                 DateSlotParticipantFactory.create(
+                    skip_triggers=True,
+                    status='registered',
                     participant=participant,
                     slot=slot
                 )

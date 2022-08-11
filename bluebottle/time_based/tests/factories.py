@@ -113,7 +113,7 @@ class ParticipationFactory(factory.DjangoModelFactory):
     end = now() + timedelta(weeks=3)
 
 
-class DateSlotParticipantFactory(factory.DjangoModelFactory):
+class DateSlotParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DateSlotParticipant
 

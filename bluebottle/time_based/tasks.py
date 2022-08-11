@@ -90,7 +90,7 @@ def time_contribution_tasks():
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="time_contribution_tasks",
+    name="period_activity_slot_tasks",
     ignore_result=True
 )
 def period_activity_slot_tasks():

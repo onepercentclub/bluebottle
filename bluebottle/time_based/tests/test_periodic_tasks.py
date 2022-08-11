@@ -30,10 +30,6 @@ from bluebottle.time_based.tests.factories import (
     DateSlotParticipantFactory, TeamSlotFactory
 )
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 class TimeBasedActivityPeriodicTasksTestCase():
 
@@ -576,19 +572,17 @@ class RecurringPeriodActivitySlotPeriodicTest(BluebottleTestCase):
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
-                with mock.patch('bluebottle.time_based.triggers.now') as mock_now:
-                    mock_now.today.return_value = when
-                    mock_now.side_effect = lambda *args, **kw: when
-
+                with mock.patch(
+                    'bluebottle.time_based.triggers.now',
+                    return_value=when
+                ):
                     period_activity_slot_tasks()
                     time_contribution_tasks()
 
     def test_create_new_slot(self):
         self.assertEqual(len(self.activity.slots.all()), 1)
 
-        logger.error('Running tasks')
         self.run_task(now() + timedelta(days=7))
-        logger.error('Running tasks again')
         self.run_task(now() + timedelta(days=7))
         self.assertEqual(len(self.activity.slots.all()), 2)
 

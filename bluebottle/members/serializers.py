@@ -670,6 +670,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_address',
             'require_birthdate',
             'require_phone_number',
+            'create_initiatives'
         )
 
 

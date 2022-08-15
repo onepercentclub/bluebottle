@@ -281,6 +281,8 @@ class TeamSlotChangedNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'is_online': 'activity.is_online',
+        'location': 'location.formatted_address',
     }
 
     @property

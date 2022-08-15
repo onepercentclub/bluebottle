@@ -382,7 +382,7 @@ class TeamReopenedMessage(TeamNotification):
 
 
 class TeamMemberAddedMessage(ActivityNotification):
-    subject = pgettext('email', "New team member")
+    subject = pgettext('email', 'Someone has joined your team for "{title}"')
     template = 'messages/team_member_added'
 
     context = {

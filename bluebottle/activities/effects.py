@@ -74,11 +74,11 @@ class CreateTeamEffect(Effect):
             self.instance.activity.team_activity == Activity.TeamActivityChoices.teams
         )
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         if self.instance.accepted_invite:
             self.instance.team = self.instance.accepted_invite.contributor.team
-            self.instance.save()
 
+    def post_save(self, **kwargs):
         if not self.instance.team:
             self.instance.team = Team.objects.create(
                 owner=self.instance.user,

@@ -460,7 +460,7 @@ class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have registered your team for "{title}"')
+    subject = pgettext('email', 'You have joined a team for "{title}"')
     template = 'messages/team_participant_joined'
     context = {
         'title': 'activity.title',

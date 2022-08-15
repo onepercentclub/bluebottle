@@ -140,6 +140,14 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 )
             }
         ),
+        (
+            _('Initiatives'),
+            {
+                'fields': (
+                    'create_initiatives',
+                )
+            }
+        ),
     )
 
     def get_fieldsets(self, request, obj=None):

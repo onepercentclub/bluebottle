@@ -648,7 +648,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_upcoming(self):
-        first = DateActivityFactory.create()
+        first = DateActivityFactory.create(
+            status='open',
+        )
 
         second = DateActivityFactory.create()
         second.status = 'full'
@@ -670,7 +672,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(second.pk))
 
     def test_filter_upcoming_false(self):
-        DateActivityFactory.create()
+        DateActivityFactory.create(
+            status='open',
+        )
 
         second = DateActivityFactory.create()
         second.status = 'full'

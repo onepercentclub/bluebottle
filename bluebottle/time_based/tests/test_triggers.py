@@ -2130,6 +2130,36 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, 'open')
         self.assertStatus(self.activity, 'open')
 
+    def test_extend_slot_unfills(self):
+        self.assertStatus(self.activity, 'open')
+        SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
+        participant2 = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot1, participant=participant2)
+        participant2 = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot2, participant=participant2)
+        self.assertStatus(self.slot1, 'full')
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'full')
+
+        self.slot1.capacity = 10
+        self.slot1.save()
+        self.assertStatus(self.slot1, 'open')
+        self.assertStatus(self.activity, 'open')
+
+    def test_cancel_open_slot_fills(self):
+        self.assertStatus(self.activity, 'open')
+        self.assertStatus(self.slot1, 'open')
+        SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
+        self.assertStatus(self.slot1, 'open')
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'open')
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.activity, 'full')
+        self.slot3 = DateActivitySlotFactory.create(activity=self.activity)
+        self.assertStatus(self.activity, 'open')
+        self.slot3.delete()
+        self.assertStatus(self.activity, 'full')
+
     def test_fill_new_slot(self):
         self.slot_part = SlotParticipantFactory.create(slot=self.slot2, participant=self.participant)
         self.assertStatus(self.slot2, 'full')

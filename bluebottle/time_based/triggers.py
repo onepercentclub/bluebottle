@@ -663,6 +663,15 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         activity_has_accepted_participants
                     ]
                 ),
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        not_all_slots_finished,
+                        all_slots_will_be_full,
+                        slot_selection_is_free
+                    ]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),

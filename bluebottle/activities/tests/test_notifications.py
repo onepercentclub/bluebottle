@@ -218,7 +218,7 @@ class TeamNotificationTestCase(NotificationTestCase):
         self.message_class = TeamMemberAddedMessage
         self.create()
         self.assertRecipients([self.captain])
-        self.assertSubject("New team member")
+        self.assertSubject('Someone has joined your team for "Save the world!"')
         self.assertHtmlBodyContains(
             f"{self.obj.user.full_name} is now part of your team for the activity ‘Save the world!’."
         )

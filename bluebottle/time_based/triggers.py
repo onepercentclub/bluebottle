@@ -43,9 +43,9 @@ from bluebottle.time_based.messages import (
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
-    TeamSlotChangedNotification
+    TeamSlotChangedNotification, TeamMemberJoinedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -1304,7 +1304,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 NotificationEffect(
-                    TeamParticipantJoinedNotification,
+                    TeamMemberJoinedNotification,
                     conditions=[
                         automatically_accept,
                         has_accepted_invite

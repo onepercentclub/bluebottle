@@ -17,6 +17,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.messages import TeamParticipantJoinedNotification
 from bluebottle.time_based.states import ParticipantStateMachine, TimeBasedStateMachine, TeamSlotStateMachine
 
 
@@ -207,18 +208,11 @@ def contributor_is_active(contribution):
     ]
 
 
-def automatically_accept(effect):
+def automatically_accept_team(effect):
     """
     automatically accept team
     """
-    captain = effect.instance.activity\
-        .contributors.not_instance_of(Organizer)\
-        .filter(user=effect.instance.owner).first()
-    return (
-        not hasattr(effect.instance.activity, 'review') or
-        not effect.instance.activity.review or
-        (captain and captain.status == 'accepted')
-    )
+    return getattr(effect.instance.activity, 'review', False) is False
 
 
 def needs_review(effect):
@@ -253,6 +247,15 @@ def team_activity_will_not_be_full(effect):
     )
 
 
+def user_is_team_captain(effect):
+    """
+    current user is team captain
+    """
+    if 'user' not in effect.options:
+        return False
+    return effect.instance.owner == effect.options['user']
+
+
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
@@ -261,7 +264,7 @@ class TeamTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     TeamAddedMessage,
-                    conditions=[automatically_accept]
+                    conditions=[automatically_accept_team]
                 ),
                 NotificationEffect(
                     TeamAppliedMessage,
@@ -270,7 +273,7 @@ class TeamTriggers(TriggerManager):
                 TransitionEffect(
                     TeamStateMachine.accept,
                     conditions=[
-                        automatically_accept
+                        automatically_accept_team
                     ]
                 )
             ]
@@ -279,6 +282,13 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
+                NotificationEffect(
+                    TeamParticipantJoinedNotification,
+                    conditions=[
+                        automatically_accept_team,
+                        user_is_team_captain
+                    ]
+                ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,

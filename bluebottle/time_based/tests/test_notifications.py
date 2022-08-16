@@ -240,7 +240,7 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.message_class = TeamParticipantJoinedNotification
         self.create()
         self.assertRecipients([self.supporter])
-        self.assertSubject('You have registered your team for "Save the world!"')
+        self.assertSubject('You have joined a team for "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
         self.assertBodyNotContains(

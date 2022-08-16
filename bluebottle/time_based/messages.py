@@ -460,7 +460,7 @@ class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have joined a team for "{title}"')
+    subject = pgettext('email', 'You have registered your team for "{title}"')
     template = 'messages/team_participant_joined'
     context = {
         'title': 'activity.title',
@@ -551,6 +551,29 @@ class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
     delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined as a team joined
+    """
+    subject = pgettext('email', 'You have joined {team_name} for "{title}"')
+    template = 'messages/team_member_joined'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name'
+    }
+    # delay = 60
 
     @property
     def action_link(self):

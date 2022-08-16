@@ -7,18 +7,19 @@ Some details of the team activity you are a part of have changed:
 {% endblocktrans %}
 </p>
 <p>
+    {% blocktrans context 'email' %}
+        Updated details below:
+    {% endblocktrans %}
+</p>
+<p>
 {{ team_name }}
 </p>
 <p>
-{{ title }}
+"{{ title }}"
 </p>
 
-{% if duration %}
-    {% include 'mails/messages/partial/period.html' %}
-{% else %}
-    {% include 'mails/messages/partial/slots.html' %}
-{%  endif %}
-</p>
+{% include 'mails/messages/partial/team_slot.html' %}
+
 <p>
 {% blocktrans context 'email' %}
 Please view your team from the activity page to see the changes.

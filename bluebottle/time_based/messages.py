@@ -200,6 +200,8 @@ class ReminderTeamSlotNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'timezone': 'timezone',
+        'location': 'location',
     }
 
     def already_send(self, recipient):
@@ -281,6 +283,8 @@ class TeamSlotChangedNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'timezone': 'timezone',
+        'location': 'location',
     }
 
     @property
@@ -456,7 +460,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
-class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+class TeamParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """
@@ -475,8 +479,8 @@ class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
-        """participant"""
-        return [self.obj.user]
+        """team captain"""
+        return [self.obj.owner]
 
 
 class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
@@ -551,6 +555,29 @@ class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
     delay = 60
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        return [self.obj.user]
+
+
+class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+    """
+    The participant joined as a team joined
+    """
+    subject = pgettext('email', 'You have joined {team_name} for "{title}"')
+    template = 'messages/team_member_joined'
+    context = {
+        'title': 'activity.title',
+        'team_name': 'team.name'
+    }
+    # delay = 60
 
     @property
     def action_link(self):

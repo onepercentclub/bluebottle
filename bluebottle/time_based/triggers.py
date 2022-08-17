@@ -8,7 +8,8 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification,
-    TeamMemberWithdrewMessage, TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage
+    TeamMemberWithdrewMessage, TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage,
+    TeamMemberAddedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
@@ -42,9 +43,9 @@ from bluebottle.time_based.messages import (
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
     ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, TeamParticipantJoinedNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
-    TeamSlotChangedNotification
+    TeamSlotChangedNotification, TeamMemberJoinedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -1107,7 +1108,7 @@ def has_accepted_invite(effect):
 
 
 def is_not_team_activity(effect):
-    """Contributor is not part of a team"""
+    """Activity is not for teams"""
     return effect.instance.activity.team_activity != 'teams'
 
 
@@ -1299,14 +1300,21 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantJoinedNotification,
                     conditions=[
                         automatically_accept,
-                        not_team_captain
+                        is_not_team_activity
                     ]
                 ),
                 NotificationEffect(
-                    TeamParticipantJoinedNotification,
+                    TeamMemberJoinedNotification,
                     conditions=[
                         automatically_accept,
-                        is_team_activity
+                        has_accepted_invite
+                    ]
+                ),
+                NotificationEffect(
+                    TeamMemberAddedMessage,
+                    conditions=[
+                        is_team_activity,
+                        not_team_captain,
                     ]
                 ),
                 NotificationEffect(

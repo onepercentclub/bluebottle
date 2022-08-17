@@ -226,6 +226,10 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     segments = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Segment.objects
     )
+    has_initiatives = serializers.SerializerMethodField()
+
+    def get_has_initiatives(self, obj):
+        return obj.own_initiatives.exists()
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -233,7 +237,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments', 'required'
+            'organization', 'segments', 'required', 'has_initiatives'
         )
 
 

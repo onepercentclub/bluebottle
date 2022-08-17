@@ -475,8 +475,8 @@ class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
-        """participant"""
-        return [self.obj.user]
+        """team captain"""
+        return [self.obj.owner]
 
 
 class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):

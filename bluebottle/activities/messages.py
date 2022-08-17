@@ -303,7 +303,7 @@ class TeamAppliedMessage(TeamNotification):
 
 class TeamCaptainAcceptedMessage(TeamNotification):
     subject = pgettext('email', 'Your team has been accepted for "{title}"')
-    template = 'messages/team_accepted'
+    template = 'messages/team_captain_accepted'
 
     context = {
         'title': 'activity.title',

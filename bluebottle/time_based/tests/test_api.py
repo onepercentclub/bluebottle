@@ -1907,7 +1907,7 @@ class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebott
 
         self.assertEqual(
             mail.outbox[0].subject,
-            f'You have joined a team for "{self.activity.title}"'
+            f'You have joined {captain.team.name} for "{self.activity.title}"'
         )
         self.assertEqual(
             mail.outbox[0].to[0],

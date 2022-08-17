@@ -1099,3 +1099,14 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')
+
+    def test_create_initiatives(self):
+        settings = MemberPlatformSettings.load()
+        settings.create_initiatives = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], False)
+        settings.create_initiatives = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)

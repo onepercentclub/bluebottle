@@ -1107,7 +1107,7 @@ def has_accepted_invite(effect):
 
 
 def is_not_team_activity(effect):
-    """Contributor is not part of a team"""
+    """Activity is not for teams"""
     return effect.instance.activity.team_activity != 'teams'
 
 
@@ -1299,7 +1299,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantJoinedNotification,
                     conditions=[
                         automatically_accept,
-                        not_team_captain
+                        is_not_team_activity
                     ]
                 ),
                 NotificationEffect(

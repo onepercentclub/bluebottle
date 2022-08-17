@@ -8,7 +8,7 @@ from django.utils.timezone import now, get_current_timezone
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.messages import ParticipantWithdrewConfirmationNotification, \
-    TeamMemberWithdrewMessage
+    TeamMemberWithdrewMessage, TeamMemberAddedMessage
 from bluebottle.activities.messages import TeamMemberRemovedMessage, TeamCancelledTeamCaptainMessage, \
     TeamCancelledMessage
 from bluebottle.activities.models import Organizer, Activity
@@ -1938,20 +1938,19 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.activity.team_activity = 'teams'
         self.activity.save()
         user = BlueBottleUserFactory.create()
-        captain = BlueBottleUserFactory.create()
-        team = TeamFactory.create(
-            owner=captain,
+        captain = self.participant_factory.create(
+            user=BlueBottleUserFactory.create(),
             activity=self.activity
         )
         self.model = self.participant_factory.build(
-            team=team,
+            accepted_invite=captain.invite,
             activity=self.activity,
             user=user
         )
         with self.execute(user=user):
             self.assertNoNotificationEffect(NewParticipantNotification)
-            self.assertNotificationEffect(TeamParticipantJoinedNotification)
-            self.assertNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
+            self.assertNotificationEffect(TeamMemberAddedMessage)
 
     def test_remove_participant(self):
         self.model = self.participant_factory.create(

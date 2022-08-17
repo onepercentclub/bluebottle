@@ -1108,7 +1108,7 @@ def has_accepted_invite(effect):
 
 
 def is_not_team_activity(effect):
-    """Contributor is not part of a team"""
+    """Activity is not for teams"""
     return effect.instance.activity.team_activity != 'teams'
 
 
@@ -1313,8 +1313,8 @@ class ParticipantTriggers(ContributorTriggers):
                 NotificationEffect(
                     TeamMemberAddedMessage,
                     conditions=[
+                        is_team_activity,
                         not_team_captain,
-                        has_team
                     ]
                 ),
                 NotificationEffect(

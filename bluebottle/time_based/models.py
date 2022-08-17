@@ -527,6 +527,11 @@ class TeamSlot(ActivitySlot):
             return self.start + self.duration
 
     @property
+    def timezone(self):
+        if self.start:
+            return self.start.strftime("%Z %z")
+
+    @property
     def is_complete(self):
         return self.start and self.duration
 

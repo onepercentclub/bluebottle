@@ -74,11 +74,13 @@ def run(*args):
         data = response.json()
         version = data['version']['number'] + 1
         html = ''
+        total = 0
 
         for model in models:
             model_class = import_string(model['model'])
             messages = document_notifications(model_class)
             if len(messages):
+                total += len(messages)
                 html += "<h2>{}</h2>".format(model_class._meta.verbose_name)
                 html += generate_notification_html(messages)
 
@@ -101,5 +103,6 @@ def run(*args):
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
         if response.status_code == 200:
             print("[OK]")
+            print(f"{total} messages")
         else:
             print("[ERROR]")

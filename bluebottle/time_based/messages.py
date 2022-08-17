@@ -200,6 +200,8 @@ class ReminderTeamSlotNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'timezone': 'timezone',
+        'location': 'location',
     }
 
     def already_send(self, recipient):
@@ -281,6 +283,8 @@ class TeamSlotChangedNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'timezone': 'timezone',
+        'location': 'location',
     }
 
     @property

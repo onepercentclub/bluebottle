@@ -647,6 +647,53 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
+    def test_filter_upcoming(self):
+        first = DateActivityFactory.create(
+            status='open',
+        )
+
+        second = DateActivityFactory.create()
+        second.status = 'full'
+        second.save()
+
+        succeeded = DateActivityFactory.create()
+        succeeded.status = 'succeeded'
+        succeeded.save()
+
+        response = self.client.get(
+            self.url + '?filter[upcoming]=true',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
+
+    def test_filter_upcoming_false(self):
+        DateActivityFactory.create(
+            status='open',
+        )
+
+        second = DateActivityFactory.create()
+        second.status = 'full'
+        second.save()
+
+        succeeded = DateActivityFactory.create()
+        succeeded.status = 'succeeded'
+        succeeded.save()
+
+        response = self.client.get(
+            self.url + '?filter[upcoming]=false',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(succeeded.pk))
+
     def test_filter_segment_mismatch(self):
         first = DateActivityFactory.create(
             status='open',

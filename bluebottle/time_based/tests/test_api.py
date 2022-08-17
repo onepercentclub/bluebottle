@@ -2255,15 +2255,15 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
         self.assertTrue('Great to have you!' in message.body)
 
     def test_accept_team_with_custom_message(self):
-        self.activity.team_activity = 'teams'
-        self.activity.review = True
-        self.activity.save()
+        self.participant.status = 'new'
         self.participant.team = TeamFactory.create(
             activity=self.activity,
             owner=self.participant.user
         )
-        self.participant.status = 'new'
         self.participant.save()
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
         self.data['data']['attributes']['transition'] = 'accept'
         self.data['data']['attributes']['message'] = 'Great to have you!'
         mail.outbox = []

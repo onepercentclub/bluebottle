@@ -456,7 +456,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         return [self.obj.user]
 
 
-class TeamParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
+class TeamParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """

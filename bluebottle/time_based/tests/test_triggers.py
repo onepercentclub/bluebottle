@@ -1766,11 +1766,11 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.assertStatus(participant.team, 'open')
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
-            mail.outbox[1].subject,
+            mail.outbox[0].subject,
             f'A new team has joined "{self.activity.title}"'
         )
         self.assertEqual(
-            mail.outbox[0].subject,
+            mail.outbox[1].subject,
             f'You have registered your team for "{self.activity.title}"'
         )
         prep = participant.preparation_contributions.first()

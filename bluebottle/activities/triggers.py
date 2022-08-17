@@ -212,7 +212,14 @@ def automatically_accept_team(effect):
     """
     automatically accept team
     """
-    return getattr(effect.instance.activity, 'review', False) is False
+    captain = effect.instance.activity\
+        .contributors.not_instance_of(Organizer)\
+        .filter(user=effect.instance.owner).first()
+    return (
+        not hasattr(effect.instance.activity, 'review') or
+        not effect.instance.activity.review or
+        (captain and captain.status == 'accepted')
+    )
 
 
 def needs_review(effect):
@@ -247,15 +254,6 @@ def team_activity_will_not_be_full(effect):
     )
 
 
-def user_is_team_captain(effect):
-    """
-    current user is team captain
-    """
-    if 'user' not in effect.options:
-        return False
-    return effect.instance.owner == effect.options['user']
-
-
 @register(Team)
 class TeamTriggers(TriggerManager):
     triggers = [
@@ -268,14 +266,16 @@ class TeamTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     TeamAppliedMessage,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                    ]
                 ),
                 TransitionEffect(
                     TeamStateMachine.accept,
                     conditions=[
                         automatically_accept_team
                     ]
-                )
+                ),
             ]
         ),
 
@@ -285,14 +285,15 @@ class TeamTriggers(TriggerManager):
                 NotificationEffect(
                     TeamParticipantJoinedNotification,
                     conditions=[
-                        automatically_accept_team,
-                        user_is_team_captain
+                        automatically_accept_team
                     ]
                 ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',

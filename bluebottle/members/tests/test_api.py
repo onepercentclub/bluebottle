@@ -12,6 +12,7 @@ from django.core.signing import TimestampSigner
 from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 
@@ -24,6 +25,10 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
+    SlotParticipantFactory
+)
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -1090,6 +1095,46 @@ class UserAPITestCase(BluebottleTestCase):
     def test_get_current_user_without_initiatives(self):
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['has_initiatives'], False)
+
+    def test_get_current_user_no_hours_spent(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['hours_spent'], 0)
+        self.assertEqual(response.json()['hours_planned'], 0)
+
+    def test_get_current_user_hours_spent(self):
+        activity = DateActivityFactory.create(
+            slot_selection='free'
+        )
+        slot1 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() - timedelta(days=1),
+            duration=timedelta(hours=3)
+        )
+        slot2 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            duration=timedelta(hours=2)
+        )
+
+        participant = DateParticipantFactory.create(
+            activity=activity,
+            user=self.user
+        )
+
+        SlotParticipantFactory.create(
+            participant=participant,
+            slot=slot1
+        )
+
+        SlotParticipantFactory.create(
+            participant=participant,
+            slot=slot2
+        )
+
+        slot1.states.finish(save=True)
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['hours_spent'], 3)
+        self.assertEqual(response.json()['hours_planned'], 2)
 
 
 class MemberSettingsAPITestCase(BluebottleTestCase):

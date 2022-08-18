@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -173,9 +174,25 @@ class TeamList(JsonApiViewMixin, ListAPIView):
                 activity_id=activity_id
             )
 
+        has_slot = self.request.query_params.get('filter[has_slot]')
+        start = self.request.query_params.get('filter[start]')
         status = self.request.query_params.get('filter[status]')
         if status:
             queryset = queryset.filter(status=status)
+        elif has_slot == 'false':
+            queryset = queryset.filter(slot__start__isnull=True).exclude(
+                status__in=['new', 'withdrawn', 'cancelled']
+            )
+        elif start == 'future':
+            queryset = queryset.filter(
+                slot__start__gt=timezone.now()
+            )
+        elif start == 'passed':
+            queryset = queryset.filter(
+                slot__start__lt=timezone.now()
+            ).exclude(
+                slot__start__isnull=True
+            )
 
         if self.request.user.is_authenticated:
             queryset = queryset.filter(
@@ -198,7 +215,14 @@ class TeamList(JsonApiViewMixin, ListAPIView):
                         )
                     )
                 )
-            ).order_by('-current_user', '-id')
+            ).distinct().order_by('-current_user')
+            if has_slot == 'false':
+                queryset = queryset.order_by('-current_user', 'id')
+            elif start == 'future':
+                queryset = queryset.order_by('-current_user', 'slot__start')
+            elif start == 'passed':
+                queryset = queryset.order_by('-current_user', '-slot__start')
+
         else:
             queryset = self.queryset.filter(
                 status='open'

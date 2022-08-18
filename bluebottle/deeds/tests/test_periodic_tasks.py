@@ -111,7 +111,7 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
 
         self.run_tasks(self.activity.start - timedelta(days=1))
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
+        self.assertEqual(mail.outbox[1].to[0], self.activity.owner.email)
         mail.outbox = []
         self.assertEqual(len(mail.outbox), 0)
         self.run_tasks(self.activity.start - timedelta(days=1))

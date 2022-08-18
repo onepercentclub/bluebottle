@@ -70,7 +70,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'matching_properties',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'initiative',

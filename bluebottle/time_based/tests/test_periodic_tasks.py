@@ -21,12 +21,12 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tasks import (
     date_activity_tasks, with_a_deadline_tasks,
-    period_participant_tasks, time_contribution_tasks
+    period_participant_tasks, time_contribution_tasks, team_slot_tasks
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
-    SlotParticipantFactory
+    SlotParticipantFactory, TeamSlotFactory
 )
 
 
@@ -843,3 +843,150 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
             len(self.participant.contributions.filter(status='new')),
             1
         )
+
+
+class TeamSlotPeriodicTasksTest(BluebottleTestCase):
+
+    def setUp(self):
+        self.activity = PeriodActivityFactory.create(
+            team_activity='teams',
+            status='open'
+        )
+        self.participant = PeriodParticipantFactory.create(
+            activity=self.activity
+        )
+        self.slot = TeamSlotFactory.create(
+            activity=self.activity,
+            team=self.participant.team,
+            start=datetime.combine((now() + timedelta(days=10)).date(), time(11, 30, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, 'now', return_value=when):
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                team_slot_tasks()
+
+    @property
+    def nigh(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.slot.start.year,
+                self.slot.start.month,
+                self.slot.start.day
+            ) - timedelta(days=4)
+        )
+
+    @property
+    def current(self):
+        return self.slot.start + timedelta(hours=1)
+
+    @property
+    def after(self):
+        return self.slot.start + timedelta(days=2)
+
+    @property
+    def before(self):
+        return timezone.get_current_timezone().localize(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day
+            ) - timedelta(days=1)
+        )
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        return self.assertEqual(obj.status, status)
+
+    def test_reminder_team_slot(self):
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The team activity "{}" will take place in a few days!'.format(self.activity.title)
+        )
+        self.assertTrue('The team activity is just a few days away!' in mail.outbox[0].body)
+
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
+
+    def test_start_team_slot(self):
+        mail.outbox = []
+        self.run_task(self.current)
+        self.assertStatus(self.slot, 'running')
+        self.assertStatus(self.slot.team, 'running')
+
+    def test_finish_team_slot(self):
+        mail.outbox = []
+        self.run_task(self.after)
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_cancelled_team(self):
+        mail.outbox = []
+        self.participant.team.states.cancel(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.slot.team, 'cancelled')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_restore_team(self):
+        mail.outbox = []
+        self.participant.team.states.cancel(save=True)
+        self.participant.team.states.reopen(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_withdrawn_team(self):
+        mail.outbox = []
+        self.participant.team.states.withdraw(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.slot.team, 'withdrawn')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_reapply_team(self):
+        mail.outbox = []
+        self.participant.team.states.withdraw(save=True)
+        self.participant.team.states.reapply(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_withdrawn_team_member(self):
+        mail.outbox = []
+        self.participant.states.withdraw(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'withdrawn')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_reapplied_team_member(self):
+        mail.outbox = []
+        self.participant.states.withdraw(save=True)
+        self.participant.states.reapply(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')

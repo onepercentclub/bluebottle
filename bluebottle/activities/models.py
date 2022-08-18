@@ -183,7 +183,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     team = models.ForeignKey(
         'activities.Team', verbose_name=_('team'),
-        null=True, blank=True, related_name='members', on_delete=models.SET_NULL
+        null=True, blank=True, related_name='members', on_delete=models.CASCADE
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'),
@@ -289,6 +289,14 @@ class Team(TriggerMixin, models.Model):
     owner = models.ForeignKey(
         'members.Member', related_name='teams', null=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def accepted_participants(self):
+        return self.members.filter(status='accepted')
+
+    @property
+    def accepted_participants_count(self):
+        return len(self.accepted_participants)
 
     class Meta(object):
         ordering = ('-created',)

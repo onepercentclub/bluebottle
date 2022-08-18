@@ -24,7 +24,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill
+    DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -42,7 +42,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -171,7 +171,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
         start = self.request.GET.get('start')
         try:
-            queryset = queryset.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            queryset = queryset.filter(
+                start__gte=dateutil.parser.parse(start).astimezone(tz)
+            )
         except (ValueError, TypeError):
             pass
 
@@ -201,6 +203,35 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+
+class TeamSlotListView(DateSlotListView):
+    related_permission_classes = {
+        'team.activity': [
+            ActivityStatusPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+            DeleteActivityPermission
+        ]
+    }
+
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        if 'team' in serializer.validated_data:
+            serializer.save(activity=serializer.validated_data['team'].activity)
+        serializer.save()
+
+
+class TeamSlotDetailView(DateSlotDetailView):
+    permission_classes = [TenantConditionalOpenClose]
+    queryset = TeamSlot.objects.all()
+    serializer_class = TeamSlotSerializer
 
 
 class DateActivityRelatedParticipantList(RelatedContributorListView):
@@ -476,11 +507,7 @@ class DateActivityIcalView(PrivateFileView):
         return response
 
 
-class ActivitySlotIcalView(PrivateFileView):
-    queryset = DateActivitySlot.objects.exclude(
-        status__in=['cancelled', 'deleted', 'rejected'],
-        activity__status__in=['cancelled', 'deleted', 'rejected'],
-    )
+class BaseSlotIcalView(PrivateFileView):
 
     max_age = 30 * 60  # half an hour
 
@@ -516,6 +543,20 @@ class ActivitySlotIcalView(PrivateFileView):
         )
 
         return response
+
+
+class ActivitySlotIcalView(BaseSlotIcalView):
+    queryset = DateActivitySlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
+
+
+class TeamSlotIcalView(BaseSlotIcalView):
+    queryset = TeamSlot.objects.exclude(
+        status__in=['cancelled', 'deleted', 'rejected'],
+        activity__status__in=['cancelled', 'deleted', 'rejected'],
+    )
 
 
 class DateParticipantExportView(ExportView):
@@ -618,6 +659,29 @@ class PeriodParticipantExportView(ExportView):
         return self.get_object().contributors.instance_of(
             PeriodParticipant
         ).prefetch_related('user__segments')
+
+    def write_data(self, workbook):
+        """ Create extra tab with team info"""
+        super().write_data(workbook)
+        if self.get_object().team_activity == 'teams':
+            worksheet = workbook.add_worksheet('Teams')
+
+            fields = [
+                ('name', 'Name'),
+                ('owner__full_name', 'Owner'),
+                ('id', 'ID'),
+                ('status', 'Status'),
+                ('accepted_participants_count', '# Accepted Participants'),
+                ('slot__start', 'Start'),
+                ('slot__duration', 'duration'),
+            ]
+
+            worksheet.write_row(0, 0, [field[1] for field in fields])
+
+            for index, team in enumerate(self.get_object().teams.all()):
+                row = [prep_field(self.request, team, field[0]) for field in fields]
+
+                worksheet.write_row(index + 1, 0, row)
 
 
 class SkillPagination(JsonApiPagination):

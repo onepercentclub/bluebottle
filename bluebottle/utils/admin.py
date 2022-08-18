@@ -57,6 +57,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
     if isinstance(attr, datetime.datetime):
         attr = attr.strftime('%d-%m-%y %H:%M')
 
+    if isinstance(attr, datetime.timedelta):
+        attr = attr.seconds / (60 * 60)
+
     output = attr() if callable(attr) else attr
 
     if isinstance(output, (list, tuple, QuerySet)):

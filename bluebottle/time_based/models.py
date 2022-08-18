@@ -9,7 +9,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contributor, Contribution
+from bluebottle.activities.models import Activity, Contributor, Contribution, Team
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
@@ -33,7 +33,10 @@ class TimeBasedActivity(Activity):
         (True, 'Yes, anywhere/online'),
         (False, 'No, enter a location')
     )
-    capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
+    capacity = models.PositiveIntegerField(
+        _('attendee limit'),
+        help_text=_('Number of participants or teams that can join'),
+        null=True, blank=True)
 
     old_is_online = models.NullBooleanField(
         _('is online'),
@@ -64,7 +67,10 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
-    review = models.NullBooleanField(_('review participants'), null=True, default=None)
+    review = models.NullBooleanField(
+        _('review participants'),
+        help_text=_('Activity manager accepts or rejects participants or teams'),
+        null=True, default=None)
 
     preparation = models.DurationField(
         _('Preparation time'),
@@ -225,7 +231,28 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         _('title'),
         max_length=255,
         null=True, blank=True)
+
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
+
+    is_online = models.NullBooleanField(
+        _('is online'),
+        choices=DateActivity.ONLINE_CHOICES,
+        null=True, default=None
+    )
+
+    online_meeting_url = models.TextField(
+        _('online meeting link'),
+        blank=True, default=''
+    )
+
+    location = models.ForeignKey(
+        Geolocation,
+        verbose_name=_('location'),
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     @property
     def uid(self):
@@ -298,25 +325,6 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
-    is_online = models.NullBooleanField(
-        _('is online'),
-        choices=DateActivity.ONLINE_CHOICES,
-        null=True, default=None
-    )
-
-    online_meeting_url = models.TextField(
-        _('online meeting link'),
-        blank=True, default=''
-    )
-
-    location = models.ForeignKey(
-        Geolocation,
-        verbose_name=_('location'),
-        null=True, blank=True,
-        on_delete=models.SET_NULL
-    )
-
-    location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     @property
     def required_fields(self):
@@ -492,8 +500,8 @@ class PeriodActivitySlot(ActivitySlot):
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
     class Meta:
-        verbose_name = _('slot')
-        verbose_name_plural = _('slots')
+        verbose_name = _('period activity slot')
+        verbose_name_plural = _('period activity slots')
         permissions = (
             ('api_read_periodactivityslot', 'Can view over a period activity slots through the API'),
             ('api_add_periodactivityslot', 'Can add over a period activity slots through the API'),
@@ -505,6 +513,52 @@ class PeriodActivitySlot(ActivitySlot):
             ('api_change_own_periodactivityslot', 'Can change own over a period activity slots through the API'),
             ('api_delete_own_periodactivityslot', 'Can delete own over a period activity slots through the API'),
         )
+
+
+class TeamSlot(ActivitySlot):
+    activity = models.ForeignKey(PeriodActivity, related_name='team_slots', on_delete=models.CASCADE)
+    start = models.DateTimeField(_('start date and time'))
+    duration = models.DurationField(_('duration'))
+    team = models.OneToOneField(Team, related_name='slot', on_delete=models.CASCADE)
+
+    @property
+    def end(self):
+        if self.start and self.duration:
+            return self.start + self.duration
+
+    @property
+    def timezone(self):
+        if self.start:
+            return self.start.strftime("%Z %z")
+
+    @property
+    def is_complete(self):
+        return self.start and self.duration
+
+    class Meta:
+        verbose_name = _('team slot')
+        verbose_name_plural = _('team slots')
+        permissions = (
+            ('api_read_teamslot', 'Can view over a team slots through the API'),
+            ('api_add_teamslot', 'Can add over a team slots through the API'),
+            ('api_change_teamslot', 'Can change over a team slots through the API'),
+            ('api_delete_teamslot', 'Can delete over a team slots through the API'),
+
+            ('api_read_own_teamslot', 'Can view own over a team slots through the API'),
+            ('api_add_own_teamslot', 'Can add own over a team slots through the API'),
+            ('api_change_own_teamslot', 'Can change own over a team slots through the API'),
+            ('api_delete_own_teamslot', 'Can delete own over a team slots through the API'),
+        )
+
+    def __str__(self):
+        return str(_('Time slot for {}')).format(self.team)
+
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/team-slots'
+
+    @property
+    def accepted_participants(self):
+        return self.team.members.filter(status='accepted')
 
 
 class Participant(Contributor):

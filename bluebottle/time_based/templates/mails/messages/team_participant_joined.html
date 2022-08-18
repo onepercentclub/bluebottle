@@ -12,12 +12,11 @@
         <b>{{ title }}</b>
     </p>
 
-    {% if duration %}
-        {% include 'mails/messages/partial/period.html' %}
-    {% else %}
-        {% include 'mails/messages/partial/slots.html' %}
-
-    {%  endif %}
+    <p>
+        {% blocktrans context 'email' %}
+            The activity manager will be in touch to confirm details such as time, date and location. You can start inviting team members, or wait until the details have been set.
+        {% endblocktrans %}
+    </p>
 
     <p>
         <i>

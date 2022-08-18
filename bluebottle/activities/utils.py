@@ -9,7 +9,8 @@ from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodHyperlinkedRelatedField, SerializerMethodResourceRelatedField
+    ResourceRelatedField, SerializerMethodResourceRelatedField,
+    HyperlinkedRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -17,6 +18,7 @@ from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.serializers import AvailableTransitionsField
@@ -25,20 +27,18 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, PeriodParticipant
-from bluebottle.time_based.states import ParticipantStateMachine
+from bluebottle.time_based.models import TimeContribution, TeamSlot
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 
 
 class TeamSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
-    members = SerializerMethodHyperlinkedRelatedField(
-        model=Contributor,
+    members = HyperlinkedRelatedField(
+        read_only=True,
         many=True,
         related_link_view_name='team-members',
         related_link_url_kwarg='team_id'
@@ -46,51 +46,37 @@ class TeamSerializer(ModelSerializer):
 
     participants_export_url = PrivateFileSerializer(
         'team-members-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='participants.csv',
         permission=CanExportTeamParticipantsPermission,
         read_only=True
     )
-
-    def get_members(self, instance):
-        user = self.context['request'].user
-        return [
-            contributor for contributor in instance.members.all() if (
-                isinstance(contributor, PeriodParticipant) and (
-                    contributor.status in [
-                        ParticipantStateMachine.new.value,
-                        ParticipantStateMachine.accepted.value,
-                        ParticipantStateMachine.succeeded.value
-                    ] or
-                    user in (
-                        instance.owner,
-                        instance.activity.owner,
-                        instance.activity.initiative.owner,
-                        contributor.user
-                    )
-                )
-            )
-        ]
+    slot = ResourceRelatedField(queryset=TeamSlot.objects)
 
     class Meta(object):
         model = Team
-        fields = ('owner', 'members', 'activity')
+        fields = ('owner', 'slot', 'members')
         meta_fields = (
             'status',
             'transitions',
             'created',
             'participants_export_url',
+
         )
 
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+            'slot',
+            'slot.location',
         ]
 
         resource_name = 'activities/teams'
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+        'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
 
@@ -228,7 +214,7 @@ class BaseActivitySerializer(ModelSerializer):
         ).count()
 
     def get_team_count(self, instance):
-        return instance.teams.filter(status='open').count()
+        return instance.teams.filter(status__in=['open', 'finished']).count()
 
     class Meta(object):
         model = Activity
@@ -284,7 +270,6 @@ class BaseActivitySerializer(ModelSerializer):
             'segments',
             'segments.segment_type'
         ]
-        resource_name = 'activities'
 
 
 class BaseActivityListSerializer(ModelSerializer):
@@ -354,7 +339,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'goals',
             'goals.type',
         ]
-        resource_name = 'activities'
 
 
 class BaseTinyActivitySerializer(ModelSerializer):
@@ -411,7 +395,7 @@ class BaseContributorListSerializer(ModelSerializer):
     class Meta(object):
         model = Contributor
         fields = ('user', 'activity', 'status', 'created', 'updated', 'accepted_invite', 'invite')
-        meta_fields = ('created', 'updated', )
+        meta_fields = ('created', 'updated',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -439,8 +423,7 @@ class BaseContributorSerializer(ModelSerializer):
         super().__init__(*args, **kwargs)
 
         if (
-            isinstance(self.instance, Iterable) or
-            (
+            isinstance(self.instance, Iterable) or (
                 self.instance and (
                     self.instance.accepted_invite or
                     self.instance.user != self.context['request'].user
@@ -451,8 +434,15 @@ class BaseContributorSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', 'team', 'accepted_invite', 'invite',)
-        meta_fields = ('transitions', 'created', 'updated', )
+        fields = (
+            'user',
+            'activity',
+            'status',
+            'team',
+            'accepted_invite',
+            'invite',
+        )
+        meta_fields = ('transitions', 'created', 'updated',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -470,15 +460,14 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ('value', 'status', )
-        meta_fields = ('created', )
+        fields = ('value', 'status',)
+        meta_fields = ('created',)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'
 
 
 def get_stats_for_activities(activities):
-
     ids = activities.values_list('id', flat=True)
 
     default_currency = properties.DEFAULT_CURRENCY
@@ -585,7 +574,7 @@ class InviteSerializer(ModelSerializer):
 
     class Meta(object):
         model = Invite
-        fields = ('id', 'team', )
+        fields = ('id', 'team',)
 
     class JSONAPIMeta(object):
         included_resources = [

@@ -6,28 +6,31 @@ from io import BytesIO
 import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
+from django.core import mail
 from django.urls import reverse
 from django.utils.timezone import now, utc
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
     APITestCase
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
+from bluebottle.time_based.serializers import TeamSlotSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory
+    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory, TeamSlotFactory
 )
 
 
@@ -424,7 +427,10 @@ class TimeBasedDetailAPIViewTestCase():
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
 
-        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
 
         if isinstance(self.activity, PeriodActivity):
             self.assertEqual(
@@ -545,7 +551,6 @@ class TimeBasedDetailAPIViewTestCase():
             self.response_data['relationships']['contributors']['links']['related'],
             user=self.activity.owner
         )
-
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -941,9 +946,26 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         })
 
     def test_get_open(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
         super().test_get_open()
 
         self.assertFalse(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+    def test_owner_succeed_manually(self):
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity.initiative = self.initiative
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.states.submit(save=True)
+        PeriodParticipantFactory.create(activity=self.activity)
+        response = self.client.get(self.url, user=self.activity.owner)
+        self.data = response.json()['data']
+        self.assertTrue(
             {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
             in self.data['meta']['transitions']
         )
@@ -1047,7 +1069,6 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.assertEqual(data['meta']['matching-properties']['location'], False)
 
     def test_get_owner_export_teams_enabled(self):
-
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.team_activities = True
@@ -1060,22 +1081,139 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.participant_factory.create_batch(
             3, activity=self.activity, accepted_invite=team_captain.invite
         )
+        team_captain.team.slot = TeamSlotFactory.create(
+            team=team_captain.team, activity=self.activity
+        )
+
+        # create another team
+        other_team_captain = self.participant_factory.create(activity=self.activity)
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         export_url = data['attributes']['participants-export-url']['url']
         export_response = self.client.get(export_url)
-        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+
+        self.assertEqual(len(workbook.worksheets), 2)
+
+        sheet = workbook.worksheets[0]
         self.assertEqual(
             tuple(sheet.values)[0],
             ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
+        )
+
+        teams_sheet = workbook.worksheets[1]
+
+        self.assertEqual(
+            tuple(teams_sheet.values)[0],
+            ('Name', 'Owner', 'ID', 'Status', '# Accepted Participants', 'Start', 'duration')
+        )
+        self.assertEqual(
+            tuple(teams_sheet.values)[1],
+            (
+                other_team_captain.team.name, other_team_captain.user.full_name,
+                other_team_captain.team.pk, other_team_captain.team.status,
+                1, None, None
+            )
+        )
+        self.assertEqual(
+            tuple(teams_sheet.values)[2],
+            (
+                team_captain.team.name, team_captain.user.full_name,
+                team_captain.team.pk, team_captain.team.status,
+                team_captain.team.accepted_participants_count,
+                team_captain.team.slot.start.strftime('%d-%m-%y %H:%M'),
+                team_captain.team.slot.duration.seconds / (60 * 60),
+            )
         )
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
             wrong_signature_response.status_code, 404
         )
+
+
+class TeamSlotAPIViewTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.activity = PeriodActivityFactory.create(
+            team_activity='teams',
+            owner=self.manager
+        )
+        self.team_captain = PeriodParticipantFactory.create(activity=self.activity)
+        self.team = self.team_captain.team
+
+        PeriodParticipantFactory.create_batch(
+            3, activity=self.activity, team=self.team
+        )
+        self.activity_url = reverse('period-detail', args=(self.activity.pk,))
+
+        self.url = reverse('team-slot-list')
+        self.serializer = TeamSlotSerializer
+        self.factory = TeamSlotFactory
+
+        self.defaults = {
+            'activity': self.activity,
+            'team': self.team,
+            'start': (now() + timedelta(days=2)).replace(hour=11, minute=0, second=0, microsecond=0),
+            'duration': '2:00:00',
+            'location': None,
+            'is_online': True,
+            'location_hint': None
+        }
+
+        self.fields = [
+            'activity',
+            'team',
+            'start',
+            'duration',
+            'location',
+            'is_online',
+            'location_hint'
+        ]
+
+    def test_create_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        ical_response = self.client.get(self.response.json()['links']['ical'])
+
+        self.assertEqual(ical_response.status_code, status.HTTP_200_OK)
+
+    def test_create_team_slot_missing_start(self):
+        self.defaults['start'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/start'
+        )
+
+    def test_create_team_slot_missing_duration(self):
+        self.defaults['duration'] = None
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['source']['pointer'],
+            '/data/attributes/duration'
+        )
+
+    def test_update_team_slot(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.url = reverse('team-slot-detail', args=(self.model.id,))
+        location = GeolocationFactory.create()
+        to_change = {
+            'is_online': False,
+            'location_hint': 'Ring top bell',
+            'location': location
+        }
+        self.perform_update(to_change=to_change, user=self.manager)
+        self.assertEqual(self.model.location_hint, 'Ring top bell')
+        self.assertEqual(self.model.location, location)
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -1167,6 +1305,26 @@ class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Bluebo
     type = 'period'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_succeed_manually(self):
+        self.activity.start = None
+        self.activity.deadline = None
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
+        PeriodParticipantFactory.create(activity=self.activity)
+
+        self.data['data']['attributes']['transition'] = 'succeed_manually'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+        self.assertIsNotNone(self.activity.deadline)
 
 
 class DateActivitySlotListAPITestCase(BluebottleTestCase):
@@ -1730,6 +1888,40 @@ class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebott
     document_url_name = 'period-participant-document'
     participant_type = 'contributors/time-based/period-participants'
 
+    def test_join_team(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        captain = PeriodParticipantFactory.create(
+            activity=self.activity
+        )
+        self.data['data']['relationships']['accepted-invite'] = {
+            'data': {
+                'type': 'activities/invites',
+                'id': str(captain.invite.id)
+            }
+        }
+        mail.outbox = []
+        self.response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have joined {captain.team.name} for "{self.activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[0].to[0],
+            self.user.email
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'Someone has joined your team for "{self.activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[1].to[0],
+            captain.user.email
+        )
+
 
 class ParticipantDetailViewTestCase():
     def setUp(self):
@@ -2013,15 +2205,176 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 
+    def test_accept_by_owner(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        mail.outbox = []
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have been selected for the activity "{self.activity.title}" 🎉'
+        )
+
+    def test_accept_with_custom_message(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        self.data['data']['attributes']['message'] = 'Great to have you!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have been selected for the activity "{self.activity.title}" 🎉'
+        )
+        self.assertTrue('Great to have you!' in message.body)
+
+    def test_accept_team_with_custom_message(self):
+        self.participant.status = 'new'
+        self.participant.team = TeamFactory.create(
+            activity=self.activity,
+            owner=self.participant.user
+        )
+        self.participant.save()
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'accept'
+        self.data['data']['attributes']['message'] = 'Great to have you!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][1]['attributes']['status'], 'accepted')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'Your team has been accepted for "{self.activity.title}"'
+        )
+        self.assertTrue('Great to have you!' in message.body)
+
+    def test_reject_by_owner(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        mail.outbox = []
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have not been selected for the activity "{self.activity.title}"'
+        )
+
+    def test_reject_with_custom_message(self):
+        self.participant.status = 'new'
+        self.participant.save()
+        self.activity.review = True
+        self.activity.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        self.data['data']['attributes']['message'] = 'Go away!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'You have not been selected for the activity "{self.activity.title}"'
+        )
+        self.assertTrue('Go away!' in message.body)
+
+    def test_reject_team_with_custom_message(self):
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+        self.participant.team = TeamFactory.create(
+            activity=self.activity,
+            owner=self.participant.user
+        )
+        self.participant.status = 'new'
+        self.participant.save()
+        self.data['data']['attributes']['transition'] = 'reject'
+        self.data['data']['attributes']['message'] = 'Go away!'
+        mail.outbox = []
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            f'Your team has been rejected for "{self.activity.title}"'
+        )
+        self.assertTrue('Go away!' in message.body)
+
 
 class ReviewParticipantTransitionAPIViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
+        self.another_user = BlueBottleUserFactory()
         self.activity = self.factory.create(review=True)
         self.participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
         )
 
         self.url = reverse(self.url_name)
@@ -2047,7 +2400,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.participant.user
+            user=self.user
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2066,7 +2419,7 @@ class ReviewParticipantTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.user
+            user=self.another_user
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2290,10 +2643,20 @@ class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase
     participant_factory = PeriodParticipantFactory
 
     def test_get_owner(self):
+        self.participants[2].team = TeamFactory.create(activity=self.activity)
+        self.participants[2].save()
+        TeamSlotFactory.create(team=self.participants[2].team, activity=self.activity)
+
         super().test_get_owner()
 
         included_contributions = self.included_by_type(self.response, 'contributions/time-contributions')
         self.assertEqual(len(included_contributions), 8)
+
+        included_teams = self.included_by_type(self.response, 'activities/teams')
+        self.assertEqual(len(included_teams), 1)
+
+        included_team_slots = self.included_by_type(self.response, 'activities/time-based/team-slots')
+        self.assertEqual(len(included_team_slots), 1)
 
 
 class SlotParticipantListAPIViewTestCase(BluebottleTestCase):

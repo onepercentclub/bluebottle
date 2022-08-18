@@ -141,10 +141,11 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             }
         ),
         (
-            _('Initiatives'),
+            _('Engagement'),
             {
                 'fields': (
                     'create_initiatives',
+                    'do_good_hours',
                 )
             }
         ),
@@ -385,6 +386,8 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         [
+                            'hours_spent',
+                            'hours_planned',
                             'initiatives',
                             'date_activities',
                             'period_activities',
@@ -439,7 +442,8 @@ class MemberAdmin(UserAdmin):
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc'
+            'funding', 'deeds', 'collect', 'kyc',
+            'hours_spent', 'hours_planned'
         ]
 
         user_groups = request.user.groups.all()

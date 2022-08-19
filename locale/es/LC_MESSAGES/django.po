@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-17 12:36+0200\n"
-"PO-Revision-Date: 2022-06-17 10:40\n"
+"POT-Creation-Date: 2022-06-21 08:49+0200\n"
+"PO-Revision-Date: 2022-06-21 10:44\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: es-EM\n"
-"X-Crowdin-File: /demo.nlcares-improvements/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 976\n"
+"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 233\n"
 
 #: bluebottle/activities/admin.py:62 bluebottle/activities/admin.py:603
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:235
@@ -597,12 +597,12 @@ msgid "Create"
 msgstr "Crear"
 
 #: bluebottle/activities/states.py:110
-msgid "The acivity will be created."
-msgstr "Se creará la acividad."
+msgid "The activity will be created."
+msgstr ""
 
 #: bluebottle/activities/states.py:119
-msgid "The acivity will be submitted for review."
-msgstr "La acividad se someterá a revisión."
+msgid "The activity will be submitted for review."
+msgstr ""
 
 #: bluebottle/activities/states.py:121 bluebottle/activities/states.py:149
 #: bluebottle/funding/states.py:574 bluebottle/initiatives/states.py:92
@@ -7105,7 +7105,7 @@ msgstr ""
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:24
 msgid "\n"
-"                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the lock has been entered completely and correctly before you repeat the lock.\n"
+"                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the slot has been entered completely and correctly before you repeat the slot.\n"
 "                    "
 msgstr ""
 

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.utils.timezone import get_current_timezone
 
 
 def nth_weekday(date):
@@ -10,10 +11,10 @@ def nth_weekday(date):
 
 
 def duplicate_slot(slot, interval, end):
-
     dates = []
+    tz = get_current_timezone()
 
-    start = slot.start
+    start = slot.start.astimezone(tz)
     for n in range(int((end - start.date()).days)):
         date = start + timedelta(days=n + 1)
         if interval == 'day':
@@ -29,5 +30,8 @@ def duplicate_slot(slot, interval, end):
 
     for date in dates:
         slot.id = None
-        slot.start = slot.start.replace(day=date.day, month=date.month, year=date.year)
+        slot.start = tz.localize(
+            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year)
+        )
+        slot.status = 'open'
         slot.save()

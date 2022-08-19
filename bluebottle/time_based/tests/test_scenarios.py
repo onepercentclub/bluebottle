@@ -338,7 +338,7 @@ class PeriodParticipantScenarioTestCase(BluebottleTestCase):
         )
         self.client = JSONAPITestClient()
 
-    def test_user_joins_activity(self):
+    def test_user_starts_a_team(self):
         api_user_joins_period_activity(self, self.activity, self.supporter)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         self.assertEqual(self.activity.teams.count(), 1)

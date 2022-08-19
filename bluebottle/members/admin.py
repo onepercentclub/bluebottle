@@ -144,7 +144,14 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
-        required_fields = ['require_birthdate', 'require_address', 'require_phone_number']
+        required_fields = [
+            'require_birthdate',
+            'require_address',
+            'require_phone_number'
+        ]
+
+        if obj.closed:
+            required_fields.insert(0, 'required_questions_location')
 
         if Location.objects.count():
             required_fields.append('require_office')
@@ -154,11 +161,16 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             required_fields.append('segment_types')
 
         if len(required_fields):
+            if obj.closed:
+                description = _('Members are required to fill out the fields listed '
+                                'below after log in or when contributing to an activity.')
+            else:
+                description = _('Members are required to fill out the fields listed '
+                                'below when contributing to an activity.')
             fieldsets += ((
                 _('Required fields'),
                 {
-                    'description': _('After logging in members are required to '
-                                     'fill out or confirm the  fields listed below.'),
+                    'description': description,
                     'fields': required_fields
                 }
             ), )

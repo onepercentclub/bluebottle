@@ -27,6 +27,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         ('first_name', _('First name')),
     )
 
+    REQUIRED_QUESTIONS_OPTIONS = (
+        ('login', _('After log in')),
+        ('contribution', _('When making a contribution')),
+    )
+
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
@@ -42,6 +47,15 @@ class MemberPlatformSettings(BasePlatformSettings):
     session_only = models.BooleanField(
         default=False,
         help_text=_('Limit user session to browser session')
+    )
+
+    required_questions_location = models.CharField(
+        choices=REQUIRED_QUESTIONS_OPTIONS,
+        max_length=12,
+        default='login',
+        help_text=_(
+            'When should the user be asked to complete their required profile fields?'
+        )
     )
 
     require_consent = models.BooleanField(
@@ -97,22 +111,22 @@ class MemberPlatformSettings(BasePlatformSettings):
     require_office = models.BooleanField(
         _('Office location'),
         default=False,
-        help_text=_('Require members to enter their office location once after logging in.')
+        help_text=_('Require members to enter their office location.')
     )
     require_address = models.BooleanField(
         _('Address'),
         default=False,
-        help_text=_('Require members to enter their address once after logging in.')
+        help_text=_('Require members to enter their address.')
     )
     require_phone_number = models.BooleanField(
         _('Phone number'),
         default=False,
-        help_text=_('Require members to enter their phone number once after logging in.')
+        help_text=_('Require members to enter their phone number.')
     )
     require_birthdate = models.BooleanField(
         _('Birthdate'),
         default=False,
-        help_text=_('Require members to enter their date of birth once after logging in.')
+        help_text=_('Require members to enter their date of birth.')
     )
 
     verify_office = models.BooleanField(

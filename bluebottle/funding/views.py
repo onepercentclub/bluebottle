@@ -316,12 +316,13 @@ class SupportersExportView(PrivateFileView):
         ):
             row = [prep_field(request, donor, field[0]) for field in self.fields]
             for segment_type in self.get_segment_types():
-                segments = ", ".join(
-                    donor.user.segments.filter(
-                        segment_type=segment_type
-                    ).values_list('name', flat=True)
-                )
-                row.append(segments)
+                if donor.user:
+                    segments = ", ".join(
+                        donor.user.segments.filter(
+                            segment_type=segment_type
+                        ).values_list('name', flat=True)
+                    )
+                    row.append(segments)
             sheet.append(row)
 
         return generate_xlsx_response(filename=filename, data=sheet)

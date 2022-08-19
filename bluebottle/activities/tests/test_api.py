@@ -26,7 +26,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SkillFactory
+    DateActivitySlotFactory, SkillFactory, TeamSlotFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -1726,7 +1726,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         )
 
 
-class RelatedTeamListViewAPITestCase(APITestCase):
+class TeamListViewAPITestCase(APITestCase):
     serializer = TeamSerializer
 
     def setUp(self):
@@ -1737,6 +1737,14 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.approved_teams = TeamFactory.create_batch(5, activity=self.activity)
         for team in self.approved_teams:
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
+
+        for team in self.approved_teams[:2]:
+            TeamSlotFactory.create(activity=self.activity, team=team, start=now() + timedelta(days=5))
+
+        TeamSlotFactory.create(
+            activity=self.activity, team=self.approved_teams[2], start=now() - timedelta(days=5)
+        )
+
         self.cancelled_teams = TeamFactory.create_batch(
             5, activity=self.activity, status='cancelled'
         )
@@ -1744,7 +1752,10 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             PeriodParticipantFactory.create(activity=self.activity, team=team, user=team.owner)
             PeriodParticipantFactory.create(activity=self.activity, team=team)
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?filter[activity_id]={}".format(
+            reverse('team-list'),
+            self.activity.pk
+        )
 
         settings = InitiativePlatformSettings.objects.get()
         settings.team_activities = True
@@ -1757,7 +1768,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams) + len(self.cancelled_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertMeta('status')
@@ -1771,6 +1781,41 @@ class RelatedTeamListViewAPITestCase(APITestCase):
             'We should have a unique list of team ids'
         )
 
+    def test_get_filtered_status(self):
+        new_teams = TeamFactory.create_batch(2, activity=self.activity, status='new')
+        self.perform_get(user=self.activity.owner, query={'filter[status]': 'new'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['id'] in [str(team.pk) for team in new_teams]
+            )
+
+    def test_get_filtered_has_no_slot(self):
+        self.perform_get(user=self.activity.owner, query={'filter[has_slot]': 'false'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertIsNone(resource['relationships']['slot']['data'])
+
+    def test_get_filtered_future(self):
+        self.perform_get(user=self.activity.owner, query={'filter[start]': 'future'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['id'] in [str(team.pk) for team in self.approved_teams[:2]]
+            )
+
+    def test_get_filtered_passed(self):
+        self.perform_get(user=self.activity.owner, query={'filter[start]': 'passed'})
+
+        self.assertStatus(status.HTTP_200_OK)
+        for resource in self.response.json()['data']:
+            self.assertEqual(
+                resource['id'], str(self.approved_teams[2].pk)
+            )
+
     def test_get_cancelled_team_captain(self):
         team = self.cancelled_teams[0]
         self.perform_get(user=team.owner)
@@ -1779,7 +1824,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
 
         self.assertTotal(len(self.approved_teams) + 1)
         self.assertObjectList(self.approved_teams + [team])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertEqual(
@@ -1794,7 +1838,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
         self.assertEqual(
@@ -1814,7 +1857,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
         for resource in self.response.json()['data']:
             self.assertTrue(resource['meta']['participants-export-url'] is None)
@@ -1835,7 +1877,6 @@ class RelatedTeamListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.approved_teams))
         self.assertObjectList(self.approved_teams)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('owner')
 
     def test_get_anonymous_closed_site(self):
@@ -1991,7 +2032,7 @@ class TeamMemberExportViewAPITestCase(APITestCase):
             activity=self.activity,
         )
 
-        self.url = reverse('related-activity-team', args=(self.activity.pk, ))
+        self.url = "{}?filter[activity_id]={}".format(reverse('team-list'), self.activity.pk)
 
     @property
     def export_url(self):
@@ -2096,7 +2137,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2108,7 +2148,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
         self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2126,7 +2165,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertTotal(len(self.accepted_members) + 1)
 
         self.assertObjectList(self.accepted_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
@@ -2139,7 +2177,6 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertTotal(len(self.accepted_members) + 1)
 
         self.assertObjectList(self.accepted_members + [self.team_captain])
-        self.assertRelationship('activity', [self.activity])
         self.assertRelationship('user')
 
         self.assertAttribute('status')

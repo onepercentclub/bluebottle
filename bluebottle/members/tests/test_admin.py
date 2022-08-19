@@ -364,11 +364,11 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
+        headers = data[0].split(";")
         user_data = []
         for row in data:
             if row.startswith(member.email):
-                user_data = row.split(',')
+                user_data = row.split(';')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
@@ -391,8 +391,8 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
-        data = data[1].split(",")
+        headers = data[0].split(";")
+        data = data[1].split(";")
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'email')
@@ -411,11 +411,11 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
+        headers = data[0].split(";")
         user_data = []
         for row in data:
             if row.startswith('malle@eppie.nl'):
-                user_data = row.split(',')
+                user_data = row.split(';')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [

@@ -118,6 +118,7 @@ class StatSerializer(serializers.ModelSerializer):
         statistics = Statistics(
             start=self.context.get('start_date'),
             end=self.context.get('end_date'),
+            year=self.context.get('year'),
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -147,6 +148,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
+    year = serializers.IntegerField()
     count = serializers.SerializerMethodField()
 
     def get_count(self, obj):
@@ -154,7 +156,7 @@ class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'count')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'count')
 
 
 class QuoteSerializer(serializers.ModelSerializer):

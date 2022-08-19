@@ -1,26 +1,23 @@
 from builtins import object
-from django.db.models import Q, Count
-from django.db.models.aggregates import Sum
 
 from django.contrib.contenttypes.models import ContentType
-
+from django.db.models import Q, Count
+from django.db.models.aggregates import Sum
 from memoize import memoize
-
 from moneyed.classes import Money
 
-from bluebottle.clients import properties
-
-from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.models import Contributor, Activity, EffortContribution
+from bluebottle.clients import properties
+from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import (
     DateActivity,
     PeriodActivity,
     TimeContribution
 )
-from bluebottle.funding.models import Donor, Funding
-from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
 

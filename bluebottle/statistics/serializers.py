@@ -1,3 +1,4 @@
+import datetime
 from builtins import str
 from builtins import object
 from rest_framework import serializers
@@ -6,13 +7,21 @@ from rest_framework_json_api.serializers import PolymorphicModelSerializer, Mode
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
+from bluebottle.time_based.tests.test_utils import tz
 
 
 class BaseStatisticSerializer(ModelSerializer):
     value = serializers.SerializerMethodField()
 
     def get_value(self, obj):
-        value = obj.get_value()
+        params = self.context['request'].query_params
+        if 'year' in params:
+            year = int(params['year'])
+            start = datetime.datetime(year, 1, 1, tzinfo=tz)
+            end = datetime.datetime(year, 12, 31, tzinfo=tz)
+            value = obj.get_value(start, end)
+        else:
+            value = obj.get_value()
 
         try:
             return {

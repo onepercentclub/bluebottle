@@ -31,23 +31,21 @@ class BaseStatisticSerializer(ModelSerializer):
         except AttributeError:
             return value
 
-        return value
-
 
 class ManualStatisticSerializer(BaseStatisticSerializer):
     class Meta(object):
         model = ManualStatistic
-        fields = ('id', 'value', 'name', 'icon')
+        fields = ('value', 'name', 'icon')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
-        fields = ('id', 'value', 'name', 'icon', )
 
 
 class DatabaseStatisticSerializer(BaseStatisticSerializer):
+
     class Meta(object):
         model = DatabaseStatistic
-        fields = ('id', 'value', 'name', 'query', 'icon', )
+        fields = ('value', 'name', 'query', 'icon', )
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
@@ -60,7 +58,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
     class Meta(object):
         model = ImpactStatistic
-        fields = ('id', 'value', 'impact_type')
+        fields = ('value', 'impact_type')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'
@@ -68,6 +66,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
 
 class StatisticSerializer(PolymorphicModelSerializer):
+
     polymorphic_serializers = [
         DatabaseStatisticSerializer,
         ManualStatisticSerializer,

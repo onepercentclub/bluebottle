@@ -1,5 +1,6 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum

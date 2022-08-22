@@ -209,12 +209,11 @@ class Statistics(object):
         return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
 
     @property
-    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
         donations = Donor.objects.filter(
-            self.date_filter('contributor_date'),
-            status='succeeded'
+            self.date_filter('created'),
+            status='succeeded',
         )
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]

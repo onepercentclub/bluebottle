@@ -32,7 +32,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -970,7 +970,7 @@ class SlotParticipantAdmin(StateMachineAdmin):
 
 
 @admin.register(Skill)
-class SkillAdmin(TranslatableAdmin):
+class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'member_link')
     readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')

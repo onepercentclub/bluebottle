@@ -180,3 +180,13 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 @admin.register(TranslationPlatformSettings)
 class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     pass
+
+
+class TranslatableAdminOrderingMixin(object):
+
+    translatable_ordering = 'translations__name'
+
+    def get_queryset(self, request):
+        language_code = self.get_queryset_language(request)
+        return super(TranslatableAdminOrderingMixin, self).get_queryset(request). \
+            translated(language_code).order_by(self.translatable_ordering)

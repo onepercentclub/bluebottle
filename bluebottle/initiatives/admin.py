@@ -12,7 +12,7 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
-from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.wallposts.admin import WallpostInline
@@ -285,7 +285,7 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
 
 
 @admin.register(Theme)
-class ThemeAdmin(TranslatableAdmin):
+class ThemeAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
     readonly_fields = ('initiative_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields

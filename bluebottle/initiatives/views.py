@@ -178,7 +178,7 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     pagination_class = NoPagination
 
     def get_queryset(self):
-        return super().get_queryset().order_by('translations__name')
+        return super().get_queryset()
 
 
 class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

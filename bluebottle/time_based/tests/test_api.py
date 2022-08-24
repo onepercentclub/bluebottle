@@ -3211,14 +3211,14 @@ class SkillApiTestCase(BluebottleTestCase):
         MemberPlatformSettings.objects.update(closed=True)
         self.url = reverse('skill-list')
         Skill.objects.all().delete()
-        self.skill = SkillFactory.create_batch(40)
+        SkillFactory.create_batch(10)
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):
         user = BlueBottleUserFactory.create()
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 40)
+        self.assertEqual(len(response.data['results']), 10)
 
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)

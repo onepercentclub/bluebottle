@@ -24,6 +24,7 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         qs = super(CountryList, self).get_queryset()
+
         if 'filter[used]' in self.request.GET:
             qs = qs.filter(
                 Q(location__initiative__status='approved') |
@@ -33,7 +34,7 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
                     Q(geolocation__dateactivityslot__activity__status__in=self.public_statuses) &
                     Q(geolocation__dateactivityslot__status__in=self.public_statuses)
                 )
-            ).distinct()
+            )
         return qs
 
 

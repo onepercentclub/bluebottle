@@ -1,13 +1,14 @@
+from datetime import timedelta
+
+from django.db.models import Sum, Q
+from django.template.defaultfilters import time, date
+from django.urls import reverse
+from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
-from django.urls import reverse
-from django.template.defaultfilters import time, date
-
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from django.utils.timezone import get_current_timezone
-
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.translation import pgettext_lazy as pgettext
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
@@ -445,3 +446,52 @@ class TeamMemberRemovedMessage(ActivityNotification):
             return [self.obj.team.owner]
         else:
             return []
+
+
+class BaseDoGoodHoursReminderNotification(TransitionMessage):
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = pgettext('email', 'Find activities')
+
+    def get_recipients(self):
+        """members with do good hours"""
+        from bluebottle.members.models import Member
+        from bluebottle.members.models import MemberPlatformSettings
+
+        year = now().year
+        do_good_hours = timedelta(hours=MemberPlatformSettings.load().do_good_hours)
+
+        members = Member.objects.annotate(
+            hours=Sum(
+                'contributor__contributions__timecontribution__value',
+                filter=Q(contributor__contributions__start__year=year)
+            ),
+        ).filter(
+            Q(hours__lt=do_good_hours) | Q(hours__isnull=True),
+            is_active=True,
+            receive_reminder_emails=True
+        ).distinct()
+        return members
+
+
+class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Are you ready to do good? Q1")
+    template = 'messages/do-good-hours/reminder-q1'
+
+
+class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Are you ready to do good? Q2")
+    template = 'messages/do-good-hours/reminder-q2'
+
+
+class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Are you ready to do good? Q3")
+    template = 'messages/do-good-hours/reminder-q3'
+
+
+class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Are you ready to do good? Q4")
+    template = 'messages/do-good-hours/reminder-q4'

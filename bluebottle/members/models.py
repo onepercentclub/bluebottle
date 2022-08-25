@@ -46,6 +46,24 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('The amount of hours users can spend each year. '
                     'Leave empty if no restrictions apply.')
     )
+
+    reminder_q1 = models.BooleanField(
+        default=False,
+        help_text=_("This activation mail is send on January 15th.")
+    )
+    reminder_q2 = models.BooleanField(
+        default=False,
+        help_text=_("This activation mail is send on April 15th.")
+    )
+    reminder_q3 = models.BooleanField(
+        default=False,
+        help_text=_("This activation mail is send on September 1st.")
+    )
+    reminder_q4 = models.BooleanField(
+        default=False,
+        help_text=_("This activation mail is send on October 15th.")
+    )
+
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
         default=False, help_text=_('Require verifying the user\'s email before signup')
@@ -171,6 +189,11 @@ class Member(BlueBottleBaseUser):
         _('Matching'),
         default=False,
         help_text=_("Monthly overview of activities that match this person's profile")
+    )
+    receive_reminder_emails = models.BooleanField(
+        _('Receive reminder emails'),
+        default=True,
+        help_text=_("User receives emails reminding them about their do good hours")
     )
 
     remote_id = models.CharField(_('remote_id'),

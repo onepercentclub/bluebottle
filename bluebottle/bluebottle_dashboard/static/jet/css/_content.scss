@@ -270,16 +270,16 @@ img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
 
   + span {
     font-weight: bold;
-    color: $success-text-color;
+    color: $success-color;
   }
 }
 
 img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span {
-  color: $success-text-color;
+  color: $success-color;
 }
 
 img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + span {
-  color: $warning-text-color;
+  color: $warning-color;
 }
 
 /* LOADING INDOCATOR */

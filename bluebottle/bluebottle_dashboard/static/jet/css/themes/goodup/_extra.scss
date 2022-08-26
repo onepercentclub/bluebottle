@@ -91,3 +91,26 @@ span.help + p.help {
     padding-left: 0;
   }
 }
+
+.icon-picker {
+
+}
+
+.icon-picker li{
+  margin: 4px 0;
+}
+
+
+.icon-picker li input{
+  display: none;
+}
+
+.icon-picker li img{
+  padding: 4px;
+  cursor: pointer;
+}
+
+
+.icon-picker li input:checked+img{
+  background-color: #64A03C66;
+}

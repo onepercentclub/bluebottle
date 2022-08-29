@@ -325,6 +325,17 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(settings_platform.require_address)
         self.assertTrue(settings_platform.require_birthdate)
 
+    def test_create_initiatives(self):
+        LocationFactory.create_batch(3)
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['create_initiatives'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.create_initiatives)
+
 
 class MemberAdminExportTest(BluebottleTestCase):
     """

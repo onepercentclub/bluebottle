@@ -268,7 +268,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', 'link', 'external')
 
 
 class StepsContentSerializer(serializers.ModelSerializer):

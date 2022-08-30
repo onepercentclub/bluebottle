@@ -100,8 +100,8 @@ ul.icon-picker {
     input {
       display: none;
       &:checked + img{
-        background-color: #64A03C66;
-        border: 2px solid #64A03C;
+        background-color: #64A03C;
+        border: 2px solid #409020;
       }
     }
     img{

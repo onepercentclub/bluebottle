@@ -92,9 +92,12 @@ span.help + p.help {
   }
 }
 
-.icon-picker {
+ul.icon-picker {
+  columns: 4;
+  width: 400px;
   li {
     margin: 4px 0;
+    line-height: 70px;
     input {
       display: none;
       &:checked + img{

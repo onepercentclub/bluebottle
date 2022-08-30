@@ -35,6 +35,9 @@ class MemberPlatformSettings(BasePlatformSettings):
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
+    create_initiatives = models.BooleanField(
+        default=True, help_text=_('Members can create initiatives')
+    )
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
         default=False, help_text=_('Require verifying the user\'s email before signup')

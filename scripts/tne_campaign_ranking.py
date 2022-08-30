@@ -8,9 +8,10 @@ from bluebottle.funding.models import Funding, Donor
 from bluebottle.geo.models import Location
 
 
-OFFICE_NAME = 'Segou'
-TARGET = 328000
-DEADLINE = date(2022, 8, 13)
+OFFICE_NAME = 'Mogadishu'
+TARGET = 500
+DEADLINES = [date(2022, 8, 20), date(2022, 8, 21)]
+
 
 def run(*args):
     tne = Client.objects.get(client_name='nexteconomy')
@@ -22,9 +23,13 @@ def run(*args):
 
         campaigns = Funding.objects.filter(
             initiative__location__name=OFFICE_NAME,
-            deadline__date=DEADLINE,
+            deadline__date__in=DEADLINES,
             status__in=('succeeded', 'partially_funded')
         )
+        print(len(campaigns))
+
+        for activity in campaigns:
+            print(activity.title, activity.amount_raised, activity.status)
 
         for campaign in campaigns:
             donors = campaign.contributors.instance_of(
@@ -38,18 +43,17 @@ def run(*args):
             total = 0
             for donor in donors:
                 total += donor.amount.amount
-                
-                if total > TARGET:
+
+                if total >= TARGET:
                     result.append({
-                        'id': campaign.id, 
-                        'title': campaign.title, 
-                        'status': campaign.status, 
-                        'target reached': str(donor.created), 
+                        'id': campaign.id,
+                        'title': campaign.title,
+                        'status': campaign.status,
+                        'target reached': str(donor.created),
                     })
                     break
 
-            
-        workbook = xlsxwriter.Workbook(f'TNE-{location.name}-{DEADLINE}.xlsx', {'remove_timezone': True})
+        workbook = xlsxwriter.Workbook(f'TNE-{location.name}-{DEADLINES[0]}.xlsx', {'remove_timezone': True})
         worksheet = workbook.add_worksheet()
 
         worksheet.write_row(0, 0, result[0].keys())
@@ -58,6 +62,3 @@ def run(*args):
             worksheet.write_row(index + 1, 0, row.values())
 
         workbook.close()
-
-        
-

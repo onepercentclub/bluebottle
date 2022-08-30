@@ -325,7 +325,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
 
 class ManageProfileSerializer(UserProfileSerializer):
     """
-    Serializer for the a member's private profile.
+    Serializer for the member's private profile.
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()

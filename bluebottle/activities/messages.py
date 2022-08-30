@@ -9,6 +9,7 @@ from pytz import timezone
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
@@ -456,6 +457,15 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
     action_title = pgettext('email', 'Find activities')
 
+    send_once = True
+
+    def already_send(self, recipient):
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            sent__year=now().year
+        ).count() > 0
+
     def get_recipients(self):
         """members with do good hours"""
         from bluebottle.members.models import Member
@@ -467,7 +477,10 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         members = Member.objects.annotate(
             hours=Sum(
                 'contributor__contributions__timecontribution__value',
-                filter=Q(contributor__contributions__start__year=year)
+                filter=(
+                    Q(contributor__contributions__start__year=year) &
+                    Q(contributor__contributions__status__in=['new', 'succeeded'])
+                )
             ),
         ).filter(
             Q(hours__lt=do_good_hours) | Q(hours__isnull=True),

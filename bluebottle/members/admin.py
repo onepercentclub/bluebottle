@@ -147,7 +147,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                     'create_initiatives',
                     'do_good_hours',
                     'reminder_q1',
-                    'reminder_q2'
+                    'reminder_q2',
                     'reminder_q3',
                     'reminder_q4'
                 ),

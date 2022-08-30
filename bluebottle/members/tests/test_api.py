@@ -24,7 +24,7 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
     SlotParticipantFactory
@@ -1167,3 +1167,16 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
+
+
+class MemberProfileAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.url = reverse('manage-profile', args=(self.user.id, ))
+
+    def test_get_profile_has_receive_reminder_emails(self):
+        response = self.client.get(self.url, user=self.user)
+        data = response.json()
+        self.assertEqual(data['receive_reminder_emails'], True)

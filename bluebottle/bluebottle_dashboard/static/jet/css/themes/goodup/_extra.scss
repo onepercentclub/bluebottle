@@ -93,24 +93,17 @@ span.help + p.help {
 }
 
 .icon-picker {
-
-}
-
-.icon-picker li{
-  margin: 4px 0;
-}
-
-
-.icon-picker li input{
-  display: none;
-}
-
-.icon-picker li img{
-  padding: 4px;
-  cursor: pointer;
-}
-
-
-.icon-picker li input:checked+img{
-  background-color: #64A03C66;
+  li {
+    margin: 4px 0;
+    input {
+      display: none;
+      &:checked + img{
+        background-color: #64A03C66;
+      }
+    }
+    img{
+      padding: 8px;
+      cursor: pointer;
+    }
+  }
 }

@@ -94,17 +94,20 @@ span.help + p.help {
 
 ul.icon-picker {
   columns: 4;
-  width: 400px;
+  width: 300px;
   li {
-    margin: 4px 0;
-    line-height: 70px;
+    padding: 8px;
     input {
       display: none;
       &:checked + img{
         background-color: #64A03C66;
+        border: 2px solid #64A03C;
       }
     }
     img{
+      border: 2px solid #dddddd;
+      width: 50px;
+      height: 50px;
       padding: 8px;
       cursor: pointer;
     }

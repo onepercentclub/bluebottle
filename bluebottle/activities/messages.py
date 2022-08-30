@@ -1,7 +1,7 @@
-from datetime import timedelta, date
+from datetime import timedelta
 
 from django.db.models import Sum, Q
-from django.template.defaultfilters import time
+from django.template.defaultfilters import time, date
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext

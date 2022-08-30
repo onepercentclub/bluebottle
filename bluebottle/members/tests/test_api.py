@@ -17,6 +17,7 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
@@ -1079,6 +1080,17 @@ class UserAPITestCase(BluebottleTestCase):
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
 
+    def test_get_current_user_with_initiatives(self):
+        InitiativeFactory.create(
+            owner=self.user
+        )
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], True)
+
+    def test_get_current_user_without_initiatives(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], False)
+
 
 class MemberSettingsAPITestCase(BluebottleTestCase):
 
@@ -1099,3 +1111,14 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')
+
+    def test_create_initiatives(self):
+        settings = MemberPlatformSettings.load()
+        settings.create_initiatives = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], False)
+        settings.create_initiatives = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)

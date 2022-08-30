@@ -91,3 +91,25 @@ span.help + p.help {
     padding-left: 0;
   }
 }
+
+ul.icon-picker {
+  columns: 4;
+  width: 300px;
+  li {
+    padding: 8px;
+    input {
+      display: none;
+      &:checked + img{
+        background-color: #64A03C;
+        border: 2px solid #409020;
+      }
+    }
+    img{
+      border: 2px solid #dddddd;
+      width: 50px;
+      height: 50px;
+      padding: 8px;
+      cursor: pointer;
+    }
+  }
+}

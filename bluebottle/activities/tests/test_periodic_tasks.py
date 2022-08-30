@@ -103,16 +103,22 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
 
     def run_task(self, when):
-        with mock.patch.object(timezone, 'now', return_value=when):
+        with mock.patch('bluebottle.activities.messages.now', return_value=when):
             with mock.patch('bluebottle.activities.tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
                 do_good_hours_reminder()
 
     @property
+    def next_year(self):
+        return timezone.get_current_timezone().localize(
+            datetime(now().year + 1, 1, 1)
+        )
+
+    @property
     def q1(self):
         return timezone.get_current_timezone().localize(
-            datetime(2022, 1, 1)
+            datetime(now().year, 1, 1)
         )
 
     @property
@@ -206,3 +212,16 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
         self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
         self.assertTrue(self.tempted_user.email in recipients, "Tempted user should receive email, because withdrawn")
+
+    def test_reminder_q1_next_year(self):
+        self.run_task(self.next_year)
+        self.assertEqual(len(mail.outbox), 4)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Are you ready to do good? Q1'
+        )
+        recipients = [m.to[0] for m in mail.outbox]
+        self.assertTrue(self.active_user.email in recipients, "Active user should receive email")
+        self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
+        self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
+        self.assertTrue(self.tempted_user.email in recipients, "Tempted user should receive email")

@@ -325,7 +325,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
 
 class ManageProfileSerializer(UserProfileSerializer):
     """
-    Serializer for the a member's private profile.
+    Serializer for the member's private profile.
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()
@@ -341,7 +341,8 @@ class ManageProfileSerializer(UserProfileSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
-            'email', 'newsletter', 'campaign_notifications', 'matching_options_set', 'location',
+            'email', 'newsletter', 'campaign_notifications', 'receive_reminder_emails',
+            'matching_options_set', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
             'from_facebook', 'place',
         )

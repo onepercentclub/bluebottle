@@ -1167,3 +1167,28 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
+
+
+class MemberProfileAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.url = reverse('manage-profile', args=(self.user.id, ))
+
+    def test_get_profile_has_receive_reminder_emails(self):
+        response = self.client.get(self.url, token=self.user_token)
+        data = response.json()
+        self.assertEqual(data['receive_reminder_emails'], True)
+
+    def test_uncheck_has_receive_reminder_emails(self):
+        response = self.client.get(self.url, token=self.user_token)
+        data = response.json()
+        data['receive_reminder_emails'] = False
+        del data['picture']
+        del data['avatar']
+        response = self.client.put(self.url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.receive_reminder_emails)

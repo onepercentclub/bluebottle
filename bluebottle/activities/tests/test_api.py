@@ -207,7 +207,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         types = set(resource['attributes']['type'] for resource in data['data'])
         self.assertEqual(
             types,
-            {'dateactivity', 'period/activity'}
+            {'dateactivity', 'periodactivity'}
         )
 
     def test_filter_expertise(self):

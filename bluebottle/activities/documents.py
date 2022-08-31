@@ -94,6 +94,8 @@ class ActivityDocument(Document):
             'id': fields.LongField(),
             'name': fields.TextField(),
             'city': fields.TextField(),
+            'country': fields.TextField(attr='country.name'),
+            'country_code': fields.TextField(attr='country.alpha2_code'),
         }
     )
 
@@ -173,19 +175,25 @@ class ActivityDocument(Document):
         if hasattr(instance, 'location') and instance.location:
             locations.append({
                 'name': instance.location.formatted_address,
-                'city': instance.location.locality
+                'city': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name
             })
         if hasattr(instance, 'office_location') and instance.office_location:
             locations.append({
                 'id': instance.office_location.pk,
                 'name': instance.office_location.name,
                 'city': instance.office_location.city,
+                'country_code': instance.office_location.country.alpha2_code,
+                'country': instance.office_location.country.name
             })
         elif instance.initiative.location:
             locations.append({
                 'id': instance.initiative.location.pk,
                 'name': instance.initiative.location.name,
                 'city': instance.initiative.location.city,
+                'country_code': instance.initiative.location.country.alpha2_code,
+                'country': instance.initiative.location.country.name
             })
         return locations
 

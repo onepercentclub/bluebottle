@@ -63,6 +63,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     image = serializers.SerializerMethodField()
     matching_options = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
     date_info = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
@@ -78,6 +79,14 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_type(self, obj):
         return obj.type.replace('activity', '')
+
+    def get_location(self, obj):
+        if obj.location:
+            location = obj.location[0]
+            if location.city:
+                return f'{location.city}, {location.country_code}'
+            else:
+                return location.country
 
     def get_image(self, obj):
         if obj.image:
@@ -191,7 +200,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'id', 'slug', 'type', 'title', 'theme', 'expertise',
             'initiative', 'image', 'matching_options', 'target',
             'amount_raised', 'deadline', 'start', 'date_info', 'location_info',
-            'status'
+            'status', 'location'
         )
 
     class JSONAPIMeta:

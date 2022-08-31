@@ -1,8 +1,8 @@
 from django.urls import reverse
 
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
@@ -62,21 +62,10 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(activity.status, 'draft')
 
     def test_admin_office_location(self):
-        activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(is_global=True)
-        )
+        LocationFactory.create()
+        activity = DateActivityFactory.create()
         url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
 
         page = self.app.get(url)
         form = page.forms['dateactivity_form']
         self.assertTrue('office_location' in form.fields)
-
-    def test_admin_no_office_location(self):
-        activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(is_global=False)
-        )
-        url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
-
-        page = self.app.get(url)
-        form = page.forms['dateactivity_form']
-        self.assertFalse('office_location' in form.fields)

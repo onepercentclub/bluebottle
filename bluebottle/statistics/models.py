@@ -118,7 +118,6 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
             'time_activities_succeeded': 'event-completed',
             'deed_succeeded': 'deed-completed',
             'fundings_succeeded': 'funding-completed',
-
             'fundings_online': 'funding',
             'time_activities_online': 'event',
             'deeds_activities_online': 'deed',
@@ -156,6 +155,15 @@ class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
     def get_value(self, start=None, end=None):
+        if start and end:
+            return self.impact_type.goals.filter(
+                activity__status='succeeded',
+                activity__created__gte=start,
+                activity__created__lt=end,
+            ).aggregate(
+                sum=Sum('realized')
+            )['sum'] or 0
+
         return self.impact_type.goals.filter(
             activity__status='succeeded',
         ).aggregate(

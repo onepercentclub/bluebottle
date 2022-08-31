@@ -1,24 +1,26 @@
 
-from builtins import str
 import datetime
+from builtins import str
 
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.test.utils import override_settings
-
+from django.utils.timezone import now
 from rest_framework import status
 
-from bluebottle.statistics.tests.factories import (
-    DatabaseStatisticFactory, ManualStatisticFactory, ImpactStatisticFactory
-)
+from bluebottle.activities.models import Contribution, Contributor, Activity
+from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.impact.tests.factories import (
     ImpactTypeFactory, ImpactGoalFactory
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.statistics.tests.factories import (
+    DatabaseStatisticFactory, ManualStatisticFactory, ImpactStatisticFactory
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
 
 
 @override_settings(
@@ -28,10 +30,10 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
         }
     }
 )
-class ImpactTypeListAPITestCase(BluebottleTestCase):
+class StatisticListListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ImpactTypeListAPITestCase, self).setUp()
+        super(StatisticListListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('statistic-list')
         self.user = BlueBottleUserFactory()
@@ -119,3 +121,106 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
     def test_post(self):
         response = self.client.post(self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_filter_by_year(self):
+        response = self.client.get(self.url + '?year=')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 3)
+
+
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
+class StatisticYearFilterListAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(StatisticYearFilterListAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.url = reverse('statistic-list')
+        self.user = BlueBottleUserFactory()
+
+        activity1 = DateActivityFactory.create()
+        activity1.created = now().replace(year=2020)
+        activity1.save()
+        activity2 = DateActivityFactory.create()
+        activity2.created = now().replace(year=2021)
+        activity2.save()
+
+        slot1 = activity1.slots.first()
+        slot1.start = now().replace(year=2020)
+        slot1.duration = datetime.timedelta(hours=4)
+        slot1.save()
+
+        slot2 = activity2.slots.first()
+        slot2.start = now().replace(year=2021)
+        slot2.duration = datetime.timedelta(hours=8)
+        slot2.save()
+
+        DateParticipantFactory.create_batch(3, activity=activity1)
+        DateParticipantFactory.create_batch(2, activity=activity2)
+
+        self.impact_type = ImpactTypeFactory.create()
+
+        ImpactGoalFactory.create(
+            activity=activity1,
+            type=self.impact_type,
+            realized=50
+        )
+        ImpactGoalFactory.create(
+            activity=activity2,
+            type=self.impact_type,
+            realized=100
+        )
+
+        donations = DonorFactory.create_batch(2)
+        for don in donations:
+            don.created = now().replace(year=2020)
+            don.save()
+
+        donations = DonorFactory.create_batch(3)
+        for don in donations:
+            don.created = now().replace(year=2021)
+            don.save()
+
+        Contribution.objects.update(status='succeeded')
+        Contributor.objects.update(status='succeeded')
+        Activity.objects.update(status='succeeded')
+
+        self.manual = ManualStatisticFactory.create(value=35)
+        self.impact = ImpactStatisticFactory(impact_type=self.impact_type)
+        self.database = DatabaseStatisticFactory(query='participants')
+        self.money = DatabaseStatisticFactory(query='donated_total')
+
+    def test_filter_by_year_2020(self):
+        response = self.client.get(self.url + '?year=2020')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value'], 35)
+        self.assertEqual(data[1]['attributes']['value'], 50.0)
+        self.assertEqual(data[2]['attributes']['value'], 3)
+        self.assertEqual(data[3]['attributes']['value'], {'amount': 70.0, 'currency': 'EUR'})
+
+    def test_filter_by_year_2021(self):
+        response = self.client.get(self.url + '?year=2021')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value'], 35)
+        self.assertEqual(data[1]['attributes']['value'], 100.0)
+        self.assertEqual(data[2]['attributes']['value'], 2)
+        self.assertEqual(data[3]['attributes']['value'], {'amount': 105.0, 'currency': 'EUR'})
+
+    def test_no_filter(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value'], 35)
+        self.assertEqual(data[1]['attributes']['value'], 150.0)
+        self.assertEqual(data[2]['attributes']['value'], 5)
+        self.assertEqual(data[3]['attributes']['value'], {'amount': 175.0, 'currency': 'EUR'})

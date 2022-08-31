@@ -118,7 +118,6 @@ class StatSerializer(serializers.ModelSerializer):
         statistics = Statistics(
             start=self.context.get('start_date'),
             end=self.context.get('end_date'),
-            year=self.context.get('year'),
         )
 
         value = getattr(statistics, obj.type, 0)

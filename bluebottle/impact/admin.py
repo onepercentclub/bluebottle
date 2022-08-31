@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from parler.admin import TranslatableAdmin
@@ -18,16 +20,22 @@ class ImpactGoalInline(admin.TabularInline):
 
 
 class ImpactTypeAdmin(TranslatableAdmin):
-    list_display = admin.ModelAdmin.list_display + ('name', 'active')
+    list_display = admin.ModelAdmin.list_display + ('name', 'active', 'activities')
 
     def get_prepopulated_fields(self, request, obj=None):
         return {'slug': ('name',)}
+    readonly_fields = ('activities',)
 
     fields = (
         'name', 'slug', 'unit', 'active',
         'icon', 'text', 'text_with_target',
-        'text_passed',
+        'text_passed', 'activities'
     )
+
+    def activities(self, obj):
+        url = reverse('admin:activities_activity_changelist')
+        total = obj.goals.count()
+        return format_html('<a href="{}?goals__type__id__exact={}">{} activities</a>', url, obj.id, total)
 
 
 admin.site.register(ImpactType, ImpactTypeAdmin)

@@ -118,7 +118,7 @@ class Statistics(object):
     def deeds_succeeded(self):
         """ Total number of succeeded tasks """
         return len(Deed.objects.filter(
-            self.date_filter('slots__start'),
+            self.date_filter('start'),
             status='succeeded'
         ))
 
@@ -304,7 +304,7 @@ class Statistics(object):
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
-            self.date_filter('donation__contributor_date'),
+            self.date_filter('created'),
             donation__status='succeeded'
         )
         totals = donations.values(
@@ -324,7 +324,7 @@ class Statistics(object):
     def members(self):
         """ Total amount of members."""
         members = Member.objects.filter(
-            self.date_filter('created'),
+            self.date_filter('date_joined'),
             is_active=True
         )
         return len(members)

@@ -1,13 +1,17 @@
 import datetime
 from builtins import str
 from builtins import object
+
+from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
-from bluebottle.time_based.tests.test_utils import tz
+
+
+tz = get_current_timezone()
 
 
 class BaseStatisticSerializer(ModelSerializer):

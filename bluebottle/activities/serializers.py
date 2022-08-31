@@ -65,7 +65,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     matching_options = serializers.SerializerMethodField()
     location_info = serializers.SerializerMethodField()
     date_info = serializers.SerializerMethodField()
-    type = serializers.CharField()
+    type = serializers.SerializerMethodField()
 
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -75,6 +75,9 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_expertise(self, obj):
         if obj.expertise:
             return obj.expertise.name
+
+    def get_type(self, obj):
+        return obj.type.replace('activity', '')
 
     def get_image(self, obj):
         if obj.image:

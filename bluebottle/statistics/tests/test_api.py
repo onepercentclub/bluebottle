@@ -190,10 +190,10 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         Contributor.objects.update(status='succeeded')
         Activity.objects.update(status='succeeded')
 
-        self.manual = ManualStatisticFactory.create(value=35)
-        self.impact = ImpactStatisticFactory(impact_type=self.impact_type)
-        self.database = DatabaseStatisticFactory(query='participants')
-        self.money = DatabaseStatisticFactory(query='donated_total')
+        self.manual = ManualStatisticFactory.create(sequence=1, value=35)
+        self.impact = ImpactStatisticFactory(sequence=2, impact_type=self.impact_type)
+        self.database = DatabaseStatisticFactory(sequence=3, query='participants')
+        self.money = DatabaseStatisticFactory(sequence=4, query='donated_total')
 
     def test_filter_by_year_2020(self):
         response = self.client.get(self.url + '?year=2020')

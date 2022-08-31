@@ -39,7 +39,7 @@ class BaseStatisticSerializer(ModelSerializer):
 class ManualStatisticSerializer(BaseStatisticSerializer):
     class Meta(object):
         model = ManualStatistic
-        fields = ('value', 'name', 'icon')
+        fields = ('value', 'name', 'icon', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
@@ -49,7 +49,7 @@ class DatabaseStatisticSerializer(BaseStatisticSerializer):
 
     class Meta(object):
         model = DatabaseStatistic
-        fields = ('value', 'name', 'query', 'icon', )
+        fields = ('value', 'name', 'query', 'icon', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
@@ -62,7 +62,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
     class Meta(object):
         model = ImpactStatistic
-        fields = ('value', 'impact_type')
+        fields = ('value', 'impact_type', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'

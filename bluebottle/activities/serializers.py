@@ -103,8 +103,8 @@ class ActivityPreviewSerializer(ModelSerializer):
             self.context['location'] = user.location or user.place
 
         matching = {}
-        matching['skill'] = obj.expertise.id in self.context['skills']
-        matching['theme'] = obj.expertise.id in self.context['themes']
+        matching['skill'] = obj.expertise.id in self.context['skills'] if obj.expertise else False
+        matching['theme'] = obj.theme.id in self.context['themes'] if obj.theme else False
 
         if obj.is_online:
             matching['location'] = True
@@ -122,17 +122,32 @@ class ActivityPreviewSerializer(ModelSerializer):
         return matching
 
     def get_filtered_slots(self, obj, only_upcoming=False):
-        start = self.context['request'].GET.get('filter[start]')
-        end = self.context['request'].GET.get('filter[end]')
         tz = get_current_timezone()
+
+        try:
+            start = dateutil.parser.parse(
+                self.context['request'].GET.get('filter[start]')
+            ).astimezone(tz)
+        except (ValueError, TypeError):
+            start = None
+
+        try:
+            end = datetime.combine(
+                dateutil.parser.parse(
+                    self.context['request'].GET.get('filter[end]'),
+                ),
+                time.max
+            ).astimezone(tz)
+        except (ValueError, TypeError):
+            end = None
 
         return [
             slot for slot in obj.slots
             if (
                 slot.status not in ['draft', 'cancelled'] and
                 (not only_upcoming or slot.start >= now()) and
-                (not start or slot.start >= dateutil.parser.parse(start).astimezone(tz)) and
-                (not end or slot.end <= datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz))
+                (not start or slot.start >= start) and
+                (not end or slot.end <= end)
             )
         ]
 
@@ -169,7 +184,8 @@ class ActivityPreviewSerializer(ModelSerializer):
         fields = (
             'id', 'slug', 'type', 'title', 'theme', 'expertise',
             'initiative', 'image', 'matching_options', 'target',
-            'amount_raised', 'deadline', 'start', 'date_info', 'location_info'
+            'amount_raised', 'deadline', 'start', 'date_info', 'location_info',
+            'status'
         )
 
     class JSONAPIMeta:

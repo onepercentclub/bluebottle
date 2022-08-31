@@ -207,7 +207,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         types = set(resource['attributes']['type'] for resource in data['data'])
         self.assertEqual(
             types,
-            {'dateactivity', 'periodactivity'}
+            {'date', 'period'}
         )
 
     def test_filter_expertise(self):
@@ -816,10 +816,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/preview')
-        self.assertEqual(data['data'][0]['attributes']['type'], 'dateactivity')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'date')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/preview')
-        self.assertEqual(data['data'][1]['attributes']['type'], 'periodactivity')
+        self.assertEqual(data['data'][1]['attributes']['type'], 'period')
 
     def test_search_boost(self):
         first = DateActivityFactory.create(

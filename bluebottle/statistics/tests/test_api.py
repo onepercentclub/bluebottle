@@ -123,7 +123,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_filter_by_year(self):
-        response = self.client.get(self.url + '?year=')
+        response = self.client.get(self.url + '?year=' + str(now().year))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 3)
 

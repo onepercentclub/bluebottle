@@ -1,4 +1,5 @@
 from django_elasticsearch_dsl.registries import registry
+from django_elasticsearch_dsl import fields
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
@@ -16,6 +17,15 @@ SCORE_MAP = {
 @registry.register_document
 @activity.doc_type
 class FundingDocument(ActivityDocument):
+    target = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+    amount_raised = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+
     class Django:
         model = Funding
         related_models = (Initiative, Member, Donor)
@@ -38,3 +48,13 @@ class FundingDocument(ActivityDocument):
         if instance.started and instance.deadline and instance.started > instance.deadline:
             return {}
         return {'gte': instance.started, 'lte': instance.deadline}
+
+    def prepare_amount(self, amount):
+        if amount:
+            return {'amount': amount.amount, 'currency': str(amount.currency)}
+
+    def prepare_target(self, instance):
+        return self.prepare_amount(instance.target)
+
+    def prepare_amount_raised(self, instance):
+        return self.prepare_amount(instance.amount_raised)

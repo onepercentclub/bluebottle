@@ -1,4 +1,5 @@
 from django_elasticsearch_dsl.registries import registry
+from django_elasticsearch_dsl import fields
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.initiatives.models import Initiative
@@ -24,6 +25,17 @@ class TimeBasedActivityDocument:
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+    slots = fields.NestedField(properties={
+        'id': fields.KeywordField(),
+        'status': fields.KeywordField(),
+        'start': fields.DateField(),
+        'end': fields.DateField(),
+        'locality': fields.KeywordField(attr='location.locality'),
+        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
+        'country': fields.KeywordField(attr='location.country.alpha2_code'),
+        'is_online': fields.BooleanField(),
+    })
+
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
             return DateActivity.objects.filter(initiative=related_instance)

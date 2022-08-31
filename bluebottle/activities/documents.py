@@ -24,6 +24,7 @@ activity.settings(
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
+    slug = fields.KeywordField()
     description = fields.TextField()
     status = fields.KeywordField()
     status_score = fields.FloatField()
@@ -31,12 +32,19 @@ class ActivityDocument(Document):
 
     type = fields.KeywordField()
 
+    image = fields.NestedField(properties={
+        'id': fields.KeywordField(),
+        'type': fields.KeywordField(),
+        'name': fields.KeywordField(),
+    })
+
     owner = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
 
     initiative = fields.NestedField(properties={
+        'id': fields.KeywordField(),
         'title': fields.TextField(),
         'pitch': fields.TextField(),
         'story': fields.TextField(),
@@ -46,6 +54,7 @@ class ActivityDocument(Document):
         attr='initiative.theme',
         properties={
             'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 
@@ -63,6 +72,7 @@ class ActivityDocument(Document):
     expertise = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 
@@ -118,6 +128,20 @@ class ActivityDocument(Document):
             doc_type=[cls],
             model=cls._doc_type.model
         )
+
+    def prepare_image(self, instance):
+        if instance.image:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+                'type': 'activity'
+            }
+        elif instance.initiative.image:
+            return {
+                'id': instance.initiative.pk,
+                'file': instance.initiative.image.file.name,
+                'type': 'initiative'
+            }
 
     def prepare_contributors(self, instance):
         return [

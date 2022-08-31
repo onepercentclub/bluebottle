@@ -8,7 +8,6 @@ import magic
 import xlsxwriter
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
-from django.db.models import Case, When, IntegerField
 from django.http import Http404, HttpResponse
 from django.utils import translation
 from django.utils.functional import cached_property
@@ -245,18 +244,7 @@ class ESPaginator(Paginator):
         """
         Returns the total number of objects, across all pages.
         """
-        if isinstance(self.object_list, tuple):
-            _, object_list = self.object_list
-        else:
-            object_list = self.object_list
-
-        try:
-            return object_list.count()
-        except (AttributeError, TypeError):
-            # AttributeError if object_list has no count() method.
-            # TypeError if object_list.count() requires arguments
-            # (i.e. is of type list).
-            return len(object_list)
+        return self.object_list.count()
 
     def page(self, number):
         number = self.validate_number(number)
@@ -266,29 +254,15 @@ class ESPaginator(Paginator):
         if top + self.orphans >= self.count:
             top = self.count
 
-        if isinstance(self.object_list, tuple):
-            queryset, search = self.object_list
-            page = self._get_page(search[bottom:top], number, self)
-
-            try:
-                pks = [result.meta.id for result in search[bottom:top].execute()]
-                queryset = queryset.filter(pk__in=pks)
-            except ValueError:
-                pks = search.to_queryset().values_list('id', flat=True)
-                queryset = search.to_queryset()
-
-            preserved_order = Case(
-                *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
-                output_field=IntegerField()
-            )
-            page.object_list = queryset.annotate(search_order=preserved_order).order_by('search_order')
-        else:
-            page = self._get_page(self.object_list[bottom:top], number, self)
-
-        return page
+        return self._get_page(self.object_list[bottom:top].execute(), number, self)
 
 
 class JsonApiPagination(JsonApiPageNumberPagination):
+    page_size = 8
+    max_page_size = None
+
+
+class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator

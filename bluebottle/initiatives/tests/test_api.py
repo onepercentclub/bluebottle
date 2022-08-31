@@ -309,42 +309,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             )
         )
 
-    def test_put_location(self):
-        location = LocationFactory.create()
-
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'relationships': {
-                    'location': {
-                        'data': {
-                            'type': 'locations',
-                            'id': location.pk
-                        }
-                    }
-                }
-            }
-        }
-        response = self.client.patch(
-            self.url,
-            json.dumps(data),
-            content_type="application/vnd.api+json",
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(
-            data['data']['relationships']['location']['data']['id'],
-            str(location.pk)
-        )
-
-        self.assertEqual(
-            get_include(response, 'locations')['attributes']['name'],
-            location.name
-        )
-
     def test_patch_anonymous(self):
         response = self.client.patch(
             self.url,

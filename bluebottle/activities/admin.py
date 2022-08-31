@@ -26,6 +26,7 @@ from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
@@ -388,7 +389,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = self.detail_fields
-        if obj and obj.initiative.is_global:
+        if Location.objects.count():
             fields = list(fields)
             fields.insert(3, 'office_location')
             fields = tuple(fields)

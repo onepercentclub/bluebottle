@@ -186,7 +186,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['type'], 'activities/fundings')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'funding')
 
         response = self.client.get(
             self.url + '?filter[type]=deed',
@@ -195,7 +195,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['type'], 'activities/deeds')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'deed')
 
         response = self.client.get(
             self.url + '?filter[type]=time_based',
@@ -204,10 +204,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        types = set(resource['type'] for resource in data['data'])
+        types = set(resource['attributes']['type'] for resource in data['data'])
         self.assertEqual(
             types,
-            {'activities/time-based/dates', 'activities/time-based/periods'}
+            {'dateactivity', 'period/activity'}
         )
 
     def test_filter_expertise(self):
@@ -247,7 +247,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(second.pk) in ids)
 
     def test_only_owner_permission(self):
-        DateActivityFactory.create(owner=self.owner, status='open')
+        owned = DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')
 
         authenticated = Group.objects.get(name='Authenticated')
@@ -266,7 +266,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
 
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_location_filter(self):
         location = LocationFactory.create()

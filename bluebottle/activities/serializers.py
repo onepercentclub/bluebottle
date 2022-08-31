@@ -109,11 +109,14 @@ class ActivityPreviewSerializer(ModelSerializer):
         if obj.is_online:
             matching['location'] = True
         elif self.context['location']:
+            positions = [obj.position] if 'lat' in obj.position else obj.position
+
             dist = min(
                 distance(
                     lonlat(pos['lat'], pos['lon']),
                     lonlat(*self.context['location'].position.tuple)
-                ) for pos in obj.position
+                ) for pos in positions
+
             )
 
             if dist.km < settings.MATCHING_DISTANCE:

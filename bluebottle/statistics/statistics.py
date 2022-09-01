@@ -1,26 +1,23 @@
 from builtins import object
-from django.db.models import Q, Count
-from django.db.models.aggregates import Sum
 
 from django.contrib.contenttypes.models import ContentType
-
+from django.db.models import Q, Count
+from django.db.models.aggregates import Sum
 from memoize import memoize
-
 from moneyed.classes import Money
 
-from bluebottle.clients import properties
-
-from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.models import Contributor, Activity, EffortContribution
+from bluebottle.clients import properties
+from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import (
     DateActivity,
     PeriodActivity,
     TimeContribution
 )
-from bluebottle.funding.models import Donor, Funding
-from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
 
@@ -121,7 +118,7 @@ class Statistics(object):
     def deeds_succeeded(self):
         """ Total number of succeeded tasks """
         return len(Deed.objects.filter(
-            self.date_filter('slots__start'),
+            self.date_filter('start'),
             status='succeeded'
         ))
 
@@ -212,12 +209,11 @@ class Statistics(object):
         return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
 
     @property
-    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
         donations = Donor.objects.filter(
-            self.date_filter('contributor_date'),
-            status='succeeded'
+            self.date_filter('created'),
+            status='succeeded',
         )
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
@@ -308,7 +304,7 @@ class Statistics(object):
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
-            self.date_filter('donation__contributor_date'),
+            self.date_filter('created'),
             donation__status='succeeded'
         )
         totals = donations.values(
@@ -328,7 +324,7 @@ class Statistics(object):
     def members(self):
         """ Total amount of members."""
         members = Member.objects.filter(
-            self.date_filter('created'),
+            self.date_filter('date_joined'),
             is_active=True
         )
         return len(members)

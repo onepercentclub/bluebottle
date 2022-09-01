@@ -279,6 +279,9 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestInitiativePlatformSettingsAdmin, self).setUp()
         self.initiative_settings = InitiativePlatformSettings.load()
+        self.initiative_settings.initiative_search_filters = ['theme']
+        self.initiative_settings.activity_search_filters = ['theme']
+        self.initiative_settings.save()
 
     def test_admin_open_initiative_disabled(self):
         self.assertFalse(self.initiative_settings.enable_open_initiatives)
@@ -293,9 +296,6 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         self.assertEqual(page.status, '200 OK')
         self.initiative_settings.refresh_from_db()
         self.assertTrue(self.initiative_settings.enable_open_initiatives)
-        input_html = page.html.find('div', {'class': 'field-activity_types'}).text
-        self.assertTrue('Deed' in input_html)
-        self.assertTrue('Funding' in input_html)
 
     def test_admin_team_activities(self):
         self.assertFalse(self.initiative_settings.team_activities)

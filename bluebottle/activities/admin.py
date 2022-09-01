@@ -362,11 +362,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         settings = InitiativePlatformSettings.objects.get()
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['initiative__location']
+            filters = filters + ['office_location']
             if settings.enable_office_regions:
                 filters = filters + [
-                    'initiative__location__subregion',
-                    'initiative__location__subregion__region']
+                    'office_location__subregion',
+                    'office_location__subregion__region']
 
         if settings.team_activities:
             filters = filters + ['team_activity']
@@ -559,9 +559,9 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     def lookup_allowed(self, key, value):
         if key in [
             'goals__type__id__exact',
-            'initiative__location__id__exact',
-            'initiative__location__subregion__id__exact',
-            'initiative__location__subregion__region__id__exact',
+            'office_location__id__exact',
+            'office_location__subregion__id__exact',
+            'office_location__subregion__region__id__exact',
         ]:
             return True
         return super(ActivityAdmin, self).lookup_allowed(key, value)
@@ -572,11 +572,11 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['initiative__location']
+            filters = filters + ['office_location']
             if settings.enable_office_regions:
                 filters = filters + [
-                    'initiative__location__subregion',
-                    'initiative__location__subregion__region'
+                    'office_location__subregion',
+                    'office_location__subregion__region'
                 ]
 
         if settings.team_activities:
@@ -592,8 +592,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     def location_link(self, obj):
         if not obj.initiative.location:
             return "-"
-        url = reverse('admin:geo_location_change', args=(obj.initiative.location.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.initiative.location)
+        url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.office_location)
     location_link.short_description = _('office')
 
     def get_list_display(self, request):

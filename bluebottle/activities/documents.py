@@ -136,8 +136,6 @@ class ActivityDocument(Document):
 
     def prepare_country(self, instance):
         country_ids = []
-        if instance.initiative.location:
-            country_ids.append(instance.initiative.location.country_id)
         if hasattr(instance, 'office_location') and instance.office_location:
             country_ids.append(instance.office_location.country_id)
         if instance.initiative.place:
@@ -157,11 +155,11 @@ class ActivityDocument(Document):
                 'name': instance.office_location.name,
                 'city': instance.office_location.city,
             })
-        elif instance.initiative.location:
+        elif instance.initiative.place:
             locations.append({
-                'id': instance.initiative.location.pk,
-                'name': instance.initiative.location.name,
-                'city': instance.initiative.location.city,
+                'id': instance.initiative.place.pk,
+                'name': instance.initiative.place.name,
+                'city': instance.initiative.place.city,
             })
         return locations
 

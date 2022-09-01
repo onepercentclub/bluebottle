@@ -1,9 +1,21 @@
 from builtins import object
 
+from datetime import datetime, time
+import dateutil
+import hashlib
+from django.urls import reverse
+
+from django.utils.timezone import get_current_timezone, now
+from django.conf import settings
+
+
+from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
+
+from geopy.distance import distance, lonlat
 
 from bluebottle.activities.models import Contributor, Activity, Team
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
@@ -26,17 +38,173 @@ from bluebottle.time_based.serializers import (
     PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
     DateParticipantListSerializer, PeriodParticipantListSerializer,
 )
+from bluebottle.utils.serializers import (
+    MoneySerializer
+)
+
+IMAGE_SIZES = {
+    'preview': '300x168',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '960x540'
+}
 
 
 class ActivityImageSerializer(ImageSerializer):
-    sizes = {
-        'preview': '300x168',
-        'small': '320x180',
-        'large': '600x337',
-        'cover': '960x540'
-    }
+    sizes = IMAGE_SIZES
     content_view_name = 'activity-image'
     relationship = 'activity_set'
+
+
+class ActivityPreviewSerializer(ModelSerializer):
+    theme = serializers.CharField(source='theme.name')
+    expertise = serializers.SerializerMethodField()
+    initiative = serializers.CharField(source='initiative.title')
+
+    image = serializers.SerializerMethodField()
+    matching_options = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+    date_info = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    target = MoneySerializer(read_only=True)
+    amount_raised = MoneySerializer(read_only=True)
+    start = serializers.CharField()
+    deadline = serializers.CharField(source='end')
+
+    def get_expertise(self, obj):
+        if obj.expertise:
+            return obj.expertise.name
+
+    def get_type(self, obj):
+        return obj.type.replace('activity', '')
+
+    def get_location(self, obj):
+        if obj.location:
+            location = obj.location[0]
+            if location.city:
+                return f'{location.city}, {location.country_code}'
+            else:
+                return location.country
+
+    def get_image(self, obj):
+        if obj.image:
+            hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
+            if obj.image.type == 'activity':
+                url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+            if obj.image.type == 'initiative':
+                url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+
+            return f'{url}?_={hash}'
+
+    def get_matching_options(self, obj):
+        user = self.context['request'].user
+        matching = {'skill': False, 'theme': False, 'location': False}
+
+        if not user.is_authenticated or obj.status != 'open':
+            return matching
+
+        if 'skills' not in self.context:
+            self.context['skills'] = [skill.pk for skill in user.skills.all()]
+
+        if 'themes' not in self.context:
+            self.context['themes'] = [theme.pk for theme in user.favourite_themes.all()]
+
+        if 'location' not in self.context:
+            self.context['location'] = user.location or user.place
+
+        matching = {}
+        matching['skill'] = obj.expertise.id in self.context['skills'] if obj.expertise else False
+        matching['theme'] = obj.theme.id in self.context['themes'] if obj.theme else False
+
+        if obj.is_online:
+            matching['location'] = True
+        elif self.context['location']:
+            positions = [obj.position] if 'lat' in obj.position else obj.position
+
+            dist = min(
+                distance(
+                    lonlat(pos['lat'], pos['lon']),
+                    lonlat(*self.context['location'].position.tuple)
+                ) for pos in positions
+
+            )
+
+            if dist.km < settings.MATCHING_DISTANCE:
+                matching['location'] = True
+
+        return matching
+
+    def get_filtered_slots(self, obj, only_upcoming=False):
+        tz = get_current_timezone()
+
+        try:
+            start = dateutil.parser.parse(
+                self.context['request'].GET.get('filter[start]')
+            ).astimezone(tz)
+        except (ValueError, TypeError):
+            start = None
+
+        try:
+            end = datetime.combine(
+                dateutil.parser.parse(
+                    self.context['request'].GET.get('filter[end]'),
+                ),
+                time.max
+            ).astimezone(tz)
+        except (ValueError, TypeError):
+            end = None
+
+        return [
+            slot for slot in obj.slots
+            if (
+                slot.status not in ['draft', 'cancelled'] and
+                (not only_upcoming or slot.start >= now()) and
+                (not start or slot.start >= start) and
+                (not end or slot.end <= end)
+            )
+        ]
+
+    def get_location_info(self, obj):
+        info = {}
+
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+
+            info['is_online'] = all(slot.is_online for slot in slots)
+
+            locations = set(
+                (slot.locality, slot.country, slot.formatted_address)
+                for slot in slots
+            )
+
+            if len(locations) > 1:
+                info['has_multiple'] = True
+            else:
+                location = tuple(locations)[0]
+                info['location'] = {
+                    'locality': location[0],
+                    'country': {'code': location[1]},
+                    'formattedAddress': location[2],
+                }
+
+        return info
+
+    def get_date_info(self, obj):
+        return {}
+
+    class Meta(object):
+        model = Activity
+        fields = (
+            'id', 'slug', 'type', 'title', 'theme', 'expertise',
+            'initiative', 'image', 'matching_options', 'target',
+            'amount_raised', 'deadline', 'start', 'date_info', 'location_info',
+            'status', 'location'
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/preview'
 
 
 class ActivityListSerializer(PolymorphicModelSerializer):

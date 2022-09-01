@@ -1,3 +1,4 @@
+import re
 import io
 from builtins import str
 import json
@@ -48,22 +49,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         super(ActivityListSearchAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
-        self.url = reverse('activity-list')
+        self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
     def test_images(self):
         DateActivityFactory.create(
-            owner=self.owner, review_status='approved', image=ImageFactory.create()
+            owner=self.owner, status='open', image=ImageFactory.create()
         )
-        PeriodActivityFactory.create(review_status='approved', image=ImageFactory.create())
-        FundingFactory.create(review_status='approved', image=ImageFactory.create())
+        PeriodActivityFactory.create(status='open', image=ImageFactory.create())
+        FundingFactory.create(review_status='open', image=ImageFactory.create())
 
         response = self.client.get(self.url, user=self.owner)
 
         for activity in response.json()['data']:
-            self.assertEqual(
-                activity['relationships']['image']['data']['type'],
-                'images'
+            self.assertTrue(
+                re.match('^/api/activities/\d+/image/600x337', activity['attributes']['image'])
             )
 
     def test_no_filter(self):
@@ -78,11 +78,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
+
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][1]['id'], str(succeeded.pk))
         self.assertEqual(data['data'][0]['id'], str(open.pk))
-
-        self.assertTrue('meta' in data['data'][0])
 
     def test_anonymous(self):
         succeeded = DateActivityFactory.create(
@@ -109,8 +108,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][1]['id'], str(succeeded.pk))
         self.assertEqual(data['data'][0]['id'], str(open.pk))
-
-        self.assertTrue('meta' in data['data'][0])
 
     def setup_closed_segments(self):
         self.closed_segment = SegmentFactory.create(closed=True)
@@ -164,7 +161,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
 
     def test_filter_owner(self):
-        DateActivityFactory.create(owner=self.owner, status='open')
+        owned = DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
@@ -174,7 +171,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_filter_type(self):
         DateActivityFactory.create(status='open')
@@ -189,7 +186,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['type'], 'activities/fundings')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'funding')
 
         response = self.client.get(
             self.url + '?filter[type]=deed',
@@ -198,7 +195,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['type'], 'activities/deeds')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'deed')
 
         response = self.client.get(
             self.url + '?filter[type]=time_based',
@@ -207,10 +204,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        types = set(resource['type'] for resource in data['data'])
+        types = set(resource['attributes']['type'] for resource in data['data'])
         self.assertEqual(
             types,
-            {'activities/time-based/dates', 'activities/time-based/periods'}
+            {'date', 'period'}
         )
 
     def test_filter_expertise(self):
@@ -250,7 +247,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(str(second.pk) in ids)
 
     def test_only_owner_permission(self):
-        DateActivityFactory.create(owner=self.owner, status='open')
+        owned = DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')
 
         authenticated = Group.objects.get(name='Authenticated')
@@ -269,7 +266,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
 
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_location_filter(self):
         location = LocationFactory.create()
@@ -818,9 +815,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
-        self.assertEqual(data['data'][0]['type'], 'activities/time-based/dates')
+        self.assertEqual(data['data'][0]['type'], 'activities/preview')
+        self.assertEqual(data['data'][0]['attributes']['type'], 'date')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['type'], 'activities/time-based/periods')
+        self.assertEqual(data['data'][0]['type'], 'activities/preview')
+        self.assertEqual(data['data'][1]['attributes']['type'], 'period')
 
     def test_search_boost(self):
         first = DateActivityFactory.create(

@@ -260,7 +260,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('team_activity', _('Team activities')),
         ('theme', _('Theme')),
         ('category', _('Category')),
-        ('status', _('Status')),
         ('segments', _('Segments')),
     )
     INITIATIVE_SEARCH_FILTERS = (

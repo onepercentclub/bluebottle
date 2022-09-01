@@ -173,28 +173,48 @@ class ActivityDocument(Document):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
-            locations.append({
-                'name': instance.location.formatted_address,
-                'city': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name
-            })
+            if instance.location.country:
+                locations.append({
+                    'name': instance.location.formatted_address,
+                    'city': instance.location.locality,
+                    'country_code': instance.location.country.alpha2_code,
+                    'country': instance.location.country.name
+                })
+            else:
+                locations.append({
+                    'name': instance.location.formatted_address,
+                    'city': instance.location.locality,
+                })
         if hasattr(instance, 'office_location') and instance.office_location:
-            locations.append({
-                'id': instance.office_location.pk,
-                'name': instance.office_location.name,
-                'city': instance.office_location.city,
-                'country_code': instance.office_location.country.alpha2_code,
-                'country': instance.office_location.country.name
-            })
+            if instance.office_location.country:
+                locations.append({
+                    'id': instance.office_location.pk,
+                    'name': instance.office_location.name,
+                    'city': instance.office_location.city,
+                    'country_code': instance.office_location.country.alpha2_code,
+                    'country': instance.office_location.country.name
+                })
+            else:
+                locations.append({
+                    'id': instance.office_location.pk,
+                    'name': instance.office_location.name,
+                    'city': instance.office_location.city,
+                })
         elif instance.initiative.location:
-            locations.append({
-                'id': instance.initiative.location.pk,
-                'name': instance.initiative.location.name,
-                'city': instance.initiative.location.city,
-                'country_code': instance.initiative.location.country.alpha2_code,
-                'country': instance.initiative.location.country.name
-            })
+            if instance.initiative.location.country:
+                locations.append({
+                    'id': instance.initiative.location.pk,
+                    'name': instance.initiative.location.name,
+                    'city': instance.initiative.location.city,
+                    'country_code': instance.initiative.location.country.alpha2_code,
+                    'country': instance.initiative.location.country.name
+                })
+            else:
+                locations.append({
+                    'id': instance.initiative.location.pk,
+                    'name': instance.initiative.location.name,
+                    'city': instance.initiative.location.city,
+                })
         return locations
 
     def prepare_expertise(self, instance):

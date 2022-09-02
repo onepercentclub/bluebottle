@@ -17,7 +17,7 @@ class GenerateLipishaAccountsEffect(Effect):
             )
             self.instance.save()
         if not self.instance.payout_code:
-            self.instance.mpesa_code = generate_payout_account(
+            self.instance.payout_code = generate_payout_account(
                 name=account.account_name,
                 number=account.account_number,
                 bank_name=account.bank_name,

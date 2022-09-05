@@ -269,6 +269,7 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
         }),
         (_('Search filters'), {
             'fields': (
+                'show_all_activities',
                 'initiative_search_filters',
                 'activity_search_filters'
             )

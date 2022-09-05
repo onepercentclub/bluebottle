@@ -261,6 +261,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('theme', _('Theme')),
         ('category', _('Category')),
         ('segments', _('Segments')),
+        ('status', _('Status')),
     )
     INITIATIVE_SEARCH_FILTERS = (
         ('location', _('Office location')),

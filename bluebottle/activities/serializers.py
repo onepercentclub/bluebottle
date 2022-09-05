@@ -63,15 +63,16 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     image = serializers.SerializerMethodField()
     matching_options = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
+    location = serializers.CharField(source='location_string')
     location_info = serializers.SerializerMethodField()
     date_info = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
+    is_online = serializers.BooleanField()
 
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
-    start = serializers.CharField()
-    deadline = serializers.CharField(source='end')
+    start = serializers.SerializerMethodField()
+    deadline = serializers.SerializerMethodField()
 
     def get_expertise(self, obj):
         if obj.expertise:
@@ -191,6 +192,23 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         return info
 
+    def get_start(self, obj):
+        if obj.start:
+            obj.start.sort()
+            dates = list(set([s.date() for s in obj.start]))
+            if len(dates) == 1:
+                return dates[0]
+            upcoming = [s for s in obj.start if s > now()]
+            if len(upcoming):
+                return upcoming[0]
+            return obj.start[0]
+        return None
+
+    def get_deadline(self, obj):
+        if obj.end and len(obj.end):
+            obj.end.sort()
+            return obj.end[-1]
+
     def get_date_info(self, obj):
         return {}
 
@@ -200,7 +218,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'id', 'slug', 'type', 'title', 'theme', 'expertise',
             'initiative', 'image', 'matching_options', 'target',
             'amount_raised', 'deadline', 'start', 'date_info', 'location_info',
-            'status', 'location'
+            'status', 'location', 'is_online'
         )
 
     class JSONAPIMeta:

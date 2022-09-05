@@ -98,6 +98,7 @@ class ActivityDocument(Document):
             'country_code': fields.TextField(attr='country.alpha2_code'),
         }
     )
+    location_string = fields.TextField()
 
     contributors = fields.DateField()
     contributor_count = fields.IntegerField()
@@ -170,6 +171,27 @@ class ActivityDocument(Document):
             country_ids.append(instance.initiative.place.country_id)
         return country_ids
 
+    def prepare_location_string(self, instance):
+
+        def location_to_string(location):
+            if location.country and location.locality:
+                return location.locality + ', ' + location.country.alpha2_code
+            if location.country:
+                return location.country.name
+            return location.locality
+
+        def office_to_string(office):
+            return office.name
+
+        if hasattr(instance, 'location') and instance.location:
+            return location_to_string(instance.location)
+        elif instance.initiative.place:
+            return location_to_string(instance.initiative.place)
+        elif hasattr(instance, 'office_location') and instance.office_location:
+            return office_to_string(instance.office_location)
+        elif instance.initiative.location:
+            return office_to_string(instance.initiative.location)
+
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
@@ -200,7 +222,7 @@ class ActivityDocument(Document):
                     'name': instance.office_location.name,
                     'city': instance.office_location.city,
                 })
-        elif instance.initiative.location:
+        if instance.initiative.location:
             if instance.initiative.location.country:
                 locations.append({
                     'id': instance.initiative.location.pk,
@@ -226,10 +248,10 @@ class ActivityDocument(Document):
             return instance.is_online
 
     def prepare_position(self, instance):
-        return None
+        return []
 
     def prepare_end(self, instance):
-        return None
+        return []
 
     def prepare_start(self, instance):
-        return None
+        return []

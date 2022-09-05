@@ -68,13 +68,13 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return locations
 
     def prepare_start(self, instance):
-        return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finishd', )]
+        return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]
 
     def prepare_end(self, instance):
         return [
             slot.start + slot.duration
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finishd', )
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
         ]
 
     def prepare_duration(self, instance):
@@ -126,7 +126,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
             position = instance.location.position
-            return {'lat': position.y, 'lon': position.x}
+            return [{'lat': position.y, 'lon': position.x}]
 
     def prepare_end(self, instance):
         return instance.deadline

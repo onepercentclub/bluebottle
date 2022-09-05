@@ -35,7 +35,7 @@ class CollectDocument(ActivityDocument):
         return instance.start
 
     def prepare_end(self, instance):
-        return instance.end
+        return [instance.end]
 
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:

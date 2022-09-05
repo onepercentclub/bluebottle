@@ -73,6 +73,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -186,20 +187,17 @@ class ActivityDocument(Document):
                     'city': instance.location.locality,
                 })
         if hasattr(instance, 'office_location') and instance.office_location:
+            location = {
+                'id': instance.office_location.pk,
+                'name': instance.office_location.name,
+                'city': instance.office_location.city,
+            }
+
             if instance.office_location.country:
-                locations.append({
-                    'id': instance.office_location.pk,
-                    'name': instance.office_location.name,
-                    'city': instance.office_location.city,
-                    'country_code': instance.office_location.country.alpha2_code,
-                    'country': instance.office_location.country.name
-                })
-            else:
-                locations.append({
-                    'id': instance.office_location.pk,
-                    'name': instance.office_location.name,
-                    'city': instance.office_location.city,
-                })
+                location['country_code'] = instance.office_location.country.alpha2_code,
+                location['country'] = instance.office_location.country.name
+            locations.append(location)
+
         elif instance.initiative.location:
             if instance.initiative.location.country:
                 locations.append({
@@ -219,7 +217,25 @@ class ActivityDocument(Document):
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
-            return {'id': instance.expertise_id}
+            return [
+                {
+                    'id': instance.expertise_id,
+                    'name': translation.name,
+                    'language': translation.language_code,
+                }
+                for translation in instance.expertise.translations.all()
+            ]
+
+    def prepare_theme(self, instance):
+        if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
+            return [
+                {
+                    'id': instance.initiative.theme_id,
+                    'name': translation.name,
+                    'language': translation.language_code,
+                }
+                for translation in instance.initiative.theme.translations.all()
+            ]
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):

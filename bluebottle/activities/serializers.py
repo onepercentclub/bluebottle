@@ -41,6 +41,7 @@ from bluebottle.time_based.serializers import (
 from bluebottle.utils.serializers import (
     MoneySerializer
 )
+from bluebottle.utils.utils import get_current_language
 
 IMAGE_SIZES = {
     'preview': '300x168',
@@ -57,7 +58,7 @@ class ActivityImageSerializer(ImageSerializer):
 
 
 class ActivityPreviewSerializer(ModelSerializer):
-    theme = serializers.CharField(source='theme.name')
+    theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
     initiative = serializers.CharField(source='initiative.title')
 
@@ -74,8 +75,24 @@ class ActivityPreviewSerializer(ModelSerializer):
     deadline = serializers.CharField(source='end')
 
     def get_expertise(self, obj):
-        if obj.expertise:
-            return obj.expertise.name
+        try:
+            return [
+                expertise.name
+                for expertise in obj.expertise or []
+                if expertise.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
+
+    def get_theme(self, obj):
+        try:
+            return [
+                theme.name
+                for theme in obj.theme or []
+                if theme.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
 
     def get_type(self, obj):
         return obj.type.replace('activity', '')
@@ -115,8 +132,8 @@ class ActivityPreviewSerializer(ModelSerializer):
             self.context['location'] = user.location or user.place
 
         matching = {}
-        matching['skill'] = obj.expertise.id in self.context['skills'] if obj.expertise else False
-        matching['theme'] = obj.theme.id in self.context['themes'] if obj.theme else False
+        matching['skill'] = obj.expertise[0].id in self.context['skills'] if obj.expertise else False
+        matching['theme'] = obj.theme[0].id in self.context['themes'] if obj.theme else False
 
         if obj.is_online:
             matching['location'] = True

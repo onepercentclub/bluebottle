@@ -218,6 +218,7 @@ class QuotesContent(TitledContent):
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -234,6 +235,7 @@ class StatsContent(TitledContent):
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Statistics')

@@ -1,0 +1,36 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You joined {{ team_name }} for an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    {% if slots %}
+        {% include 'mails/messages/partial/slots.html' %}
+    {% else %}
+        <p>
+            {% blocktrans context 'email' %}
+                The activity manager will be in touch to confirm details such as time, date and location.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+
+{% endblock %}
+
+
+{% block end_message %}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}

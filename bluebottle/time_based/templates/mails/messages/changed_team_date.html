@@ -7,35 +7,19 @@ Some details of the team activity you are a part of have changed:
 {% endblocktrans %}
 </p>
 <p>
+    {% blocktrans context 'email' %}
+        Updated details below:
+    {% endblocktrans %}
+</p>
+<p>
 {{ team_name }}
 </p>
 <p>
-{{ title }}
+"{{ title }}"
 </p>
 
-{% if start %}
-    {% blocktrans context 'email' %}
-        Start: {{ start }}
-    {% endblocktrans %}
-{% endif %}
-<br />
-{% if end %}
-    {% blocktrans context 'email' %}
-        End: {{ end }}
-    {% endblocktrans %}
-{% endif %}
-<br />
-{% if is_online %}
-    {% blocktrans context 'email' %}
-        Anywhere/Online
-    {% endblocktrans %}
-{% else %}
-    {% if location %}
-        {{ location }}
-    {% endif %}
-{% endif %}
+{% include 'mails/messages/partial/team_slot.html' %}
 
-</p>
 <p>
 {% blocktrans context 'email' %}
 Please view your team from the activity page to see the changes.

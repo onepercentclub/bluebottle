@@ -17,6 +17,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.messages import TeamParticipantJoinedNotification
 from bluebottle.time_based.states import ParticipantStateMachine, TimeBasedStateMachine, TeamSlotStateMachine
 
 
@@ -207,7 +208,7 @@ def contributor_is_active(contribution):
     ]
 
 
-def automatically_accept(effect):
+def automatically_accept_team(effect):
     """
     automatically accept team
     """
@@ -261,28 +262,38 @@ class TeamTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     TeamAddedMessage,
-                    conditions=[automatically_accept]
+                    conditions=[automatically_accept_team]
                 ),
                 NotificationEffect(
                     TeamAppliedMessage,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                    ]
                 ),
                 TransitionEffect(
                     TeamStateMachine.accept,
                     conditions=[
-                        automatically_accept
+                        automatically_accept_team
                     ]
-                )
+                ),
             ]
         ),
 
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
+                NotificationEffect(
+                    TeamParticipantJoinedNotification,
+                    conditions=[
+                        automatically_accept_team
+                    ]
+                ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',

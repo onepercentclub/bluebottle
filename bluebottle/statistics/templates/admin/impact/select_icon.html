@@ -3,7 +3,7 @@
         {% for group, options, index in widget.optgroups %}
             {% for option in options %}
                 <li>
-                    {% include option.template_name with widget=option %}
+                    {% include option.template_name with wrap_label=True widget=option %}
                 </li>
             {% endfor %}
         {% endfor %}

@@ -3,6 +3,7 @@ from rest_framework import permissions
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
+from bluebottle.utils.permissions import IsOwner
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -92,7 +93,7 @@ class ContributorPermission(ResourcePermission):
             return user.has_perms(perms) and user in [
                 obj.activity.owner,
                 obj.activity.initiative.owner,
-            ] or user in obj.activity.initiative.activity_managers.all()
+            ] or user in obj.activity.initiative.activity_managers.all() or (obj.team and obj.team.owner == user)
 
 
 class ContributionPermission(ResourcePermission):
@@ -116,6 +117,19 @@ class DeleteActivityPermission(ResourcePermission):
             return False
         else:
             return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
+class CanExportTeamParticipantsPermission(IsOwner):
+    """ Allows access only to team owner or activity manager. """
+    def has_object_action_permission(self, action, user, obj):
+        return (
+            obj.owner == user or
+            obj.activity.owner == user or
+            user in obj.activity.initiative.activity_managers.all()
+        ) and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):
         return True

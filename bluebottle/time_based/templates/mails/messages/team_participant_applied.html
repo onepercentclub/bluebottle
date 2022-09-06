@@ -1,0 +1,32 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You have registered your team on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                You will receive a notification by email when the activity manager accepts your team. Once you have been accepted, you can invite your team members to the activity.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}
+
+{% block end_message %}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If your team is unable to participate, please withdraw your team request via the activity page so that another team can take your place. 
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}

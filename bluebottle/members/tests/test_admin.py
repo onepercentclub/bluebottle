@@ -18,8 +18,9 @@ from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.admin import MemberAdmin, MemberCreationForm
-from bluebottle.members.models import Member
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.notifications.models import MessageTemplate
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
@@ -293,6 +294,49 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         self.assertTrue('is_superuser' not in fields)
 
 
+class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
+
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def test_require_location(self):
+        LocationFactory.create_batch(3)
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['require_office'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.require_office)
+
+    def test_require_profile_fields(self):
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['require_address'].checked = True
+        form['require_birthdate'].checked = True
+        form['require_phone_number'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.require_phone_number)
+        self.assertTrue(settings_platform.require_address)
+        self.assertTrue(settings_platform.require_birthdate)
+
+    def test_create_initiatives(self):
+        LocationFactory.create_batch(3)
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['create_initiatives'].checked = True
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertTrue(settings_platform.create_initiatives)
+
+
 class MemberAdminExportTest(BluebottleTestCase):
     """
     Test csv export
@@ -331,11 +375,11 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
+        headers = data[0].split(";")
         user_data = []
         for row in data:
             if row.startswith(member.email):
-                user_data = row.split(',')
+                user_data = row.split(';')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [
@@ -358,8 +402,8 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
-        data = data[1].split(",")
+        headers = data[0].split(";")
+        data = data[1].split(";")
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'email')
@@ -378,11 +422,11 @@ class MemberAdminExportTest(BluebottleTestCase):
         response = self.export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.decode('utf-8').split("\r\n")
-        headers = data[0].split(",")
+        headers = data[0].split(";")
         user_data = []
         for row in data:
             if row.startswith('malle@eppie.nl'):
-                user_data = row.split(',')
+                user_data = row.split(';')
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers, [

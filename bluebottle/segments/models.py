@@ -23,10 +23,36 @@ class SegmentType(models.Model):
     inherit = models.BooleanField(
         _('Inherit'),
         help_text=_(
-            'Newly created activities will inherit the segments set on the activity owner.'
+            'Newly created activities inherit the segments of the activity creator.'
         ),
         default=True
     )
+
+    visibility = models.BooleanField(
+        _('Visible'),
+        help_text=_(
+            'Show segment on the activity detail page'
+        ),
+        default=True
+    )
+
+    required = models.BooleanField(
+        _('Required for members'),
+        help_text=_(
+            'Require members to enter their segment type once after logging in.'
+        ),
+        default=False
+    )
+
+    needs_verification = models.BooleanField(
+        _('Verify SSO data'),
+        help_text=_((
+            'Require members to verify their segment type once if it is filled via SSO.'
+            'Only works if "Required for members" is enabled.'
+        )),
+        default=False
+    )
+
     is_active = models.BooleanField(
         _('Is active'),
         default=True
@@ -47,6 +73,8 @@ class SegmentType(models.Model):
     def save(self, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        if not self.name:
+            self.name = self.slug.replace('-', ' ').title()
 
         super(SegmentType, self).save(**kwargs)
 

@@ -104,10 +104,22 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'members'
 
     def to_representation(self, instance):
+        user = self.context['request'].user
         if instance.is_anonymous:
             return {'id': 'anonymous', "is_anonymous": True}
 
-        return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
+        representation = BaseMemberSerializer(instance, context=self.context).to_representation(instance)
+
+        if (
+            self.context.get('display_member_names') == 'first_name' and
+            instance not in self.context.get('owners', []) and
+            not user.is_staff and
+            not user.is_superuser
+        ):
+            del representation['last_name']
+            representation['full_name'] = representation['first_name']
+
+        return representation
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -187,6 +199,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         if user != instance.owner and user not in instance.activity_managers.all():
             if not user.is_authenticated:
                 return activities.filter(status__in=public_statuses).exclude(segments__closed=True)
+            elif user.is_staff:
+                return activities.filter(
+                    Q(status__in=public_statuses) |
+                    Q(owner=user) |
+                    Q(initiative__activity_managers=user)
+                )
             else:
                 return activities.filter(
                     Q(status__in=public_statuses) |
@@ -395,12 +413,14 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'require_organization',
+            'team_activities',
             'contact_method',
             'enable_impact',
             'enable_office_regions',
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',
+            'show_all_activities',
             'has_locations'
         )
 

@@ -4,9 +4,12 @@ from django.urls import reverse
 
 from django.utils.translation import gettext_lazy as _
 
+from dotted.collection import DottedDict
+
 from rest_framework import serializers, validators
 
 from bluebottle.members.models import Member
+from bluebottle.geo.models import Location
 
 
 class NonNestedSerializer(serializers.Serializer):
@@ -49,6 +52,39 @@ class EmailsField(serializers.CharField):
             self.fail('blank')
 
         return super(EmailsField, self).run_validation(data)
+
+
+class AddressesField(serializers.RelatedField):
+    queryset = Location.objects.all()
+    initial = []
+
+    def get_attribute(self, instance):
+        value = getattr(instance, self.source)
+        if value is None:
+            return False
+
+        return value
+
+    def to_representation(self, value):
+        if not value:
+            return []
+
+        return [{
+            'type': 'work',
+            'locality': value.name
+
+        }]
+
+    def to_internal_value(self, value):
+        if value:
+            queryset = self.get_queryset()
+            location_name = value[0]['locality']
+            try:
+                return queryset.get(name=location_name)
+            except Location.DoesNotExist:
+                return queryset.create(name=location_name)
+            except (TypeError, ValueError):
+                self.fail('invalid')
 
 
 class SchemaSerializer(NonNestedSerializer):
@@ -106,7 +142,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         source='remote_id', required=False,
         validators=[
             validators.UniqueValidator(
-                queryset=Member.objects.all()
+                queryset=Member.objects.filter(scim_external_id__isnull=False)
             )
         ]
     )
@@ -118,9 +154,12 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         allow_blank=False,
         validators=[
             validators.UniqueValidator(
-                queryset=Member.objects.all(), lookup='iexact'
+                queryset=Member.objects.filter(scim_external_id__isnull=False), lookup='iexact'
             )
         ]
+    )
+    addresses = AddressesField(
+        source='location', required=False
     )
     active = serializers.BooleanField(source='is_active')
     groups = serializers.SerializerMethodField(read_only=True)
@@ -144,7 +183,10 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Member
-        fields = ('id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
+        fields = (
+            'id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta',
+            'addresses'
+        )
 
 
 class GroupMemberListSerializer(serializers.ListSerializer):
@@ -210,3 +252,30 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
                 pass
 
         return super(SCIMGroupSerializer, self).update(obj, data)
+
+
+class SCIMPatchSerializer(serializers.Serializer):
+    schemas = serializers.ListField()
+    Operations = serializers.ListField()
+
+    class Meta:
+        fields = ('schemas', 'Operations')
+
+    def patch(self, data):
+        data = DottedDict(data)
+
+        self.is_valid(raise_exception=True)
+
+        for operation in self.validated_data['Operations']:
+            path = operation['path']
+            value = operation['value']
+            if path.startswith('emails[type eq "work"]'):
+                path = path.replace('emails[type eq "work"].value', 'emails/0')
+                value = {'type': 'work', 'value': value, 'primary': True}
+            if path.startswith('addresses[type eq "work"]'):
+                path = path.replace('addresses[type eq "work"].locality', 'addresses/0')
+                value = {'type': 'work', 'locality': value}
+
+            data[path.replace('/', '.')] = value
+
+        return data.to_python()

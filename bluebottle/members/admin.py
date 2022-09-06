@@ -13,6 +13,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import Q
 from django.forms import BaseInlineFormSet
+from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
@@ -51,7 +52,7 @@ from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member
+from .models import Member, UserSegment
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -110,14 +111,105 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
-    fields = (
-        'closed', 'confirm_signup', 'enable_gender', 'enable_birthdate', 'enable_segments',
-        'enable_address', 'create_segments', 'login_methods', 'email_domain', 'session_only',
-        'background', 'require_consent', 'consent_link', 'anonymization_age'
+    fieldsets = (
+        (
+            _('Login'),
+            {
+                'fields': (
+                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'background',
+                )
+            }
+        ),
+
+        (
+            _('Profile'),
+            {
+                'fields': (
+                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Privacy'),
+            {
+                'fields': (
+                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
+                    'display_member_names'
+                )
+            }
+        ),
+        (
+            _('Initiatives'),
+            {
+                'fields': (
+                    'create_initiatives',
+                )
+            }
+        ),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = self.fieldsets
+        required_fields = [
+            'require_birthdate',
+            'require_address',
+            'require_phone_number'
+        ]
+
+        if obj.closed:
+            required_fields.insert(0, 'required_questions_location')
+
+        if Location.objects.count():
+            required_fields.append('require_office')
+            required_fields.append('verify_office')
+
+        if SegmentType.objects.count():
+            required_fields.append('segment_types')
+
+        if len(required_fields):
+            if obj.closed:
+                description = _('Members are required to fill out the fields listed '
+                                'below after log in or when contributing to an activity.')
+            else:
+                description = _('Members are required to fill out the fields listed '
+                                'below when contributing to an activity.')
+            fieldsets += ((
+                _('Required fields'),
+                {
+                    'description': description,
+                    'fields': required_fields
+                }
+            ), )
+
+        return fieldsets
+
+    readonly_fields = ('segment_types',)
+
+    def segment_types(self, obj):
+        template = loader.get_template('segments/admin/required_segment_types.html')
+        context = {
+            'required': SegmentType.objects.filter(required=True).all(),
+            'link': reverse('admin:segments_segmenttype_changelist')
+        }
+        return template.render(context)
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
+
+
+class SegmentSelect(Select):
+    template_name = 'widgets/segment-select.html'
+
+    def __init__(self, verified):
+        self.verified = verified
+        super().__init__()
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['verified'] = self.verified
+        return context
 
 
 class MemberChangeForm(MemberForm):
@@ -140,14 +232,17 @@ class MemberChangeForm(MemberForm):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
-                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                user_segment = UserSegment.objects.filter(
+                    member=self.instance, segment__segment_type=segment_type
+                ).first()
+
+                self.fields[segment_type.field_name] = forms.ModelChoiceField(
                     required=False,
                     label=segment_type.name,
                     queryset=segment_type.segments,
+                    widget=SegmentSelect(verified=user_segment.verified if user_segment else None)
                 )
-                self.initial[segment_type.field_name] = self.instance.segments.filter(
-                    segment_type=segment_type
-                ).all()
+                self.initial[segment_type.field_name] = user_segment.segment if user_segment else None
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -159,7 +254,9 @@ class MemberChangeForm(MemberForm):
         member = super(MemberChangeForm, self).save(commit=commit)
         segments = []
         for segment_type in SegmentType.objects.all():
-            segments += self.cleaned_data.get(segment_type.field_name, [])
+            segment = self.cleaned_data.get(segment_type.field_name, None)
+            if segment:
+                segments.append(segment)
         member.segments.set(segments)
         return member
 
@@ -267,6 +364,7 @@ class MemberAdmin(UserAdmin):
                         'fields':
                         ['picture', 'about_me', 'matching_options_set',
                          'favourite_themes', 'skills', 'place']
+
                     }
                 ],
                 [

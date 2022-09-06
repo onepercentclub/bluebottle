@@ -1,3 +1,4 @@
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import IsOwner
 
@@ -26,7 +27,8 @@ class PaymentPermission(IsOwner):
 class CanExportSupportersPermission(IsOwner):
     """ Allows access only to obj owner. """
     def has_object_action_permission(self, action, user, obj):
-        return obj.owner == user or user in obj.initiative.activity_managers.all()
+        return (obj.owner == user or user in obj.initiative.activity_managers.all()) \
+            and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):
         return True

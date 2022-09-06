@@ -1,9 +1,11 @@
 from builtins import object
 
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField
+from rest_framework_json_api.relations import (
+    PolymorphicResourceRelatedField, ResourceRelatedField
+)
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Contributor, Activity
+from bluebottle.activities.models import Contributor, Activity, Team
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
@@ -68,7 +70,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'matching_properties',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'initiative',
@@ -189,12 +191,16 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+        'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(object):
         included_resources = [
             'user',
             'activity',
+            'slots',
+            'slots.slot',
         ]
 
     class Meta(object):
@@ -248,3 +254,16 @@ class RelatedActivityImageContentSerializer(ImageSerializer):
     }
     content_view_name = 'related-activity-image-content'
     relationship = 'relatedimage_set'
+
+
+class TeamTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Team.objects.all())
+    field = 'states'
+
+    included_serializers = {
+        'resource': 'bluebottle.activities.utils.TeamSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource']
+        resource_name = 'activities/team-transitions'

@@ -1,5 +1,7 @@
 from builtins import str
 from builtins import object
+from django.http import Http404
+
 from django.contrib.auth.models import Group
 
 from rest_framework import (
@@ -10,7 +12,7 @@ from rest_framework import (
 from bluebottle.members.models import Member
 
 from bluebottle.scim.models import SCIMPlatformSettings
-from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer
+from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer, SCIMPatchSerializer
 from bluebottle.scim import scim_data
 from bluebottle.scim.filters import SCIMFilter
 
@@ -72,37 +74,58 @@ class SCIMViewMixin(object):
     filter_backends = (SCIMFilter, )
 
     def handle_exception(self, exc):
-        try:
-            codes = exc.get_codes()
-
-            status_code = exc.status_code
-
-            if isinstance(codes, dict):
-                if any(['unique' in error_codes for error_codes in codes.values()]):
-                    error_code = 'uniqueness'
-                    status_code = 409
-                else:
-                    error_code = list(codes.values())[0]
-            else:
-                error_code = codes
-
+        if isinstance(exc, Http404):
+            status_code = 404
             data = {
-                'scimType': error_code,
                 'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
-                'status': status_code
+                'status': status_code,
+                'detail': 'The resource was not found'
             }
+        else:
+            try:
+                codes = exc.get_codes()
 
-            if isinstance(exc.detail, dict):
-                data['details'] = '\n'.join(
-                    '{}: {}'.format(key, ', '.join(value)) for key, value in list(exc.detail.items())
-                )
-            else:
-                data['details'] = str(exc.detail)
+                status_code = exc.status_code
 
-        except AttributeError:
-            raise exc
+                if isinstance(codes, dict):
+                    if any(['unique' in error_codes for error_codes in codes.values()]):
+                        error_code = 'uniqueness'
+                        status_code = 409
+                    else:
+                        error_code = list(codes.values())[0]
+                else:
+                    error_code = codes
+
+                data = {
+                    'scimType': error_code,
+                    'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                    'status': status_code
+                }
+
+                if isinstance(exc.detail, dict):
+                    data['details'] = '\n'.join(
+                        '{}: {}'.format(key, ', '.join(value)) for key, value in list(exc.detail.items())
+                    )
+                else:
+                    data['details'] = str(exc.detail)
+
+            except AttributeError:
+                raise exc
 
         return response.Response(data, status=status_code)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.get_serializer(instance).data
+
+        patch_serializer = SCIMPatchSerializer(data=request.data)
+
+        serializer = self.get_serializer(instance, data=patch_serializer.patch(data), partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+
+        return response.Response(serializer.data)
 
 
 class StaticRetrieveAPIView(SCIMViewMixin, generics.RetrieveAPIView):
@@ -152,6 +175,22 @@ class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
     ).exclude(email='devteam+accounting@onepercentclub.com')
 
     serializer_class = SCIMMemberSerializer
+
+    def perform_create(self, serializer):
+        try:
+            # If a user with the correct remote id but without an external id
+            # exists, allow the create for once.
+            # In this case the provisioning client does not know about the member, and
+            # can continue as normal
+            if 'remote_id' in serializer.validated_data:
+                serializer.instance = Member.objects.get(
+                    remote_id=serializer.validated_data['remote_id'],
+                    scim_external_id__isnull=True
+                )
+        except Member.DoesNotExist:
+            pass
+
+        return super().perform_create(serializer)
 
 
 class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):

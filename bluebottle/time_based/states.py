@@ -6,6 +6,7 @@ from bluebottle.activities.states import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
+    TeamSlot,
 )
 from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, AllStates, ModelStateMachine
@@ -244,7 +245,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     start = Transition(
-        [open, finished],
+        [open, finished, full],
         running,
         name=_("Start"),
         description=_(
@@ -282,6 +283,18 @@ class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
     pass
 
 
+@register(TeamSlot)
+class TeamSlotStateMachine(ActivitySlotStateMachine):
+    initiate = Transition(
+        EmptyState(),
+        ActivitySlotStateMachine.open,
+        name=_('Initiate'),
+        description=_(
+            'The slot was created.'
+        ),
+    )
+
+
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
         _('pending'),
@@ -312,7 +325,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def is_user(self, user):
         """is participant"""
-        return self.instance.user == user or user.is_staff
+        return self.instance.user == user
 
     def can_accept_participant(self, user):
         """can accept participant"""
@@ -321,6 +334,7 @@ class ParticipantStateMachine(ContributorStateMachine):
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or
+            (self.instance.team and self.instance.team.owner == user) or
             user.is_staff or
             user in self.instance.activity.initiative.activity_managers.all()
         )
@@ -419,6 +433,9 @@ class DateParticipantStateMachine(ParticipantStateMachine):
 
 @register(PeriodParticipant)
 class PeriodParticipantStateMachine(ParticipantStateMachine):
+    def is_not_team(self):
+        return not self.instance.team
+
     stopped = State(
         _('stopped'),
         'stopped',
@@ -432,7 +449,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant stopped contributing."),
         automatic=False,
-        conditions=[ParticipantStateMachine.activity_is_open]
+        conditions=[ParticipantStateMachine.activity_is_open, is_not_team]
     )
 
     start = Transition(

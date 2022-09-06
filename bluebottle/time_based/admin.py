@@ -1,27 +1,37 @@
+from django import forms
+from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import SimpleListFilter, widgets
 from django.db import models
 from django.db.models import Sum
 from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
+from django.http import HttpResponseRedirect
 from django.template import loader, defaultfilters
+from django.template.response import TemplateResponse
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
+from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from parler.utils.views import get_language_parameter
 from pytz import timezone
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
+)
+from bluebottle.activities.models import Team
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill
+    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
+from bluebottle.time_based.utils import nth_weekday, duplicate_slot
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -30,23 +40,13 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     model = Participant
     per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
-                       'created', 'transition_date', 'status', 'disabled')
+                       'created', 'transition_date', 'status')
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']
 
-    def get_fields(self, request, obj=None):
-        if self.can_edit(obj):
-            return super().get_fields(request, obj)
-        else:
-            return ['disabled']
-
     def get_template(self):
         pass
-
-    def disabled(self, obj):
-        return format_html('<i>{}</i>', obj)
-    disabled.short_description = _('First complete and submit the activity before managing participants.')
 
     def can_edit(self, obj):
         return obj and obj.id and obj.status in ['open', 'succeeded', 'full', 'submitted']
@@ -90,11 +90,57 @@ class DateParticipantAdminInline(BaseParticipantAdminInline):
     fields = ('edit', 'user', 'status')
 
 
+class PeriodParticipantForm(ModelForm):
+
+    activity = None
+
+    class Meta:
+        model = PeriodParticipant
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        super(PeriodParticipantForm, self).__init__(*args, **kwargs)
+        if self.activity and 'team' in self.fields:
+            self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
+
+    def full_clean(self):
+        data = super(PeriodParticipantForm, self).full_clean()
+        if not self.instance.activity_id and self.instance.team_id:
+            self.instance.activity = self.instance.team.activity
+        return data
+
+
 class PeriodParticipantAdminInline(BaseParticipantAdminInline):
     model = PeriodParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
+    raw_id_fields = BaseParticipantAdminInline.raw_id_fields
     fields = ('edit', 'user', 'status')
+    form = PeriodParticipantForm
+
+    def get_parent_object_from_request(self, request):
+        """
+        Returns the parent object from the request or None.
+        """
+        resolved = resolve(request.path_info)
+        if resolved.kwargs:
+            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
+        return None
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # Set activity on form so we can filter teams for new participants too
+        formset = super(PeriodParticipantAdminInline, self).get_formset(request, obj, **kwargs)
+        parent = self.get_parent_object_from_request(request)
+        if isinstance(parent, PeriodActivity):
+            formset.form.activity = parent
+        return formset
+
+    def get_fields(self, request, obj=None):
+        fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)
+        if isinstance(obj, PeriodActivity):
+            if obj and obj.team_activity == 'teams':
+                fields += ('team',)
+        return fields
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -159,6 +205,8 @@ class TimeBasedActivityAdminForm(ActivityForm):
 class DateActivityASlotInline(TabularInlinePaginated):
     model = DateActivitySlot
     per_page = 20
+    can_delete = True
+
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -170,7 +218,6 @@ class DateActivityASlotInline(TabularInlinePaginated):
     }
     ordering = ['-start']
     readonly_fields = ['link', 'timezone', ]
-
     fields = [
         'link',
         'title',
@@ -194,11 +241,62 @@ class DateActivityASlotInline(TabularInlinePaginated):
     timezone.short_description = _('Timezone')
 
 
+class TeamSlotForm(ModelForm):
+
+    class Meta:
+        model = TeamSlot
+        exclude = []
+
+    def full_clean(self):
+        data = super(TeamSlotForm, self).full_clean()
+        if not self.instance.activity_id and self.instance.team_id:
+            self.instance.activity = self.instance.team.activity
+        return data
+
+
+class TeamSlotInline(admin.StackedInline):
+    model = TeamSlot
+
+    form = TeamSlotForm
+    verbose_name = _('Time slot')
+    verbose_name_plural = _('Time slot')
+    raw_id_fields = ('location', )
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+    }
+
+    ordering = ['-start']
+    readonly_fields = ['link', 'timezone', 'status']
+    fields = [
+        'start',
+        'duration',
+        'timezone',
+        'location',
+        'is_online',
+        'status',
+    ]
+
+    def timezone(self, obj):
+        if not obj.is_online and obj.location:
+            return obj.location.timezone
+        else:
+            return str(obj.start.astimezone(get_current_timezone()).tzinfo)
+    timezone.short_description = _('Timezone')
+
+
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter),
@@ -243,7 +341,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
-    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
@@ -254,24 +352,29 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'deadline',
-        'registration_deadline',
+    def get_detail_fields(self, request, obj):
+        fields = ActivityChildAdmin.detail_fields + (
+            'start',
+            'deadline',
+            'registration_deadline',
 
-        'duration',
-        'duration_period',
-        'preparation',
+            'duration',
+            'duration_period',
+            'preparation',
 
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url',
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
 
-        'expertise',
-        'capacity',
-        'review',
-    )
+            'expertise',
+            'capacity',
+            'review',
+        )
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.team_activities:
+            fields += ('team_activity',)
+        return fields
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
@@ -328,7 +431,7 @@ class SlotParticipantInline(admin.TabularInline):
 
 class SlotAdmin(StateMachineAdmin):
 
-    inlines = [SlotParticipantInline]
+    raw_id_fields = ['activity', 'location']
 
     formfield_overrides = {
         models.DurationField: {
@@ -347,6 +450,38 @@ class SlotAdmin(StateMachineAdmin):
             )
         },
     }
+
+    def activity_link(self, obj):
+        url = reverse(
+            'admin:time_based_{}_change'.format(obj.activity._meta.model_name),
+            args=(obj.activity.id,)
+        )
+        return format_html('<a href="{}">{}</a>', url, obj.activity)
+    activity_link.short_description = _('Activity')
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj and not obj.is_online and obj.location:
+            local_start = obj.start.astimezone(timezone(obj.location.timezone))
+            platform_start = obj.start.astimezone(get_current_timezone())
+            offset = local_start.utcoffset() - platform_start.utcoffset()
+
+            if offset.total_seconds() != 0:
+                timezone_text = _(
+                    'Local time in "{location}" is {local_time}. '
+                    'This is {offset} hours {relation} compared to the '
+                    'standard platform timezone ({current_timezone}).'
+                ).format(
+                    location=obj.location,
+                    local_time=defaultfilters.time(local_start),
+                    offset=abs(offset.total_seconds() / 3600.0),
+                    relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
+                    current_timezone=get_current_timezone()
+                )
+
+                help_texts = {'start': timezone_text}
+                kwargs.update({'help_texts': help_texts})
+
+        return super(SlotAdmin, self).get_form(request, obj, **kwargs)
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
@@ -377,7 +512,13 @@ class SlotAdmin(StateMachineAdmin):
         'updated',
         'valid'
     ]
-    detail_fields = []
+    detail_fields = [
+        'activity',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url'
+    ]
     status_fields = [
         'status',
         'states',
@@ -458,11 +599,65 @@ class RequiredSlotFilter(SimpleListFilter):
             return queryset
 
 
+class SlotDuplicateForm(forms.Form):
+
+    INTERVAL_CHOICES = (
+        ('day', _('day')),
+        ('week', _('week')),
+        ('month', _('xth weekday of the month')),
+        ('monthday', _('day x of the month')),
+    )
+
+    interval = forms.ChoiceField(
+        label=_('Repeat'),
+        choices=INTERVAL_CHOICES,
+    )
+
+    end = forms.DateField(
+        label=_('End date'),
+        help_text=_('Select a date until which the series runs. If you plan '
+                    'further than 6 months in the future, '
+                    'the loading time can be quite long.'),
+        widget=widgets.AdminDateWidget()
+    )
+
+    title = _('Duplicate slot')
+
+    def __init__(self, slot, data=None, *args, **kwargs):
+        start = slot.start
+        if slot.location:
+            start = start.astimezone(timezone(slot.location.timezone))
+        if data:
+            super(SlotDuplicateForm, self).__init__(data)
+        else:
+            super(SlotDuplicateForm, self).__init__()
+        interval_day = _('Every day')
+        interval_week = _('Each week on {weekday}').format(
+            weekday=start.strftime('%A')
+        )
+        interval_month = _('Monthly every {nth} {weekday}').format(
+            nth=ordinalize(nth_weekday(start)),
+            weekday=start.strftime('%A')
+        )
+        interval_monthday = _('Monthly every {monthday}').format(
+            monthday=ordinalize(slot.start.strftime('%-d'))
+        )
+        interval_choices = (
+            ('day', interval_day),
+            ('week', interval_week),
+            ('monthday', interval_monthday),
+            ('month', interval_month),
+        )
+        self.fields['interval'].choices = interval_choices
+        self.fields['interval'].help_text = _(
+            'We selected these choices because this slot takes place {start}'
+        ).format(start=start.strftime('%A %-d %B %Y %H:%M %Z'))
+
+
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
-
-    raw_id_fields = ['activity', 'location']
+    inlines = [SlotParticipantInline]
 
     def lookup_allowed(self, lookup, value):
         if lookup == 'activity__slot_selection__exact':
@@ -479,11 +674,6 @@ class DateSlotAdmin(SlotAdmin):
         RequiredSlotFilter,
     ]
 
-    def activity_link(self, obj):
-        url = reverse('admin:time_based_dateactivity_change', args=(obj.activity.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.activity)
-    activity_link.short_description = _('Activity')
-
     def attendee_limit(self, obj):
         return obj.capacity or obj.activity.capacity
 
@@ -497,41 +687,89 @@ class DateSlotAdmin(SlotAdmin):
         return _('Required')
     required.short_description = _('Required')
 
-    def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
-            local_start = obj.start.astimezone(timezone(obj.location.timezone))
-            platform_start = obj.start.astimezone(get_current_timezone())
-            offset = local_start.utcoffset() - platform_start.utcoffset()
-
-            if offset.total_seconds() != 0:
-                timezone_text = _(
-                    'Local time in "{location}" is {local_time}. '
-                    'This is {offset} hours {relation} compared to the '
-                    'standard platform timezone ({current_timezone}).'
-                ).format(
-                    location=obj.location,
-                    local_time=defaultfilters.time(local_start),
-                    offset=abs(offset.total_seconds() / 3600.0),
-                    relation=_('later') if offset.total_seconds() > 0 else _('earlier'),
-                    current_timezone=get_current_timezone()
-                )
-
-                help_texts = {'start': timezone_text}
-                kwargs.update({'help_texts': help_texts})
-
-        return super(DateSlotAdmin, self).get_form(request, obj, **kwargs)
-
     detail_fields = SlotAdmin.detail_fields + [
-        'activity',
         'title',
         'capacity',
         'start',
         'duration',
-        'is_online',
-        'location',
-        'location_hint',
-        'online_meeting_url',
     ]
+
+    def get_urls(self):
+        urls = super(DateSlotAdmin, self).get_urls()
+
+        extra_urls = [
+            url(r'^(?P<pk>\d+)/duplicate/$',
+                self.admin_site.admin_view(self.duplicate_slot),
+                name='time_based_dateactivityslot_duplicate'
+                ),
+        ]
+        return extra_urls + urls
+
+    def duplicate_slot(self, request, pk, *args, **kwargs):
+        slot = DateActivitySlot.objects.get(pk=pk)
+        if request.method == "POST":
+            form = SlotDuplicateForm(data=request.POST, slot=slot)
+            if form.is_valid():
+                data = form.cleaned_data
+                duplicate_slot(slot, data['interval'], data['end'])
+                slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
+                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
+
+        if slot.location:
+            start = slot.start.astimezone(timezone(slot.location.timezone))
+        else:
+            start = slot.start
+
+        context = {
+            'opts': self.model._meta,
+            'slot': slot,
+            'time': start.strftime('%H:%M %Z'),
+            'form': SlotDuplicateForm(slot=slot)
+        }
+        return TemplateResponse(
+            request, 'admin/time_based/duplicate_slot.html', context
+        )
+
+
+@admin.register(PeriodActivitySlot)
+class PeriodSlotAdmin(SlotAdmin):
+    model = PeriodActivitySlot
+
+    date_hierarchy = 'start'
+    list_display = [
+        '__str__', 'start', 'activity_link',
+    ]
+    list_filter = [
+        'status',
+        SlotTimeFilter,
+        RequiredSlotFilter,
+    ]
+
+    def participants(self, obj):
+        return obj.accepted_participants.count()
+    participants.short_description = _('Accepted participants')
+
+
+@admin.register(TeamSlot)
+class TeamSlotAdmin(SlotAdmin):
+    model = TeamSlot
+    raw_id_fields = SlotAdmin.raw_id_fields + ['team']
+    date_hierarchy = 'start'
+    list_display = [
+        '__str__', 'start', 'activity_link',
+    ]
+    list_filter = [
+        'status',
+        SlotTimeFilter,
+        RequiredSlotFilter,
+    ]
+    detail_fields = SlotAdmin.detail_fields + [
+        'team',
+    ]
+
+    def participants(self, obj):
+        return obj.accepted_participants.count()
+    participants.short_description = _('Accepted participants')
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

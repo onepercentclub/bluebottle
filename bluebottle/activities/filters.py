@@ -31,8 +31,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
-        'initiative_location.id',
+        'upcoming',
+        'location.id',
         'segment',
+        'team_activity'
     )
 
     search_fields = (
@@ -42,10 +44,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'owner.full_name',
         'initiative.title',
         'initiative.pitch',
-        'initiative.pitch',
-        'initiative_location.name',
-        'initiative_location.city',
-        'location.formatted_address',
+        'location.name',
+        'location.city',
         'segments.name',
     )
 
@@ -53,8 +53,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'title': 2,
         'initiative.pitch': 0.5,
         'initiative.story': 0.5,
-        'initiative_location.name': 0.5,
-        'initiative_location.city': 0.5,
+        'location.name': 0.5,
+        'location.city': 0.5,
     }
 
     def get_sort_relevancy(self, request):
@@ -153,11 +153,22 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return Term(type=value)
 
+    def get_upcoming_filter(self, value, request):
+        if value == 'true':
+            return Terms(status=['open', 'full'])
+        if value == 'false':
+            return Terms(status=['succeeded', 'partially_funded'])
+
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')
         end = request.GET.get('filter[end]')
 
         try:
+            start_date = dateutil.parser.parse(start) if start else None
+            end_date = datetime.combine(dateutil.parser.parse(end), time.max) if end else None
+            if start_date and end_date and end_date < start_date:
+                # If start end date if before start date, the return no results
+                return Term(id=0)
             return Range(
                 duration={
                     'gte': dateutil.parser.parse(start) if start else None,
@@ -196,27 +207,33 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_default_filters(self, request):
         permission = 'activities.api_read_activity'
+
         filters = [
             ~Terms(status=[
                 'draft', 'needs_work', 'submitted', 'deleted',
                 'closed', 'cancelled', 'rejected'
             ]),
-            ~Nested(
-                path='segments',
-                query=(
-                    Term(segments__closed=True)
-                )
-            ) | Nested(
-                path='segments',
-                query=(
-                    Terms(
-                        segments__id=[
-                            segment.id for segment in request.user.segments.filter(closed=True)
-                        ] if request.user.is_authenticated else []
+
+        ]
+        if not request.user.is_staff:
+            filters += [
+                ~Nested(
+                    path='segments',
+                    query=(
+                        Term(segments__closed=True)
+                    )
+                ) | Nested(
+                    path='segments',
+                    query=(
+                        Terms(
+                            segments__id=[
+                                segment.id for segment in request.user.segments.filter(closed=True)
+                            ] if request.user.is_authenticated else []
+                        )
                     )
                 )
-            )
-        ]
+            ]
+
         if not request.user.has_perm(permission):
             return filters + [
                 Nested(

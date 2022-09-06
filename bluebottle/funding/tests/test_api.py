@@ -1,7 +1,6 @@
 import json
-from builtins import range
-from builtins import str
 from datetime import timedelta
+from io import BytesIO
 
 import mock
 import munch
@@ -10,10 +9,11 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
+from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
     FundingFactory, RewardFactory, DonorFactory,
     BudgetLineFactory
@@ -36,10 +36,12 @@ from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.segments.tests.factories import SegmentTypeFactory
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -399,6 +401,9 @@ class FundingDetailTestCase(BluebottleTestCase):
         }
 
     def test_view_funding_owner(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
         DonorFactory.create(
             user=co_financer,
@@ -460,11 +465,47 @@ class FundingDetailTestCase(BluebottleTestCase):
         # Test that geolocation is included too
         geolocation = self.included_by_type(response, 'geolocations')[0]
         self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
+        self.assertIsNotNone(data['data']['attributes']['supporters-export-url'])
 
-        export_url = data['data']['attributes']['supporters-export-url']['url']
+    def test_get_owner_export_disabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = False
+        initiative_settings.save()
+        DonorFactory.create_batch(
+            4,
+            amount=Money(200, 'EUR'),
+            activity=self.funding,
+            status='succeeded')
+        DonorFactory.create_batch(
+            2,
+            amount=Money(100, 'EUR'),
+            activity=self.funding,
+            status='new')
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']
+        self.assertIsNone(export_url)
 
+    def test_get_owner_export_enabled(self):
+        SegmentTypeFactory.create()
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+        DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
+        DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']['url']
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Donor Date' in export_response.content)
+        sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
+        self.assertEqual(sheet['A1'].value, 'Email')
+        self.assertEqual(sheet['B1'].value, 'Name')
+        self.assertEqual(sheet['C1'].value, 'Date')
+        self.assertEqual(sheet['D1'].value, 'Amount')
+        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -1737,3 +1778,51 @@ class FundingAPITestCase(APITestCase):
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
+
+
+class FundingPlatformSettingsAPITestCase(APITestCase):
+
+    def setUp(self):
+        super(FundingPlatformSettingsAPITestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+    def test_anonymous_donations_setting(self):
+        funding_settings = FundingPlatformSettings.load()
+        funding_settings.anonymous_donations = True
+        funding_settings.allow_anonymous_rewards = True
+        funding_settings.save()
+        response = self.client.get('/api/config', user=self.user)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEquals(
+            data['platform']['funding'],
+            {
+                'anonymous_donations': True,
+                'allow_anonymous_rewards': True
+            }
+        )
+
+
+class FundingAnonymousDonationsTestCase(APITestCase):
+
+    def setUp(self):
+        super(FundingAnonymousDonationsTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+        donation = DonorFactory.create(
+            user=BlueBottleUserFactory.create(),
+            status='succeeded'
+        )
+
+        self.url = reverse('funding-donation-detail', args=(donation.id,))
+
+    def test_donation(self):
+        self.perform_get()
+        self.assertTrue('user' in self.response.json()['data']['relationships'])
+        self.assertRelationship('user', self.user)
+
+    def test_anonymous_donation(self):
+        funding_settings = FundingPlatformSettings.load()
+        funding_settings.anonymous_donations = True
+        funding_settings.save()
+        self.perform_get()
+        self.assertFalse('user' in self.response.json()['data']['relationships'])

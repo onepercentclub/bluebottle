@@ -1,0 +1,12 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% if custom_message %}
+            {{custom_message|linebreaks}}
+        {% else %}
+            {% blocktrans context 'email' %}Unfortunately, your team has been rejected for the activity '{{title}}'.{% endblocktrans %}
+        {% endif %}
+    </p>
+{% endblock %}

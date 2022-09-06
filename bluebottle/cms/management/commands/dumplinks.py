@@ -23,9 +23,8 @@ class Command(BaseCommand):
                     links.append({
                         'title': link.title,
                         'highlight': link.highlight,
-                        'component': link.component,
-                        'component_id': link.component_id,
-                        'external_link': link.external_link,
+                        'open_in_new_tab': link.open_in_new_tab,
+                        'link': link.link,
                         'link_order': link.link_order
                     })
                 groups.append({

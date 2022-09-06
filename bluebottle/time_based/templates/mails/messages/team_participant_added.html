@@ -1,0 +1,10 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>You have been added to team "{{ team_name }}" for the activity "{{ title }}" as a participant.</p>
+
+<p>Head over to the activity page for more information.</p>
+
+<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
+{% endblocktrans %}{% endblock %}

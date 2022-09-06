@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message%}
+    <p>
+        {% blocktrans context 'email' %}Your team was accepted again{% endblocktrans %}
+    </p>
+{% endblock %}

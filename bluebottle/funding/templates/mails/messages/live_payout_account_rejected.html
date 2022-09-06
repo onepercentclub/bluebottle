@@ -1,0 +1,26 @@
+{% extends "base.mail.html" %}
+{% load djmoney %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            Hi platform manager,<br/>
+            <br/>
+            A live campaign has a problem with their KYC validation. <br/>
+            Please check this soonest!
+        {% endblocktrans %}
+    </p>
+    <p class="important">
+        {% blocktrans context 'email' %}
+            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.
+            All donations will be returned to your supporters!
+        {% endblocktrans %}
+    </p>
+{% endblock content %}
+
+{% block action %}
+    <a href="{{ site }}/admin/funding/payoutaccount/{{ id }}" class="action-email">
+       {% trans 'Check payout account' context 'email' %}
+    </a>
+{% endblock %}`

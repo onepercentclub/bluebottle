@@ -59,7 +59,11 @@ class TransitionMessage(object):
             'recipient_name': '[first name]',
         }
         for key, item in list(self.context.items()):
-            context[key] = attrgetter(item)(self.obj)
+            try:
+                context[key] = attrgetter(item)(self.obj)
+            except AttributeError:
+                logger.error(f'Missing attribute in message context: {item}')
+                context[key] = item
 
         if 'context' in self.options:
             context.update(self.options['context'])
@@ -155,7 +159,7 @@ class TransitionMessage(object):
                     custom_template.set_current_language(recipient.primary_language)
                     try:
                         subject = custom_template.subject.format(**context)
-                        body_html = format_html(custom_template.body_html.format(**context))
+                        body_html = format_html(custom_template.body_html, **context)
                         body_txt = custom_template.body_txt.format(**context)
                     except custom_template.DoesNotExist:
                         # Translation for current language not set, use default.

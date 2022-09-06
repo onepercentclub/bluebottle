@@ -5,8 +5,9 @@
     "browserify": "13.0.1",
     "browsernizr": "2.1.0",
     "es6-promise": "3.2.1",
-    "gulp": "3.9.1",
+    "gulp": "^3.9.1",
     "gulp-clean-css": "2.0.12",
+    "gulp-cli": "^2.3.0",
     "gulp-concat-css": "2.3.0",
     "gulp-postcss": "6.1.1",
     "gulp-replace": "0.5.4",
@@ -26,7 +27,5 @@
     "vinyl-buffer": "1.0.0",
     "vinyl-source-stream": "1.1.0"
   },
-  "dependencies": {
-    "gulp-cli": "^2.3.0"
-  }
+  "dependencies": {}
 }

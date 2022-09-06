@@ -5,6 +5,7 @@ from builtins import str
 from builtins import zip
 from builtins import object
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
 
 
@@ -185,6 +186,8 @@ class TriggerMixin(object):
                         self._triggers.append(BoundTrigger(self, trigger))
 
     def execute_triggers(self, effects=None, **options):
+        if 'user' not in options and get_current_user():
+            options['user'] = get_current_user()
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)
@@ -200,6 +203,8 @@ class TriggerMixin(object):
             trigger = self._triggers.pop()
             trigger.execute(effects, **options)
 
+        self._triggers = []
+
         return effects
 
     def save(self, *args, **kwargs):
@@ -210,3 +215,11 @@ class TriggerMixin(object):
         while self._postponed_effects:
             effect = self._postponed_effects.pop()
             effect.post_save()
+
+        self._postponed_effects = []
+
+        self._initial_values = dict(
+            (field.name, getattr(self, field.name))
+            for field in self._meta.fields
+            if not field.is_relation
+        )

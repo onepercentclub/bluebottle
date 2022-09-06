@@ -96,7 +96,8 @@ class MemberSegmentTestCase(BluebottleTestCase):
     def test_new_user_added_to_segment_with_inherit(self):
         type = SegmentTypeFactory.create(inherit=True)
         segment = SegmentFactory.create(
-            segment_type=type
+            segment_type=type,
+            email_domains=[]
         )
 
         user = BlueBottleUserFactory.create()
@@ -105,6 +106,39 @@ class MemberSegmentTestCase(BluebottleTestCase):
         activity = DeedFactory.create(owner=user)
 
         self.assertEqual(list(activity.segments.all()), list(user.segments.all()))
+
+        new_segment = SegmentFactory.create(
+            segment_type=type,
+            email_domains=[]
+        )
+        user.segments.add(new_segment)
+        self.assertTrue(new_segment in activity.segments.all())
+
+        user.segments.remove(new_segment)
+        self.assertFalse(new_segment in activity.segments.all())
+
+    def test_new_user_added_to_segment_with_inherit_closed(self):
+        type = SegmentTypeFactory.create(inherit=True)
+        segment = SegmentFactory.create(
+            segment_type=type,
+            email_domains=[]
+        )
+
+        user = BlueBottleUserFactory.create()
+        user.segments.add(segment)
+
+        activity = DeedFactory.create(owner=user, status='closed')
+
+        self.assertEqual(list(activity.segments.all()), list(user.segments.all()))
+
+        new_segment = SegmentFactory.create(
+            segment_type=type,
+            email_domains=[]
+        )
+        user.segments.add(new_segment)
+        self.assertFalse(new_segment in activity.segments.all())
+        user.segments.remove(new_segment)
+        self.assertFalse(new_segment in activity.segments.all())
 
     def test_new_user_added_to_segment_without_inherit(self):
         type = SegmentTypeFactory.create(inherit=False)
@@ -118,3 +152,17 @@ class MemberSegmentTestCase(BluebottleTestCase):
         activity = DeedFactory.create(owner=user)
 
         self.assertEqual(len(activity.segments.all()), 0)
+
+        new_segment = SegmentFactory.create(
+            segment_type=type,
+            email_domains=[]
+        )
+        user.segments.add(new_segment)
+        self.assertEqual(len(activity.segments.all()), 0)
+
+        activity.segments.add(segment)
+        self.assertTrue(segment in activity.segments.all())
+
+        user.segments.remove(segment)
+
+        self.assertTrue(segment in activity.segments.all())

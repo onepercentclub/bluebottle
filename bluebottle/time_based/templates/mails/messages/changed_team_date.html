@@ -1,0 +1,40 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+{% block message %}
+<p>
+{% blocktrans context 'email' %}
+Some details of the team activity you are a part of have changed:
+{% endblocktrans %}
+</p>
+<p>
+    {% blocktrans context 'email' %}
+        Updated details below:
+    {% endblocktrans %}
+</p>
+<p>
+{{ team_name }}
+</p>
+<p>
+"{{ title }}"
+</p>
+
+{% include 'mails/messages/partial/team_slot.html' %}
+
+<p>
+{% blocktrans context 'email' %}
+Please view your team from the activity page to see the changes.
+{% endblocktrans %}
+</p>
+<p>
+{% endblock %}
+
+{% block end_message %}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}
+

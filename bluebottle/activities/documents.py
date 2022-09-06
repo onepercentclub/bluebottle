@@ -75,18 +75,11 @@ class ActivityDocument(Document):
         }
     )
 
-    is_online = fields.BooleanField('is_online')
+    is_online = fields.BooleanField()
+    team_activity = fields.KeywordField()
 
     location = fields.NestedField(
         attr='location',
-        properties={
-            'id': fields.LongField(),
-            'formatted_address': fields.TextField(),
-        }
-    )
-
-    initiative_location = fields.NestedField(
-        attr='fallback_location',
         properties={
             'id': fields.LongField(),
             'name': fields.TextField(),
@@ -142,17 +135,35 @@ class ActivityDocument(Document):
         return str(instance.__class__.__name__.lower())
 
     def prepare_country(self, instance):
+        country_ids = []
         if instance.initiative.location:
-            return instance.initiative.location.country_id
+            country_ids.append(instance.initiative.location.country_id)
+        if hasattr(instance, 'office_location') and instance.office_location:
+            country_ids.append(instance.office_location.country_id)
         if instance.initiative.place:
-            return instance.initiative.place.country_id
+            country_ids.append(instance.initiative.place.country_id)
+        return country_ids
 
     def prepare_location(self, instance):
+        locations = []
         if hasattr(instance, 'location') and instance.location:
-            return {
-                'id': instance.location.pk,
-                'formatted_address': instance.location.formatted_address
-            }
+            locations.append({
+                'name': instance.location.formatted_address,
+                'city': instance.location.locality
+            })
+        if hasattr(instance, 'office_location') and instance.office_location:
+            locations.append({
+                'id': instance.office_location.pk,
+                'name': instance.office_location.name,
+                'city': instance.office_location.city,
+            })
+        elif instance.initiative.location:
+            locations.append({
+                'id': instance.initiative.location.pk,
+                'name': instance.initiative.location.name,
+                'city': instance.initiative.location.city,
+            })
+        return locations
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:

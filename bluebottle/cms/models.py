@@ -1,20 +1,17 @@
+from adminsortable.fields import SortableForeignKey
+from adminsortable.models import SortableMixin
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
-from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
-from adminsortable.fields import SortableForeignKey
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
 from bluebottle.activities.models import Activity
-from bluebottle.geo.models import Location
-from bluebottle.pages.models import Page
-from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
+from bluebottle.geo.models import Location
+from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeValidator, validate_file_infection
 
@@ -112,45 +109,20 @@ class LinkGroup(SortableMixin):
 
 
 class Link(SortableMixin):
-    COMPONENT_CHOICES = (
-        ('page', _('Page')),
-        ('initiatives.list', _('Initiative Search')),
-        ('initiatives.start', _('Initiative Start')),
-        ('initiatives.create', _('Initiative Create')),
-        ('initiatives.detail', _('Initiative Detail')),
-        ('initiatives.activities.list', _('Activities Search')),
-        ('project', _('Project')),
-        ('task', _('Task')),
-        ('fundraiser', _('Fundraiser')),
-        ('results-page', _('Results Page')),
-        ('news', _('News')),
-    )
 
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
-    highlight = models.BooleanField(default=False)
+    highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
+    open_in_new_tab = models.BooleanField(default=False, blank=False, help_text=_('Open the link in a new browser tab'))
     title = models.CharField(_('Title'), null=False, max_length=100)
-    component = models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50,
-                                 blank=True, null=True)
-    component_id = models.CharField(_('Component ID'), max_length=100, blank=True, null=True)
-    external_link = models.CharField(_('External Link'), max_length=2000, blank=True, null=True)
+    link = models.CharField(_('Link'), max_length=2000, blank=True, null=True)
     link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
         ordering = ['link_order']
 
-    def clean(self):
-        if self.component == 'page':
-            if not self.component_id:
-                raise ValidationError({
-                    'component_id': _("If you use Page you should also set the page slug as the component id.")
-                })
-            language = self.link_group.site_links.language.full_code
-            if not Page.objects.filter(slug=self.component_id, language=language).count():
-                raise ValidationError({
-                    'component_id': _("Page with this slug does not exist for this language.")
-                })
-        return super(Link, self).clean()
+    def __str__(self):
+        return self.title
 
 
 class Stat(SortableMixin, models.Model):
@@ -246,6 +218,7 @@ class QuotesContent(TitledContent):
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -262,6 +235,7 @@ class StatsContent(TitledContent):
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Statistics')

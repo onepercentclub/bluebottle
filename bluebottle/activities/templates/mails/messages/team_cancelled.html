@@ -1,0 +1,8 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message%}
+    <p>
+        {% blocktrans context 'email' %}Your team '{{team_name}}' is no longer participating in the activity '{{title}}'.{% endblocktrans %}
+    </p>
+{% endblock %}

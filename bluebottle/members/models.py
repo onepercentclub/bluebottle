@@ -13,6 +13,7 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from ..segments.models import SegmentType
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -21,8 +22,21 @@ class MemberPlatformSettings(BasePlatformSettings):
         ('SSO', _('Company SSO')),
     )
 
+    DISPLAY_MEMBER_OPTIONS = (
+        ('full_name', _('Full name')),
+        ('first_name', _('First name')),
+    )
+
+    REQUIRED_QUESTIONS_OPTIONS = (
+        ('login', _('After log in')),
+        ('contribution', _('When making a contribution')),
+    )
+
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
+    )
+    create_initiatives = models.BooleanField(
+        default=True, help_text=_('Members can create initiatives')
     )
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
@@ -36,6 +50,15 @@ class MemberPlatformSettings(BasePlatformSettings):
     session_only = models.BooleanField(
         default=False,
         help_text=_('Limit user session to browser session')
+    )
+
+    required_questions_location = models.CharField(
+        choices=REQUIRED_QUESTIONS_OPTIONS,
+        max_length=12,
+        default='login',
+        help_text=_(
+            'When should the user be asked to complete their required profile fields?'
+        )
     )
 
     require_consent = models.BooleanField(
@@ -85,7 +108,47 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     anonymization_age = models.IntegerField(
         default=0,
-        help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
+        help_text=_("Require members to enter or verify the fields below once after logging in.")
+    )
+
+    require_office = models.BooleanField(
+        _('Office location'),
+        default=False,
+        help_text=_('Require members to enter their office location.')
+    )
+    require_address = models.BooleanField(
+        _('Address'),
+        default=False,
+        help_text=_('Require members to enter their address.')
+    )
+    require_phone_number = models.BooleanField(
+        _('Phone number'),
+        default=False,
+        help_text=_('Require members to enter their phone number.')
+    )
+    require_birthdate = models.BooleanField(
+        _('Birthdate'),
+        default=False,
+        help_text=_('Require members to enter their date of birth.')
+    )
+
+    verify_office = models.BooleanField(
+        _('Verify SSO data office location'),
+        default=False,
+        help_text=_('Require members to verify their office location once if it is filled via SSO.')
+    )
+
+    display_member_names = models.CharField(
+        _('Display member names'),
+        choices=DISPLAY_MEMBER_OPTIONS,
+        max_length=12,
+        default='full_name',
+        help_text=_(
+            'How names of members will be displayed for visitors and other members.'
+            'If first name is selected, then the names of initiators and activity manager '
+            'will remain displayed in full and Activity managers and initiators will see '
+            'the full names of their participants. And staff members will see all names in full.'
+        )
     )
 
     class Meta(object):
@@ -126,6 +189,7 @@ class Member(BlueBottleBaseUser):
         verbose_name=_('Segment'),
         related_name='users',
         blank=True,
+        through='members.UserSegment'
     )
 
     def __init__(self, *args, **kwargs):
@@ -177,6 +241,32 @@ class Member(BlueBottleBaseUser):
 
         return initials
 
+    @property
+    def required(self):
+        required = []
+        for segment_type in SegmentType.objects.filter(required=True).all():
+            if not self.segments.filter(
+                usersegment__verified=True, segment_type=segment_type
+            ).count():
+                required.append(f'segment_type.{segment_type.id}')
+
+        settings = MemberPlatformSettings.load()
+
+        if settings.require_office and (
+            not self.location or
+            (settings.verify_office and not self.location_verified)
+        ):
+            required.append('location')
+
+        for attr in ['birthdate', 'phone_number']:
+            if getattr(settings, f'require_{attr}') and not getattr(self, attr):
+                required.append(attr)
+
+        if settings.require_address and not (self.place and self.place.complete):
+            required.append('address')
+
+        return required
+
     def __str__(self):
         return self.full_name
 
@@ -184,6 +274,12 @@ class Member(BlueBottleBaseUser):
         if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
             self.submitted_initiative_notifications = False
         super(Member, self).save(*args, **kwargs)
+
+
+class UserSegment(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    segment = models.ForeignKey('segments.segment', on_delete=models.CASCADE)
+    verified = models.BooleanField(default=False)
 
 
 class UserActivity(models.Model):

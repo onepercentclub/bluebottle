@@ -108,7 +108,7 @@ class DonorTriggerTests(BluebottleTestCase):
         self.assertEqual(self.donor.payout_amount, Money(250, 'USD'))
         contribution = self.donor.contributions.get()
         self.assertEqual(contribution.value, Money(250, 'USD'))
-        self.assertEqual(self.funding.amount_donated, Money(200, 'EUR'))
+        self.assertEqual(self.funding.amount_donated, Money(375, 'EUR'))
 
     def test_donor_activity_refunded(self):
         """

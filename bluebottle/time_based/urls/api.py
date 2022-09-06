@@ -12,8 +12,10 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     DateSlotDetailView, DateSlotListView,
     SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
-    DateActivityIcalView, ActivitySlotIcalView, DateParticipantExportView, PeriodParticipantExportView,
-    SlotRelatedParticipantList, SkillList, SkillDetail
+    DateActivityIcalView, ActivitySlotIcalView, TeamSlotIcalView,
+    DateParticipantExportView, PeriodParticipantExportView,
+    SlotRelatedParticipantList, SkillList, SkillDetail,
+    RelatedSlotParticipantListView, TeamSlotListView, TeamSlotDetailView
 )
 
 urlpatterns = [
@@ -53,6 +55,10 @@ urlpatterns = [
         ActivitySlotIcalView.as_view(),
         name='slot-ical'),
 
+    url(r'^/team/ical/(?P<pk>\d+)$',
+        TeamSlotIcalView.as_view(),
+        name='team-ical'),
+
     url(r'^/period/(?P<pk>\d+)$',
         PeriodActivityDetailView.as_view(),
         name='period-detail'),
@@ -60,6 +66,14 @@ urlpatterns = [
     url(r'^/period/(?P<activity_id>\d+)/participants$',
         PeriodActivityRelatedParticipantList.as_view(),
         name='period-participants'),
+
+    url(r'^/team/slots$',
+        TeamSlotListView.as_view(),
+        name='team-slot-list'),
+
+    url(r'^/team/slots/(?P<pk>\d+)$',
+        TeamSlotDetailView.as_view(),
+        name='team-slot-detail'),
 
     url(r'^/date/transitions$',
         DateTransitionList.as_view(),
@@ -85,6 +99,10 @@ urlpatterns = [
     url(r'^/slot-participants$',
         SlotParticipantListView.as_view(),
         name='slot-participant-list'),
+    url(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
+        RelatedSlotParticipantListView.as_view(),
+        name='related-slot-participant-list'),
+
     url(r'^/slot-participants/(?P<pk>\d+)$',
         SlotParticipantDetailView.as_view(),
         name='slot-participant-detail'),

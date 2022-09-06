@@ -35,12 +35,12 @@ def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
         for activity in instance.activities.filter(
             status__in=open_statuses
         ):
-            for pk in pk_set:
-                activity.segments.add(pk)
+            for segment in instance.segments.filter(segment_type__inherit=True):
+                activity.segments.add(segment)
 
     if action == 'post_remove':
         for activity in instance.activities.filter(
             status__in=open_statuses
         ):
-            for pk in pk_set:
-                activity.segments.remove(pk)
+            for segment in activity.segments.filter(segment_type__inherit=True, pk__in=pk_set):
+                activity.segments.remove(segment)

@@ -1,0 +1,19 @@
+{% load i18n %}
+<ul>
+    {% for segment_type in required %}
+        <li>
+            <b>{{ segment_type.name }}</b>
+        </li>
+    {% empty %}
+        <li>
+            <i>
+                {% trans "no segment types are marked as required" %}
+            </i>
+        </li>
+    {% endfor %}
+</ul>
+
+{% trans "Mark segment types as required in " %}
+<a href="{{ link }}">
+    {% trans "segment type overview" %}
+</a>

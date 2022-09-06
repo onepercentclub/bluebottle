@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
+from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
@@ -98,3 +98,18 @@ class ActivitySegmentsTestCase(TestCase):
             initiative=InitiativeFactory.create(is_global=False)
         )
         self.assertFalse('office_location' in activity.required_fields)
+
+    def test_is_team_captain_no_team(self):
+        activity = PeriodActivityFactory.create()
+        participant = PeriodParticipantFactory.create(activity=activity)
+        self.assertFalse(participant.is_team_captain)
+
+    def test_is_team_captain_with_team(self):
+        activity = PeriodActivityFactory.create(team_activity='teams')
+        participant = PeriodParticipantFactory.create(activity=activity)
+        self.assertTrue(participant.is_team_captain)
+
+        participant = PeriodParticipantFactory.create(
+            activity=activity, accepted_invite=participant.invite
+        )
+        self.assertFalse(participant.is_team_captain)

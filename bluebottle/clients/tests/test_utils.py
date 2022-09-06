@@ -28,9 +28,9 @@ class TestSiteLinks(BluebottleTestCase):
         self.site_links = SiteLinksFactory.create(language=language_en)
         self.link_groups = {}
 
-        self._add_link(title='Project List', component='project')
-        self._add_link(title='Task List', component='task')
-        self._add_link(group_name='about', title='Search', external_link='https://duck.example.com')
+        self._add_link(title='About us', link='/pages/about')
+        self._add_link(title='Task List', link='/initiatives/activities/list')
+        self._add_link(group_name='about', title='Search', open_in_new_tab=True, link='https://duck.example.com')
 
     def _add_link(self, group_name='main', **kwargs):
         if group_name not in self.link_groups:
@@ -49,9 +49,10 @@ class TestSiteLinks(BluebottleTestCase):
 
         link1 = main_links[0]
         expected1 = {
-            'route': 'project',
+            'link': '/pages/about',
             'isHighlighted': False,
-            'title': 'Project List',
+            'openInNewTab': False,
+            'title': 'About us',
             'sequence': 1
         }
         self.assertEqual(main['title'], 'main Group')
@@ -61,11 +62,11 @@ class TestSiteLinks(BluebottleTestCase):
         results = get_user_site_links(self.user1)
 
         link = _group_by_name(results, 'about')['links'][0]
-        self.assertTrue(link['external'])
+        self.assertTrue(link['openInNewTab'])
 
     def test_user_site_links_perm(self):
         # Add link with resultpage permission
-        secret_link = self._add_link(title='Results Page', component='results')
+        secret_link = self._add_link(title='Results Page', link='results')
         perm = LinkPermissionFactory.create(permission='cms.api_change_resultpage',
                                             present=True)
         secret_link.link_permissions.add(perm)
@@ -85,7 +86,7 @@ class TestSiteLinks(BluebottleTestCase):
 
     def test_user_site_links_missing_perm(self):
         # Add link with absent resultpage permission
-        secret_link = self._add_link(title='Public Results Page', component='results')
+        secret_link = self._add_link(title='Public Results Page', link='/pages/results')
         perm = LinkPermissionFactory.create(permission='cms.api_change_resultpage',
                                             present=False)
         secret_link.link_permissions.add(perm)
@@ -116,7 +117,7 @@ class TestSiteLinks(BluebottleTestCase):
         site_links = SiteLinksFactory.create(language=language_nl)
         link_group = LinkGroupFactory.create(title='NL Group', name='main-nl',
                                              site_links=site_links)
-        LinkFactory.create(link_group=link_group, title='Project List NL', component='project')
+        LinkFactory.create(link_group=link_group, title='Project List NL', link='/initiatives/link')
 
         # Test language specific site links are loaded if available
         results = get_user_site_links(self.user1)

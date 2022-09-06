@@ -1,10 +1,11 @@
-from builtins import object
 import mimetypes
 import os
+from io import BytesIO
+from operator import attrgetter
 
 import icalendar
-
 import magic
+import xlsxwriter
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
@@ -27,9 +28,11 @@ from taggit.models import Tag
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
+import re
 
 mime = magic.Magic(mime=True)
 
@@ -59,14 +62,14 @@ class TagSearch(views.APIView):
         return response.Response(data)
 
 
-class ModelTranslationViewMixin(object):
+class ModelTranslationViewMixin():
     def get(self, request, *args, **kwargs):
         language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-class ViewPermissionsMixin(object):
+class ViewPermissionsMixin():
     """ View mixin with permission checks added from the DRF APIView """
     @property
     def model(self):
@@ -111,7 +114,7 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     permission_classes = (ResourcePermission,)
 
 
-class RelatedPermissionMixin(object):
+class RelatedPermissionMixin():
     related_permission_classes = {}
 
     def check_object_permissions(self, request, obj):
@@ -126,7 +129,7 @@ class RelatedPermissionMixin(object):
         Raises an appropriate exception if the request is not permitted.
         """
         for related, permissions in list(self.related_permission_classes.items()):
-            related_obj = getattr(obj, related)
+            related_obj = attrgetter(related)(obj)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):
                     self.permission_denied(
@@ -339,5 +342,49 @@ class IcalView(PrivateFileView):
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
+
+        return response
+
+
+class ExportView(PrivateFileView):
+    filename = 'exports'
+
+    def get_fields(self):
+        return self.fields
+
+    def get_filename(self):
+        return f'{self.filename} for {self.get_object()}.xlsx'
+
+    def get_row(self, instance):
+        return [prep_field(self.request, instance, field[0]) for field in self.get_fields()]
+
+    def get_data(self):
+        return [self.get_row(instance) for instance in self.get_instances()]
+
+    def get_instances(self):
+        raise NotImplementedError()
+
+    def write_data(self, workbook):
+        title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
+        worksheet = workbook.add_worksheet(title)
+
+        worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
+
+        for (index, row) in enumerate(self.get_data()):
+            worksheet.write_row(index + 1, 0, row)
+
+    def get(self, request, *args, **kwargs):
+        output = BytesIO()
+
+        workbook = xlsxwriter.Workbook(output, {'remove_timezone': True})
+        self.write_data(workbook)
+        workbook.close()
+
+        output.seek(0)
+
+        response = HttpResponse(output.read())
+
+        response['Content-Disposition'] = f'attachment; filename="{self.get_filename()}"'
+        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         return response

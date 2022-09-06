@@ -1,24 +1,28 @@
 import json
-from builtins import range
 import time
-from datetime import datetime, timedelta
+from builtins import range
 from calendar import timegm
-from bluebottle.clients import properties
+from datetime import datetime, timedelta, date
 
+import jwt
 import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.urls import reverse
 from django.db import connection
 from django.test.utils import override_settings
+from django.urls import reverse
 from rest_framework import status
-
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.auth.middleware import authorization_logger
+from bluebottle.clients import properties
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -37,11 +41,28 @@ class LoginTestCase(BluebottleTestCase):
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        token = response.json()['token']
+        decoded = jwt.decode(
+            token, algorithms='HS256', options=dict(verify_signature=False)
+        )
+
+        self.assertEquals(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
+        self.assertEqual(decoded['username'], self.user.pk)
+
         current_user_response = self.client.get(
-            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+            reverse('user-current'), token='JWT {}'.format(token)
         )
 
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_login_formencoded(self):
+        response = self.client.post(
+            reverse('token-auth'),
+            {'email': self.email, 'password': self.password},
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_login_different_case(self):
         response = self.client.post(
@@ -248,6 +269,24 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 2)
 
         member = Member.objects.get(email=email)
+        self.assertFalse(member.is_active)
+
+    def test_create_twice_different_case(self):
+        email = 'test@example.com'
+
+        self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email.title()}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        member = Member.objects.get(email__iexact=email)
         self.assertFalse(member.is_active)
 
     def test_create_already_active(self):
@@ -939,3 +978,147 @@ class RefreshTokenTest(BluebottleTestCase):
         response = self.client.get(reverse('user-current'), token=new_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['id'], self.user.pk)
+
+
+class UserAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.current_user_url = reverse('user-current')
+        self.segment_type = SegmentTypeFactory.create(required=False)
+        self.segments = SegmentFactory.create_batch(3, segment_type=self.segment_type)
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.current_user_url = reverse('user-current')
+        self.logout_url = reverse('user-logout')
+
+    def test_get_current_user_no_required_segments(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_required_location(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+    def test_get_current_user_required_fields(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_address = True
+        settings.require_phone_number = True
+        settings.require_birthdate = True
+        settings.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertTrue('birthdate' in response.json()['required'])
+        self.assertTrue('phone_number' in response.json()['required'])
+        self.assertTrue('address' in response.json()['required'])
+
+        self.user.birthdate = date(1980, 1, 14)
+        self.user.phone_number = '+310612345678'
+        self.user.place = PlaceFactory.create(
+            street="test straat",
+            street_number=12,
+            postal_code='1024 BZ',
+            locality="Amsterdam",
+        )
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_required_location_set(self):
+        settings = MemberPlatformSettings.load()
+        settings.require_office = True
+        settings.save()
+        self.user.location = LocationFactory.create()
+        self.user.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_required_segments_defined(self):
+        self.segment_type.required = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': True})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_unverified_required_segments(self):
+        self.segment_type.required = True
+        self.segment_type.needs_verification = True
+        self.segment_type.save()
+        self.user.segments.add(self.segments[0], through_defaults={'verified': False})
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [f'segment_type.{self.segment_type.id}'])
+
+    def test_get_current_user_with_unverified_required_location(self):
+        MemberPlatformSettings.objects.update_or_create(
+            require_office=True,
+            verify_office=True,
+        )
+        self.user.location = LocationFactory.create()
+        self.user.location_verified = False
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], ['location'])
+
+        self.user.location_verified = True
+        self.user.save()
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['required'], [])
+
+    def test_get_current_user_with_initiatives(self):
+        InitiativeFactory.create(
+            owner=self.user
+        )
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], True)
+
+    def test_get_current_user_without_initiatives(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], False)
+
+
+class MemberSettingsAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.url = reverse('settings')
+
+    def test_required_questions(self):
+        settings = MemberPlatformSettings.load()
+        settings.required_questions_location = 'login'
+        settings.closed = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'login')
+        settings.required_questions_location = 'contribution'
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')
+
+    def test_create_initiatives(self):
+        settings = MemberPlatformSettings.load()
+        settings.create_initiatives = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], False)
+        settings.create_initiatives = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)

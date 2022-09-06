@@ -152,6 +152,29 @@ def api_user_joins_activity(test, activity, supporter,
     test.assertEqual(response.status_code, status_code, msg)
 
 
+def api_user_joins_period_activity(
+        test, activity, supporter,
+        request_user=None, status_code=201, msg=None):
+    if not request_user:
+        request_user = supporter
+    test.data = {
+        'data': {
+            'type': 'contributors/time-based/period-participants',
+            'relationships': {
+                'activity': {
+                    'data': {
+                        'type': 'activities/time-based/periods',
+                        'id': activity.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('period-participant-list')
+    response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code, msg)
+
+
 def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter

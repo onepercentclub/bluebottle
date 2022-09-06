@@ -1,27 +1,30 @@
-from builtins import str
-from builtins import object
+import uuid
+from builtins import str, object
+
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.contrib.contenttypes.fields import GenericRelation
+from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-
 from future.utils import python_2_unicode_compatible
-
-from bluebottle.fsm.triggers import TriggerMixin
-
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
-from bluebottle.initiatives.models import Initiative
 from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+
+    class TeamActivityChoices(DjangoChoices):
+        teams = ChoiceItem('teams', label=_("Teams"))
+        individuals = ChoiceItem('individuals', label=_("Individuals"))
+
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('activity manager'),
@@ -57,7 +60,14 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     description = models.TextField(
         _('Description'), blank=True
     )
-
+    team_activity = models.CharField(
+        _('participation'),
+        max_length=100,
+        default=TeamActivityChoices.individuals,
+        choices=TeamActivityChoices.choices,
+        blank=True,
+        help_text=_("Is this activity open for individuals or can only teams sign up?")
+    )
     image = ImageField(blank=True, null=True)
 
     video_url = models.URLField(
@@ -153,7 +163,9 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     # This fixing deleting related polymorphic objects through admin
-    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+    if hasattr(sub_objs, 'non_polymorphic'):
+        sub_objs = sub_objs.non_polymorphic()
+    return models.CASCADE(collector, field, sub_objs, using)
 
 
 @python_2_unicode_compatible
@@ -168,13 +180,29 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     activity = models.ForeignKey(
         Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE
     )
+
+    team = models.ForeignKey(
+        'activities.Team', verbose_name=_('team'),
+        null=True, blank=True, related_name='members', on_delete=models.CASCADE
+    )
     user = models.ForeignKey(
-        'members.Member', verbose_name=_('user'), null=True, blank=True, on_delete=models.CASCADE
+        'members.Member', verbose_name=_('user'),
+        null=True, blank=True, on_delete=models.CASCADE
+    )
+    invite = models.OneToOneField(
+        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
+    )
+    accepted_invite = models.ForeignKey(
+        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
     )
 
     @property
     def owner(self):
         return self.user
+
+    @property
+    def is_team_captain(self):
+        return self.team and self.user == self.team.owner
 
     @property
     def date(self):
@@ -240,6 +268,54 @@ class EffortContribution(Contribution):
     class Meta(object):
         verbose_name = _("Effort")
         verbose_name_plural = _("Contributions")
+
+
+class Invite(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/invites'
+
+
+class Team(TriggerMixin, models.Model):
+    status = models.CharField(max_length=40)
+
+    activity = models.ForeignKey(
+        Activity, related_name='teams', on_delete=NON_POLYMORPHIC_CASCADE
+    )
+
+    created = models.DateTimeField(default=timezone.now)
+
+    owner = models.ForeignKey(
+        'members.Member', related_name='teams', null=True, on_delete=models.SET_NULL
+    )
+
+    @property
+    def accepted_participants(self):
+        return self.members.filter(status='accepted')
+
+    @property
+    def accepted_participants_count(self):
+        return len(self.accepted_participants)
+
+    class Meta(object):
+        ordering = ('-created',)
+        verbose_name = _("Team")
+
+        permissions = (
+            ('api_read_team', 'Can view team through the API'),
+            ('api_change_team', 'Can change team through the API'),
+            ('api_change_own_team', 'Can change own team through the API'),
+        )
+
+    @property
+    def name(self):
+        return _("Team {name}").format(
+            name=self.owner.full_name if self.owner_id else _("Anonymous")
+        )
+
+    def __str__(self):
+        return self.name
 
 
 from bluebottle.activities.signals import *  # noqa

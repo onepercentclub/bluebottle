@@ -4,7 +4,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from mock import patch
 
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -19,12 +19,24 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         """
         Tests the manager ``create_user`` method.
         """
+
         user = BlueBottleUserFactory.create(
             email='john_doe@onepercentclub.com')
 
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_superuser)
         self.assertFalse(user.is_staff)
+
+    def test_create_user_with_email(self):
+        payload = {
+            'email': 'john_doe@onepercentclub.com',
+            'remote_id': 'john_doe@onepercentclub.com',
+            'username': 'johny',
+        }
+        user = Member.objects.create_user(**payload)
+        self.assertTrue(user.id)
+        self.assertEqual(user.email, 'john_doe@onepercentclub.com')
+        self.assertEqual(user.username, 'johny')
 
     def test_create_user_no_email_provided(self):
         """
@@ -129,7 +141,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
-        self.assertTrue('[Set password](https://testserver/setpassword' in mail.outbox[0].body)
+        self.assertTrue('[Set password](https://testserver/authentication/set-password' in mail.outbox[0].body)
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)

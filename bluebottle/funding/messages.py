@@ -2,6 +2,7 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.members.models import Member
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -168,9 +169,22 @@ class PayoutAccountRejected(TransitionMessage):
         """the activity organizer"""
         return [self.obj.owner]
 
-    def get_bcc_addresses(self):
+
+class LivePayoutAccountRejected(TransitionMessage):
+    subject = _(u'Live campaign identity verification failed!')
+    template = 'messages/live_payout_account_rejected'
+
+    context = {
+        'id': 'id'
+    }
+
+    def get_recipients(self):
         """platform support email addresses"""
-        return settings.SUPPORT_EMAIL_ADDRESSES
+        members = []
+        for email in settings.SUPPORT_EMAIL_ADDRESSES:
+            member, _c = Member.objects.get_or_create(email=email)
+            members.append(member)
+        return members
 
 
 class PayoutAccountVerified(TransitionMessage):

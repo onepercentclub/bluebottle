@@ -9,14 +9,13 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
             return user in [
                 getattr(parent, 'owner', None),
                 getattr(parent.initiative, 'owner', None),
-                getattr(parent.initiative, 'task_manager', None),
                 getattr(parent.initiative, 'promoter', None)
-            ]
+            ] + list(parent.initiative.activity_managers.all())
+
         return user in [
             getattr(parent, 'owner', None),
-            getattr(parent, 'task_manager', None),
             getattr(parent, 'promoter', None)
-        ]
+        ] + list(parent.activity_managers.all())
 
     def has_object_action_permission(self, action, user, obj):
         if isinstance(obj, Wallpost) and not any([

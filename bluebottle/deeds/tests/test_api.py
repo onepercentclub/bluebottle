@@ -1,8 +1,8 @@
-import csv
 from datetime import timedelta, date
 import io
 
 from rest_framework import status
+from openpyxl import load_workbook
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -14,6 +14,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
@@ -118,10 +119,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.model = self.factory.create(**self.defaults)
 
         self.accepted_participants = DeedParticipantFactory.create_batch(
-            5, activity=self.model, status='accepted'
+            4, activity=self.model, status='accepted'
         )
         self.withdrawn_participants = DeedParticipantFactory.create_batch(
-            5, activity=self.model, status='withdrawn'
+            4, activity=self.model, status='withdrawn'
         )
 
         self.url = reverse('deed-detail', args=(self.model.pk, ))
@@ -246,6 +247,21 @@ class DeedsDetailViewAPITestCase(APITestCase):
             contributors,
             self.accepted_participants + [participant]
         )
+
+    def test_get_with_participant_team(self):
+        self.model.team_activity = 'teams'
+        self.model.save()
+
+        participant = DeedParticipantFactory.create(
+            activity=self.model,
+            user=self.user
+        )
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('my-contributor', participant)
+        self.assertIncluded('my-contributor.invite', participant.invite)
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -389,6 +405,18 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             )
         )
 
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
+    def test_get_hide_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
     def test_get_user(self):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
@@ -401,6 +429,23 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
                 for participant in self.response.json()['data']
             )
         )
+
+    def test_get_user_hide_first_name(self):
+        DeedParticipantFactory.create(
+            activity=self.activity, status='accepted', user=self.activity.owner
+        )
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            if member['id'] == str(self.activity.owner.pk):
+                self.assertIsNotNone(member['attributes']['last-name'])
+                self.assertEqual(member['attributes']['full-name'], self.activity.owner.full_name)
+            else:
+                self.assertIsNone(member['attributes']['last-name'])
+                self.assertEqual(member['attributes']['full-name'], member['attributes']['first-name'])
 
     def test_get_user_succeeded(self):
         self.activity.start = date.today() - timedelta(days=10)
@@ -432,6 +477,15 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             )
         )
 
+    def test_get_anonymous_hide_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        for member in self.get_included('user'):
+            self.assertIsNone(member['attributes']['last-name'])
+
     def test_get_closed_site(self):
         with self.closed_site():
             self.perform_get()
@@ -457,7 +511,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
             'activity': self.activity
         }
 
-        self.fields = ['activity']
+        self.fields = ['activity', 'accepted_invite']
 
     def test_create(self):
         self.perform_create(user=self.user)
@@ -472,6 +526,20 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', True)
 
         self.assertTransition('withdraw')
+        self.assertIncluded('invite')
+
+    def test_create_with_team_invite(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
+        team_captain = DeedParticipantFactory.create(activity=self.activity)
+
+        self.defaults['accepted_invite'] = team_captain.invite
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertRelationship('team', [team_captain.team])
 
     def test_create_anonymous(self):
         self.perform_create()
@@ -551,13 +619,12 @@ class ParticipantExportViewAPITestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
         response = self.client.get(self.export_url)
-        reader = csv.DictReader(io.StringIO(response.content.decode()))
 
-        for row in reader:
-            self.assertTrue('Email' in row)
-            self.assertTrue('Name' in row)
-            self.assertTrue('Registration Date' in row)
-            self.assertTrue('Status' in row)
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+        self.assertEqual(
+            rows[0], ('Email', 'Name', 'Registration Date', 'Status')
+        )
 
     def test_get_owner_incorrect_hash(self):
         self.perform_get(user=self.activity.owner)
@@ -576,3 +643,69 @@ class ParticipantExportViewAPITestCase(APITestCase):
     def test_get_no_user(self):
         self.perform_get()
         self.assertIsNone(self.export_url)
+
+
+class DeedParticipantDetailViewAPITestCase(APITestCase):
+    serializer = DeedParticipantSerializer
+
+    def setUp(self):
+        super().setUp()
+
+        self.activity = DeedFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            start=date.today() + timedelta(days=10),
+            end=date.today() + timedelta(days=20),
+        )
+        self.participant = DeedParticipantFactory.create(activity=self.activity)
+        self.url = reverse('deed-participant-detail', args=(self.participant.pk, ))
+
+    def test_get_user(self):
+        self.perform_get(user=self.participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('activity', self.activity)
+        self.assertIncluded('user', self.participant.user)
+        self.assertRelationship('invite', [self.participant.invite])
+        self.assertRelationship('accepted-invite')
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('activity', self.activity)
+        self.assertIncluded('user', self.participant.user)
+        self.assertNoRelationship('invite')
+        self.assertRelationship('accepted-invite')
+
+    def test_get_accepted_invite(self):
+        invite = DeedParticipantFactory.create().invite
+        self.participant.accepted_invite = invite
+        self.participant.save()
+
+        self.perform_get(user=self.participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('activity', self.activity)
+        self.assertIncluded('user', self.participant.user)
+        self.assertNoRelationship('invite')
+        self.assertRelationship('accepted-invite')
+
+    def test_get_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('activity', self.activity)
+        self.assertIncluded('user', self.participant.user)
+        self.assertNoRelationship('invite')
+        self.assertRelationship('accepted-invite')
+
+    def test_get_anonymous_closed_site(self):
+        with self.closed_site():
+            self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)

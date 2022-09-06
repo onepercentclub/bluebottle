@@ -12,7 +12,7 @@ from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.utils.encoding import smart_str
-from moneyed import Money
+from djmoney.money import Money
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
@@ -51,8 +51,14 @@ def prep_field(request, obj, field, manyToManySep=';'):
     if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
 
+    if isinstance(attr, Money):
+        attr = str(attr)
+
     if isinstance(attr, datetime.datetime):
         attr = attr.strftime('%d-%m-%y %H:%M')
+
+    if isinstance(attr, datetime.timedelta):
+        attr = attr.seconds / (60 * 60)
 
     output = attr() if callable(attr) else attr
 
@@ -93,12 +99,11 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 field_names = [field for field in fields]
                 labels = field_names
 
-        response = HttpResponse(content_type='text/csv')
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             str(opts).replace('.', '_')
         )
-
-        writer = csv.writer(response)
+        writer = csv.writer(response, delimiter=';', dialect='excel')
 
         if header:
             row = labels if labels else field_names
@@ -118,8 +123,16 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             # Write extra field data
             if queryset.model is Member:
                 for segment_type in SegmentType.objects.all():
-                    segments = ", ".join(obj.segments.filter(
+                    segments = " | ".join(obj.segments.filter(
                         segment_type=segment_type).values_list('name', flat=True))
+                    row.append(segments)
+            if issubclass(queryset.model, Contributor):
+                for segment_type in SegmentType.objects.all():
+                    if obj.user:
+                        segments = " | ".join(obj.user.segments.filter(
+                            segment_type=segment_type).values_list('name', flat=True))
+                    else:
+                        segments = ''
                     row.append(segments)
             escaped_row = [escape_csv_formulas(item) for item in row]
             writer.writerow(escaped_row)

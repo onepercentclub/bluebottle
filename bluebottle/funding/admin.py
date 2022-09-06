@@ -153,7 +153,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donors_link', 'started',
+        'donors_link', 'started', 'team_activity'
     ]
 
     list_display = ActivityChildAdmin.list_display + [
@@ -166,6 +166,7 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_donated.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+    # Translators: xgettext:no-python-format
     percentage_donated.short_description = _('% donated')
 
     def percentage_matching(self, obj):
@@ -173,6 +174,7 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_matching.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+    # Translators: xgettext:no-python-format
     percentage_matching.short_description = _('% matching')
 
     def amount_raised(self, obj):

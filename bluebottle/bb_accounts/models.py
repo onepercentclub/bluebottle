@@ -59,29 +59,32 @@ def generate_picture_filename(instance, filename):
 
 
 class BlueBottleUserManager(UserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
         """
         Creates and saves a User with the given email and password.
         """
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
+        extra_fields['is_active'] = True
+        return super().create_user(username, email, password, **extra_fields)
 
-        return super().create_user(username, password, **extra_fields)
-
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
         now = timezone.now()
-
         extra_fields['last_login'] = now
         extra_fields['date_joined'] = now
-
-        return super().create_superuser(username, password, **extra_fields)
+        extra_fields['is_active'] = True
+        if not username:
+            username = email
+        return super().create_superuser(username, email, password, **extra_fields)
 
     def get_by_natural_key(self, username):
-        return self.get(**{
-            '{}__iexact'.format(self.model.USERNAME_FIELD): username
-        })
+        if isinstance(username, int):
+            return self.get(pk=username)
+        else:
+            return self.get(**{
+                '{}__iexact'.format(self.model.USERNAME_FIELD): username
+            })
 
 
 @python_2_unicode_compatible
@@ -133,6 +136,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         'geo.Location', blank=True,
         verbose_name=_('Office'),
         null=True, on_delete=models.SET_NULL)
+
+    location_verified = models.BooleanField(
+        default=False,
+        help_text=_('Office location is verified by the user')
+    )
+
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)

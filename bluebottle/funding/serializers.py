@@ -442,9 +442,12 @@ class DonorSerializer(BaseContributorSerializer):
         If the donor is anonymous, we do not return the user.
         """
         fields = super(DonorSerializer, self).get_fields()
-        if isinstance(self.instance, Donor) and self.instance.anonymous:
+        funding_settings = FundingPlatformSettings.load()
+        if isinstance(self.instance, Donor) and (
+            self.instance.anonymous or
+            funding_settings.anonymous_donations
+        ):
             del fields['user']
-
         return fields
 
 
@@ -627,4 +630,5 @@ class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
 
         fields = (
             'allow_anonymous_rewards',
+            'anonymous_donations',
         )

@@ -335,3 +335,13 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         input_html = page.html.find('div', {'class': 'field-activity_types'}).text
         self.assertTrue('Deed' in input_html)
         self.assertTrue('Funding' in input_html)
+
+    def test_admin_team_activities(self):
+        url = reverse('admin:initiatives_initiativeplatformsettings_change')
+        self.app.set_user(self.superuser)
+        page = self.app.get(url)
+        form = page.forms[0]
+        form['team_activities'] = True
+        form.submit()
+        initiative_settings = InitiativePlatformSettings.load()
+        self.assertTrue(initiative_settings.team_activities)

@@ -118,7 +118,15 @@ div.system-message {
 }
 
 .description {
-  font-size: 0.9rem;
-  margin: 0;
-  padding: 6px 0 0 0;
+  padding: 12px 12px 12px 36px;
+  border-radius: 4px;
+  background: #ececec 8px 50% url('/static/assets/admin/images/icons/info.svg') no-repeat;
+
+  &.warning {
+    padding: 12px 12px 12px 24px;
+    color: #B96500;
+    background: #f8f0e6 8px 24px url('/static/assets/admin/images/icons/warning.svg') no-repeat;
+  }
+
 }
+

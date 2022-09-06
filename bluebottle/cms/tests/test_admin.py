@@ -2,7 +2,7 @@ from django.urls.base import reverse
 from fluent_contents.models import Placeholder
 from django.test.utils import override_settings
 
-from bluebottle.cms.models import StatsContent, ActivitiesContent
+from bluebottle.cms.models import StatsContent, ActivitiesContent, Link
 from bluebottle.test.factory_models.cms import ResultPageFactory, LinkGroupFactory, LinkFactory
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -80,29 +80,8 @@ class SiteLinkAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url)
         form = page.forms[0]
         form['links-0-title'] = 'Some page'
-        form['links-0-component'] = 'page'
-        form['links-0-component_id'] = ''
-        page = form.submit()
-        self.assertTrue(
-            "If you use Page you should also set the page slug as the component id."
-            in page.text
-        )
-        form = page.forms[0]
-        form['links-0-title'] = 'Some page'
-        form['links-0-component'] = 'page'
-        form['links-0-component_id'] = 'info'
-        page = form.submit()
-        self.assertFalse(
-            "Page with this slug does not exist for this language."
-            in page.text
-        )
-        page = self.app.get(url)
-        form = page.forms[0]
-        form['links-0-title'] = 'Some page'
-        form['links-0-component'] = 'page'
-        form['links-0-component_id'] = 'hupsakidee'
-        page = form.submit()
-        self.assertTrue(
-            "Page with this slug does not exist for this language."
-            in page.text
-        )
+        form['links-0-link'] = '/pages/some'
+        form.submit()
+
+        link = Link.objects.last()
+        self.assertEqual(link.link, '/pages/some')

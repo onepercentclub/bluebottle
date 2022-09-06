@@ -19,7 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import PlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -146,8 +146,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
     User preview serializer that respects anonymization_age
     """
+    def __init__(self, *args, **kwargs):
+        self.hide_last_name = kwargs.pop('hide_last_name', None)
+
+        super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
+        user = self.context['request'].user
         if self.parent.__class__.__name__ == 'ReactionSerializer':
             # For some reason self.parent.instance doesn't work on ReactionSerializer
             if self.parent.instance:
@@ -159,7 +164,19 @@ class UserPreviewSerializer(serializers.ModelSerializer):
                     return {"id": 0, "is_anonymous": True}
         if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
             return {"id": 0, "is_anonymous": True}
-        return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
+
+        representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
+        if not (
+            user.is_staff or
+            user.is_superuser
+        ) and (
+            self.hide_last_name and
+            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+        ):
+            del representation['last_name']
+            representation['full_name'] = representation['first_name']
+
+        return representation
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -209,6 +226,10 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     segments = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Segment.objects
     )
+    has_initiatives = serializers.SerializerMethodField()
+
+    def get_has_initiatives(self, obj):
+        return obj.own_initiatives.exists()
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -216,7 +237,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments',
+            'organization', 'segments', 'required', 'has_initiatives'
         )
 
 
@@ -262,6 +283,21 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     )
 
     is_active = serializers.BooleanField(read_only=True)
+
+    def save(self, *args, **kwargs):
+
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -632,6 +668,13 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_gender',
             'enable_address',
             'enable_birthdate',
+            'required_questions_location',
+            'require_office',
+            'verify_office',
+            'require_address',
+            'require_birthdate',
+            'require_phone_number',
+            'create_initiatives'
         )
 
 

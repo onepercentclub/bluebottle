@@ -57,10 +57,10 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         language = translation.get_language()
-        country_ids = Initiative.objects.\
-            filter(place__isnull=False).distinct('place__country').\
+        country_ids = Initiative.objects. \
+            filter(place__isnull=False).distinct('place__country'). \
             values_list('place__country__id', flat=True)
-        countries = Country.objects.filter(id__in=country_ids).language(language).\
+        countries = Country.objects.filter(id__in=country_ids).language(language). \
             order_by('translations__name')
         return [(c.id, c.name) for c in countries]
 
@@ -93,13 +93,12 @@ class ActiviyManagersInline(admin.TabularInline):
     def email(self, obj):
         return self.user_link(obj, 'email')
 
-    readonly_fields = ('full_name', 'email', )
-    exclude = ('member', )
+    readonly_fields = ('full_name', 'email',)
+    exclude = ('member',)
 
 
 @admin.register(Initiative)
 class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
-
     form = InitiativeAdminForm
 
     prepopulated_fields = {"slug": ("title",)}
@@ -154,6 +153,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             return "-"
         url = reverse('admin:geo_location_change', args=(obj.location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.location)
+
     location_link.short_description = _('office')
 
     search_fields = ['title', 'pitch', 'story',
@@ -161,7 +161,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     readonly_fields = ['link', 'created', 'updated', 'valid']
 
-    ordering = ('-created', )
+    ordering = ('-created',)
 
     export_to_csv_fields = (
         ('title', 'Title'),
@@ -237,6 +237,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
+
     link.short_description = _("Show on site")
 
     def valid(self, obj):
@@ -260,7 +261,28 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    pass
+    fieldsets = (
+        (_('Activity types'), {
+            'fields': (
+                'activity_types', 'team_activities'
+            )
+        }),
+        (_('Search filters'), {
+            'fields': (
+                'show_all_activities',
+                'initiative_search_filters',
+                'activity_search_filters'
+            )
+        }),
+        (_('Options'), {
+            'fields': (
+                'contact_method', 'require_organization',
+                'enable_impact', 'enable_office_regions', 'enable_multiple_dates',
+                'enable_open_initiatives', 'enable_participant_exports',
+                'enable_matching_emails',
+            )
+        }),
+    )
 
 
 @admin.register(Theme)

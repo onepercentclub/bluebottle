@@ -11,6 +11,7 @@ from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -230,4 +231,54 @@ class TestExportAdmin(BluebottleTestCase):
         self.assertEqual(
             book.sheet_by_name('Activities during a period').cell(1, 22).value,
             750
+        )
+
+    def test_export_teams(self):
+        self.settings = InitiativePlatformSettingsFactory.create(
+            team_activities=False
+        )
+        from_date = now() - timedelta(weeks=2)
+        to_date = now() + timedelta(weeks=1)
+
+        initiative = InitiativeFactory.create()
+
+        activity = PeriodActivityFactory.create(
+            initiative=initiative
+        )
+        team_captain = PeriodParticipantFactory.create(activity=activity)
+        PeriodParticipantFactory.create_batch(
+            3, activity=activity, accepted_invite=team_captain.invite
+        )
+        data = {
+            'from_date': from_date,
+            'to_date': to_date,
+            '_save': 'Confirm'
+        }
+        tenant = connection.tenant
+        result = plain_export(Exporter, tenant=tenant, **data)
+        book = xlrd.open_workbook(result)
+
+        sheet = book.sheet_by_name('Participants over a period')
+        self.assertEqual(
+            [field.value for field in tuple(sheet.get_rows())[0]],
+            [
+                'Participant ID', 'Activity Title', 'Initiative Title', 'Activity ID',
+                'Activity status', 'User ID', 'Remote ID', 'Email', 'Status',
+            ]
+        )
+
+        self.settings.team_activities = True
+        self.settings.save()
+
+        result = plain_export(Exporter, tenant=tenant, **data)
+        book = xlrd.open_workbook(result)
+
+        sheet = book.sheet_by_name('Participants over a period')
+        self.assertEqual(
+            [field.value for field in tuple(sheet.get_rows())[0]],
+            [
+                'Participant ID', 'Activity Title', 'Initiative Title', 'Activity ID',
+                'Activity status', 'User ID', 'Remote ID', 'Email', 'Status', 'Team',
+                'Team Captain'
+            ]
         )

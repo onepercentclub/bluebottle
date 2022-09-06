@@ -1,27 +1,83 @@
-from bluebottle.collect.models import CollectContribution
-from django.conf import settings
 from builtins import object
+from collections.abc import Iterable
 
+from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.utils.translation import gettext_lazy as _
+from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework.fields import SerializerMethodField
+from rest_framework_json_api.relations import (
+    ResourceRelatedField, SerializerMethodResourceRelatedField,
+    HyperlinkedRelatedField
+)
 from rest_framework_json_api.serializers import ModelSerializer
 
-from geopy.distance import distance, lonlat
-
-from bluebottle.activities.models import Activity, Contributor, Contribution, Organizer, EffortContribution
+from bluebottle.activities.models import (
+    Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
+)
+from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
+from bluebottle.collect.models import CollectContribution
+from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
-from bluebottle.fsm.serializers import AvailableTransitionsField
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.segments.models import Segment
+from bluebottle.time_based.models import TimeContribution, TeamSlot
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
-
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+
+
+class TeamSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    transitions = AvailableTransitionsField(source='states')
+
+    members = HyperlinkedRelatedField(
+        read_only=True,
+        many=True,
+        related_link_view_name='team-members',
+        related_link_url_kwarg='team_id'
+    )
+
+    participants_export_url = PrivateFileSerializer(
+        'team-members-export',
+        url_args=('pk',),
+        filename='participants.csv',
+        permission=CanExportTeamParticipantsPermission,
+        read_only=True
+    )
+    slot = ResourceRelatedField(queryset=TeamSlot.objects)
+
+    class Meta(object):
+        model = Team
+        fields = ('owner', 'slot', 'members')
+        meta_fields = (
+            'status',
+            'transitions',
+            'created',
+            'participants_export_url',
+
+        )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'owner',
+            'slot',
+            'slot.location',
+        ]
+
+        resource_name = 'activities/teams'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+        'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -110,11 +166,22 @@ class BaseActivitySerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
+    team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+
+    segments = SerializerMethodResourceRelatedField(
+        source='segments',
+        model=Segment,
+        many=True,
+        read_only=True
+    )
+
+    def get_segments(self, obj):
+        return obj.segments.filter(segment_type__visibility=True)
 
     matching_properties = MatchingPropertiesField()
 
@@ -146,6 +213,9 @@ class BaseActivitySerializer(ModelSerializer):
             status__in=['accepted', 'succeeded', 'activity_refunded']
         ).count()
 
+    def get_team_count(self, instance):
+        return instance.teams.filter(status__in=['open', 'finished']).count()
+
     class Meta(object):
         model = Activity
         fields = (
@@ -166,7 +236,8 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
-            'segments'
+            'segments',
+            'team_activity'
         )
 
         meta_fields = (
@@ -177,7 +248,8 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
-            'contributor_count'
+            'contributor_count',
+            'team_count'
         )
 
     class JSONAPIMeta(object):
@@ -198,7 +270,6 @@ class BaseActivitySerializer(ModelSerializer):
             'segments',
             'segments.segment_type'
         ]
-        resource_name = 'activities'
 
 
 class BaseActivityListSerializer(ModelSerializer):
@@ -212,6 +283,12 @@ class BaseActivityListSerializer(ModelSerializer):
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
+    team_activity = SerializerMethodField()
+
+    def get_team_activity(self, instance):
+        if InitiativePlatformSettings.load().team_activities:
+            return instance.team_activity
+        return 'individuals'
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
@@ -241,6 +318,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
+            'team_activity'
         )
 
         meta_fields = (
@@ -261,7 +339,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'goals',
             'goals.type',
         ]
-        resource_name = 'activities'
 
 
 class BaseTinyActivitySerializer(ModelSerializer):
@@ -317,8 +394,8 @@ class BaseContributorListSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', 'created', 'updated', )
-        meta_fields = ('created', 'updated', )
+        fields = ('user', 'activity', 'status', 'created', 'updated', 'accepted_invite', 'invite')
+        meta_fields = ('created', 'updated',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -332,23 +409,47 @@ class BaseContributorListSerializer(ModelSerializer):
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-
+    team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'invite': 'bluebottle.activities.utils.InviteSerializer',
+        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if (
+            isinstance(self.instance, Iterable) or (
+                self.instance and (
+                    self.instance.accepted_invite or
+                    self.instance.user != self.context['request'].user
+                )
+            )
+        ):
+            self.fields.pop('invite')
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', )
-        meta_fields = ('transitions', 'created', 'updated', )
+        fields = (
+            'user',
+            'activity',
+            'status',
+            'team',
+            'accepted_invite',
+            'invite',
+        )
+        meta_fields = ('transitions', 'created', 'updated',)
 
     class JSONAPIMeta(object):
         included_resources = [
             'user',
             'activity',
+            'invite',
+            'team'
         ]
         resource_name = 'contributors'
 
@@ -359,15 +460,14 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ('value', 'status', )
-        meta_fields = ('created', )
+        fields = ('value', 'status',)
+        meta_fields = ('created',)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'
 
 
 def get_stats_for_activities(activities):
-
     ids = activities.values_list('id', flat=True)
 
     default_currency = properties.DEFAULT_CURRENCY
@@ -459,4 +559,31 @@ def get_stats_for_activities(activities):
         'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
         'contributors': contributor_count,
         'amount': amount
+    }
+
+
+class InviteSerializer(ModelSerializer):
+    team = SerializerMethodResourceRelatedField(
+        model=Team,
+        many=False,
+        read_only=True
+    )
+
+    def get_team(self, obj):
+        return obj.contributor.team
+
+    class Meta(object):
+        model = Invite
+        fields = ('id', 'team',)
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'team', 'team.owner',
+        ]
+
+        resource_name = 'activities/invites'
+
+    included_serializers = {
+        'team': 'bluebottle.activities.utils.TeamSerializer',
+        'team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }

@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.models import Organizer, EffortContribution
+from bluebottle.activities.models import Organizer, EffortContribution, Team
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -100,14 +100,14 @@ class ActivityStateMachine(ModelStateMachine):
         )
 
     def should_auto_approve(self):
-        """the activity should approved automatically"""
+        """the activity should be approved automatically"""
         return self.instance.auto_approve
 
     initiate = Transition(
         EmptyState(),
         draft,
         name=_('Create'),
-        description=_('The acivity will be created.'),
+        description=_('The activity will be created.'),
     )
 
     auto_submit = Transition(
@@ -116,7 +116,7 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         submitted,
-        description=_('The acivity will be submitted for review.'),
+        description=_('The activity will be submitted for review.'),
         automatic=True,
         name=_('Submit'),
         conditions=[is_complete, is_valid],
@@ -347,3 +347,133 @@ class OrganizerStateMachine(ContributorStateMachine):
 @register(EffortContribution)
 class EffortContributionStateMachine(ContributionStateMachine):
     pass
+
+
+@register(Team)
+class TeamStateMachine(ModelStateMachine):
+    new = State(
+        _('new'),
+        'new',
+        _('The team has yet to be accepted')
+    )
+    open = State(
+        _('open'),
+        'open',
+        _('The team is open for contributors')
+    )
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _('The team captain has withdrawn the team. Contributors can no longer register')
+    )
+
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The team is cancelled. Contributors can no longer register')
+    )
+
+    running = State(
+        _('running'),
+        'running',
+        _('The team is currently running the activity.')
+    )
+
+    finished = State(
+        _('finished'),
+        'finished',
+        _('The team has completed the activity.')
+    )
+
+    def is_team_captain(self, user):
+        return user == self.instance.owner
+
+    def is_activity_owner(self, user):
+        return (
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('Create'),
+        description=_('The team will be created.'),
+    )
+
+    accept = Transition(
+        new,
+        open,
+        name=_('Accept'),
+        description=_('The team will be accepted.'),
+    )
+
+    withdraw = Transition(
+        open,
+        withdrawn,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('cancel'),
+        description=_('The team captain has withdrawn. Contributors can no longer apply')
+    )
+
+    reapply = Transition(
+        withdrawn,
+        open,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('reopen'),
+        description=_('The team captain has reapplied. Contributors can apply again')
+    )
+
+    reset = Transition(
+        withdrawn,
+        open,
+        automatic=False,
+        permission=is_team_captain,
+        name=_('reset'),
+        description=_(
+            'The team captain has reset the team. All participants are removed, and the team start over fresh'
+        )
+    )
+
+    cancel = Transition(
+        [
+            open,
+            new
+        ],
+        cancelled,
+        automatic=False,
+        permission=is_activity_owner,
+        name=_('reject'),
+        description=_('The team is cancelled. Contributors can no longer apply')
+    )
+
+    reopen = Transition(
+        [cancelled, running, finished],
+        open,
+        automatic=False,
+        permission=is_activity_owner,
+        name=_('accept'),
+        description=_('The team is reopened. Contributors can apply again')
+    )
+
+    start = Transition(
+        [open, finished],
+        running,
+        name=_("Start"),
+        description=_(
+            "The slot is currently taking place."
+        )
+    )
+    finish = Transition(
+        [open, running],
+        finished,
+        name=_("Finish"),
+        description=_(
+            "The slot has ended. "
+            "Triggered when slot has ended."
+        )
+    )

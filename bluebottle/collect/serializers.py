@@ -89,6 +89,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         resource_name = 'activities/collects'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
+            'my_contributor.invite',
             'location',
             'collect_type'
             'goals',
@@ -101,7 +102,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
-
+            'my_contributor.invite': 'bluebottle.activities.utils.InviteSerializer',
         }
     )
 
@@ -169,11 +170,13 @@ class CollectContributorSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'activity',
+            'invite',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.collect.serializers.CollectActivitySerializer',
+        'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
 

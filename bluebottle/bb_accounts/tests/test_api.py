@@ -19,13 +19,16 @@ from django.utils.http import int_to_base36
 from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, UserSegment
+
+from bluebottle.segments.tests.factories import SegmentFactory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
 )
-from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
+
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory, LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase, JSONAPITestClient
 
 ASSERTION_MAPPING = {
@@ -350,6 +353,84 @@ class UserApiIntegrationTest(BluebottleTestCase):
             self.user_1.place
         )
 
+    def test_user_set_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+
+    def test_user_verify_segment(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+
+        segment = SegmentFactory.create()
+        self.user_1.segments.add(segment, through_defaults={'verified': False})
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'segments': [segment.pk],
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['segments'], [segment.pk]
+        )
+        self.assertEqual(self.user_1.segments.first(), segment)
+        self.assertTrue(UserSegment.objects.get(member=self.user_1, segment=segment).verified)
+
+    def test_user_verify_location(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+        MemberPlatformSettings.objects.update_or_create(
+            verify_office=True,
+        )
+
+        self.user_1.location = LocationFactory.create()
+        self.user_1.location_verified = False
+        self.user_1.save()
+
+        new_location = LocationFactory.create()
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        data = {
+            'location': new_location.pk
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['location'], new_location.pk
+        )
+
+        self.user_1.refresh_from_db()
+        self.assertEqual(self.user_1.location, new_location)
+        self.assertTrue(self.user_1.location_verified)
+
     def test_unauthenticated_user(self):
         """
         Test retrieving the currently logged in user while not logged in.
@@ -497,7 +578,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Setup: get the password reset token and url.
         token_regex = re.compile(
-            '/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
+            '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})',
             re.DOTALL)
         token_matches = token_regex.search(mail.outbox[0].body)
         reset_confirm_url = reverse('password-reset-confirm')

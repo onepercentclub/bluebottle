@@ -1,5 +1,3 @@
-import csv
-
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -25,6 +23,7 @@ from bluebottle.funding.serializers import (
     PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
+from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -33,6 +32,7 @@ from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
 )
+from bluebottle.utils.xlsx import generate_xlsx_response
 
 
 class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -291,31 +291,38 @@ class SupportersExportView(PrivateFileView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
-        ('created', 'Donor Date'),
-        ('amount_currency', 'Currency'),
+        ('created', 'Date'),
         ('amount', 'Amount'),
         ('reward__title', 'Reward'),
     )
 
     model = Funding
 
+    def get_segment_types(self):
+        return SegmentType.objects.all()
+
     def get(self, request, *args, **kwargs):
-        instance = self.get_object()
+        activity = self.get_object()
+        filename = 'participants for {}.xlsx'.format(activity.title)
 
-        response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename="supporters.csv"'
-        response['Content-Type'] = 'text/csv'
+        sheet = []
+        title_row = [field[1] for field in self.fields]
+        for segment_type in self.get_segment_types():
+            title_row.append(segment_type.name)
+        sheet.append(title_row)
 
-        writer = csv.writer(response)
-
-        writer.writerow([field[1] for field in self.fields])
-        for donation in instance.contributors.filter(
-            status='succeeded'
-        ).instance_of(
-            Donor
+        for t, donor in enumerate(
+            activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
         ):
-            writer.writerow([
-                prep_field(request, donation, field[0]) for field in self.fields
-            ])
+            row = [prep_field(request, donor, field[0]) for field in self.fields]
+            for segment_type in self.get_segment_types():
+                if donor.user:
+                    segments = ", ".join(
+                        donor.user.segments.filter(
+                            segment_type=segment_type
+                        ).values_list('name', flat=True)
+                    )
+                    row.append(segments)
+            sheet.append(row)
 
-        return response
+        return generate_xlsx_response(filename=filename, data=sheet)

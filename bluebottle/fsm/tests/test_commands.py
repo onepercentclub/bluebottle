@@ -25,7 +25,7 @@ class PrintTransitionsTestCase(BluebottleTestCase):
     def test_print_transitions_all_models_render(self):
         for model in settings.CONFLUENCE['dev_models']:
             data = eval(self.document_transitions(model['model']))
-            self.assertEqual(
+            self.assertEquals(
                 [key for key in data.keys()],
                 ['states', 'transitions', 'triggers', 'periodic_tasks']
             )

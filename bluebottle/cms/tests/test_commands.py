@@ -12,144 +12,139 @@ from bluebottle.utils.models import Language
 
 PAGE_DUMP = [
     {
-        u'model': u'HomePage',
-        u'data': [
+        'model': 'HomePage',
+        'data': [
             {
-                u'fields': {
-                    u'language_code': u'en',
-                    u'sort_order': 1,
-                    u'sub_title': None,
-                    u'title': None
+                'fields': {
+                    'language_code': 'en',
+                    'sort_order': 1,
+                    'sub_title': None,
+                    'title': None
                 },
-                u'model': u'SlidesContent',
-                u'app': u'cms',
-                u'items': []
+                'model': 'SlidesContent',
+                'app': 'cms',
+                'items': []
             }, {
-                u'fields': {
-                    u'action_text': u'Start your own project',
-                    u'title': None,
-                    u'action_link': u'/start-project',
-                    u'sub_title': None,
-                    u'sort_order': 2,
-                    u'language_code': u'en'
+                'fields': {
+                    'action_text': 'Start your own project',
+                    'title': None,
+                    'action_link': '/start-project',
+                    'sub_title': None,
+                    'sort_order': 2,
+                    'language_code': 'en'
                 },
-                u'model': u'StepsContent',
-                u'app': u'cms',
-                u'items': [
+                'model': 'StepsContent',
+                'app': 'cms',
+                'items': [
                     {
-                        u'model': u'Step',
-                        u'data': {
-                            u'text': u'Go!',
-                            u'image': u'',
-                            u'header': u'First',
-                            u'sequence': 1
+                        'model': 'Step',
+                        'data': {
+                            'text': 'Go!',
+                            'image': '',
+                            'header': 'First',
+                            'sequence': 1
                         },
-                        u'app': u'cms'
+                        'app': 'cms'
                     }, {
-                        u'model': u'Step',
-                        u'data': {
-                            u'text': u'Go!',
-                            u'image': u'',
-                            u'header': u'Second',
-                            u'sequence': 2
+                        'model': 'Step',
+                        'data': {
+                            'text': 'Go!',
+                            'image': '',
+                            'header': 'Second',
+                            'sequence': 2
                         },
-                        u'app': u'cms'
+                        'app': 'cms'
                     }, {
-                        u'model': u'Step',
-                        u'data': {
-                            u'text': u'Go!',
-                            u'image': u'',
-                            u'header': u'Third',
-                            u'sequence': 3
+                        'model': 'Step',
+                        'data': {
+                            'text': 'Go!',
+                            'image': '',
+                            'header': 'Third',
+                            'sequence': 3
                         },
-                        u'app': u'cms'
+                        'app': 'cms'
                     }
                 ]
             }
         ],
-        u'app': u'cms',
-        u'properties': {}
+        'app': 'cms',
+        'properties': {}
     }, {
-        u'model': u'Page',
-        u'data': [
+        'model': 'Page',
+        'data': [
             {
-                u'fields': {
-                    u'text': u'A really engaging text!',
-                    u'text_final': None,
-                    u'sort_order': 1,
-                    u'language_code': u'en'
+                'fields': {
+                    'text': 'A really engaging text!',
+                    'text_final': None,
+                    'sort_order': 1,
+                    'language_code': 'en'
                 },
-                u'model': u'TextItem',
-                u'app': u'text',
-                u'items': []
+                'model': 'TextItem',
+                'app': 'text',
+                'items': []
             }
         ],
-        u'app': u'pages',
-        u'properties': {
-            u'status': u'published',
-            u'language': u'en',
-            u'title': u'About this platform',
-            u'publication_date': '2020-01-01 00:00',
-            u'slug': u'about',
-            u'full_page': False
+        'app': 'pages',
+        'properties': {
+            'status': 'published',
+            'language': 'en',
+            'title': 'About this platform',
+            'publication_date': '2020-01-01 00:00',
+            'slug': 'about',
+            'full_page': False
         }
     }
 ]
 LINK_DUMP = [
     {
-        u'language': u'en',
-        u'groups': [{
-            u'title': u'Main',
-            u'name': u'main',
-            u'links': [
+        'language': 'en',
+        'groups': [{
+            'title': 'Main',
+            'name': 'main',
+            'links': [
                 {
-                    u'component_id': None,
-                    u'title': u'Start your initiative',
-                    u'component': u'initiatives.start',
-                    u'external_link': None,
-                    u'highlight': False,
-                    u'link_order': 1
+                    'title': 'Start your initiative',
+                    'link': '/initiatives/start',
+                    'open_in_new_tab': False,
+                    'highlight': False,
+                    'link_order': 1
                 }, {
-                    u'component_id': u'about',
-                    u'title': u'About this platform',
-                    u'component': u'pages',
-                    u'external_link': None,
-                    u'highlight': False,
-                    u'link_order': 2
+                    'title': 'About this platform',
+                    'link': '/pages/about',
+                    'open_in_new_tab': False,
+                    'highlight': False,
+                    'link_order': 2
                 },
                 {
-                    u'component_id': None,
-                    u'title': u'',
-                    u'component': None,
-                    u'external_link': u'https://example.com',
-                    u'highlight': False,
-                    u'link_order': 3
+                    'title': 'Example',
+                    'link': 'https://example.com',
+                    'open_in_new_tab': True,
+                    'highlight': False,
+                    'link_order': 3
                 }
             ],
-            u'group_order': 1
+            'group_order': 1
         }, {
-            u'title': u'Info',
-            u'name': u'info',
-            u'links': [
+            'title': 'Info',
+            'name': 'info',
+            'links': [
                 {
-                    u'component_id': u'story',
-                    u'title': u'Our story',
-                    u'component': u'pages',
-                    u'external_link': None,
-                    u'highlight': False,
-                    u'link_order': 4
+                    'title': 'Our story',
+                    'link': '/pages/story',
+                    'open_in_new_tab': False,
+                    'highlight': False,
+                    'link_order': 4
                 }, {
-                    u'component_id': u'how-it-works',
-                    u'title': u'How it works',
-                    u'component': u'pages',
-                    u'external_link': None,
-                    u'highlight': False,
-                    u'link_order': 5
+                    'title': 'How it works',
+                    'link': '/pages/how-it-works',
+                    'open_in_new_tab': False,
+                    'highlight': False,
+                    'link_order': 5
                 }
             ],
-            u'group_order': 2
+            'group_order': 2
         }],
-        u'has_copyright': True
+        'has_copyright': True
     }
 ]
 
@@ -243,18 +238,19 @@ class LinkDumpCommandsTestCase(BluebottleTestCase):
             site_links=sl
         )
         Link.objects.create(
-            component='initiatives.start',
+            link='/initiatives/start',
             title='Start your initiative',
             link_group=lg
         )
         Link.objects.create(
-            component='pages',
-            component_id='about',
+            link='/pages/about',
             title='About this platform',
             link_group=lg
         )
         Link.objects.create(
-            external_link='https://example.com',
+            title='Example',
+            link='https://example.com',
+            open_in_new_tab=True,
             link_group=lg
         )
 
@@ -264,14 +260,12 @@ class LinkDumpCommandsTestCase(BluebottleTestCase):
             site_links=sl
         )
         Link.objects.create(
-            component='pages',
-            component_id='story',
+            link='/pages/story',
             title='Our story',
             link_group=lg
         )
         Link.objects.create(
-            component='pages',
-            component_id='how-it-works',
+            link='/pages/how-it-works',
             title='How it works',
             link_group=lg
         )
@@ -279,7 +273,6 @@ class LinkDumpCommandsTestCase(BluebottleTestCase):
         call_command('dumplinks', '-f', 'test_links.json')
         with open("test_links.json", "r") as json_file:
             test_output = json.load(json_file)
-
         self.assertEqual(test_output, LINK_DUMP)
 
     def test_loadlinks(self):
@@ -294,4 +287,4 @@ class LinkDumpCommandsTestCase(BluebottleTestCase):
         self.assertEqual(groups[0].links.count(), 3)
         self.assertEqual(groups[1].links.count(), 2)
 
-        self.assertEqual(groups[0].links.first().component, 'initiatives.start')
+        self.assertEqual(groups[0].links.first().link, '/initiatives/start')

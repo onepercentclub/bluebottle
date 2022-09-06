@@ -14,9 +14,8 @@
 
     {% if duration %}
         {% include 'mails/messages/partial/period.html' %}
-    {% else %}
+    {% elif slots %}
         {% include 'mails/messages/partial/slots.html' %}
-
     {%  endif %}
 {% endblock %}
 

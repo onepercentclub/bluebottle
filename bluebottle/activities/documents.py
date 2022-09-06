@@ -146,6 +146,7 @@ class ActivityDocument(Document):
         locations = []
         if hasattr(instance, 'location') and instance.location:
             locations.append({
+                'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'city': instance.location.locality
             })
@@ -155,11 +156,11 @@ class ActivityDocument(Document):
                 'name': instance.office_location.name,
                 'city': instance.office_location.city,
             })
-        elif instance.initiative.place:
+        if instance.initiative.place:
             locations.append({
                 'id': instance.initiative.place.pk,
-                'name': instance.initiative.place.name,
-                'city': instance.initiative.place.city,
+                'name': instance.initiative.place.formatted_address,
+                'city': instance.initiative.place.locality,
             })
         return locations
 

@@ -877,26 +877,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(initiative.pk))
 
-    def test_filter_location(self):
-        location = LocationFactory.create()
-        initiative = InitiativeFactory.create(status='approved')
-        DateActivityFactory.create(
-            initiative=initiative,
-            office_location=location,
-            status='open'
-        )
-        InitiativeFactory.create(status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[location.id]={}'.format(location.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
-
     def test_filter_not_owner(self):
         """
         Non-owner should only see approved initiatives
@@ -988,30 +968,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['id'], str(first.pk))
-
-    def test_search_location(self):
-        location = LocationFactory.create(name='nameofoffice')
-        first = InitiativeFactory.create(status='approved')
-        second = InitiativeFactory.create(status='approved', title='nameofoffice')
-
-        DateActivityFactory.create(
-            initiative=first,
-            office_location=location,
-            status='open'
-        )
-
-        InitiativeFactory.create(status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[search]=nameofoffice',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

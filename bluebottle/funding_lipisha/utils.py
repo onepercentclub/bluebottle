@@ -265,6 +265,8 @@ def generate_payout_account(
         transaction_account_swift_code=swift_code,
         transaction_account_manager=credentials['prefix']
     )
+    if data['status']['status'] == 'FAIL':
+        raise PaymentException(data['status']['status_description'])
     return data['content']['transaction_account_number']
 
 
@@ -276,4 +278,6 @@ def generate_mpesa_account(name):
         transaction_account_name=name,
         transaction_account_manager=credentials['prefix']
     )
+    if data['status']['status'] == 'FAIL':
+        raise PaymentException(data['status']['status_description'])
     return data['content']['transaction_account_number']

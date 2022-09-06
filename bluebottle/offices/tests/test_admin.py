@@ -1,15 +1,16 @@
 from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
+from bluebottle.activities.admin import ActivityAdmin
+from bluebottle.activities.models import Activity
 from bluebottle.geo.admin import LocationAdmin
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.admin import InitiativeAdmin
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from build.lib.bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class MockRequest(object):
@@ -57,69 +58,63 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.location_admin = LocationAdmin(Location, self.site)
         self.subregion_admin = OfficeSubRegionAdmin(OfficeSubRegion, self.site)
         self.region_admin = OfficeRegionAdmin(OfficeRegion, self.site)
-        self.initiative_admin = InitiativeAdmin(Initiative, self.site)
-        self.initiatives_url = reverse('admin:initiatives_initiative_changelist')
+        self.activity_admin = ActivityAdmin(Activity, self.site)
         self.activities_url = reverse('admin:activities_activity_changelist')
         self.dateactivities_url = reverse('admin:time_based_dateactivity_changelist')
-        InitiativeFactory.create(location=self.location1)
-        InitiativeFactory.create_batch(3, location=self.location2)
-        InitiativeFactory.create_batch(2, location=self.location3)
-        InitiativeFactory.create_batch(4, location=self.location4)
-        InitiativeFactory.create_batch(8, location=self.location5)
+        DateActivityFactory.create(office_location=self.location1)
+        DateActivityFactory.create_batch(3, office_location=self.location2)
+        DateActivityFactory.create_batch(2, office_location=self.location3)
+        DateActivityFactory.create_batch(4, office_location=self.location4)
+        DateActivityFactory.create_batch(8, office_location=self.location5)
 
-    def test_initiatives_link(self):
-        initiatives_link = self.location_admin.initiatives(self.location1)
-        self.assertTrue('>1<' in initiatives_link)
-        self.assertTrue(
-            '/en/admin/initiatives/initiative/?location__id__exact={}'.format(
-                self.location1.id
-            ) in initiatives_link
+    def test_activities_link(self):
+        activities_link = self.location_admin.activities(self.location1)
+        self.assertEqual(
+            f'<a href="/en/admin/activities/activity/?'
+            f'office_location__id__exact={self.location1.id}">1</a>',
+            activities_link
         )
 
-        initiatives_link = self.location_admin.initiatives(self.location5)
-        self.assertTrue('>8<' in initiatives_link)
-        self.assertTrue(
-            '/en/admin/initiatives/initiative/?location__id__exact={}'.format(
-                self.location5.id
-            ) in initiatives_link
+        activities_link = self.location_admin.activities(self.location5)
+        self.assertEqual(
+            f'<a href="/en/admin/activities/activity/?'
+            f'office_location__id__exact={self.location5.id}">8</a>',
+            activities_link
         )
 
-    def test_initiatives_link_regions_enabled(self):
+    def test_activities_link_regions_enabled(self):
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
-        initiatives_link = self.region_admin.initiatives(self.europe)
-        self.assertTrue('>10<' in initiatives_link)
-        self.assertTrue(
-            '/en/admin/initiatives/initiative/?location__subregion__region__id__exact={}'.format(
-                self.europe.id
-            ) in initiatives_link
+        activities_link = self.region_admin.activities(self.europe)
+        self.assertEqual(
+            f'<a href="/en/admin/activities/activity/?'
+            f'office_location__subregion__region__id__exact={self.europe.id}">10</a>',
+            activities_link
         )
 
-        initiatives_link = self.region_admin.initiatives(self.africa)
-        self.assertTrue('>8<' in initiatives_link)
-        self.assertTrue(
-            '/en/admin/initiatives/initiative/?location__subregion__region__id__exact={}'.format(
-                self.africa.id
-            ) in initiatives_link
+        activities_link = self.region_admin.activities(self.africa)
+        self.assertEqual(
+            f'<a href="/en/admin/activities/activity/?'
+            f'office_location__subregion__region__id__exact={self.africa.id}">8</a>',
+            activities_link
         )
 
     def test_office_filters(self):
         request = MockRequest()
-        filters = self.initiative_admin.get_list_filter(request)
-        self.assertTrue('location' in filters)
-        self.assertFalse('location__subregion_exact_id' in filters)
-        self.assertFalse('location__subregion__region_exact_id' in filters)
+        filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue('office_location' in filters)
+        self.assertFalse('office_location__subregion_exact_id' in filters)
+        self.assertFalse('office_location__subregion__region_exact_id' in filters)
 
     def test_office_filters_regions_enabled(self):
-        self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         request = MockRequest()
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
-        filters = self.initiative_admin.get_list_filter(request)
-        self.assertTrue('location__subregion' in filters)
-        self.assertTrue('location__subregion__region' in filters)
+        filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue('office_location__subregion' in filters)
+        self.assertTrue('office_location__subregion__region' in filters)
 
     def test_office_admin(self):
         self.client.force_login(self.superuser)
@@ -143,65 +138,20 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertContains(response, 'By office group')
         self.assertContains(response, 'By office region')
         response = self.client.get(self.activities_url, {
-            'initiative__location__subregion__region__id__exact': self.location1.subregion.region.id,
-            'initiative__location__subregion__id__exact': self.location1.subregion.id,
-            'initiative__location__id__exact': self.location1.id,
-        })
-        self.assertEqual(response.status_code, 200)
-
-    def test_initiative_admin_region_filters(self):
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.initiatives_url, {
-            'location__subregion__region__id__exact': self.location1.subregion.region.id,
-            'location__subregion__id__exact': self.location1.subregion.id,
-            'location__id__exact': self.location1.id,
+            'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
+            'office_location__subregion__id__exact': self.location1.subregion.id,
+            'office_location__id__exact': self.location1.id,
         })
         self.assertEqual(response.status_code, 200)
 
     def test_dateactivity_admin_region_filters(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.dateactivities_url, {
-            'initiative__location__subregion__region__id__exact': self.location1.subregion.region.id,
-            'initiative__location__subregion__id__exact': self.location1.subregion.id,
-            'initiative__location__id__exact': self.location1.id,
+            'office_location__subregion__region__id__exact': self.location1.subregion.region.id,
+            'office_location__subregion__id__exact': self.location1.subregion.id,
+            'office_location__id__exact': self.location1.id,
         })
         self.assertEqual(response.status_code, 200)
-
-    def test_dashboards_office_admin(self):
-        initiative_settings = InitiativePlatformSettings.objects.get()
-        initiative_settings.enable_office_regions = True
-        initiative_settings.save()
-        self.superuser.location = self.location3
-        self.superuser.save()
-        self.client.force_login(self.superuser)
-        url = reverse('admin:index')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Recently submitted initiatives for my office:')
-        self.assertContains(response, 'Recently submitted initiatives for my office region:')
-        self.assertContains(response, 'Recently submitted initiatives for my office group:')
-
-        initiative_settings = InitiativePlatformSettings.objects.get()
-        initiative_settings.enable_office_regions = False
-        initiative_settings.save()
-
-    def test_dashboards_initiative_admin(self):
-        initiative_settings = InitiativePlatformSettings.objects.get()
-        initiative_settings.enable_office_regions = True
-        initiative_settings.save()
-        self.superuser.location = self.location3
-        self.superuser.save()
-        self.client.force_login(self.superuser)
-        url = reverse('admin:app_list', args=('initiatives',))
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Recently submitted initiatives for my office:')
-        self.assertContains(response, 'Recently submitted initiatives for my office region:')
-        self.assertContains(response, 'Recently submitted initiatives for my office group:')
-
-        initiative_settings = InitiativePlatformSettings.objects.get()
-        initiative_settings.enable_office_regions = False
-        initiative_settings.save()
 
     def test_office_menu_for_staff(self):
         url = reverse('admin:index')

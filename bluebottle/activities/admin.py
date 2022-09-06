@@ -277,9 +277,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def lookup_allowed(self, key, value):
         if key in [
-            'initiative__location__id__exact',
-            'initiative__location__subregion__id__exact',
-            'initiative__location__subregion__region__id__exact',
+            'office_location__id__exact',
+            'office_location__subregion__id__exact',
+            'office_location__subregion__region__id__exact',
         ]:
             return True
         return super(ActivityChildAdmin, self).lookup_allowed(key, value)

@@ -238,8 +238,8 @@ class SegmentDetailAPITestCase(APITestCase):
 
         funding = FundingFactory.create(
             initiative=initiative,
-            deadline=now() - datetime.timedelta(weeks=1),
-            status='succeeded'
+            deadline=now() + datetime.timedelta(weeks=1),
+            status='open'
         )
         funding.segments.set([self.model])
         for donor in DonorFactory.create_batch(3, activity=funding, user=None, amount=Money(10, 'USD')):
@@ -249,9 +249,9 @@ class SegmentDetailAPITestCase(APITestCase):
 
         deed_activity = DeedFactory.create(
             initiative=initiative,
-            status='succeeded',
+            status='open',
             start=datetime.date.today() - datetime.timedelta(days=10),
-            end=datetime.date.today() - datetime.timedelta(days=5)
+            end=datetime.date.today() + datetime.timedelta(days=5)
         )
         deed_activity.segments.set([self.model])
 
@@ -262,8 +262,8 @@ class SegmentDetailAPITestCase(APITestCase):
 
         collect_activity = CollectActivityFactory.create(
             initiative=initiative,
-            status='succeeded',
-            start=datetime.date.today() - datetime.timedelta(weeks=2),
+            status='open',
+            start=datetime.date.today() + datetime.timedelta(weeks=2),
         )
         collect_activity.segments.set([self.model])
         collect_activity.realized = 100
@@ -272,9 +272,9 @@ class SegmentDetailAPITestCase(APITestCase):
 
         unrelated_activity = PeriodActivityFactory.create(
             initiative=initiative,
-            status='succeeded',
+            status='open',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
-            deadline=datetime.date.today() - datetime.timedelta(weeks=1),
+            deadline=datetime.date.today() + datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
         PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
@@ -285,7 +285,7 @@ class SegmentDetailAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.json()['data']['meta']['activities-count'], 5)
+        self.assertEqual(response.json()['data']['meta']['activities-count'], 4)
         self.assertEqual(response.json()['data']['meta']['initiatives-count'], 1)
 
         stats = response.json()['data']['meta']['stats']

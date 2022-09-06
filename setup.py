@@ -85,7 +85,7 @@ install_requires = [
     'html5lib==1.0b10',
     'icalendar==4.0.4',
     'influxdb==4.1.1',
-    'lipisha==0.2.4',
+    'lipisha==0.3.0',
     'lxml==4.6.3',
     'micawber==0.5.2',
     'mixpanel==4.3.2',

@@ -1,6 +1,5 @@
-from bluebottle.activities.triggers import ActivityTriggers
 from bluebottle.fsm.triggers import (
-    TransitionTrigger, register
+    TransitionTrigger, register, TriggerManager
 )
 from bluebottle.funding_lipisha.effects import GenerateLipishaAccountsEffect
 from bluebottle.funding_lipisha.models import LipishaBankAccount
@@ -8,8 +7,8 @@ from bluebottle.funding_lipisha.states import LipishaBankAccountStateMachine
 
 
 @register(LipishaBankAccount)
-class LipishaBankAccountTriggers(ActivityTriggers):
-    triggers = ActivityTriggers.triggers + [
+class LipishaBankAccountTriggers(TriggerManager):
+    triggers = [
 
         TransitionTrigger(
             LipishaBankAccountStateMachine.verify,

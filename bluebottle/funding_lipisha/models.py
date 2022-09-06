@@ -104,5 +104,8 @@ class LipishaBankAccount(BankAccount):
             'account': self.mpesa_code
         }
 
+    def __str__(self):
+        return "Lipisha Bankaccount {}".format(self.account_name)
+
 
 from .states import *  # noqa

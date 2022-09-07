@@ -3,8 +3,8 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 
 
@@ -21,11 +21,11 @@ class OfficeInline(admin.TabularInline):
 
 @admin.register(OfficeSubRegion)
 class OfficeSubRegionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'region', 'offices', 'initiatives')
+    list_display = ('name', 'region', 'offices', 'activities')
     model = OfficeSubRegion
     search_fields = ('name', 'description')
     raw_id_fields = ('region',)
-    readonly_fields = ('offices', 'initiatives')
+    readonly_fields = ('offices', 'activities')
     list_filter = ('region',)
 
     inlines = [OfficeInline]
@@ -38,15 +38,15 @@ class OfficeSubRegionAdmin(admin.ModelAdmin):
             len(Location.objects.filter(subregion=obj))
         )
 
-    def initiatives(self, obj):
+    def activities(self, obj):
         return format_html(
-            u'<a href="{}?location__subregion__id__exact={}">{}</a>',
-            reverse('admin:initiatives_initiative_changelist'),
+            u'<a href="{}?office_location__subregion__id__exact={}">{}</a>',
+            reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Initiative.objects.filter(location__subregion=obj))
+            len(Activity.objects.filter(office_location__subregion=obj))
         )
 
-    fields = ('name', 'description', 'region', 'offices', 'initiatives')
+    fields = ('name', 'description', 'region', 'offices', 'activities')
 
 
 class OfficeSubRegionInline(admin.TabularInline):
@@ -62,10 +62,10 @@ class OfficeSubRegionInline(admin.TabularInline):
 
 @admin.register(OfficeRegion)
 class OfficeRegionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'subregions_link', 'offices', 'initiatives')
+    list_display = ('name', 'subregions_link', 'offices', 'activities')
     model = OfficeRegion
     search_fields = ('name', 'description')
-    readonly_fields = ('offices', 'subregions_link', 'initiatives')
+    readonly_fields = ('offices', 'subregions_link', 'activities')
     inlines = [OfficeSubRegionInline]
 
     def subregions_link(self, obj):
@@ -85,12 +85,12 @@ class OfficeRegionAdmin(admin.ModelAdmin):
             len(Location.objects.filter(subregion__region=obj))
         )
 
-    def initiatives(self, obj):
+    def activities(self, obj):
         return format_html(
-            u'<a href="{}?location__subregion__region__id__exact={}">{}</a>',
-            reverse('admin:initiatives_initiative_changelist'),
+            u'<a href="{}?office_location__subregion__region__id__exact={}">{}</a>',
+            reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Initiative.objects.filter(location__subregion__region=obj))
+            len(Activity.objects.filter(office_location__subregion__region=obj))
         )
 
-    fields = ('name', 'description', 'subregions_link', 'offices', 'initiatives')
+    fields = ('name', 'description', 'subregions_link', 'offices', 'activities')

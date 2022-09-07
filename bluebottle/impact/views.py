@@ -11,7 +11,7 @@ from bluebottle.utils.views import (
     JsonApiViewMixin,
     ListAPIView,
     CreateAPIView,
-    RetrieveUpdateDestroyAPIView
+    RetrieveUpdateDestroyAPIView, RetrieveAPIView
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 
@@ -25,6 +25,15 @@ class ImpactTypePagination(PageNumberPagination):
 
 
 class ImpactTypeList(JsonApiViewMixin, ListAPIView):
+    queryset = ImpactType.objects.filter(active=True)
+
+    permission_classes = [TenantConditionalOpenClose, ]
+    serializer_class = ImpactTypeSerializer
+    pagination_class = ImpactTypePagination
+    filter_backends = (ImpactTypeSearchFilter, )
+
+
+class ImpactTypeDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = ImpactType.objects.filter(active=True)
 
     permission_classes = [TenantConditionalOpenClose, ]

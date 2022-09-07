@@ -3,7 +3,6 @@ from django.test import TestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationContactFactory
-from bluebottle.test.factory_models.geo import LocationFactory
 
 
 class InitiativeTestCase(TestCase):
@@ -101,13 +100,3 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(
             initiative.slug, 'new'
         )
-
-    def test_location_not_required(self):
-        LocationFactory.create()
-        initiative = InitiativeFactory(is_global=True, location=None)
-        self.assertFalse('location' in initiative.required_fields)
-
-    def test_location_required(self):
-        LocationFactory.create()
-        initiative = InitiativeFactory(is_global=False, location=None)
-        self.assertTrue('location' in initiative.required_fields)

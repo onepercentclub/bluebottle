@@ -51,8 +51,6 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     office_location = models.ForeignKey(
         'geo.Location', verbose_name=_('office'),
-        help_text=_("Office is set on activity level because the "
-                    "initiative is set to 'global' or no initiative has been specified."),
         null=True, blank=True, on_delete=models.SET_NULL)
 
     title = models.CharField(_('Title'), max_length=255)

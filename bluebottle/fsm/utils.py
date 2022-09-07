@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 
+from bluebottle.activities.models import Team
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import DeedParticipant, Deed
 from django.core.exceptions import FieldDoesNotExist
@@ -13,7 +14,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution, DateActivitySlot, SlotParticipant
+    TimeContribution, DateActivitySlot, SlotParticipant, TeamSlot
 
 
 def get_doc(element):
@@ -95,6 +96,12 @@ def setup_instance(model):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
         instance.participant = DateParticipant(activity=activity)
+
+    if isinstance(instance, Team):
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, TeamSlot):
+        instance.team = Team()
 
     if isinstance(instance, TimeContribution):
         contributor = PeriodParticipant()

@@ -62,7 +62,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
                 'name': slot.location.formatted_address,
                 'locality': slot.location.locality,
                 'country_code': slot.location.country.alpha2_code,
-                'country': slot.location.country.country
+                'country': slot.location.country.name
             }
             for slot in instance.slots.all()
             if not slot.is_online and slot.location

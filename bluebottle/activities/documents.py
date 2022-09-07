@@ -6,6 +6,9 @@ from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
 from elasticsearch_dsl.field import DateRange
+from bluebottle.members.models import Member
+
+from bluebottle.initiatives.models import Initiative, Theme
 
 
 class DateRangeField(fields.DEDField, DateRange):
@@ -110,7 +113,20 @@ class ActivityDocument(Document):
     duration = DateRangeField()
     activity_date = fields.DateField()
 
+    def get_instances_from_related(self, related_instance):
+        model = self.Django.model
+
+        if isinstance(related_instance, Initiative):
+            return model.objects.filter(initiative=related_instance)
+        if isinstance(related_instance, Theme):
+            return model.objects.filter(initiative__theme=related_instance)
+        if isinstance(related_instance, Theme.translations.field.model):
+            return model.objects.filter(initiative__theme=related_instance.master)
+        if isinstance(related_instance, Member):
+            return model.objects.filter(owner=related_instance)
+
     class Django:
+        related_models = (Initiative, Theme, Theme.translations.field.model, Member)
         model = Activity
 
     date_field = None
@@ -174,45 +190,37 @@ class ActivityDocument(Document):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
-            if instance.location.country:
-                locations.append({
-                    'name': instance.location.formatted_address,
-                    'city': instance.location.locality,
-                    'country_code': instance.location.country.alpha2_code,
-                    'country': instance.location.country.name
-                })
-            else:
-                locations.append({
-                    'name': instance.location.formatted_address,
-                    'city': instance.location.locality,
-                })
+            locations.append({
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+            })
         if hasattr(instance, 'office_location') and instance.office_location:
-            location = {
-                'id': instance.office_location.pk,
+            locations.append({
                 'name': instance.office_location.name,
-                'city': instance.office_location.city,
-            }
-
-            if instance.office_location.country:
-                location['country_code'] = instance.office_location.country.alpha2_code,
-                location['country'] = instance.office_location.country.name
-            locations.append(location)
+                'locality': instance.office_location.city,
+                'country_code': instance.office_location.country.alpha2_code,
+                'country': instance.office_location.country.name,
+                'type': 'office'
+            })
 
         elif instance.initiative.location:
-            if instance.initiative.location.country:
-                locations.append({
-                    'id': instance.initiative.location.pk,
-                    'name': instance.initiative.location.name,
-                    'city': instance.initiative.location.city,
-                    'country_code': instance.initiative.location.country.alpha2_code,
-                    'country': instance.initiative.location.country.name
-                })
-            else:
-                locations.append({
-                    'id': instance.initiative.location.pk,
-                    'name': instance.initiative.location.name,
-                    'city': instance.initiative.location.city,
-                })
+            locations.append({
+                'name': instance.office_location.name,
+                'locality': instance.initiative.location.city,
+                'country_code': instance.initiative.location.country.alpha2_code,
+                'country': instance.initiative.location.country.name,
+                'type': 'initiative_office'
+            })
+        elif instance.initiative.place:
+            locations.append({
+                'locality': instance.initiative.place.locality,
+                'country_code': instance.initiative.place.country.alpha2_code,
+                'country': instance.initiative.place.country.name,
+                'type': 'impact_location'
+            })
         return locations
 
     def prepare_expertise(self, instance):

@@ -63,16 +63,31 @@ class ActivityPreviewSerializer(ModelSerializer):
     initiative = serializers.CharField(source='initiative.title')
 
     image = serializers.SerializerMethodField()
-    matching_options = serializers.SerializerMethodField()
+    matching_properties = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
-    location_info = serializers.SerializerMethodField()
-    date_info = serializers.SerializerMethodField()
+
+    slot_count = serializers.SerializerMethodField()
+    is_online = serializers.SerializerMethodField()
+    has_multiple_locations = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+
     type = serializers.SerializerMethodField()
 
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
-    start = serializers.CharField()
-    deadline = serializers.CharField(source='end')
+    amount_matching = MoneySerializer(read_only=True)
+    start = serializers.SerializerMethodField()
+    end = serializers.SerializerMethodField()
+
+    collect_type = serializers.SerializerMethodField()
+
+    def get_start(self, obj):
+        if obj.start and len(obj.start) == 1:
+            return obj.start[0]
+
+    def get_end(self, obj):
+        if obj.end and len(obj.end) == 1:
+            return obj.end[0]
 
     def get_expertise(self, obj):
         try:
@@ -80,6 +95,16 @@ class ActivityPreviewSerializer(ModelSerializer):
                 expertise.name
                 for expertise in obj.expertise or []
                 if expertise.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
+
+    def get_collect_type(self, obj):
+        try:
+            return [
+                collect_type.name
+                for collect_type in getattr(obj, 'collect_type', [])
+                if collect_type.language == get_current_language()
             ][0]
         except IndexError:
             pass
@@ -98,10 +123,17 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace('activity', '')
 
     def get_location(self, obj):
-        if obj.location:
-            location = obj.location[0]
-            if location.city:
-                return f'{location.city}, {location.country_code}'
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+            if len(slots) == 1:
+                location = slots[0]
+        else:
+            order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
+            location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
+
+        if location:
+            if location.locality:
+                return f'{location.locality}, {location.country_code}'
             else:
                 return location.country
 
@@ -115,7 +147,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
             return f'{url}?_={hash}'
 
-    def get_matching_options(self, obj):
+    def get_matching_properties(self, obj):
         user = self.context['request'].user
         matching = {'skill': False, 'theme': False, 'location': False}
 
@@ -183,41 +215,35 @@ class ActivityPreviewSerializer(ModelSerializer):
             )
         ]
 
-    def get_location_info(self, obj):
-        info = {}
+    def get_slot_count(self, obj):
+        return len(self.get_filtered_slots(obj))
 
+    def get_is_online(self, obj):
         if obj.slots:
-            slots = self.get_filtered_slots(obj)
+            return all(slot.is_online for slot in self.get_filtered_slots(obj))
+        else:
+            return obj.is_online
 
-            info['is_online'] = all(slot.is_online for slot in slots)
+    def get_has_multiple_locations(self, obj):
+        return len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) > 1
 
-            locations = set(
-                (slot.locality, slot.country, slot.formatted_address)
-                for slot in slots
-            )
+    def get_is_full(self, obj):
+        slots = self.get_filtered_slots(obj)
 
-            if len(locations) > 1:
-                info['has_multiple'] = True
-            else:
-                location = tuple(locations)[0]
-                info['location'] = {
-                    'locality': location[0],
-                    'country': {'code': location[1]},
-                    'formattedAddress': location[2],
-                }
-
-        return info
-
-    def get_date_info(self, obj):
-        return {}
+        if len(slots):
+            return all(slot.status != 'open' for slot in slots)
+        else:
+            return obj.status != 'open'
 
     class Meta(object):
         model = Activity
         fields = (
             'id', 'slug', 'type', 'title', 'theme', 'expertise',
-            'initiative', 'image', 'matching_options', 'target',
-            'amount_raised', 'deadline', 'start', 'date_info', 'location_info',
-            'status', 'location'
+            'initiative', 'image', 'matching_properties', 'target',
+            'amount_raised', 'target', 'amount_matching', 'end', 'start',
+            'status', 'location', 'team_activity',
+            'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
+            'collect_type'
         )
 
     class JSONAPIMeta:

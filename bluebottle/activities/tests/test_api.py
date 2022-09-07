@@ -18,7 +18,7 @@ from rest_framework import status
 from bluebottle.files.tests.factories import ImageFactory
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
@@ -65,6 +65,183 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.assertTrue(
                 re.match('^/api/activities/\d+/image/600x337', activity['attributes']['image'])
             )
+
+    def test_deed_preview(self):
+        activity = DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], True)
+        self.assertEqual(attributes['is-full'], None)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+
+    def test_date_preview(self):
+        activity = DateActivityFactory.create(status='open')
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+        location = activity.slots.first().location
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
+    def test_date_preview_multiple_slots(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(3, activity=activity)
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(attributes['has-multiple-locations'], True)
+        self.assertIsNone(attributes['location'])
+
+    def test_date_preview_multiple_slots_filtered(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
+        DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=14))
+        DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
+
+        start = now()
+        end = start + timedelta(days=8)
+        response = self.client.get(
+            self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
+                start.year, start.month, start.day,
+                end.year, end.month, end.day),
+        )
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+        self.assertEqual(attributes['is-online'], False)
+
+        location = current_slot.location
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
+    def test_date_preview_all_full(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(3, activity=activity, status='full')
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['is-full'], True)
+
+    def test_date_preview_is_online(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create_batch(
+            3, activity=activity, location=None, is_online=True, status='full'
+        )
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['is-online'], True)
+
+    def test_period_preview(self):
+        activity = PeriodActivityFactory.create(status='open', is_online=False)
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+
+        location = activity.location
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
+    def test_funding_preview(self):
+        activity = FundingFactory.create(status='open')
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], None)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], None)
+        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+
+        location = activity.initiative.place
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
+    def test_collect_preview(self):
+        activity = CollectActivityFactory.create(status='open')
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], None)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], None)
+        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+        self.assertEqual(attributes['collect-type'], activity.collect_type.name)
+
+        location = activity.location
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
+    def test_collect_preview_dutch(self):
+        activity = CollectActivityFactory.create(status='open')
+        theme_translation = activity.initiative.theme.translations.create(
+            name='Thema 1', language_code='nl'
+        )
+
+        collect_type_translation = activity.collect_type.translations.create(
+            name='Type naam', language_code='nl'
+        )
+        response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['theme'], theme_translation.name)
+        self.assertEqual(attributes['collect-type'], collect_type_translation.name)
 
     def test_no_filter(self):
         succeeded = DateActivityFactory.create(

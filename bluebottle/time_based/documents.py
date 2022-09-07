@@ -2,8 +2,6 @@ from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl import fields
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import Member
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
 )
@@ -32,22 +30,24 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),
         'formatted_address': fields.KeywordField(attr='location.formatted_address'),
-        'country': fields.KeywordField(attr='location.country.alpha2_code'),
+        'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
+        'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
     })
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return DateActivity.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Member):
-            return DateActivity.objects.filter(owner=related_instance)
+        result = super().get_instances_from_related(related_instance)
+
+        if result is not None:
+            return result
+
         if isinstance(related_instance, DateParticipant):
             return DateActivity.objects.filter(contributors=related_instance)
         if isinstance(related_instance, DateActivitySlot):
             return related_instance.activity
 
     class Django:
-        related_models = (Initiative, Member, DateParticipant, DateActivitySlot)
+        related_models = ActivityDocument.Django.related_models + (DateParticipant, DateActivitySlot)
         model = DateActivity
 
     def get_queryset(self):
@@ -60,7 +60,9 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         locations += [
             {
                 'name': slot.location.formatted_address,
-                'city': slot.location.locality
+                'locality': slot.location.locality,
+                'country_code': slot.location.country.alpha2_code,
+                'country': slot.location.country.country
             }
             for slot in instance.slots.all()
             if not slot.is_online and slot.location
@@ -106,15 +108,16 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return PeriodActivity.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Member):
-            return PeriodActivity.objects.filter(owner=related_instance)
+        result = super().get_instances_from_related(related_instance)
+
+        if result is not None:
+            return result
+
         if isinstance(related_instance, PeriodParticipant):
             return PeriodActivity.objects.filter(contributors=related_instance)
 
     class Django:
-        related_models = (Initiative, Member, PeriodParticipant)
+        related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
         model = PeriodActivity
 
     def prepare_country(self, instance):
@@ -128,8 +131,11 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             position = instance.location.position
             return {'lat': position.y, 'lon': position.x}
 
+    def prepare_start(self, instance):
+        return [instance.start]
+
     def prepare_end(self, instance):
-        return instance.deadline
+        return [instance.deadline]
 
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:

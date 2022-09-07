@@ -11,3 +11,9 @@
 {% block action %}
     <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
 {% endblock %}`
+
+{% block end_message %}
+    {% blocktrans %}
+        Go to <a href="{{ opt_out_link }}">your profile</a> to opt-out.
+    {% endblocktrans %}
+{% endblock %}

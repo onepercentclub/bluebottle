@@ -199,6 +199,7 @@ class ActivityDocument(Document):
             })
         if hasattr(instance, 'office_location') and instance.office_location:
             locations.append({
+                'id': instance.office_location.pk,
                 'name': instance.office_location.name,
                 'locality': instance.office_location.city,
                 'country_code': instance.office_location.country.alpha2_code,
@@ -208,6 +209,7 @@ class ActivityDocument(Document):
 
         elif instance.initiative.location:
             locations.append({
+                'id': instance.initiative.location.pk,
                 'name': instance.initiative.location.name,
                 'locality': instance.initiative.location.city,
                 'country_code': (

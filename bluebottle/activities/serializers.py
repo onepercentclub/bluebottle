@@ -217,7 +217,8 @@ class ActivityPreviewSerializer(ModelSerializer):
         ]
 
     def get_slot_count(self, obj):
-        return len(self.get_filtered_slots(obj))
+        if obj.slots:
+            return len(self.get_filtered_slots(obj))
 
     def get_is_online(self, obj):
         if obj.slots:
@@ -233,7 +234,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         if len(slots):
             return all(slot.status != 'open' for slot in slots)
-        else:
+        elif obj.type == 'period':
             return obj.status != 'open'
 
     class Meta(object):

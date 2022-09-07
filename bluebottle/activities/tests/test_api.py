@@ -76,7 +76,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], True)
+        self.assertEqual(attributes['is-online'], None)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
 
@@ -199,10 +199,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
-        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
 
         location = activity.location
@@ -244,10 +244,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], None)
-        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], None)
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
 
         location = activity.initiative.place
@@ -266,10 +266,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], None)
-        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], None)
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
         self.assertEqual(attributes['collect-type'], activity.collect_type.name)
 
@@ -280,12 +280,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
-        theme_translation = activity.initiative.theme.translations.create(
-            name='Thema 1', language_code='nl'
+        theme_translation = activity.initiative.theme.translations.get(
+            language_code='nl'
         )
 
-        collect_type_translation = activity.collect_type.translations.create(
-            name='Type naam', language_code='nl'
+        collect_type_translation = activity.collect_type.translations.get(
+            language_code='nl'
         )
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']

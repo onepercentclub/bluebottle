@@ -147,6 +147,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
+    year = serializers.IntegerField()
     count = serializers.SerializerMethodField()
 
     def get_count(self, obj):
@@ -154,7 +155,7 @@ class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'count')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'count')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -268,7 +269,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', 'link', 'external')
 
 
 class StepsContentSerializer(serializers.ModelSerializer):

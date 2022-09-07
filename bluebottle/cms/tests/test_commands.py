@@ -42,6 +42,8 @@ PAGE_DUMP = [
                             'text': 'Go!',
                             'image': '',
                             'header': 'First',
+                            'link': None,
+                            'external': False,
                             'sequence': 1
                         },
                         'app': 'cms'
@@ -51,6 +53,8 @@ PAGE_DUMP = [
                             'text': 'Go!',
                             'image': '',
                             'header': 'Second',
+                            'link': None,
+                            'external': False,
                             'sequence': 2
                         },
                         'app': 'cms'
@@ -60,6 +64,8 @@ PAGE_DUMP = [
                             'text': 'Go!',
                             'image': '',
                             'header': 'Third',
+                            'link': None,
+                            'external': False,
                             'sequence': 3
                         },
                         'app': 'cms'

@@ -1,0 +1,12 @@
+{% load i18n %}
+<h3>{% trans "Generate Lipisha Accounts" %}</h3>
+
+<p>
+    {% trans "Generate Lipisha accounts for" %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other campaigns 
+        {% endblocktrans %}
+    {% endif %} 
+</p>

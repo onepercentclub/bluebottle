@@ -218,6 +218,7 @@ class QuotesContent(TitledContent):
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -234,6 +235,7 @@ class StatsContent(TitledContent):
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
+    year = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('Statistics')
@@ -404,6 +406,10 @@ class Step(SortableMixin, models.Model):
     )
     header = models.CharField(_("Header"), max_length=100)
     text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
+    link = models.CharField(_("Link"), max_length=100, blank=True, null=True)
+    external = models.BooleanField(_("Open in new tab"), default=False, blank=False,
+                                   help_text=_('Open the link in a new browser tab'))
+
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

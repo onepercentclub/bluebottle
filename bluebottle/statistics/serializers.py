@@ -1,5 +1,8 @@
+import datetime
 from builtins import str
 from builtins import object
+
+from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -8,11 +11,21 @@ from bluebottle.statistics.models import (
 )
 
 
+tz = get_current_timezone()
+
+
 class BaseStatisticSerializer(ModelSerializer):
     value = serializers.SerializerMethodField()
 
     def get_value(self, obj):
-        value = obj.get_value()
+        params = self.context['request'].query_params
+        if 'year' in params:
+            year = int(params['year'])
+            start = datetime.datetime(year, 1, 1, tzinfo=tz)
+            end = datetime.datetime(year, 12, 31, tzinfo=tz)
+            value = obj.get_value(start, end)
+        else:
+            value = obj.get_value()
 
         try:
             return {
@@ -22,23 +35,21 @@ class BaseStatisticSerializer(ModelSerializer):
         except AttributeError:
             return value
 
-        return value
-
 
 class ManualStatisticSerializer(BaseStatisticSerializer):
     class Meta(object):
         model = ManualStatistic
-        fields = ('id', 'value', 'name', 'icon')
+        fields = ('value', 'name', 'icon', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
-        fields = ('id', 'value', 'name', 'icon', )
 
 
 class DatabaseStatisticSerializer(BaseStatisticSerializer):
+
     class Meta(object):
         model = DatabaseStatistic
-        fields = ('id', 'value', 'name', 'query', 'icon', )
+        fields = ('value', 'name', 'query', 'icon', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
@@ -51,7 +62,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
     class Meta(object):
         model = ImpactStatistic
-        fields = ('id', 'value', 'impact_type')
+        fields = ('value', 'impact_type', 'sequence')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'
@@ -59,6 +70,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
 
 class StatisticSerializer(PolymorphicModelSerializer):
+
     polymorphic_serializers = [
         DatabaseStatisticSerializer,
         ManualStatisticSerializer,

@@ -161,6 +161,33 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-online'], True)
 
+    def test_date_preview_matching(self):
+        activity = DateActivityFactory.create(
+            status='open',
+            slots=[]
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
+        )
+
+        DateActivitySlotFactory.create(
+            activity=activity
+        )
+
+        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.skills.add(activity.expertise)
+        self.owner.place = PlaceFactory.create(
+            position=Point(20.0, 10.0)
+        )
+        self.owner.save()
+
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['matching-properties']['theme'], True)
+        self.assertEqual(attributes['matching-properties']['skill'], True)
+        self.assertEqual(attributes['matching-properties']['location'], True)
+
     def test_period_preview(self):
         activity = PeriodActivityFactory.create(status='open', is_online=False)
         response = self.client.get(self.url, user=self.owner)
@@ -182,6 +209,29 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(
             attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
+
+        self.assertEqual(attributes['matching-properties']['theme'], False)
+        self.assertEqual(attributes['matching-properties']['skill'], False)
+        self.assertEqual(attributes['matching-properties']['location'], False)
+
+    def test_period_preview_matching(self):
+        activity = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1))
+        )
+
+        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.skills.add(activity.expertise)
+        self.owner.place = PlaceFactory.create(
+            position=Point(20.0, 10.0)
+        )
+        self.owner.save()
+
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['matching-properties']['theme'], True)
+        self.assertEqual(attributes['matching-properties']['skill'], True)
+        self.assertEqual(attributes['matching-properties']['location'], True)
 
     def test_funding_preview(self):
         activity = FundingFactory.create(status='open')

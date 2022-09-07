@@ -123,6 +123,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace('activity', '')
 
     def get_location(self, obj):
+        location = False
         if obj.slots:
             slots = self.get_filtered_slots(obj)
             if len(slots) == 1:
@@ -163,7 +164,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         if 'location' not in self.context:
             self.context['location'] = user.location or user.place
 
-        matching = {}
+        matching = {'location': False}
         matching['skill'] = obj.expertise[0].id in self.context['skills'] if obj.expertise else False
         matching['theme'] = obj.theme[0].id in self.context['themes'] if obj.theme else False
 
@@ -174,7 +175,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
             dist = min(
                 distance(
-                    lonlat(pos['lat'], pos['lon']),
+                    lonlat(pos['lon'], pos['lat']),
                     lonlat(*self.context['location'].position.tuple)
                 ) for pos in positions
 

@@ -206,7 +206,7 @@ class ActivityDocument(Document):
                 'type': 'office'
             })
 
-        elif instance.initiative.location:
+        elif instance.initiative.office_location:
             locations.append({
                 'name': instance.office_location.name,
                 'locality': instance.initiative.location.city,

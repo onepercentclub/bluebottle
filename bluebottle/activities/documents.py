@@ -206,12 +206,18 @@ class ActivityDocument(Document):
                 'type': 'office'
             })
 
-        elif instance.initiative.office_location:
+        elif instance.initiative.location:
             locations.append({
-                'name': instance.office_location.name,
+                'name': instance.initiative.location.name,
                 'locality': instance.initiative.location.city,
-                'country_code': instance.initiative.location.country.alpha2_code,
-                'country': instance.initiative.location.country.name,
+                'country_code': (
+                    instance.initiative.location.country.alpha2_code if
+                    instance.initiative.location.country else None
+                ),
+                'country': (
+                    instance.initiative.location.country.name if
+                    instance.initiative.location.country else None
+                ),
                 'type': 'initiative_office'
             })
         elif instance.initiative.place:

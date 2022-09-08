@@ -470,6 +470,14 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context['opt_out_link'] = tenant_url('/member/profile')
         return context
 
+    @property
+    def generic_subject(self):
+        from bluebottle.members.models import MemberPlatformSettings
+        settings = MemberPlatformSettings.load()
+        context = self.get_generic_context()
+        context['do_good_hours'] = settings.do_good_hours
+        return str(self.subject.format(**context))
+
     def already_send(self, recipient):
         return Message.objects.filter(
             template=self.get_template(),

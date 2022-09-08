@@ -49,19 +49,21 @@ class TransitionMessage(object):
         return f'{self.__class__.__name__}-{self.obj.id}'
 
     def get_generic_context(self):
-        from bluebottle.members.models import Member
-
         language = get_current_language()
-        recipient = Member.objects.first()
-        context = self.get_context(recipient)
-        context.update({
+        context = {
             'obj': self.obj,
             'site': 'https://[site domain]',
             'site_name': '[site name]',
             'language': language,
             'contact_email': '[platform manager email]',
             'recipient_name': '[first name]',
-        })
+        }
+        for key, item in list(self.context.items()):
+            try:
+                context[key] = attrgetter(item)(self.obj)
+            except AttributeError:
+                logger.error(f'Missing attribute in message context: {item}')
+                context[key] = item
 
         if 'context' in self.options:
             context.update(self.options['context'])

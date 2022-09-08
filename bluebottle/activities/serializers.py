@@ -78,6 +78,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_matching = MoneySerializer(read_only=True)
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
+    highlight = serializers.BooleanField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -128,7 +129,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             slots = self.get_filtered_slots(obj)
             if len(slots) == 1:
                 location = slots[0]
-        else:
+        elif len(obj.location):
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
             location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
 
@@ -171,18 +172,19 @@ class ActivityPreviewSerializer(ModelSerializer):
         if obj.is_online:
             matching['location'] = True
         elif self.context['location']:
-            positions = [obj.position] if 'lat' in obj.position else obj.position
+            positions = [obj.position] if obj.position and 'lat' in obj.position else obj.position
 
-            dist = min(
-                distance(
-                    lonlat(pos['lon'], pos['lat']),
-                    lonlat(*self.context['location'].position.tuple)
-                ) for pos in positions
+            if positions:
+                dist = min(
+                    distance(
+                        lonlat(pos['lon'], pos['lat']),
+                        lonlat(*self.context['location'].position.tuple)
+                    ) for pos in positions
 
-            )
+                )
 
-            if dist.km < settings.MATCHING_DISTANCE:
-                matching['location'] = True
+                if dist.km < settings.MATCHING_DISTANCE:
+                    matching['location'] = True
 
         return matching
 
@@ -245,7 +247,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type'
+            'collect_type', 'highlight'
         )
 
     class JSONAPIMeta:

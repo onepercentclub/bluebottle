@@ -32,6 +32,7 @@ class ActivityDocument(Document):
     status = fields.KeywordField()
     status_score = fields.FloatField()
     created = fields.DateField()
+    highlight = fields.BooleanField()
 
     type = fields.KeywordField()
 
@@ -198,14 +199,22 @@ class ActivityDocument(Document):
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
-            locations.append({
-                'id': instance.office_location.pk,
-                'name': instance.office_location.name,
-                'locality': instance.office_location.city,
-                'country_code': instance.office_location.country.alpha2_code,
-                'country': instance.office_location.country.name,
-                'type': 'office'
-            })
+            if instance.office_location.country:
+                locations.append({
+                    'id': instance.office_location.pk,
+                    'name': instance.office_location.name,
+                    'locality': instance.office_location.city,
+                    'country_code': instance.office_location.country.alpha2_code,
+                    'country': instance.office_location.country.name,
+                    'type': 'office'
+                })
+            else:
+                locations.append({
+                    'id': instance.office_location.pk,
+                    'name': instance.office_location.name,
+                    'locality': instance.office_location.city,
+                    'type': 'office'
+                })
 
         elif instance.initiative.location:
             locations.append({

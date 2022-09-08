@@ -248,3 +248,36 @@ def acknowledge_payment(data):
         pass
     payment.save()
     return generate_success_response(payment)
+
+
+def generate_payout_account(
+    name, number, bank_name, bank_branch, bank_address, swift_code
+):
+    credentials = get_credentials()
+    client = init_client()
+    data = client.create_withdrawal_account(
+        transaction_account_type="1",
+        transaction_account_name=name,
+        transaction_account_number=number,
+        transaction_account_bank_name=bank_name,
+        transaction_account_bank_branch=bank_branch,
+        transaction_account_bank_address=bank_address,
+        transaction_account_swift_code=swift_code,
+        transaction_account_manager=credentials['prefix']
+    )
+    if data['status']['status'] == 'FAIL':
+        raise PaymentException(data['status']['status_description'])
+    return data['content']['transaction_account_number']
+
+
+def generate_mpesa_account(name):
+    credentials = get_credentials()
+    client = init_client()
+    data = client.create_payment_account(
+        transaction_account_type=1,
+        transaction_account_name=name,
+        transaction_account_manager=credentials['prefix']
+    )
+    if data['status']['status'] == 'FAIL':
+        raise PaymentException(data['status']['status_description'])
+    return data['content']['transaction_account_number']

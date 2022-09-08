@@ -25,6 +25,24 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
 
+    class OfficeRestrictionChoices(DjangoChoices):
+        office = ChoiceItem(
+            'office',
+            label=_("Only people from the same office are allowed to participate")
+        )
+        office_subregion = ChoiceItem(
+            'office_subregion',
+            label=_("Only people within the same group are allowed to participate")
+        )
+        office_region = ChoiceItem(
+            'office_region',
+            label=_("Only people within the same region are allowed to participate")
+        )
+        all = ChoiceItem(
+            'all',
+            label=_("Everybody is allowed to participate")
+        )
+
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('activity manager'),
@@ -51,9 +69,14 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     office_location = models.ForeignKey(
         'geo.Location', verbose_name=_('office'),
-        help_text=_("Office is set on activity level because the "
-                    "initiative is set to 'global' or no initiative has been specified."),
         null=True, blank=True, on_delete=models.SET_NULL)
+
+    office_restriction = models.CharField(
+        _('Office restriction'),
+        default=OfficeRestrictionChoices.all,
+        choices=OfficeRestrictionChoices.choices,
+        max_length=100
+    )
 
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')

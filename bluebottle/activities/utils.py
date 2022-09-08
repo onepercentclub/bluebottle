@@ -172,6 +172,8 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+    office_location = serializers.CharField()
+    office_restriction = serializers.CharField()
 
     segments = SerializerMethodResourceRelatedField(
         source='segments',
@@ -199,7 +201,7 @@ class BaseActivitySerializer(ModelSerializer):
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
         'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
-        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
+        'office_location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
@@ -236,6 +238,7 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
+            'office_restriction',
             'segments',
             'team_activity'
         )

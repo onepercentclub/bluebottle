@@ -26,6 +26,7 @@ from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
@@ -311,13 +312,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'location_link'
     ]
 
     detail_fields = (
         'title',
         'initiative',
         'owner'
+    )
+
+    office_fields = (
+        'office_location',
+        'office_restriction',
     )
 
     description_fields = (
@@ -376,7 +381,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            fields = fields + ['location_link']
+            fields = fields + ['office_location']
         return fields
 
     def get_status_fields(self, request, obj):
@@ -387,8 +392,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fields
 
     def get_detail_fields(self, request, obj):
+        settings = InitiativePlatformSettings.objects.get()
         fields = self.detail_fields
-        if obj and obj.initiative.is_global:
+        if obj and Location.objects.count() and not settings.enable_office_regions:
             fields = list(fields)
             fields.insert(3, 'office_location')
             fields = tuple(fields)
@@ -417,19 +423,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         )
     initiative_link.short_description = _('Initiative')
 
-    def location_link(self, obj):
-        if not obj.initiative.location:
-            return "-"
-        url = reverse('admin:geo_location_change', args=(obj.initiative.location.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.initiative.location)
-    location_link.short_description = _('office')
-
     def get_fieldsets(self, request, obj=None):
+        settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_('Detail'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
+        if settings.enable_office_regions:
+            fieldsets.insert(1, (
+                _('Office'), {'fields': self.office_fields}
+            ))
+
         if request.user.is_superuser:
             fieldsets += [
                 (_('Super admin'), {'fields': (
@@ -552,7 +557,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         CollectActivity
     )
     date_hierarchy = 'transition_date'
-    readonly_fields = ['link', 'review_status', 'location_link']
+    readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):
@@ -588,18 +593,11 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_display = ['__str__', 'created', 'type', 'state_name',
                     'link', 'highlight']
 
-    def location_link(self, obj):
-        if not obj.initiative.location:
-            return "-"
-        url = reverse('admin:geo_location_change', args=(obj.initiative.location.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.initiative.location)
-    location_link.short_description = _('office')
-
     def get_list_display(self, request):
         fields = list(self.list_display)
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            fields = fields + ['location_link']
+            fields = fields + ['office_location']
         return fields
 
     search_fields = ('title', 'description',

@@ -60,7 +60,7 @@ class MemberPlatformSettings(BasePlatformSettings):
     reminder_q3 = models.BooleanField(
         _('Reminder Q3'),
         default=False,
-        help_text=_("This activation mail is sent on September 1st.")
+        help_text=_("This activation mail is sent on July 1st.")
     )
     reminder_q4 = models.BooleanField(
         _('Reminder Q4'),

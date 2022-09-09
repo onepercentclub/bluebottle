@@ -453,11 +453,30 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
     @property
     def action_link(self):
-        return self.obj.get_absolute_url()
+        from bluebottle.clients.utils import tenant_url
+        return tenant_url('/initiatives/activities/list')
 
     action_title = pgettext('email', 'Find activities')
 
     send_once = True
+
+    def get_context(self, recipient):
+        from bluebottle.members.models import MemberPlatformSettings
+        from bluebottle.clients.utils import tenant_url
+
+        context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
+        settings = MemberPlatformSettings.load()
+        context['do_good_hours'] = settings.do_good_hours
+        context['opt_out_link'] = tenant_url('/member/profile')
+        return context
+
+    @property
+    def generic_subject(self):
+        from bluebottle.members.models import MemberPlatformSettings
+        settings = MemberPlatformSettings.load()
+        context = self.get_generic_context()
+        context['do_good_hours'] = settings.do_good_hours
+        return str(self.subject.format(**context))
 
     def already_send(self, recipient):
         return Message.objects.filter(
@@ -491,20 +510,20 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Are you ready to do good? Q1")
+    subject = pgettext('email', "It’s a new year, let's make some impact!")
     template = 'messages/do-good-hours/reminder-q1'
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Are you ready to do good? Q2")
+    subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
     template = 'messages/do-good-hours/reminder-q2'
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Are you ready to do good? Q3")
+    subject = pgettext('email', "Half way through the year and still plenty of activities to join")
     template = 'messages/do-good-hours/reminder-q3'
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Are you ready to do good? Q4")
+    subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
     template = 'messages/do-good-hours/reminder-q4'

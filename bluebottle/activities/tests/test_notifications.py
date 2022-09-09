@@ -345,30 +345,37 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Are you ready to do good? Q1")
-        self.assertBodyContains('First reminder')
+        self.assertSubject("It’s a new year, let's make some impact!")
+        self.assertBodyContains('Can you spend 8 hours making an impact this year?')
         self.assertActionTitle('Find activities')
+        self.assertActionLink('https://testserver/initiatives/activities/list')
+        self.assertBodyContains('https://testserver/member/profile')
 
     def test_reminder_q2(self):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Are you ready to do good? Q2")
-        self.assertBodyContains('Second reminder')
+        self.assertSubject("Haven’t joined an activity yet? Let’s get started!")
+        self.assertBodyContains('The first step is always the hardest')
         self.assertActionTitle('Find activities')
 
     def test_reminder_q3(self):
         self.message_class = DoGoodHoursReminderQ3Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Are you ready to do good? Q3")
-        self.assertBodyContains('Third reminder')
+        self.assertSubject("Half way through the year and still plenty of activities to join")
+        self.assertBodyContains(
+            'There’s still so much time to reach the target of 8 hours making an impact this year.'
+        )
         self.assertActionTitle('Find activities')
 
     def test_reminder_q4(self):
         self.message_class = DoGoodHoursReminderQ4Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Are you ready to do good? Q4")
-        self.assertBodyContains('Fourth reminder')
+        self.assertSubject("Make use of your 8 hours of impact!")
+        self.assertBodyContains(
+            'Get involved with some good causes before the year ends, '
+            'there are plenty of activities that need your help!'
+        )
         self.assertActionTitle('Find activities')

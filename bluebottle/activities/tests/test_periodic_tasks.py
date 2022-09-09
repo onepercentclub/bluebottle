@@ -154,10 +154,6 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
     def test_reminder_q1(self):
         self.run_task(self.q1)
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'Are you ready to do good? Q1'
-        )
         recipients = [m.to[0] for m in mail.outbox]
         self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
         self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
@@ -178,10 +174,6 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         )
         self.run_task(self.q2)
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'Are you ready to do good? Q2'
-        )
         recipients = [m.to[0] for m in mail.outbox]
         self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
         self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
@@ -204,10 +196,6 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
         self.run_task(self.q4)
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'Are you ready to do good? Q4'
-        )
         recipients = [m.to[0] for m in mail.outbox]
         self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
         self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
@@ -216,10 +204,6 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
     def test_reminder_q1_next_year(self):
         self.run_task(self.next_year)
         self.assertEqual(len(mail.outbox), 4)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'Are you ready to do good? Q1'
-        )
         recipients = [m.to[0] for m in mail.outbox]
         self.assertTrue(self.active_user.email in recipients, "Active user should receive email")
         self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")

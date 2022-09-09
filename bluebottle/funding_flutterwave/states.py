@@ -1,7 +1,8 @@
-from bluebottle.fsm.state import register
+from bluebottle.fsm.state import register, Transition, AllStates
 
 from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
+from django.utils.translation import gettext_lazy as _
 
 
 @register(FlutterwavePayment)
@@ -12,4 +13,11 @@ class FlutterwavePaymentStateMachine(BasePaymentStateMachine):
 
 @register(FlutterwaveBankAccount)
 class FlutterwaveBankAccountStateMachine(BankAccountStateMachine):
-    pass
+
+    migrate_to_lipisha = Transition(
+        AllStates(),
+        BankAccountStateMachine.rejected,
+        name=_("Migrate to Lipisha"),
+        description=_("Migrate to Lipisha account"),
+        automatic=False
+    )

@@ -273,8 +273,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_location_filter(self):
         location = LocationFactory.create()
-        initiative = InitiativeFactory.create(status='open', location=location)
-        activity = DateActivityFactory.create(status='open', initiative=initiative)
+        activity = DateActivityFactory.create(status='open', office_location=location)
         DateActivityFactory.create(status='open')
 
         response = self.client.get(
@@ -285,32 +284,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(activity.pk))
-
-    def test_location_global_filter(self):
-        location = LocationFactory.create()
-        initiative = InitiativeFactory.create(status='open', location=location)
-        activity = DateActivityFactory.create(
-            status='open', initiative=initiative
-        )
-
-        global_initiative = InitiativeFactory.create(status='open', is_global=True)
-        global_activity = DateActivityFactory.create(
-            status='open', initiative=global_initiative, office_location=location
-        )
-        DateActivityFactory.create(status='open')
-
-        response = self.client.get(
-            self.url + '?filter[location.id]={}'.format(location.pk),
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-
-        initiative_ids = [resource['id'] for resource in data['data']]
-        self.assertTrue(str(activity.pk) in initiative_ids)
-        self.assertTrue(str(global_activity.pk) in initiative_ids)
 
     def test_activity_date_filter(self):
         next_month = now() + dateutil.relativedelta.relativedelta(months=1)
@@ -1234,23 +1207,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         office1 = LocationFactory.create(country=country1)
         office2 = LocationFactory.create(country=country2)
 
-        initiative1 = InitiativeFactory.create(location=office1, place=None)
-        initiative2 = InitiativeFactory.create(location=office2, place=None)
-        initiative3 = InitiativeFactory.create(location=office1, place=None)
-        initiative4 = InitiativeFactory.create(location=office2, place=None)
-
         location1 = GeolocationFactory(country=country1)
 
-        first = PeriodActivityFactory.create(status='full', initiative=initiative1, is_online=True)
+        first = PeriodActivityFactory.create(status='full', office_location=office1, is_online=True)
         PeriodParticipantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = PeriodActivityFactory.create(status='open', initiative=initiative3, is_online=True)
+        second = PeriodActivityFactory.create(status='open', office_location=office1, is_online=True)
 
-        third = PeriodActivityFactory.create(status='full', initiative=initiative2, location=location1)
+        third = PeriodActivityFactory.create(status='full', office_location=office2, location=location1)
         PeriodParticipantFactory.create_batch(3, activity=third, status='accepted')
 
-        PeriodActivityFactory.create(status='open', initiative=initiative4, is_online=True)
-        date = DateActivityFactory.create(status='open', initiative=initiative1)
+        PeriodActivityFactory.create(status='open', office_location=office2, is_online=True)
+        date = DateActivityFactory.create(status='open', office_location=office1)
         DateActivitySlotFactory.create(activity=date, status='open', is_online=True)
 
         response = self.client.get(
@@ -1268,14 +1236,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_mixed_country(self):
         country1 = CountryFactory.create()
-        country2 = CountryFactory.create()
         office1 = LocationFactory.create(country=country1)
-        office2 = LocationFactory.create(country=country2)
         location1 = GeolocationFactory(country=country1)
 
-        initiative1 = InitiativeFactory.create(location=office1, place=None)
-        initiative2 = InitiativeFactory.create(location=office2, place=None)
-        initiative3 = InitiativeFactory.create(is_global=True, place=None)
+        initiative1 = InitiativeFactory.create(place=None)
+        initiative2 = InitiativeFactory.create(place=None)
+        initiative3 = InitiativeFactory.create(place=None)
         initiative4 = InitiativeFactory.create(place=location1)
 
         PeriodActivityFactory.create(status='full', initiative=initiative1, is_online=True)
@@ -1292,7 +1258,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
 
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))

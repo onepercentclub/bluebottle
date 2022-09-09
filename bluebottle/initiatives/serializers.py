@@ -22,7 +22,6 @@ from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
-from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
@@ -309,7 +308,7 @@ class InitiativeListSerializer(ModelSerializer):
             'id', 'title', 'pitch', 'categories',
             'owner', 'activity_managers',
             'slug', 'has_organization', 'transitions',
-            'story', 'image', 'theme', 'place', 'location'
+            'story', 'image', 'theme', 'place',
         )
 
         meta_fields = ('permissions', 'status', 'created', 'transitions',)
@@ -317,7 +316,7 @@ class InitiativeListSerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner', 'activity_managers',
-            'categories', 'theme', 'place', 'location',
+            'categories', 'theme', 'place',
             'image', 'organization',
         ]
         resource_name = 'initiatives'
@@ -398,10 +397,6 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
-    has_locations = serializers.SerializerMethodField()
-
-    def get_has_locations(self, obj):
-        return Location.objects.count()
 
     class Meta(object):
         model = InitiativePlatformSettings
@@ -418,7 +413,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',
-            'has_locations'
+            'show_all_activities',
         )
 
 

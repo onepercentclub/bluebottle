@@ -1,10 +1,8 @@
 from django.core import mail
 
 from bluebottle.initiatives.messages import InitiativeSubmittedStaffMessage
-from bluebottle.initiatives.effects import RemoveLocationEffect
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
 
 
@@ -39,7 +37,6 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         )
         self.defaults = {
             'owner': self.owner,
-            'location': LocationFactory.create()
         }
         super().setUp()
 
@@ -48,22 +45,3 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         self.model.states.submit()
         with self.execute():
             self.assertNotificationEffect(InitiativeSubmittedStaffMessage)
-
-    def test_make_gobal(self):
-        self.create()
-        self.model.is_global = True
-        with self.execute():
-            self.assertEffect(RemoveLocationEffect)
-
-        self.model.save()
-
-        self.assertIsNone(self.model.location)
-
-    def test_make_gobal_no_location(self):
-        self.create()
-        self.model.location = None
-        self.model.save()
-
-        self.model.is_global = True
-        with self.execute():
-            self.assertNoEffect(RemoveLocationEffect)

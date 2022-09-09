@@ -400,6 +400,57 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
+    def test_filter_initiative(self):
+        activity = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(activity.pk))
+
+    def test_filter_initiative_owner(self):
+        activity = DateActivityFactory.create(status='open')
+        draft_activity = DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+            user=activity.initiative.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in ids)
+        self.assertTrue(str(draft_activity.pk) in ids)
+
+    def test_filter_initiative_activity_owner(self):
+        activity = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        owned_draft_activity = DateActivityFactory.create(
+            status='draft', initiative=activity.initiative, owner=self.owner
+        )
+
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in ids)
+        self.assertTrue(str(owned_draft_activity.pk) in ids)
+
     def test_filter_type(self):
         DateActivityFactory.create(status='open')
         PeriodActivityFactory.create(status='open')

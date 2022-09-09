@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
@@ -8,7 +8,6 @@ from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodP
 
 class ActivitySegmentsTestCase(TestCase):
     def setUp(self):
-
         team_type = SegmentTypeFactory.create(name='Team')
         self.team = SegmentFactory.create(name='Online Marketing', segment_type=team_type)
         self.other_team = SegmentFactory.create(name='Direct Marketing', segment_type=team_type)
@@ -64,15 +63,12 @@ class ActivitySegmentsTestCase(TestCase):
         self.assertFalse(self.team in activity.segments.all())
 
     def test_office_location_required(self):
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create()
-        )
+        LocationFactory.create_batch(3)
+        activity = PeriodActivityFactory.create()
         self.assertTrue('office_location' in activity.required_fields)
 
     def test_office_location_not_required(self):
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create()
-        )
+        activity = PeriodActivityFactory.create()
         self.assertFalse('office_location' in activity.required_fields)
 
     def test_is_team_captain_no_team(self):

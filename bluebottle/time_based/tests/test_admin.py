@@ -97,13 +97,10 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
     def test_list_activities_office(self):
         office = LocationFactory.create(name='Schin op Geul')
-        initiative = InitiativeFactory.create(location=office)
-        PeriodActivityFactory.create(initiative=initiative)
+        PeriodActivityFactory.create(office_location=office)
         url = reverse('admin:time_based_periodactivity_changelist')
         response = self.app.get(url)
-        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
-        response = self.app.get(url)
-        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 2)
+        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 1)
 
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):

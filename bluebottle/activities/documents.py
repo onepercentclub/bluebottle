@@ -6,6 +6,9 @@ from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
 from elasticsearch_dsl.field import DateRange
+from bluebottle.members.models import Member
+
+from bluebottle.initiatives.models import Initiative, Theme
 
 
 class DateRangeField(fields.DEDField, DateRange):
@@ -24,6 +27,7 @@ activity.settings(
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
+    slug = fields.KeywordField()
     description = fields.TextField()
     status = fields.KeywordField()
     status_score = fields.FloatField()
@@ -31,12 +35,19 @@ class ActivityDocument(Document):
 
     type = fields.KeywordField()
 
+    image = fields.NestedField(properties={
+        'id': fields.KeywordField(),
+        'type': fields.KeywordField(),
+        'name': fields.KeywordField(),
+    })
+
     owner = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
 
     initiative = fields.NestedField(properties={
+        'id': fields.KeywordField(),
         'title': fields.TextField(),
         'pitch': fields.TextField(),
         'story': fields.TextField(),
@@ -46,6 +57,7 @@ class ActivityDocument(Document):
         attr='initiative.theme',
         properties={
             'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 
@@ -63,6 +75,8 @@ class ActivityDocument(Document):
     expertise = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -84,6 +98,8 @@ class ActivityDocument(Document):
             'id': fields.LongField(),
             'name': fields.TextField(),
             'city': fields.TextField(),
+            'country': fields.TextField(attr='country.name'),
+            'country_code': fields.TextField(attr='country.alpha2_code'),
         }
     )
 
@@ -97,7 +113,20 @@ class ActivityDocument(Document):
     duration = DateRangeField()
     activity_date = fields.DateField()
 
+    def get_instances_from_related(self, related_instance):
+        model = self.Django.model
+
+        if isinstance(related_instance, Initiative):
+            return model.objects.filter(initiative=related_instance)
+        if isinstance(related_instance, Theme):
+            return model.objects.filter(initiative__theme=related_instance)
+        if isinstance(related_instance, Theme.translations.field.model):
+            return model.objects.filter(initiative__theme=related_instance.master)
+        if isinstance(related_instance, Member):
+            return model.objects.filter(owner=related_instance)
+
     class Django:
+        related_models = (Initiative, Theme, Theme.translations.field.model, Member)
         model = Activity
 
     date_field = None
@@ -118,6 +147,20 @@ class ActivityDocument(Document):
             doc_type=[cls],
             model=cls._doc_type.model
         )
+
+    def prepare_image(self, instance):
+        if instance.image:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+                'type': 'activity'
+            }
+        elif instance.initiative.image:
+            return {
+                'id': instance.initiative.pk,
+                'file': instance.initiative.image.file.name,
+                'type': 'initiative'
+            }
 
     def prepare_contributors(self, instance):
         return [
@@ -148,32 +191,57 @@ class ActivityDocument(Document):
             locations.append({
                 'id': instance.location.id,
                 'name': instance.location.formatted_address,
-                'city': instance.location.locality
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
             locations.append({
                 'id': instance.office_location.pk,
                 'name': instance.office_location.name,
-                'city': instance.office_location.city,
+                'locality': instance.office_location.city,
+                'country_code': instance.office_location.country.alpha2_code,
+                'country': instance.office_location.country.name,
+                'type': 'office'
             })
-        if instance.initiative.place:
+        elif instance.initiative.place:
             locations.append({
-                'id': instance.initiative.place.pk,
-                'name': instance.initiative.place.formatted_address,
-                'city': instance.initiative.place.locality,
+                'locality': instance.initiative.place.locality,
+                'country_code': instance.initiative.place.country.alpha2_code,
+                'country': instance.initiative.place.country.name,
+                'type': 'impact_location'
             })
         return locations
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
-            return {'id': instance.expertise_id}
+            return [
+                {
+                    'id': instance.expertise_id,
+                    'name': translation.name,
+                    'language': translation.language_code,
+                }
+                for translation in instance.expertise.translations.all()
+            ]
+
+    def prepare_theme(self, instance):
+        if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
+            return [
+                {
+                    'id': instance.initiative.theme_id,
+                    'name': translation.name,
+                    'language': translation.language_code,
+                }
+                for translation in instance.initiative.theme.translations.all()
+            ]
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):
             return instance.is_online
 
     def prepare_position(self, instance):
-        return None
+        return []
 
     def prepare_end(self, instance):
         return None

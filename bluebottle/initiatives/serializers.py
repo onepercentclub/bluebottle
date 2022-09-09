@@ -22,6 +22,7 @@ from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
+from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
@@ -397,6 +398,10 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    has_locations = serializers.SerializerMethodField()
+
+    def get_has_locations(self, obj):
+        return Location.objects.count()
 
     class Meta(object):
         model = InitiativePlatformSettings
@@ -414,6 +419,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_participant_exports',
             'enable_open_initiatives',
             'show_all_activities',
+            'has_locations'
         )
 
 

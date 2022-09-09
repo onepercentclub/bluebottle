@@ -13,7 +13,8 @@ from polymorphic.models import PolymorphicModel
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.initiatives.models import Initiative
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -24,6 +25,24 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
+
+    class OfficeRestrictionChoices(DjangoChoices):
+        office = ChoiceItem(
+            'office',
+            label=_("Only people from the same office are allowed to participate")
+        )
+        office_subregion = ChoiceItem(
+            'office_subregion',
+            label=_("Only people within the same group are allowed to participate")
+        )
+        office_region = ChoiceItem(
+            'office_region',
+            label=_("Only people within the same region are allowed to participate")
+        )
+        all = ChoiceItem(
+            'all',
+            label=_("Everybody is allowed to participate")
+        )
 
     owner = models.ForeignKey(
         'members.Member',
@@ -52,6 +71,13 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     office_location = models.ForeignKey(
         'geo.Location', verbose_name=_('office'),
         null=True, blank=True, on_delete=models.SET_NULL)
+
+    office_restriction = models.CharField(
+        _('Office restriction'),
+        default=OfficeRestrictionChoices.all,
+        choices=OfficeRestrictionChoices.choices,
+        blank=True, null=True, max_length=100
+    )
 
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
@@ -100,19 +126,17 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         raise NotImplementedError
 
     @property
-    def fallback_location(self):
-        return self.initiative.location or self.office_location
-
-    @property
     def stats(self):
         return {}
 
     @property
     def required_fields(self):
-        if self.initiative_id and self.initiative.is_global:
-            return ['office_location']
-        else:
-            return []
+        fields = []
+        if Location.objects.count():
+            fields.append('office_location')
+            if InitiativePlatformSettings.load().enable_office_regions:
+                fields.append('office_restriction')
+        return fields
 
     class Meta(object):
         verbose_name = _("Activity")

@@ -172,6 +172,7 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
+    office_restriction = serializers.CharField(required=False)
 
     segments = SerializerMethodResourceRelatedField(
         source='segments',
@@ -199,9 +200,11 @@ class BaseActivitySerializer(ModelSerializer):
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
         'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
-        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'office_location': 'bluebottle.geo.serializers.OfficeSerializer',
+        'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
+        'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
     }
 
     def get_is_follower(self, instance):
@@ -236,6 +239,7 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'goals',
             'office_location',
+            'office_restriction',
             'segments',
             'team_activity'
         )
@@ -268,7 +272,10 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative.categories',
             'initiative.theme',
             'segments',
-            'segments.segment_type'
+            'segments.segment_type',
+            'office_location',
+            'office_location.subregion',
+            'office_location.subregion.region',
         ]
 
 
@@ -292,7 +299,6 @@ class BaseActivityListSerializer(ModelSerializer):
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
-        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',

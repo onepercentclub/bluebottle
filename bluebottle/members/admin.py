@@ -111,6 +111,7 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+
     fieldsets = (
         (
             _('Login'),
@@ -143,13 +144,14 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         (
             _('Engagement'),
             {
+                'description': _('Quarterly emails will only be sent to users who have not spent any hours.'),
                 'fields': (
-                    'create_initiatives',
                     'do_good_hours',
                     'reminder_q1',
                     'reminder_q2',
                     'reminder_q3',
-                    'reminder_q4'
+                    'reminder_q4',
+                    'create_initiatives',
                 ),
             }
         ),
@@ -190,7 +192,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return fieldsets
 
-    readonly_fields = ('segment_types',)
+    readonly_fields = ('segment_types', )
 
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')

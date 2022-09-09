@@ -22,6 +22,7 @@ class LipishaPaymentProviderAdmin(PaymentProviderChildAdmin):
 class LipishaBankAccountAdmin(BankAccountChildAdmin):
     fields = (
         'mpesa_code',
+        'payout_code',
         'account_number',
         'account_name',
         'bank_name',

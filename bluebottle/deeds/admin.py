@@ -81,7 +81,7 @@ class DeedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
-        ('fallback_location', 'Office Location'),
+        ('office_location', 'Office Location'),
         ('start', 'Start'),
         ('end', 'End'),
     )

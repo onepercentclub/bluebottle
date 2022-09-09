@@ -236,7 +236,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
@@ -260,7 +259,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_managers',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
-            'theme', 'place', 'location', 'activities', 'segments',
+            'theme', 'place', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'is_global',
         )
 
@@ -272,7 +271,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner', 'reviewer', 'promoter', 'activity_managers',
-            'categories', 'theme', 'place', 'location',
+            'categories', 'theme', 'place',
             'image', 'organization', 'organization_contact', 'activities',
             'activities.image', 'activities.location',
             'activities.goals', 'activities.goals.type',
@@ -300,7 +299,6 @@ class InitiativeListSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
     }
 

@@ -13,7 +13,8 @@ from polymorphic.models import PolymorphicModel
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.initiatives.models import Initiative
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -75,7 +76,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         _('Office restriction'),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
-        max_length=100
+        blank=True, null=True, max_length=100
     )
 
     title = models.CharField(_('Title'), max_length=255)
@@ -125,19 +126,17 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         raise NotImplementedError
 
     @property
-    def fallback_location(self):
-        return self.initiative.location or self.office_location
-
-    @property
     def stats(self):
         return {}
 
     @property
     def required_fields(self):
-        if self.initiative_id and self.initiative.is_global:
-            return ['office_location']
-        else:
-            return []
+        fields = []
+        if Location.objects.count():
+            fields.append('office_location')
+            if InitiativePlatformSettings.load().enable_office_regions:
+                fields.append('office_restriction')
+        return fields
 
     class Meta(object):
         verbose_name = _("Activity")

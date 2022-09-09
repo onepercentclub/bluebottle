@@ -19,7 +19,7 @@ from bluebottle.cms.models import (
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.geo.serializers import LocationSerializer
+from bluebottle.geo.serializers import OfficeSerializer
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
@@ -342,7 +342,7 @@ class WelcomeContentSerializer(serializers.ModelSerializer):
 
 
 class LocationsContentSerializer(serializers.ModelSerializer):
-    locations = LocationSerializer(many=True)
+    locations = OfficeSerializer(many=True)
 
     class Meta(object):
         model = LocationsContent

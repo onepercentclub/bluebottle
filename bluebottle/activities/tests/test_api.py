@@ -1983,15 +1983,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             data['data']['relationships']['reviewer']['data']['id'], 'anonymous'
         )
 
-        included_activity = [
-            included for included in data['included'] if
-            included['type'] == 'activities/time-based/dates'
-        ][0]
-
-        self.assertEqual(
-            included_activity['relationships']['owner']['data']['id'], 'anonymous'
-        )
-
     def test_initiative_not_over_max_age(self):
         self.member_settings.anonymization_age = 300
         self.member_settings.save()
@@ -2005,7 +1996,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         initiative.created = now() - timedelta(days=200)
         initiative.save()
 
-        activity = DateActivityFactory.create(
+        DateActivityFactory.create(
             initiative=initiative,
             status='open'
         )
@@ -2024,15 +2015,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['reviewer']['data']['id'], str(initiative.reviewer.pk)
-        )
-
-        included_activity = [
-            included for included in data['included'] if
-            included['type'] == 'activities/time-based/dates'
-        ][0]
-
-        self.assertEqual(
-            included_activity['relationships']['owner']['data']['id'], str(activity.owner.pk)
         )
 
     def test_participants_over_max_age(self):

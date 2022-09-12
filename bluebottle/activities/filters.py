@@ -37,6 +37,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'segment',
         'team_activity',
         'highlight'
+        'initiative.id'
     )
 
     search_fields = (
@@ -215,8 +216,36 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 'draft', 'needs_work', 'submitted', 'deleted',
                 'closed', 'cancelled', 'rejected'
             ]),
-
         ]
+
+        fields = super(ActivitySearchFilter, self).get_filter_fields(request)
+        if 'initiative.id' in fields and request.user.is_authenticated:
+            filters = [
+                ~Terms(status=[
+                    'draft', 'needs_work', 'submitted', 'deleted',
+                    'closed', 'cancelled', 'rejected'
+                ]) |
+                Nested(
+                    path='owner',
+                    query=(
+                        Term(owner__id=request.user.id)
+                    )
+                ) |
+                Nested(
+                    path='initiative',
+                    query=(
+                        Term(initiative__owner=request.user.id)
+                    )
+                )
+            ]
+        else:
+            filters = [
+                ~Terms(status=[
+                    'draft', 'needs_work', 'submitted', 'deleted',
+                    'closed', 'cancelled', 'rejected'
+                ]),
+            ]
+
         if not request.user.is_staff:
             filters += [
                 ~Nested(

@@ -52,6 +52,11 @@ class ActivityDocument(Document):
         'pitch': fields.TextField(),
         'story': fields.TextField(),
         'owner': fields.KeywordField(attr='owner.id'),
+        'activity_managers': fields.NestedField(
+            properties={
+                'id': fields.KeywordField(),
+            }
+        )
     })
 
     theme = fields.NestedField(

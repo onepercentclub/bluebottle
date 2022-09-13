@@ -82,11 +82,21 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
 
     def get_start(self, obj):
-        if obj.start and len(obj.start) == 1:
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+            if slots:
+                return slots[0].start
+
+        elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 
     def get_end(self, obj):
-        if obj.end and len(obj.end) == 1:
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+            if slots:
+                return slots[0].end
+
+        elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 
     def get_expertise(self, obj):

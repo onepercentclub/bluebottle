@@ -236,23 +236,21 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
     def test_readonly_fields(self):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
-        expected_fields = set((
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
-            'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities', 'funding', 'deeds', 'collect',
-            'is_superuser', 'kyc'
-        ))
+        expected_fields = {
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
+            'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent'
+        }
 
         self.assertEqual(expected_fields, set(fields))
 
     def test_readonly_fields_create(self):
         fields = self.member_admin.get_readonly_fields(self.request)
-        expected_fields = set((
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
-            'reset_password', 'resend_welcome_link',
-            'initiatives', 'date_activities', 'period_activities', 'funding', 'deeds', 'collect',
-            'is_superuser', 'kyc'
-        ))
+        expected_fields = {
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
+            'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent'
+        }
 
         self.assertEqual(expected_fields, set(fields))
         self.member_admin = MemberAdmin(Member, AdminSite())
@@ -295,7 +293,6 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
 
 class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True
@@ -579,7 +576,6 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
 
 
 class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
-
     extra_environ = {}
     csrf_checks = False
     setup_auth = True

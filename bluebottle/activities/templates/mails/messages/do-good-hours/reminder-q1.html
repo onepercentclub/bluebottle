@@ -1,0 +1,8 @@
+{% extends "mails/messages/do-good-hours/reminder-base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        Can you spend {{ do_good_hours }} hours making an impact this year? Of course you can! There's a wide range of activities to join, all contributing to good causes. Check them out!
+    {% endblocktrans %}
+{% endblock %}

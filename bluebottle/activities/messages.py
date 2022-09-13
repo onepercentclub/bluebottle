@@ -1,13 +1,15 @@
+from datetime import timedelta
+
+from django.db.models import Sum, Q
+from django.template.defaultfilters import time, date
+from django.urls import reverse
+from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
-from django.urls import reverse
-from django.template.defaultfilters import time, date
-
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from django.utils.timezone import get_current_timezone
-
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.translation import pgettext_lazy as pgettext
+from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
@@ -445,3 +447,83 @@ class TeamMemberRemovedMessage(ActivityNotification):
             return [self.obj.team.owner]
         else:
             return []
+
+
+class BaseDoGoodHoursReminderNotification(TransitionMessage):
+
+    @property
+    def action_link(self):
+        from bluebottle.clients.utils import tenant_url
+        return tenant_url('/initiatives/activities/list')
+
+    action_title = pgettext('email', 'Find activities')
+
+    send_once = True
+
+    def get_context(self, recipient):
+        from bluebottle.members.models import MemberPlatformSettings
+        from bluebottle.clients.utils import tenant_url
+
+        context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
+        settings = MemberPlatformSettings.load()
+        context['do_good_hours'] = settings.do_good_hours
+        context['opt_out_link'] = tenant_url('/member/profile')
+        return context
+
+    @property
+    def generic_subject(self):
+        from bluebottle.members.models import MemberPlatformSettings
+        settings = MemberPlatformSettings.load()
+        context = self.get_generic_context()
+        context['do_good_hours'] = settings.do_good_hours
+        return str(self.subject.format(**context))
+
+    def already_send(self, recipient):
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+            sent__year=now().year
+        ).count() > 0
+
+    def get_recipients(self):
+        """members with do good hours"""
+        from bluebottle.members.models import Member
+        from bluebottle.members.models import MemberPlatformSettings
+
+        year = now().year
+        do_good_hours = timedelta(hours=MemberPlatformSettings.load().do_good_hours)
+
+        members = Member.objects.annotate(
+            hours=Sum(
+                'contributor__contributions__timecontribution__value',
+                filter=(
+                    Q(contributor__contributions__start__year=year) &
+                    Q(contributor__contributions__status__in=['new', 'succeeded'])
+                )
+            ),
+        ).filter(
+            Q(hours__lt=do_good_hours) | Q(hours__isnull=True),
+            is_active=True,
+            receive_reminder_emails=True
+        ).distinct()
+        return members
+
+
+class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "It’s a new year, let's make some impact!")
+    template = 'messages/do-good-hours/reminder-q1'
+
+
+class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
+    template = 'messages/do-good-hours/reminder-q2'
+
+
+class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Half way through the year and still plenty of activities to join")
+    template = 'messages/do-good-hours/reminder-q3'
+
+
+class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
+    subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
+    template = 'messages/do-good-hours/reminder-q4'

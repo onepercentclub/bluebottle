@@ -1,12 +1,13 @@
 import requests
-from bluebottle.clients.utils import LocalTenant
-
-from bluebottle.clients.models import Client
 from bs4 import BeautifulSoup
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-from bluebottle.fsm.utils import document_notifications
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.fsm.utils import document_notifications, get_doc
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.utils.utils import get_class
 
 api = settings.CONFLUENCE['api']
 
@@ -61,9 +62,11 @@ def run(*args):
     if 'prod' in args:
         models = settings.CONFLUENCE['prod_models']
         notifications = settings.CONFLUENCE['prod_notifications']
+        extra_messages = settings.CONFLUENCE['prod_extra_messages']
     else:
         models = settings.CONFLUENCE['dev_models']
         notifications = settings.CONFLUENCE['dev_notifications']
+        extra_messages = settings.CONFLUENCE['dev_extra_messages']
 
     tenant = Client.objects.get(schema_name='goodup_demo')
 
@@ -83,6 +86,24 @@ def run(*args):
                 total += len(messages)
                 html += "<h2>{}</h2>".format(model_class._meta.verbose_name)
                 html += generate_notification_html(messages)
+
+        total += len(extra_messages)
+        messages = []
+        for extra in extra_messages:
+            message_class = get_class(extra)
+            message = message_class(MemberPlatformSettings)
+            messages.append({
+                'class': extra,
+                'trigger': 'Cronjob',
+                'template': message_class.template,
+                'description': get_doc(message_class),
+                'recipients': get_doc(message_class.get_recipients),
+                'subject': message_class.subject,
+                'content_text': message.generic_content_text,
+                # 'content_html': message.generic_content_html
+            })
+        html += "<h2>Other messages</h2>"
+        html += generate_notification_html(messages)
 
         data = {
             "id": notifications['page_id'],

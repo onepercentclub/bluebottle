@@ -124,7 +124,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_date_preview_multiple_slots_single_open(self):
         activity = DateActivityFactory.create(status='open', slots=[])
-        DateActivitySlotFactory.create(activity=activity, status='draft')
+        DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
 
         response = self.client.get(self.url, user=self.owner)

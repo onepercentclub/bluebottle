@@ -184,7 +184,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         if obj.is_online:
             matching['location'] = True
-        elif self.context['location']:
+        elif self.context['location'] and obj.position:
             positions = [obj.position] if 'lat' in obj.position else obj.position
 
             dist = min(

@@ -122,11 +122,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertIsNone(attributes['location'])
 
+    def test_date_preview_multiple_slots_single_open(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
+        open_slot = DateActivitySlotFactory.create(activity=activity)
+
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+
+        self.assertEqual(
+            attributes['location'],
+            f'{open_slot.location.locality}, {open_slot.location.country.alpha2_code}'
+        )
+
+        self.assertEqual(dateutil.parser.parse(attributes['start']), open_slot.start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), open_slot.end)
+
     def test_date_preview_multiple_slots_filtered(self):
         activity = DateActivityFactory.create(status='open', slots=[])
-        current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=14))
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
+        current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
         start = now()
         end = start + timedelta(days=8)
@@ -137,8 +156,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
+
         self.assertEqual(attributes['has-multiple-locations'], False)
         self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(dateutil.parser.parse(attributes['start']), current_slot.start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), current_slot.end)
 
         location = current_slot.location
         self.assertEqual(

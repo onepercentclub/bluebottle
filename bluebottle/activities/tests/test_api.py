@@ -80,6 +80,66 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
 
+    def test_permissions_anonymous(self):
+        DeedFactory.create(status='open')
+        response = self.client.get(self.url)
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertFalse(permissions['PUT'])
+        self.assertFalse(permissions['PATCH'])
+        self.assertFalse(permissions['DELETE'])
+
+    def test_permissions_user(self):
+        DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=BlueBottleUserFactory.create())
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertFalse(permissions['PUT'])
+        self.assertFalse(permissions['PATCH'])
+        self.assertFalse(permissions['DELETE'])
+
+    def test_permissions_owner(self):
+        activity = DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=activity.owner)
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertTrue(permissions['PUT'])
+        self.assertTrue(permissions['PATCH'])
+        self.assertTrue(permissions['DELETE'])
+
+    def test_permissions_initiative_owner(self):
+        activity = DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=activity.initiative.owner)
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertTrue(permissions['PUT'])
+        self.assertTrue(permissions['PATCH'])
+        self.assertTrue(permissions['DELETE'])
+
+    def test_permissions_initiative_activity_manager(self):
+        activity = DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=activity.initiative.activity_managers.first())
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertTrue(permissions['PUT'])
+        self.assertTrue(permissions['PATCH'])
+        self.assertTrue(permissions['DELETE'])
+
+    def test_permissions_initiative_activity_staff(self):
+        DeedFactory.create(status='open')
+        response = self.client.get(self.url, user=BlueBottleUserFactory.create(is_staff=True))
+        permissions = response.json()['data'][0]['meta']['permissions']
+
+        self.assertTrue(permissions['GET'])
+        self.assertTrue(permissions['PUT'])
+        self.assertTrue(permissions['PATCH'])
+        self.assertTrue(permissions['DELETE'])
+
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
         response = self.client.get(self.url, user=self.owner)

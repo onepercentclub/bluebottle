@@ -80,6 +80,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     end = serializers.SerializerMethodField()
 
     collect_type = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     def get_start(self, obj):
         if obj.slots:
@@ -251,6 +252,37 @@ class ActivityPreviewSerializer(ModelSerializer):
         elif obj.type == 'period':
             return obj.status != 'open'
 
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        permission_mapping = {
+            'deed': 'deeds.api_change_own_deed',
+            'collectactivity': 'collect.api_change_own_collectactivity',
+            'dateactivity': 'time_based.api_change_own_dateactivity',
+            'periodactivity': 'time_based.api_change_own_periodactivity',
+            'funding': 'funding.api_change_own_funding',
+        }
+
+        model_permission = user.has_perm(permission_mapping[obj.type])
+        is_activity_manager = user.pk in [manager.id for manager in obj.initiative.activity_managers]
+        is_initiative_owner = user.pk == obj.initiative.owner
+        is_owner = user.pk == obj.owner.id
+
+        has_change_permission = (
+            model_permission and (
+                is_activity_manager or
+                is_initiative_owner or
+                is_owner or
+                user.is_staff
+            )
+        )
+
+        return {
+            'GET': True,
+            'PUT': has_change_permission,
+            'PATCH': has_change_permission,
+            'DELETE': has_change_permission
+        }
+
     class Meta(object):
         model = Activity
         fields = (
@@ -261,6 +293,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type'
         )
+        meta_fields = ('permissions', )
 
     class JSONAPIMeta:
         resource_name = 'activities/preview'

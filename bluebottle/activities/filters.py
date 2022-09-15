@@ -236,6 +236,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     query=(
                         Term(initiative__owner=request.user.id)
                     )
+                ) |
+                Nested(
+                    path='initiative.activity_managers',
+                    query=(
+                        Term(initiative__activity_managers__id=request.user.id)
+                    )
                 )
             ]
         else:

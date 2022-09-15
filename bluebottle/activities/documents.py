@@ -51,6 +51,12 @@ class ActivityDocument(Document):
         'title': fields.TextField(),
         'pitch': fields.TextField(),
         'story': fields.TextField(),
+        'owner': fields.KeywordField(attr='owner.id'),
+        'activity_managers': fields.NestedField(
+            properties={
+                'id': fields.KeywordField(),
+            }
+        )
     })
 
     theme = fields.NestedField(
@@ -206,12 +212,18 @@ class ActivityDocument(Document):
                 'type': 'office'
             })
         elif instance.initiative.place:
-            locations.append({
-                'locality': instance.initiative.place.locality,
-                'country_code': instance.initiative.place.country.alpha2_code,
-                'country': instance.initiative.place.country.name,
-                'type': 'impact_location'
-            })
+            if instance.initiative.place.country:
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'country_code': instance.initiative.place.country.alpha2_code,
+                    'country': instance.initiative.place.country.name,
+                    'type': 'impact_location'
+                })
+            else:
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'type': 'impact_location'
+                })
         return locations
 
     def prepare_expertise(self, instance):

@@ -1,4 +1,5 @@
 from builtins import object
+from itertools import groupby
 from collections.abc import Iterable
 
 from django.conf import settings
@@ -558,7 +559,23 @@ def get_stats_for_activities(activities):
         'currency': default_currency
     }
 
+    impact = []
+    for type, goals in groupby(
+        ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
+        lambda goal: goal.type
+    ):
+        value = sum(goal.realized or goal.realized_from_contributions or 0 for goal in goals)
+
+        if value:
+            impact.append({
+                'name': type.text_passed,
+                'iconName': type.icon,
+                'unit': type.unit,
+                'value': value
+            })
+
     return {
+        'impact': impact,
         'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
         'effort': effort['count'],
         'collected': dict((stat['type_id'], stat['amount']) for stat in collected),

@@ -58,6 +58,8 @@ class CollectDocument(ActivityDocument):
         return {'gte': instance.start, 'lte': instance.end}
 
     def prepare_collect_type(self, instance):
+        if not instance.collect_type:
+            return []
         return [
             {'name': translation.name, 'language': translation.language_code}
             for translation in instance.collect_type.translations.all()

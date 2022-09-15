@@ -82,11 +82,21 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
 
     def get_start(self, obj):
-        if obj.start and len(obj.start) == 1:
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+            if slots:
+                return slots[0].start
+
+        elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 
     def get_end(self, obj):
-        if obj.end and len(obj.end) == 1:
+        if obj.slots:
+            slots = self.get_filtered_slots(obj)
+            if slots:
+                return slots[0].end
+
+        elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 
     def get_expertise(self, obj):
@@ -128,9 +138,12 @@ class ActivityPreviewSerializer(ModelSerializer):
             slots = self.get_filtered_slots(obj)
             if len(slots) == 1:
                 location = slots[0]
-        elif obj.location:
+        elif type == 'funding':
+            places = [location for location in obj.location if location.type == 'place']
+            if places:
+                location = places[0]
+        else:
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
-
             location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
 
         if location:
@@ -171,12 +184,14 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         if obj.is_online:
             matching['location'] = True
-        elif self.context['location'] and len(obj.position):
+        elif self.context['location'] and obj.position:
+            positions = [obj.position] if 'lat' in obj.position else obj.position
+
             dist = min(
                 distance(
                     lonlat(pos['lon'], pos['lat']),
                     lonlat(*self.context['location'].position.tuple)
-                ) for pos in obj.position
+                ) for pos in positions
 
             )
 

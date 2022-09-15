@@ -10,7 +10,6 @@ from bluebottle.funding_lipisha.states import LipishaBankAccountStateMachine
 @register(LipishaBankAccount)
 class LipishaBankAccountTriggers(BankAccountTriggers):
     triggers = BankAccountTriggers.triggers + [
-
         TransitionTrigger(
             LipishaBankAccountStateMachine.verify,
             effects=[

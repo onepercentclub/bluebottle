@@ -122,11 +122,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertIsNone(attributes['location'])
 
+    def test_date_preview_multiple_slots_single_open(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
+        open_slot = DateActivitySlotFactory.create(activity=activity)
+
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slot-count'], 1)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+
+        self.assertEqual(
+            attributes['location'],
+            f'{open_slot.location.locality}, {open_slot.location.country.alpha2_code}'
+        )
+
+        self.assertEqual(dateutil.parser.parse(attributes['start']), open_slot.start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), open_slot.end)
+
     def test_date_preview_multiple_slots_filtered(self):
         activity = DateActivityFactory.create(status='open', slots=[])
-        current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=14))
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
+        current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
         start = now()
         end = start + timedelta(days=8)
@@ -137,8 +156,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
+
         self.assertEqual(attributes['has-multiple-locations'], False)
         self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(dateutil.parser.parse(attributes['start']), current_slot.start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), current_slot.end)
 
         location = current_slot.location
         self.assertEqual(
@@ -399,6 +421,77 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(owned.pk))
+
+    def test_filter_initiative(self):
+        activity = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], str(activity.pk))
+
+    def test_filter_initiative_owner(self):
+        activity = DateActivityFactory.create(status='open')
+        draft_activity = DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+            user=activity.initiative.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in ids)
+        self.assertTrue(str(draft_activity.pk) in ids)
+
+    def test_filter_initiative_activity_manager(self):
+        activity = DateActivityFactory.create(status='open')
+        draft_activity = DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        DateActivityFactory.create(status='open')
+
+        activity_manager = BlueBottleUserFactory.create()
+        activity.initiative.activity_managers.add(activity_manager)
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+            user=activity_manager
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in ids)
+        self.assertTrue(str(draft_activity.pk) in ids)
+
+    def test_filter_initiative_activity_owner(self):
+        activity = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='draft', initiative=activity.initiative)
+        owned_draft_activity = DateActivityFactory.create(
+            status='draft', initiative=activity.initiative, owner=self.owner
+        )
+
+        DateActivityFactory.create(status='open')
+
+        response = self.client.get(
+            self.url + '?filter[initiative.id]={}'.format(activity.initiative.pk),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        ids = [resource['id'] for resource in data['data']]
+        self.assertTrue(str(activity.pk) in ids)
+        self.assertTrue(str(owned_draft_activity.pk) in ids)
 
     def test_filter_type(self):
         DateActivityFactory.create(status='open')
@@ -1878,15 +1971,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
             data['data']['relationships']['reviewer']['data']['id'], 'anonymous'
         )
 
-        included_activity = [
-            included for included in data['included'] if
-            included['type'] == 'activities/time-based/dates'
-        ][0]
-
-        self.assertEqual(
-            included_activity['relationships']['owner']['data']['id'], 'anonymous'
-        )
-
     def test_initiative_not_over_max_age(self):
         self.member_settings.anonymization_age = 300
         self.member_settings.save()
@@ -1900,7 +1984,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         initiative.created = now() - timedelta(days=200)
         initiative.save()
 
-        activity = DateActivityFactory.create(
+        DateActivityFactory.create(
             initiative=initiative,
             status='open'
         )
@@ -1919,15 +2003,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['reviewer']['data']['id'], str(initiative.reviewer.pk)
-        )
-
-        included_activity = [
-            included for included in data['included'] if
-            included['type'] == 'activities/time-based/dates'
-        ][0]
-
-        self.assertEqual(
-            included_activity['relationships']['owner']['data']['id'], str(activity.owner.pk)
         )
 
     def test_participants_over_max_age(self):

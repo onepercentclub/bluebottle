@@ -136,7 +136,8 @@ class ActivityPreviewSerializer(ModelSerializer):
         location = False
         if obj.slots:
             slots = self.get_filtered_slots(obj)
-            if len(slots) == 1:
+
+            if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
                 location = slots[0]
         elif type == 'funding':
             places = [location for location in obj.location if location.type == 'place']

@@ -2573,6 +2573,31 @@ class RelatedParticipantsAPIViewTestCase():
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 1)
 
+    def test_get_filter_new(self):
+        participant = self.participants[1]
+
+        participant.status = 'new'
+        participant.save()
+        self.response = self.client.get(
+            self.url + '?filter[status]=new', user=self.activity.owner
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        self.assertTotal(1)
+        self.assertEqual(self.response.json()['data'][0]['id'], str(participant.pk))
+
+    def test_get_filter_new_other_user(self):
+        participant = self.participants[1]
+
+        participant.status = 'new'
+        participant.save()
+        self.response = self.client.get(
+            self.url + '?filter[status]=new', user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        self.assertTotal(0)
+
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
         group = Group.objects.get(name='Anonymous')

@@ -16,7 +16,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -1569,3 +1569,24 @@ class InitiativeAPITestCase(APITestCase):
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('segments', [segment])
+
+
+class InitiativePlatformSettingsApiTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettings.load()
+        self.url = reverse('settings')
+
+    def test_get_search_filter_settings(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['platform']['initiatives']['show_all_activities'])
+
+        self.settings.show_all_activities = True
+        self.settings.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['platform']['initiatives']['show_all_activities'])

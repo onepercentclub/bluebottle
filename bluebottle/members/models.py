@@ -5,6 +5,8 @@ from builtins import object
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Sum, Q
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -14,6 +16,7 @@ from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..segments.models import SegmentType
+from ..time_based.models import TimeContribution
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -35,6 +38,36 @@ class MemberPlatformSettings(BasePlatformSettings):
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
+    create_initiatives = models.BooleanField(
+        default=True, help_text=_('Members can create initiatives')
+    )
+    do_good_hours = models.IntegerField(
+        null=True, blank=True,
+        help_text=_('The amount of hours users can spend each year. '
+                    'Leave empty if no restrictions apply.')
+    )
+
+    reminder_q1 = models.BooleanField(
+        _('Reminder Q1'),
+        default=False,
+        help_text=_("This activation mail is sent on January 1st.")
+    )
+    reminder_q2 = models.BooleanField(
+        _('Reminder Q2'),
+        default=False,
+        help_text=_("This activation mail is sent on April 1st.")
+    )
+    reminder_q3 = models.BooleanField(
+        _('Reminder Q3'),
+        default=False,
+        help_text=_("This activation mail is sent on July 1st.")
+    )
+    reminder_q4 = models.BooleanField(
+        _('Reminder Q4'),
+        default=False,
+        help_text=_("This activation mail is sent on October 1st.")
+    )
+
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
         default=False, help_text=_('Require verifying the user\'s email before signup')
@@ -161,6 +194,11 @@ class Member(BlueBottleBaseUser):
         default=False,
         help_text=_("Monthly overview of activities that match this person's profile")
     )
+    receive_reminder_emails = models.BooleanField(
+        _('Receive reminder emails'),
+        default=True,
+        help_text=_("User receives emails reminding them about their do good hours")
+    )
 
     remote_id = models.CharField(_('remote_id'),
                                  max_length=75,
@@ -266,6 +304,24 @@ class Member(BlueBottleBaseUser):
 
     def __str__(self):
         return self.full_name
+
+    def get_hours(self, status):
+        hours = TimeContribution.objects.filter(
+            contributor__user=self, status=status
+        ).filter(
+            Q(start__year=now().year) | Q(end__year=now().year)
+        ).aggregate(hours=Sum('value'))['hours']
+        if hours:
+            return hours.seconds / 3600
+        return 0.0
+
+    @property
+    def hours_spent(self):
+        return self.get_hours('succeeded')
+
+    @property
+    def hours_planned(self):
+        return self.get_hours('new')
 
     def save(self, *args, **kwargs):
         if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:

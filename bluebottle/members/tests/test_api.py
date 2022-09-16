@@ -12,17 +12,23 @@ from django.core.signing import TimestampSigner
 from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
+    SlotParticipantFactory
+)
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -1079,6 +1085,57 @@ class UserAPITestCase(BluebottleTestCase):
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
 
+    def test_get_current_user_with_initiatives(self):
+        InitiativeFactory.create(
+            owner=self.user
+        )
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], True)
+
+    def test_get_current_user_without_initiatives(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], False)
+
+    def test_get_current_user_no_hours_spent(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['hours_spent'], 0)
+        self.assertEqual(response.json()['hours_planned'], 0)
+
+    def test_get_current_user_hours_spent(self):
+        activity = DateActivityFactory.create(
+            slot_selection='free'
+        )
+        slot1 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() - timedelta(days=1),
+            duration=timedelta(hours=3)
+        )
+        slot2 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            duration=timedelta(hours=2)
+        )
+
+        participant = DateParticipantFactory.create(
+            activity=activity,
+            user=self.user
+        )
+
+        SlotParticipantFactory.create(
+            participant=participant,
+            slot=slot1
+        )
+
+        SlotParticipantFactory.create(
+            participant=participant,
+            slot=slot2
+        )
+
+        slot1.states.finish(save=True)
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['hours_spent'], 3)
+        self.assertEqual(response.json()['hours_planned'], 2)
+
 
 class MemberSettingsAPITestCase(BluebottleTestCase):
 
@@ -1099,3 +1156,39 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')
+
+    def test_create_initiatives(self):
+        settings = MemberPlatformSettings.load()
+        settings.create_initiatives = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], False)
+        settings.create_initiatives = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
+
+
+class MemberProfileAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.url = reverse('manage-profile', args=(self.user.id, ))
+
+    def test_get_profile_has_receive_reminder_emails(self):
+        response = self.client.get(self.url, token=self.user_token)
+        data = response.json()
+        self.assertEqual(data['receive_reminder_emails'], True)
+
+    def test_uncheck_has_receive_reminder_emails(self):
+        response = self.client.get(self.url, token=self.user_token)
+        data = response.json()
+        data['receive_reminder_emails'] = False
+        del data['picture']
+        del data['avatar']
+        response = self.client.put(self.url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.receive_reminder_emails)

@@ -169,6 +169,12 @@ class FlutterwaveBankAccount(BankAccount):
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/flutterwave-external-accounts'
 
+    @property
+    def bank_name(self):
+        if not self.bank_code:
+            return None
+        return [bank[1] for bank in self.BANK_CHOICES if bank[0] == self.bank_code][0]
+
     def __str__(self):
         return "Flutterwave Bankaccount {}".format(self.account_holder_name)
 

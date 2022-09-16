@@ -557,6 +557,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
     def lookup_allowed(self, key, value):
         if key in [
+            'goals__type__id__exact',
             'initiative__location__id__exact',
             'initiative__location__subregion__id__exact',
             'initiative__location__subregion__region__id__exact',

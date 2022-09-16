@@ -31,6 +31,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
+        'upcoming',
         'location.id',
         'segment',
         'team_activity'
@@ -151,6 +152,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
             return Term(type='dateactivity') | Term(type='periodactivity')
 
         return Term(type=value)
+
+    def get_upcoming_filter(self, value, request):
+        if value == 'true':
+            return Terms(status=['open', 'full'])
+        if value == 'false':
+            return Terms(status=['succeeded', 'partially_funded'])
 
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')

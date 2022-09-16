@@ -207,8 +207,14 @@ class ActivityDocument(Document):
                 'id': instance.office_location.pk,
                 'name': instance.office_location.name,
                 'locality': instance.office_location.city,
-                'country_code': instance.office_location.country.alpha2_code,
-                'country': instance.office_location.country.name,
+                'country_code': (
+                    instance.office_location.country.alpha2_code if
+                    instance.office_location.country else None
+                ),
+                'country': (
+                    instance.office_location.country.name if
+                    instance.office_location.country else None
+                ),
                 'type': 'office'
             })
         elif instance.initiative.place:

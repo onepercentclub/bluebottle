@@ -43,6 +43,18 @@ class TeamsField(HyperlinkedRelatedField):
             return f"{self.reverse('team-list')}?filter[activity_id]={kwargs['pk']}"
 
 
+class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.pop('model')
+        super().__init__(*args, **kwargs)
+
+    def get_url(self, *args, **kwargs):
+        url = super().get_url(*args, **kwargs)
+
+        if url:
+            return f"{url}?filter[status]=new"
+
+
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
     is_online = serializers.BooleanField(required=False, allow_null=True)
@@ -56,6 +68,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise',
             'review',
             'contributors',
+            'unreviewed_contributors',
             'my_contributor',
             'teams',
         )
@@ -362,9 +375,17 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     contributors = SerializerMethodHyperlinkedRelatedField(
         model=DateParticipant,
+        read_only=True,
         many=True,
         related_link_view_name='date-participants',
         related_link_url_kwarg='activity_id'
+    )
+
+    unreviewed_contributors = UnreviewedContributorsField(
+        read_only=True,
+        related_link_view_name='date-participants',
+        related_link_url_kwarg='activity_id',
+        model=DateParticipant
     )
 
     def get_slot_count(self, instance):
@@ -384,6 +405,22 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
                 )
             )
         ]
+
+    def get_unreviewed_contributors(self, instance):
+        user = self.context['request'].user
+        unreviewed_participants = instance.contributors.instance_of(
+            DateParticipant
+        ).filter(
+            status=ParticipantStateMachine.new.value
+        )
+
+        if (
+            user not in (instance.owner, instance.initiative.owner) and
+            user not in instance.activity_managers.all()
+        ):
+            unreviewed_participants = unreviewed_participants.filter(user=user)
+
+        return unreviewed_participants
 
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
@@ -467,6 +504,13 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = ParticipantsField()
 
+    unreviewed_contributors = UnreviewedContributorsField(
+        read_only=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id',
+        model=PeriodParticipant
+    )
+
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',
         url_args=('pk', ),
@@ -474,6 +518,22 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         permission=CanExportParticipantsPermission,
         read_only=True
     )
+
+    def get_unreviewed_contributors(self, instance):
+        user = self.context['request'].user
+        unreviewed_participants = instance.contributors.instance_of(
+            PeriodParticipant
+        ).filter(
+            status=ParticipantStateMachine.new.value
+        )
+
+        if (
+            user not in (instance.owner, instance.initiative.owner) and
+            user not in instance.activity_managers.all()
+        ):
+            unreviewed_participants = unreviewed_participants.filter(user=user)
+
+        return unreviewed_participants
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user

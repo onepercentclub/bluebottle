@@ -583,7 +583,7 @@ class Participant(Contributor):
 
 class DateParticipant(Participant):
     motivation = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, view_name='date-participant-document')
 
     class Meta():
         verbose_name = _("Participant on a date")
@@ -606,7 +606,7 @@ class DateParticipant(Participant):
 
 class PeriodParticipant(Participant, Contributor):
     motivation = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, view_name='period-participant-document')
 
     current_period = models.DateField(null=True, blank=True)
 

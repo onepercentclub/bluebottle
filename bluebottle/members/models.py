@@ -1,7 +1,9 @@
 from __future__ import absolute_import
 
 from builtins import object
+from datetime import timedelta, date
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -289,19 +291,19 @@ class Member(BlueBottleBaseUser):
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
 
-        settings = MemberPlatformSettings.load()
+        platform_settings = MemberPlatformSettings.load()
 
-        if settings.require_office and (
+        if platform_settings.require_office and (
             not self.location or
-            (settings.verify_office and not self.location_verified)
+            (platform_settings.verify_office and not self.location_verified)
         ):
             required.append('location')
 
         for attr in ['birthdate', 'phone_number']:
-            if getattr(settings, f'require_{attr}') and not getattr(self, attr):
+            if getattr(platform_settings, f'require_{attr}') and not getattr(self, attr):
                 required.append(attr)
 
-        if settings.require_address and not (self.place and self.place.complete):
+        if platform_settings.require_address and not (self.place and self.place.complete):
             required.append('address')
 
         return required
@@ -310,10 +312,13 @@ class Member(BlueBottleBaseUser):
         return self.full_name
 
     def get_hours(self, status):
+        platform_settings = MemberPlatformSettings.load()
+        year_start = date(now().year, 1, 1) + relativedelta(months=-platform_settings.fiscal_month_offset)
+        year_end = year_start + relativedelta(years=1) - timedelta(days=1)
         hours = TimeContribution.objects.filter(
             contributor__user=self, status=status
         ).filter(
-            Q(start__year=now().year) | Q(end__year=now().year)
+            Q(start_gte=year_start, start_lte=year_end)
         ).aggregate(hours=Sum('value'))['hours']
         if hours:
             return hours.seconds / 3600

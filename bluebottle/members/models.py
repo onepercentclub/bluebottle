@@ -187,6 +187,20 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
+    @property
+    def fiscal_year_start(self):
+        offset = self.fiscal_month_offset
+        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
+        return (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+
+    @property
+    def fiscal_year_end(self):
+        return self.fiscal_year_start + relativedelta(years=1) - timedelta(seconds=1)
+
+    def fiscal_year(self):
+        offset = self.fiscal_month_offset
+        return (now() - relativedelta(months=offset)).year
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -313,10 +327,8 @@ class Member(BlueBottleBaseUser):
 
     def get_hours(self, status):
         platform_settings = MemberPlatformSettings.load()
-        offset = platform_settings.fiscal_month_offset
-        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
-        year_start = (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
-        year_end = year_start + relativedelta(years=1) - timedelta(seconds=1)
+        year_start = platform_settings.fiscal_year_start
+        year_end = platform_settings.fiscal_year_end
         hours = TimeContribution.objects.filter(
             contributor__user=self, status=status,
             start__gte=year_start, start__lte=year_end

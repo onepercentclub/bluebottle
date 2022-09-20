@@ -341,6 +341,18 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
+        contributor_url = reverse(f'{self.type}-participants', args=(self.activity.pk, ))
+        self.assertTrue(
+            data['relationships']['unreviewed-contributors']['links']['related'].endswith(
+                f"{contributor_url}?filter[status]=new"
+            )
+        )
+        self.assertTrue(
+            data['relationships']['contributors']['links']['related'].endswith(
+                contributor_url
+            )
+        )
+
     def test_matching_theme(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)

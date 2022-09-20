@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 
 from builtins import object
-from datetime import timedelta, date
+from datetime import timedelta, datetime
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Sum, Q
+from django.db.models import Sum
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
@@ -48,10 +48,10 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('The amount of hours users can spend each year. '
                     'Leave empty if no restrictions apply.')
     )
-    fiscal_month_offset = models.PositiveIntegerField(
+    fiscal_month_offset = models.IntegerField(
         _('Fiscal year offset'),
         help_text=_('Use this if the fiscal years starts later or earlier then January. '
-                    'If the year starts September (so earlier) then this value should be 4.'),
+                    'If the year starts September (so earlier) then this value should be -4.'),
         default=0)
     reminder_q1 = models.BooleanField(
         _('Reminder Q1'),
@@ -313,12 +313,13 @@ class Member(BlueBottleBaseUser):
 
     def get_hours(self, status):
         platform_settings = MemberPlatformSettings.load()
-        year_start = date(now().year, 1, 1) + relativedelta(months=-platform_settings.fiscal_month_offset)
-        year_end = year_start + relativedelta(years=1) - timedelta(days=1)
+        offset = platform_settings.fiscal_month_offset
+        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
+        year_start = (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+        year_end = year_start + relativedelta(years=1) - timedelta(seconds=1)
         hours = TimeContribution.objects.filter(
-            contributor__user=self, status=status
-        ).filter(
-            Q(start_gte=year_start, start_lte=year_end)
+            contributor__user=self, status=status,
+            start__gte=year_start, start__lte=year_end
         ).aggregate(hours=Sum('value'))['hours']
         if hours:
             return hours.seconds / 3600

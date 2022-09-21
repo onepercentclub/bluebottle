@@ -3,6 +3,7 @@ from datetime import date
 
 from celery.schedules import crontab
 from celery.task import periodic_task
+from dateutil.relativedelta import relativedelta
 from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
 
 from bluebottle.activities.documents import activity
@@ -130,17 +131,17 @@ def recommend():
     ignore_result=True
 )
 def do_good_hours_reminder():
-
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             settings = MemberPlatformSettings.objects.get()
             if settings.do_good_hours:
-                q1 = date.today().replace(month=1, day=1)
-                q2 = date.today().replace(month=4, day=1)
-                q3 = date.today().replace(month=7, day=1)
-                q4 = date.today().replace(month=10, day=1)
-                notification = None
+                offset = settings.fiscal_month_offset
                 today = date.today()
+                q1 = (date.today().replace(month=1, day=1) + relativedelta(months=offset)).replace(today.year)
+                q2 = (date.today().replace(month=4, day=1) + relativedelta(months=offset)).replace(today.year)
+                q3 = (date.today().replace(month=7, day=1) + relativedelta(months=offset)).replace(today.year)
+                q4 = (date.today().replace(month=10, day=1) + relativedelta(months=offset)).replace(today.year)
+                notification = None
                 if settings.reminder_q1 and today == q1:
                     notification = DoGoodHoursReminderQ1Notification(settings)
                 if settings.reminder_q2 and today == q2:

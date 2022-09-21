@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-21 14:50+0200\n"
-"PO-Revision-Date: 2022-09-21 12:51\n"
+"POT-Creation-Date: 2022-09-21 14:53+0200\n"
+"PO-Revision-Date: 2022-09-21 12:53\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -5278,7 +5278,7 @@ msgid "The initiative will be submitted for review."
 msgstr "Die Initiative wird zur Überprüfung vorgelegt."
 
 #: bluebottle/initiatives/states.py:102
-msgid "The initiative will be visible in the frontend and all completed activities will be open for contributions. Crondfunding activities have to be reviewed separately."
+msgid "The initiative will be visible in the frontend and all completed activities will be open for contributions. Crowdfunding activities have to be reviewed separately."
 msgstr ""
 
 #: bluebottle/initiatives/states.py:115

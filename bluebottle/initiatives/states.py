@@ -100,7 +100,9 @@ class ReviewStateMachine(ModelStateMachine):
         approved,
         name=_('Approve'),
         description=_("The initiative will be visible in the frontend and "
-                      "all completed activities will be open for contributions."),
+                      "all completed activities will be open for contributions. "
+                      "Crondfunding activities have to be reviewed separately."
+                      ),
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,

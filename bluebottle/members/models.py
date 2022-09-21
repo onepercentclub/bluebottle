@@ -46,26 +46,30 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('The amount of hours users can spend each year. '
                     'Leave empty if no restrictions apply.')
     )
-
+    fiscal_month_offset = models.PositiveIntegerField(
+        _('Fiscal year offset'),
+        help_text=_('Use this if the fiscal years starts later or earlier then January. '
+                    'If the year starts September (so earlier) then this value should be 4.'),
+        default=0)
     reminder_q1 = models.BooleanField(
         _('Reminder Q1'),
         default=False,
-        help_text=_("This activation mail is sent on January 1st.")
+        help_text=_("This activation mail is sent in first month.")
     )
     reminder_q2 = models.BooleanField(
         _('Reminder Q2'),
         default=False,
-        help_text=_("This activation mail is sent on April 1st.")
+        help_text=_("This activation mail is sent in fourth month")
     )
     reminder_q3 = models.BooleanField(
         _('Reminder Q3'),
         default=False,
-        help_text=_("This activation mail is sent on July 1st.")
+        help_text=_("This activation mail is sent in seventh month.")
     )
     reminder_q4 = models.BooleanField(
         _('Reminder Q4'),
         default=False,
-        help_text=_("This activation mail is sent on October 1st.")
+        help_text=_("This activation mail is sent in tenth month.")
     )
 
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])

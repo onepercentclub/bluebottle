@@ -13,10 +13,6 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         programs = ChoiceItem('programs', label=_('Programs'))
         civic = ChoiceItem('civic', label=_('Civic'))
 
-    fiscal_month_offset = models.PositiveIntegerField(
-        _('Fiscal year offset'),
-        help_text=_('This could be used in reporting.'),
-        default=0)
     user_base = models.PositiveIntegerField(
         _("User base"),
         help_text=_('Number of employees or number of users that could access the platform.'),

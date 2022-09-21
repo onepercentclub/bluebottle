@@ -85,7 +85,6 @@ class LookerSSOEmbed(object):
             ('external_group_id', 'Back-office Users'),
             ('user_attributes', {
                 'tenant': schema_name,
-                'fiscal_month_offset': analytics_settings.fiscal_month_offset,
                 'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
             }),

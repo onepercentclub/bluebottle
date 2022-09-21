@@ -235,7 +235,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:
-            return obj.location.timezone
+            return f'{obj.start.astimezone(timezone(obj.location.timezone))} ({obj.location.timezone})'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
     timezone.short_description = _('Timezone')

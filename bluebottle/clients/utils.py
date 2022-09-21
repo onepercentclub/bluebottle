@@ -225,6 +225,7 @@ def get_public_properties(request):
         properties = get_tenant_properties()
 
         config = {
+            'tenant': current_tenant.client_name,
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
             'currencies': get_currencies(),

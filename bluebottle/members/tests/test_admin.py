@@ -333,6 +333,16 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         settings_platform = MemberPlatformSettings.load()
         self.assertTrue(settings_platform.create_initiatives)
 
+    def test_fiscal_year(self):
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['fiscal_month_offset'] = '4'
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertEqual(settings_platform.fiscal_month_offset, 4)
+
 
 class MemberAdminExportTest(BluebottleTestCase):
     """

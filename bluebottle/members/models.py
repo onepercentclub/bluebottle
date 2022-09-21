@@ -56,22 +56,22 @@ class MemberPlatformSettings(BasePlatformSettings):
     reminder_q1 = models.BooleanField(
         _('Reminder Q1'),
         default=False,
-        help_text=_("This activation mail is sent in first month.")
+        help_text=_("This activation mail is sent in the first month of the (fiscal) year.")
     )
     reminder_q2 = models.BooleanField(
         _('Reminder Q2'),
         default=False,
-        help_text=_("This activation mail is sent in fourth month")
+        help_text=_("This activation mail is sent in the fourth month of the (fiscal) year.")
     )
     reminder_q3 = models.BooleanField(
         _('Reminder Q3'),
         default=False,
-        help_text=_("This activation mail is sent in seventh month.")
+        help_text=_("This activation mail is sent in the seventh month of the (fiscal) year.")
     )
     reminder_q4 = models.BooleanField(
         _('Reminder Q4'),
         default=False,
-        help_text=_("This activation mail is sent in tenth month.")
+        help_text=_("This activation mail is sent in the tenth month of the (fiscal) year.")
     )
 
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])

@@ -159,7 +159,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             if obj.image.type == 'activity':
                 url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
             if obj.image.type == 'initiative':
-                url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+                url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
 
             return f'{url}?_={hash}'
 

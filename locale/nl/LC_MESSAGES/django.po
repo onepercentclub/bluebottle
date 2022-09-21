@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-21 14:53+0200\n"
-"PO-Revision-Date: 2022-09-21 12:53\n"
+"PO-Revision-Date: 2022-09-21 12:55\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -5275,7 +5275,7 @@ msgstr "Het initiatief zal worden ingediend te review."
 
 #: bluebottle/initiatives/states.py:102
 msgid "The initiative will be visible in the frontend and all completed activities will be open for contributions. Crowdfunding activities have to be reviewed separately."
-msgstr ""
+msgstr "Het initiatief zal zichtbaar zijn aan de voorkant en alle volledige activiteiten zullen open zijn voor bijdrages. Crowdfunding activiteiten moeten apart worden goedgekeurd."
 
 #: bluebottle/initiatives/states.py:115
 msgid "The status of the initiative is set to 'Needs work'. The initiator can edit and resubmit the initiative. Don't forget to inform the initiator of the necessary adjustments."

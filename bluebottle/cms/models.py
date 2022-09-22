@@ -8,7 +8,6 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
-from bluebottle.activities.models import Activity
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.utils.fields import ImageField
@@ -252,11 +251,6 @@ class ActivitiesContent(TitledContent):
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/initiatives/activities/list",
                                    blank=True, null=True)
-
-    activities = models.ManyToManyField(
-        Activity, blank=True, db_table='cms_activitycontent_activities'
-    )
-    highlighted = models.BooleanField(default=False)
 
     preview_template = 'admin/cms/preview/activities.html'
 

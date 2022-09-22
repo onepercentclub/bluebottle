@@ -842,7 +842,7 @@ class DateParticipantSerializer(ParticipantSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
-                fields=('activity', 'user')
+                fields=('activity', 'user',)
             )
         ]
 
@@ -858,6 +858,7 @@ class DateParticipantSerializer(ParticipantSerializer):
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
 
@@ -904,6 +905,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

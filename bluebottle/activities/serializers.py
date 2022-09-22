@@ -137,13 +137,14 @@ class ActivityPreviewSerializer(ModelSerializer):
         location = False
         if obj.slots:
             slots = self.get_filtered_slots(obj)
-            if len(slots) == 1:
+
+            if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
                 location = slots[0]
         elif type == 'funding':
             places = [location for location in obj.location if location.type == 'place']
             if places:
                 location = places[0]
-        else:
+        elif len(obj.location):
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
             location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
 
@@ -159,7 +160,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             if obj.image.type == 'activity':
                 url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
             if obj.image.type == 'initiative':
-                url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+                url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
 
             return f'{url}?_={hash}'
 

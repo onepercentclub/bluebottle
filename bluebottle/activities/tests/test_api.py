@@ -122,6 +122,29 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertIsNone(attributes['location'])
 
+    def test_date_preview_multiple_slots_single_location(self):
+        activity = DateActivityFactory.create(status='open', slots=[])
+        location = GeolocationFactory.create()
+        DateActivitySlotFactory.create_batch(3, activity=activity, location=location)
+        response = self.client.get(self.url, user=self.owner)
+        attributes = response.json()['data'][0]['attributes']
+
+        self.assertEqual(attributes['slug'], activity.slug)
+        self.assertEqual(attributes['title'], activity.title)
+        self.assertEqual(attributes['initiative'], activity.initiative.title)
+        self.assertEqual(attributes['status'], activity.status)
+        self.assertEqual(attributes['team-activity'], activity.team_activity)
+        self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(attributes['is-full'], False)
+        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(attributes['has-multiple-locations'], False)
+
+        self.assertEqual(
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+        )
+
     def test_date_preview_multiple_slots_single_open(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)

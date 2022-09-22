@@ -205,24 +205,22 @@ class ActivityDocument(Document):
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
-            if instance.office_location.country:
-                locations.append({
-                    'id': instance.office_location.pk,
-                    'name': instance.office_location.name,
-                    'locality': instance.office_location.city,
-                    'country_code': instance.office_location.country.alpha2_code,
-                    'country': instance.office_location.country.name,
-                    'type': 'office'
-                })
-            else:
-                locations.append({
-                    'id': instance.office_location.pk,
-                    'name': instance.office_location.name,
-                    'locality': instance.office_location.city,
-                    'type': 'office'
-                })
-
+            locations.append({
+                'id': instance.office_location.pk,
+                'name': instance.office_location.name,
+                'locality': instance.office_location.city,
+                'country_code': (
+                    instance.office_location.country.alpha2_code if
+                    instance.office_location.country else None
+                ),
+                'country': (
+                    instance.office_location.country.name if
+                    instance.office_location.country else None
+                ),
+                'type': 'office'
+            })
         elif instance.initiative.location:
+
             locations.append({
                 'id': instance.initiative.location.pk,
                 'name': instance.initiative.location.name,

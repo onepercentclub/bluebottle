@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodResourceRelatedField
+    ResourceRelatedField, SerializerMethodResourceRelatedField, HyperlinkedRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -29,7 +29,6 @@ from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
-from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.fields import (
     SafeField,
     ValidationErrorsField,
@@ -153,6 +152,14 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
+class ActivitiesField(HyperlinkedRelatedField):
+    def __init__(self, many=True, read_only=True, *args, **kwargs):
+        super().__init__(Activity, many=many, read_only=read_only, *args, **kwargs)
+
+    def get_url(self, name, view_name, kwargs, request):
+        return f"{self.reverse('activity-preview-list')}?filter[initiative.id]={kwargs['pk']}"
+
+
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
@@ -161,12 +168,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
-    activities = PolymorphicSerializerMethodResourceRelatedField(
-        ActivityListSerializer,
-        model=Activity,
-        many=True,
-        read_only=True
-    )
+
+    activities = ActivitiesField()
+
     segments = SerializerMethodResourceRelatedField(
         ActivityListSerializer,
         model=Segment,

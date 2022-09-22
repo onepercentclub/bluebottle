@@ -35,7 +35,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'location.id',
         'segment',
         'team_activity',
-        'initiative.id'
+        'initiative.id',
+        'highlight',
     )
 
     search_fields = (

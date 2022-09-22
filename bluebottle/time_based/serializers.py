@@ -849,7 +849,6 @@ class DateParticipantSerializer(ParticipantSerializer):
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'slots',
-            'activity',
         ]
         resource_name = 'contributors/time-based/date-participants'
 
@@ -859,7 +858,6 @@ class DateParticipantSerializer(ParticipantSerializer):
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
 
@@ -906,7 +904,6 @@ class PeriodParticipantSerializer(ParticipantSerializer):
             'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
-            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
 

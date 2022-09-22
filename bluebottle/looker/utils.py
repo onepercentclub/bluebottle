@@ -1,5 +1,7 @@
 from future import standard_library
 
+from bluebottle.members.models import MemberPlatformSettings
+
 standard_library.install_aliases()
 from builtins import object
 import binascii
@@ -70,6 +72,7 @@ class LookerSSOEmbed(object):
     def url(self):
         schema_name = connection.tenant.schema_name
         analytics_settings = AnalyticsPlatformSettings.objects.get()
+        member_settings = MemberPlatformSettings.objects.get()
 
         params = OrderedDict([
             ('nonce', self.nonce.decode()),
@@ -85,6 +88,7 @@ class LookerSSOEmbed(object):
             ('external_group_id', 'Back-office Users'),
             ('user_attributes', {
                 'tenant': schema_name,
+                'fiscal_month_offset': member_settings.fiscal_month_offset,
                 'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
             }),

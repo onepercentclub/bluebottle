@@ -162,7 +162,6 @@ class ResultPageTestCase(BluebottleTestCase):
 
         projects = response.data['blocks'][0]
         self.assertEqual(projects['type'], 'activities')
-        self.assertEqual(projects['activities'][0]['title'], activity.title)
 
     def test_results_share_results(self):
         share_text = '{people} donated {donated} and did {tasks} tasks and joined {activities} activities.'
@@ -295,7 +294,6 @@ class HomePageTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'activities')
-        self.assertEqual(len(response.data['blocks'][0]['activities']), 4)
 
     def test_slides_png(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)

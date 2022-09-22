@@ -16,6 +16,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     document = activity
 
     sort_fields = {
+        'highlight': ('-highlight', ),
         'date': ('-activity_date', ),
         'alphabetical': ('title_keyword', ),
         'popularity': 'relevancy',

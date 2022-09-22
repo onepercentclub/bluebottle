@@ -78,6 +78,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_matching = MoneySerializer(read_only=True)
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
+    highlight = serializers.BooleanField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -260,7 +261,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type'
+            'collect_type', 'highlight'
         )
 
     class JSONAPIMeta:

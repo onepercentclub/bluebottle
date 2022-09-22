@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime
 
 from celery.schedules import crontab
 from celery.task import periodic_task
@@ -137,10 +137,10 @@ def do_good_hours_reminder():
             if settings.do_good_hours:
                 offset = settings.fiscal_month_offset
                 today = date.today()
-                q1 = (date.today().replace(month=1, day=1) + relativedelta(months=offset)).replace(today.year)
-                q2 = (date.today().replace(month=4, day=1) + relativedelta(months=offset)).replace(today.year)
-                q3 = (date.today().replace(month=7, day=1) + relativedelta(months=offset)).replace(today.year)
-                q4 = (date.today().replace(month=10, day=1) + relativedelta(months=offset)).replace(today.year)
+                q1 = (datetime(2000, 1, 1).date() + relativedelta(months=offset)).replace(today.year)
+                q2 = q1 + relativedelta(months=3)
+                q3 = q1 + relativedelta(months=6)
+                q4 = q1 + relativedelta(months=9)
                 notification = None
                 if settings.reminder_q1 and today == q1:
                     notification = DoGoodHoursReminderQ1Notification(settings)

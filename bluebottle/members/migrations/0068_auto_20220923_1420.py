@@ -14,6 +14,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='memberplatformsettings',
+            name='do_good_hours',
+            field=models.PositiveIntegerField(blank=True, help_text="Leave empty if this feature won't be used.", null=True, verbose_name='Impact hours'),
+        ),
+        migrations.AlterField(
+            model_name='memberplatformsettings',
             name='fiscal_month_offset',
             field=models.IntegerField(blank=True, default=0, help_text='Set the number of months your fiscal year will be offset by. This will also take into account how the impact metrics are shown on the homepage. e.g. If the year starts from September (so earlier) then this value should be -4.', null=True, verbose_name='Fiscal year offset'),
         ),

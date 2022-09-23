@@ -43,7 +43,7 @@ class MemberPlatformSettings(BasePlatformSettings):
     create_initiatives = models.BooleanField(
         default=True, help_text=_('Members can create initiatives')
     )
-    do_good_hours = models.IntegerField(
+    do_good_hours = models.PositiveIntegerField(
         _('Impact hours'),
         null=True, blank=True,
         help_text=_("Leave empty if this feature won't be used.")

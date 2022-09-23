@@ -44,34 +44,32 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=True, help_text=_('Members can create initiatives')
     )
     do_good_hours = models.IntegerField(
+        _('Impact hours'),
         null=True, blank=True,
-        help_text=_('The amount of hours users can spend each year. '
-                    'Leave empty if no restrictions apply.')
+        help_text=_("Leave empty if this feature won't be used.")
     )
     fiscal_month_offset = models.IntegerField(
         _('Fiscal year offset'),
-        help_text=_('Use this if the fiscal years starts later or earlier then January. '
-                    'If the year starts September (so earlier) then this value should be -4.'),
+        help_text=_('Set the number of months your fiscal year will be offset by. '
+                    'This will also take into account how the impact metrics are shown on the homepage. '
+                    'e.g. If the year starts from September (so earlier) then this value should be -4.'),
         default=0)
+
     reminder_q1 = models.BooleanField(
         _('Reminder Q1'),
         default=False,
-        help_text=_("This activation mail is sent in the first month of the (fiscal) year.")
     )
     reminder_q2 = models.BooleanField(
         _('Reminder Q2'),
         default=False,
-        help_text=_("This activation mail is sent in the fourth month of the (fiscal) year.")
     )
     reminder_q3 = models.BooleanField(
         _('Reminder Q3'),
         default=False,
-        help_text=_("This activation mail is sent in the seventh month of the (fiscal) year.")
     )
     reminder_q4 = models.BooleanField(
         _('Reminder Q4'),
         default=False,
-        help_text=_("This activation mail is sent in the tenth month of the (fiscal) year.")
     )
 
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])

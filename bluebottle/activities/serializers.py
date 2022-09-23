@@ -78,6 +78,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_matching = MoneySerializer(read_only=True)
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
+    highlight = serializers.BooleanField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -136,7 +137,8 @@ class ActivityPreviewSerializer(ModelSerializer):
         location = False
         if obj.slots:
             slots = self.get_filtered_slots(obj)
-            if len(slots) == 1:
+
+            if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
                 location = slots[0]
         elif type == 'funding':
             places = [location for location in obj.location if location.type == 'place']
@@ -158,7 +160,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             if obj.image.type == 'activity':
                 url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
             if obj.image.type == 'initiative':
-                url = reverse('activity-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+                url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
 
             return f'{url}?_={hash}'
 
@@ -259,7 +261,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type'
+            'collect_type', 'highlight'
         )
 
     class JSONAPIMeta:

@@ -32,6 +32,7 @@ class ActivityDocument(Document):
     status = fields.KeywordField()
     status_score = fields.FloatField()
     created = fields.DateField()
+    highlight = fields.BooleanField()
 
     type = fields.KeywordField()
 

@@ -155,7 +155,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             }
         ),
         (
-            _('Engagement'),
+            _('Impact hours'),
             {
                 'fields': (
                     'impact_hours_info',

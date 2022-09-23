@@ -157,7 +157,7 @@ class ActivitiesField(HyperlinkedRelatedField):
         super().__init__(Activity, many=many, read_only=read_only, *args, **kwargs)
 
     def get_url(self, name, view_name, kwargs, request):
-        return f"{self.reverse('activity-preview-list')}?filter[initiative.id]={kwargs['pk']}"
+        return f"{self.reverse('activity-preview-list')}?filter[initiative.id]={kwargs['pk']}&page[size]=100"
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):

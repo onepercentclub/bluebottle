@@ -14,8 +14,9 @@ from rest_framework import status
 
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.impact.models import ImpactType
+from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -410,6 +411,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertTrue(
             '/data/attributes/title' in (error['source']['pointer'] for error in data['meta']['required'])
         )
+        self.assertEqual(
+            data['relationships']['activities']['links']['related'],
+            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=100'
+        )
 
     def test_get_image_used_twice(self):
         InitiativeFactory.create(image=self.initiative.image)
@@ -435,177 +440,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data['attributes']['title'], self.initiative.title)
-
-    def test_get_activities(self):
-        event = DateActivityFactory.create(
-            status='full',
-            initiative=self.initiative,
-            image=ImageFactory.create(),
-            slots=[]
-        )
-
-        DateActivityFactory.create(
-            status='deleted',
-            initiative=self.initiative,
-        )
-        DateActivityFactory.create(
-            status='cancelled',
-            initiative=self.initiative,
-        )
-
-        funding = FundingFactory.create(
-            status='partially_funded',
-            initiative=self.initiative
-        )
-        DateActivitySlotFactory.create(activity=event)
-        response = self.client.get(self.url)
-
-        data = response.json()['data']
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 2)
-        activity_types = [rel['type'] for rel in data['relationships']['activities']['data']]
-
-        self.assertTrue(
-            'activities/fundings' in activity_types
-        )
-        self.assertTrue(
-            'activities/time-based/dates' in activity_types
-        )
-
-        event_data = get_include(response, 'activities/time-based/dates')
-        self.assertEqual(event_data['id'], str(event.pk))
-        self.assertEqual(
-            event_data['attributes']['title'],
-            event.title
-        )
-
-        funding_data = get_include(response, 'activities/fundings')
-        self.assertEqual(funding_data['id'], str(funding.pk))
-        self.assertEqual(
-            funding_data['attributes']['title'],
-            funding.title
-        )
-
-        activity_image = event_data['relationships']['image']['data']
-
-        self.assertTrue(
-            activity_image in (
-                {'type': included['type'], 'id': included['id']} for included in
-                response.json()['included']
-            )
-        )
-
-    def test_get_activities_owner(self):
-        DateActivityFactory.create(
-            status='full',
-            initiative=self.initiative,
-        )
-
-        DateActivityFactory.create(
-            status='cancelled',
-            initiative=self.initiative,
-        )
-
-        DateActivityFactory.create(
-            status='deleted',
-            initiative=self.initiative,
-        )
-
-        FundingFactory.create(
-            status='partially_funded',
-            initiative=self.initiative
-        )
-        response = self.client.get(self.url, user=self.initiative.owner)
-
-        data = response.json()['data']
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 3)
-
-    def test_get_activities_managers(self):
-        DateActivityFactory.create(
-            status='draft',
-            initiative=self.initiative,
-        )
-
-        DateActivityFactory.create(
-            status='cancelled',
-            initiative=self.initiative,
-        )
-
-        DateActivityFactory.create(
-            status='deleted',
-            initiative=self.initiative,
-        )
-
-        FundingFactory.create(
-            status='partially_funded',
-            initiative=self.initiative
-        )
-        manager = BlueBottleUserFactory.create()
-        self.initiative.activity_managers.add(manager)
-        response = self.client.get(self.url, user=manager)
-
-        data = response.json()['data']
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 3)
-
-    def test_get_activities_closed_segments(self):
-        open_segment = SegmentFactory.create(closed=False)
-        closed_segment = SegmentFactory.create(closed=True)
-        user = BlueBottleUserFactory.create()
-        user.segments.add(closed_segment)
-        another_user = BlueBottleUserFactory.create()
-        another_user.segments.add(open_segment)
-        staff_member = BlueBottleUserFactory.create(is_staff=True)
-
-        act1 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act1.segments.add(open_segment)
-
-        act2 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act2.segments.add(closed_segment)
-
-        act3 = DateActivityFactory.create(
-            status='open',
-            initiative=self.initiative,
-        )
-        act3.segments.add(closed_segment)
-        act3.segments.add(open_segment)
-        response = self.client.get(self.url, user=user)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 3)
-        response = self.client.get(self.url, user=another_user)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 1)
-        response = self.client.get(self.url)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 1)
-        response = self.client.get(self.url, user=staff_member)
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 3)
-
-    def test_deleted_activities(self):
-        DateActivityFactory.create(initiative=self.initiative, status='deleted')
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
-
-        data = response.json()['data']
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(data['relationships']['activities']['data']), 0)
 
     def test_get_stats(self):
         self.initiative.states.approve(save=True)
@@ -721,6 +555,46 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             stats['collected'][str(other_collect_activity.collect_type_id)],
             other_collect_activity.realized
         )
+
+    def test_get_stats_impact(self):
+        self.initiative.states.approve(save=True)
+
+        co2 = ImpactType.objects.get(slug='co2')
+        water = ImpactType.objects.get(slug='water')
+
+        first = DeedFactory.create(
+            initiative=self.initiative, target=5, enable_impact=True
+        )
+        ImpactGoalFactory.create(activity=first, type=co2, realized=100)
+        ImpactGoalFactory.create(activity=first, type=water, realized=0, target=1000)
+        DeedParticipantFactory.create_batch(5, activity=first)
+
+        second = DeedFactory.create(
+            initiative=self.initiative, target=5, enable_impact=True
+        )
+        ImpactGoalFactory.create(activity=second, type=co2, realized=200)
+        ImpactGoalFactory.create(activity=second, type=water, realized=0, target=1000)
+
+        third = DeedFactory.create(
+            initiative=self.initiative, target=10, enable_impact=True
+        )
+        ImpactGoalFactory.create(activity=third, type=co2, realized=300)
+        ImpactGoalFactory.create(activity=third, type=water, realized=0, target=500)
+        DeedParticipantFactory.create_batch(5, activity=third)
+
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stats = response.json()['data']['meta']['stats']
+
+        self.assertEqual(stats['impact'][0]['name'], 'reduce CO₂ emissions by {} kg')
+        self.assertEqual(stats['impact'][0]['value'], 600.0)
+
+        self.assertEqual(stats['impact'][1]['name'], 'water saved')
+        self.assertEqual(stats['impact'][1]['value'], 1250.0)
 
     def test_get_other(self):
         response = self.client.get(
@@ -883,21 +757,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
             self.assertTrue(
                 resource['id'] in expected_ids
             )
-
-    def test_filter_owner_activity(self):
-        InitiativeFactory.create_batch(4, status='submitted')
-
-        with_activity = InitiativeFactory.create(status='submitted', owner=self.owner)
-        activity = DateActivityFactory.create(owner=self.owner, initiative=with_activity)
-
-        response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
 
     def test_filter_country(self):
         mordor = CountryFactory.create(name='Mordor')

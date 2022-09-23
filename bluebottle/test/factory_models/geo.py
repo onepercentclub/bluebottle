@@ -28,6 +28,7 @@ class CountryFactory(factory.DjangoModelFactory):
         model = Country
 
     name = factory.Faker('country')
+    alpha2_code = factory.Faker('country_code')
     subregion = factory.SubFactory(SubRegionFactory)
 
 

@@ -1,9 +1,8 @@
 from django_elasticsearch_dsl.registries import registry
+from django_elasticsearch_dsl import fields
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import Member
 
 SCORE_MAP = {
     'open': 1,
@@ -16,15 +15,25 @@ SCORE_MAP = {
 @registry.register_document
 @activity.doc_type
 class FundingDocument(ActivityDocument):
+    target = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+    amount_raised = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+
     class Django:
         model = Funding
-        related_models = (Initiative, Member, Donor)
+        related_models = ActivityDocument.Django.related_models + (Donor, )
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return Funding.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Member):
-            return Funding.objects.filter(owner=related_instance)
+        result = super().get_instances_from_related(related_instance)
+
+        if result is not None:
+            return result
+
         if isinstance(related_instance, Donor):
             return Funding.objects.filter(contributors=related_instance)
 
@@ -32,9 +41,19 @@ class FundingDocument(ActivityDocument):
         return SCORE_MAP.get(instance.status, 0)
 
     def prepare_end(self, instance):
-        return instance.deadline
+        return [instance.deadline]
 
     def prepare_duration(self, instance):
         if instance.started and instance.deadline and instance.started > instance.deadline:
             return {}
         return {'gte': instance.started, 'lte': instance.deadline}
+
+    def prepare_amount(self, amount):
+        if amount:
+            return {'amount': amount.amount, 'currency': str(amount.currency)}
+
+    def prepare_target(self, instance):
+        return self.prepare_amount(instance.target)
+
+    def prepare_amount_raised(self, instance):
+        return self.prepare_amount(instance.amount_raised)

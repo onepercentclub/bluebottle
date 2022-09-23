@@ -4,6 +4,7 @@ from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework import response
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
@@ -12,7 +13,7 @@ from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
-    ActivityListSerializer,
+    ActivityPreviewSerializer,
     ContributorListSerializer,
     TeamTransitionSerializer,
 )
@@ -31,24 +32,27 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, ExportView
+    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
 )
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 
 
-class ActivityList(JsonApiViewMixin, ListAPIView):
-    queryset = Activity.objects.select_related(
-        'owner',
-        'initiative',
-        'initiative__owner',
-        'initiative__location',
-        'initiative__theme',
-        'initiative__place',
-        'initiative__image',
-        'initiative__location__country',
-        'initiative__organization',
-    ).prefetch_related('initiative__activity_managers')
-    serializer_class = ActivityListSerializer
+class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
+    serializer_class = ActivityPreviewSerializer
     model = Activity
+    pagination_class = JsonApiElasticSearchPagination
+    renderer_classes = (ElasticSearchJSONAPIRenderer, )
+
+    def list(self, request, *args, **kwargs):
+        result = self.filter_queryset(None)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result, many=True)
+        return response.Response(serializer.data)
 
     filter_backends = (
         ActivitySearchFilter,
@@ -57,13 +61,6 @@ class ActivityList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
-
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'location': ['location'],
-        'country': ['country'],
-        'owner': ['owner'],
-    }
 
 
 class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):

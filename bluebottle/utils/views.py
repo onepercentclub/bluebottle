@@ -16,6 +16,8 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+
+from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework.pagination import PageNumberPagination
@@ -239,7 +241,7 @@ class TranslatedApiViewMixin(object):
         return qs
 
 
-class ESPaginator(Paginator):
+class ESDBPaginator(Paginator):
     @cached_property
     def count(self):
         """
@@ -288,7 +290,32 @@ class ESPaginator(Paginator):
         return page
 
 
+class ESPaginator(Paginator):
+    @cached_property
+    def count(self):
+        """
+        Returns the total number of objects, across all pages.
+        """
+        return self.object_list[1].count()
+
+    def page(self, number):
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        return self._get_page(self.object_list[1][bottom:top].execute(), number, self)
+
+
 class JsonApiPagination(JsonApiPageNumberPagination):
+    page_size = 8
+    max_page_size = None
+    django_paginator_class = ESDBPaginator
+
+
+class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator

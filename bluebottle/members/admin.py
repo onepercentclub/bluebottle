@@ -147,6 +147,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 'description': _('Quarterly emails will only be sent to users who have not spent any hours.'),
                 'fields': (
                     'do_good_hours',
+                    'fiscal_month_offset',
                     'reminder_q1',
                     'reminder_q2',
                     'reminder_q3',

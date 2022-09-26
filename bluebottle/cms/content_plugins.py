@@ -64,7 +64,6 @@ class HomepageStatisticsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ActivitiesBlockPlugin(CMSContentPlugin):
     model = ActivitiesContent
-    raw_id_fields = ('activities', )
     category = _('Activities')
 
 

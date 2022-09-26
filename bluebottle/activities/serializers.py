@@ -78,6 +78,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     amount_matching = MoneySerializer(read_only=True)
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
+    highlight = serializers.BooleanField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -177,7 +178,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             self.context['themes'] = [theme.pk for theme in user.favourite_themes.all()]
 
         if 'location' not in self.context:
-            self.context['location'] = user.location or user.place
+            if user.location and user.location.position:
+                self.context['location'] = user.location
+
+            if user.place and user.place.position:
+                self.context['location'] = user.place
 
         matching = {'location': False}
         matching['skill'] = obj.expertise[0].id in self.context['skills'] if obj.expertise else False
@@ -185,7 +190,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         if obj.is_online:
             matching['location'] = True
-        elif self.context['location'] and obj.position:
+        elif 'location' in self.context and obj.position:
             positions = [obj.position] if 'lat' in obj.position else obj.position
 
             dist = min(
@@ -260,7 +265,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type'
+            'collect_type', 'highlight'
         )
 
     class JSONAPIMeta:

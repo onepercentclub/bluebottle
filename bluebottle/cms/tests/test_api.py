@@ -150,9 +150,8 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(quotes['quotes'][0]['quote'], self.quote.quote)
 
     def test_results_activities(self):
-        activity = DateActivityFactory.create(status='open')
-        block = ActivitiesContent.objects.create_for_placeholder(self.placeholder)
-        block.activities.add(activity)
+        DateActivityFactory.create(status='open', highlight=True)
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder)
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -290,7 +289,7 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_activities_from_homepage(self):
         DateActivityFactory.create_batch(10, status='open', highlight=True)
-        ActivitiesContent.objects.create_for_placeholder(self.placeholder, highlighted=True)
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'activities')

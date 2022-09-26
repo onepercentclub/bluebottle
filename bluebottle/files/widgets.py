@@ -1,4 +1,5 @@
 from django.forms import Select
+from bluebottle.utils.utils import reverse_signed
 
 
 class ImageWidget(Select):
@@ -32,9 +33,14 @@ class PrivateDocumentWidget(Select):
 
     def get_context(self, name, value, attrs):
         context = super(PrivateDocumentWidget, self).get_context(name, value, attrs)
+
         if value:
             from bluebottle.files.models import PrivateDocument
-            context['file'] = PrivateDocument.objects.get(pk=value).file
+            document = PrivateDocument.objects.get(pk=value)
+            context['download_link'] = reverse_signed(
+                self.attrs['view_name'],
+                args=(getattr(document, f"{self.attrs['related_field']}_set").first().pk, )
+            )
         else:
-            context['file'] = None
+            context['download_link'] = None
         return context

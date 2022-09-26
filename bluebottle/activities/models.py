@@ -21,7 +21,6 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
-
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
@@ -51,8 +50,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         on_delete=models.CASCADE
     )
 
-    highlight = models.BooleanField(default=False,
-                                    help_text=_('Highlight this activity to show it on homepage'))
+    highlight = models.BooleanField(
+        default=False,
+        help_text=_('Highlight this activity to show it on homepage')
+    )
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
@@ -69,11 +70,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     initiative = models.ForeignKey(Initiative, related_name='activities', on_delete=models.CASCADE)
 
     office_location = models.ForeignKey(
-        'geo.Location', verbose_name=_('office'),
+        'geo.Location', verbose_name=_('Host office'),
         null=True, blank=True, on_delete=models.SET_NULL)
 
     office_restriction = models.CharField(
-        _('Office restriction'),
+        _('Restrictions'),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True, null=True, max_length=100
@@ -276,7 +277,6 @@ class Contribution(TriggerMixin, PolymorphicModel):
 
 
 class EffortContribution(Contribution):
-
     class ContributionTypeChoices(DjangoChoices):
         organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
         deed = ChoiceItem('deed', label=_("Deed particpant"))

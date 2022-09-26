@@ -92,6 +92,7 @@ urlpatterns = [
     url(r'^/participants/date/transitions$',
         DateParticipantTransitionList.as_view(),
         name='date-participant-transition-list'),
+
     url(r'^/participants/date/(?P<pk>\d+)/document$',
         DateParticipantDocumentDetail.as_view(),
         name='date-participant-document'),

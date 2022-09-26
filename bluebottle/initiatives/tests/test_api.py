@@ -411,6 +411,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertTrue(
             '/data/attributes/title' in (error['source']['pointer'] for error in data['meta']['required'])
         )
+        self.assertEqual(
+            data['relationships']['activities']['links']['related'],
+            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=100'
+        )
 
     def test_get_image_used_twice(self):
         InitiativeFactory.create(image=self.initiative.image)

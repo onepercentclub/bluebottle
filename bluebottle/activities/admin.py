@@ -322,7 +322,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     office_fields = (
         'office_location',
-        'office_restriction',
     )
 
     description_fields = (
@@ -430,7 +429,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
-        if settings.enable_office_regions:
+
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                self.office_fields += (
+                    'office_restriction',
+                )
             fieldsets.insert(1, (
                 _('Office'), {'fields': self.office_fields}
             ))

@@ -419,6 +419,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'contact_method',
             'enable_impact',
             'enable_office_regions',
+            'enable_office_restrictions',
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',

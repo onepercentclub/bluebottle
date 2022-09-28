@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from pytz import UTC
 
+from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory
@@ -215,6 +216,21 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         page = form.submit()
         self.assertEqual(page.status, '200 OK')
         self.assertTrue('This field is required.' in page.text)
+
+    def test_document(self):
+        self.participant.document = PrivateDocumentFactory.create()
+        self.participant.save()
+
+        self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
+        page = self.app.get(self.url)
+        self.assertEqual(page.status, '200 OK')
+
+        link = page.html.find("a", {'class': 'private-document-link'})
+        self.assertTrue(
+            link.attrs['href'].startswith(
+                reverse('date-participant-document', args=(self.participant.pk, ))
+            )
+        )
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):

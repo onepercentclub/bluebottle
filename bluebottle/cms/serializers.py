@@ -1,13 +1,12 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from django.db.models import Sum
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
 
-from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
@@ -190,31 +189,10 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ActivitiesContentSerializer(serializers.ModelSerializer):
-    activities = serializers.SerializerMethodField()
-
-    def get_activities(self, obj):
-        if obj.highlighted:
-            activities = Activity.objects.filter(
-                highlight=True
-            ).exclude(
-                segments__closed=True
-            ).exclude(
-                status__in=[
-                    'draft', 'needs_work', 'submitted',
-                    'deleted', 'cancelled', 'rejected',
-                    'expired',
-                ]
-            ).order_by('?')[0:4]
-        else:
-            activities = obj.activities
-
-        return ActivityListSerializer(
-            activities, many=True, context=self.context
-        ).to_representation(activities)
 
     class Meta(object):
         model = ActivitiesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'activities',
+        fields = ('id', 'type', 'title', 'sub_title',
                   'action_text', 'action_link')
 
 
@@ -269,7 +247,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', 'link', 'external')
 
 
 class StepsContentSerializer(serializers.ModelSerializer):

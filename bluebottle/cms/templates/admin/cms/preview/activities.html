@@ -1,7 +1,4 @@
-<ul>
-{% for activity in instance.activities.all %}
-    <li>{{ activity.title }}</li>
-{% endfor %}
-</ul>
+{% load i18n%}
 
+{% trans "Toggle 'highlight' on activities to show them in this block." %}
 {{ instance.action }}

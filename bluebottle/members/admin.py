@@ -111,6 +111,7 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+
     fieldsets = (
         (
             _('Login'),
@@ -141,11 +142,18 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             }
         ),
         (
-            _('Initiatives'),
+            _('Engagement'),
             {
+                'description': _('Quarterly emails will only be sent to users who have not spent any hours.'),
                 'fields': (
+                    'do_good_hours',
+                    'fiscal_month_offset',
+                    'reminder_q1',
+                    'reminder_q2',
+                    'reminder_q3',
+                    'reminder_q4',
                     'create_initiatives',
-                )
+                ),
             }
         ),
     )
@@ -185,7 +193,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return fieldsets
 
-    readonly_fields = ('segment_types',)
+    readonly_fields = ('segment_types', )
 
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
@@ -385,6 +393,8 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         [
+                            'hours_spent',
+                            'hours_planned',
                             'initiatives',
                             'date_activities',
                             'period_activities',
@@ -439,7 +449,8 @@ class MemberAdmin(UserAdmin):
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc'
+            'funding', 'deeds', 'collect', 'kyc',
+            'hours_spent', 'hours_planned'
         ]
 
         user_groups = request.user.groups.all()

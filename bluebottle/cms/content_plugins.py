@@ -32,10 +32,10 @@ class CMSContentPlugin(ContentPlugin):
             "all": ('admin/css/forms-nested.css', )
         }
         js = (
-            'admin/js/inlines-nested.js',
+            'admin/js/jquery.init.js',
+            'admin/js/inlines-nested.min.js',
             'js/csrf.js',
             'adminsortable/js/jquery-ui-django-admin.min.js',
-            'adminsortable/js/admin.sortable.stacked.inlines.js'
         )
 
 
@@ -64,7 +64,6 @@ class HomepageStatisticsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ActivitiesBlockPlugin(CMSContentPlugin):
     model = ActivitiesContent
-    raw_id_fields = ('activities', )
     category = _('Activities')
 
 

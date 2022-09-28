@@ -66,6 +66,7 @@ def tenant_url(path=None):
         url = "http://{0}:8000".format(domain)
     else:
         url = "https://{0}".format(domain)
+
     if path:
         return url + path
     return url
@@ -224,6 +225,7 @@ def get_public_properties(request):
         properties = get_tenant_properties()
 
         config = {
+            'tenant': current_tenant.client_name,
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
             'currencies': get_currencies(),

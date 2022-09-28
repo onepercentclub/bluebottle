@@ -235,7 +235,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:
-            return obj.location.timezone
+            return f'{obj.start.astimezone(timezone(obj.location.timezone))} ({obj.location.timezone})'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
     timezone.short_description = _('Timezone')
@@ -805,6 +805,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
     readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
     fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('document', )
     list_display = ['__str__', 'activity_link', 'status']
 
     def total(self, obj):

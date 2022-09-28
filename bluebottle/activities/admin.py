@@ -588,8 +588,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
         return filters
 
-    list_editable = ('highlight',)
-
     list_display = ['__str__', 'created', 'type', 'state_name',
                     'link', 'highlight']
 

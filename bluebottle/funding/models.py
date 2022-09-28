@@ -640,7 +640,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = PrivateDocumentField(blank=True, null=True, on_delete=models.deletion.SET_NULL)
+    document = PrivateDocumentField(
+        blank=True, null=True, on_delete=models.deletion.SET_NULL, view_name='kyc-document'
+    )
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 

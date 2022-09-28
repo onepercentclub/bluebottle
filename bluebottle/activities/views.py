@@ -327,6 +327,10 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 status__in=('accepted', 'succeeded',)
             )
 
+        status = self.request.query_params.get('filter[status]')
+        if status:
+            queryset = queryset.filter(status=status)
+
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
         )

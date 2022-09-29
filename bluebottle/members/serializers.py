@@ -675,7 +675,11 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_birthdate',
             'require_phone_number',
             'create_initiatives',
-            'do_good_hours'
+            'do_good_hours',
+            'fiscal_month_offset',
+            'fiscal_year',
+            'fiscal_year_start',
+            'fiscal_year_end',
         )
 
 

@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
 from builtins import object
+from datetime import timedelta, datetime
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Sum, Q
+from django.db.models import Sum
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
@@ -51,7 +53,6 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Set the number of months your fiscal year will be offset by. '
                     'This will also take into account how the impact metrics are shown on the homepage. '
                     'e.g. If the year starts from September (so earlier) then this value should be -4.'),
-        null=True, blank=True,
         default=0)
 
     reminder_q1 = models.BooleanField(
@@ -184,6 +185,20 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
+    @property
+    def fiscal_year_start(self):
+        offset = self.fiscal_month_offset
+        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
+        return (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+
+    @property
+    def fiscal_year_end(self):
+        return self.fiscal_year_start + relativedelta(years=1) - timedelta(seconds=1)
+
+    def fiscal_year(self):
+        offset = self.fiscal_month_offset
+        return (now() - relativedelta(months=offset)).year
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -288,19 +303,19 @@ class Member(BlueBottleBaseUser):
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
 
-        settings = MemberPlatformSettings.load()
+        platform_settings = MemberPlatformSettings.load()
 
-        if settings.require_office and (
+        if platform_settings.require_office and (
             not self.location or
-            (settings.verify_office and not self.location_verified)
+            (platform_settings.verify_office and not self.location_verified)
         ):
             required.append('location')
 
         for attr in ['birthdate', 'phone_number']:
-            if getattr(settings, f'require_{attr}') and not getattr(self, attr):
+            if getattr(platform_settings, f'require_{attr}') and not getattr(self, attr):
                 required.append(attr)
 
-        if settings.require_address and not (self.place and self.place.complete):
+        if platform_settings.require_address and not (self.place and self.place.complete):
             required.append('address')
 
         return required
@@ -309,10 +324,12 @@ class Member(BlueBottleBaseUser):
         return self.full_name
 
     def get_hours(self, status):
+        platform_settings = MemberPlatformSettings.load()
+        year_start = platform_settings.fiscal_year_start
+        year_end = platform_settings.fiscal_year_end
         hours = TimeContribution.objects.filter(
-            contributor__user=self, status=status
-        ).filter(
-            Q(start__year=now().year) | Q(end__year=now().year)
+            contributor__user=self, status=status,
+            start__gte=year_start, start__lte=year_end
         ).aggregate(hours=Sum('value'))['hours']
         if hours:
             return hours.seconds / 3600

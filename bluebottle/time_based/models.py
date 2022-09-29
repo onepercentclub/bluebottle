@@ -296,6 +296,8 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
         if self.location:
             params['location'] = self.location.formatted_address
+            if self.location_hint:
+                params['location'] = f'{params["location"]} ({self.location_hint})'
 
         return u'{}?{}'.format(url, urlencode(params))
 

@@ -498,6 +498,9 @@ class DateActivityIcalView(PrivateFileView):
             if slot.location:
                 event['location'] = icalendar.vText(slot.location.formatted_address)
 
+                if slot.location_hint:
+                    event['location'] = f'{event["location"]} ({slot.location_hint})'
+
             calendar.add_component(event)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
@@ -535,6 +538,8 @@ class BaseSlotIcalView(PrivateFileView):
         if instance.location:
             slot['location'] = icalendar.vText(instance.location.formatted_address)
 
+            if instance.location_hint:
+                slot['location'] = f'{slot["location"]} ({instance.location_hint})'
         calendar.add_component(slot)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')

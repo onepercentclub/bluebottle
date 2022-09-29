@@ -122,6 +122,12 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         )
 
     @property
+    def fiscal_q1(self):
+        return timezone.get_current_timezone().localize(
+            datetime(now().year, 9, 1)
+        )
+
+    @property
     def after_q1(self):
         return timezone.get_current_timezone().localize(
             datetime(now().year, 1, 12)
@@ -161,6 +167,21 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
         mail.outbox = []
         self.run_task(self.q1)
+        self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
+
+    def test_reminder_fiscal_q1(self):
+        settings = MemberPlatformSettings.load()
+        settings.fiscal_month_offset = -4
+        settings.save()
+        self.run_task(self.fiscal_q1)
+        self.assertEqual(len(mail.outbox), 3)
+        recipients = [m.to[0] for m in mail.outbox]
+        self.assertTrue(self.moderate_user.email in recipients, "Moderate user should receive email")
+        self.assertTrue(self.passive_user.email in recipients, "Passive user should receive email")
+        self.assertTrue(self.tempted_user.email in recipients, "Tempted user should receive email")
+
+        mail.outbox = []
+        self.run_task(self.fiscal_q1)
         self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
 
     def test_reminder_after_q1(self):

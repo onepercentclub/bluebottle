@@ -24,6 +24,7 @@ from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
 from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.offices.tests.factories import OfficeRegionFactory, OfficeSubRegionFactory
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
@@ -1030,6 +1031,97 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 0)
+
+    def test_filter_by_office(self):
+
+        europe = OfficeRegionFactory.create(name='Europe')
+        africa = OfficeRegionFactory.create(name='Africa')
+        netherlands = OfficeSubRegionFactory.create(
+            region=europe,
+            name='The Netherlands'
+        )
+        bulgaria = OfficeSubRegionFactory.create(
+            region=europe,
+            name='Bulgaria'
+        )
+        namibia = OfficeSubRegionFactory.create(
+            region=africa,
+            name='Nambibia'
+        )
+        amsterdam = LocationFactory.create(name='Amsterdam', subregion=netherlands)
+        leiden = LocationFactory.create(name='Leiden', subregion=netherlands)
+        lyutidol = LocationFactory.create(name='Lyutidol', subregion=bulgaria)
+        windhoek = LocationFactory.create(name='Windhoek', subregion=namibia)
+
+        DateActivityFactory.create(
+            office_location=leiden,
+            status='open',
+            office_restriction='office'
+        )
+        DateActivityFactory.create(
+            office_location=amsterdam,
+            status='open',
+            office_restriction='office_subregion'
+        )
+        DateActivityFactory.create(
+            office_location=amsterdam,
+            status='open',
+            office_restriction='office_subregion'
+        )
+        DateActivityFactory.create(
+            office_location=lyutidol,
+            status='open',
+            office_restriction='office_region'
+        )
+        DateActivityFactory.create(
+            office_location=windhoek,
+            status='open',
+            office_restriction='all'
+        )
+        DateActivityFactory.create(
+            office_location=windhoek,
+            status='open',
+            office_restriction='office_region'
+        )
+        platform = InitiativePlatformSettings.load()
+        platform.enable_office_restrictions = False
+        platform.save()
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(self.url, user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(f'{self.url}?filter[office]={windhoek.id}', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+        platform = InitiativePlatformSettings.load()
+        platform.enable_office_restrictions = True
+        platform.save()
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(self.url, user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(f'{self.url}?filter[office]={windhoek.id}', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        response = self.client.get(f'{self.url}?filter[office]={leiden.id}', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 5)
+
+        response = self.client.get(f'{self.url}?filter[office]={lyutidol.id}', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        response = self.client.get(f'{self.url}?filter[office]={amsterdam.id}', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
 
     def test_search(self):
         first = DateActivityFactory.create(

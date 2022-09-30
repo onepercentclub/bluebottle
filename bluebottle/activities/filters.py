@@ -184,6 +184,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     Term(office_restriction__restriction='office_region')
                 )
             )
+        return []
 
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')

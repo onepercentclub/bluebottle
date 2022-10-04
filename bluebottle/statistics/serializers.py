@@ -2,10 +2,12 @@ import datetime
 from builtins import str
 from builtins import object
 
+from dateutil.relativedelta import relativedelta
 from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
@@ -21,8 +23,9 @@ class BaseStatisticSerializer(ModelSerializer):
         params = self.context['request'].query_params
         if 'year' in params:
             year = int(params['year'])
-            start = datetime.datetime(year, 1, 1, tzinfo=tz)
-            end = datetime.datetime(year, 12, 31, tzinfo=tz)
+            settings = MemberPlatformSettings.load()
+            start = datetime.datetime(year, 1, 1, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
+            end = datetime.datetime(year, 12, 31, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
             value = obj.get_value(start, end)
         else:
             value = obj.get_value()

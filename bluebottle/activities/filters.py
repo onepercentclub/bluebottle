@@ -18,7 +18,6 @@ class ActivitySearchFilter(ElasticSearchFilter):
     sort_fields = {
         'highlight': ('-highlight', ),
         'date': ('-activity_date', ),
-        'upcoming': ('activity_date', ),
         'alphabetical': ('title_keyword', ),
         'popularity': 'relevancy',
         'relevancy': 'relevancy',

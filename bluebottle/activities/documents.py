@@ -1,14 +1,14 @@
 from builtins import str
+
 from django_elasticsearch_dsl import Document, fields
-
-from bluebottle.funding.models import Donor
-from bluebottle.utils.documents import MultiTenantIndex
-from bluebottle.activities.models import Activity
-from bluebottle.utils.search import Search
 from elasticsearch_dsl.field import DateRange
-from bluebottle.members.models import Member
 
+from bluebottle.activities.models import Activity
+from bluebottle.funding.models import Donor
 from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.members.models import Member
+from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.search import Search
 
 
 class DateRangeField(fields.DEDField, DateRange):
@@ -107,6 +107,16 @@ class ActivityDocument(Document):
             'city': fields.TextField(),
             'country': fields.TextField(attr='country.name'),
             'country_code': fields.TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    office_restriction = fields.NestedField(
+        attr='office_restriction',
+        properties={
+            'restriction': fields.TextField(),
+            'office': fields.LongField(),
+            'office_subregion': fields.LongField(),
+            'office_region': fields.LongField(),
         }
     )
 
@@ -232,6 +242,15 @@ class ActivityDocument(Document):
                     'type': 'impact_location'
                 })
         return locations
+
+    def prepare_office_restriction(self, instance):
+        office = instance.office_location
+        return {
+            'restriction': instance.office_restriction,
+            'office': office.id if office else None,
+            'subregion': office.subregion.id if office and office.subregion_id else None,
+            'region': office.subregion.region.id if office and office.subregion and office.subregion.region else None
+        }
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:

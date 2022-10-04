@@ -300,6 +300,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
         default=False,
         help_text=_("Allow admins to add (sub)regions to their offices.")
     )
+    enable_office_restrictions = models.BooleanField(
+        default=False,
+        help_text=_("Allow activity managers to specify office restrictions on activities.")
+    )
     enable_multiple_dates = models.BooleanField(
         default=False,
         help_text=_("Enable date activities to have multiple slots.")

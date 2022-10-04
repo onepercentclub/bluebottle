@@ -1,14 +1,16 @@
 import re
-import dateutil
 from datetime import datetime, time
 
+import dateutil
 from django.conf import settings
-
+from elasticsearch_dsl.function import ScriptScore
 from elasticsearch_dsl.query import (
     FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
 )
-from elasticsearch_dsl.function import ScriptScore
+
 from bluebottle.activities.documents import activity
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.filters import ElasticSearchFilter
 
 
@@ -34,6 +36,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'status',
         'upcoming',
         'location.id',
+        'office',
         'segment',
         'team_activity',
         'initiative.id',
@@ -161,6 +164,27 @@ class ActivitySearchFilter(ElasticSearchFilter):
             return Terms(status=['open', 'full'])
         if value == 'false':
             return Terms(status=['succeeded', 'partially_funded'])
+
+    def get_office_filter(self, value, request):
+        office = Location.objects.filter(id=value).first()
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.enable_office_restrictions:
+            return Nested(
+                path='office_restriction',
+                query=Term(
+                    office_restriction__restriction='all'
+                ) | (
+                    Term(office_restriction__office=office.id) &
+                    Term(office_restriction__restriction='office')
+                ) | (
+                    Term(office_restriction__subregion=office.subregion.id) &
+                    Term(office_restriction__restriction='office_subregion')
+                ) | (
+                    Term(office_restriction__region=office.subregion.region.id) &
+                    Term(office_restriction__restriction='office_region')
+                )
+            )
+        return []
 
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')

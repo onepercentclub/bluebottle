@@ -234,7 +234,8 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
         (_('Options'), {
             'fields': (
                 'contact_method', 'require_organization',
-                'enable_impact', 'enable_office_regions', 'enable_multiple_dates',
+                'enable_impact', 'enable_office_regions', 'enable_office_restrictions',
+                'enable_multiple_dates',
                 'enable_open_initiatives', 'enable_participant_exports',
                 'enable_matching_emails',
             )

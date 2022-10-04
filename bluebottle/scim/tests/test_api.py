@@ -614,7 +614,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         """
         Create a user with a location
         """
-        location = LocationFactory.create()
+        location = LocationFactory.create(name='test location!', slug='test-location')
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'active': True,

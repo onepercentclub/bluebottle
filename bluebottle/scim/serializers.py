@@ -2,6 +2,7 @@ from builtins import object
 from django.contrib.auth.models import Group
 from django.urls import reverse
 
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from dotted.collection import DottedDict
@@ -80,7 +81,7 @@ class AddressesField(serializers.RelatedField):
             queryset = self.get_queryset()
             location_name = value[0]['locality']
             try:
-                return queryset.get(name=location_name)
+                return queryset.get(slug=slugify(location_name))
             except Location.DoesNotExist:
                 return queryset.create(name=location_name)
             except (TypeError, ValueError):

@@ -1684,6 +1684,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_calendar_links(self):
+        self.slot.location = None
         self.slot.is_online = True
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
@@ -1695,16 +1696,45 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         links = response.json()['data']['attributes']['links']
 
         self.assertTrue(
-            urllib.parse.quote_plus(self.slot.online_meeting_url) in links['google']
-        )
-        self.assertTrue(
-            'https://calendar.google.com/calendar/render?action=TEMPLATE' in links['google']
-        )
-
-        self.assertTrue(
             links['ical'].startswith(
                 reverse('slot-ical', args=(self.slot.pk,))
             )
+        )
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(params['action'], ['TEMPLATE'])
+        self.assertEqual(params['text'][0], self.activity.title)
+        self.assertEqual(
+            params['details'][0],
+            f'{self.activity.description}\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
+        )
+
+    def test_get_calendar_links_location(self):
+        self.slot.is_online = False
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(
+            params['location'][0], self.slot.location.formatted_address
+        )
+
+    def test_get_calendar_links_location_hint(self):
+        self.slot.is_online = False
+        self.slot.location_hint = 'On the second floor'
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(
+            params['location'][0],
+            f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
         )
 
     def test_closed_site(self):
@@ -3066,6 +3096,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.slot = self.activity.slots.first()
         self.slot.is_online = True
         self.slot.online_meeting_url = 'http://example.com'
+        self.slot.location = None
         self.slot.save()
 
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
@@ -3112,6 +3143,37 @@ class SlotIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertTrue('location' not in ical_event)
+
+    def test_get_location(self):
+        self.slot.location = GeolocationFactory.create()
+        self.slot.save()
+
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertEqual(
+                ical_event['location'], self.slot.location.formatted_address
+            )
+
+    def test_get_location_hint(self):
+        self.slot.location = GeolocationFactory.create()
+        self.slot.location_hint = 'On the first floor'
+        self.slot.save()
+
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertEqual(
+                ical_event['location'],
+                f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
+            )
 
     def test_get_no_signature(self):
         response = self.client.get(self.unsigned_url)

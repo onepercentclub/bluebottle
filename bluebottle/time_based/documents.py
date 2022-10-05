@@ -107,6 +107,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 @registry.register_document
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'period': fields.KeywordField(),
+        'value': fields.FloatField()
+    })
+
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
 
@@ -125,6 +130,12 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return instance.location.country_id
         else:
             return super().prepare_country(instance)
+
+    def prepare_contribution_duration(self, instance):
+        return {
+            'period': instance.duration_period,
+            'value': instance.duration.seconds / (60 * 60)
+        }
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:

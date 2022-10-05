@@ -79,6 +79,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
+    contribution_duration = serializers.SerializerMethodField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -109,6 +110,13 @@ class ActivityPreviewSerializer(ModelSerializer):
             ][0]
         except IndexError:
             pass
+
+    def get_contribution_duration(self, obj):
+        if obj.contribution_duration:
+            return {
+                'period': obj.contribution_duration.period,
+                'value': obj.contribution_duration.value,
+            }
 
     def get_collect_type(self, obj):
         try:
@@ -265,7 +273,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type', 'highlight'
+            'collect_type', 'highlight', 'contribution_duration',
         )
 
     class JSONAPIMeta:

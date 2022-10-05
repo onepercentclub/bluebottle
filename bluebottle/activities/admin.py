@@ -431,7 +431,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         ]
 
         if Location.objects.count():
-            if settings.enable_office_restrictions:
+            if settings.enable_office_restrictions and 'office_restriction' not in self.office_fields:
                 self.office_fields += (
                     'office_restriction',
                 )

@@ -112,10 +112,26 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_contribution_duration(self, obj):
-        if obj.contribution_duration:
+        if len(obj.contribution_duration) == 0:
+            return {}
+        elif len(obj.contribution_duration) == 1:
             return {
-                'period': obj.contribution_duration.period,
-                'value': obj.contribution_duration.value,
+                'period': obj.contribution_duration[0].period,
+                'value': obj.contribution_duration[0].value,
+            }
+        else:
+            future = [
+                slot for slot in obj.contribution_duration
+                if datetime.strptime(slot.start, '%Y-%m-%dT%H:%M:%S%z') > now()
+            ]
+            if len(future):
+                return {
+                    'period': future.period,
+                    'value': future.value,
+                }
+            return {
+                'period': obj.contribution_duration[0].period,
+                'value': obj.contribution_duration[0].value,
             }
 
     def get_collect_type(self, obj):

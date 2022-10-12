@@ -47,19 +47,23 @@ class CountrySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'code', 'oda')
 
 
-class LocationSerializer(serializers.ModelSerializer):
-    latitude = serializers.DecimalField(source='position.latitude', required=False, max_digits=10, decimal_places=3)
-    longitude = serializers.DecimalField(source='position.longitude', required=False, max_digits=10, decimal_places=3)
-    image = ImageSerializer(required=False)
-
-    static_map_url = StaticMapsField(source='position')
+class OfficeListSerializer(ModelSerializer):
 
     class Meta(object):
         model = Location
-        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
+        fields = ('id', 'name', 'description', 'subregion')
 
     class JSONAPIMeta(object):
         resource_name = 'locations'
+        included_resources = [
+            'subregion',
+            'subregion.region'
+        ]
+
+    included_serializers = {
+        'subregion': 'bluebottle.offices.serializers.SubregionSerializer',
+        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
+    }
 
 
 class OfficeSerializer(ModelSerializer):
@@ -71,10 +75,23 @@ class OfficeSerializer(ModelSerializer):
 
     class Meta(object):
         model = Location
-        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
+        fields = (
+            'id', 'name', 'description', 'image',
+            'latitude', 'longitude', 'static_map_url',
+            'subregion'
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'locations'
+        included_resources = [
+            'subregion',
+            'subregion.region'
+        ]
+
+    included_serializers = {
+        'subregion': 'bluebottle.offices.serializers.SubregionSerializer',
+        'subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
+    }
 
 
 class SimplePointSerializer(serializers.CharField):

@@ -1,15 +1,13 @@
 from django.test import TestCase
 
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory
+from bluebottle.time_based.tests.factories import PeriodActivityFactory, PeriodParticipantFactory
 
 
 class ActivitySegmentsTestCase(TestCase):
     def setUp(self):
-
         team_type = SegmentTypeFactory.create(name='Team')
         self.team = SegmentFactory.create(name='Online Marketing', segment_type=team_type)
         self.other_team = SegmentFactory.create(name='Direct Marketing', segment_type=team_type)
@@ -64,39 +62,13 @@ class ActivitySegmentsTestCase(TestCase):
         self.assertTrue(self.unit in activity.segments.all())
         self.assertFalse(self.team in activity.segments.all())
 
-    def test_office_location_fallback(self):
-        location = LocationFactory.create()
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(location=location)
-        )
-        self.assertEqual(activity.fallback_location, location)
-
-    def test_office_location_fallback_both(self):
-        location = LocationFactory.create()
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(location=location),
-            office_location=LocationFactory.create()
-        )
-        self.assertEqual(activity.fallback_location, location)
-
-    def test_office_location_fallback_activity(self):
-        location = LocationFactory.create()
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(location=None),
-            office_location=location
-        )
-        self.assertEqual(activity.fallback_location, location)
-
     def test_office_location_required(self):
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(is_global=True)
-        )
+        LocationFactory.create_batch(3)
+        activity = PeriodActivityFactory.create()
         self.assertTrue('office_location' in activity.required_fields)
 
     def test_office_location_not_required(self):
-        activity = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(is_global=False)
-        )
+        activity = PeriodActivityFactory.create()
         self.assertFalse('office_location' in activity.required_fields)
 
     def test_is_team_captain_no_team(self):

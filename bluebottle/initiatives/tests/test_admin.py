@@ -16,7 +16,6 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.test.factory_models.geo import LocationFactory
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
@@ -52,7 +51,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'View on site')
         self.assertContains(response, 'Activities')
         self.assertContains(response, 'Messages')
-        self.assertContains(response, 'Offices')
         self.assertContains(response, 'Impact location')
 
     def test_initiative_admin_wrong_id(self):
@@ -68,26 +66,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), 'Initiative with ID "123456789" doesn\'t exist. Perhaps it was deleted?')
-
-    def test_initiative_open(self):
-        LocationFactory.create()
-        self.initiative.is_open = True
-        self.initiative.save()
-        self.client.force_login(self.superuser)
-        admin_url = reverse('admin:initiatives_initiative_change',
-                            args=(self.initiative.id,))
-        response = self.client.get(admin_url)
-        self.assertContains(response, 'Is global')
-
-    def test_initiative_closed(self):
-        LocationFactory.create()
-        self.initiative.is_open = False
-        self.initiative.save()
-        self.client.force_login(self.superuser)
-        admin_url = reverse('admin:initiatives_initiative_change',
-                            args=(self.initiative.id,))
-        response = self.client.get(admin_url)
-        self.assertNotContains(response, 'Is global')
 
     def test_initiative_admin_with_organization_contact(self):
         self.initiative.contact = OrganizationFactory.create()
@@ -251,7 +229,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_admin_open_initiative_disabled(self):
         initiative = InitiativeFactory.create()
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
-
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
         self.assertFalse('is_open' in page.forms[0].fields)
@@ -265,34 +242,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
         self.assertTrue('is_open' in page.forms[0].fields)
-
-    def test_global_initiative_set(self):
-        initiative_settings = InitiativePlatformSettings.load()
-        initiative_settings.enable_open_initiatives = True
-        initiative_settings.save()
-        locations = LocationFactory.create_batch(5)
-        initiative = InitiativeFactory.create(
-            is_open=True,
-            location=locations[0]
-        )
-        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
-        self.app.set_user(self.staff_member)
-        page = self.app.get(url)
-        form = page.forms[0]
-        self.assertTrue('is_open' in form.fields)
-        self.assertTrue('is_global' in form.fields)
-        self.assertTrue('location' in form.fields)
-        form['is_global'] = True
-        page = form.submit()
-        self.assertTrue('<h3>Remove location</h3>' in page.text)
-        form = page.forms[0]
-        page = form.submit().follow()
-        url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
-        self.app.set_user(self.staff_member)
-        page = self.app.get(url)
-        form = page.forms[0]
-        self.assertTrue('is_global' in form.fields)
-        self.assertFalse('location' in form.fields)
 
     def test_paginated_activities(self):
         self.app.set_user(self.staff_member)
@@ -327,21 +276,37 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
     csrf_checks = False
     setup_auth = True
 
+    def setUp(self):
+        super(TestInitiativePlatformSettingsAdmin, self).setUp()
+        self.initiative_settings = InitiativePlatformSettings.load()
+        self.initiative_settings.initiative_search_filters = ['theme']
+        self.initiative_settings.activity_search_filters = ['theme']
+        self.initiative_settings.save()
+
     def test_admin_open_initiative_disabled(self):
-        # Check multiple input shows labels
+        self.assertFalse(self.initiative_settings.enable_open_initiatives)
         url = reverse('admin:initiatives_initiativeplatformsettings_changelist')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
-        input_html = page.html.find('div', {'class': 'field-activity_types'}).text
-        self.assertTrue('Deed' in input_html)
-        self.assertTrue('Funding' in input_html)
+        form = page.forms[0]
+        self.assertFalse(form['enable_open_initiatives'].checked)
+        form['enable_open_initiatives'].checked = True
+        page = form.submit().follow()
+        self.assertFalse('error' in page.text)
+        self.assertEqual(page.status, '200 OK')
+        self.initiative_settings.refresh_from_db()
+        self.assertTrue(self.initiative_settings.enable_open_initiatives)
 
     def test_admin_team_activities(self):
+        self.assertFalse(self.initiative_settings.team_activities)
         url = reverse('admin:initiatives_initiativeplatformsettings_change')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
         form = page.forms[0]
-        form['team_activities'] = True
-        form.submit()
-        initiative_settings = InitiativePlatformSettings.load()
-        self.assertTrue(initiative_settings.team_activities)
+        self.assertFalse(form['team_activities'].checked)
+        form['team_activities'].checked = True
+        page = form.submit().follow()
+        self.assertEqual(page.status, '200 OK')
+        self.assertFalse('error' in page.text)
+        self.initiative_settings.refresh_from_db()
+        self.assertTrue(self.initiative_settings.team_activities)

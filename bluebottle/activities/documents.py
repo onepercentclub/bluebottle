@@ -1,14 +1,14 @@
 from builtins import str
+
 from django_elasticsearch_dsl import Document, fields
-
-from bluebottle.funding.models import Donor
-from bluebottle.utils.documents import MultiTenantIndex
-from bluebottle.activities.models import Activity
-from bluebottle.utils.search import Search
 from elasticsearch_dsl.field import DateRange
-from bluebottle.members.models import Member
 
+from bluebottle.activities.models import Activity
+from bluebottle.funding.models import Donor
 from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.members.models import Member
+from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.search import Search
 
 
 class DateRangeField(fields.DEDField, DateRange):
@@ -110,6 +110,16 @@ class ActivityDocument(Document):
         }
     )
 
+    office_restriction = fields.NestedField(
+        attr='office_restriction',
+        properties={
+            'restriction': fields.TextField(),
+            'office': fields.LongField(),
+            'office_subregion': fields.LongField(),
+            'office_region': fields.LongField(),
+        }
+    )
+
     contributors = fields.DateField()
     contributor_count = fields.IntegerField()
     donation_count = fields.IntegerField()
@@ -186,8 +196,6 @@ class ActivityDocument(Document):
 
     def prepare_country(self, instance):
         country_ids = []
-        if instance.initiative.location:
-            country_ids.append(instance.initiative.location.country_id)
         if hasattr(instance, 'office_location') and instance.office_location:
             country_ids.append(instance.office_location.country_id)
         if instance.initiative.place:
@@ -198,6 +206,7 @@ class ActivityDocument(Document):
         locations = []
         if hasattr(instance, 'location') and instance.location:
             locations.append({
+                'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'locality': instance.location.locality,
                 'country_code': instance.location.country.alpha2_code,
@@ -219,30 +228,29 @@ class ActivityDocument(Document):
                 ),
                 'type': 'office'
             })
-        elif instance.initiative.location:
-
-            locations.append({
-                'id': instance.initiative.location.pk,
-                'name': instance.initiative.location.name,
-                'locality': instance.initiative.location.city,
-                'country_code': (
-                    instance.initiative.location.country.alpha2_code if
-                    instance.initiative.location.country else None
-                ),
-                'country': (
-                    instance.initiative.location.country.name if
-                    instance.initiative.location.country else None
-                ),
-                'type': 'initiative_office'
-            })
         elif instance.initiative.place:
-            locations.append({
-                'locality': instance.initiative.place.locality,
-                'country_code': instance.initiative.place.country.alpha2_code,
-                'country': instance.initiative.place.country.name,
-                'type': 'impact_location'
-            })
+            if instance.initiative.place.country:
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'country_code': instance.initiative.place.country.alpha2_code,
+                    'country': instance.initiative.place.country.name,
+                    'type': 'impact_location'
+                })
+            else:
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'type': 'impact_location'
+                })
         return locations
+
+    def prepare_office_restriction(self, instance):
+        office = instance.office_location
+        return {
+            'restriction': instance.office_restriction,
+            'office': office.id if office else None,
+            'subregion': office.subregion.id if office and office.subregion_id else None,
+            'region': office.subregion.region.id if office and office.subregion and office.subregion.region else None
+        }
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
@@ -271,7 +279,7 @@ class ActivityDocument(Document):
             return instance.is_online
 
     def prepare_position(self, instance):
-        return None
+        return []
 
     def prepare_end(self, instance):
         return None

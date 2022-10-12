@@ -6,10 +6,10 @@ from django.utils.translation import gettext_lazy as _
 from mapwidgets import GooglePointFieldWidget
 from parler.admin import TranslatableAdmin
 
+from bluebottle.activities.models import Activity
 from bluebottle.geo.models import (
     Location, Country, Place,
     Geolocation)
-from bluebottle.initiatives.models import Initiative
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -57,19 +57,19 @@ class LocationAdmin(admin.ModelAdmin):
             return True
         return super(LocationAdmin, self).lookup_allowed(key, value)
 
-    list_display = ('name', 'slug', 'subregion_link', 'region_link', 'initiatives')
+    list_display = ('name', 'slug', 'subregion_link', 'region_link', 'activities', 'country')
     model = Location
     search_fields = ('name', 'description', 'city')
     verbose_name_plural = 'test'
 
     list_filter = ('subregion', 'subregion__region')
 
-    def initiatives(self, obj):
+    def activities(self, obj):
         return format_html(
-            u'<a href="{}?location__id__exact={}">{}</a>',
-            reverse('admin:initiatives_initiative_changelist'),
+            u'<a href="{}?office_location__id__exact={}">{}</a>',
+            reverse('admin:activities_activity_changelist'),
             obj.id,
-            len(Initiative.objects.filter(location=obj))
+            len(Activity.objects.filter(office_location=obj))
         )
 
     def subregion_link(self, obj):

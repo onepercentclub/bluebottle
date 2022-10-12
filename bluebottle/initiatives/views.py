@@ -1,8 +1,8 @@
-from builtins import str
 import uuid
+from builtins import str
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-
 from django.core.cache import cache
 from django.db import connection
 from rest_framework import generics
@@ -11,21 +11,20 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Funding
-from bluebottle.files.models import RelatedImage
-from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.permissions import (
     InitiativeStatusPermission, InitiativeOwnerPermission
 )
-from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativeRedirectSerializer,
     RelatedInitiativeImageSerializer, ThemeSerializer
 )
-from bluebottle.initiatives.models import Theme
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -95,9 +94,7 @@ class InitiativeMapList(generics.ListAPIView):
     def get_queryset(self):
         queryset = super(InitiativeMapList, self).get_queryset()
         queryset = queryset.filter(status='approved').all()
-        if not Location.objects.count():
-            # Skip initiatives without proper location
-            queryset = queryset.exclude(place__position=Point(0, 0))
+        queryset = queryset.exclude(place__position=Point(0, 0))
         return queryset
 
     def list(self, request, *args, **kwargs):

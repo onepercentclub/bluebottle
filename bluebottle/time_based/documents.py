@@ -158,7 +158,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
             position = instance.location.position
-            return {'lat': position.y, 'lon': position.x}
+            return [{'lat': position.y, 'lon': position.x}]
 
     def prepare_start(self, instance):
         return [instance.start]

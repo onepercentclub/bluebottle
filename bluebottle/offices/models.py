@@ -16,6 +16,9 @@ class OfficeRegion(models.Model):
     def __str__(self):
         return self.name
 
+    class JSONAPIMeta(object):
+        resource_name = 'offices/region'
+
 
 class OfficeSubRegion(models.Model):
     name = models.CharField(_('name'), max_length=255)
@@ -33,3 +36,6 @@ class OfficeSubRegion(models.Model):
 
     def __str__(self):
         return self.name
+
+    class JSONAPIMeta(object):
+        resource_name = 'offices/subregion'

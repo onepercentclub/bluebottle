@@ -146,7 +146,8 @@ tests_requires = [
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
     'sniffer==0.4.0',
-    'vine==1.3.0'
+    'vine==1.3.0',
+    'Faker==12.3.3'
 ]
 
 dev_requires = [

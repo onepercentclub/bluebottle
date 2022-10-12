@@ -1092,7 +1092,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
-        user = BlueBottleUserFactory.create()
         response = self.client.get(f'{self.url}?filter[office]={windhoek.id}', user=user)
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 6)
@@ -1122,6 +1121,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(f'{self.url}?filter[office]={amsterdam.id}', user=user)
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 4)
+
+        response = self.client.get(f'{self.url}?filter[office]=false', user=user)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
 
     def test_search(self):
         first = DateActivityFactory.create(

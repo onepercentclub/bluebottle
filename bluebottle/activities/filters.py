@@ -166,6 +166,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
             return Terms(status=['succeeded', 'partially_funded'])
 
     def get_office_filter(self, value, request):
+        if value == 'false':
+            return Nested(
+                path='office_restriction',
+                query=Term(
+                    office_restriction__restriction='all'
+                )
+            )
+
         office = Location.objects.filter(id=value).first()
         initiative_settings = InitiativePlatformSettings.load()
         if initiative_settings.enable_office_restrictions:

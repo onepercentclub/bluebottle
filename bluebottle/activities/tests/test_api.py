@@ -249,6 +249,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
+        self.assertEqual(attributes['contribution-duration'], {'period': 'overall', 'value': 20.0})
 
         location = activity.location
         self.assertEqual(

@@ -145,7 +145,7 @@ class MemberTestCase(BluebottleTestCase):
         slot5 = DateActivitySlotFactory.create(
             activity=activity,
             start=nov19,
-            duration=timedelta(hours=16)
+            duration=timedelta(hours=20)
         )
 
         participant = DateParticipantFactory.create(
@@ -192,7 +192,7 @@ class MemberTestCase(BluebottleTestCase):
         self.asserTimeSpent(sep20, 15)
 
         sep19 = datetime.datetime(2019, 9, 15, tzinfo=UTC)
-        self.asserTimeSpent(sep19, 16)
+        self.asserTimeSpent(sep19, 20)
 
         platform_settings.fiscal_month_offset = -4
         platform_settings.save()
@@ -201,7 +201,7 @@ class MemberTestCase(BluebottleTestCase):
         self.asserTimeSpent(sep20, 8)
 
         sep19 = datetime.datetime(2019, 9, 15, tzinfo=UTC)
-        self.asserTimeSpent(sep19, 23)
+        self.asserTimeSpent(sep19, 27)
 
         platform_settings.fiscal_month_offset = 2
         platform_settings.save()
@@ -210,4 +210,4 @@ class MemberTestCase(BluebottleTestCase):
         self.asserTimeSpent(sep20, 12)
 
         sep19 = datetime.datetime(2019, 9, 15, tzinfo=UTC)
-        self.asserTimeSpent(sep19, 19)
+        self.asserTimeSpent(sep19, 23)

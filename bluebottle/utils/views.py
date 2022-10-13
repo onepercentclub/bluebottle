@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import re
 from io import BytesIO
 from operator import attrgetter
 
@@ -15,8 +16,6 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
-
-from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework.pagination import PageNumberPagination
@@ -33,7 +32,7 @@ from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
-import re
+from .utils import get_current_language
 
 mime = magic.Magic(mime=True)
 
@@ -233,9 +232,9 @@ class OwnerListViewMixin(object):
 
 class TranslatedApiViewMixin(object):
     def get_queryset(self):
-        qs = super(TranslatedApiViewMixin, self).get_queryset().translated(
-            get_language()
-        )
+        qs = super(TranslatedApiViewMixin, self).get_queryset().active_translations(
+            get_current_language()
+        ).distinct('id').order_by('id')
         qs = qs.order_by(*qs.model._meta.ordering)
         return qs
 

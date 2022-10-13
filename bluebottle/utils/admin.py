@@ -183,6 +183,16 @@ class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAd
     pass
 
 
+class TranslatableAdminOrderingMixin(object):
+
+    translatable_ordering = 'translations__name'
+
+    def get_queryset(self, request):
+        language_code = self.get_queryset_language(request)
+        return super(TranslatableAdminOrderingMixin, self).get_queryset(request). \
+            translated(language_code).order_by(self.translatable_ordering)
+
+
 def admin_info_box(text):
     template = loader.get_template('admin/info_box.html')
     context = {

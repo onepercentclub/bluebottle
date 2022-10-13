@@ -15,7 +15,7 @@ from parler.models import TranslatedFields
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
@@ -183,7 +183,8 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             if not self.owner.partner_organization:
                 fields.append('organization_contact')
 
-        fields.append('place')
+        if not Location.objects.count():
+            fields.append('place')
 
         return fields
 

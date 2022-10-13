@@ -10,6 +10,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.geo.models import (
     Location, Country, Place,
     Geolocation)
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -38,7 +39,7 @@ class LocationFilter(admin.SimpleListFilter):
             return queryset
 
 
-class CountryAdmin(TranslatableAdmin):
+class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
     search_fields = ('translations__name', 'alpha2_code', 'alpha3_code')
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')

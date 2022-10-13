@@ -1248,6 +1248,53 @@ class ThemeAPITestCase(BluebottleTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_detail_translation(self):
+        theme = ThemeFactory.create(slug='world', name='Zooi')
+        theme.set_current_language('en')
+        theme.name = 'World domination'
+        theme.save()
+        url = reverse('initiative-theme', args=(theme.id,))
+        response = self.client.get(
+            url,
+            user=self.user,
+            HTTP_X_APPLICATION_LANGUAGE='en'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], 'World domination')
+
+    def test_detail_translation_missing(self):
+        theme = Theme.objects.create(slug='world')
+        theme.set_current_language('en')
+        theme.name = 'World domination'
+        theme.save()
+        url = reverse('initiative-theme', args=(theme.id,))
+        response = self.client.get(
+            url,
+            user=self.user,
+            HTTP_X_APPLICATION_LANGUAGE='nl'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], 'World domination')
+
+    def test_detail_translation_nl(self):
+        theme = ThemeFactory.create(slug='world')
+        theme.set_current_language('en')
+        theme.name = 'World domination'
+        theme.set_current_language('nl')
+        theme.name = 'Wereldoverheersing'
+        theme.save()
+        url = reverse('initiative-theme', args=(theme.id,))
+        response = self.client.get(
+            url,
+            user=self.user,
+            HTTP_X_APPLICATION_LANGUAGE='nl'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], 'Wereldoverheersing')
+
 
 class ThemeApiTestCase(BluebottleTestCase):
 

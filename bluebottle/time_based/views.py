@@ -15,7 +15,6 @@ from bluebottle.activities.permissions import (
     ActivitySegmentPermission
 )
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.clients import properties
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
@@ -698,10 +697,6 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SkillPagination
-
-    def get_queryset(self):
-        lang = self.request.LANGUAGE_CODE or properties.LANGUAGE_CODE
-        return super().get_queryset().translated(lang).order_by('translations__name')
 
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

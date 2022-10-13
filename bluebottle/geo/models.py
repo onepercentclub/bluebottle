@@ -12,10 +12,10 @@ from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
 from timezonefinder import TimezoneFinder
 
-from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
+from ..utils.models import SortableTranslatableModel
 
 tf = TimezoneFinder()
 
@@ -106,7 +106,6 @@ class Country(GeoBaseModel):
         return self.alpha2_code
 
     class Meta(GeoBaseModel.Meta):
-        ordering = ['translations__name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
 

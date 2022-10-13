@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from bluebottle.impact.models import ImpactType, ImpactGoal
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
 class ImpactGoalInline(admin.TabularInline):
@@ -19,7 +20,7 @@ class ImpactGoalInline(admin.TabularInline):
     unit.short_description = _('Unit')
 
 
-class ImpactTypeAdmin(TranslatableAdmin):
+class ImpactTypeAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('name', 'active', 'activities')
 
     def get_prepopulated_fields(self, request, obj=None):

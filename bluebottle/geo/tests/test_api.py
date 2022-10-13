@@ -50,13 +50,14 @@ class CountryListTestCase(GeoTestCase):
         """
         Ensure get request returns record with correct data.
         """
-        response = self.client.get(reverse('country-list'))
+        response = self.client.get(
+            reverse('country-list'),
+            HTTP_X_APPLICATION_LANGUAGE='nl'
+        )
 
-        country = response.data[0]
-
-        self.assertEqual(country['id'], self.country_1.id)
-        self.assertEqual(country['name'], self.country_1.name)
-        self.assertEqual(country['code'], 'GE')
+        countries = response.data
+        self.assertTrue('Abchazië' in [c['name'] for c in countries])
+        self.assertTrue('Zwitserland' in [c['name'] for c in countries])
 
 
 class UsedCountryListTestCase(GeoTestCase):

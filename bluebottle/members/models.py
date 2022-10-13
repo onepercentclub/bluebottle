@@ -328,11 +328,13 @@ class Member(BlueBottleBaseUser):
         year_start = platform_settings.fiscal_year_start
         year_end = platform_settings.fiscal_year_end
         hours = TimeContribution.objects.filter(
-            contributor__user=self, status=status,
-            start__gte=year_start, start__lte=year_end
+            contributor__user=self,
+            status=status,
+            start__gte=year_start,
+            start__lte=year_end
         ).aggregate(hours=Sum('value'))['hours']
         if hours:
-            return hours.seconds / 3600
+            return hours.seconds / 3600 + hours.days * 24
         return 0.0
 
     @property

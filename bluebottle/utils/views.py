@@ -16,8 +16,6 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
-
-from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework.pagination import PageNumberPagination

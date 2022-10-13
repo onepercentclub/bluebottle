@@ -9,7 +9,7 @@ from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.geo.models import Location, Country
+from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
@@ -110,51 +110,16 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'place',
     )
 
-    def lookup_allowed(self, key, value):
-        if key in [
-            'location__id__exact',
-            'location__subregion__id__exact',
-            'location__subregion__region__id__exact',
-        ]:
-            return True
-        return super(InitiativeAdmin, self).lookup_allowed(key, value)
-
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
-
-    def get_list_display(self, request):
-        fields = self.list_display
-        if Location.objects.count():
-            fields = fields + ['location_link']
-        return fields
 
     list_filter = [
         InitiativeReviewerFilter,
         ('categories', SortedRelatedFieldListFilter),
         ('theme', SortedRelatedFieldListFilter),
         StateMachineFilter,
+        InitiativeCountryFilter
     ]
-
-    def get_list_filter(self, request):
-        filters = self.list_filter
-        if Location.objects.count():
-            filters = filters + ['location']
-            if InitiativePlatformSettings.objects.get().enable_office_regions:
-                filters = filters + [
-                    'location__subregion',
-                    'location__subregion__region']
-        elif InitiativeCountryFilter not in filters:
-            filters.append(InitiativeCountryFilter)
-
-        return filters
-
-    def location_link(self, obj):
-        if not obj.location:
-            return "-"
-        url = reverse('admin:geo_location_change', args=(obj.location.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.location)
-
-    location_link.short_description = _('office')
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -172,7 +137,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ('image', 'Image'),
         ('video_url', 'Video'),
         ('place', 'Place'),
-        ('location', 'Location'),
         ('organization', 'Organization'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Owner email'),
@@ -189,14 +153,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             'title', 'slug', 'owner',
             'theme', 'categories'
         ]
-
-        if Location.objects.count():
-            if obj and obj.is_open:
-                detail_fields.append('is_global')
-            if obj and not obj.is_global:
-                detail_fields.append('location')
-        else:
-            detail_fields.append('place')
+        detail_fields.append('place')
 
         if InitiativePlatformSettings.objects.get().enable_open_initiatives:
             detail_fields.append('is_open')
@@ -277,7 +234,8 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
         (_('Options'), {
             'fields': (
                 'contact_method', 'require_organization',
-                'enable_impact', 'enable_office_regions', 'enable_multiple_dates',
+                'enable_impact', 'enable_office_regions', 'enable_office_restrictions',
+                'enable_multiple_dates',
                 'enable_open_initiatives', 'enable_participant_exports',
                 'enable_matching_emails',
             )

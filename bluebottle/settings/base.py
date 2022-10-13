@@ -711,7 +711,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__locality', 'Location'),
                 ('location__country__name', 'Country'),
                 ('location__country__alpha2_code', 'Country Code'),
-                ('fallback_location', _('Office location')),
+                ('office_location', 'Office Location'),
 
                 ('expertise', 'Skill'),
                 ('capacity', 'People needed'),
@@ -752,7 +752,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('description', 'Description'),
                 ('status', 'Status'),
-                ('fallback_location', _('Office location')),
+                ('office_location', 'Office Location'),
 
                 ('expertise', 'Skill'),
 
@@ -856,7 +856,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('description', 'Description'),
                 ('status', 'Status'),
-                ('fallback_location', _('Office location')),
+                ('office_location', 'Office Location'),
 
                 ('target', 'Target'),
                 ('amount_matching', 'Amount matching'),

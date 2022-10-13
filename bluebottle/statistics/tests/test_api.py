@@ -144,19 +144,19 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
 
         activity1 = DateActivityFactory.create()
-        activity1.created = now().replace(year=2020)
+        activity1.created = now().replace(year=2020, month=6, day=12)
         activity1.save()
         activity2 = DateActivityFactory.create()
-        activity2.created = now().replace(year=2021)
+        activity2.created = now().replace(year=2021, month=10, day=12)
         activity2.save()
 
         slot1 = activity1.slots.first()
-        slot1.start = now().replace(year=2020)
+        slot1.start = now().replace(year=2020, month=6, day=12)
         slot1.duration = datetime.timedelta(hours=4)
         slot1.save()
 
         slot2 = activity2.slots.first()
-        slot2.start = now().replace(year=2021)
+        slot2.start = now().replace(year=2021, month=1, day=12)
         slot2.duration = datetime.timedelta(hours=8)
         slot2.save()
 
@@ -178,12 +178,12 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
 
         donations = DonorFactory.create_batch(2)
         for don in donations:
-            don.created = now().replace(year=2020)
+            don.created = now().replace(year=2020, month=8)
             don.save()
 
         donations = DonorFactory.create_batch(3)
         for don in donations:
-            don.created = now().replace(year=2021)
+            don.created = now().replace(year=2021, month=2, day=12)
             don.save()
 
         Contribution.objects.update(status='succeeded')
@@ -220,6 +220,32 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.assertEqual(len(data), 4)
         self.assertEqual(data[0]['attributes']['value'], 35)
         self.assertEqual(data[1]['attributes']['value'], 100.0)
+        self.assertEqual(data[2]['attributes']['value'], 2)
+        self.assertEqual(data[3]['attributes']['value'], {'amount': 105.0, 'currency': 'EUR'})
+
+    def test_filter_by_fiscal_year_2020(self):
+        settings = MemberPlatformSettings.load()
+        settings.fiscal_month_offset = 4
+        settings.save()
+        response = self.client.get(self.url + '?year=2020')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value'], 35)
+        self.assertEqual(data[1]['attributes']['value'], 50.0)
+        self.assertEqual(data[2]['attributes']['value'], 5)
+        self.assertEqual(data[3]['attributes']['value'], {'amount': 175.0, 'currency': 'EUR'})
+
+    def test_filter_by_fiscal_year_2021(self):
+        settings = MemberPlatformSettings.load()
+        settings.fiscal_month_offset = -4
+        settings.save()
+        response = self.client.get(self.url + '?year=2021')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value'], 35)
+        self.assertEqual(data[1]['attributes']['value'], 0.0)
         self.assertEqual(data[2]['attributes']['value'], 2)
         self.assertEqual(data[3]['attributes']['value'], {'amount': 105.0, 'currency': 'EUR'})
 

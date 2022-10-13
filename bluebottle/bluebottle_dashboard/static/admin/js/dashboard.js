@@ -51,6 +51,14 @@ function hideDeleteButton() {
   });
 }
 
+function hideInfoBoxLabel() {
+  jQuery(".inline-description").each(function(index, info) {
+    const row = info.parentElement.parentElement;
+    row.after(info);
+    row.remove();
+  });
+}
+
 window.onload = function() {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
@@ -59,5 +67,6 @@ window.onload = function() {
   removeRedundantTabs();
   addHashToInlinePaginator();
   hideDeleteButton();
+  hideInfoBoxLabel();
   window.onhashchange = addHashToInlinePaginator;
 };

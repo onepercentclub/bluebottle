@@ -1,17 +1,14 @@
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register, ModelChangedTrigger
-from bluebottle.fsm.effects import RelatedTransitionEffect
-from bluebottle.initiatives.states import ReviewStateMachine
-from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.states import ActivityStateMachine
-from bluebottle.time_based.states import TimeBasedStateMachine
-
-from bluebottle.initiatives.effects import RemoveLocationEffect
+from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register, ModelChangedTrigger
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
     InitiativeCancelledOwnerMessage, AssignedReviewerMessage, InitiativeSubmittedStaffMessage
 )
-
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.states import TimeBasedStateMachine
 
 
 def reviewer_is_set(effect):
@@ -74,12 +71,6 @@ class InitiativeTriggers(TriggerManager):
             'reviewer_id',
             effects=[
                 NotificationEffect(AssignedReviewerMessage)
-            ]
-        ),
-        ModelChangedTrigger(
-            'is_global',
-            effects=[
-                RemoveLocationEffect
             ]
         ),
     ]

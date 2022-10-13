@@ -164,18 +164,11 @@ class InitiativeDocument(Document):
         return segments
 
     def prepare_location(self, instance):
-        if instance.is_global:
-            return [{
-                'id': activity.office_location.id,
-                'name': activity.office_location.name,
-                'city': activity.office_location.city
-            } for activity in instance.activities.all() if activity.office_location]
-        elif instance.location:
-            return {
-                'id': instance.location.id,
-                'name': instance.location.name,
-                'city': instance.location.city
-            }
+        return [{
+            'id': activity.office_location.id,
+            'name': activity.office_location.name,
+            'city': activity.office_location.city
+        } for activity in instance.activities.all() if activity.office_location]
 
     def prepare_activity_owners(self, instance):
         return [

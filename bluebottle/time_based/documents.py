@@ -23,6 +23,10 @@ class TimeBasedActivityDocument:
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'value': fields.FloatField()
+    })
+
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
@@ -86,6 +90,17 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
         ]
 
+    def prepare_contribution_duration(self, instance):
+        return [
+            {
+                'period': 'slot',
+                'start': slot.start,
+                'value': slot.duration.seconds / (60 * 60)
+            }
+            for slot in instance.slots.all()
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
+        ]
+
     def prepare_country(self, instance):
         countries = [super().prepare_country(instance)]
         return countries + [
@@ -107,6 +122,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 @registry.register_document
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'period': fields.KeywordField(),
+        'value': fields.FloatField()
+    })
+
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
 
@@ -126,10 +146,19 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         else:
             return super().prepare_country(instance)
 
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [{
+                'period': instance.duration_period,
+                'start': instance.start,
+                'value': instance.duration.seconds / (60 * 60)
+            }]
+        return {}
+
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
             position = instance.location.position
-            return {'lat': position.y, 'lon': position.x}
+            return [{'lat': position.y, 'lon': position.x}]
 
     def prepare_start(self, instance):
         return [instance.start]

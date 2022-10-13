@@ -1,24 +1,23 @@
 from django.core import mail
 
-from bluebottle.time_based.tests.factories import DateActivityFactory
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
-from bluebottle.time_based.states import DateStateMachine
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory,
 )
-from bluebottle.fsm.state import TransitionNotPossible
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.test.utils import BluebottleTestCase
-
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.states import ReviewStateMachine
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationContactFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.states import DateStateMachine
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class InitiativeReviewStateMachineTests(BluebottleTestCase):
+
     def setUp(self):
         super(InitiativeReviewStateMachineTests, self).setUp()
         self.user = BlueBottleUserFactory.create(first_name='Bart', last_name='Lacroix')
@@ -162,13 +161,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.states.submit
         )
 
-    def test_submit_contact_without_location_has_locations(self):
-        LocationFactory.create_batch(5)
+    def test_submit_initiative_without_geolocation(self):
         self.initiative = InitiativeFactory.create(
             has_organization=False,
             owner=self.user,
             place=None,
-            location=None,
             organization=None
         )
 
@@ -178,21 +175,6 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertRaises(
             TransitionNotPossible,
             self.initiative.states.submit
-        )
-
-    def test_submit_contact_location_has_locations(self):
-        locations = LocationFactory.create_batch(5)
-        self.initiative = InitiativeFactory.create(
-            has_organization=False,
-            owner=self.user,
-            place=None,
-            location=locations[0],
-            organization=None
-        )
-
-        self.initiative.states.submit()
-        self.assertEqual(
-            self.initiative.status, ReviewStateMachine.submitted.value
         )
 
     def test_submit_with_activities(self):

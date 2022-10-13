@@ -1264,7 +1264,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(result['attributes']['name'], 'World domination')
 
     def test_detail_translation_missing(self):
-        theme = ThemeFactory.create(slug='world')
+        theme = Theme.objects.create(slug='world')
         theme.set_current_language('en')
         theme.name = 'World domination'
         theme.save()

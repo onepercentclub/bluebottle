@@ -16,7 +16,6 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from parler.utils.views import get_language_parameter
 from pytz import timezone
 
 from bluebottle.activities.admin import (
@@ -32,7 +31,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -178,7 +177,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
-        ('fallback_location', 'Office Location'),
+        ('office_location', 'Office Location'),
         ('capacity', 'Capacity'),
         ('review', 'Review participants')
     )
@@ -235,7 +234,7 @@ class DateActivityASlotInline(TabularInlinePaginated):
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:
-            return obj.location.timezone
+            return f'{obj.start.astimezone(timezone(obj.location.timezone))} ({obj.location.timezone})'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
     timezone.short_description = _('Timezone')
@@ -805,6 +804,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
     readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
     fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('document', )
     list_display = ['__str__', 'activity_link', 'status']
 
     def total(self, obj):
@@ -970,14 +970,10 @@ class SlotParticipantAdmin(StateMachineAdmin):
 
 
 @admin.register(Skill)
-class SkillAdmin(TranslatableAdmin):
+class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'member_link')
     readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
-
-    def get_queryset(self, request):
-        lang = get_language_parameter(request, self.query_language_key)
-        return super().get_queryset(request).translated(lang).order_by('translations__name')
 
     def get_actions(self, request):
         actions = super(SkillAdmin, self).get_actions(request)

@@ -1,14 +1,16 @@
 import re
-import dateutil
 from datetime import datetime, time
 
+import dateutil
 from django.conf import settings
-
+from elasticsearch_dsl.function import ScriptScore
 from elasticsearch_dsl.query import (
     FunctionScore, SF, Terms, Term, Nested, Q, Range, ConstantScore
 )
-from elasticsearch_dsl.function import ScriptScore
+
 from bluebottle.activities.documents import activity
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.filters import ElasticSearchFilter
 
 
@@ -16,6 +18,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     document = activity
 
     sort_fields = {
+        'highlight': ('-highlight', ),
         'date': ('-activity_date', ),
         'alphabetical': ('title_keyword', ),
         'popularity': 'relevancy',
@@ -31,9 +34,13 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
+        'upcoming',
         'location.id',
+        'office',
         'segment',
-        'team_activity'
+        'team_activity',
+        'initiative.id',
+        'highlight',
     )
 
     search_fields = (
@@ -152,6 +159,41 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return Term(type=value)
 
+    def get_upcoming_filter(self, value, request):
+        if value == 'true':
+            return Terms(status=['open', 'full'])
+        if value == 'false':
+            return Terms(status=['succeeded', 'partially_funded'])
+
+    def get_office_filter(self, value, request):
+        if value == 'false':
+            return Nested(
+                path='office_restriction',
+                query=Term(
+                    office_restriction__restriction='all'
+                )
+            )
+
+        office = Location.objects.filter(id=value).first()
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.enable_office_restrictions:
+            return Nested(
+                path='office_restriction',
+                query=Term(
+                    office_restriction__restriction='all'
+                ) | (
+                    Term(office_restriction__office=office.id) &
+                    Term(office_restriction__restriction='office')
+                ) | (
+                    Term(office_restriction__subregion=office.subregion.id) &
+                    Term(office_restriction__restriction='office_subregion')
+                ) | (
+                    Term(office_restriction__region=office.subregion.region.id) &
+                    Term(office_restriction__restriction='office_region')
+                )
+            )
+        return []
+
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')
         end = request.GET.get('filter[end]')
@@ -206,8 +248,42 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 'draft', 'needs_work', 'submitted', 'deleted',
                 'closed', 'cancelled', 'rejected'
             ]),
-
         ]
+
+        fields = super(ActivitySearchFilter, self).get_filter_fields(request)
+        if 'initiative.id' in fields and request.user.is_authenticated:
+            filters = [
+                ~Terms(status=[
+                    'draft', 'needs_work', 'submitted', 'deleted',
+                    'closed', 'cancelled', 'rejected'
+                ]) |
+                Nested(
+                    path='owner',
+                    query=(
+                        Term(owner__id=request.user.id)
+                    )
+                ) |
+                Nested(
+                    path='initiative',
+                    query=(
+                        Term(initiative__owner=request.user.id)
+                    )
+                ) |
+                Nested(
+                    path='initiative.activity_managers',
+                    query=(
+                        Term(initiative__activity_managers__id=request.user.id)
+                    )
+                )
+            ]
+        else:
+            filters = [
+                ~Terms(status=[
+                    'draft', 'needs_work', 'submitted', 'deleted',
+                    'closed', 'cancelled', 'rejected'
+                ]),
+            ]
+
         if not request.user.is_staff:
             filters += [
                 ~Nested(

@@ -1,0 +1,9 @@
+{% extends "mails/messages/do-good-hours/reminder-base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        There’s still so much time to reach the target of {{ do_good_hours }} hours making an impact this year.
+        Check out the activities you can join.
+    {% endblocktrans %}
+{% endblock %}

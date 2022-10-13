@@ -296,6 +296,8 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
         if self.location:
             params['location'] = self.location.formatted_address
+            if self.location_hint:
+                params['location'] = f'{params["location"]} ({self.location_hint})'
 
         return u'{}?{}'.format(url, urlencode(params))
 
@@ -583,7 +585,7 @@ class Participant(Contributor):
 
 class DateParticipant(Participant):
     motivation = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, view_name='date-participant-document')
 
     class Meta():
         verbose_name = _("Participant on a date")
@@ -606,7 +608,7 @@ class DateParticipant(Participant):
 
 class PeriodParticipant(Participant, Contributor):
     motivation = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, view_name='period-participant-document')
 
     current_period = models.DateField(null=True, blank=True)
 
@@ -699,7 +701,7 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        SlotParticipant, null=True, related_name='contributions', on_delete=models.CASCADE
+        SlotParticipant, null=True, blank=True, related_name='contributions', on_delete=models.CASCADE
     )
 
     class JSONAPIMeta:

@@ -1,19 +1,19 @@
 import logging
+from datetime import date, datetime
 
 from celery.schedules import crontab
 from celery.task import periodic_task
-
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
-
+from dateutil.relativedelta import relativedelta
 from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.activities.documents import activity
+from bluebottle.activities.messages import MatchingActivitiesNotification, DoGoodHoursReminderQ1Notification, \
+    DoGoodHoursReminderQ4Notification, DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification
 from bluebottle.activities.models import Activity
-from bluebottle.activities.messages import MatchingActivitiesNotification
-from bluebottle.members.models import Member
-
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import Member, MemberPlatformSettings
 
 logger = logging.getLogger('bluebottle')
 
@@ -123,3 +123,36 @@ def recommend():
                             )
                         except Exception as e:
                             logger.error(e)
+
+
+@periodic_task(
+    run_every=(crontab(minute=0, hour=10)),
+    name="do_good_hours_reminder",
+    ignore_result=True
+)
+def do_good_hours_reminder():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.do_good_hours:
+                offset = settings.fiscal_month_offset
+                today = date.today()
+                q1 = (datetime(2000, 1, 1).date() + relativedelta(months=offset)).replace(today.year)
+                q2 = q1 + relativedelta(months=3)
+                q3 = q1 + relativedelta(months=6)
+                q4 = q1 + relativedelta(months=9)
+                notification = None
+                if settings.reminder_q1 and today == q1:
+                    notification = DoGoodHoursReminderQ1Notification(settings)
+                if settings.reminder_q2 and today == q2:
+                    notification = DoGoodHoursReminderQ2Notification(settings)
+                if settings.reminder_q3 and today == q3:
+                    notification = DoGoodHoursReminderQ3Notification(settings)
+                if settings.reminder_q4 and today == q4:
+                    notification = DoGoodHoursReminderQ4Notification(settings)
+
+                if notification:
+                    try:
+                        notification.compose_and_send()
+                    except Exception as e:
+                        logger.error(e)

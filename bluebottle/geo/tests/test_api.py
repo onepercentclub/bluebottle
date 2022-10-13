@@ -50,13 +50,14 @@ class CountryListTestCase(GeoTestCase):
         """
         Ensure get request returns record with correct data.
         """
-        response = self.client.get(reverse('country-list'))
+        response = self.client.get(
+            reverse('country-list'),
+            HTTP_X_APPLICATION_LANGUAGE='nl'
+        )
 
-        country = response.data[0]
-
-        self.assertEqual(country['id'], self.country_1.id)
-        self.assertEqual(country['name'], self.country_1.name)
-        self.assertEqual(country['code'], 'GE')
+        countries = response.data
+        self.assertTrue('Abchazië' in [c['name'] for c in countries])
+        self.assertTrue('Zwitserland' in [c['name'] for c in countries])
 
 
 class UsedCountryListTestCase(GeoTestCase):
@@ -163,20 +164,16 @@ class LocationListTestCase(GeoTestCase):
                 description="Description {}".format(i))
             )
 
-    def test_api_location_list_endpoint(self):
-        """
-        Ensure get request returns 200.
-        """
-        response = self.client.get(reverse('office-list'))
+    def test_api_location_detail_endpoint(self):
+        location = self.locations[0]
+        response = self.client.get(reverse('office-detail', args=(location.id, )))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['name'], self.locations[0].name)
+        self.assertEqual(data['attributes']['description'], self.locations[0].description)
 
-        self.assertEqual(len(data['data']), 10)
-        self.assertEqual(data['data'][0]['attributes']['name'], self.locations[0].name)
-        self.assertEqual(data['data'][0]['attributes']['description'], self.locations[0].description)
-
-        static_map_url = data['data'][0]['attributes']['static-map-url']
+        static_map_url = data['attributes']['static-map-url']
         self.assertTrue(
             static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
         )

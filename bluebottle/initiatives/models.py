@@ -1,5 +1,6 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
@@ -182,11 +183,8 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             if not self.owner.partner_organization:
                 fields.append('organization_contact')
 
-        if not self.is_global:
-            if Location.objects.count():
-                fields.append('location')
-            else:
-                fields.append('place')
+        if not Location.objects.count():
+            fields.append('place')
 
         return fields
 
@@ -260,8 +258,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('team_activity', _('Team activities')),
         ('theme', _('Theme')),
         ('category', _('Category')),
-        ('status', _('Status')),
         ('segments', _('Segments')),
+        ('status', _('Status')),
     )
     INITIATIVE_SEARCH_FILTERS = (
         ('location', _('Office location')),
@@ -287,6 +285,11 @@ class InitiativePlatformSettings(BasePlatformSettings):
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
+    show_all_activities = models.BooleanField(
+        default=False,
+        help_text=_("In initial search show all activities, not only upcoming.")
+    )
+
     enable_impact = models.BooleanField(
         default=False,
         help_text=_("Allow activity managers to indicate the impact they make.")
@@ -294,6 +297,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_office_regions = models.BooleanField(
         default=False,
         help_text=_("Allow admins to add (sub)regions to their offices.")
+    )
+    enable_office_restrictions = models.BooleanField(
+        default=False,
+        help_text=_("Allow activity managers to specify office restrictions on activities.")
     )
     enable_multiple_dates = models.BooleanField(
         default=False,

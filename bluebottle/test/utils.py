@@ -743,9 +743,9 @@ class NotificationTestCase(BluebottleTestCase):
         )
 
     def assertRecipients(self, recipients):
-        if recipients != self.message.get_recipients():
+        if list(recipients) != list(self.message.get_recipients()):
             self.fail("Recipients did not match: '{}' != '{}'".format(
-                recipients, self.message.get_recipients())
+                list(recipients), list(self.message.get_recipients()))
             )
 
     def assertSubject(self, subject):

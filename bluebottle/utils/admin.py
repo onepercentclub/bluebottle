@@ -11,6 +11,7 @@ from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
+from django.template import loader
 from django.utils.encoding import smart_str
 from djmoney.money import Money
 from parler.admin import TranslatableAdmin
@@ -180,3 +181,21 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 @admin.register(TranslationPlatformSettings)
 class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     pass
+
+
+class TranslatableAdminOrderingMixin(object):
+
+    translatable_ordering = 'translations__name'
+
+    def get_queryset(self, request):
+        language_code = self.get_queryset_language(request)
+        return super(TranslatableAdminOrderingMixin, self).get_queryset(request). \
+            translated(language_code).order_by(self.translatable_ordering)
+
+
+def admin_info_box(text):
+    template = loader.get_template('admin/info_box.html')
+    context = {
+        'text': text,
+    }
+    return template.render(context)

@@ -341,6 +341,18 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
+        contributor_url = reverse(f'{self.type}-participants', args=(self.activity.pk, ))
+        self.assertTrue(
+            data['relationships']['unreviewed-contributors']['links']['related'].endswith(
+                f"{contributor_url}?filter[status]=new"
+            )
+        )
+        self.assertTrue(
+            data['relationships']['contributors']['links']['related'].endswith(
+                contributor_url
+            )
+        )
+
     def test_matching_theme(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
@@ -1672,6 +1684,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_calendar_links(self):
+        self.slot.location = None
         self.slot.is_online = True
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
@@ -1683,16 +1696,45 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         links = response.json()['data']['attributes']['links']
 
         self.assertTrue(
-            urllib.parse.quote_plus(self.slot.online_meeting_url) in links['google']
-        )
-        self.assertTrue(
-            'https://calendar.google.com/calendar/render?action=TEMPLATE' in links['google']
-        )
-
-        self.assertTrue(
             links['ical'].startswith(
                 reverse('slot-ical', args=(self.slot.pk,))
             )
+        )
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(params['action'], ['TEMPLATE'])
+        self.assertEqual(params['text'][0], self.activity.title)
+        self.assertEqual(
+            params['details'][0],
+            f'{self.activity.description}\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
+        )
+
+    def test_get_calendar_links_location(self):
+        self.slot.is_online = False
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(
+            params['location'][0], self.slot.location.formatted_address
+        )
+
+    def test_get_calendar_links_location_hint(self):
+        self.slot.is_online = False
+        self.slot.location_hint = 'On the second floor'
+        self.slot.save()
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
+        self.assertEqual(
+            params['location'][0],
+            f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
         )
 
     def test_closed_site(self):
@@ -2573,6 +2615,31 @@ class RelatedParticipantsAPIViewTestCase():
         included_documents = self.included_by_type(self.response, 'private-documents')
         self.assertEqual(len(included_documents), 1)
 
+    def test_get_filter_new(self):
+        participant = self.participants[1]
+
+        participant.status = 'new'
+        participant.save()
+        self.response = self.client.get(
+            self.url + '?filter[status]=new', user=self.activity.owner
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        self.assertTotal(1)
+        self.assertEqual(self.response.json()['data'][0]['id'], str(participant.pk))
+
+    def test_get_filter_new_other_user(self):
+        participant = self.participants[1]
+
+        participant.status = 'new'
+        participant.save()
+        self.response = self.client.get(
+            self.url + '?filter[status]=new', user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+        self.assertTotal(0)
+
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
         group = Group.objects.get(name='Anonymous')
@@ -3029,6 +3096,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.slot = self.activity.slots.first()
         self.slot.is_online = True
         self.slot.online_meeting_url = 'http://example.com'
+        self.slot.location = None
         self.slot.save()
 
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
@@ -3075,6 +3143,37 @@ class SlotIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertTrue('location' not in ical_event)
+
+    def test_get_location(self):
+        self.slot.location = GeolocationFactory.create()
+        self.slot.save()
+
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertEqual(
+                ical_event['location'], self.slot.location.formatted_address
+            )
+
+    def test_get_location_hint(self):
+        self.slot.location = GeolocationFactory.create()
+        self.slot.location_hint = 'On the first floor'
+        self.slot.save()
+
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+            self.assertEqual(
+                ical_event['location'],
+                f'{self.slot.location.formatted_address} ({self.slot.location_hint})'
+            )
 
     def test_get_no_signature(self):
         response = self.client.get(self.unsigned_url)
@@ -3211,14 +3310,14 @@ class SkillApiTestCase(BluebottleTestCase):
         MemberPlatformSettings.objects.update(closed=True)
         self.url = reverse('skill-list')
         Skill.objects.all().delete()
-        self.skill = SkillFactory.create_batch(40)
+        SkillFactory.create_batch(10)
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):
         user = BlueBottleUserFactory.create()
         response = self.client.get(self.url, user=user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 40)
+        self.assertEqual(len(response.data['results']), 10)
 
     def test_get_skills_unauthenticated(self):
         response = self.client.get(self.url)

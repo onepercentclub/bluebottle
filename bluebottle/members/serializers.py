@@ -1,6 +1,7 @@
-from builtins import object
 import uuid
+from builtins import object
 
+import passwordmeter
 from axes.handlers.proxy import AxesProxyHandler
 from django import forms
 from django.conf import settings
@@ -11,8 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
-
-import passwordmeter
 
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
@@ -25,7 +24,6 @@ from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
-
 
 BB_USER_MODEL = get_user_model()
 
@@ -226,6 +224,10 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     segments = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Segment.objects
     )
+    has_initiatives = serializers.SerializerMethodField()
+
+    def get_has_initiatives(self, obj):
+        return obj.own_initiatives.exists()
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -233,7 +235,8 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
-            'organization', 'segments', 'required'
+            'organization', 'segments', 'required', 'has_initiatives',
+            'hours_spent', 'hours_planned'
         )
 
 
@@ -322,7 +325,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
 
 class ManageProfileSerializer(UserProfileSerializer):
     """
-    Serializer for the a member's private profile.
+    Serializer for the member's private profile.
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()
@@ -338,7 +341,8 @@ class ManageProfileSerializer(UserProfileSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
-            'email', 'newsletter', 'campaign_notifications', 'matching_options_set', 'location',
+            'email', 'newsletter', 'campaign_notifications', 'receive_reminder_emails',
+            'matching_options_set', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
             'from_facebook', 'place',
         )
@@ -670,6 +674,12 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_address',
             'require_birthdate',
             'require_phone_number',
+            'create_initiatives',
+            'do_good_hours',
+            'fiscal_month_offset',
+            'fiscal_year',
+            'fiscal_year_start',
+            'fiscal_year_end',
         )
 
 

@@ -1,10 +1,14 @@
 from __future__ import absolute_import
 
 from builtins import object
+from datetime import timedelta, datetime
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Sum
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -14,6 +18,7 @@ from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..segments.models import SegmentType
+from ..time_based.models import TimeContribution
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -35,6 +40,38 @@ class MemberPlatformSettings(BasePlatformSettings):
     closed = models.BooleanField(
         default=False, help_text=_('Require login before accessing the platform')
     )
+    create_initiatives = models.BooleanField(
+        default=True, help_text=_('Members can create initiatives')
+    )
+    do_good_hours = models.PositiveIntegerField(
+        _('Impact hours'),
+        null=True, blank=True,
+        help_text=_("Leave empty if this feature won't be used.")
+    )
+    fiscal_month_offset = models.IntegerField(
+        _('Fiscal year offset'),
+        help_text=_('Set the number of months your fiscal year will be offset by. '
+                    'This will also take into account how the impact metrics are shown on the homepage. '
+                    'e.g. If the year starts from September (so earlier) then this value should be -4.'),
+        default=0)
+
+    reminder_q1 = models.BooleanField(
+        _('Reminder Q1'),
+        default=False,
+    )
+    reminder_q2 = models.BooleanField(
+        _('Reminder Q2'),
+        default=False,
+    )
+    reminder_q3 = models.BooleanField(
+        _('Reminder Q3'),
+        default=False,
+    )
+    reminder_q4 = models.BooleanField(
+        _('Reminder Q4'),
+        default=False,
+    )
+
     login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
         default=False, help_text=_('Require verifying the user\'s email before signup')
@@ -148,6 +185,20 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
+    @property
+    def fiscal_year_start(self):
+        offset = self.fiscal_month_offset
+        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
+        return (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+
+    @property
+    def fiscal_year_end(self):
+        return self.fiscal_year_start + relativedelta(years=1) - timedelta(seconds=1)
+
+    def fiscal_year(self):
+        offset = self.fiscal_month_offset
+        return (now() - relativedelta(months=offset)).year
+
     class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
@@ -160,6 +211,11 @@ class Member(BlueBottleBaseUser):
         _('Matching'),
         default=False,
         help_text=_("Monthly overview of activities that match this person's profile")
+    )
+    receive_reminder_emails = models.BooleanField(
+        _('Receive reminder emails'),
+        default=True,
+        help_text=_("User receives emails reminding them about their do good hours")
     )
 
     remote_id = models.CharField(_('remote_id'),
@@ -247,25 +303,45 @@ class Member(BlueBottleBaseUser):
             ).count():
                 required.append(f'segment_type.{segment_type.id}')
 
-        settings = MemberPlatformSettings.load()
+        platform_settings = MemberPlatformSettings.load()
 
-        if settings.require_office and (
+        if platform_settings.require_office and (
             not self.location or
-            (settings.verify_office and not self.location_verified)
+            (platform_settings.verify_office and not self.location_verified)
         ):
             required.append('location')
 
         for attr in ['birthdate', 'phone_number']:
-            if getattr(settings, f'require_{attr}') and not getattr(self, attr):
+            if getattr(platform_settings, f'require_{attr}') and not getattr(self, attr):
                 required.append(attr)
 
-        if settings.require_address and not (self.place and self.place.complete):
+        if platform_settings.require_address and not (self.place and self.place.complete):
             required.append('address')
 
         return required
 
     def __str__(self):
         return self.full_name
+
+    def get_hours(self, status):
+        platform_settings = MemberPlatformSettings.load()
+        year_start = platform_settings.fiscal_year_start
+        year_end = platform_settings.fiscal_year_end
+        hours = TimeContribution.objects.filter(
+            contributor__user=self, status=status,
+            start__gte=year_start, start__lte=year_end
+        ).aggregate(hours=Sum('value'))['hours']
+        if hours:
+            return hours.seconds / 3600
+        return 0.0
+
+    @property
+    def hours_spent(self):
+        return self.get_hours('succeeded')
+
+    @property
+    def hours_planned(self):
+        return self.get_hours('new')
 
     def save(self, *args, **kwargs):
         if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:

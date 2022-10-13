@@ -15,7 +15,6 @@ from bluebottle.activities.permissions import (
     ActivitySegmentPermission
 )
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.clients import properties
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
@@ -498,6 +497,9 @@ class DateActivityIcalView(PrivateFileView):
             if slot.location:
                 event['location'] = icalendar.vText(slot.location.formatted_address)
 
+                if slot.location_hint:
+                    event['location'] = f'{event["location"]} ({slot.location_hint})'
+
             calendar.add_component(event)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
@@ -535,6 +537,8 @@ class BaseSlotIcalView(PrivateFileView):
         if instance.location:
             slot['location'] = icalendar.vText(instance.location.formatted_address)
 
+            if instance.location_hint:
+                slot['location'] = f'{slot["location"]} ({instance.location_hint})'
         calendar.add_component(slot)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
@@ -693,10 +697,6 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SkillPagination
-
-    def get_queryset(self):
-        lang = self.request.LANGUAGE_CODE or properties.LANGUAGE_CODE
-        return super().get_queryset().translated(lang).order_by('translations__name')
 
 
 class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

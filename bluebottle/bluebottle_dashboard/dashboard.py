@@ -9,9 +9,7 @@ from jet.dashboard.modules import LinkList
 
 from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
-from bluebottle.initiatives.dashboard import MyReviewingInitiatives, MyOfficeInitiatives, \
-    MyOfficeSubRegionInitiatives, MyOfficeRegionInitiatives, RecentInitiatives
-from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.dashboard import MyReviewingInitiatives, RecentInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
 
 
@@ -24,14 +22,6 @@ class CustomIndexDashboard(Dashboard):
         # Initiatives
         self.children.append(MyReviewingInitiatives())
         self.children.append(RecentInitiatives())
-
-        if hasattr(context, 'request'):
-            user = context.request.user
-            if user.location:
-                self.children.append(MyOfficeInitiatives())
-                if InitiativePlatformSettings.objects.get().enable_office_regions:
-                    self.children.append(MyOfficeSubRegionInitiatives())
-                    self.children.append(MyOfficeRegionInitiatives())
 
         # Activities
         self.children.append(RecentActivities())

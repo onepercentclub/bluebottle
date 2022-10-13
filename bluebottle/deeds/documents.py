@@ -2,8 +2,6 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.deeds.models import DeedParticipant, Deed
-from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import Member
 
 SCORE_MAP = {
     'open': 1,
@@ -20,22 +18,23 @@ class DeedDocument(ActivityDocument):
         return SCORE_MAP.get(instance.status, 0)
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return Deed.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Member):
-            return Deed.objects.filter(owner=related_instance)
+        result = super().get_instances_from_related(related_instance)
+
+        if result is not None:
+            return result
+
         if isinstance(related_instance, DeedParticipant):
             return Deed.objects.filter(contributors=related_instance)
 
     class Django:
-        related_models = (Initiative, Member, DeedParticipant)
+        related_models = ActivityDocument.Django.related_models + (DeedParticipant, )
         model = Deed
 
     def prepare_start(self, instance):
-        return instance.start
+        return [instance.start]
 
     def prepare_end(self, instance):
-        return instance.end
+        return [instance.end]
 
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:

@@ -8,10 +8,6 @@
             {{ initiative.date_submitted|date }}<br>
         </span>
         <a href="{% url 'admin:initiatives_initiative_change' initiative.id %}" >{{ initiative.title }}</a>
-        {% if initiative.location %}
-            &nbsp;&middot;&nbsp;
-            <i>{{ initiative.location }}</i>
-        {% endif %}
         <br>
         <b>{{ initiative.owner.full_name }}</b>
         <br>

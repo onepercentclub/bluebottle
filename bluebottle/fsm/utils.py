@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 
+from bluebottle.activities.models import Team
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import DeedParticipant, Deed
 from django.core.exceptions import FieldDoesNotExist
@@ -13,7 +14,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution, DateActivitySlot, SlotParticipant
+    TimeContribution, DateActivitySlot, SlotParticipant, TeamSlot
 
 
 def get_doc(element):
@@ -86,6 +87,11 @@ def setup_instance(model):
     if isinstance(instance, DateParticipant):
         instance.activity = DateActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
+        instance.team = Team()
+        instance.team.slot = TeamSlot()
+        instance.team.start = now() + timedelta(days=3)
+        instance.team.duration = timedelta(hours=2)
+        instance.team.owner = Member(first_name='[first name]', last_name='[last name]')
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivitySlot):
@@ -95,6 +101,24 @@ def setup_instance(model):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
         instance.participant = DateParticipant(activity=activity)
+
+    if isinstance(instance, Team):
+        instance.activity = DateActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.activity.owner = Member(first_name='[first name]', last_name='[last name]')
+        instance.slot = TeamSlot()
+        instance.start = now() + timedelta(days=3)
+        instance.duration = timedelta(hours=2)
+
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, TeamSlot):
+        instance.team = Team()
+        instance.start = now() + timedelta(days=3)
+        instance.duration = timedelta(hours=2)
+        instance.team.activity = DateActivity(title="[activity title]")
+        instance.team.activity.pre_save_polymorphic()
+        instance.team.activity.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TimeContribution):
         contributor = PeriodParticipant()

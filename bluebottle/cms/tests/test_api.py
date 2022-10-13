@@ -68,14 +68,14 @@ class ResultPageTestCase(BluebottleTestCase):
         DonorFactory.create(
             activity=funding,
             status='succeeded',
-            contributor_date=yesterday,
+            created=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
         DonorFactory.create(
             activity=funding,
             status='succeeded',
-            contributor_date=long_ago,
+            created=long_ago,
             user=user,
             amount=Money(50, 'EUR')
         )
@@ -150,9 +150,8 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(quotes['quotes'][0]['quote'], self.quote.quote)
 
     def test_results_activities(self):
-        activity = DateActivityFactory.create(status='open')
-        block = ActivitiesContent.objects.create_for_placeholder(self.placeholder)
-        block.activities.add(activity)
+        DateActivityFactory.create(status='open', highlight=True)
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder)
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -162,7 +161,6 @@ class ResultPageTestCase(BluebottleTestCase):
 
         projects = response.data['blocks'][0]
         self.assertEqual(projects['type'], 'activities')
-        self.assertEqual(projects['activities'][0]['title'], activity.title)
 
     def test_results_share_results(self):
         share_text = '{people} donated {donated} and did {tasks} tasks and joined {activities} activities.'
@@ -291,11 +289,10 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_activities_from_homepage(self):
         DateActivityFactory.create_batch(10, status='open', highlight=True)
-        ActivitiesContent.objects.create_for_placeholder(self.placeholder, highlighted=True)
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'activities')
-        self.assertEqual(len(response.data['blocks'][0]['activities']), 4)
 
     def test_slides_png(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)

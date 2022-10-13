@@ -49,7 +49,7 @@ from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin, admin_info_box
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
@@ -61,7 +61,7 @@ class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
         super(MemberForm, self).__init__(data, files, *args, **kwargs)
 
         if self.current_user.is_superuser:
-            # Super users can assign every group to a user
+            # Superusers can assign every group to a user
             group_queryset = Group.objects.all()
         else:
             # Normal staff users can only choose groups that they belong to.
@@ -111,6 +111,20 @@ class MemberCreationForm(MemberForm):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+
+    def reminder_info(self, obj):
+        return admin_info_box(
+            _('Quarterly emails will only be sent at the beginning of each '
+              'quarter if the impact hours are set. Users will only receive '
+              'the emails if they have not spent all the set hours.')
+        )
+
+    def impact_hours_info(self, obj):
+        return admin_info_box(
+            _('The impact hours feature will show the amount of hours '
+              'users are encouraged to spend making an impact each year.')
+        )
+
     fieldsets = (
         (
             _('Login'),
@@ -138,6 +152,29 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                     'session_only', 'require_consent', 'consent_link', 'anonymization_age',
                     'display_member_names'
                 )
+            }
+        ),
+        (
+            _('Impact hours'),
+            {
+                'fields': (
+                    'impact_hours_info',
+                    'do_good_hours',
+                    'fiscal_month_offset',
+                    'reminder_info',
+                    'reminder_q1',
+                    'reminder_q2',
+                    'reminder_q3',
+                    'reminder_q4',
+                ),
+            }
+        ),
+        (
+            _('Initiatives'),
+            {
+                'fields': (
+                    'create_initiatives',
+                ),
             }
         ),
     )
@@ -177,7 +214,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return fieldsets
 
-    readonly_fields = ('segment_types',)
+    readonly_fields = ('segment_types', 'reminder_info', 'impact_hours_info')
 
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
@@ -377,6 +414,8 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         [
+                            'hours_spent',
+                            'hours_planned',
                             'initiatives',
                             'date_activities',
                             'period_activities',
@@ -431,7 +470,8 @@ class MemberAdmin(UserAdmin):
             'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc'
+            'funding', 'deeds', 'collect', 'kyc',
+            'hours_spent', 'hours_planned'
         ]
 
         user_groups = request.user.groups.all()

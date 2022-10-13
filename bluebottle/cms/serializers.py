@@ -1,13 +1,12 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from django.db.models import Sum
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
 
-from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
@@ -19,7 +18,7 @@ from bluebottle.cms.models import (
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.geo.serializers import LocationSerializer
+from bluebottle.geo.serializers import OfficeSerializer
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
@@ -147,6 +146,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
+    year = serializers.IntegerField()
     count = serializers.SerializerMethodField()
 
     def get_count(self, obj):
@@ -154,7 +154,7 @@ class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'count')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'count')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -189,31 +189,10 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ActivitiesContentSerializer(serializers.ModelSerializer):
-    activities = serializers.SerializerMethodField()
-
-    def get_activities(self, obj):
-        if obj.highlighted:
-            activities = Activity.objects.filter(
-                highlight=True
-            ).exclude(
-                segments__closed=True
-            ).exclude(
-                status__in=[
-                    'draft', 'needs_work', 'submitted',
-                    'deleted', 'cancelled', 'rejected',
-                    'expired',
-                ]
-            ).order_by('?')[0:4]
-        else:
-            activities = obj.activities
-
-        return ActivityListSerializer(
-            activities, many=True, context=self.context
-        ).to_representation(activities)
 
     class Meta(object):
         model = ActivitiesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'activities',
+        fields = ('id', 'type', 'title', 'sub_title',
                   'action_text', 'action_link')
 
 
@@ -268,7 +247,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', 'link', 'external')
 
 
 class StepsContentSerializer(serializers.ModelSerializer):
@@ -341,7 +320,7 @@ class WelcomeContentSerializer(serializers.ModelSerializer):
 
 
 class LocationsContentSerializer(serializers.ModelSerializer):
-    locations = LocationSerializer(many=True)
+    locations = OfficeSerializer(many=True)
 
     class Meta(object):
         model = LocationsContent

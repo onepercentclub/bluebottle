@@ -16,7 +16,6 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from parler.utils.views import get_language_parameter
 from pytz import timezone
 
 from bluebottle.activities.admin import (
@@ -975,10 +974,6 @@ class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'member_link')
     readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
-
-    def get_queryset(self, request):
-        lang = get_language_parameter(request, self.query_language_key)
-        return super().get_queryset(request).translated(lang).order_by('translations__name')
 
     def get_actions(self, request):
         actions = super(SkillAdmin, self).get_actions(request)

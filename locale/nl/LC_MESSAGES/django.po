@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-21 14:53+0200\n"
-"PO-Revision-Date: 2022-09-21 12:55\n"
+"PO-Revision-Date: 2022-10-13 15:12\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: nl\n"
-"X-Crowdin-File: /ticket.BB-20508-translate/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 1530\n"
+"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 233\n"
 
 #: bluebottle/activities/admin.py:64 bluebottle/activities/admin.py:629
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:235
@@ -265,7 +265,7 @@ msgstr "Je hebt je afgemeld voor de activiteit \"{title}\""
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, there are {count} activities on {site_name} matching your profile"
-msgstr "{first_name}, er zijn {count} activiteiten op {site_name} die overeenkomen met jou profiel"
+msgstr "{first_name}, er zijn {count} activiteiten op {site_name} die overeenkomen met jouw profiel"
 
 #: bluebottle/activities/messages.py:192
 msgctxt "email"
@@ -5065,12 +5065,12 @@ msgstr "Je bent aangewezen als beoordelaar voor \"{title}\"."
 #: bluebottle/initiatives/messages.py:118
 #, python-brace-format
 msgid "You have a new post on '{title}'"
-msgstr "Je hebt een nieuw bericht op '{title}'"
+msgstr "Je hebt een nieuwe reactie op '{title}'"
 
 #: bluebottle/initiatives/messages.py:134
 #, python-brace-format
 msgid "Update from '{title}'"
-msgstr "Update van '{title}'"
+msgstr "Nieuwe update van '{title}'"
 
 #: bluebottle/initiatives/models.py:44
 msgid "reviewer"

@@ -70,7 +70,7 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
         return queryset
 
 
-class ActiviyManagersInline(admin.TabularInline):
+class ActivityManagersInline(admin.TabularInline):
     model = Initiative.activity_managers.through
     show_change_link = True
     extra = 0
@@ -108,6 +108,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'promoter',
         'organization', 'organization_contact',
         'place',
+        'theme',
+        'categories'
     )
 
     date_hierarchy = 'created'

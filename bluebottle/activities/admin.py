@@ -271,7 +271,7 @@ class TeamInline(admin.TabularInline):
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
-    raw_id_fields = ['owner', 'initiative']
+    raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
 
@@ -435,9 +435,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
                 self.office_fields += (
                     'office_restriction',
                 )
-            fieldsets.insert(1, (
-                _('Office'), {'fields': self.office_fields}
-            ))
+                fieldsets.insert(1, (
+                    _('Office'), {'fields': self.office_fields}
+                ))
 
         if request.user.is_superuser:
             fieldsets += [

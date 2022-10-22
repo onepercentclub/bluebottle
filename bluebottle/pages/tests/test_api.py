@@ -65,7 +65,7 @@ class PageListTestCase(PageTestCase):
 
 class PageDetailTestCase(PageTestCase):
     """
-    Test case for ``PageDetail`` API view.
+    Test case for ``OldPageDetail`` API view.
 
     Endpoint: /api/pages/<language>/pages/<slug>
     """

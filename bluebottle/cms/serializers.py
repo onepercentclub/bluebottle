@@ -6,6 +6,7 @@ from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
+from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
@@ -501,13 +502,39 @@ class HomePageSerializer(serializers.ModelSerializer):
         fields = ('id', 'blocks')
 
 
-class PageSerializer(serializers.ModelSerializer):
+class HomeSerializer(ModelSerializer):
+    blocks = BlockSerializer(
+        source='content.contentitems.all.translated',
+        many=True
+    )
+
+    class Meta(object):
+        model = HomePage
+        fields = ('id', 'blocks')
+
+    class JSONAPIMeta(object):
+        resource_name = 'pages'
+
+
+class OldPageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     blocks = BlockSerializer(source='body.contentitems.all', many=True)
 
     class Meta(object):
         model = Page
         fields = ('title', 'id', 'blocks', 'language', 'full_page')
+
+
+class PageSerializer(ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+    blocks = BlockSerializer(source='body.contentitems.all', many=True)
+
+    class Meta(object):
+        model = Page
+        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+
+    class JSONAPIMeta(object):
+        resource_name = 'pages'
 
 
 class NewsItemSerializer(serializers.ModelSerializer):

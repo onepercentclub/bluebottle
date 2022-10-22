@@ -9,12 +9,12 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import ResultPage, HomePage
 from bluebottle.cms.serializers import (
     ResultPageSerializer, HomePageSerializer, NewsItemSerializer,
-    PageSerializer
+    OldPageSerializer, HomeSerializer, PageSerializer
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
 from bluebottle.utils.utils import get_language_from_request
-from bluebottle.utils.views import RetrieveAPIView
+from bluebottle.utils.views import RetrieveAPIView, JsonApiViewMixin
 
 
 class ResultPageDetail(RetrieveAPIView):
@@ -46,9 +46,14 @@ class HomePageDetail(RetrieveAPIView):
     serializer_class = HomePageSerializer
 
 
-class PageDetail(RetrieveAPIView):
+class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
+    queryset = HomePage.objects.all()
+    serializer_class = HomeSerializer
+
+
+class OldPageDetail(RetrieveAPIView):
     queryset = Page.objects
-    serializer_class = PageSerializer
+    serializer_class = OldPageSerializer
     lookup_field = 'slug'
 
     def get_object(self, queryset=None):
@@ -67,6 +72,10 @@ class PageDetail(RetrieveAPIView):
                 )
             except ObjectDoesNotExist:
                 raise Http404
+
+
+class PageDetail(JsonApiViewMixin, OldPageDetail):
+    serializer_class = PageSerializer
 
 
 class NewsItemDetail(RetrieveAPIView):

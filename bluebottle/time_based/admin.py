@@ -166,7 +166,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter]
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['expertise']
 
     export_to_csv_fields = (
         ('title', 'Title'),

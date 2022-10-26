@@ -343,7 +343,7 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 class MemberAdmin(UserAdmin):
-    raw_id_fields = ('partner_organization', 'place')
+    raw_id_fields = ('partner_organization', 'place', 'location')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {

@@ -267,7 +267,12 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.activity.accepted_participants
+            slot_participant.participant.user for slot_participant
+            in self.obj.slot_participants.all()
+            if (
+                slot_participant.status == 'registered' and
+                slot_participant.participant.status == 'accepted'
+            )
         ]
 
 

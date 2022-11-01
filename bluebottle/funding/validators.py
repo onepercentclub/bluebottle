@@ -27,7 +27,7 @@ class DeadlineValidator(Validator):
 
     def is_valid(self):
         return (
-            self.instance.status in ('submitted', 'needs_work', 'draft') or
+            self.instance.status in ('submitted', 'needs_work', 'draft', 'partially_funded', 'succeeded') or
             self.instance.duration or
             (
                 self.instance.deadline and

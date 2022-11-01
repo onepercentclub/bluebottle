@@ -107,6 +107,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_date_preview_multiple_slots(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity)
+        DateActivitySlotFactory.create(
+            status='succeeded', activity=activity, start=now() - timedelta(days=10)
+        )
         response = self.client.get(self.url, user=self.owner)
         attributes = response.json()['data'][0]['attributes']
 
@@ -119,7 +122,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], False)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
-        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(attributes['slot-count'], 4)
+        self.assertEqual(
+            dateutil.parser.parse(attributes['start']),
+            min([slot.start for slot in activity.slots.all() if slot.start > now()])
+        )
+
+        self.assertEqual(
+            dateutil.parser.parse(attributes['end']),
+            min([slot.end for slot in activity.slots.all() if slot.start > now()])
+        )
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertIsNone(attributes['location'])
 

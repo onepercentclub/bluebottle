@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -20,14 +22,33 @@ class KYCReadyValidator(Validator):
 
 class DeadlineValidator(Validator):
     code = 'deadline'
-    message = _('Make sure deadline is in the future')
+    message = _('Make sure the deadline is in the future.')
     field = 'deadline'
 
     def is_valid(self):
         return (
             self.instance.status in ('submitted', 'needs_work', 'draft') or
             self.instance.duration or
-            (self.instance.deadline and self.instance.deadline > now())
+            (
+                self.instance.deadline and
+                now() < self.instance.deadline
+            )
+        )
+
+
+class DeadlineMaxValidator(Validator):
+    code = 'deadline'
+    message = _('The deadline should not be more then 60 days in the future')
+    field = 'deadline'
+
+    def is_valid(self):
+        return (
+            self.instance.status in ('submitted', 'needs_work', 'draft') or
+            self.instance.duration or
+            (
+                self.instance.deadline and
+                self.instance.deadline <= now() + timedelta(days=60)
+            )
         )
 
 

@@ -762,9 +762,6 @@ class FundingTestCase(BluebottleTestCase):
         response = self.client.get(update_url, data, user=self.user)
         data = response.json()
 
-        print(data['data']['meta']['errors'])
-        print(data['data']['meta']['required'])
-
         self.assertEqual(
             len(data['data']['meta']['errors']),
             0
@@ -774,9 +771,16 @@ class FundingTestCase(BluebottleTestCase):
             0
         )
         funding.states.submit(save=True)
+        funding.states.approve(save=True)
         data['data']['attributes'] = {
             'deadline': now() + timedelta(days=80),
         }
+        response = self.client.put(update_url, data, user=self.user)
+        data = response.json()
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['title'],
+            'The deadline should not be more then 60 days in the future'
+        )
 
 
 class DonationTestCase(BluebottleTestCase):

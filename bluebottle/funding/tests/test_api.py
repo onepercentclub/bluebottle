@@ -676,7 +676,7 @@ class FundingTestCase(BluebottleTestCase):
         super(FundingTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory.create(owner=self.user, status='approved')
+        self.initiative = InitiativeFactory.create(owner=self.user)
 
         self.bank_account = PledgeBankAccountFactory.create(status='verified')
 
@@ -743,6 +743,8 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_without_errors(self):
+        self.initiative.status = 'approved'
+        self.initiative.save()
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()

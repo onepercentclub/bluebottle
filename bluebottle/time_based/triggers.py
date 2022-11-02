@@ -1223,11 +1223,6 @@ class ParticipantTriggers(ContributorTriggers):
                         team_is_open
                     ]
                 ),
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.reset,
-                    conditions=[team_is_active]
-                ),
                 FollowActivityEffect,
             ]
         ),
@@ -1261,9 +1256,8 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-
                 RelatedTransitionEffect(
-                    'finished_contributions',
+                    'started_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
@@ -1358,7 +1352,7 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[team_is_active]
                 ),
                 RelatedTransitionEffect(
-                    'finished_contributions',
+                    'started_contributions',
                     TimeContributionStateMachine.succeed,
                     conditions=[team_is_active]
                 ),
@@ -1656,16 +1650,6 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreatePeriodTimeContributionEffect,
                 CreateOverallTimeContributionEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            ParticipantStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    'finished_contributions',
-                    TimeContributionStateMachine.succeed
-                ),
             ]
         ),
 

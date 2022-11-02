@@ -2120,6 +2120,11 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             exclude(timecontribution__contribution_type='preparation').get().status,
             'succeeded'
         )
+        self.assertEqual(
+            self.participants[0].contributions.
+            filter(timecontribution__contribution_type='preparation').get().status,
+            'succeeded'
+        )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
     def test_reapply(self):
@@ -2133,6 +2138,11 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.assertEqual(
             self.participants[0].contributions.
             exclude(timecontribution__contribution_type='preparation').get().status,
+            'succeeded'
+        )
+        self.assertEqual(
+            self.participants[0].contributions.
+            filter(timecontribution__contribution_type='preparation').get().status,
             'succeeded'
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())

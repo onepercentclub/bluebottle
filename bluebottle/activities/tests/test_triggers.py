@@ -224,7 +224,7 @@ class TeamTriggersTestCase(TriggerTestCase):
         )
 
         for contribution in self.participant.contributions.all():
-            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+            self.assertEqual(contribution.status, 'succeeded')
 
         self.model.states.withdraw(save=True)
 
@@ -246,7 +246,7 @@ class TeamTriggersTestCase(TriggerTestCase):
         self.participant.refresh_from_db()
 
         for contribution in self.participant.contributions.all():
-            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+            self.assertEqual(contribution.status, 'succeeded')
 
     def test_reset(self):
         self.create()
@@ -272,7 +272,7 @@ class TeamTriggersTestCase(TriggerTestCase):
             other_participant.refresh_from_db()
 
         for contribution in self.participant.contributions.all():
-            self.assertEqual(contribution.status, TimeContributionStateMachine.new.value)
+            self.assertEqual(contribution.status, 'succeeded')
 
     def test_reopen(self):
         self.create()

@@ -99,6 +99,7 @@ install_requires = [
     'pyasn1==0.4.2',
     'pygeoip==0.3.2',
     'pyjwt==2.0.1',
+    'pyparsing==3.0.9',
     'python-dateutil==2.6.1',
     'python-magic==0.4.15',
     'python-memcached==1.58',

@@ -775,9 +775,16 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertTrue(expected in mail.outbox[0].body)
 
     def test_changed_multiple_dates(self):
-        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.activity.slot_selection = 'free'
+
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(activity=self.activity, user=eng)
+        participant = DateParticipantFactory.create(activity=self.activity, user=eng)
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
+
+        slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        other_participant = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=slot2, participant=other_participant)
+
         mail.outbox = []
         self.slot.start = now() + timedelta(days=10)
 
@@ -791,16 +798,17 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title)
         )
 
-        with TenantLanguage('en'):
-            for slot in [self.slot, self.slot2]:
-                expected = '{} {} - {} ({})'.format(
-                    defaultfilters.date(slot.start),
-                    defaultfilters.time(slot.start.astimezone(get_current_timezone())),
-                    defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                    slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-                )
+        self.assertEqual(mail.outbox[0].to[0], participant.user.email)
 
-                self.assertTrue(expected in mail.outbox[0].body)
+        with TenantLanguage('en'):
+            expected = '{} {} - {} ({})'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+            )
+
+            self.assertTrue(expected in mail.outbox[0].body)
 
     def test_reschedule_contributions(self):
         DateParticipantFactory.create_batch(5, activity=self.activity)

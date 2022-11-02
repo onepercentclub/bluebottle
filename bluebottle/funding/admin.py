@@ -302,6 +302,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
+        ('id', 'Order ID'),
     )
 
     def get_exclude(self, request, obj=None):

@@ -2775,7 +2775,8 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.slot.capacity = 1
         self.slot.save()
 
-        SlotParticipantFactory.create(slot=self.slot)
+        part = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot, participant=part)
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

@@ -109,7 +109,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'organization', 'organization_contact',
         'place',
         'theme',
-        'categories'
     )
 
     date_hierarchy = 'created'

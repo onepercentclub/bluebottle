@@ -33,17 +33,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=self.funding)
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
 
-    def test_funding_admin(self):
-        self.client.force_login(self.superuser)
-        self.funding.states.submit(save=True)
-        response = self.client.get(self.admin_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_state_transition',
-                               args=(self.funding.id, 'states', 'approve'))
-        self.assertContains(response, reviewed_url)
-
     def test_funding_admin_review(self):
         self.client.force_login(self.superuser)
         self.funding.states.submit(save=True)
@@ -55,6 +44,14 @@ class FundingTestCase(BluebottleAdminTestCase):
                                args=(self.funding.id, 'states', 'approve'))
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_funding_admin_future_deadline(self):
+        self.client.force_login(self.superuser)
+        self.funding.status = 'open'
+        self.funding.save()
+        DonorFactory.create(activity=self.funding)
+        response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_funding_admin_add_matching(self):

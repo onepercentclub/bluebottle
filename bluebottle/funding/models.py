@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import logging
 import random
 import string
 from builtins import object
@@ -8,6 +9,7 @@ from builtins import range
 
 from babel.numbers import get_currency_name
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db import models
 from django.db.models import Count
@@ -26,13 +28,11 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator, \
+    DeadlineMaxValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -150,9 +150,15 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
+    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, BudgetLineValidator, TargetValidator]
 
     auto_approve = False
+
+    def admin_clean(self):
+        for val in self.validators:
+            validator = val(self)
+            if not validator.is_valid():
+                raise ValidationError(validator.message)
 
     @property
     def required_fields(self):

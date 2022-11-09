@@ -8,6 +8,7 @@ from bluebottle.time_based.tests.factories import DateActivityFactory, DateActiv
     DateParticipantFactory, SlotParticipantFactory
 from bluebottle.time_based.serializers import DateActivityListSerializer
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.factory_models.geo import GeolocationFactory
 
 from django.test.client import RequestFactory
 
@@ -199,9 +200,9 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         )
 
     def test_location_info_multiple_locations(self):
-        DateActivitySlotFactory.create(activity=self.activity),
-        DateActivitySlotFactory.create(activity=self.activity),
-        DateActivitySlotFactory.create(activity=self.activity),
+        DateActivitySlotFactory.create(activity=self.activity)
+        DateActivitySlotFactory.create(activity=self.activity)
+        DateActivitySlotFactory.create(activity=self.activity)
 
         self.assertAttribute(
             'location_info',
@@ -209,6 +210,34 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': None,
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
+    def test_location_info_multiple_slots_single_location(self):
+        location = GeolocationFactory.create()
+
+        DateActivitySlotFactory.create(activity=self.activity, location=location)
+        DateActivitySlotFactory.create(activity=self.activity, location=location)
+        DateActivitySlotFactory.create(
+            activity=self.activity,
+            location=location,
+            location_hint='test hint'
+        )
+
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': False,
+                'is_online': False,
+                'location': {
+                    'locality': location.locality,
+                    'formattedAddress': location.formatted_address,
+                    'country': {
+                        'code': location.country.alpha2_code
+                    }
+                },
                 'online_meeting_url': None,
                 'location_hint': None,
             }

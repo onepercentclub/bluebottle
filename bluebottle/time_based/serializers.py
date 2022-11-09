@@ -321,7 +321,7 @@ class DateActivitySlotInfoMixin():
                 'location_hint': None,
             }
 
-        has_multiple = len(set(locations)) > 1 and not is_online
+        has_multiple = len(set(location[:2] for location in locations)) > 1 and not is_online
         if has_multiple:
             return {
                 'has_multiple': True,

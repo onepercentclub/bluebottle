@@ -2,6 +2,7 @@ from builtins import object
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 
 
 class OfficeRegion(models.Model):
@@ -39,3 +40,22 @@ class OfficeSubRegion(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'offices/subregion'
+
+
+class OfficeRestrictionChoices(DjangoChoices):
+    office = ChoiceItem(
+        'office',
+        label=_("Open to people from the same office")
+    )
+    office_subregion = ChoiceItem(
+        'office_subregion',
+        label=_("Open to people from offices within the same group")
+    )
+    office_region = ChoiceItem(
+        'office_region',
+        label=_("Open to people from offices within the same region")
+    )
+    all = ChoiceItem(
+        'all',
+        label=_("Open to people from any office")
+    )

@@ -88,7 +88,7 @@ class LocationAdmin(admin.ModelAdmin):
     region_link.short_description = _('Office region')
 
     fieldsets = (
-        (_('Info'), {'fields': ('name', 'subregion', 'description', 'city', 'country', 'image')}),
+        (_('Info'), {'fields': ('name', 'slug', 'subregion', 'description', 'city', 'country', 'image')}),
         (_('Map'), {'fields': ('position', )})
     )
 

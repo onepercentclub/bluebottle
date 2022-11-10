@@ -58,6 +58,15 @@ class BaseTokenAuthentication():
                 user.save()
             except Location.DoesNotExist:
                 pass
+        if 'location.name' in data:
+            try:
+                if user.location_verified:
+                    return
+
+                user.location = Location.objects.get(name=data['location.name'])
+                user.save()
+            except Location.DoesNotExist:
+                pass
 
     def get_segments_from_data(self, data):
         segment_list = {}
@@ -140,7 +149,7 @@ class BaseTokenAuthentication():
         if not created:
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
-        logger.warning(data)
+
         self.set_location(user, data)
         self.set_segments(user, data)
 

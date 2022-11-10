@@ -81,7 +81,7 @@ class BaseTokenAuthentication():
                 segment_type = SegmentType.objects.get(slug=type_slug)
             except SegmentType.DoesNotExist:
                 logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
-                return
+                return segment_list
 
             if not isinstance(value, (list, tuple)):
                 value = [value]

@@ -15,6 +15,7 @@ from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -24,24 +25,6 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
-
-    class OfficeRestrictionChoices(DjangoChoices):
-        office = ChoiceItem(
-            'office',
-            label=_("Only people from the same office are allowed to participate")
-        )
-        office_subregion = ChoiceItem(
-            'office_subregion',
-            label=_("Only people within the same group are allowed to participate")
-        )
-        office_region = ChoiceItem(
-            'office_region',
-            label=_("Only people within the same region are allowed to participate")
-        )
-        all = ChoiceItem(
-            'all',
-            label=_("Everybody is allowed to participate")
-        )
 
     owner = models.ForeignKey(
         'members.Member',

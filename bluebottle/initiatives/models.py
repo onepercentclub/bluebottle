@@ -17,6 +17,7 @@ from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.validators import UniqueTitleValidator
+from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
     SortableTranslatableModel
@@ -294,14 +295,23 @@ class InitiativePlatformSettings(BasePlatformSettings):
         default=False,
         help_text=_("Allow activity managers to indicate the impact they make.")
     )
+
     enable_office_regions = models.BooleanField(
         default=False,
         help_text=_("Allow admins to add (sub)regions to their offices.")
     )
+
     enable_office_restrictions = models.BooleanField(
         default=False,
         help_text=_("Allow activity managers to specify office restrictions on activities.")
     )
+    default_office_restriction = models.CharField(
+        _('Default office restriction'),
+        default=OfficeRestrictionChoices.all,
+        choices=OfficeRestrictionChoices.choices,
+        blank=True, null=True, max_length=100
+    )
+
     enable_multiple_dates = models.BooleanField(
         default=False,
         help_text=_("Enable date activities to have multiple slots.")

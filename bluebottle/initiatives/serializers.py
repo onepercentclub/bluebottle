@@ -420,6 +420,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_impact',
             'enable_office_regions',
             'enable_office_restrictions',
+            'default_office_restriction',
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',

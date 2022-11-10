@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rest_framework import views, response
+from django.db import connection
 
 from bluebottle.clients.utils import get_public_properties
 
@@ -20,6 +21,7 @@ class SettingsView(views.APIView):
         member_settings = obj['platform']['members']
         if member_settings['closed'] and not request.user.is_authenticated:
             obj = {
+                'tenant': connection.tenant.client_name,
                 'platform': {
                     'members': {
                         'closed': member_settings['closed'],

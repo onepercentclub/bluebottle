@@ -277,6 +277,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(
             response.data,
             {
+                'tenant': 'test',
                 'platform': {
                     'members': {
                         'closed': True,

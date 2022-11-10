@@ -11,7 +11,7 @@ logger = logging.getLogger('bluebottle')
 
 
 @periodic_task(
-    run_every=(crontab(minute='*/15')),
+    run_every=(crontab(hour='*/15')),
     name="funding_tasks",
     ignore_result=True
 )
@@ -20,6 +20,19 @@ def funding_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in Funding.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(hour=2, minute=20)),
+    name="donor_tasks",
+    ignore_result=True
+)
+def donor_tasks():
+    from bluebottle.funding.models import Donor
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in Donor.get_periodic_tasks():
                 task.execute()
 
 

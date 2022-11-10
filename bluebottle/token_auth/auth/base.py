@@ -140,7 +140,7 @@ class BaseTokenAuthentication():
         if not created:
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
-
+        logger.warning(data)
         self.set_location(user, data)
         self.set_segments(user, data)
 

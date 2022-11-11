@@ -153,7 +153,11 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
                 'start': instance.start,
                 'value': instance.duration.seconds / (60 * 60)
             }]
-        return []
+        return [{
+            'period': instance.duration_period,
+            'start': instance.start,
+            'value': 0
+        }]
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:

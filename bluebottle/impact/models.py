@@ -18,6 +18,7 @@ ICONS = [
     ('co2', _('C02')),
     ('water', _('Water')),
     ('plastic', _('plastic')),
+    ('food', _('Food')),
 
     ('task', _('Task')),
     ('task-completed', _('Task completed')),

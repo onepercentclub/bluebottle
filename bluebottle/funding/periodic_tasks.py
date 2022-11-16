@@ -1,11 +1,12 @@
+from datetime import timedelta
 from builtins import str
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
-from bluebottle.funding.models import Funding
-from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding.models import Funding, Donor
+from bluebottle.funding.states import FundingStateMachine, DonorStateMachine
 
 
 def target_reached(effect):
@@ -49,4 +50,21 @@ class FundingFinishedTask(ModelPeriodicTask):
         return str(_("Campaign deadline has passed."))
 
 
+class DonorExpiredTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            created__lte=timezone.now() - timedelta(days=14),
+            status='new'
+        )
+
+    effects = [
+        TransitionEffect(DonorStateMachine.expire)
+    ]
+
+    def __str__(self):
+        return str(_("Campaign deadline has passed."))
+
+
 Funding.periodic_tasks = [FundingFinishedTask]
+Donor.periodic_tasks = [DonorExpiredTask]

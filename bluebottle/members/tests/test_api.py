@@ -24,7 +24,7 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
     SlotParticipantFactory
@@ -1192,3 +1192,25 @@ class MemberProfileAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
         self.assertFalse(self.user.receive_reminder_emails)
+
+
+class CurrentMemberAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.url = reverse('current-member-detail')
+
+    def test_get_logged_in(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertEqual(self.response.json()['data']['id'], str(self.user.pk))
+        self.assertAttribute('first-name')
+        self.assertAttribute('last-name')
+        self.assertMeta('permissions')
+
+    def test_get_logged_out(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)

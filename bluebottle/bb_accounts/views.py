@@ -35,7 +35,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
-from bluebottle.initiatives.serializers import MemberSerializer
+from bluebottle.initiatives.serializers import MemberSerializer, CurrentMemberSerializer
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
@@ -147,6 +147,18 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         instance.anonymize()
+
+
+class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = CurrentMemberSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, *args, **kwargs):
+        return self.request.user
 
 
 class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):

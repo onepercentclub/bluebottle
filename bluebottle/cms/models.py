@@ -186,6 +186,9 @@ class Quote(models.Model):
         ]
     )
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/quotes/quotes'
+
 
 class TitledContent(ContentItem):
     title = models.CharField(max_length=50, blank=True, null=True)
@@ -204,6 +207,9 @@ class QuotesContent(TitledContent):
 
     class Meta:
         verbose_name = _('Quotes')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/quotes'
 
     def __str__(self):
         return str(self.quotes)
@@ -239,6 +245,9 @@ class HomepageStatisticsContent(TitledContent):
     class Meta:
         verbose_name = _('Statistics')
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/stats'
+
     def __str__(self):
         return str(self.title)
 
@@ -256,6 +265,9 @@ class ActivitiesContent(TitledContent):
 
     class Meta:
         verbose_name = _('Activities')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/activities'
 
     def __str__(self):
         return str(self.title)
@@ -306,6 +318,9 @@ class ProjectsMapContent(TitledContent):
 
     class Meta:
         verbose_name = _('Projects Map')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/map'
 
     def __str__(self):
         return 'Projects Map'
@@ -381,6 +396,9 @@ class SlidesContent(TitledContent):
     class Meta:
         verbose_name = _('Slides')
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/slides'
+
     def __str__(self):
         return str(self.slides)
 
@@ -409,6 +427,9 @@ class Step(SortableMixin, models.Model):
     class Meta:
         ordering = ['sequence']
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/steps/steps'
+
 
 @python_2_unicode_compatible
 class StepsContent(TitledContent):
@@ -422,6 +443,9 @@ class StepsContent(TitledContent):
 
     class Meta:
         verbose_name = _('Steps')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/slides'
 
     def __str__(self):
         return str(_('Steps'))
@@ -514,6 +538,9 @@ class ContentLink(SortableMixin, models.Model):
     class Meta:
         ordering = ['sequence']
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/links/links'
+
 
 @python_2_unicode_compatible
 class LinksContent(TitledContent):
@@ -521,6 +548,9 @@ class LinksContent(TitledContent):
 
     class Meta:
         verbose_name = _('Links')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/links'
 
     def __str__(self):
         return str(_('Links'))

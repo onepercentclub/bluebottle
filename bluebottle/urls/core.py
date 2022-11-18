@@ -82,6 +82,9 @@ urlpatterns = [
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
+    # New JSON-API auth route
+    url(r'^api/auth/', AxesObtainJSONWebToken.as_view(), name='auth'),
+
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
     # Social token authorization

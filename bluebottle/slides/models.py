@@ -97,3 +97,6 @@ class Slide(PublishableModel):
 
     class Meta(object):
         ordering = ('language', 'sequence')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/slides/slides'

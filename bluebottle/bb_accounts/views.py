@@ -63,6 +63,16 @@ class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
     parser_classes = (parsers.JSONParser, )
 
 
+class AxesObtainJSONAPIWebToken(ObtainJSONWebTokenView):
+    """
+    API View that receives a POST with a user's username and password.
+
+    Returns a JSON Web Token that can be used for authenticated requests.
+    """
+    serializer_class = AxesJSONWebTokenSerializer
+    parser_classes = (parsers.JSONParser, )
+
+
 class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
     serializer_class = CaptchaSerializer
 

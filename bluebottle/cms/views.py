@@ -3,13 +3,14 @@ from datetime import datetime, time
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http.response import Http404
+from fluent_contents.models import ContentItem
 from pytz import timezone
 
 from bluebottle.clients import properties
 from bluebottle.cms.models import ResultPage, HomePage
 from bluebottle.cms.serializers import (
     ResultPageSerializer, HomePageSerializer, NewsItemSerializer,
-    OldPageSerializer, HomeSerializer, PageSerializer
+    OldPageSerializer, HomeSerializer, PageSerializer, BlockSerializer
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
@@ -53,6 +54,13 @@ class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
     def get_object(self):
         obj = super(HomeDetail, self).get_object()
         return obj.content
+
+
+class BlockDetail(JsonApiViewMixin, RetrieveAPIView):
+    queryset = ContentItem.objects.all()
+    serializer_class = BlockSerializer
+
+    permission_classes = []
 
 
 class OldPageDetail(RetrieveAPIView):

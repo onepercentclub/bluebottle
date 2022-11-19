@@ -393,6 +393,11 @@ class Slide(SortableMixin, models.Model):
 class SlidesContent(TitledContent):
     type = 'slides'
 
+    def slides(self):
+        return Slide.objects.published().filter(
+            language=self.language_code
+        )
+
     class Meta:
         verbose_name = _('Slides')
 
@@ -445,7 +450,7 @@ class StepsContent(TitledContent):
         verbose_name = _('Steps')
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/slides'
+        resource_name = 'pages/blocks/steps'
 
     def __str__(self):
         return str(_('Steps'))

@@ -518,7 +518,7 @@ class BaseBlockSerializer(ModelSerializer):
 
     class Meta(object):
         model = LinksContent
-        fields = ('id', 'type', 'title', 'sub_title',)
+        fields = ('id', 'type', 'language_code', 'title', 'sub_title',)
 
     def get_type(self, obj):
         return self.JSONAPIMeta.resource_name
@@ -536,7 +536,7 @@ class LinksBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = LinksContent
         includes_resources = ['links']
-        fields = ('id', 'type', 'title', 'sub_title', 'links', )
+        fields = BaseBlockSerializer.Meta.fields + ('links', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/links'
@@ -558,7 +558,7 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ProjectsMapContent
-        fields = ('id', 'type', 'title', 'sub_title')
+        fields = BaseBlockSerializer.Meta.fields
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'
@@ -582,7 +582,7 @@ class SlidesBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = SlidesContent
-        fields = ('id', 'type', 'slides', 'title', 'sub_title', 'slides')
+        fields = BaseBlockSerializer.Meta.fields + ('slides', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/slides'
@@ -676,6 +676,38 @@ class BlockSerializer(PolymorphicModelSerializer):
 
 
 class HomeSerializer(ModelSerializer):
+
+    blocks = PolymorphicResourceRelatedField(
+        BlockSerializer,
+        read_only=True,
+        many=True,
+        source='content.contentitems.all.translated',
+    )
+
+    class Meta(object):
+        model = HomePage
+        fields = ('id', 'blocks')
+
+    class JSONAPIMeta(object):
+        resource_name = 'pages'
+        included_resources = [
+            'blocks',
+            'blocks.steps',
+            'blocks.links',
+            'blocks.slides',
+            'blocks.quotes',
+        ]
+
+    included_serializers = {
+        'blocks': 'bluebottle.cms.serializers.BlockSerializer',
+        'steps': 'bluebottle.cms.serializers.StepSerializer',
+        'links': 'bluebottle.cms.serializers.LinkSerializer',
+        'slides': 'bluebottle.cms.serializers.SlideSerializer',
+        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+    }
+
+
+class HomeContentSerializer(ModelSerializer):
 
     blocks = PolymorphicResourceRelatedField(
         BlockSerializer,

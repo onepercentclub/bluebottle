@@ -10,7 +10,7 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import ResultPage, HomePage
 from bluebottle.cms.serializers import (
     ResultPageSerializer, HomePageSerializer, NewsItemSerializer,
-    OldPageSerializer, HomeSerializer, PageSerializer, BlockSerializer, HomeContentSerializer
+    OldPageSerializer, HomeSerializer, PageSerializer, BlockSerializer
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
@@ -47,18 +47,13 @@ class HomePageDetail(RetrieveAPIView):
     serializer_class = HomePageSerializer
 
 
-class HomeContentDetail(JsonApiViewMixin, RetrieveAPIView):
-    queryset = HomePage.objects.all()
-    serializer_class = HomeContentSerializer
-
-    def get_object(self):
-        obj = super(HomeContentDetail, self).get_object()
-        return obj.content
-
-
 class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = HomePage.objects.all()
     serializer_class = HomeSerializer
+
+    def get_object(self):
+        obj = super(HomeDetail, self).get_object()
+        return obj.content
 
 
 class BlockDetail(JsonApiViewMixin, RetrieveAPIView):

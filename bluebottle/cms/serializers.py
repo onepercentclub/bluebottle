@@ -681,38 +681,6 @@ class HomeSerializer(ModelSerializer):
         BlockSerializer,
         read_only=True,
         many=True,
-        source='content.contentitems.all.translated',
-    )
-
-    class Meta(object):
-        model = HomePage
-        fields = ('id', 'blocks')
-
-    class JSONAPIMeta(object):
-        resource_name = 'pages'
-        included_resources = [
-            'blocks',
-            'blocks.steps',
-            'blocks.links',
-            'blocks.slides',
-            'blocks.quotes',
-        ]
-
-    included_serializers = {
-        'blocks': 'bluebottle.cms.serializers.BlockSerializer',
-        'steps': 'bluebottle.cms.serializers.StepSerializer',
-        'links': 'bluebottle.cms.serializers.LinkSerializer',
-        'slides': 'bluebottle.cms.serializers.SlideSerializer',
-        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
-    }
-
-
-class HomeContentSerializer(ModelSerializer):
-
-    blocks = PolymorphicResourceRelatedField(
-        BlockSerializer,
-        read_only=True,
-        many=True,
         source='contentitems'
     )
 

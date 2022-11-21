@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-21 14:53+0200\n"
-"PO-Revision-Date: 2022-11-21 09:36\n"
+"PO-Revision-Date: 2022-11-21 10:37\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -4594,7 +4594,7 @@ msgstr "iDEAL"
 #: bluebottle/funding_stripe/models.py:239
 #: bluebottle/funding_stripe/models.py:267
 msgid "Direct debit"
-msgstr "Eenmalige incasso"
+msgstr "Eenmalige machtiging"
 
 #: bluebottle/funding_stripe/models.py:302
 msgid "Starts with 'acct_...'"

@@ -109,7 +109,7 @@ class InitiativeMapList(generics.ListAPIView):
 
 
 class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
-    queryset = Initiative.objects.filter(status='approved').exclude(place__position=Point(0, 0))
+    queryset = Initiative.objects.filter(status='approved', place__position__isnull=False).exclude(place__position=Point(0, 0))
     serializer_class = InitiativePreviewSerializer
 
     owner_filter_field = 'owner'

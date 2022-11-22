@@ -549,7 +549,7 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
     initiatives = CustomHyperlinkRelatedSerializer(
-        link="/api/initiatives/previews"
+        link="/api/initiatives/preview/"
     )
 
     class Meta(object):

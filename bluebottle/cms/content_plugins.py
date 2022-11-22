@@ -6,7 +6,7 @@ from fluent_contents.forms import ContentItemForm
 
 from bluebottle.cms.admin import (
     QuoteInline, StatInline, StepInline, LogoInline, ContentLinkInline,
-    GreetingInline
+    GreetingInline, SlideInline
 )
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, ShareResultsContent, SupporterTotalContent,
@@ -88,6 +88,7 @@ class SupporterTotalBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class SlidesBlockPlugin(CMSContentPlugin):
     model = SlidesContent
+    inlines = [SlideInline]
 
     category = _('Homepage')
 

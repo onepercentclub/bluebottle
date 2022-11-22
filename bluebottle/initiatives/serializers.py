@@ -152,9 +152,7 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
-class InitiativePreviewSerializer(serializers.ModelSerializer):
-    # Use a standard serializer and tinypoint serializer to keep this request tiny
-    # No need to repeat `type` and `latitude`, `longitude` for every record.
+class InitiativePreviewSerializer(ModelSerializer):
     position = TinyPointSerializer()
 
     class Meta(object):

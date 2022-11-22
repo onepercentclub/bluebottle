@@ -265,4 +265,6 @@ class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
         super(CustomHyperlinkRelatedSerializer, self).__init__(source='parent', read_only=True, **kwargs)
 
     def get_links(self, *args, **kwargs):
-        return self.link
+        return {
+            'related': self.link
+        }

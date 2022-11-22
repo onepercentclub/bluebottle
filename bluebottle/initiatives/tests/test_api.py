@@ -48,6 +48,23 @@ class InitiativeAPITestCase(TestCase):
         self.visitor = BlueBottleUserFactory.create()
 
 
+class InitiativePreviewListAPITestCase(APITestCase):
+    def setUp(self):
+        super(InitiativePreviewListAPITestCase, self).setUp()
+        InitiativeFactory.create_batch(10, status='approved')
+        InitiativeFactory.create_batch(2, status='cancelled')
+        InitiativeFactory.create_batch(2, location=None)
+
+        self.url = reverse('initiative-preview-list')
+
+    def test_get(self):
+        self.perform_get()
+        self.assertSize(10)
+        self.assertAttribute('title')
+        self.assertAttribute('position')
+        self.assertAttribute('slug')
+
+
 class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeListAPITestCase, self).setUp()

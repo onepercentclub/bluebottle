@@ -22,7 +22,7 @@ from bluebottle.initiatives.permissions import (
 )
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
-    InitiativeMapSerializer, InitiativeRedirectSerializer,
+    InitiativeMapSerializer, InitiativePreviewSerializer, InitiativeRedirectSerializer,
     RelatedInitiativeImageSerializer, ThemeSerializer
 )
 from bluebottle.transitions.views import TransitionList
@@ -96,6 +96,23 @@ class InitiativeMapList(generics.ListAPIView):
         queryset = queryset.filter(status='approved').all()
         queryset = queryset.exclude(place__position=Point(0, 0))
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
+        data = cache.get(cache_key)
+        if not data:
+            queryset = self.get_queryset().order_by('created')
+            serializer = self.get_serializer(queryset, many=True)
+            data = serializer.data
+            cache.set(cache_key, data)
+        return Response(data)
+
+
+class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
+    queryset = Initiative.objects.filter(status='approved').exclude(place__position=Point(0, 0))
+    serializer_class = InitiativePreviewSerializer
+
+    owner_filter_field = 'owner'
 
     def list(self, request, *args, **kwargs):
         cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)

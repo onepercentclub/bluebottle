@@ -152,6 +152,21 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
+class InitiativePreviewSerializer(serializers.ModelSerializer):
+    # Use a standard serializer and tinypoint serializer to keep this request tiny
+    # No need to repeat `type` and `latitude`, `longitude` for every record.
+    position = TinyPointSerializer()
+
+    class Meta(object):
+        model = Initiative
+        fields = (
+            'id', 'title', 'slug', 'position',
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'initiatives/preview'
+
+
 class ActivitiesField(HyperlinkedRelatedField):
     def __init__(self, many=True, read_only=True, *args, **kwargs):
         super().__init__(Activity, many=many, read_only=read_only, *args, **kwargs)

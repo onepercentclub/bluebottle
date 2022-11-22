@@ -1,4 +1,6 @@
 from future import standard_library
+from rest_framework_json_api.relations import HyperlinkedRelatedField
+
 standard_library.install_aliases()
 import logging
 import os
@@ -254,3 +256,13 @@ class PrivateFileSerializer(FileSerializer):
             'url': url,
             'name': filename
         }
+
+
+class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
+
+    def __init__(self, link, **kwargs):
+        self.link = link
+        super(CustomHyperlinkRelatedSerializer, self).__init__(source='parent', read_only=True, **kwargs)
+
+    def get_links(self, *args, **kwargs):
+        return self.link

@@ -12,7 +12,7 @@ from rest_framework_json_api.relations import PolymorphicResourceRelatedField, R
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer, SorlImageField
+    ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
 )
 from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.cms.models import (
@@ -548,14 +548,6 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
-    def __repr__(self):
-        if 'start_date' in self.context and 'end_date' in self.context:
-            start = self.context['start_date'].strftime(
-                '%s') if self.context['start_date'] else 'none'
-            end = self.context['end_date'].strftime(
-                '%s') if self.context['end_date'] else 'none'
-            return 'MapsContent({},{})'.format(start, end)
-        return 'MapsContent'
 
     class Meta(object):
         model = ProjectsMapContent
@@ -567,14 +559,9 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 
 class ActivitiesBlockSerializer(BaseBlockSerializer):
 
-    activities = serializers.SerializerMethodField()
-
-    def get_activities(self, obj):
-        url = f"{reverse('activity-preview-list')}?filter[highlight]=true&page[size]=4"
-        return {
-            'self': url,
-            'related': url
-        }
+    activities = CustomHyperlinkRelatedSerializer(
+        link="/api/activities/preview?filter[highlight]=true&page[size]=4"
+    )
 
     class Meta(object):
         model = ActivitiesContent
@@ -623,18 +610,24 @@ class StepsBlockSerializer(BaseBlockSerializer):
     }
 
 
-class HomepageStatisticsBlockSerializer(BaseBlockSerializer):
+class StatsBlockSerializer(BaseBlockSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
     year = serializers.IntegerField()
-    count = serializers.SerializerMethodField()
+    stats = serializers.SerializerMethodField()
 
-    def get_count(self, obj):
-        return len(BaseStatistic.objects.filter(active=True))
+    def get_stats(self, obj):
+        url = reverse('statistic-list')
+        if obj.year:
+            url += f'?year={obj.year}'
+        return {
+            'self': url,
+            'related': url
+        }
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'year', 'count')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/stats'
@@ -665,7 +658,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         ActivitiesBlockSerializer,
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
-        HomepageStatisticsBlockSerializer,
+        StatsBlockSerializer,
         QuotesBlockSerializer
     ]
 

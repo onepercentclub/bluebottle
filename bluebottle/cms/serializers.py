@@ -560,7 +560,7 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 class ActivitiesBlockSerializer(BaseBlockSerializer):
 
     activities = CustomHyperlinkRelatedSerializer(
-        link="/api/activities/preview?filter[highlight]=true&page[size]=4"
+        link="/api/activities/search?filter[highlight]=true&page[size]=4"
     )
 
     class Meta(object):
@@ -610,20 +610,23 @@ class StepsBlockSerializer(BaseBlockSerializer):
     }
 
 
+class StatsLinkSerializer(CustomHyperlinkRelatedSerializer):
+
+    def get_links(self, *args, **kwargs):
+        url = reverse('statistic-list')
+        obj = args[0]
+        if obj.year:
+            url += f'?year={obj.year}'
+        return {
+            'related': url
+        }
+
+
 class StatsBlockSerializer(BaseBlockSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
     year = serializers.IntegerField()
-    stats = serializers.SerializerMethodField()
-
-    def get_stats(self, obj):
-        url = reverse('statistic-list')
-        if obj.year:
-            url += f'?year={obj.year}'
-        return {
-            'self': url,
-            'related': url
-        }
+    stats = StatsLinkSerializer()
 
     class Meta(object):
         model = HomepageStatisticsContent

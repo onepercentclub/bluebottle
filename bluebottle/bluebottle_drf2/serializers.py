@@ -260,7 +260,7 @@ class PrivateFileSerializer(FileSerializer):
 
 class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
 
-    def __init__(self, link, **kwargs):
+    def __init__(self, link=None, **kwargs):
         self.link = link
         super(CustomHyperlinkRelatedSerializer, self).__init__(source='parent', read_only=True, **kwargs)
 

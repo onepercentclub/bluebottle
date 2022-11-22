@@ -2,6 +2,7 @@ from builtins import object
 from builtins import str
 
 from django.db.models import Sum
+from django.urls import reverse
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -566,9 +567,18 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 
 class ActivitiesBlockSerializer(BaseBlockSerializer):
 
+    activities = serializers.SerializerMethodField()
+
+    def get_activities(self, obj):
+        url = f"{reverse('activity-preview-list')}?filter[highlight]=true&page[size]=4"
+        return {
+            'self': url,
+            'related': url
+        }
+
     class Meta(object):
         model = ActivitiesContent
-        fields = BaseBlockSerializer.Meta.fields + ('action_text', 'action_link')
+        fields = BaseBlockSerializer.Meta.fields + ('action_text', 'action_link', 'activities')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/activities'

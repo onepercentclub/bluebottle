@@ -28,7 +28,6 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SlotParticipantFactory, TeamSlotFactory
 )
-from bluebottle.test.factory_models.geo import GeolocationFactory
 
 
 class TimeBasedActivityTriggerTestCase():
@@ -2518,23 +2517,6 @@ class TeamSlotTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(TeamSlotChangedNotification)
         self.assertEqual(self.model.status, 'open')
         self.assertEqual(self.model.team.status, 'open')
-
-    def test_change_location(self):
-        self.activity.is_online = False
-        self.activity.save()
-
-        start = now() + timedelta(days=4)
-        self.model = TeamSlotFactory.build(
-            team=self.participant.team,
-            activity=self.activity,
-            start=start,
-            duration=timedelta(hours=2)
-        )
-
-        self.model.location = GeolocationFactory.create()
-
-        with self.execute():
-            self.assertNotificationEffect(TeamSlotChangedNotification)
 
 
 class TeamReviewTriggerTestCase(TriggerTestCase):

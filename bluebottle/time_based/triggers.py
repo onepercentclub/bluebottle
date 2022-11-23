@@ -798,17 +798,6 @@ class TeamSlotTriggers(TriggerManager):
                 )
             ]
         ),
-
-        ModelChangedTrigger(
-            ['location', 'duration'],
-            effects=[
-                NotificationEffect(
-                    TeamSlotChangedNotification,
-                    conditions=[has_future_date]
-                ),
-            ]
-        ),
-
         ModelChangedTrigger(
             'start',
             effects=[

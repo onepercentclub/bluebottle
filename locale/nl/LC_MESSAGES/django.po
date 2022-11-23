@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-11-23 16:04+0100\n"
-"PO-Revision-Date: 2022-11-23 15:06\n"
+"PO-Revision-Date: 2022-11-23 15:17\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -60,12 +60,12 @@ msgstr "Pas aan"
 
 #: bluebottle/activities/admin.py:267
 msgid "Add time slot"
-msgstr ""
+msgstr "Voeg tijdsblok toe"
 
 #: bluebottle/activities/admin.py:269 bluebottle/time_based/admin.py:260
 #: bluebottle/time_based/admin.py:261
 msgid "Time slot"
-msgstr ""
+msgstr "Tijdsblok"
 
 #: bluebottle/activities/admin.py:423 bluebottle/initiatives/models.py:145
 msgid "Initiative"
@@ -347,7 +347,7 @@ msgstr "Team annulering voor '{title}'"
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been rejected for \"{title}\""
-msgstr ""
+msgstr "Je team is afgewezen voor '{title}\""
 
 #: bluebottle/activities/messages.py:357
 #, python-brace-format
@@ -365,13 +365,13 @@ msgstr "Je team is opnieuw geaccepteerd"
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team for \"{title}\""
-msgstr ""
+msgstr "Iemand heeft zich aangesloten bij jouw team voor \"{title}\""
 
 #: bluebottle/activities/messages.py:409
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for \"{title}\""
-msgstr ""
+msgstr "Een deelnemer heeft zich afgemeld voor jouw activiteit \"{title}\""
 
 #: bluebottle/activities/messages.py:431
 #, python-brace-format
@@ -382,28 +382,28 @@ msgstr "Teamlid verwijderd voor ''{title}'"
 #: bluebottle/activities/messages.py:459
 msgctxt "email"
 msgid "Find activities"
-msgstr ""
+msgstr "Bekijk activiteiten"
 
 #: bluebottle/activities/messages.py:513
 msgctxt "email"
 msgid "It’s a new year, let's make some impact!"
-msgstr ""
+msgstr "Het is een nieuw jaar, laten we wat impact maken!"
 
 #: bluebottle/activities/messages.py:518
 msgctxt "email"
 msgid "Haven’t joined an activity yet? Let’s get started!"
-msgstr ""
+msgstr "Nog niet aangemeld voor een activiteit? Laten we beginnen!"
 
 #: bluebottle/activities/messages.py:523
 msgctxt "email"
 msgid "Half way through the year and still plenty of activities to join"
-msgstr ""
+msgstr "Halverwege het jaar en nog steeds genoeg activiteiten om je voor aan te melden"
 
 #: bluebottle/activities/messages.py:528
 #, python-brace-format
 msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
-msgstr ""
+msgstr "Maak gebruik van je {do_good_hours} uur impact!"
 
 #: bluebottle/activities/models.py:26 bluebottle/notifications/models.py:57
 msgid "Teams"
@@ -431,11 +431,11 @@ msgstr "Datum van de laatste transitie."
 
 #: bluebottle/activities/models.py:56
 msgid "Host office"
-msgstr ""
+msgstr "Host kantoor"
 
 #: bluebottle/activities/models.py:60
 msgid "Restrictions"
-msgstr ""
+msgstr "Beperkingen"
 
 #: bluebottle/activities/models.py:66 bluebottle/cms/models.py:42
 #: bluebottle/cms/models.py:103 bluebottle/cms/models.py:116
@@ -552,7 +552,7 @@ msgstr "Team"
 #: bluebottle/activities/models.py:318
 #, python-brace-format
 msgid "Team {name}"
-msgstr ""
+msgstr "Team {name}"
 
 #: bluebottle/activities/models.py:319
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:16
@@ -652,11 +652,11 @@ msgstr "Aanmaken"
 
 #: bluebottle/activities/states.py:110
 msgid "The activity will be created."
-msgstr ""
+msgstr "De activiteit wordt aangemaakt."
 
 #: bluebottle/activities/states.py:119
 msgid "The activity will be submitted for review."
-msgstr ""
+msgstr "Het initiatief zal worden ingediend te review."
 
 #: bluebottle/activities/states.py:121 bluebottle/activities/states.py:149
 #: bluebottle/funding/states.py:586 bluebottle/initiatives/states.py:92
@@ -837,7 +837,7 @@ msgstr "bezig"
 
 #: bluebottle/activities/states.py:379
 msgid "The team is currently running the activity."
-msgstr ""
+msgstr "Het team voert momenteel de activiteit uit."
 
 #: bluebottle/activities/states.py:383 bluebottle/time_based/states.py:170
 msgid "finished"
@@ -845,7 +845,7 @@ msgstr "afgerond"
 
 #: bluebottle/activities/states.py:385
 msgid "The team has completed the activity."
-msgstr ""
+msgstr "Het team heeft de activiteit voltooid."
 
 #: bluebottle/activities/states.py:403
 msgid "The team will be created."
@@ -1210,7 +1210,9 @@ msgstr "\n"
 msgid "\n"
 "        Go to <a href=\"%(opt_out_link)s\">your profile</a> to opt-out.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Ga naar <a href=\"%(opt_out_link)s\">uw profiel</a> om af te melden.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q1.html:5
 #, python-format
@@ -1218,14 +1220,18 @@ msgctxt "email"
 msgid "\n"
 "        Can you spend %(do_good_hours)s hours making an impact this year? Of course you can! There's a wide range of activities to join, all contributing to good causes. Check them out!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Kun jij %(do_good_hours)s uur besteden om dit jaar impact te maken? Natuurlijk kan dat! Er is een breed scala aan activiteiten om aan je bij aan te melden, allemaal om goede doelen om aan te geven. Check ze uit!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q2.html:5
 msgctxt "email"
 msgid "\n"
 "        The first step is always the hardest, that's why we have made it as easy as possible to find an activity and make an impact!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        De eerste stap is altijd de moeilijkste, Daarom hebben we het zo eenvoudig mogelijk gemaakt om een activiteit te vinden en een impact te maken!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q3.html:5
 #, python-format
@@ -1234,14 +1240,19 @@ msgid "\n"
 "        There’s still so much time to reach the target of %(do_good_hours)s hours making an impact this year.\n"
 "        Check out the activities you can join.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Er is nog zoveel tijd om het doel van %(do_good_hours)s uur te bereiken.\n"
+"        Bekijk de activiteiten die je kunt aansluiten.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q4.html:5
 msgctxt "email"
 msgid "\n"
 "        Get involved with some good causes before the year ends, there are plenty of activities that need your help!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Doe mee met een aantal goede zaken voor het einde van het jaar, er zijn tal van activiteiten die je hulp nodig hebben!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:6
 #, python-format
@@ -1304,26 +1315,26 @@ msgstr "%(team_name)s neemt deel aan uw activiteit '%(title)s'."
 #: bluebottle/activities/templates/mails/messages/team_applied.html:9
 msgctxt "email"
 msgid "Next steps"
-msgstr ""
+msgstr "Volgende stappen"
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:12
 #: bluebottle/activities/templates/mails/messages/team_applied.html:12
 #, python-format
 msgctxt "email"
 msgid "Contact team captain %(team_captain_name)s to settle on a date, time and location for when they will participate in this activity."
-msgstr ""
+msgstr "Contacteer teamcaptain %(team_captain_name)s om te bepalen wanner en waar ze deel zullen nemen."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:13
 #: bluebottle/activities/templates/mails/messages/team_applied.html:13
 msgctxt "email"
 msgid "Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members."
-msgstr ""
+msgstr "Voeg deze informatie toe aan het team via de ongeplande teamlijst op de activiteitspagina zodat deze zichtbaar is voor de teamleden."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:15
 #: bluebottle/activities/templates/mails/messages/team_applied.html:16
 msgctxt "email"
 msgid "Team captain contact details:"
-msgstr ""
+msgstr "Teamcaptain contactgegevens:"
 
 #: bluebottle/activities/templates/mails/messages/team_applied.html:6
 #, python-format
@@ -1334,7 +1345,7 @@ msgstr "%(team_name)s heeft zich aangemeld voor jouw activiteit \"%(title)s\"."
 #: bluebottle/activities/templates/mails/messages/team_applied.html:14
 msgctxt "email"
 msgid "Accept the team after you have added the details so when the team members are invited  to join the activity it includes the time, date and location."
-msgstr ""
+msgstr "Accepteer het team nadat u de gegevens heeft toegevoegd, zodat de teamleden worden uitgenodigd om deel te nemen aan de activiteit die de tijd, datum en locatie bekent zijn."
 
 #: bluebottle/activities/templates/mails/messages/team_cancelled.html:6
 #: bluebottle/activities/templates/mails/messages/team_withdrawn.html:6
@@ -1354,14 +1365,15 @@ msgstr "Helaas is je team afgewezen voor de activiteit '%(title)s'."
 msgctxt "email"
 msgid "Your team has been accepted for the activity '%(title)s'.\n"
 "            "
-msgstr ""
+msgstr "Je team is geaccepteerd voor '%(title)s.            "
 
 #: bluebottle/activities/templates/mails/messages/team_captain_accepted.html:14
 msgctxt "email"
 msgid "\n"
 "            On the activity page you will find the link to invite your team members.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Op de activiteitenpagina vindt je de link om je teamleden uit te nodigen.        "
 
 #: bluebottle/activities/templates/mails/messages/team_member_added.html:6
 #, python-format
@@ -1808,7 +1820,7 @@ msgstr "Welkom,"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:42
 msgid "View site"
-msgstr ""
+msgstr "Bekijk site"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:45
 msgid "Change password"
@@ -2320,7 +2332,7 @@ msgstr "platform instellingen"
 
 #: bluebottle/cms/templates/admin/cms/preview/activities.html:3
 msgid "Toggle 'highlight' on activities to show them in this block."
-msgstr ""
+msgstr "Schakel 'highlight' in bij activiteiten om ze in dit blok te tonen."
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:85
 #, python-format
@@ -2884,7 +2896,7 @@ msgstr "gebruikt"
 
 #: bluebottle/files/templates/widgets/document.html:3
 msgid "Download"
-msgstr ""
+msgstr "Downloaden"
 
 #: bluebottle/files/validators.py:9
 msgid "Videos larger then 10MB will slow down the page too much."
@@ -3081,7 +3093,7 @@ msgstr "Valuta"
 #: bluebottle/funding/admin.py:129
 #, python-brace-format
 msgid "Can't extend a deadline to more then 60 days from the first donation, which was {date}. Maximum deadline is {deadline}"
-msgstr ""
+msgstr "Kan een deadline niet verlengen tot meer dan 60 dagen vanaf de eerste donatie, dat was {date}. Maximale deadline is {deadline}"
 
 #: bluebottle/funding/admin.py:185
 #, no-python-format
@@ -3646,7 +3658,7 @@ msgstr "Betaal de donatie terug, omdat de gehele activiteit terug zal worden bet
 
 #: bluebottle/funding/states.py:294
 msgid "Expire the donation account. This happens when a donation is still 'new' after 10 days"
-msgstr ""
+msgstr "Laat het donatie verlopen. Dit gebeurt wanneer een donatie nog 'nieuw' is na 10 dagen"
 
 #: bluebottle/funding/states.py:304
 msgid "Payment was started."
@@ -4447,11 +4459,11 @@ msgstr "Zorg ervoor dat je payout account is geverifieerd"
 
 #: bluebottle/funding/validators.py:25
 msgid "Make sure the deadline is in the future."
-msgstr ""
+msgstr "Zorg dat de deadline in de toekomst ligt."
 
 #: bluebottle/funding/validators.py:41
 msgid "The deadline should not be more then 60 days in the future"
-msgstr ""
+msgstr "De deadline mag niet langer zijn dan 60 dagen in de toekomst"
 
 #: bluebottle/funding/validators.py:57
 msgid "Please specify a budget"
@@ -4911,7 +4923,7 @@ msgstr "plastic"
 
 #: bluebottle/impact/models.py:21
 msgid "Food"
-msgstr ""
+msgstr "Eten"
 
 #: bluebottle/impact/models.py:23
 msgid "Task"
@@ -5212,11 +5224,11 @@ msgstr "Sta admins toe om (sub)regions toe te voegen."
 
 #: bluebottle/initiatives/models.py:306
 msgid "Allow activity managers to specify office restrictions on activities."
-msgstr ""
+msgstr "Activiteitenbeheerders toestaan kantoorbeperkingen op activiteiten op te geven."
 
 #: bluebottle/initiatives/models.py:309
 msgid "Default office restriction"
-msgstr ""
+msgstr "Standaard kantoorbeperking"
 
 #: bluebottle/initiatives/models.py:317
 msgid "Enable date activities to have multiple slots."
@@ -5477,11 +5489,11 @@ msgstr "Is actief"
 
 #: bluebottle/members/admin.py:117
 msgid "Quarterly emails will only be sent at the beginning of each quarter if the impact hours are set. Users will only receive the emails if they have not spent all the set hours."
-msgstr ""
+msgstr "Driemaandelijkse e-mails worden pas aan het begin van elk kwartaal verstuurd als de impact uren zijn vastgesteld. Gebruikers ontvangen alleen de e-mails als ze alle ingestelde uren niet hebben gebruikt."
 
 #: bluebottle/members/admin.py:124
 msgid "The impact hours feature will show the amount of hours users are encouraged to spend making an impact each year."
-msgstr ""
+msgstr "De impacturenfunctie toont het aantal uren dat gebruikers worden aangemoedigd om elk jaar een impact te besteden."
 
 #: bluebottle/members/admin.py:130
 msgid "Login"
@@ -5497,7 +5509,7 @@ msgstr "Privacy"
 
 #: bluebottle/members/admin.py:158 bluebottle/members/models.py:47
 msgid "Impact hours"
-msgstr ""
+msgstr "Impact uren"
 
 #: bluebottle/members/admin.py:202
 msgid "Members are required to fill out the fields listed below after log in or when contributing to an activity."
@@ -5630,7 +5642,7 @@ msgstr ""
 
 #: bluebottle/members/models.py:49
 msgid "Leave empty if this feature won't be used."
-msgstr ""
+msgstr "Laat leeg als deze functie niet wordt gebruikt."
 
 #: bluebottle/members/models.py:52
 msgid "Fiscal year offset"
@@ -5638,7 +5650,7 @@ msgstr "Fiscaal jaar gecompenseerd"
 
 #: bluebottle/members/models.py:53
 msgid "Set the number of months your fiscal year will be offset by. This will also take into account how the impact metrics are shown on the homepage. e.g. If the year starts from September (so earlier) then this value should be -4."
-msgstr ""
+msgstr "Stel het aantal maanden in dat uw fiscale jaar zal worden gecompenseerd. Hierbij zal ook rekening worden gehouden met de manier waarop de impactstatistieken op de homepage worden weergegeven. b.v. Als het jaar begint vanaf september (dus eerder) dan moet deze waarde -4 zijn."
 
 #: bluebottle/members/models.py:59
 msgid "Reminder Q1"
@@ -6134,19 +6146,19 @@ msgstr "regio's"
 
 #: bluebottle/offices/models.py:48
 msgid "Open to people from the same office"
-msgstr ""
+msgstr "Open voor mensen van hetzelfde kantoor"
 
 #: bluebottle/offices/models.py:52
 msgid "Open to people from offices within the same group"
-msgstr ""
+msgstr "Open voor mensen uit kantoren binnen dezelfde groep"
 
 #: bluebottle/offices/models.py:56
 msgid "Open to people from offices within the same region"
-msgstr ""
+msgstr "Open voor mensen uit kantoren in dezelfde regio"
 
 #: bluebottle/offices/models.py:60
 msgid "Open to people from any office"
-msgstr ""
+msgstr "Open voor mensen uit elk kantoor"
 
 #: bluebottle/organizations/models.py:36
 msgid "Partner Organization Logo"
@@ -7685,7 +7697,9 @@ msgstr "Let op"
 msgid "\n"
 "                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the slot has been entered completely and correctly before you repeat the slot.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"                        Het is niet mogelijk om achteraf bulkwijzigingen aan te brengen in de gecreëerde slots. Dus zorg ervoor dat alle informatie over het slot volledig en correct is ingevoerd voordat u deze actie uitvoert.\n"
+"                    "
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:49
 msgid "Create duplicates"
@@ -7852,7 +7866,9 @@ msgctxt "email"
 msgid "\n"
 "        Anywhere/Online\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Overal/Online\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
 #, python-format

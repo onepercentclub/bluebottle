@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-21 14:53+0200\n"
-"PO-Revision-Date: 2022-11-23 15:08\n"
+"PO-Revision-Date: 2022-11-23 15:18\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -60,12 +60,12 @@ msgstr "Pas aan"
 
 #: bluebottle/activities/admin.py:266
 msgid "Add time slot"
-msgstr ""
+msgstr "Voeg tijdsblok toe"
 
 #: bluebottle/activities/admin.py:268 bluebottle/time_based/admin.py:261
 #: bluebottle/time_based/admin.py:262
 msgid "Time slot"
-msgstr ""
+msgstr "Tijdsblok"
 
 #: bluebottle/activities/admin.py:418 bluebottle/initiatives/models.py:143
 msgid "Initiative"
@@ -344,7 +344,7 @@ msgstr "Team annulering voor '{title}'"
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been rejected for \"{title}\""
-msgstr ""
+msgstr "Je team is afgewezen voor '{title}\""
 
 #: bluebottle/activities/messages.py:357
 #, python-brace-format
@@ -362,13 +362,13 @@ msgstr "Je team is opnieuw geaccepteerd"
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team for \"{title}\""
-msgstr ""
+msgstr "Iemand heeft zich aangesloten bij jouw team voor \"{title}\""
 
 #: bluebottle/activities/messages.py:409
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for \"{title}\""
-msgstr ""
+msgstr "Een deelnemer heeft zich afgemeld voor jouw activiteit \"{title}\""
 
 #: bluebottle/activities/messages.py:431
 #, python-brace-format
@@ -379,28 +379,28 @@ msgstr "Teamlid verwijderd voor ''{title}'"
 #: bluebottle/activities/messages.py:459
 msgctxt "email"
 msgid "Find activities"
-msgstr ""
+msgstr "Bekijk activiteiten"
 
 #: bluebottle/activities/messages.py:513
 msgctxt "email"
 msgid "It’s a new year, let's make some impact!"
-msgstr ""
+msgstr "Het is een nieuw jaar, laten we wat impact maken!"
 
 #: bluebottle/activities/messages.py:518
 msgctxt "email"
 msgid "Haven’t joined an activity yet? Let’s get started!"
-msgstr ""
+msgstr "Nog niet aangemeld voor een activiteit? Laten we beginnen!"
 
 #: bluebottle/activities/messages.py:523
 msgctxt "email"
 msgid "Half way through the year and still plenty of activities to join"
-msgstr ""
+msgstr "Halverwege het jaar en nog steeds genoeg activiteiten om je voor aan te melden"
 
 #: bluebottle/activities/messages.py:528
 #, python-brace-format
 msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
-msgstr ""
+msgstr "Maak gebruik van je {do_good_hours} uur impact!"
 
 #: bluebottle/activities/models.py:25 bluebottle/notifications/models.py:57
 msgid "Teams"
@@ -545,7 +545,7 @@ msgstr "Team"
 #: bluebottle/activities/models.py:313
 #, python-brace-format
 msgid "Team {name}"
-msgstr ""
+msgstr "Team {name}"
 
 #: bluebottle/activities/models.py:314
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:16
@@ -644,11 +644,11 @@ msgstr "Aanmaken"
 
 #: bluebottle/activities/states.py:110
 msgid "The activity will be created."
-msgstr ""
+msgstr "De activiteit wordt aangemaakt."
 
 #: bluebottle/activities/states.py:119
 msgid "The activity will be submitted for review."
-msgstr ""
+msgstr "Het initiatief zal worden ingediend te review."
 
 #: bluebottle/activities/states.py:121 bluebottle/activities/states.py:149
 #: bluebottle/funding/states.py:574 bluebottle/initiatives/states.py:92
@@ -828,7 +828,7 @@ msgstr "bezig"
 
 #: bluebottle/activities/states.py:379
 msgid "The team is currently running the activity."
-msgstr ""
+msgstr "Het team voert momenteel de activiteit uit."
 
 #: bluebottle/activities/states.py:383 bluebottle/time_based/states.py:170
 msgid "finished"
@@ -836,7 +836,7 @@ msgstr "afgerond"
 
 #: bluebottle/activities/states.py:385
 msgid "The team has completed the activity."
-msgstr ""
+msgstr "Het team heeft de activiteit voltooid."
 
 #: bluebottle/activities/states.py:403
 msgid "The team will be created."
@@ -1201,7 +1201,9 @@ msgstr "\n"
 msgid "\n"
 "        Go to <a href=\"%(opt_out_link)s\">your profile</a> to opt-out.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Ga naar <a href=\"%(opt_out_link)s\">uw profiel</a> om af te melden.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q1.html:5
 #, python-format
@@ -1209,14 +1211,18 @@ msgctxt "email"
 msgid "\n"
 "        Can you spend %(do_good_hours)s hours making an impact this year? Of course you can! There's a wide range of activities to join, all contributing to good causes. Check them out!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Kun jij %(do_good_hours)s uur besteden om dit jaar impact te maken? Natuurlijk kan dat! Er is een breed scala aan activiteiten om aan je bij aan te melden, allemaal om goede doelen om aan te geven. Check ze uit!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q2.html:5
 msgctxt "email"
 msgid "\n"
 "        The first step is always the hardest, that's why we have made it as easy as possible to find an activity and make an impact!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        De eerste stap is altijd de moeilijkste, Daarom hebben we het zo eenvoudig mogelijk gemaakt om een activiteit te vinden en een impact te maken!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q3.html:5
 #, python-format
@@ -1225,14 +1231,19 @@ msgid "\n"
 "        There’s still so much time to reach the target of %(do_good_hours)s hours making an impact this year.\n"
 "        Check out the activities you can join.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Er is nog zoveel tijd om het doel van %(do_good_hours)s uur te bereiken.\n"
+"        Bekijk de activiteiten die je kunt aansluiten.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/do-good-hours/reminder-q4.html:5
 msgctxt "email"
 msgid "\n"
 "        Get involved with some good causes before the year ends, there are plenty of activities that need your help!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Doe mee met een aantal goede zaken voor het einde van het jaar, er zijn tal van activiteiten die je hulp nodig hebben!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:6
 #, python-format
@@ -1295,26 +1306,26 @@ msgstr "%(team_name)s neemt deel aan uw activiteit '%(title)s'."
 #: bluebottle/activities/templates/mails/messages/team_applied.html:9
 msgctxt "email"
 msgid "Next steps"
-msgstr ""
+msgstr "Volgende stappen"
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:12
 #: bluebottle/activities/templates/mails/messages/team_applied.html:12
 #, python-format
 msgctxt "email"
 msgid "Contact team captain %(team_captain_name)s to settle on a date, time and location for when they will participate in this activity."
-msgstr ""
+msgstr "Contacteer teamcaptain %(team_captain_name)s om te bepalen wanner en waar ze deel zullen nemen."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:13
 #: bluebottle/activities/templates/mails/messages/team_applied.html:13
 msgctxt "email"
 msgid "Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members."
-msgstr ""
+msgstr "Voeg deze informatie toe aan het team via de ongeplande teamlijst op de activiteitspagina zodat deze zichtbaar is voor de teamleden."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:15
 #: bluebottle/activities/templates/mails/messages/team_applied.html:16
 msgctxt "email"
 msgid "Team captain contact details:"
-msgstr ""
+msgstr "Teamcaptain contactgegevens:"
 
 #: bluebottle/activities/templates/mails/messages/team_applied.html:6
 #, python-format
@@ -1325,7 +1336,7 @@ msgstr "%(team_name)s heeft zich aangemeld voor jouw activiteit \"%(title)s\"."
 #: bluebottle/activities/templates/mails/messages/team_applied.html:14
 msgctxt "email"
 msgid "Accept the team after you have added the details so when the team members are invited  to join the activity it includes the time, date and location."
-msgstr ""
+msgstr "Accepteer het team nadat u de gegevens heeft toegevoegd, zodat de teamleden worden uitgenodigd om deel te nemen aan de activiteit die de tijd, datum en locatie bekent zijn."
 
 #: bluebottle/activities/templates/mails/messages/team_cancelled.html:6
 #: bluebottle/activities/templates/mails/messages/team_withdrawn.html:6
@@ -1345,14 +1356,15 @@ msgstr "Helaas is je team afgewezen voor de activiteit '%(title)s'."
 msgctxt "email"
 msgid "Your team has been accepted for the activity '%(title)s'.\n"
 "            "
-msgstr ""
+msgstr "Je team is geaccepteerd voor '%(title)s.            "
 
 #: bluebottle/activities/templates/mails/messages/team_captain_accepted.html:14
 msgctxt "email"
 msgid "\n"
 "            On the activity page you will find the link to invite your team members.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Op de activiteitenpagina vindt je de link om je teamleden uit te nodigen.        "
 
 #: bluebottle/activities/templates/mails/messages/team_member_added.html:6
 #, python-format
@@ -1804,7 +1816,7 @@ msgstr "Welkom,"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:42
 msgid "View site"
-msgstr ""
+msgstr "Bekijk site"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:45
 msgid "Change password"
@@ -7669,7 +7681,9 @@ msgstr "Let op"
 msgid "\n"
 "                        It is not possible to make bulk changes to the created slots afterwards. So make sure that all information for the slot has been entered completely and correctly before you repeat the slot.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"                        Het is niet mogelijk om achteraf bulkwijzigingen aan te brengen in de gecreëerde slots. Dus zorg ervoor dat alle informatie over het slot volledig en correct is ingevoerd voordat u deze actie uitvoert.\n"
+"                    "
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:49
 msgid "Create duplicates"

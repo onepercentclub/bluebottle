@@ -691,56 +691,6 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, 'open')
         self.assertStatus(self.activity, 'open')
 
-    def test_fill_free(self):
-        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
-
-        self.slot.capacity = 2
-        self.slot.save()
-
-        self.activity.slot_selection = 'free'
-        self.activity.save()
-
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
-        third = DateParticipantFactory.create(activity=self.activity)
-
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
-        SlotParticipantFactory.create(participant=second, slot=self.slot)
-
-        SlotParticipantFactory.create(participant=first, slot=self.slot2)
-        SlotParticipantFactory.create(participant=second, slot=self.slot2)
-        SlotParticipantFactory.create(participant=third, slot=self.slot2)
-
-        self.assertStatus(self.slot, 'full')
-        self.assertStatus(self.slot2, 'full')
-        self.assertStatus(self.activity, 'full')
-
-    def test_fill_cancel_slot(self):
-        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
-
-        self.slot.capacity = 2
-        self.slot.save()
-
-        self.activity.slot_selection = 'free'
-        self.activity.save()
-
-        first = DateParticipantFactory.create(activity=self.activity)
-        second = DateParticipantFactory.create(activity=self.activity)
-
-        SlotParticipantFactory.create(participant=first, slot=self.slot)
-        SlotParticipantFactory.create(participant=second, slot=self.slot)
-
-        self.slot2.states.cancel(save=True)
-
-        self.assertStatus(self.slot, 'full')
-        self.assertStatus(self.activity, 'full')
-
-    def test_full_create_new_slot(self):
-        self.test_fill_free()
-        DateActivitySlotFactory.create(activity=self.activity, capacity=3)
-
-        self.assertStatus(self.activity, 'open')
-
     def test_finish_one_slot_with_participants(self):
         DateParticipantFactory.create(activity=self.activity)
         self.slot.start = now() - timedelta(days=1)

@@ -231,11 +231,14 @@ class DonorStateMachine(ContributorStateMachine):
         'refunded',
         _("The contribution was refunded.")
     )
+
     activity_refunded = State(
         _('activity refunded'),
         'activity_refunded',
         _("The contribution was refunded because the activity refunded.")
     )
+
+    expired = State(_('expired'), 'expired')
 
     def is_successful(self):
         """donation is successful"""
@@ -244,7 +247,8 @@ class DonorStateMachine(ContributorStateMachine):
     succeed = Transition(
         [
             ContributorStateMachine.new,
-            ContributorStateMachine.failed
+            ContributorStateMachine.failed,
+            expired
         ],
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
@@ -281,6 +285,14 @@ class DonorStateMachine(ContributorStateMachine):
         description=_(
             "Refund the donation, because the entire activity will be refunded."),
         automatic=True,
+    )
+
+    expire = Transition(
+        [ContributorStateMachine.new],
+        expired,
+        name=_('Expire'),
+        description=_("Expire the donation account. This happens when a donation is still 'new' after 10 days"),
+        automatic=True
     )
 
 

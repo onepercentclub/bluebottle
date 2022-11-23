@@ -251,7 +251,9 @@ class CreateSlotParticipantsForParticipantsEffect(Effect):
         activity = self.instance.activity
         if activity.slot_selection == 'all':
             for slot in activity.slots.all():
-                SlotParticipant.objects.create(participant=participant, slot=slot)
+                slot_participant = SlotParticipant(participant=participant, slot=slot)
+                slot_participant.execute_triggers(**self.options)
+                slot_participant.save()
 
 
 class UnlockUnfilledSlotsEffect(Effect):

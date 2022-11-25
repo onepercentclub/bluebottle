@@ -592,8 +592,11 @@ class MemberAdmin(UserAdmin):
                     DateParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(participants)) or _('None')
-    date_activities.short_description = _('Activity on a date participation')
+
+        if len(participants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(participants)))
+        return _('None')
+    date_activities.short_description = _('Activity on a date')
 
     def period_activities(self, obj):
         applicants = []
@@ -607,8 +610,9 @@ class MemberAdmin(UserAdmin):
                     PeriodParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(applicants)) or _('None')
-    date_activities.short_description = _('Activity during a date participation')
+        if len(applicants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
+    period_activities.short_description = _('Activity over a period')
 
     def funding(self, obj):
         donations = []

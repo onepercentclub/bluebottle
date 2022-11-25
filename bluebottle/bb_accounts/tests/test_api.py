@@ -858,19 +858,72 @@ class LoginJsonApiTestCase(BluebottleTestCase):
             },
         }
 
-    def test_login(self):
-        token = self.user.get_jwt_token()
+    def test_login_wrong_pwd(self):
         expected = {
-            "data": {
-                "type": "auth/token",
-                "id": None,
-                "attributes": {
-                    "token": token
-                }
-            }
+            'errors': [{
+                'code': 'invalid',
+                'detail': 'Unable to log in with provided credentials.',
+                'source': {
+                    'pointer': '/data/attributes/non-field-errors'
+                },
+                'status': '400'
+            }]
         }
-
+        self.data['data']['attributes']['password'] = 'awildguess'
         response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_pwd_null(self):
+        expected = {
+            'errors': [{
+                'code': 'null',
+                'detail': 'This field may not be null.',
+                'source': {
+                    'pointer': '/data/attributes/password'
+                },
+                'status': '400'
+            }]
+        }
+        self.data['data']['attributes']['password'] = None
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_pwd_empty(self):
+        expected = {
+            'errors': [{
+                'code': 'blank',
+                'detail': 'This field may not be blank.',
+                'source': {
+                    'pointer': '/data/attributes/password'
+                },
+                'status': '400'
+            }]
+        }
+        self.data['data']['attributes']['password'] = ''
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_too_many_failed_attempts(self):
+        expected = {
+            'errors': [{
+                'code': 'throttled',
+                'detail': 'Too many failed password attempts. Expected available in 600 seconds.',
+                'source': {
+                    'pointer': '/data'
+                },
+                'status': '429'
+            }]
+        }
+        self.data['data']['attributes']['password'] = 'awildguess'
+        for i in range(10):
+            self.client.post(self.url, self.data)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 429)
         data = response.json()
         self.assertEqual(expected, data)

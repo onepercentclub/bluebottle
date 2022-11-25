@@ -10,6 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
+from rest_framework_json_api.serializers import Serializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -67,6 +68,19 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
             msg = _('Must include "{username_field}" and "password".')
             msg = msg.format(username_field=self.username_field)
             raise serializers.ValidationError(msg)
+
+
+class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
+
+    email = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    token = serializers.CharField(read_only=True)
+
+    class Meta:
+        fields = ['token', 'email', 'password']
+
+    class JSONAPIMeta(object):
+        resource_name = 'auth/token'
 
 
 class PrivateProfileMixin(object):

@@ -840,3 +840,26 @@ class MemberDetailViewAPITestCase(APITestCase):
         self.perform_get(user=self.user2)
         self.assertStatus(status.HTTP_200_OK)
         self.assertEqual(self.response.data['id'], self.user1.id)
+
+
+class LoginJsonApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory(password='psssssst')
+        self.url = reverse('auth')
+        self.data = {
+            'data': {
+                'attributes': {
+                    'email': self.user.email,
+                    'password': 'psssssst'
+                },
+                'type': "auth/token"
+            },
+        }
+
+    def test_login(self):
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertTrue(data['data']['attributes']['token'])

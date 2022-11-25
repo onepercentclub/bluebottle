@@ -859,7 +859,18 @@ class LoginJsonApiTestCase(BluebottleTestCase):
         }
 
     def test_login(self):
+        token = self.user.get_jwt_token()
+        expected = {
+            "data": {
+                "type": "auth/token",
+                "id": None,
+                "attributes": {
+                    "token": token
+                }
+            }
+        }
+
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, 201)
         data = response.json()
-        self.assertTrue(data['data']['attributes']['token'])
+        self.assertEqual(expected, data)

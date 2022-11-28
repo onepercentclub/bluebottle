@@ -156,6 +156,11 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
     ordering = ('-start',)
 
+    def lookup_allowed(self, lookup, value):
+        if lookup == 'contributor__user_id':
+            return True
+        return super(ContributionAdmin, self).lookup_allowed(lookup, value)
+
     def contributor_link(self, obj):
         if obj:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))

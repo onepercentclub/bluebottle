@@ -5,8 +5,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render
 from django.template.context import RequestContext
 from rest_framework_jwt.views import refresh_jwt_token
-from bluebottle.bb_accounts.views import AxesObtainJSONWebToken
-
+from bluebottle.bb_accounts.views import AxesObtainJSONWebToken, AuthView
 
 from bluebottle.auth.views import GetAuthToken
 from bluebottle.utils.views import LoginWithView
@@ -83,6 +82,9 @@ urlpatterns = [
     url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
+
+    # JSON-API Web Token based authentication for Django REST framework
+    url(r'^api/auth/', AuthView.as_view(), name='auth'),
 
     # Social token authorization
     url(r'^api/social/',

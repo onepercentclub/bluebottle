@@ -151,7 +151,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return [{
                 'period': instance.duration_period,
                 'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60)
+                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
             }]
         return [{
             'period': instance.duration_period,

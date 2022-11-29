@@ -239,7 +239,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
             'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent'
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions'
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -249,7 +249,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
             'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent'
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions'
         }
 
         self.assertEqual(expected_fields, set(fields))

@@ -414,6 +414,7 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         [
+                            'all_contributions',
                             'hours_spent',
                             'hours_planned',
                             'initiatives',
@@ -471,7 +472,7 @@ class MemberAdmin(UserAdmin):
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
             'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned'
+            'hours_spent', 'hours_planned', 'all_contributions'
         ]
 
         user_groups = request.user.groups.all()
@@ -488,6 +489,19 @@ class MemberAdmin(UserAdmin):
             readonly_fields.append('is_superuser')
 
         return readonly_fields
+
+    def hours_spent(self, obj):
+        return obj.hours_spent
+    hours_spent.short_description = _("Hours spent this year")
+
+    def hours_planned(self, obj):
+        return obj.hours_planned
+    hours_planned.short_description = _("Hours planned this year")
+
+    def all_contributions(self, obj):
+        url = reverse('admin:activities_contribution_changelist') + f'?contributor__user_id={obj.id}'
+        return format_html('<a href={}>{}</a>', url, _("Show all contributions"))
+    all_contributions.short_description = _("All contributions")
 
     export_fields = (
         ('email', 'email'),
@@ -561,7 +575,9 @@ class MemberAdmin(UserAdmin):
                     Initiative.objects.filter(status='approved', **{field: obj}).count(),
                     field,
                 ))
-        return format_html('<br/>'.join(initiatives)) or _('None')
+        if len(initiatives):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(initiatives)))
+        return _('None')
     initiatives.short_description = _('Initiatives')
 
     def date_activities(self, obj):
@@ -576,8 +592,11 @@ class MemberAdmin(UserAdmin):
                     DateParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(participants)) or _('None')
-    date_activities.short_description = _('Activity on a date participation')
+
+        if len(participants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(participants)))
+        return _('None')
+    date_activities.short_description = _('Activity on a date')
 
     def period_activities(self, obj):
         applicants = []
@@ -591,8 +610,9 @@ class MemberAdmin(UserAdmin):
                     PeriodParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(applicants)) or _('None')
-    date_activities.short_description = _('Activity during a date participation')
+        if len(applicants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
+    period_activities.short_description = _('Activity over a period')
 
     def funding(self, obj):
         donations = []

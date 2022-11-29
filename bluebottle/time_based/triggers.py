@@ -628,7 +628,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     conditions=[
                         not_all_slots_finished,
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
             ]
@@ -691,7 +690,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     conditions=[
                         not_all_slots_finished,
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
@@ -705,7 +703,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     TimeBasedStateMachine.lock,
                     conditions=[
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
             ]
@@ -717,7 +714,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     'activity',
                     TimeBasedStateMachine.unlock,
                     conditions=[
-                        slot_selection_is_free,
                         activity_has_status_full
                     ]
                 ),

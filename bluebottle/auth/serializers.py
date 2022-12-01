@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.utils.timezone import now
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
@@ -18,8 +20,12 @@ def complete(request, backend):
         user = request.backend.auth_complete(request=request)
     except AuthCanceled:
         return None
+    if not user.email:
+        if user.date_joined > now() - timedelta(hours=1):
+            user.delete()
+        raise AuthenticationFailed('Email is required', code="email_required")
     if not user.is_active:
-        raise AuthenticationFailed('User account is de-activated', code="account_not_active")
+        raise AuthenticationFailed('User account is disabled', code="account_disabled")
     return user
 
 

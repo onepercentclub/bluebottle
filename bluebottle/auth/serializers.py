@@ -19,7 +19,7 @@ def complete(request, backend):
     except AuthCanceled:
         return None
     if not user.is_active:
-        raise AuthenticationFailed('User account is de-activated')
+        raise AuthenticationFailed('User account is de-activated', code="account_not_active")
     return user
 
 
@@ -31,7 +31,6 @@ class FacebookAuthSerializer(Serializer):
     def validate(self, attrs):
         request = self.context.get('request')
         user = complete(request, 'facebook')
-
         return {'user': user}
 
     def create(self, data, *args, **kwargs):

@@ -74,7 +74,6 @@ def complete(request, backend):
 class AuthFacebookView(JsonApiViewMixin, CreateAPIView):
     serializer_class = FacebookAuthSerializer
     permission_classes = ()
-    queryset = Token.objects.all()
 
 
 @csrf_protect

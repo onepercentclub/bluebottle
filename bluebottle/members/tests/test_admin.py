@@ -343,6 +343,19 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.fiscal_month_offset, 4)
 
+    def test_retention_settings(self):
+        LocationFactory.create_batch(3)
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['retention_anonymize'] = '12'
+        form['retention_delete'] = '24'
+
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertEqual(settings_platform.retention_anonymize, 12)
+        self.assertEqual(settings_platform.retention_delete, 24)
+
 
 class MemberAdminExportTest(BluebottleTestCase):
     """

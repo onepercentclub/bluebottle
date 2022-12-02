@@ -32,6 +32,7 @@ class WallpostDataRetentionTest(BluebottleTestCase):
     def test_data_retention(self):
         member_settings = MemberPlatformSettings.load()
         self.assertEqual(Wallpost.objects.count(), 3)
+        self.assertEqual(Wallpost.objects.filter(author__isnull=False).count(), 3)
         self.task()
         self.assertEqual(Wallpost.objects.count(), 3)
         member_settings.retention_delete = 10

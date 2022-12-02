@@ -350,6 +350,9 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         form['retention_anonymize'] = '12'
         form['retention_delete'] = '24'
 
+        page = form.submit()
+        self.assertContains(page, 'You are about to anonymise/delete user data across the whole platform.')
+        form = page.forms[0]
         form.submit()
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.retention_anonymize, 12)

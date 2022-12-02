@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+    <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation
+    delete-selected-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; {% trans 'Confirm side effects' %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h2>{% trans "Confirm setting user data retention" %}</h2>
+    <p>
+        {% blocktrans %}You are about to anonymise/delete user data across the whole platform.{% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans %}This will have the following effects:{% endblocktrans %}
+    </p>
+    <ul></ul>
+    <ul>
+        <li>
+            <h3>{% trans "Reporting" %}</h3>
+            <p>
+                {%  blocktrans %}
+                    Reporting information will not be available after the user data has been anonymised and/or deleted.
+                {% endblocktrans %}
+            </p>
+            <h3>{% trans "Contribution page" %}</h3>
+            <p>
+                {%  blocktrans %}
+                    When user data is deleted after the set number of months, only contributions that took place
+                    before the set months will be shown.
+                {% endblocktrans %}
+            </p>
+            <h3>{% trans "Activity detail page" %}</h3>
+            <p>
+                {%  blocktrans %}
+                    When user data is anonymised after the set number of months, the participants list on the
+                    activity page will not show the participants names. Any donations or post on the update
+                    wall will also be anonymised.
+                {% endblocktrans %}
+            </p>
+            <p>
+                {%  blocktrans %}
+                    When user data is deleted after the set number of months, the participants list on
+                    the activity page will only show the number of participants that took place in that activity.
+                    Any donations or posts on the update wall will be removed.
+                {% endblocktrans %}
+            </p>
+    </ul>
+
+
+    <form method="post" id="confirm">{% csrf_token %}
+        <div>
+            {% for name, value in post.items %}
+                <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {% endfor %}
+            {% for obj in queryset.items %}
+                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
+            {% endfor %}
+            {% if has_notifications %}
+                <div>
+                    <input type="checkbox" name="send_messages" checked id="id_send_messages">
+                    <label for="id_send_messages">{% trans "Send messages" %}</label><br>
+                </div>
+            {% endif %}
+            <br>
+            <br>
+            <input type="hidden" name="action" value="transition_selected"/>
+            <input type="hidden" name="post" value="yes"/>
+            <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}"/>
+            <a href="{{ cancel_url }}" class="button cancel-link">{% trans "No, take me back" %}</a>
+        </div>
+    </form>
+{% endblock %}

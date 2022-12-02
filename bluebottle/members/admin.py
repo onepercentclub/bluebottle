@@ -17,6 +17,7 @@ from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
+from django.template.response import TemplateResponse
 from django.urls import reverse, NoReverseMatch
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
@@ -242,6 +243,41 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             'link': reverse('admin:segments_segmenttype_changelist')
         }
         return template.render(context)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        """
+        Show confirmation page if retention params change
+        """
+
+        obj = MemberPlatformSettings.load()
+
+        if object_id and request.method == 'POST' and not request.POST.get('post', False):
+            model_form = self.get_form(request, obj)
+            form = model_form(request.POST, request.FILES, instance=obj)
+
+            if 'confirm' in request.POST and request.POST['confirm']:
+                if form.is_valid():
+                    form.save(commit=False)
+                    return HttpResponseRedirect(reverse('admin:members_memberplatformsettings'))
+
+            data = request.POST
+            if (
+                    data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
+            ) or (
+                    data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
+            ):
+                context = dict(
+                    obj=obj,
+                    title=_('Are you sure?'),
+                    post=request.POST,
+                    opts=self.model._meta,
+                    media=self.media,
+                )
+                return TemplateResponse(
+                    request, "admin/members/set_retention_confirmation.html", context
+                )
+
+        return super(MemberPlatformSettingsAdmin, self).changeform_view(request, object_id, form_url, extra_context)
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)

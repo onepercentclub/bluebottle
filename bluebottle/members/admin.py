@@ -177,6 +177,19 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 ),
             }
         ),
+        (
+            _('User data'),
+            {
+                'description': _('User data can be anonymised and/or deleted after a set number of months from '
+                                 'the time it was created to comply with company policies and local laws. User '
+                                 'data includes names, contributions and wall posts. Please contact the support '
+                                 'team at GoodUp for more information.'),
+                'fields': (
+                    'retention_anonymize',
+                    'retention_delete'
+                )
+            }
+        )
     )
 
     def get_fieldsets(self, request, obj=None):

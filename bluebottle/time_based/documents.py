@@ -95,7 +95,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             {
                 'period': 'slot',
                 'start': slot.start,
-                'value': slot.duration.seconds / (60 * 60)
+                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
             }
             for slot in instance.slots.all()
             if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
@@ -151,7 +151,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return [{
                 'period': instance.duration_period,
                 'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60)
+                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
             }]
         return [{
             'period': instance.duration_period,

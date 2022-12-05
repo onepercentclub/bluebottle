@@ -63,6 +63,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         blank=True, null=True, max_length=100
     )
 
+    has_deleted_data = models.BooleanField(
+        default=False
+    )
+
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
     description = models.TextField(

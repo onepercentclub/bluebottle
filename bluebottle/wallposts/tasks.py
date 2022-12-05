@@ -36,6 +36,14 @@ def data_retention_wallposts_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 wps = Wallpost.objects.filter(created__lt=history)
                 if wps.count():
+                    for wp in wps:
+                        try:
+                            if not wp.content_object.has_deleted_data:
+                                wp.content_object.has_deleted_data = True
+                                wp.content_object.save(run_triggers=False)
+                        except AttributeError:
+                            pass
+
                     logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wps.count} wallposts')
                     SystemWallpost.objects.filter(created__lt=history).all().delete()
                     MediaWallpost.objects.filter(created__lt=history).all().delete()

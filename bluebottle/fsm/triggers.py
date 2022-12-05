@@ -207,16 +207,18 @@ class TriggerMixin(object):
 
         return effects
 
-    def save(self, *args, **kwargs):
-        self.execute_triggers()
+    def save(self, run_triggers=True, *args, **kwargs):
+        if run_triggers:
+            self.execute_triggers()
 
         super(TriggerMixin, self).save(*args, **kwargs)
 
-        while self._postponed_effects:
-            effect = self._postponed_effects.pop()
-            effect.post_save()
+        if run_triggers:
+            while self._postponed_effects:
+                effect = self._postponed_effects.pop()
+                effect.post_save()
 
-        self._postponed_effects = []
+            self._postponed_effects = []
 
         self._initial_values = dict(
             (field.name, getattr(self, field.name))

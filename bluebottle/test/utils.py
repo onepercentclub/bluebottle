@@ -963,3 +963,8 @@ class JSONAPITestClient(Client):
 def get_first_included_by_type(response, type):
     included = response.json()['included']
     return [include for include in included if include['type'] == type][0]
+
+
+def get_count_included_by_type(response, type):
+    included = response.json()['included']
+    return len([include for include in included if include['type'] == type])

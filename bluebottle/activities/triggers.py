@@ -1,6 +1,6 @@
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
-    TeamContributionTransitionEffect, ResetTeamParticipantsEffect
+    TeamContributionTransitionEffect, ResetTeamParticipantsEffect, CreateInviteForOwnerEffect
 )
 from bluebottle.activities.messages import (
     TeamAddedMessage, TeamReopenedMessage, TeamAppliedMessage,
@@ -13,7 +13,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register, ModelChangedTrigger
 )
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.notifications.effects import NotificationEffect
@@ -402,6 +402,12 @@ class TeamTriggers(TriggerManager):
                         contributor_is_active
                     ]
                 ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'owner',
+            effects=[
+                CreateInviteForOwnerEffect,
             ]
         ),
 

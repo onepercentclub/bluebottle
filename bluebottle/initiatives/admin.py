@@ -125,7 +125,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['link', 'created', 'updated', 'valid']
+    readonly_fields = ['link', 'created', 'updated', 'has_deleted_data', 'valid']
 
     ordering = ('-created',)
 
@@ -176,7 +176,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 'reviewer', 'activity_managers', 'promoter',
                 'valid',
                 'status', 'states',
-                'created', 'updated',
+                'created', 'updated', 'has_deleted_data'
             )}),
         )
         if request.user.is_superuser:

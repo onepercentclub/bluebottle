@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.wallposts.models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost
+from bluebottle.wallposts.models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, Reaction
 
 logger = logging.getLogger('bluebottle')
 
@@ -19,7 +19,7 @@ logger = logging.getLogger('bluebottle')
     ignore_result=True
 )
 def data_retention_wallposts_task():
-    for tenant in Client.objects.all():
+    for tenant in Client.objects.filter(schema_name='onepercent').all():
         with LocalTenant(tenant, clear_tenant=True):
             settings = MemberPlatformSettings.objects.get()
             if settings.retention_anonymize:
@@ -32,6 +32,7 @@ def data_retention_wallposts_task():
                         author=None,
                         editor=None
                     )
+                Reaction.objects.filter(created__lt=history, author__isnull=False).update(author=None, editor=None)
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
                 wps = Wallpost.objects.filter(created__lt=history)
@@ -48,3 +49,4 @@ def data_retention_wallposts_task():
                     SystemWallpost.objects.filter(created__lt=history).all().delete()
                     MediaWallpost.objects.filter(created__lt=history).all().delete()
                     TextWallpost.objects.filter(created__lt=history).all().delete()
+                Reaction.objects.filter(created__lt=history).all().delete()

@@ -265,7 +265,8 @@ class Reaction(AnonymizationMixin, models.Model):
         settings.AUTH_USER_MODEL,
         verbose_name=_('author'),
         related_name='wallpost_reactions',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     )
     editor = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True,

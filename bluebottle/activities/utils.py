@@ -236,6 +236,7 @@ class BaseActivitySerializer(ModelSerializer):
             'is_follower',
             'status',
             'stats',
+            'has_deleted_data',
             'errors',
             'required',
             'goals',

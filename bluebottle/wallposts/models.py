@@ -103,25 +103,6 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     def parent(self):
         return self.content_object
 
-    class Analytics(object):
-        type = 'wallpost'
-        tags = {}
-        fields = {
-            'id': 'id',
-            'user_id': 'author.id'
-        }
-
-        @staticmethod
-        def skip(obj, created):
-            return True if obj.wallpost_type == 'system' else False
-
-        @staticmethod
-        def timestamp(obj, created):
-            if created:
-                return obj.created
-            else:
-                return obj.updated
-
     class Meta(object):
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
@@ -284,7 +265,8 @@ class Reaction(AnonymizationMixin, models.Model):
         settings.AUTH_USER_MODEL,
         verbose_name=_('author'),
         related_name='wallpost_reactions',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     )
     editor = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True,

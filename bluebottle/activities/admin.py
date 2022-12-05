@@ -312,6 +312,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
+        'has_deleted_data',
         'valid',
         'transition_date',
         'stats_data',
@@ -340,6 +341,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     status_fields = (
         'created',
         'updated',
+        'has_deleted_data',
         'status',
         'states'
     )

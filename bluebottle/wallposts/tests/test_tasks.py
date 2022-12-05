@@ -29,12 +29,14 @@ class WallpostDataRetentionTest(BluebottleTestCase):
         wp3.save()
         self.task = data_retention_wallposts_task
 
-    def test_data_retention(self):
-        member_settings = MemberPlatformSettings.load()
+    def test_data_retention_dont_delete_without_settings(self):
         self.assertEqual(Wallpost.objects.count(), 3)
         self.assertEqual(Wallpost.objects.filter(author__isnull=False).count(), 3)
         self.task()
         self.assertEqual(Wallpost.objects.count(), 3)
+
+    def test_data_retention_clean_up(self):
+        member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()

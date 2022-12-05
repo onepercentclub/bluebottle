@@ -24,10 +24,10 @@ def data_retention_wallposts_task():
             settings = MemberPlatformSettings.objects.get()
             if settings.retention_anonymize:
                 history = now() - relativedelta(months=settings.retention_anonymize)
-                wps = Wallpost.objects.filter(created__lt=history, author__isnull=False)
-                if wps.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wps.count} wallposts')
-                    wps.update(
+                wallposts = Wallpost.objects.filter(created__lt=history, author__isnull=False)
+                if wallposts.count():
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wallposts.count} wallposts')
+                    wallposts.update(
                         ip_address=None,
                         author=None,
                         editor=None
@@ -35,9 +35,9 @@ def data_retention_wallposts_task():
                 Reaction.objects.filter(created__lt=history, author__isnull=False).update(author=None, editor=None)
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
-                wps = Wallpost.objects.filter(created__lt=history)
-                if wps.count():
-                    for wp in wps:
+                wallposts = Wallpost.objects.filter(created__lt=history)
+                if wallposts.count():
+                    for wp in wallposts:
                         try:
                             if not wp.content_object.has_deleted_data:
                                 wp.content_object.has_deleted_data = True
@@ -45,7 +45,7 @@ def data_retention_wallposts_task():
                         except AttributeError:
                             pass
 
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wps.count} wallposts')
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wallposts.count} wallposts')
                     SystemWallpost.objects.filter(created__lt=history).all().delete()
                     MediaWallpost.objects.filter(created__lt=history).all().delete()
                     TextWallpost.objects.filter(created__lt=history).all().delete()

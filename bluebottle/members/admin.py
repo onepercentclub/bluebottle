@@ -229,6 +229,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     readonly_fields = ('segment_types', 'reminder_info', 'impact_hours_info')
 
+    def get_readonly_fields(self, request, obj=None):
+        read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            read_only_fields += ('retention_anonymize', 'retention_delete')
+        return read_only_fields
+
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {

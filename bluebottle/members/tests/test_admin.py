@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
@@ -344,7 +344,6 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(settings_platform.fiscal_month_offset, 4)
 
     def test_retention_settings(self):
-        LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
         form = page.forms[0]
@@ -355,6 +354,15 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.retention_anonymize, 12)
         self.assertEqual(settings_platform.retention_delete, 24)
+
+    def test_retention_settings_staff(self):
+        permission = Permission.objects.filter(codename='change_memberplatformsettings').first()
+        self.staff_member.user_permissions.add(permission)
+        self.app.set_user(self.staff_member)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        self.assertFalse('retention_anonymize' in form.fields)
+        self.assertFalse('retention_delete' in form.fields)
 
 
 class MemberAdminExportTest(BluebottleTestCase):

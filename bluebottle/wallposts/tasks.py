@@ -25,16 +25,18 @@ def data_retention_wallposts_task():
             if settings.retention_anonymize:
                 history = now() - relativedelta(months=settings.retention_anonymize)
                 wps = Wallpost.objects.filter(created__lt=history, author__isnull=False)
-                logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wps.count} wallposts')
-                wps.update(
-                    ip_address=None,
-                    author=None,
-                    editor=None
-                )
+                if wps.count():
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wps.count} wallposts')
+                    wps.update(
+                        ip_address=None,
+                        author=None,
+                        editor=None
+                    )
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
                 wps = Wallpost.objects.filter(created__lt=history)
-                logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wps.count} wallposts')
-                SystemWallpost.objects.filter(created__lt=history).all().delete()
-                MediaWallpost.objects.filter(created__lt=history).all().delete()
-                TextWallpost.objects.filter(created__lt=history).all().delete()
+                if wps.count():
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wps.count} wallposts')
+                    SystemWallpost.objects.filter(created__lt=history).all().delete()
+                    MediaWallpost.objects.filter(created__lt=history).all().delete()
+                    TextWallpost.objects.filter(created__lt=history).all().delete()

@@ -680,6 +680,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'fiscal_year',
             'fiscal_year_start',
             'fiscal_year_end',
+            'retention_anonymize',
+            'retention_delete'
         )
 
 

@@ -432,8 +432,11 @@ class BaseContributorSerializer(ModelSerializer):
         if (
             isinstance(self.instance, Iterable) or (
                 self.instance and (
-                    self.instance.accepted_invite or
-                    self.instance.user != self.context['request'].user
+                    (not self.instance.team or self.instance.user != self.instance.team.owner) and
+                    (
+                        self.instance.accepted_invite or
+                        self.instance.user != self.context['request'].user
+                    )
                 )
             )
         ):

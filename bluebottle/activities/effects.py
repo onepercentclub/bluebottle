@@ -174,6 +174,21 @@ class CreateInviteEffect(Effect):
         return str(_('Create invite'))
 
 
+class CreateInviteForOwnerEffect(Effect):
+    "Create an invite for the new owner"
+
+    display = False
+
+    def pre_save(self, **kwargs):
+        participant = self.instance.members.filter(user=self.instance.owner).first()
+        if participant:
+            participant.invite = Invite()
+            participant.invite.save()
+
+    def __str__(self):
+        return str(_('Create invite  or owner'))
+
+
 class ResetTeamParticipantsEffect(Effect):
     "Remove all contributors from the team"
     display = True

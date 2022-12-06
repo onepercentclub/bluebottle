@@ -109,7 +109,10 @@ class InitiativeMapList(generics.ListAPIView):
 
 
 class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
-    queryset = Initiative.objects.filter(status='approved', place__position__isnull=False).exclude(place__position=Point(0, 0))
+    queryset = Initiative.objects.filter(
+        status='approved',
+        place__position__isnull=False
+    ).exclude(place__position=Point(0, 0))
     serializer_class = InitiativePreviewSerializer
 
     owner_filter_field = 'owner'
@@ -202,6 +205,7 @@ class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
 
 
 from collections import namedtuple
+
 Instance = namedtuple('Instance', 'pk, route, params, target_params, target_route')
 
 

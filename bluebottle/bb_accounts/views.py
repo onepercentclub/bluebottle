@@ -1,43 +1,35 @@
-from datetime import timedelta
-from django.utils.timezone import now
 import json
-import requests
+from datetime import timedelta
 
+import requests
+from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from django.template import loader
 from django.http import Http404
-from django.utils.http import base36_to_int, int_to_base36
-from django.utils.translation import gettext_lazy as _
+from django.template import loader
 from django.utils import timezone
-
+from django.utils.http import base36_to_int, int_to_base36
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
-
-from rest_framework_jwt.views import ObtainJSONWebTokenView
-
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
-
-from axes.utils import reset
+from rest_framework_jwt.views import ObtainJSONWebTokenView
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_accounts.permissions import (
     CurrentUserPermission, IsAuthenticatedOrOpenPermission
 )
 from bluebottle.bb_accounts.utils import send_welcome_mail
-from bluebottle.members.models import UserActivity
-from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
-
-from tenant_extras.utils import TenantLanguage
-
-from bluebottle.utils.email_backend import send_mail
-from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
-from bluebottle.initiatives.serializers import MemberSerializer
+from bluebottle.clients.utils import tenant_url
+from bluebottle.initiatives.serializers import MemberSerializer, CurrentMemberSerializer
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, CurrentUserSerializer,
@@ -45,10 +37,12 @@ from bluebottle.members.serializers import (
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer,
-    PasswordStrengthSerializer, PasswordResetConfirmSerializer
+    PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer
 )
 from bluebottle.members.tokens import login_token_generator
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
 
 USER_MODEL = get_user_model()
 
@@ -61,6 +55,14 @@ class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
     """
     serializer_class = AxesJSONWebTokenSerializer
     parser_classes = (parsers.JSONParser, )
+
+
+class AuthView(JsonApiViewMixin, CreateAPIView):
+
+    def perform_create(self, serializer):
+        return serializer.data
+
+    serializer_class = AuthTokenSerializer
 
 
 class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
@@ -147,6 +149,18 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         instance.anonymize()
+
+
+class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = CurrentMemberSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, *args, **kwargs):
+        return self.request.user
 
 
 class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):

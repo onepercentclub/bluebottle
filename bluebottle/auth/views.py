@@ -1,4 +1,5 @@
 from django.shortcuts import resolve_url
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
@@ -19,8 +20,8 @@ from rest_framework import parsers, renderers
 from social_django.utils import psa, get_strategy, STORAGE
 from social.exceptions import AuthCanceled
 
-# from social_auth.decorators import
-from datetime import datetime
+from bluebottle.auth.serializers import FacebookAuthSerializer
+from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
 
 class GetAuthToken(APIView):
@@ -60,7 +61,7 @@ def complete(request, backend):
         return None
 
     if user and user.is_active:
-        user.last_login = datetime.now()
+        user.last_login = now()
         user.save()
         return {'token': user.get_jwt_token()}
     elif user and not user.is_active:
@@ -68,6 +69,11 @@ def complete(request, backend):
             "This user account is disabled, please contact us if you want to re-activate.")}
     else:
         return None
+
+
+class AuthFacebookView(JsonApiViewMixin, CreateAPIView):
+    serializer_class = FacebookAuthSerializer
+    permission_classes = ()
 
 
 @csrf_protect

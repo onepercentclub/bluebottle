@@ -19,7 +19,7 @@ logger = logging.getLogger('bluebottle')
     ignore_result=True
 )
 def data_retention_wallposts_task():
-    for tenant in Client.objects.filter(schema_name='onepercent').all():
+    for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             settings = MemberPlatformSettings.objects.get()
             if settings.retention_anonymize:
@@ -37,11 +37,11 @@ def data_retention_wallposts_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 wallposts = Wallpost.objects.filter(created__lt=history)
                 if wallposts.count():
-                    for wp in wallposts:
+                    for wallpost in wallposts:
                         try:
-                            if not wp.content_object.has_deleted_data:
-                                wp.content_object.has_deleted_data = True
-                                wp.content_object.save(run_triggers=False)
+                            if not wallpost.content_object.has_deleted_data:
+                                wallpost.content_object.has_deleted_data = True
+                                wallpost.content_object.save(run_triggers=False)
                         except AttributeError:
                             pass
 

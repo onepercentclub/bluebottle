@@ -64,7 +64,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     )
 
     has_deleted_data = models.BooleanField(
-        default=False
+        default=False,
+        help_text=_('Due to company policies and local laws, user data maybe deleted in this activity.')
     )
 
     title = models.CharField(_('Title'), max_length=255)

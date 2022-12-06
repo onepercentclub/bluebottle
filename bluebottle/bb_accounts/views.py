@@ -1,7 +1,8 @@
 import json
 from datetime import timedelta
-
+import uuid
 import requests
+
 from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -60,7 +61,11 @@ class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
 class AuthView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
-        return serializer.data
+        from collections import namedtuple
+        model = namedtuple('Model', ('pk', 'token'))
+
+        serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['token'])
+        return serializer.validated_data
 
     serializer_class = AuthTokenSerializer
 
@@ -178,6 +183,10 @@ class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
 
     def perform_create(self, serializer, *args, **kwargs):
         serializer.is_valid(raise_exception=True)
+
+        from collections import namedtuple
+        model = namedtuple('Model', 'pk')
+        serializer.instance = model(str(uuid.uuid4()))
 
 
 class CurrentUser(RetrieveAPIView):

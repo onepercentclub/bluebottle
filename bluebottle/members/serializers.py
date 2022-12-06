@@ -496,7 +496,7 @@ class PasswordStrengthSerializer(serializers.ModelSerializer):
         return data
 
     def get_strength(self, data):
-        strength, _ = passwordmeter.test(data['password'])
+        strength, _ = passwordmeter.test(self.validated_data['password'])
         return strength
 
     class Meta(object):

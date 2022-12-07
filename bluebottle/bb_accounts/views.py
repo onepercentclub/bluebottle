@@ -37,7 +37,7 @@ from bluebottle.members.serializers import (
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
-    CaptchaSerializer, AxesJSONWebTokenSerializer,
+    CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
     PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer
 )
 from bluebottle.members.tokens import login_token_generator
@@ -176,6 +176,16 @@ class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     serializer_class = MemberSerializer
 
     permission_classes = [IsAuthenticatedOrOpenPermission]
+
+
+class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = MemberSignUpSerializer
+
+    permission_classes = []
 
 
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):

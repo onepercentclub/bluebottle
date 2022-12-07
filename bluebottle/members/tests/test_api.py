@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
+from bluebottle.members.serializers import MemberSignUpSerializer
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -1214,3 +1215,113 @@ class CurrentMemberAPITestCase(APITestCase):
     def test_get_logged_out(self):
         self.perform_get()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class MemberSignUpAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('member-signup')
+
+        self.serializer = MemberSignUpSerializer
+
+        self.defaults = {
+            'first_name': 'Test',
+            'last_name': 'Tester',
+            'email': 'test@example.com',
+            'password': '32940udsonde!0f09hf'
+        }
+        self.fields = self.defaults.keys()
+
+    def test_signup(self):
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertAttribute('first-name', self.defaults['first_name'])
+        self.assertAttribute('last-name', self.defaults['last_name'])
+        self.assertAttribute('email', self.defaults['email'])
+        user = Member.objects.get(email=self.defaults['email'])
+        self.assertTrue(
+            user.check_password(self.defaults['password'])
+        )
+
+    def test_create_short_password(self):
+        self.defaults['password'] = 'blabla'
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'This password is too short. It must contain at least 8 characters.'
+        )
+        self.assertEqual(
+            error['source']['pointer'],
+            '/data/attributes/password'
+        )
+
+    def test_create_common_password(self):
+        self.defaults['password'] = 'welcome123'
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'This password is too common.'
+        )
+        self.assertEqual(
+            error['source']['pointer'],
+            '/data/attributes/password'
+        )
+
+    def test_conflict(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'])
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'email_unique')
+
+    def test_conflict_facebook(self):
+        user = BlueBottleUserFactory.create(email=self.defaults['email'])
+        user.social_auth.create(provider='facebook')
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'social_account_unique')
+
+    def test_conflict_case_insensitive(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'].title())
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'email_unique')
+
+    def test_create_closed(self):
+        with self.closed_site():
+            self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'The platform is closed.'
+        )
+
+    def test_create_confirmation_enabled(self):
+        MemberPlatformSettings.objects.create(confirm_signup=True)
+        with self.closed_site():
+            self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['detail'], 'Signup requires a confirmation token.')
+        self.assertEqual(error['source']['pointer'], '/data/attributes/email')

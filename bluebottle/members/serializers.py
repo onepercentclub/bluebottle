@@ -459,7 +459,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
             raise serializers.ValidationError(
-                'a member with this email address already exists.',
+                'A member with this email address already exists.',
                 code='email_in_use',
             )
         return email

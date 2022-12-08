@@ -14,7 +14,6 @@ from rest_framework_json_api.serializers import Serializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
@@ -435,6 +434,13 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
+
+    def create(self, validated_data):
+        (instance, _) = BB_USER_MODEL.objects.get_or_create(
+            email__iexact=validated_data['email'],
+            defaults={'is_active': False, 'email': validated_data['email']}
+        )
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL

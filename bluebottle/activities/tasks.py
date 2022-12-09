@@ -4,6 +4,7 @@ from datetime import date, datetime
 from celery.schedules import crontab
 from celery.task import periodic_task
 from dateutil.relativedelta import relativedelta
+from django.db.models import Count
 from django.utils.timezone import now
 from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
 
@@ -178,7 +179,16 @@ def data_retention_contribution_task():
                     )
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
-                contributors = Contributor.objects.filter(created__lt=history, user__isnull=False)
+                contributors = Contributor.objects.filter(created__lt=history)
                 if contributors.count():
                     logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count} contributors')
-                    # TODO: Delete contributors + add successful count to activity
+                    successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
+                        annotate(total=Count('activity_id')).order_by('activity_id')
+                    for success in successful:
+                        activity = Activity.objects.filter(id=success['activity_id']).get()
+                        activity.deleted_successful_contributors = success['total']
+                        activity.has_deleted_data = True
+                        activity.save(run_triggers=False)
+
+                    for contributor in contributors.all():
+                        contributor.delete()

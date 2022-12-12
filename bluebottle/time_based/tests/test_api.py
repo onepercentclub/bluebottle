@@ -2629,8 +2629,6 @@ class RelatedParticipantsAPIViewTestCase():
         self.response = self.client.get(self.url, user=self.participants[0].user)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
         self.assertTotal(9)
-        included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 1)
 
     def test_get_filter_new(self):
         participant = self.participants[1]

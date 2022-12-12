@@ -545,7 +545,7 @@ def get_stats_for_activities(activities):
     contributor_count += anonymous_donations
 
     contributor_count += Activity.objects.filter(id__in=ids).\
-        aggregate(total=Sum('deleted_successful_contributors'))['total']
+        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
     collected = CollectContribution.objects.filter(
         status='succeeded',

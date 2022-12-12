@@ -254,6 +254,7 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
+            'deleted_successful_contributors',
             'contributor_count',
             'team_count'
         )

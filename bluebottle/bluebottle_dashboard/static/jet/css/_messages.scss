@@ -118,14 +118,14 @@ div.system-message {
 }
 
 .description {
-  padding: 12px 12px 12px 36px;
+  padding: 16px 42px;
   border-radius: 4px;
-  background: #ececec 8px 50% url('/static/assets/admin/images/icons/info.svg') no-repeat;
+  background: #ececec 20px 20px url('/static/assets/admin/images/icons/info.svg') no-repeat;
 
   &.warning {
-    padding: 12px 12px 12px 24px;
+    padding: 16px 42px;
     color: #B96500;
-    background: #f8f0e6 8px 24px url('/static/assets/admin/images/icons/warning.svg') no-repeat;
+    background: #f8f0e6 20px 20px url('/static/assets/admin/images/icons/warning.svg') no-repeat;
   }
 
 }

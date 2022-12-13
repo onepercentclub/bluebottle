@@ -43,6 +43,7 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']
+    template = 'admin/participant_list.html'
 
     def get_template(self):
         pass
@@ -317,7 +318,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     duration.short_description = _('Slots')
 
     def participant_count(self, obj):
-        return obj.accepted_participants.count()
+        return obj.accepted_participants.count() + obj.deleted_successful_contributors or 0
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (

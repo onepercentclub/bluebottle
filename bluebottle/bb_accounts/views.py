@@ -187,6 +187,9 @@ class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
 
     permission_classes = []
 
+    def perform_create(self, serializer):
+        return serializer.save(is_active=True)
+
 
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
     serializer_class = PasswordStrengthSerializer

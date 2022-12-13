@@ -1240,6 +1240,13 @@ class MemberSignUpAPITestCase(APITestCase):
         self.assertAttribute('first-name', self.defaults['first_name'])
         self.assertAttribute('last-name', self.defaults['last_name'])
         self.assertAttribute('email', self.defaults['email'])
+
+        token = self.response.json()['data']['attributes']['token']
+        current_user_response = self.client.get(
+            reverse('current-member-detail'), HTTP_AUTHORIZATION=f'JWT {token}'
+        )
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
         user = Member.objects.get(email=self.defaults['email'])
         self.assertTrue(
             user.check_password(self.defaults['password'])

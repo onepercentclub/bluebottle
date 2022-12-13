@@ -509,6 +509,8 @@ class PasswordStrengthSerializer(serializers.ModelSerializer):
 
 
 class UniqueEmailValidator(validators.UniqueValidator):
+    message = _('An user with this email address already exists')
+
     def __call__(self, value, serializer_field):
         try:
             return super().__call__(value, serializer_field)

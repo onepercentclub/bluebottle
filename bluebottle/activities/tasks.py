@@ -4,12 +4,14 @@ from datetime import date, datetime
 from celery.schedules import crontab
 from celery.task import periodic_task
 from dateutil.relativedelta import relativedelta
+from django.db.models import Count
+from django.utils.timezone import now
 from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
 
 from bluebottle.activities.documents import activity
 from bluebottle.activities.messages import MatchingActivitiesNotification, DoGoodHoursReminderQ1Notification, \
     DoGoodHoursReminderQ4Notification, DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -156,3 +158,37 @@ def do_good_hours_reminder():
                         notification.compose_and_send()
                     except Exception as e:
                         logger.error(e)
+
+
+@periodic_task(
+    run_every=(crontab(minute=0, hour=10)),
+    name="data_retention_contributions",
+    ignore_result=True
+)
+def data_retention_contribution_task():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.retention_anonymize:
+                history = now() - relativedelta(months=settings.retention_anonymize)
+                contributors = Contributor.objects.filter(created__lt=history, user__isnull=False)
+                if contributors.count():
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {contributors.count} contributors')
+                    contributors.update(
+                        user=None,
+                    )
+            if settings.retention_delete:
+                history = now() - relativedelta(months=settings.retention_delete)
+                contributors = Contributor.objects.filter(created__lt=history)
+                if contributors.count():
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count} contributors')
+                    successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
+                        annotate(total=Count('activity_id')).order_by('activity_id')
+                    for success in successful:
+                        activity = Activity.objects.filter(id=success['activity_id']).get()
+                        activity.deleted_successful_contributors = success['total']
+                        activity.has_deleted_data = True
+                        activity.save(run_triggers=False)
+
+                    for contributor in contributors.all():
+                        contributor.delete()

@@ -3,6 +3,7 @@ from builtins import str, object
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.db.models import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -67,6 +68,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         _('Has anonymised and/or deleted data'),
         default=False,
         help_text=_('Due to company policies and local laws, user data maybe deleted in this activity.')
+    )
+
+    deleted_successful_contributors = models.PositiveIntegerField(
+        _('Number of deleted successful contributors'),
+        default=0
     )
 
     title = models.CharField(_('Title'), max_length=255)
@@ -249,7 +255,11 @@ class Contribution(TriggerMixin, PolymorphicModel):
     end = models.DateTimeField(_('end'), null=True, blank=True)
 
     contributor = models.ForeignKey(
-        Contributor, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE
+        Contributor,
+        related_name='contributions',
+        on_delete=SET_NULL,
+        null=True,
+        blank=True
     )
 
     @property

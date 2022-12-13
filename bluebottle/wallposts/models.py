@@ -79,7 +79,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
         verbose_name=_("Donor"),
         related_name='wallpost',
         null=True, blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL
     )
 
     pinned = models.BooleanField(

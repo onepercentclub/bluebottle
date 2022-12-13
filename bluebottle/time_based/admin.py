@@ -71,6 +71,8 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
         return None
 
     def edit(self, obj):
+        if not obj.user and obj.activity.has_deleted_data:
+            return format_html(f'<i>{_("Anonymous")}</i>')
         if not obj.id:
             return '-'
         return format_html(

@@ -166,7 +166,7 @@ def do_good_hours_reminder():
     ignore_result=True
 )
 def data_retention_contribution_task():
-    for tenant in Client.objects.filter(schema_name='dll').all():
+    for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             settings = MemberPlatformSettings.objects.get()
             if settings.retention_anonymize:

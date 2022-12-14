@@ -58,13 +58,15 @@ class CreateOverallTimeContributionEffect(Effect):
         start = activity.start or date.today()
         end = activity.deadline if hasattr(activity, 'deadline') else None
 
-        TimeContribution.objects.create(
+        contribution = TimeContribution(
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
             start=tz.localize(datetime.combine(start, datetime.min.time())),
             end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
         )
+        contribution.execute_triggers(**self.options)
+        contribution.save()
 
     def __str__(self):
         return _('Create overall contribution')

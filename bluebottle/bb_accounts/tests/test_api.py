@@ -927,3 +927,50 @@ class LoginJsonApiTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 429)
         data = response.json()
         self.assertEqual(expected, data)
+
+
+class UserSignupTokenApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.client = JSONAPITestClient()
+        self.url = reverse('user-signup-token')
+        self.data = {
+            'data': {
+                'attributes': {
+                    'email': 'malle@eppie.hh',
+                },
+                'type': "signup-tokens"
+            },
+        }
+
+    def test_create_user(self):
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertIsNotNone(data['data']['id'])
+
+    def test_existing__user(self):
+        user = BlueBottleUserFactory.create()
+        self.data['data']['attributes']['email'] = user.email
+        expected = {
+            'errors': [{
+                'code': 'email_in_use',
+                'detail': 'A member with this email address already exists.',
+                'source': {
+                    'pointer': '/data/attributes/email'
+                },
+                'status': '400'
+            }]
+        }
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_existing_inactive_user(self):
+        user = BlueBottleUserFactory.create(is_active=False)
+        self.data['data']['attributes']['email'] = user.email
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data['data']['id'], str(user.id))

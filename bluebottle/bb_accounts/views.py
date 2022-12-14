@@ -37,7 +37,7 @@ from bluebottle.members.serializers import (
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
-    CaptchaSerializer, AxesJSONWebTokenSerializer,
+    CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
     PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer
 )
 from bluebottle.members.tokens import login_token_generator
@@ -178,6 +178,19 @@ class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
+class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = MemberSignUpSerializer
+
+    permission_classes = []
+
+    def perform_create(self, serializer):
+        return serializer.save(is_active=True)
+
+
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
     serializer_class = PasswordStrengthSerializer
 
@@ -232,10 +245,7 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
     serializer_class = SignUpTokenSerializer
 
     def perform_create(self, serializer):
-        (instance, _) = USER_MODEL.objects.get_or_create(
-            email__iexact=serializer.validated_data['email'],
-            defaults={'is_active': False, 'email': serializer.validated_data['email']}
-        )
+        instance = serializer.save()
         token = TimestampSigner().sign(instance.pk)
         SignUptokenMessage(
             instance,
@@ -245,7 +255,6 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
                 'segment_id': serializer.validated_data.get('segment_id', '')
             },
         ).compose_and_send()
-
         return instance
 
 

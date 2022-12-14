@@ -435,6 +435,13 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
 
+    def create(self, validated_data):
+        (instance, _) = BB_USER_MODEL.objects.get_or_create(
+            email__iexact=validated_data['email'],
+            defaults={'is_active': False, 'email': validated_data['email']}
+        )
+        return instance
+
     class Meta(object):
         model = BB_USER_MODEL
         fields = ('id', 'email', 'url', 'segment_id')
@@ -452,7 +459,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
             raise serializers.ValidationError(
-                'a member with this email address already exists.',
+                'A member with this email address already exists.',
                 code='email_in_use',
             )
         return email
@@ -505,6 +512,67 @@ class PasswordStrengthSerializer(serializers.ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'password-strengths'
+
+
+class UniqueEmailValidator(validators.UniqueValidator):
+    message = _('An user with this email address already exists')
+
+    def __call__(self, value, serializer_field):
+        try:
+            return super().__call__(value, serializer_field)
+        except serializers.ValidationError:
+            user = BB_USER_MODEL.objects.get(email__iexact=value)
+            if user.social_auth.count() > 0:
+                code = 'social_account_unique'
+            else:
+                code = 'email_unique'
+
+            raise serializers.ValidationError(self.message, code=code)
+
+
+class MemberSignUpSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating users. This can only be used for creating
+    users (POST) and should not be used for listing,
+    editing or viewing users.
+    """
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueEmailValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
+    password = PasswordField(required=True, max_length=128)
+    token = serializers.CharField(source='get_jwt_token', read_only=True)
+
+    @property
+    def errors(self):
+        return super(MemberSignUpSerializer, self).errors
+
+    def validate(self, data):
+        settings = MemberPlatformSettings.objects.get()
+        if settings.confirm_signup:
+            raise serializers.ValidationError(
+                {'email': _('Signup requires a confirmation token.')}
+            )
+
+        if settings.closed:
+            raise serializers.ValidationError(
+                {'email': _('The platform is closed.')}
+            )
+
+        passwordmeter.test(data['password'])
+        data['password'] = make_password(data['password'])
+        return data
+
+    class Meta(object):
+        model = BB_USER_MODEL
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token', )
+
+    class JSONAPIMeta:
+        resource_name = 'auth/signup'
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

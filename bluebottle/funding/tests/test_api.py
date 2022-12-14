@@ -678,6 +678,10 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
+        settings = InitiativePlatformSettings.objects.get()
+        settings.activity_types.append('funding')
+        settings.save()
+
         self.bank_account = PledgeBankAccountFactory.create(status='verified')
 
         self.create_url = reverse('funding-list')

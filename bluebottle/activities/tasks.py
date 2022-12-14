@@ -189,6 +189,9 @@ def data_retention_contribution_task():
                         activity.deleted_successful_contributors = success['total']
                         activity.has_deleted_data = True
                         activity.save(run_triggers=False)
+                        print('marking as succesful', activity, activity.has_deleted_data)
+
+                    print('deleteing contributors')
 
                     for contributor in contributors.all():
                         contributor.delete()

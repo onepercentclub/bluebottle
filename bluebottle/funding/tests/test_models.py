@@ -5,11 +5,17 @@ import mock
 from django.utils.timezone import now
 from moneyed import Money
 
+from bluebottle.activities.tasks import data_retention_contribution_task
+
 from bluebottle.funding.models import Payout
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
-    ExternalAccountFactory
+from bluebottle.funding_stripe.tests.factories import (
+    StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory
+)
+
+from bluebottle.members.models import MemberPlatformSettings
+
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -21,6 +27,61 @@ class FundingTestCase(BluebottleTestCase):
         expected = 'http://testserver/en/initiatives/activities/details' \
                    '/funding/{}/{}'.format(funding.id, funding.slug)
         self.assertEqual(funding.get_absolute_url(), expected)
+
+    def test_amount_donated(self):
+        funding = FundingFactory.create(target=Money(100, 'EUR'))
+        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status="succeeded")
+
+        funding.refresh_from_db()
+
+        self.assertEqual(funding.amount_donated, Money(90, 'EUR'))
+        self.assertEqual(funding.amount_pledged, Money(0, 'EUR'))
+        self.assertEqual(funding.genuine_amount_donated, Money(90, 'EUR'))
+
+    def test_amount_donated_pledge(self):
+        funding = FundingFactory.create(target=Money(100, 'EUR'))
+
+        pledge = DonorFactory.create(activity=funding, amount=Money(30, 'EUR'))
+        PledgePaymentFactory.create(donation=pledge)
+
+        DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'), status="succeeded")
+
+        funding.refresh_from_db()
+
+        self.assertEqual(funding.amount_donated, Money(120, 'EUR'))
+        self.assertEqual(funding.amount_pledged, Money(30, 'EUR'))
+        self.assertEqual(funding.genuine_amount_donated, Money(90, 'EUR'))
+
+    def test_amount_donated_anonimised(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.retention_delete = 10
+        member_settings.retention_anonymize = 6
+        member_settings.save()
+
+        funding = FundingFactory.create(target=Money(100, 'EUR'))
+        donors = DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'))
+        for donor in donors:
+            donor.states.succeed(save=True)
+
+        old_donation = DonorFactory.create(
+            activity=funding, amount=Money(30, 'EUR'), created=now() - timedelta(days=330)
+        )
+        old_donation.states.succeed(save=True)
+
+        funding.refresh_from_db()
+        self.assertEqual(len(funding.donations), 4)
+        self.assertEqual(funding.amount_donated, Money(120, 'EUR'))
+        self.assertEqual(funding.amount_pledged, Money(0, 'EUR'))
+        self.assertEqual(funding.genuine_amount_donated, Money(120, 'EUR'))
+
+        data_retention_contribution_task()
+        funding.update_amounts()
+
+        funding.refresh_from_db()
+        self.assertEqual(len(funding.donations), 3)
+        self.assertEqual(funding.amount_donated, Money(120, 'EUR'))
+        self.assertEqual(funding.amount_pledged, Money(0, 'EUR'))
+        self.assertEqual(funding.genuine_amount_donated, Money(120, 'EUR'))
 
     def test_budget_currency_change(self):
         funding = FundingFactory.create(target=Money(100, 'EUR'))

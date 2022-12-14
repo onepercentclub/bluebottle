@@ -1041,8 +1041,14 @@ class ParticipantTriggerTestCase(object):
             as_user=user
         )
         self.assertEqual(participant.team, team_captain.team)
-        self.assertTrue(f'Someone has joined your team for "{self.activity.title}"' in [message.subject for message in mail.outbox])
-        self.assertTrue(f'You have joined Team user_6 user_6 for "{self.activity.title}"' in [message.subject for message in mail.outbox])
+        self.assertTrue(
+            f'Someone has joined your team for "{self.activity.title}"'
+            in [message.subject for message in mail.outbox]
+        )
+        self.assertTrue(
+            f'You have joined Team user_6 user_6 for "{self.activity.title}"'
+            in [message.subject for message in mail.outbox]
+        )
 
     def test_initiate_team_invite_review(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams

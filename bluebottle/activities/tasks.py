@@ -171,12 +171,14 @@ def data_retention_contribution_task():
             settings = MemberPlatformSettings.objects.get()
             if settings.retention_anonymize:
                 history = now() - relativedelta(months=settings.retention_anonymize)
+                Activity.objects.filter(created__lt=history, has_deleted_data=False).update(has_deleted_data=True)
                 contributors = Contributor.objects.filter(created__lt=history, user__isnull=False)
                 if contributors.count():
                     logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {contributors.count} contributors')
                     contributors.update(
                         user=None,
                     )
+
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
@@ -187,7 +189,6 @@ def data_retention_contribution_task():
                     for success in successful:
                         activity = Activity.objects.filter(id=success['activity_id']).get()
                         activity.deleted_successful_contributors = success['total']
-                        activity.has_deleted_data = True
                         activity.save(run_triggers=False)
 
                     for contributor in contributors.all():

@@ -1032,13 +1032,17 @@ class ParticipantTriggerTestCase(object):
         )
 
         mail.outbox = []
+
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
             activity=self.activity,
             accepted_invite=team_captain.invite,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
         self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
+        self.assertTrue(f'Someone has joined your team for "{self.activity.title}"' in [message.subject for message in mail.outbox])
+        self.assertTrue(f'You have joined Team user_6 user_6 for "{self.activity.title}"' in [message.subject for message in mail.outbox])
 
     def test_initiate_team_invite_review(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams

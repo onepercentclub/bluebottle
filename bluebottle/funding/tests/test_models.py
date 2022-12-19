@@ -52,13 +52,13 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(funding.amount_pledged, Money(30, 'EUR'))
         self.assertEqual(funding.genuine_amount_donated, Money(90, 'EUR'))
 
-    def test_amount_donated_anonimised(self):
+    def test_amount_donated_anonymized(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
 
-        funding = FundingFactory.create(target=Money(100, 'EUR'))
+        funding = FundingFactory.create(target=Money(100, 'EUR'), created=now() - timedelta(days=330))
         donors = DonorFactory.create_batch(3, activity=funding, amount=Money(30, 'EUR'))
         for donor in donors:
             donor.states.succeed(save=True)

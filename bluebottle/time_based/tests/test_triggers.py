@@ -1026,9 +1026,11 @@ class ParticipantTriggerTestCase(object):
         self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.activity.save()
 
+        captain = BlueBottleUserFactory.create()
+
         team_captain = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=captain
         )
 
         mail.outbox = []
@@ -1046,7 +1048,7 @@ class ParticipantTriggerTestCase(object):
             in [message.subject for message in mail.outbox]
         )
         self.assertTrue(
-            f'You have joined Team user_6 user_6 for "{self.activity.title}"'
+            f'You have joined Team {captain.first_name} {captain.last_name} for "{self.activity.title}"'
             in [message.subject for message in mail.outbox]
         )
 

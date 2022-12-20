@@ -1025,6 +1025,7 @@ class ParticipantTriggerTestCase(object):
     def test_initiate_team_invite(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.activity.save()
+        captain = BlueBottleUserFactory.create()
 
         captain = BlueBottleUserFactory.create()
 

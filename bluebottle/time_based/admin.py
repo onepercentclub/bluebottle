@@ -355,7 +355,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     ]
 
     def get_detail_fields(self, request, obj):
-        fields = ActivityChildAdmin.detail_fields + (
+        fields = super().get_detail_fields(request, obj) + (
             'start',
             'deadline',
             'registration_deadline',

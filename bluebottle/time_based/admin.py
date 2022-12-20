@@ -40,6 +40,13 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
                        'created', 'transition_date', 'status')
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = self.readonly_fields
+        if obj and getattr(obj, 'has_deleted_data', False):
+            fields += ('user',)
+        return fields
+
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']
@@ -355,7 +362,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     ]
 
     def get_detail_fields(self, request, obj):
-        fields = ActivityChildAdmin.detail_fields + (
+        fields = super().get_detail_fields(request, obj) + (
             'start',
             'deadline',
             'registration_deadline',

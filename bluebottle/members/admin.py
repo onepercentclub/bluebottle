@@ -467,18 +467,8 @@ class MemberAdmin(UserAdmin):
                 [
                     _('Engagement'),
                     {
-                        'fields':
-                        [
-                            'all_contributions',
-                            'hours_spent',
-                            'hours_planned',
-                            'initiatives',
-                            'date_activities',
-                            'period_activities',
-                            'funding',
-                            'deeds',
-                            'collect',
-                        ]
+                        'fields': self.get_impact_fields(obj)
+
                     }
                 ],
                 [
@@ -527,7 +517,8 @@ class MemberAdmin(UserAdmin):
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
             'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned', 'all_contributions'
+            'hours_spent', 'hours_planned', 'all_contributions',
+            'data_retention_info'
         ]
 
         user_groups = request.user.groups.all()
@@ -544,6 +535,31 @@ class MemberAdmin(UserAdmin):
             readonly_fields.append('is_superuser')
 
         return readonly_fields
+
+    def get_impact_fields(self, obj):
+        fields = [
+            'all_contributions',
+            'hours_spent',
+            'hours_planned',
+            'initiatives',
+            'date_activities',
+            'period_activities',
+            'funding',
+            'deeds',
+            'collect',
+        ]
+        member_settings = MemberPlatformSettings.load()
+        if member_settings.retention_delete or member_settings.retention_anonymize:
+            fields.insert(0, 'data_retention_info')
+
+        return fields
+
+    def data_retention_info(self, obj):
+        member_settings = MemberPlatformSettings.load()
+        months = member_settings.retention_anonymize or member_settings.retention_delete
+        return admin_info_box(
+            _('Only data from the last {months} months is shown.').format(months=months)
+        )
 
     def hours_spent(self, obj):
         return obj.hours_spent

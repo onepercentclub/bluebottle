@@ -72,7 +72,9 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     deleted_successful_contributors = models.PositiveIntegerField(
         _('Number of deleted successful contributors'),
-        default=0
+        default=0,
+        null=True,
+        blank=True
     )
 
     title = models.CharField(_('Title'), max_length=255)
@@ -201,11 +203,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     team = models.ForeignKey(
         'activities.Team', verbose_name=_('team'),
-        null=True, blank=True, related_name='members', on_delete=models.CASCADE
+        null=True, blank=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'),
-        null=True, blank=True, on_delete=models.CASCADE
+        null=True, blank=True, on_delete=models.SET_NULL
     )
     invite = models.OneToOneField(
         'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"

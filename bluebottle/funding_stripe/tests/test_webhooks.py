@@ -472,6 +472,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_source_chargeable_us(self):
         self.funding.bank_account.connect_account.country = 'US'
+        self.funding.bank_account.connect_account.account.country = 'US'
+        self.funding.bank_account.connect_account.save()
 
         data = {
             'object': {

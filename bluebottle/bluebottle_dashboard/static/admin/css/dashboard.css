@@ -182,3 +182,7 @@ form .aligned strong+p.help {
 .array-item input {
     padding: 6px;
 }
+
+.inline-related .description {
+    margin: 8px;
+}

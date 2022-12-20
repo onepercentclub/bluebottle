@@ -313,7 +313,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'has_deleted_data',
-        'deleted_successful_contributors',
         'valid',
         'transition_date',
         'stats_data',
@@ -343,7 +342,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'has_deleted_data',
-        'deleted_successful_contributors',
         'status',
         'states'
     )

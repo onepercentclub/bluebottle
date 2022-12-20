@@ -9,6 +9,7 @@
         <fieldset class="module {{ inline_admin_formset.classes }}">
             <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
             {{ inline_admin_formset.formset.non_form_errors }}
+
             <table>
                 <thead><tr>
                     <th class="original"></th>
@@ -73,15 +74,12 @@
                 </tbody>
             </table>
             {% include 'admin/tabular_paginator.html' %}
-
             {# Only bit that changed #}
             {% if original.deleted_successful_contributors %}
-                <div class="admin-extra-comment">
-                    <b>
-                        {% blocktrans with count=original.deleted_successful_contributors %}
-                            {{ count }} other participants took place in this activity
-                        {% endblocktrans %}
-                    </b>
+                <div class="description">
+                    {% blocktrans with total=original.succeeded_participant_count count=original.deleted_successful_contributors %}
+                        {{ total }} participants took part in this activity of which {{ count }} were deleted due to data retention.
+                    {% endblocktrans %}
                 </div>
             {% endif %}
             {# end #}

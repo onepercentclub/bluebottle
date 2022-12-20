@@ -8,10 +8,11 @@
         {{ inline_admin_formset.formset.management_form }}
         <fieldset class="module {{ inline_admin_formset.classes }}">
             <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+
             {# Only bit that changed #}
             {% if original.deleted_successful_contributors %}
                 <div class="description">
-                    {% blocktrans with total=original.succeeded_participant_count count=original.deleted_successful_contributors %}
+                    {% blocktrans with total=original.succeeded_contributor_count count=original.deleted_successful_contributors %}
                         <b>{{ total }}</b> participants took part in this activity out of which <b>{{ count }}</b> were deleted due to company policies and local laws.
                     {% endblocktrans %}
                 </div>

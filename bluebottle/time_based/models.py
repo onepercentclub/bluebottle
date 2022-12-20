@@ -113,7 +113,7 @@ class TimeBasedActivity(Activity):
         return self.participants.filter(status__in=('accepted', 'succeeded'))
 
     @property
-    def succeeded_participant_count(self):
+    def succeeded_contributor_count(self):
         return self.accepted_participants.count() + self.deleted_successful_contributors
 
     @property

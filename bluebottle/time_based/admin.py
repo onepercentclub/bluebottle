@@ -40,6 +40,13 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
                        'created', 'transition_date', 'status')
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = self.readonly_fields
+        if obj.has_deleted_data:
+            fields += ('user',)
+        return fields
+
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']

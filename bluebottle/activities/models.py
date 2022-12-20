@@ -72,7 +72,9 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     deleted_successful_contributors = models.PositiveIntegerField(
         _('Number of deleted successful contributors'),
-        default=0
+        default=0,
+        null=True,
+        blank=True
     )
 
     title = models.CharField(_('Title'), max_length=255)

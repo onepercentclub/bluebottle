@@ -70,10 +70,45 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
             raise serializers.ValidationError(msg)
 
 
-class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
+class PasswordValidator(object):
+    requires_context = True
 
-    email = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
+    def __call__(self, value, serializer_field):
+        if serializer_field.parent.instance:
+            user = serializer_field.parent.instance
+        else:
+            user = None
+
+        password_validation.validate_password(value, user)
+        return value
+
+
+# Thanks to Neamar Tucote for this code:
+# https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
+class PasswordField(serializers.CharField):
+    """ Special field to update a password field. """
+    widget = forms.widgets.PasswordInput
+    hidden_password_string = '********'
+
+    def __init__(self, **kwargs):
+        super(PasswordField, self).__init__(**kwargs)
+        validator = PasswordValidator()
+        self.validators.append(validator)
+
+    def to_representation(self, value):
+        """ Hide hashed-password in API display. """
+        return self.hidden_password_string
+
+
+class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['email'] = serializers.CharField(
+            required=True
+        )
+    email = serializers.CharField(required=True)
+    password = PasswordField(required=True)
     token = serializers.CharField(read_only=True)
 
     class Meta:
@@ -395,36 +430,6 @@ class UserDataExportSerializer(UserProfileSerializer):
         )
 
 
-class PasswordValidator(object):
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        if serializer_field.parent.instance:
-            user = serializer_field.parent.instance
-        else:
-            user = None
-
-        password_validation.validate_password(value, user)
-        return value
-
-
-# Thanks to Neamar Tucote for this code:
-# https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
-class PasswordField(serializers.CharField):
-    """ Special field to update a password field. """
-    widget = forms.widgets.PasswordInput
-    hidden_password_string = '********'
-
-    def __init__(self, **kwargs):
-        super(PasswordField, self).__init__(**kwargs)
-        validator = PasswordValidator()
-        self.validators.append(validator)
-
-    def to_representation(self, value):
-        """ Hide hashed-password in API display. """
-        return self.hidden_password_string
-
-
 class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
@@ -494,7 +499,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
 class PasswordStrengthSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    email = serializers.CharField(write_only=True, allow_blank=True)
+    email = serializers.CharField(write_only=True, allow_blank=True, required=False)
     strength = serializers.SerializerMethodField()
 
     def validate(self, data):

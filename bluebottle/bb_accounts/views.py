@@ -62,9 +62,14 @@ class AuthView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         from collections import namedtuple
-        model = namedtuple('Model', ('pk', 'token'))
+        model = namedtuple('Model', ('pk', 'email', 'password', 'token'))
 
-        serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['token'])
+        serializer.instance = model(
+            str(uuid.uuid4()),
+            serializer.validated_data['user'].email,
+            '**************',
+            serializer.validated_data['token']
+        )
         return serializer.validated_data
 
     serializer_class = AuthTokenSerializer

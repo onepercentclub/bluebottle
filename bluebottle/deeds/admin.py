@@ -46,7 +46,7 @@ class DeedParticipantInline(TabularInlinePaginated):
     readonly_fields = ['edit', 'created', 'status']
     fields = ['edit', 'user', 'created', 'status']
     extra = 0
-    # template = 'admin/participant_list.html'
+    template = 'admin/participant_list.html'
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:

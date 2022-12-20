@@ -79,7 +79,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     ]
 
     def contributor_count(self, obj):
-        return obj.contributors.count()
+        return obj.contributors.count() + obj.deleted_successful_contributors or 0
     contributor_count.short_description = _('Contributors')
 
     detail_fields = ActivityChildAdmin.detail_fields + (

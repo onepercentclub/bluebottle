@@ -381,6 +381,11 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
         except USER_MODEL.DoesNotExist:
             pass
 
+        from collections import namedtuple
+
+        model = namedtuple('Model', ('pk', 'email'))
+        serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])
+
 
 class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
     queryset = USER_MODEL.objects.all()

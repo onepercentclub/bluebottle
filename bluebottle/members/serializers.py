@@ -659,7 +659,7 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta(object):
-        fields = ('email',)
+        fields = ('id', 'email',)
 
     class JSONAPIMeta(object):
         resource_name = 'reset-tokens'

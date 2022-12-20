@@ -55,7 +55,7 @@ class CollectContributorInline(admin.TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
-        if obj.has_deleted_data:
+        if obj and obj.has_deleted_data:
             fields += ('user',)
         return fields
 

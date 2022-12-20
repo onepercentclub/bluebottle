@@ -43,7 +43,7 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
 
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
-        if obj.has_deleted_data:
+        if obj and getattr(obj, 'has_deleted_data', False):
             fields += ('user',)
         return fields
 

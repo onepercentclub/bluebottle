@@ -1488,10 +1488,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation.states.fail()
             donation.save()
 
-        self.funding.states.submit()
-        self.funding.states.approve()
-        self.funding.states.succeed()
-        self.funding.save()
+        self.funding.states.succeed(save=True)
 
         with mock.patch(
                 'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock

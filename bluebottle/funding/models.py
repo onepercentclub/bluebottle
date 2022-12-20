@@ -191,8 +191,6 @@ class Funding(Activity):
         from bluebottle.funding.utils import calculate_total
         from .states import DonorStateMachine
 
-        self.refresh_from_db()
-
         if not self.has_deleted_data:
             donations = self.donations.filter(
                 status__in=(

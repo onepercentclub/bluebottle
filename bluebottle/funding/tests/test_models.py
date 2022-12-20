@@ -75,9 +75,9 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(funding.genuine_amount_donated, Money(120, 'EUR'))
 
         data_retention_contribution_task()
+        funding.refresh_from_db()
         funding.update_amounts()
 
-        funding.refresh_from_db()
         self.assertEqual(len(funding.donations), 3)
         self.assertEqual(funding.amount_donated, Money(120, 'EUR'))
         self.assertEqual(funding.amount_pledged, Money(0, 'EUR'))

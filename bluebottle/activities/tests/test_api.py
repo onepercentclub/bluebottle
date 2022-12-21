@@ -2601,9 +2601,9 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertAttribute('status')
         self.assertMeta('transitions')
 
-        self.assertEqual(
-            self.response.json()['data'][0]['relationships']['user']['data']['id'],
-            str(self.team.owner.pk)
+        self.assertTrue(
+            str(self.team.owner.pk) in
+            [m['relationships']['user']['data']['id'] for m in self.response.json()['data']]
         )
 
     def test_get_team_member(self):

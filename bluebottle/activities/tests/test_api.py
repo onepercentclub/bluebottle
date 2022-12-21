@@ -2592,6 +2592,9 @@ class TeamMemberListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        ids = [m.id for m in self.accepted_members] + [m.id for m in self.withdrawn_members]
+
+        self.assertEqual(len(set(ids)), 6)
         self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
         self.assertRelationship('user')
 

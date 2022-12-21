@@ -678,6 +678,10 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
+        settings = InitiativePlatformSettings.objects.get()
+        settings.activity_types.append('funding')
+        settings.save()
+
         self.bank_account = PledgeBankAccountFactory.create(status='verified')
 
         self.create_url = reverse('funding-list')
@@ -1484,8 +1488,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation.states.fail()
             donation.save()
 
-        self.funding.states.succeed()
-        self.funding.save()
+        self.funding.states.succeed(save=True)
 
         with mock.patch(
                 'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock

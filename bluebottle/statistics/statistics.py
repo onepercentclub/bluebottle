@@ -48,7 +48,7 @@ class Statistics(object):
         task owner or  member.
         """
         contributor_ids = Contributor.objects.filter(
-            self.date_filter('contributor_date'),
+            self.date_filter('contributions__start'),
             user_id__isnull=False,
             status__in=('new', 'accepted', 'active', 'succeeded')
         ).order_by(

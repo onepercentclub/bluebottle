@@ -785,7 +785,7 @@ class StatisticsDateTest(BluebottleTestCase):
             stats.time_activities_succeeded, 2
         )
         self.assertEqual(
-            stats.people_involved, 1
+            stats.people_involved, 2
         )
 
     def test_start(self):
@@ -798,7 +798,7 @@ class StatisticsDateTest(BluebottleTestCase):
         )
 
         self.assertEqual(
-            stats.people_involved, 4
+            stats.people_involved, 5
         )
 
     def test_both(self):
@@ -813,5 +813,5 @@ class StatisticsDateTest(BluebottleTestCase):
             stats.time_activities_succeeded, 1
         )
         self.assertEqual(
-            stats.people_involved, 1
+            stats.people_involved, 2
         )

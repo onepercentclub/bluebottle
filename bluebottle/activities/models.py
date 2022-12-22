@@ -236,7 +236,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        return str(_('Guest'))
+        return str(_('Anonymous'))
 
 
 @python_2_unicode_compatible

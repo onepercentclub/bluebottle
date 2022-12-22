@@ -714,10 +714,15 @@ class ActivityAdminInline(StackedPolymorphicInline):
 @admin.register(Team)
 class TeamAdmin(StateMachineAdmin):
     raw_id_fields = ['owner', 'activity']
-    readonly_fields = ['created', 'activity_link', 'invite_link']
+    readonly_fields = ['created', 'activity_link', 'invite_link', 'member_count']
     fields = ['activity', 'invite_link', 'created', 'owner', 'status', 'states']
     superadmin_fields = ['force_status']
-    list_display = ['__str__', 'activity_link', 'status']
+    list_display = ['__str__', 'activity_link', 'status', 'member_count']
+
+    def member_count(self, obj):
+        link = reverse('admin:time_based_periodparticipant_changelist') + f'?team_id={obj.id}'
+        count = obj.members.count()
+        return format_html('<a href="{}">{}</a>', link, count)
 
     def get_inline_instances(self, request, obj=None):
         self.inlines = []

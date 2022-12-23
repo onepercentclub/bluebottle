@@ -12,40 +12,40 @@ from djmoney.money import Money
 
 
 def calculate_total(queryset, target='EUR'):
-    tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
-    with LocalTenant(tenant):
-        totals = queryset.values(
-            'payout_amount_currency'
-        ).annotate(
-            total=Sum('payout_amount')
-        ).order_by('-created')
-        amounts = [Money(tot['total'], tot['payout_amount_currency']) for tot in totals]
-        amounts = [convert(amount, target) for amount in amounts]
-        return sum(amounts) or Money(0, target)
+    totals = queryset.values(
+        'payout_amount_currency'
+    ).annotate(
+        total=Sum('payout_amount')
+    ).order_by('-created')
+    amounts = [Money(tot['total'], tot['payout_amount_currency']) for tot in totals]
+    amounts = [convert(amount, target) for amount in amounts]
+    return sum(amounts) or Money(0, target)
 
 
 def update_funding_totals(apps, schema_editor):
     Funding = apps.get_model('funding', 'Funding')
     Donor = apps.get_model('funding', 'Donor')
-    for funding in Funding.objects.all():
+    tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
+    with LocalTenant(tenant):
+        for funding in Funding.objects.all():
 
-        donations = Donor.objects.filter(
-            activity_id=funding.id,
-            status__in=(
-                'succeeded',
-                'activity_refunded',
+            donations = Donor.objects.filter(
+                activity_id=funding.id,
+                status__in=(
+                    'succeeded',
+                    'activity_refunded',
+                )
             )
-        )
-        currency = funding.target.currency if funding.target else properties.DEFAULT_CURRENCY
+            currency = funding.target.currency if funding.target else properties.DEFAULT_CURRENCY
 
-        funding.amount_donated = calculate_total(donations, currency)
-        funding.amount_pledged = calculate_total(
-            donations.filter(
-                payment__pledgepayment__isnull=False
-            ),
-            currency
-        )
-        funding.save()
+            funding.amount_donated = calculate_total(donations, currency)
+            funding.amount_pledged = calculate_total(
+                donations.filter(
+                    payment__pledgepayment__isnull=False
+                ),
+                currency
+            )
+            funding.save()
 
 
 class Migration(migrations.Migration):

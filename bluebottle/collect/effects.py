@@ -33,11 +33,12 @@ class SetOverallContributor(Effect):
     display = False
 
     def post_save(self):
-        contributor, _ = CollectContributor.objects.get_or_create(
-            user=None,
-            activity=self.instance,
-            defaults={'value': self.instance.realized}
-        )
+        contributor = CollectContributor.objects.filter(user=None, activity=self.instance).first()
+        if not contributor:
+            contributor = CollectContributor.objects.create(
+                user=None,
+                activity=self.instance
+            )
         contributor.value = self.instance.realized
         contributor.save()
         contribution = contributor.contributions.get()

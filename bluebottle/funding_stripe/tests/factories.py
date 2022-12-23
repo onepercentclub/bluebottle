@@ -72,7 +72,6 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
                 'individual.first_name', 'individual.last_name'
             ]
         })
-
         with mock.patch('stripe.Account.create', return_value=account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 

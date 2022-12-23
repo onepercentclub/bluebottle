@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import logging
 import random
 import string
@@ -8,7 +6,6 @@ from builtins import object
 from builtins import range
 
 from babel.numbers import get_currency_name
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db import models
@@ -140,6 +137,9 @@ class Funding(Activity):
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+    amount_donated = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+    amount_pledged = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     started = models.DateTimeField(
@@ -188,10 +188,26 @@ class Funding(Activity):
         )
 
     def update_amounts(self):
-        cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
-        cache.delete(cache_key)
-        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
-        cache.delete(cache_key)
+        from bluebottle.funding.utils import calculate_total
+        from .states import DonorStateMachine
+
+        if not self.has_deleted_data:
+            donations = self.donations.filter(
+                status__in=(
+                    DonorStateMachine.succeeded.value,
+                    DonorStateMachine.activity_refunded.value,
+                )
+            )
+            currency = self.target.currency if self.target else properties.DEFAULT_CURRENCY
+
+            self.amount_donated = calculate_total(donations, currency)
+            self.amount_pledged = calculate_total(
+                donations.filter(
+                    donor__payment__pledgepayment__isnull=False
+                ),
+                currency
+            )
+            self.save()
 
     @property
     def activity_date(self):
@@ -202,72 +218,11 @@ class Funding(Activity):
         return self.contributors.instance_of(Donor)
 
     @property
-    def amount_donated(self):
-        """
-        The sum of all contributors (donations) converted to the targets currency
-        """
-        from .states import DonorStateMachine
-        from bluebottle.funding.utils import calculate_total
-        cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
-        total = cache.get(cache_key)
-        if not total:
-            donations = self.donations.filter(
-                status__in=(
-                    DonorStateMachine.succeeded.value,
-                    DonorStateMachine.activity_refunded.value,
-                )
-            )
-            if self.target and self.target.currency:
-                total = calculate_total(donations, self.target.currency)
-            else:
-                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
-            cache.set(cache_key, total)
-        return total
-
-    @property
     def genuine_amount_donated(self):
         """
         The sum of all contributors (donations) without pledges converted to the targets currency
         """
-        from .states import DonorStateMachine
-        from bluebottle.funding.utils import calculate_total
-        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
-        total = cache.get(cache_key)
-        if not total:
-            donations = self.donations.filter(
-                status__in=(
-                    DonorStateMachine.succeeded.value,
-                    DonorStateMachine.activity_refunded.value,
-                ),
-                donor__payment__pledgepayment__isnull=True
-            )
-            if self.target and self.target.currency:
-                total = calculate_total(donations, self.target.currency)
-            else:
-                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
-            cache.set(cache_key, total)
-        return total
-
-    @cached_property
-    def amount_pledged(self):
-        """
-        The sum of all contributors (donations) converted to the targets currency
-        """
-        from .states import DonorStateMachine
-        from bluebottle.funding.utils import calculate_total
-        donations = self.donations.filter(
-            status__in=(
-                DonorStateMachine.succeeded.value,
-                DonorStateMachine.activity_refunded.value,
-            ),
-            donor__payment__pledgepayment__isnull=False
-        )
-        if self.target and self.target.currency:
-            total = calculate_total(donations, self.target.currency)
-        else:
-            total = calculate_total(donations, properties.DEFAULT_CURRENCY)
-
-        return total
+        return self.amount_donated - self.amount_pledged
 
     @property
     def amount_raised(self):

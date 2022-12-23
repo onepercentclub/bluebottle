@@ -185,6 +185,24 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
+    retention_anonymize = models.PositiveIntegerField(
+        _('Anonymise'),
+        default=None,
+        null=True,
+        blank=True,
+        help_text=_('Set the number of months after which user data will be anonymised.')
+
+    )
+
+    retention_delete = models.PositiveIntegerField(
+        _('Delete'),
+        default=None,
+        null=True,
+        blank=True,
+        help_text=_('Set the number of months after which user data will be deleted.')
+
+    )
+
     @property
     def fiscal_year_start(self):
         offset = self.fiscal_month_offset

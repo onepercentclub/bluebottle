@@ -1,18 +1,22 @@
+from bluebottle.members.models import MemberPlatformSettings
+from dateutil.relativedelta import relativedelta
 from django.test.utils import override_settings
 from django.test import tag
 from django.contrib.gis.geos import Point
 from django.core import mail
+from django.utils.timezone import now
 
 from django_elasticsearch_dsl.test import ESTestCase
 
-
+from bluebottle.activities.models import Contributor
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
-from bluebottle.activities.tasks import recommend
+from bluebottle.activities.tasks import recommend, data_retention_contribution_task
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, PeriodParticipantFactory, SkillFactory
+    PeriodActivityFactory, PeriodParticipantFactory, SkillFactory, DateActivityFactory, DateParticipantFactory
 )
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 
@@ -276,3 +280,47 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         recommend()
 
         self.assertEqual(len(mail.outbox), 0)
+
+
+class ContributorDataRetentionTest(BluebottleTestCase):
+
+    def create_contributors(self, factory, activity, dates):
+        for date in dates:
+            contributor = factory.create(activity=activity)
+            contributor.created = date
+            contributor.save()
+            contributor.contributions.update(status='succeeded')
+
+    def setUp(self):
+        super(ContributorDataRetentionTest, self).setUp()
+        months_ago_12 = now() - relativedelta(months=12)
+        months_ago_8 = now() - relativedelta(months=8)
+        months_ago_2 = now() - relativedelta(months=2)
+
+        self.activity1 = DateActivityFactory.create()
+        self.activity2 = PeriodActivityFactory.create()
+        self.activity3 = DeedFactory.create()
+
+        self.create_contributors(DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8])
+        self.create_contributors(PeriodParticipantFactory, self.activity2, [months_ago_12, months_ago_2])
+        self.create_contributors(DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2])
+
+        self.task = data_retention_contribution_task
+
+    def test_data_retention_dont_delete_without_settings(self):
+        self.assertEqual(Contributor.objects.count(), 9)
+        self.task()
+        self.assertEqual(Contributor.objects.count(), 9)
+
+    def test_data_retention_clean_up(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.retention_delete = 10
+        member_settings.retention_anonymize = 6
+        member_settings.save()
+        self.task()
+        self.assertEqual(Contributor.objects.count(), 7)
+        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
+        self.activity1.refresh_from_db()
+        self.assertEqual(self.activity1.deleted_successful_contributors, 1)
+        self.activity2.refresh_from_db()
+        self.assertEqual(self.activity2.deleted_successful_contributors, 1)

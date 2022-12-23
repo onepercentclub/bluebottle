@@ -162,7 +162,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return super(ContributionAdmin, self).lookup_allowed(lookup, value)
 
     def contributor_link(self, obj):
-        if obj:
+        if obj and obj.contributor_id:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
     contributor_link.short_description = _('Contributor')
@@ -312,6 +312,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
+        'has_deleted_data',
         'valid',
         'transition_date',
         'stats_data',
@@ -340,6 +341,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     status_fields = (
         'created',
         'updated',
+        'has_deleted_data',
         'status',
         'states'
     )

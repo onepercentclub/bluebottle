@@ -233,7 +233,7 @@ class Funding(Activity):
             currency = self.target.currency
         else:
             currency = 'EUR'
-        total = self.amount_donated
+        total = convert(self.amount_donated, currency)
         if self.amount_matching:
             total += convert(
                 self.amount_matching,

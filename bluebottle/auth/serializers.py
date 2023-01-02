@@ -52,4 +52,4 @@ class FacebookAuthSerializer(Serializer):
         fields = ['access_token', 'signed_request', 'token']
 
     class JSONAPIMeta:
-        resource_name = 'auth/token'
+        resource_name = 'facebook/tokens'

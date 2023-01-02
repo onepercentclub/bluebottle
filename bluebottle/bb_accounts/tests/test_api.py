@@ -589,6 +589,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
             reset_confirm_url,
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
+        confirm_data = response.json()['data']
+        self.assertTrue('id' in confirm_data)
+        self.assertTrue('token' in confirm_data['attributes'])
+        self.assertTrue('jwt-token' in confirm_data['attributes'])
+        self.assertTrue('password' in confirm_data['attributes'])
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 

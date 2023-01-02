@@ -193,6 +193,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
     User preview serializer that respects anonymization_age
     """
+
     def __init__(self, *args, **kwargs):
         self.hide_last_name = kwargs.pop('hide_last_name', None)
 
@@ -676,7 +677,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     jwt_token = serializers.CharField(read_only=True)
 
     class Meta(object):
-        fields = ('token', 'jwt_token', )
+        fields = ('token', 'jwt_token', 'password')
 
     class JSONAPIMeta(object):
         resource_name = 'reset-token-confirmations'

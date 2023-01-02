@@ -32,12 +32,12 @@ started:
 
     $ pip install -e .[test]
 
-#. (optional) If you want to use Docker for Postgres and Elasticsearch, run the steps below. Make sure to download Docker first.
+#. (optional) If you want to use Docker for Postgres and Elasticsearch, run the steps below. Make sure to download Docker (e.g. `Docker Desktop <https://www.docker.com/products/docker-desktop/>`_) first.
     * To start the containers::
 
         $ docker-compose -u -d
 
-    * To import a database dump file (please note that the last two commands runs without the `-t` flag)::
+    * To import a database dump file (please note that the last two commands run without the `-t` flag)::
 
         $ docker exec -it -u postgres postgres dropdb reef
         $ docker exec -it -u postgres postgres createdb reef
@@ -51,6 +51,10 @@ started:
 #. (optional) Create a new tenant (if you haven't imported a database dump)::
 
     $ python manage.py create_tenant
+
+#. (optional) To re-index any imported data using Elasticsearch, run::
+
+    $ python ./manage.py tenant_command search_index --rebuild -f
 
 #. Start the server::
 
@@ -67,9 +71,9 @@ started:
 Docker
 ------
 
-It is possible to run PostgreSQL and Elasticsearch in a Docker environment using `docker-compose`. To get started, make sure to download Docker.
+It is possible to run PostgreSQL and Elasticsearch in a Docker environment using `docker-compose`. To get started, make sure to download a Docker client, like `Docker Desktop <https://www.docker.com/products/docker-desktop/>`_.
 
-In your `local.py` file, make sure to set the `DATABASES` variable to the following::
+In your `local.py` file, set the `DATABASES` variable to the following::
 
     DATABASES = {
         'default': {
@@ -79,7 +83,7 @@ In your `local.py` file, make sure to set the `DATABASES` variable to the follow
             'NAME': 'reef',
             'USER': 'postgres',
             'PASSWORD': 'postgres',
-            'DISABLE_SERVER_SIDE_CURSORS': True
+            'DISABLE_SERVER_SIDE_CURSORS': True # this prevents issues with connection pooling
         },
     }
 
@@ -96,7 +100,7 @@ The environment also comes with pgAdmin included so you can inspect the local da
     * Email: `admin@admin.com`
     * Password: `admin`
 
-After that, you can add a new server using the details below:
+After that, you can add a new server using the details below to inspect the PostgreSQL database:
 
     * Host: `host.docker.internal`
     * Username: `postgres`

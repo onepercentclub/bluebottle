@@ -37,11 +37,11 @@ started:
 
         $ docker-compose -u -d
 
-    * To import a database dump file (please note that the last command runs without the `-t` flag)::
+    * To import a database dump file (please note that the last two commands runs without the `-t` flag)::
 
         $ docker exec -it -u postgres postgres dropdb reef
         $ docker exec -it -u postgres postgres createdb reef
-        $ bzcat reef-prod-current.sql.bz2 | 
+        $ bzcat reef-prod-current.sql.bz2 | docker exec -i -u postgres postgres psql reef
         $ echo "UPDATE clients_client SET domain_url=CONCAT(client_name, '.localhost');" | docker exec -i -u postgres postgres psql reef
 
 #. Migrate the database schemas::

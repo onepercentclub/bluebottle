@@ -52,9 +52,15 @@ started:
 
     $ python manage.py create_tenant
 
-#. (optional) To re-index any imported data using Elasticsearch, run::
+#. (optional) Re-index any imported data using Elasticsearch
+    * For all tenants::
+    
+        $ python manage.py tenant_command search_index --rebuild -f
 
-    $ python ./manage.py tenant_command search_index --rebuild -f
+    * If for whatever reason this doesn't work, try running the migration step for a single tenant only, and indexing that tenant's data. E.g.::
+
+        $ python manage.py migrate_schemas -s onepercent --settings=bluebottle.settings.testing
+        $ python manage.py tenant_command --schema onepercent search_index --rebuild -f
 
 #. Start the server::
 

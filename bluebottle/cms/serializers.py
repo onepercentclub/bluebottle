@@ -545,5 +545,8 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'metadata_keywords',
             'start_page',
             'logo',
-            'favicons'
+            'favicons',
+            'action_color',
+            'action_text_color',
+            'description_color'
         )

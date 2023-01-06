@@ -1,5 +1,6 @@
 from adminsortable.fields import SortableForeignKey
 from adminsortable.models import SortableMixin
+from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -546,9 +547,32 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
+
+    action_color = ColorField(
+        _('Action colour'), null=True, blank=True,
+        help_text=_(
+            'Colour for action buttons and links'
+        )
+    )
+    action_text_color = ColorField(
+        _('Action text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the action colour is quite light, you could set this to a darker colour for better contrast'
+        )
+    )
+
+    description_color = ColorField(
+        _('Description colour'), null=True, blank=True,
+        help_text=_(
+            'Colour for descriptive texts'
+        )
+    )
+
     contact_email = models.EmailField(null=True, blank=True)
-    contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
+    contact_phone = models.CharField(max_length=100, null=True, blank=True)
+
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
     powered_by_logo = models.ImageField(

@@ -2,6 +2,7 @@ from adminsortable.fields import SortableForeignKey
 from adminsortable.models import SortableMixin
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItem
@@ -548,6 +549,13 @@ class WelcomeContent(ContentItem):
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
+    def validate_file_extension(value):
+        import os
+        ext = os.path.splitext(value.name)[1]
+        valid_extensions = ['.woff2']
+        if ext not in valid_extensions:
+            raise ValidationError(u'File not supported!')
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
@@ -567,6 +575,14 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_(
             'Colour for descriptive texts'
         )
+    )
+
+    title_font = models.FileField(
+        _('Title font'), null=True, blank=True,
+        help_text=_(
+            'Font to use for titles. Should be .woff2 type'
+        ),
+        validators=[validate_file_extension]
     )
 
     contact_email = models.EmailField(null=True, blank=True)

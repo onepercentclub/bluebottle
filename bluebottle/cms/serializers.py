@@ -548,5 +548,6 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'favicons',
             'action_color',
             'action_text_color',
-            'description_color'
+            'description_color',
+            'title_font'
         )

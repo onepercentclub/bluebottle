@@ -1,0 +1,33 @@
+version: "3.7"
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.18
+    ports:
+      - 9200:9200
+    restart: always
+    volumes:
+      - ./elasticsearch-data:/var/lib/elasticsearch/data
+
+  pg-admin:
+    container_name: pg-admin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    image: dpage/pgadmin4:latest
+    restart: always
+    ports:
+      - 5050:80
+
+  postgres:
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=reef
+    image: postgis/postgis:latest # postgres + postgis
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data

@@ -15,12 +15,8 @@ RUN apt-get install -y --no-install-recommends \
   postgresql \
   postgis
 
-# Set environment variables
+# Disable pip version check
 ENV PIP_DISABLE_PIP_VERSION_CHECK 1
-# will not try to write .pyc files
-ENV PYTHONDONTWRITEBYTECODE 1  
-# console output is not buffered by Docker
-ENV PYTHONUNBUFFERED 1
 
 # Set work directory
 WORKDIR /bluebottle
@@ -42,6 +38,11 @@ RUN pip install -e .
 ################
 
 FROM python:3.8
+
+# Don't write .pyc files
+ENV PYTHONDONTWRITEBYTECODE 1  
+# Console output is not buffered by Docker
+ENV PYTHONUNBUFFERED 1
 
 # Set work directory
 WORKDIR /bluebottle

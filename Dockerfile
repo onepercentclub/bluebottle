@@ -11,9 +11,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   libxml2 \
   libxmlsec1 \
-  libxmlsec1-dev \
-  postgresql \
-  postgis
+  libxmlsec1-dev
 
 # Disable pip version check
 ENV PIP_DISABLE_PIP_VERSION_CHECK 1
@@ -22,8 +20,8 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK 1
 WORKDIR /bluebottle
 
 # Create the env (for caching)
-RUN python -m venv /usr/app/venv
-ENV PATH="/usr/app/venv/bin:$PATH"
+RUN python -m venv /bluebottle/venv
+ENV PATH="/bluebottle/venv/bin:$PATH"
 
 # Copy files necessary for install
 RUN mkdir bluebottle
@@ -39,6 +37,12 @@ RUN pip install -e .
 
 FROM python:3.8
 
+# Install missing dependencies
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+  postgresql \
+  postgis
+
 # Don't write .pyc files
 ENV PYTHONDONTWRITEBYTECODE 1  
 # Console output is not buffered by Docker
@@ -52,7 +56,4 @@ COPY --from=deps /bluebottle/venv ./venv
 COPY . .
 
 # Set the env
-ENV PATH="/usr/app/venv/bin:$PATH"
-
-# Run migrations
-RUN python manage.py migrate_schemas --shared --settings=bluebottle.settings.testing
+ENV PATH="/bluebottle/venv/bin:$PATH"

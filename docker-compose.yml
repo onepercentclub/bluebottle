@@ -2,7 +2,9 @@ version: "3.7"
 services:
   bluebottle:
     build: .
-    command: python /bluebottle/manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate_schemas --shared --settings=bluebottle.settings.local &&
+             python manage.py runserver 0.0.0.0:8000"
     container_name: bluebottle
     depends_on:
       - elasticsearch
@@ -10,6 +12,8 @@ services:
     ports:
       - 8000:8000
     restart: always
+    volumes:
+      - ./bluebottle-data:/var/lib/elasticsearch/data
 
   elasticsearch:
     container_name: elasticsearch

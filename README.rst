@@ -81,7 +81,7 @@ In your `local.py` file, set the `DATABASES` variable to the following::
     DATABASES = {
         'default': {
             'ENGINE': 'bluebottle.clients.postgresql_backend',
-            'HOST': 'localhost',
+            'HOST': 'postgres',
             'PORT': '5432',
             'NAME': 'reef',
             'USER': 'postgres',

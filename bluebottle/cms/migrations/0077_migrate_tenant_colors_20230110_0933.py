@@ -47,13 +47,14 @@ def migrate_tenant_colors(apps, schema_editor):
                         value = match.groups()[0]
                         if '$color-client-descriptive' in value:
                             value = settings.description_color
-                        if '$color-client-action' in value:
+                        elif '$color-client-action' in value:
                             value = settings.action_color
-                        if 'white' in value:
+                        elif 'white' in value:
                             value = '#ffffff'
-                        if '$color-grey-custom' in value:
+                        elif '$color-grey-custom' in value:
                             value = '#4a4a4a'
-                        if '#' not in value:
+
+                        if not value or '#' not in value:
                             print('ERROR {} {} {} {}'.format(tenant.schema_name, k, v, value))
                         else:
                             setattr(settings, v, value)

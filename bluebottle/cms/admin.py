@@ -187,8 +187,10 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             {
                 'fields': (
                     'logo', 'favicon',
-                    'action_color', 'action_text_color', 'description_color',
-                    'title_font'
+                    'action_color', 'action_text_color', 'alternative_link_color',
+                    'description_color', 'description_text_color',
+                    'footer_color', 'footer_text_color',
+                    'title_font', 'body_font'
                 )
             }
         ),

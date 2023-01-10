@@ -569,11 +569,39 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'If the action colour is quite light, you could set this to a darker colour for better contrast'
         )
     )
+    alternative_link_color = ColorField(
+        _('Alternative link colour'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'If the action colour is quite light, you can set this colour to use for text links'
+        )
+    )
 
     description_color = ColorField(
         _('Description colour'), null=True, blank=True,
         help_text=_(
-            'Colour for descriptive texts'
+            'Colour for descriptive and secondary buttons'
+        )
+    )
+    description_text_color = ColorField(
+        _('Description text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the description colour is quite light, you could set this to a darker colour for better contrast'
+        )
+    )
+    footer_color = ColorField(
+        _('Footer colour'), null=True, blank=True,
+        default='#3b3b3b',
+        help_text=_(
+            'Colour for platform footer'
+        )
+    )
+    footer_text_color = ColorField(
+        _('Footer text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the footer colour is quite light, you could set this to a darker colour for better contrast'
         )
     )
 
@@ -581,6 +609,14 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         _('Title font'), null=True, blank=True,
         help_text=_(
             'Font to use for titles. Should be .woff2 type'
+        ),
+        validators=[validate_file_extension]
+    )
+
+    body_font = models.FileField(
+        _('Body font'), null=True, blank=True,
+        help_text=_(
+            'Font to use for paragraph texts. Should be .woff2 type'
         ),
         validators=[validate_file_extension]
     )

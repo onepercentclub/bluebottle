@@ -139,7 +139,7 @@ To run commands in the Python container::
 
 If you need to rebuild the container, for example when you want to apply changes after pulling the latest version of a branch, run::
 
-    $  docker compose up --build
+    $ docker compose up --build
 
 Testing
 -------

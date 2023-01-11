@@ -90,6 +90,12 @@ In your `local.py` file, set the `DATABASES` variable to the following::
         },
     }
 
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': 'elasticsearch:9200'
+        },
+    }
+
 * To start the containers (if this is your first time, all dependencies will be installed automatically)::
 
     $ docker-compose -u -d

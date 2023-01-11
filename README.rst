@@ -123,9 +123,13 @@ After that, you can add a new server using the details below to inspect the Post
     * Username: `postgres`
     * Password: `postgres`
 
-To run commands in the Python container:
+To run commands in the Python container::
 
-    $ docker exec -it -u bluebottle python manage.py [YOUR_COMMAND]
+    $ docker exec -it bluebottle python manage.py [YOUR_COMMAND]
+
+    - For example::
+  
+        $ docker exec -it bluebottle python manage.py migrate_schemas -s onepercent --settings=bluebottle.settings.local
 
 Testing
 -------

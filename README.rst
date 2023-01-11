@@ -137,6 +137,10 @@ To run commands in the Python container::
   
         $ docker exec -it bluebottle python manage.py migrate_schemas -s onepercent --settings=bluebottle.settings.local
 
+If you need to rebuild the container, for example when you want to apply changes after pulling the latest version of a branch, run::
+
+    $  docker compose up --build bluebottle
+
 Testing
 -------
 

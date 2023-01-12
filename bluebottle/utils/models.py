@@ -65,7 +65,7 @@ def get_current_language():
         except ValueError:
             return Language.objects.filter(code=language).first()
     except Language.DoesNotExist:
-        return Language.objects.filter(default=True).first().full_code
+        return Language.objects.filter(default=True).first()
 
 
 @python_2_unicode_compatible

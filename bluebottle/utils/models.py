@@ -56,14 +56,16 @@ def get_language_choices():
 
 
 def get_current_language():
-    language = get_language()
-
+    language_code = get_language()
+    if not language_code:
+        return Language.objects.filter(default=True).first()
     try:
         try:
-            code, sub_code = language.split('-')
+            code, sub_code = language_code.split('-')
+            code, sub_code = language_code.split('-')
             return Language.objects.get(code=code, sub_code=sub_code)
         except ValueError:
-            return Language.objects.filter(code=language).first()
+            return Language.objects.filter(code=language_code).get()
     except Language.DoesNotExist:
         return Language.objects.filter(default=True).first()
 

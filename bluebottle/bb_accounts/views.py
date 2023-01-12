@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 import uuid
 import requests
+from collections import namedtuple
 
 from axes.utils import reset
 from django.contrib.auth import get_user_model
@@ -61,7 +62,6 @@ class AxesObtainJSONWebToken(ObtainJSONWebTokenView):
 class AuthView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
-        from collections import namedtuple
         model = namedtuple('Model', ('pk', 'email', 'password', 'token'))
 
         serializer.instance = model(
@@ -81,6 +81,14 @@ class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         ip = get_client_ip(self.request)
         reset(ip=ip)
+
+        model = namedtuple('Model', ('pk', 'token'))
+
+        serializer.instance = model(
+            str(uuid.uuid4()),
+            serializer.validated_data['token']
+        )
+        return serializer.validated_data
 
 
 class UserProfileDetail(RetrieveAPIView):
@@ -202,7 +210,6 @@ class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
     def perform_create(self, serializer, *args, **kwargs):
         serializer.is_valid(raise_exception=True)
 
-        from collections import namedtuple
         model = namedtuple('Model', 'pk')
         serializer.instance = model(str(uuid.uuid4()))
 
@@ -335,9 +342,17 @@ class PasswordResetConfirm(JsonApiViewMixin, CreateAPIView):
 
             user.set_password(serializer.validated_data['password'])
             user.save()
-            serializer.validated_data['jwt_token'] = user.get_jwt_token()
 
             # return a jwt token so the user can be logged in immediately
+            serializer.validated_data['jwt_token'] = user.get_jwt_token()
+
+            model = namedtuple('Model', ('pk', 'password', 'jwt_token', 'token'))
+            serializer.instance = model(
+                str(uuid.uuid4()),
+                '*******',
+                serializer.validated_data['jwt_token'],
+                serializer.validated_data['token'],
+            )
         else:
             raise ValidationError('Token expired')
 
@@ -385,8 +400,6 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
             )
         except USER_MODEL.DoesNotExist:
             pass
-
-        from collections import namedtuple
 
         model = namedtuple('Model', ('pk', 'email'))
         serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])

@@ -90,10 +90,11 @@ class PasswordField(serializers.CharField):
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
         super(PasswordField, self).__init__(**kwargs)
-        validator = PasswordValidator()
-        self.validators.append(validator)
+        if validate:
+            validator = PasswordValidator()
+            self.validators.append(validator)
 
     def to_representation(self, value):
         """ Hide hashed-password in API display. """
@@ -108,7 +109,7 @@ class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
             required=True
         )
     email = serializers.CharField(required=True)
-    password = PasswordField(required=True)
+    password = PasswordField(required=True, validate=False)
     token = serializers.CharField(read_only=True)
 
     class Meta:
@@ -193,6 +194,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
     User preview serializer that respects anonymization_age
     """
+
     def __init__(self, *args, **kwargs):
         self.hide_last_name = kwargs.pop('hide_last_name', None)
 
@@ -676,7 +678,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     jwt_token = serializers.CharField(read_only=True)
 
     class Meta(object):
-        fields = ('token', 'jwt_token', )
+        fields = ('token', 'jwt_token', 'password')
 
     class JSONAPIMeta(object):
         resource_name = 'reset-token-confirmations'

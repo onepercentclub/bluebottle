@@ -10,6 +10,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 
 from bluebottle.activities.models import Contributor
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -264,6 +265,64 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         for activity in self.non_matches + self.partial_matches:
             self.assertFalse(activity.title in body)
             self.assertFalse(activity.get_absolute_url() in body)
+
+    def test_not_including_closed_segment(self):
+        closed_segment = SegmentFactory.create(closed=True)
+        activity = self.matches.pop()
+        activity.segments.set([closed_segment])
+
+        for act in self.partial_matches:
+            act.delete()
+
+        recommend()
+
+        body = mail.outbox[-1].body
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            '{}, there are 2 activities on Test matching your profile'.format(
+                self.user.first_name
+            )
+        )
+
+        self.assertTrue('/en/initiatives/activities/list' in body)
+
+        self.assertFalse(activity.title in body)
+        self.assertFalse(activity.get_absolute_url() in body)
+
+        for activity in self.matches:
+            self.assertTrue(activity.title in body)
+            self.assertTrue(activity.get_absolute_url() in body)
+
+    def test_including_closed_segment(self):
+        closed_segment = SegmentFactory.create(closed=True)
+        activity = self.matches.pop()
+        activity.segments.set([closed_segment])
+
+        self.user.segments.set([closed_segment])
+
+        for act in self.partial_matches:
+            act.delete()
+
+        recommend()
+
+        body = mail.outbox[-1].body
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            '{}, there are 3 activities on Test matching your profile'.format(
+                self.user.first_name
+            )
+        )
+
+        self.assertTrue('/en/initiatives/activities/list' in body)
+
+        self.assertTrue(activity.title in body)
+        self.assertTrue(activity.get_absolute_url() in body)
+
+        for activity in self.matches:
+            self.assertTrue(activity.title in body)
+            self.assertTrue(activity.get_absolute_url() in body)
 
     def test_not_subscribed(self):
         self.user.subscribed = False

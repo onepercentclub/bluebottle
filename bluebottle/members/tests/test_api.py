@@ -1078,3 +1078,24 @@ class UserAPITestCase(BluebottleTestCase):
 
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['required'], [])
+
+
+class MemberSettingsAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
+        self.url = reverse('settings')
+
+    def test_required_questions(self):
+        settings = MemberPlatformSettings.load()
+        settings.required_questions_location = 'login'
+        settings.closed = True
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'login')
+        settings.required_questions_location = 'contribution'
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.json()['platform']['members']['required_questions_location'], 'contribution')

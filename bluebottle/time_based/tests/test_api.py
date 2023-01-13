@@ -1888,6 +1888,40 @@ class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebott
     document_url_name = 'period-participant-document'
     participant_type = 'contributors/time-based/period-participants'
 
+    def test_join_team(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        captain = PeriodParticipantFactory.create(
+            activity=self.activity
+        )
+        self.data['data']['relationships']['accepted-invite'] = {
+            'data': {
+                'type': 'activities/invites',
+                'id': str(captain.invite.id)
+            }
+        }
+        mail.outbox = []
+        self.response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have joined {captain.team.name} for "{self.activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[0].to[0],
+            self.user.email
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'Someone has joined your team for "{self.activity.title}"'
+        )
+        self.assertEqual(
+            mail.outbox[1].to[0],
+            captain.user.email
+        )
+
 
 class ParticipantDetailViewTestCase():
     def setUp(self):
@@ -2221,15 +2255,15 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
         self.assertTrue('Great to have you!' in message.body)
 
     def test_accept_team_with_custom_message(self):
-        self.activity.team_activity = 'teams'
-        self.activity.review = True
-        self.activity.save()
+        self.participant.status = 'new'
         self.participant.team = TeamFactory.create(
             activity=self.activity,
             owner=self.participant.user
         )
-        self.participant.status = 'new'
         self.participant.save()
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
         self.data['data']['attributes']['transition'] = 'accept'
         self.data['data']['attributes']['message'] = 'Great to have you!'
         mail.outbox = []

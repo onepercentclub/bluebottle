@@ -17,7 +17,8 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.states import ParticipantStateMachine, TimeBasedStateMachine
+from bluebottle.time_based.messages import TeamParticipantJoinedNotification
+from bluebottle.time_based.states import ParticipantStateMachine, TimeBasedStateMachine, TeamSlotStateMachine
 
 
 def initiative_is_approved(effect):
@@ -207,7 +208,7 @@ def contributor_is_active(contribution):
     ]
 
 
-def automatically_accept(effect):
+def automatically_accept_team(effect):
     """
     automatically accept team
     """
@@ -261,28 +262,38 @@ class TeamTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     TeamAddedMessage,
-                    conditions=[automatically_accept]
+                    conditions=[automatically_accept_team]
                 ),
                 NotificationEffect(
                     TeamAppliedMessage,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review,
+                    ]
                 ),
                 TransitionEffect(
                     TeamStateMachine.accept,
                     conditions=[
-                        automatically_accept
+                        automatically_accept_team
                     ]
-                )
+                ),
             ]
         ),
 
         TransitionTrigger(
             TeamStateMachine.accept,
             effects=[
+                NotificationEffect(
+                    TeamParticipantJoinedNotification,
+                    conditions=[
+                        automatically_accept_team
+                    ]
+                ),
                 RelatedTransitionEffect(
                     'members',
                     ParticipantStateMachine.accept,
-                    conditions=[needs_review]
+                    conditions=[
+                        needs_review
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -302,6 +313,10 @@ class TeamTriggers(TriggerManager):
                 ),
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamCancelledMessage),
+                RelatedTransitionEffect(
+                    'slot',
+                    TeamSlotStateMachine.cancel,
+                ),
             ]
         ),
 
@@ -315,7 +330,11 @@ class TeamTriggers(TriggerManager):
                 ),
                 TeamContributionTransitionEffect(ContributionStateMachine.fail),
                 NotificationEffect(TeamWithdrawnMessage),
-                NotificationEffect(TeamWithdrawnActivityOwnerMessage)
+                NotificationEffect(TeamWithdrawnActivityOwnerMessage),
+                RelatedTransitionEffect(
+                    'slot',
+                    TeamSlotStateMachine.cancel,
+                ),
             ]
         ),
 
@@ -329,6 +348,10 @@ class TeamTriggers(TriggerManager):
                         activity_is_active,
                         contributor_is_active
                     ]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    TeamSlotStateMachine.reopen
                 ),
 
             ]
@@ -345,7 +368,11 @@ class TeamTriggers(TriggerManager):
                     ]
                 ),
                 NotificationEffect(TeamReappliedMessage),
-                NotificationEffect(TeamAddedMessage)
+                NotificationEffect(TeamAddedMessage),
+                RelatedTransitionEffect(
+                    'slot',
+                    TeamSlotStateMachine.reopen,
+                ),
             ]
         ),
 
@@ -357,7 +384,25 @@ class TeamTriggers(TriggerManager):
                     contribution_conditions=[activity_is_active, contributor_is_active]
                 ),
                 ResetTeamParticipantsEffect,
-                NotificationEffect(TeamAddedMessage)
+                NotificationEffect(TeamAddedMessage),
+                RelatedTransitionEffect(
+                    'slot',
+                    TeamSlotStateMachine.reopen,
+                ),
+
             ]
         ),
+
+        TransitionTrigger(
+            TeamStateMachine.finish,
+            effects=[
+                TeamContributionTransitionEffect(
+                    ContributionStateMachine.succeed,
+                    contribution_conditions=[
+                        contributor_is_active
+                    ]
+                ),
+            ]
+        ),
+
     ]

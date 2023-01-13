@@ -45,7 +45,10 @@ class ExportAsCSVActionTest(BluebottleTestCase):
             TestModelQuerySet([TestModel(title='bla', text='bli bloe')])
         )
 
-        data = list(csv.reader(response.content.decode('utf-8').split('\n')))
+        data = list(csv.reader(
+            response.content.decode('utf-8').split('\n'),
+            delimiter=";"
+        ))
 
         self.assertEqual(data[0], ['Just a title', 'Some text'])
         self.assertEqual(data[1], ['bla', 'bli bloe'])
@@ -57,7 +60,10 @@ class ExportAsCSVActionTest(BluebottleTestCase):
             TestModelQuerySet([TestModel(title='@bla', text='+bli bloe')])
         )
 
-        data = list(csv.reader(response.content.decode('utf-8').split('\n')))
+        data = list(csv.reader(
+            response.content.decode('utf-8').split('\n'),
+            delimiter=";"
+        ))
 
         self.assertEqual(data[0], ['Just a title', 'Some text'])
         self.assertEqual(data[1], ["'@bla", "'+bli bloe"])

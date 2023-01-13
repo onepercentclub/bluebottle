@@ -706,3 +706,67 @@ class TeamSlotPeriodicTasksTest(BluebottleTestCase):
         self.run_task(self.after)
         self.assertStatus(self.slot, 'finished')
         self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_cancelled_team(self):
+        mail.outbox = []
+        self.participant.team.states.cancel(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.slot.team, 'cancelled')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_restore_team(self):
+        mail.outbox = []
+        self.participant.team.states.cancel(save=True)
+        self.participant.team.states.reopen(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_withdrawn_team(self):
+        mail.outbox = []
+        self.participant.team.states.withdraw(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.slot.team, 'withdrawn')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_reapply_team(self):
+        mail.outbox = []
+        self.participant.team.states.withdraw(save=True)
+        self.participant.team.states.reapply(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')
+
+    def test_finish_withdrawn_team_member(self):
+        mail.outbox = []
+        self.participant.states.withdraw(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'withdrawn')
+        self.assertStatus(self.participant.contributions.first(), 'failed')
+
+    def test_finish_reapplied_team_member(self):
+        mail.outbox = []
+        self.participant.states.withdraw(save=True)
+        self.participant.states.reapply(save=True)
+        self.run_task(self.after)
+
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot.team, 'finished')
+        self.assertStatus(self.participant, 'accepted')
+        self.assertStatus(self.participant.contributions.first(), 'succeeded')

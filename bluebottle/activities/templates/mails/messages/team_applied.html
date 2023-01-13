@@ -6,9 +6,13 @@
         {% blocktrans context 'email' %}{{team_name}} has applied to your activity "{{title}}".{% endblocktrans %}
     </p>
     <p>
-        {% blocktrans context 'email' %}Please contact them to sort out any details via {{team_captain_email}}.{% endblocktrans %}
+        {% blocktrans context 'email' %}Next steps{% endblocktrans %}
     </p>
-    <p>
-        {% blocktrans context 'email' %}You can accept or reject the team on the activity page.{% endblocktrans %}
-    </p>
+    <ol>
+        <li>{% blocktrans context 'email' %}Contact team captain {{team_captain_name}} to settle on a date, time and location for when they will participate in this activity.{% endblocktrans %}</li>
+        <li>{% blocktrans context 'email' %}Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members.{% endblocktrans %}</li>
+        <li>{% blocktrans context 'email' %}Accept the team after you have added the details so when the team members are invited  to join the activity it includes the time, date and location.{% endblocktrans %}</li>
+    </ol>
+    <p>{% blocktrans context 'email' %}Team captain contact details:{% endblocktrans %}</p>
+    <p>{{team_captain_email}}</p>
 {% endblock %}

@@ -2592,15 +2592,18 @@ class TeamMemberListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        ids = [m.id for m in self.accepted_members] + [m.id for m in self.withdrawn_members]
+
+        self.assertEqual(len(set(ids)), 6)
         self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
         self.assertMeta('transitions')
 
-        self.assertEqual(
-            self.response.json()['data'][0]['relationships']['user']['data']['id'],
-            str(self.team.owner.pk)
+        self.assertTrue(
+            str(self.team.owner.pk) in
+            [m['relationships']['user']['data']['id'] for m in self.response.json()['data']]
         )
 
     def test_get_team_member(self):

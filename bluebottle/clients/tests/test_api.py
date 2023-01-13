@@ -246,12 +246,16 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_member_platform_settings(self):
         MemberPlatformSettings.objects.create(
             closed=False,
-            require_consent=True
+            require_consent=True,
+            retention_anonymize=24,
+            retention_delete=36
         )
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['members']['closed'], False)
         self.assertEqual(response.data['platform']['members']['require_consent'], True)
+        self.assertEqual(response.data['platform']['members']['retention_anonymize'], 24)
+        self.assertEqual(response.data['platform']['members']['retention_delete'], 36)
 
     def test_member_platform_settings_closed(self):
         MemberPlatformSettings.objects.create(

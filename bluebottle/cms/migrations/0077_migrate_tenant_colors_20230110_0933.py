@@ -18,9 +18,10 @@ def migrate_tenant_colors(apps, schema_editor):
 
     basepath = path.dirname(__file__)
     with open(f'{basepath}/colors.json') as colors_file:
-        try: 
-            data = json.load(colors_file)[tenant.schema_name]
-        except KeyError: 
+        try:
+            data = json.load(colors_file)[tenant.client_name]
+        except KeyError:
+            print('Could not find colours for tenant')
             return
 
     for key, value in data.items():

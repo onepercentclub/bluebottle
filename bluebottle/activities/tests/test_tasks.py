@@ -280,7 +280,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            '{}, there are 2 activities on Test matching your profile'.format(
+            '{}, there are 1 activities on Test matching your profile'.format(
                 self.user.first_name
             )
         )
@@ -310,7 +310,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            '{}, there are 3 activities on Test matching your profile'.format(
+            '{}, there are 2 activities on Test matching your profile'.format(
                 self.user.first_name
             )
         )

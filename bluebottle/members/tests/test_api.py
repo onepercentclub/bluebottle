@@ -859,13 +859,13 @@ class UserLogoutTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class UserActivityTest(BluebottleTestCase):
+class OldUserActivityTest(BluebottleTestCase):
     def setUp(self):
-        super(UserActivityTest, self).setUp()
+        super(OldUserActivityTest, self).setUp()
 
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.user_activity_url = reverse('user-activity')
+        self.user_activity_url = reverse('old-user-activity')
 
     def test_log_activity(self):
         data = {'path': '/'}
@@ -887,6 +887,55 @@ class UserActivityTest(BluebottleTestCase):
     def test_log_activity_long_path(self):
         data = {'path': '/' + ('a' * 300)}
         response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+
+        activity = UserActivity.objects.get()
+
+        self.assertEqual(
+            len(activity.path), 200
+        )
+        self.assertTrue(activity.path.startswith('/aaaaaaa'))
+
+
+class UserActivityTest(BluebottleTestCase):
+    def setUp(self):
+        super(UserActivityTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_activity_url = reverse('user-activity')
+        self.client = JSONAPITestClient()
+
+    def prepare_data(self, path='/'):
+        return {
+            "data": {
+                "type": "users/activities",
+                "attributes": {
+                    'path': path
+                }
+            }
+        }
+
+    def test_log_activity(self):
+        data = self.prepare_data()
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        data = self.prepare_data('/pages/about')
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        data = self.prepare_data('/initiatives/activities/list')
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserActivity.objects.count(), 3)
+
+    def test_log_activity_anonymous(self):
+        data = self.prepare_data()
+        response = self.client.post(self.user_activity_url, data)
+        self.assertEqual(response.status_code, 401)
+
+    def test_log_activity_long_path(self):
+        data = self.prepare_data('/' + ('a' * 300))
+        response = self.client.post(self.user_activity_url, data, user=self.user)
         self.assertEqual(response.status_code, 201)
 
         activity = UserActivity.objects.get()

@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
-from rest_framework_json_api.serializers import Serializer
+from rest_framework_json_api.serializers import Serializer, ModelSerializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -360,7 +360,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
         )
 
 
-class UserActivitySerializer(serializers.ModelSerializer):
+class OldUserActivitySerializer(serializers.ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
@@ -372,6 +372,23 @@ class UserActivitySerializer(serializers.ModelSerializer):
             'id',
             'path',
         )
+
+
+class UserActivitySerializer(ModelSerializer):
+    """
+    Serializer for user activity (log paths)
+    """
+    path = TruncatedCharField(length=200, required=False)
+
+    class Meta(object):
+        model = UserActivity
+        fields = (
+            'id',
+            'path',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'users/activities'
 
 
 class ManageProfileSerializer(UserProfileSerializer):

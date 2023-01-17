@@ -1,6 +1,6 @@
 
 from django.conf.urls import url
-from bluebottle.bb_accounts.views import UserActivityDetail
+from bluebottle.bb_accounts.views import UserActivityDetail, OldUserActivityDetail
 from bluebottle.bb_accounts.views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
     PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
@@ -29,7 +29,8 @@ urlpatterns = [
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^current/?$', CurrentUser.as_view(), name='user-current'),
     url(r'^captcha$', CaptchaVerification.as_view(), name='captcha-verification'),
-    url(r'^activities/$', UserActivityDetail.as_view(), name='user-activity'),
+    url(r'^activities/$', OldUserActivityDetail.as_view(), name='old-user-activity'),
+    url(r'^user-activities/$', UserActivityDetail.as_view(), name='user-activity'),
     url(r'^email$', EmailSetView.as_view(), name='user-set-email'),
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),
     url(r'^logout$', Logout.as_view(), name='user-logout'),

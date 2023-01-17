@@ -39,7 +39,7 @@ from bluebottle.members.serializers import (
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
-    PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer
+    PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer, OldUserActivitySerializer
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.email_backend import send_mail
@@ -102,10 +102,20 @@ class UserProfileDetail(RetrieveAPIView):
     permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
-class UserActivityDetail(CreateAPIView):
+class OldUserActivityDetail(CreateAPIView):
     """
 
     """
+    queryset = UserActivity.objects.all()
+    serializer_class = OldUserActivitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
+
+
+class UserActivityDetail(JsonApiViewMixin, CreateAPIView):
     queryset = UserActivity.objects.all()
     serializer_class = UserActivitySerializer
     permission_classes = [IsAuthenticated]

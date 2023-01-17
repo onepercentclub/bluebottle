@@ -619,7 +619,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(b'This password is too short' in response.content)
+        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(

@@ -10,8 +10,8 @@ class CustomMinimumLengthValidator(MinimumLengthValidator):
         if len(password) < self.min_length:
             raise ValidationError(
                 ngettext(
-                    "Password should be at least %(min_length)d character.",
-                    "Password should be at least %(min_length)d characters.",
+                    "Password should at least be %(min_length)d character.",
+                    "Password should at least be %(min_length)d characters.",
                     self.min_length
                 ),
                 code='password_too_short',

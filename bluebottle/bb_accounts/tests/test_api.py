@@ -576,6 +576,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(len(mail.outbox), 1)
 
+        self.assertTrue('/auth/set-password' in mail.outbox[0].body)
+
         # Setup: get the password reset token and url.
         token_regex = re.compile(
             '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})',

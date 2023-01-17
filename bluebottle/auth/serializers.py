@@ -7,6 +7,7 @@ from rest_framework_json_api.serializers import Serializer
 from social_core.exceptions import AuthCanceled
 from social_core.utils import get_strategy
 from social_django.utils import psa, STORAGE
+from django.utils.translation import gettext_lazy as _
 
 
 def load_drf_strategy(request=None):
@@ -23,9 +24,12 @@ def complete(request, backend):
     if not user.email:
         if user.date_joined > now() - timedelta(hours=1):
             user.delete()
-        raise AuthenticationFailed('Email is required', code="email_required")
+        raise AuthenticationFailed(
+            _('Please allow Facebook access to your email address if you wish to sign up/log in via Facebook.'),
+            code="email_required"
+        )
     if not user.is_active:
-        raise AuthenticationFailed('User account is disabled', code="account_disabled")
+        raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
     return user
 
 

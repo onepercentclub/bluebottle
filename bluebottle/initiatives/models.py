@@ -79,6 +79,10 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    has_deleted_data = models.BooleanField(
+        default=False
+    )
+
     slug = models.SlugField(_('slug'), max_length=100, default='new')
 
     pitch = models.TextField(

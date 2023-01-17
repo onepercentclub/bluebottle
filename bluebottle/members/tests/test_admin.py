@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
@@ -239,7 +239,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
             'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions'
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
+            'data_retention_info'
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -249,7 +250,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
             'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions'
+            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
+            'data_retention_info'
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -342,6 +344,30 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         form.submit()
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.fiscal_month_offset, 4)
+
+    def test_retention_settings(self):
+        self.app.set_user(self.superuser)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        form['retention_anonymize'] = '12'
+        form['retention_delete'] = '24'
+
+        page = form.submit()
+        self.assertContains(page, 'You are about to anonymise/delete user data across the whole platform.')
+        form = page.forms[0]
+        form.submit()
+        settings_platform = MemberPlatformSettings.load()
+        self.assertEqual(settings_platform.retention_anonymize, 12)
+        self.assertEqual(settings_platform.retention_delete, 24)
+
+    def test_retention_settings_staff(self):
+        permission = Permission.objects.filter(codename='change_memberplatformsettings').first()
+        self.staff_member.user_permissions.add(permission)
+        self.app.set_user(self.staff_member)
+        page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
+        form = page.forms[0]
+        self.assertFalse('retention_anonymize' in form.fields)
+        self.assertFalse('retention_delete' in form.fields)
 
 
 class MemberAdminExportTest(BluebottleTestCase):

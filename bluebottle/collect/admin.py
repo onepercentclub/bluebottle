@@ -8,7 +8,7 @@ from parler.admin import TranslatableAdmin
 from bluebottle.activities.admin import (
     ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline
 )
-from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType
+from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType, CollectContribution
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -21,12 +21,20 @@ class CollectAdminForm(ActivityForm):
         }
 
 
+class CollectContributionInline(admin.TabularInline):
+    model = CollectContribution
+    extra = 0
+    readonly_fields = ('status', 'start',)
+    fields = readonly_fields + ('value',)
+
+
 @admin.register(CollectContributor)
 class CollectContributorAdmin(ContributorChildAdmin):
     readonly_fields = ['created']
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
+    inlines = [CollectContributionInline]
 
 
 class CollectContributorInline(admin.TabularInline):
@@ -36,14 +44,20 @@ class CollectContributorInline(admin.TabularInline):
     fields = ['edit', 'user', 'created', 'status']
     extra = 0
 
-    def get_queryset(self, request):
-        qs = super(CollectContributorInline, self).get_queryset(request)
-        return qs.filter(user__isnull=False)
+    template = 'admin/participant_list.html'
 
     def edit(self, obj):
+        if not obj.user and obj.activity.has_deleted_data:
+            return format_html(f'<i>{_("Anonymous")}</i>')
         url = reverse('admin:collect_collectcontributor_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit contributor'))
     edit.short_description = _('Edit contributor')
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = self.readonly_fields
+        if obj and obj.has_deleted_data:
+            fields += ('user',)
+        return fields
 
 
 @admin.register(CollectActivity)
@@ -65,7 +79,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
     ]
 
     def contributor_count(self, obj):
-        return obj.contributors.count()
+        return obj.contributors.count() + obj.deleted_successful_contributors or 0
     contributor_count.short_description = _('Contributors')
 
     detail_fields = ActivityChildAdmin.detail_fields + (

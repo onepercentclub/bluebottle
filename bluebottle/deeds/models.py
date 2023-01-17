@@ -87,6 +87,10 @@ class Deed(Activity):
         )
 
     @property
+    def succeeded_contributor_count(self):
+        return self.participants.count() + self.deleted_successful_contributors
+
+    @property
     def efforts(self):
         return EffortContribution.objects.filter(
             contributor__activity=self,

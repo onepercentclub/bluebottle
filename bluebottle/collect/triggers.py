@@ -65,6 +65,11 @@ def has_start_date(effect):
     return effect.instance.start
 
 
+def has_no_end_date(effect):
+    """has no end date"""
+    return not effect.instance.end
+
+
 @register(CollectActivity)
 class CollectActivityTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [

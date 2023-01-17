@@ -79,7 +79,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
         verbose_name=_("Donor"),
         related_name='wallpost',
         null=True, blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL
     )
 
     pinned = models.BooleanField(
@@ -102,25 +102,6 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     @property
     def parent(self):
         return self.content_object
-
-    class Analytics(object):
-        type = 'wallpost'
-        tags = {}
-        fields = {
-            'id': 'id',
-            'user_id': 'author.id'
-        }
-
-        @staticmethod
-        def skip(obj, created):
-            return True if obj.wallpost_type == 'system' else False
-
-        @staticmethod
-        def timestamp(obj, created):
-            if created:
-                return obj.created
-            else:
-                return obj.updated
 
     class Meta(object):
         ordering = ('created',)
@@ -284,7 +265,8 @@ class Reaction(AnonymizationMixin, models.Model):
         settings.AUTH_USER_MODEL,
         verbose_name=_('author'),
         related_name='wallpost_reactions',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     )
     editor = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('editor'), blank=True,

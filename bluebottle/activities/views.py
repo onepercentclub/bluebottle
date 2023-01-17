@@ -241,26 +241,21 @@ class TeamMembersList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = self.queryset.order_by('-current_user', '-id').filter(
+            queryset = self.queryset.filter(
                 Q(user=self.request.user) |
                 Q(team__owner=self.request.user) |
                 Q(team__activity__owner=self.request.user) |
                 Q(team__activity__initiative__activity_managers=self.request.user) |
                 Q(status='accepted')
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user),
-                    output_field=BooleanField()
-                )
-            )
+            ).order_by('-id')
         else:
             queryset = self.queryset.filter(
                 status='accepted'
-            )
+            ).order_by('-id')
 
         return queryset.filter(
             team_id=self.kwargs['team_id']
-        )
+        ).distinct('user_id', 'id').order_by('-id', 'user_id')
 
     serializer_class = TeamMemberSerializer
 
@@ -316,16 +311,11 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 Q(activity__owner=self.request.user) |
                 Q(activity__initiative__activity_manager=self.request.user) |
                 Q(status__in=('accepted', 'succeeded',))
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user if self.request.user.is_authenticated else None),
-                    output_field=BooleanField()
-                )
-            ).order_by('-current_user', '-id')
+            ).order_by('-id')
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded',)
-            )
+            ).order_by('-id')
 
         status = self.request.query_params.get('filter[status]')
         if status:

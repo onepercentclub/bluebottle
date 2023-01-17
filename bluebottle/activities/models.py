@@ -3,6 +3,7 @@ from builtins import str, object
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.db.models import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -61,6 +62,19 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True, null=True, max_length=100
+    )
+
+    has_deleted_data = models.BooleanField(
+        _('Has anonymised and/or deleted data'),
+        default=False,
+        help_text=_('Due to company policies and local laws, user data maybe deleted in this activity.')
+    )
+
+    deleted_successful_contributors = models.PositiveIntegerField(
+        _('Number of deleted successful contributors'),
+        default=0,
+        null=True,
+        blank=True
     )
 
     title = models.CharField(_('Title'), max_length=255)
@@ -189,11 +203,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     team = models.ForeignKey(
         'activities.Team', verbose_name=_('team'),
-        null=True, blank=True, related_name='members', on_delete=models.CASCADE
+        null=True, blank=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'),
-        null=True, blank=True, on_delete=models.CASCADE
+        null=True, blank=True, on_delete=models.SET_NULL
     )
     invite = models.OneToOneField(
         'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
@@ -222,7 +236,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        return str(_('Guest'))
+        return str(_('Anonymous'))
 
 
 @python_2_unicode_compatible
@@ -243,7 +257,11 @@ class Contribution(TriggerMixin, PolymorphicModel):
     end = models.DateTimeField(_('end'), null=True, blank=True)
 
     contributor = models.ForeignKey(
-        Contributor, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE
+        Contributor,
+        related_name='contributions',
+        on_delete=SET_NULL,
+        null=True,
+        blank=True
     )
 
     @property

@@ -804,7 +804,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(b'too short' in response.content)
+        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
@@ -919,7 +919,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'This password is too short. It must contain at least 8 characters.'
+            'Password should at least be 8 characters.'
         )
 
     def test_common(self):
@@ -1261,7 +1261,7 @@ class MemberSignUpAPITestCase(APITestCase):
         error = self.response.json()['errors'][0]
         self.assertEqual(
             error['detail'],
-            'This password is too short. It must contain at least 8 characters.'
+            'Password should at least be 8 characters.'
         )
         self.assertEqual(
             error['source']['pointer'],

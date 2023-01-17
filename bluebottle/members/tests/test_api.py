@@ -804,7 +804,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue('Password should at least be 8 characters.' in response.content)
+        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))

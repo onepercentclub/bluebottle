@@ -919,7 +919,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'This password is too short. It must contain at least 8 characters.'
+            'Password should be at least 8 characters.'
         )
 
     def test_common(self):

@@ -90,6 +90,12 @@ In your `local.py` file, set the `DATABASES` variable to the following::
         },
     }
 
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': 'elasticsearch:9200'
+        },
+    }
+
 * To start the containers (if this is your first time, all dependencies will be installed automatically)::
 
     $ docker-compose -u -d
@@ -123,9 +129,17 @@ After that, you can add a new server using the details below to inspect the Post
     * Username: `postgres`
     * Password: `postgres`
 
-To run commands in the Python container:
+To run commands in the Python container::
 
-    $ docker exec -it -u bluebottle python manage.py [YOUR_COMMAND]
+    $ docker exec -it bluebottle python manage.py [YOUR_COMMAND]
+
+    - For example::
+  
+        $ docker exec -it bluebottle python manage.py migrate_schemas -s onepercent --settings=bluebottle.settings.local
+
+If you need to rebuild the container, for example when you want to apply changes after pulling the latest version of a branch, run::
+
+    $ docker compose up --build
 
 Testing
 -------

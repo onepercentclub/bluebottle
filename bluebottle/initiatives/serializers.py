@@ -26,6 +26,7 @@ from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
 from bluebottle.members.models import Member
+from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
@@ -63,28 +64,6 @@ class CategorySerializer(ModelSerializer):
         resource_name = 'categories'
 
 
-class BaseMemberSerializer(ModelSerializer):
-    avatar = SorlImageField('133x133', source='picture', crop='center')
-    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
-    is_active = serializers.BooleanField(read_only=True)
-    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
-    is_anonymous = serializers.SerializerMethodField()
-
-    class Meta(object):
-        model = Member
-        fields = (
-            'id', 'first_name', 'last_name', 'initials', 'avatar',
-            'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer', 'is_anonymous'
-        )
-
-    def get_is_anonymous(self, obj):
-        return False
-
-    class JSONAPIMeta(object):
-        resource_name = 'members'
-
-
 class MemberSerializer(ModelSerializer):
     avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
@@ -107,7 +86,7 @@ class MemberSerializer(ModelSerializer):
         if instance.is_anonymous:
             return {'id': 'anonymous', "is_anonymous": True}
 
-        representation = BaseMemberSerializer(instance, context=self.context).to_representation(instance)
+        representation = super().to_representation(instance)
 
         if (
             self.context.get('display_member_names') == 'first_name' and
@@ -119,6 +98,13 @@ class MemberSerializer(ModelSerializer):
             representation['full_name'] = representation['first_name']
 
         return representation
+
+
+class CurrentMemberSerializer(MemberSerializer):
+    permissions = UserPermissionsSerializer(read_only=True)
+
+    class Meta(MemberSerializer.Meta):
+        meta_fields = ('permissions', )
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -154,6 +140,7 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
 
 class InitiativePreviewSerializer(ModelSerializer):
     position = TinyPointSerializer()
+    id = serializers.CharField()
 
     class Meta(object):
         model = Initiative
@@ -433,6 +420,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_impact',
             'enable_office_regions',
             'enable_office_restrictions',
+            'default_office_restriction',
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',

@@ -29,7 +29,6 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                     'is-anonymous': True
                 }
             }
-
         return super().build_json_resource_obj(
             fields, resource, resource_instance, resource_name, *args, **kwargs
         )

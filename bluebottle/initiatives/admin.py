@@ -125,7 +125,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['link', 'created', 'updated', 'valid']
+    readonly_fields = ['link', 'created', 'updated', 'has_deleted_data', 'valid']
 
     ordering = ('-created',)
 
@@ -176,7 +176,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 'reviewer', 'activity_managers', 'promoter',
                 'valid',
                 'status', 'states',
-                'created', 'updated',
+                'created', 'updated', 'has_deleted_data'
             )}),
         )
         if request.user.is_superuser:
@@ -232,10 +232,16 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
                 'activity_search_filters'
             )
         }),
+        (_('Offices'), {
+            'fields': (
+                'enable_office_regions', 'enable_office_restrictions',
+                'default_office_restriction'
+            )
+        }),
         (_('Options'), {
             'fields': (
                 'contact_method', 'require_organization',
-                'enable_impact', 'enable_office_regions', 'enable_office_restrictions',
+                'enable_impact',
                 'enable_multiple_dates',
                 'enable_open_initiatives', 'enable_participant_exports',
                 'enable_matching_emails',

@@ -213,7 +213,7 @@ class BaseActivitySerializer(ModelSerializer):
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
     def get_contributor_count(self, instance):
-        return instance.contributors.not_instance_of(Organizer).filter(
+        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
             status__in=['accepted', 'succeeded', 'activity_refunded']
         ).count()
 
@@ -236,6 +236,7 @@ class BaseActivitySerializer(ModelSerializer):
             'is_follower',
             'status',
             'stats',
+            'has_deleted_data',
             'errors',
             'required',
             'goals',
@@ -253,6 +254,7 @@ class BaseActivitySerializer(ModelSerializer):
             'errors',
             'required',
             'matching_properties',
+            'deleted_successful_contributors',
             'contributor_count',
             'team_count'
         )
@@ -432,8 +434,11 @@ class BaseContributorSerializer(ModelSerializer):
         if (
             isinstance(self.instance, Iterable) or (
                 self.instance and (
-                    self.instance.accepted_invite or
-                    self.instance.user != self.context['request'].user
+                    (not self.instance.team or self.instance.user != self.instance.team.owner) and
+                    (
+                        self.instance.accepted_invite or
+                        self.instance.user != self.context['request'].user
+                    )
                 )
             )
         ):
@@ -538,6 +543,9 @@ def get_stats_for_activities(activities):
     ).count()
 
     contributor_count += anonymous_donations
+
+    contributor_count += Activity.objects.filter(id__in=ids).\
+        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
     collected = CollectContribution.objects.filter(
         status='succeeded',

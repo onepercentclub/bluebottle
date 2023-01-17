@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-from builtins import str
-from builtins import object
-import dkim
-import mock
 import unittest
 import uuid
-from bluebottle.time_based.models import DateActivity
+from builtins import object
+from builtins import str
 
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-
-from bluebottle.initiatives.models import Initiative
+import dkim
+import mock
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Permission
@@ -19,25 +15,25 @@ from django.core.management import call_command
 from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
-
 from moneyed import Money
+from parler import appsettings
 
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import DateActivity
 from bluebottle.utils.fields import RestrictedImageFormField
-from bluebottle.utils.models import Language
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.models import Language, get_current_language
 from bluebottle.utils.permissions import (
     ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
     OneOf
 )
+from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
-
-from bluebottle.test.factory_models.utils import LanguageFactory
 from ..email_backend import send_mail, create_message
-
-from parler import appsettings
 
 
 def generate_random_slug():
@@ -693,3 +689,49 @@ class GetClientIPTestCase(TestCase):
 
         ip = get_client_ip(request)
         self.assertEqual(ip, '127.0.0.1')
+
+
+class GetCurrentLanguageTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(GetCurrentLanguageTestCase, self).setUp()
+        Language.objects.update(default=False)
+        LanguageFactory.create(code='fr', default=True, language_name='French')
+        LanguageFactory.create(code='bg', language_name='Bulgarian')
+        LanguageFactory.create(code='nl', sub_code='nl', language_name='Dutch')
+        LanguageFactory.create(code='nl', sub_code='pl', language_name='Plat Leids')
+
+    @mock.patch(
+        'bluebottle.utils.models.get_language',
+        return_value=''
+    )
+    def test_get_current_language_without_value(self, get_language):
+        self.assertEqual(get_current_language().language_name, 'French')
+
+    @mock.patch(
+        'bluebottle.utils.models.get_language',
+        return_value='xx'
+    )
+    def test_get_current_language_with_invalid_value(self, get_language):
+        self.assertEqual(get_current_language().language_name, 'French')
+
+    @mock.patch(
+        'bluebottle.utils.models.get_language',
+        return_value='bg'
+    )
+    def test_get_current_language_with_value(self, get_language):
+        self.assertEqual(get_current_language().language_name, 'Bulgarian')
+
+    @mock.patch(
+        'bluebottle.utils.models.get_language',
+        return_value='nl'
+    )
+    def test_get_current_language_with_two_languages(self, get_language):
+        self.assertEqual(get_current_language().language_name, 'Dutch')
+
+    @mock.patch(
+        'bluebottle.utils.models.get_language',
+        return_value='nl-pl'
+    )
+    def test_get_current_language_with_subcode(self, get_language):
+        self.assertEqual(get_current_language().language_name, 'Plat Leids')

@@ -2,8 +2,8 @@ from decimal import Decimal
 
 import mock
 from django.contrib.auth.models import Group, Permission
-from django.urls import reverse
 from django.test.utils import override_settings
+from django.urls import reverse
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
@@ -11,8 +11,8 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -246,12 +246,16 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_member_platform_settings(self):
         MemberPlatformSettings.objects.create(
             closed=False,
-            require_consent=True
+            require_consent=True,
+            retention_anonymize=24,
+            retention_delete=36
         )
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['members']['closed'], False)
         self.assertEqual(response.data['platform']['members']['require_consent'], True)
+        self.assertEqual(response.data['platform']['members']['retention_anonymize'], 24)
+        self.assertEqual(response.data['platform']['members']['retention_delete'], 36)
 
     def test_member_platform_settings_closed(self):
         MemberPlatformSettings.objects.create(
@@ -274,21 +278,43 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
         response = self.client.get(self.settings_url)
 
-        self.assertEqual(
-            response.data,
-            {
-                'platform': {
-                    'members': {
-                        'closed': True,
-                        'background': '',
-                        'login_methods': ['password'],
-                        'session_only': False,
-                        'email_domain': None,
-                        'confirm_signup': False,
-                    }
-                }
-            }
-        )
+        content = {
+            'contact_email': None,
+            'contact_phone': None,
+            'copyright': None,
+            'powered_by_link': None,
+            'powered_by_logo': None,
+            'powered_by_text': None,
+            'metadata_title': None,
+            'metadata_description': None,
+            'metadata_keywords': None,
+            'start_page': None,
+            'logo': None,
+            'favicons': {
+                'large': '',
+                'small': ''
+            },
+            'action_color': None,
+            'action_text_color': '#ffffff',
+            'alternative_link_color': None,
+            'description_color': None,
+            'description_text_color': '#ffffff',
+            'footer_color': '#3b3b3b',
+            'footer_text_color': '#ffffff',
+            'title_font': None,
+            'body_font': None
+        }
+        members = {
+            'closed': True,
+            'background': '',
+            'login_methods': ['password'],
+            'session_only': False,
+            'email_domain': None,
+            'confirm_signup': False
+        }
+
+        self.assertEqual(response.data['platform']['members'], members)
+        self.assertEqual(response.data['platform']['content'], content)
 
     def test_member_platform_required_settings(self):
         MemberPlatformSettings.objects.create(

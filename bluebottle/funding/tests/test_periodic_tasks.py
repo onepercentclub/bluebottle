@@ -7,7 +7,7 @@ from django.utils.timezone import now
 from djmoney.money import Money
 
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.funding.tasks import funding_tasks
+from bluebottle.funding.tasks import funding_tasks, donor_tasks
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
@@ -93,3 +93,43 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             mail.outbox[0].subject,
             u'Your crowdfunding campaign deadline passed'
         )
+
+
+class DonorScheduledTasksTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.donor = DonorFactory.create()
+
+    def test_donor_not_yet_expired(self):
+        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=10))):
+            donor_tasks()
+
+        self.donor.refresh_from_db()
+        self.assertEqual(self.donor.status, 'new')
+
+        self.assertEqual(len(self.donor.contributions.all()), 1)
+        self.assertEqual(self.donor.contributions.all()[0].status, 'new')
+
+    def test_donor_expired(self):
+        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=20))):
+            donor_tasks()
+
+        self.donor.refresh_from_db()
+
+        self.assertEqual(self.donor.status, 'expired')
+
+        self.assertEqual(len(self.donor.contributions.all()), 1)
+        self.assertEqual(self.donor.contributions.all()[0].status, 'failed')
+
+    def test_donor_succeeded_not_expired(self):
+        self.donor.states.succeed(save=True)
+
+        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=20))):
+            donor_tasks()
+
+        self.donor.refresh_from_db()
+
+        self.assertEqual(self.donor.status, 'succeeded')
+
+        self.assertEqual(len(self.donor.contributions.all()), 1)
+        self.assertEqual(self.donor.contributions.all()[0].status, 'succeeded')

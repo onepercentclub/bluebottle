@@ -691,6 +691,56 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, 'open')
         self.assertStatus(self.activity, 'open')
 
+    def test_fill_free(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        first = DateParticipantFactory.create(activity=self.activity)
+        second = DateParticipantFactory.create(activity=self.activity)
+        third = DateParticipantFactory.create(activity=self.activity)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot)
+        SlotParticipantFactory.create(participant=second, slot=self.slot)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot2)
+        SlotParticipantFactory.create(participant=second, slot=self.slot2)
+        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+
+        self.assertStatus(self.slot, 'full')
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'full')
+
+    def test_fill_cancel_slot(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        first = DateParticipantFactory.create(activity=self.activity)
+        second = DateParticipantFactory.create(activity=self.activity)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot)
+        SlotParticipantFactory.create(participant=second, slot=self.slot)
+
+        self.slot2.states.cancel(save=True)
+
+        self.assertStatus(self.slot, 'full')
+        self.assertStatus(self.activity, 'full')
+
+    def test_full_create_new_slot(self):
+        self.test_fill_free()
+        DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        self.assertStatus(self.activity, 'open')
+
     def test_finish_one_slot_with_participants(self):
         DateParticipantFactory.create(activity=self.activity)
         self.slot.start = now() - timedelta(days=1)
@@ -975,20 +1025,35 @@ class ParticipantTriggerTestCase(object):
     def test_initiate_team_invite(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams
         self.activity.save()
+        captain = BlueBottleUserFactory.create()
+
+        captain = BlueBottleUserFactory.create()
+
+        captain = BlueBottleUserFactory.create()
 
         team_captain = self.participant_factory.create(
             activity=self.activity,
-            user=BlueBottleUserFactory.create()
+            user=captain
         )
 
         mail.outbox = []
+
+        user = BlueBottleUserFactory.create()
         participant = self.participant_factory.create(
             activity=self.activity,
             accepted_invite=team_captain.invite,
-            user=BlueBottleUserFactory.create()
+            user=user,
+            as_user=user
         )
         self.assertEqual(participant.team, team_captain.team)
-        'New team member' in [message.subject for message in mail.outbox]
+        self.assertTrue(
+            f'Someone has joined your team for "{self.activity.title}"'
+            in [message.subject for message in mail.outbox]
+        )
+        self.assertTrue(
+            f'You have joined Team {captain.first_name} {captain.last_name} for "{self.activity.title}"'
+            in [message.subject for message in mail.outbox]
+        )
 
     def test_initiate_team_invite_review(self):
         self.activity.team_activity = Activity.TeamActivityChoices.teams

@@ -215,7 +215,6 @@ class APITestCase(BluebottleTestCase):
 
         If `user` is None, perform an anoymous request
         """
-
         if query:
             parsed_url = urlparse(self.url)
             current_query = dict(parse_qsl(parsed_url.query))
@@ -229,9 +228,10 @@ class APITestCase(BluebottleTestCase):
             url = self.url
 
         self.user = user
+
         self.response = self.client.get(
             url,
-            user=user
+            user=user,
         )
 
     def perform_update(self, to_change=None, user=None):
@@ -963,3 +963,8 @@ class JSONAPITestClient(Client):
 def get_first_included_by_type(response, type):
     included = response.json()['included']
     return [include for include in included if include['type'] == type][0]
+
+
+def get_count_included_by_type(response, type):
+    included = response.json()['included']
+    return len([include for include in included if include['type'] == type])

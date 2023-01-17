@@ -5,9 +5,11 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from dotted.collection import DottedDict
-
 from rest_framework import serializers, validators
+
+from bluebottle.segments.models import Segment
+from bluebottle.scim.models import SCIMPlatformSettings
+from bluebottle.scim.utils import SCIMPath
 
 from bluebottle.members.models import Member
 from bluebottle.geo.models import Location
@@ -77,7 +79,7 @@ class AddressesField(serializers.RelatedField):
         }]
 
     def to_internal_value(self, value):
-        if value:
+        if value and 'locality' in value[0]:
             queryset = self.get_queryset()
             location_name = value[0]['locality']
             try:
@@ -162,6 +164,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     addresses = AddressesField(
         source='location', required=False
     )
+
     active = serializers.BooleanField(source='is_active')
     groups = serializers.SerializerMethodField(read_only=True)
     schemas = SchemaSerializer(read_only=False)
@@ -182,11 +185,46 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
             read_only=True
         ).data
 
+    def save(self, *args, **kwargs):
+        result = super().save(*args, **kwargs)
+
+        segment_settings = SCIMPlatformSettings.objects.get().segments
+
+        for path, segment_type in segment_settings:
+            segment_name = path.get(self.initial_data)
+            if segment_name:
+                (segment, _created) = Segment.objects.get_or_create(
+                    segment_type=segment_type,
+                    slug=slugify(segment_name),
+                    defaults={
+                        'name': segment_name
+                    }
+                )
+
+                self.instance.segments.remove(*self.instance.segments.filter(segment_type=segment_type))
+                self.instance.segments.add(segment)
+
+        return result
+
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+
+        segment_settings = SCIMPlatformSettings.objects.get().segments
+
+        for path, segment_type in segment_settings:
+            try:
+                segment = obj.segments.get(segment_type=segment_type)
+                path.set(data, segment.name)
+            except Segment.DoesNotExist:
+                pass
+
+        return data
+
     class Meta(object):
         model = Member
         fields = (
             'id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta',
-            'addresses'
+            'addresses',
         )
 
 
@@ -263,20 +301,11 @@ class SCIMPatchSerializer(serializers.Serializer):
         fields = ('schemas', 'Operations')
 
     def patch(self, data):
-        data = DottedDict(data)
+        if self.is_valid():
+            for operation in self.validated_data['Operations']:
+                path = SCIMPath(operation['path'])
+                value = operation['value']
 
-        self.is_valid(raise_exception=True)
+                path.set(data, value)
 
-        for operation in self.validated_data['Operations']:
-            path = operation['path']
-            value = operation['value']
-            if path.startswith('emails[type eq "work"]'):
-                path = path.replace('emails[type eq "work"].value', 'emails/0')
-                value = {'type': 'work', 'value': value, 'primary': True}
-            if path.startswith('addresses[type eq "work"]'):
-                path = path.replace('addresses[type eq "work"].locality', 'addresses/0')
-                value = {'type': 'work', 'locality': value}
-
-            data[path.replace('/', '.')] = value
-
-        return data.to_python()
+        return data

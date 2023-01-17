@@ -5,10 +5,9 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render
 from django.template.context import RequestContext
 from rest_framework_jwt.views import refresh_jwt_token
-from bluebottle.bb_accounts.views import AxesObtainJSONWebToken
+from bluebottle.bb_accounts.views import AxesObtainJSONWebToken, AuthView
 
-
-from bluebottle.auth.views import GetAuthToken
+from bluebottle.auth.views import GetAuthToken, AuthFacebookView
 from bluebottle.utils.views import LoginWithView
 
 urlpatterns = [
@@ -87,6 +86,9 @@ urlpatterns = [
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
+    # JSON-API Web Token based authentication for Django REST framework
+    url(r'^api/auth$', AuthView.as_view(), name='auth'),
+
     # Social token authorization
     url(r'^api/social/',
         include('bluebottle.social.urls.api')),
@@ -124,6 +126,9 @@ urlpatterns += [
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),
+    url(r'^api/auth/facebook$',
+        AuthFacebookView.as_view()),
+
 
     # Needed for the self-documenting API in Django Rest Framework.
     url(r'^api-auth/', include('rest_framework.urls',

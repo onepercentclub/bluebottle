@@ -58,6 +58,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.states.submit()
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
+        self.funding.save()
         donation = DonorFactory.create(
             activity=self.funding,
             amount=Money(70, 'EUR')
@@ -75,6 +76,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
+
         self.assertContains(response, 'recalculate')
         recalculate_url = reverse('admin:funding_funding_state_transition',
                                   args=(self.funding.id, 'states', 'recalculate'))

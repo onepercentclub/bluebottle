@@ -98,7 +98,8 @@ class InitiativeMapList(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
+        cache_key = '{}.initiative_preview_data'.format(connection.tenant.schema_name)
+        cache.set(cache_key, None)
         data = cache.get(cache_key)
         if not data:
             queryset = self.get_queryset().order_by('created')

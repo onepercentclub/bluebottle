@@ -1,14 +1,12 @@
 import json
-from datetime import timedelta
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
-from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, BudgetLineFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, \
     StripePaymentFactory, StripePayoutAccountFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -30,17 +28,19 @@ class TestPayoutApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.finance_user)
 
-        yesterday = now() - timedelta(days=1)
         payout_account = StripePayoutAccountFactory.create(status='verified')
         self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
 
-        self.funding = FundingFactory.create(
-            deadline=yesterday,
-            status='open'
-        )
+        self.funding = FundingFactory.create()
 
         self.funding.bank_account = self.bank_account
-        self.funding.save()
+
+        BudgetLineFactory.create_batch(2, activity=self.funding)
+
+        self.funding.initiative.states.submit()
+        self.funding.initiative.states.approve(save=True)
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         donations = DonorFactory.create_batch(
             4,

@@ -113,6 +113,10 @@ class TimeBasedActivity(Activity):
         return self.participants.filter(status__in=('accepted', 'succeeded'))
 
     @property
+    def succeeded_contributor_count(self):
+        return self.accepted_participants.count() + self.deleted_successful_contributors
+
+    @property
     def durations(self):
         return TimeContribution.objects.filter(
             contributor__activity=self
@@ -705,7 +709,7 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        SlotParticipant, null=True, blank=True, related_name='contributions', on_delete=models.CASCADE
+        SlotParticipant, null=True, blank=True, related_name='contributions', on_delete=models.SET_NULL
     )
 
     class JSONAPIMeta:
@@ -716,8 +720,12 @@ class TimeContribution(Contribution):
         verbose_name_plural = _("Contributions")
 
     def __str__(self):
-        return _("Contribution {name} {date}").format(
-            name=self.contributor.user,
+        if self.contributor:
+            return _("Contribution {name} {date}").format(
+                name=self.contributor.user,
+                date=self.start.date() if self.start else ''
+            )
+        return _("Contribution {date}").format(
             date=self.start.date() if self.start else ''
         )
 

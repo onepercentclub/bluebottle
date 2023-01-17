@@ -235,7 +235,7 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'bluebottle.auth.password_validation.CustomMinimumLengthValidator',
         'OPTIONS': {
             'min_length': 8,
         }

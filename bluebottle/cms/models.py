@@ -1,6 +1,8 @@
 from adminsortable.fields import SortableForeignKey
 from adminsortable.models import SortableMixin
+from colorfield.fields import ColorField
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItem
@@ -581,9 +583,83 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
+
+    def validate_file_extension(value):
+        import os
+        ext = os.path.splitext(value.name)[1]
+        valid_extensions = ['.woff2']
+        if ext not in valid_extensions:
+            raise ValidationError(u'File not supported!')
+
+    action_color = ColorField(
+        _('Action colour'), null=True, blank=True,
+        help_text=_(
+            'Colour for action buttons and links'
+        )
+    )
+    action_text_color = ColorField(
+        _('Action text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the action colour is quite light, you could set this to a darker colour for better contrast'
+        )
+    )
+    alternative_link_color = ColorField(
+        _('Alternative link colour'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'If the action colour is quite light, you can set this colour to use for text links'
+        )
+    )
+
+    description_color = ColorField(
+        _('Description colour'), null=True, blank=True,
+        help_text=_(
+            'Colour for descriptive and secondary buttons'
+        )
+    )
+    description_text_color = ColorField(
+        _('Description text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the description colour is quite light, you could set this to a darker colour for better contrast'
+        )
+    )
+    footer_color = ColorField(
+        _('Footer colour'), null=True, blank=True,
+        default='#3b3b3b',
+        help_text=_(
+            'Colour for platform footer'
+        )
+    )
+    footer_text_color = ColorField(
+        _('Footer text colour'), null=True, blank=True,
+        default="#ffffff",
+        help_text=_(
+            'If the footer colour is quite light, you could set this to a darker colour for better contrast'
+        )
+    )
+
+    title_font = models.FileField(
+        _('Title font'), null=True, blank=True,
+        help_text=_(
+            'Font to use for titles. Should be .woff2 type'
+        ),
+        validators=[validate_file_extension]
+    )
+
+    body_font = models.FileField(
+        _('Body font'), null=True, blank=True,
+        help_text=_(
+            'Font to use for paragraph texts. Should be .woff2 type'
+        ),
+        validators=[validate_file_extension]
+    )
+
     contact_email = models.EmailField(null=True, blank=True)
-    contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
+    contact_phone = models.CharField(max_length=100, null=True, blank=True)
+
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
     powered_by_logo = models.ImageField(

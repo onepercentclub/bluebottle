@@ -15,6 +15,6 @@
 {% endblock %}
 
 {% block action %}
-<a href="{{site}}/signup/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}&segmentId={{custom_message.segment_id}}"
+<a href="{{site}}/auth/confirm/?token={{custom_message.token}}&email={{to.email}}&url={{custom_message.url}}&segmentId={{custom_message.segment_id}}"
        class="action-email">{% trans 'Create your password' context 'email' %}</a>
 {% endblock %}`

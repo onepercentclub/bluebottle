@@ -616,7 +616,7 @@ class StepsBlockSerializer(BaseBlockSerializer):
 class StatsLinkSerializer(CustomHyperlinkRelatedSerializer):
 
     def get_links(self, *args, **kwargs):
-        url = reverse('statistic-list')
+        url = reverse('statistics')
         obj = args[0]
         if obj.year:
             url += f'?year={obj.year}'

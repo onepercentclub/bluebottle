@@ -72,7 +72,7 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
         included_resources = ['impact_type']
 
 
-class StatisticSerializer(PolymorphicModelSerializer):
+class OldStatisticSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
         DatabaseStatisticSerializer,
@@ -85,3 +85,12 @@ class StatisticSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = ['impact_type']
+
+
+class StatisticSerializer(BaseStatisticSerializer):
+    class Meta(object):
+        model = DatabaseStatistic
+        fields = ('value', 'name', 'icon', 'sequence')
+
+    class JSONAPIMeta(object):
+        resource_name = 'statistics'

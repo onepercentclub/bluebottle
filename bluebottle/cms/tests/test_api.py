@@ -573,6 +573,29 @@ class HomeTestCase(BluebottleTestCase):
             '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
         )
 
+    def test_quotes(self):
+        block = QuotesContent.objects.create_for_placeholder(self.placeholder)
+        block.quotes.create(name='Ik zelf', quote="Leuk! Al zeg ik het zelf.")
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/quotes')
+
+        quotes_block = get_include(response, 'pages/blocks/quotes')
+        self.assertEqual(quotes_block['relationships']['quotes']['meta']['count'], 1)
+
+        quote = get_include(response, 'pages/blocks/quotes/quotes')
+
+        self.assertEqual(
+            quote['attributes']['name'],
+            'Ik zelf'
+        )
+        self.assertEqual(
+            quote['attributes']['quote'],
+            'Leuk! Al zeg ik het zelf.'
+        )
+
 
 class PageTestCase(BluebottleTestCase):
     """

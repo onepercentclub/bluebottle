@@ -19,9 +19,11 @@ from rest_framework import status
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent, ActivitiesContent
+    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent
 )
 from bluebottle.contentplugins.models import PictureItem
+from bluebottle.initiatives.tests.test_api import get_include
+from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
@@ -266,13 +268,13 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
 
-class HomePageTestCase(BluebottleTestCase):
+class OldHomePageTestCase(BluebottleTestCase):
     """
     Integration tests for the Home Page API.
     """
 
     def setUp(self):
-        super(HomePageTestCase, self).setUp()
+        super(OldHomePageTestCase, self).setUp()
         HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
@@ -483,6 +485,93 @@ class NewsItemTestCase(BluebottleTestCase):
         self.assertTrue(response.data['main_image'].startswith('/media/cache'))
         self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
         self.assertEqual(response.data['blocks'][0]['html'], html.html)
+
+
+class HomeTestCase(BluebottleTestCase):
+    """
+    Integration tests for the Home API.
+    """
+
+    def setUp(self):
+        super(HomeTestCase, self).setUp()
+        HomePage.objects.get(pk=1).delete()
+        self.page = HomePageFactory(pk=1)
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
+        self.url = reverse('home-detail')
+
+    def test_stats(self):
+        HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
+        ManualStatisticFactory.create(name='Trees planted', value=250, icon='trees')
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/stats')
+
+        stats_block = get_include(response, 'pages/blocks/stats')
+        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list')
+
+    def test_stats_with_year(self):
+        block = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
+        block.year = '2023'
+        block.save()
+        ManualStatisticFactory.create(name='Trees planted', value=250, icon='trees')
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/stats')
+
+        stats_block = get_include(response, 'pages/blocks/stats')
+        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list?year=2023')
+
+    def test_steps(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+        block.action_text = 'Here you go'
+        block.save()
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                StepFactory.create(
+                    block=block,
+                    header='test header',
+                    text='<a href="http://example.com">link</a>',
+                    image=image
+                )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/steps')
+
+        step_block = get_include(response, 'pages/blocks/steps')
+        self.assertEqual(step_block['attributes']['action-text'], 'Here you go')
+
+        step = get_include(response, 'pages/blocks/steps/steps')
+        self.assertEqual(step['attributes']['header'], 'test header')
+        self.assertEqual(step['attributes']['text'], '<a href="http://example.com">link</a>')
+
+    def test_steps_unsafe(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            StepFactory.create(
+                block=block,
+                header='test header',
+                text='<script src="http://example.com"></script>Some text',
+                image=image
+            )
+
+        response = self.client.get(self.url)
+
+        step = get_include(response, 'pages/blocks/steps/steps')
+        self.assertEqual(
+            step['attributes']['text'],
+            '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+        )
 
 
 class PageTestCase(BluebottleTestCase):

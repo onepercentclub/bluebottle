@@ -4,70 +4,6 @@ from django.db import migrations
 from django.utils.text import slugify
 
 
-def migrate_extra_fields_to_segments(apps, schema_editor):
-    Member = apps.get_model('members', 'Member')
-    SegmentType = apps.get_model('segments', 'SegmentType')
-    Segment = apps.get_model('segments', 'Segment')
-    CustomMemberFieldSettings = apps.get_model('members', 'CustomMemberFieldSettings')
-    MemberPlatformSettings = apps.get_model('members', 'MemberPlatformSettings')
-    CustomMemberField = apps.get_model('members', 'CustomMemberField')
-
-    if CustomMemberFieldSettings.objects.count() == 1:
-        MemberPlatformSettings.objects.update(
-            create_segments=True,
-            enable_segments=True
-        )
-        department, _ = SegmentType.objects.get_or_create(
-            name='Department',
-            slug='department',
-        )
-        for member in Member.objects.all():
-            field = CustomMemberField.objects.filter(member=member, field__name='department').first()
-            if field and field.value:
-                segment, _ = Segment.objects.get_or_create(
-                    segment_type=department,
-                    slug=slugify(field.value),
-                    defaults={
-                        'alternate_names': [field.value],
-                        'name': field.value
-                    }
-                )
-                member.segments.add(segment)
-    if CustomMemberFieldSettings.objects.count() == 4:
-
-        city, _ = SegmentType.objects.get_or_create(
-            name='City',
-            slug='city',
-        )
-        country, _ = SegmentType.objects.get_or_create(
-            name='Country',
-            slug='country',
-        )
-        for member in Member.objects.all():
-            field = CustomMemberField.objects.filter(member=member, field__name='country').first()
-            if field and field.value:
-                my_country, _ = Segment.objects.get_or_create(
-                    segment_type=country,
-                    slug=slugify(field.value),
-                    defaults={
-                        'alternate_names': [field.value],
-                        'name': field.value
-                    }
-                )
-                member.segments.add(my_country)
-            field = CustomMemberField.objects.filter(member=member, field__name='city').first()
-            if field and field.value:
-                my_city, _ = Segment.objects.get_or_create(
-                    segment_type=city,
-                    slug=slugify(field.value),
-                    defaults={
-                        'alternate_names': [field.value],
-                        'name': field.value
-                    }
-                )
-                member.segments.add(my_city)
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -76,9 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            migrate_extra_fields_to_segments,
-            migrations.RunPython.noop
-        )
     ]
 

@@ -16,10 +16,6 @@ class Migration(migrations.Migration):
             model_name='suggestion',
             name='project',
         ),
-        migrations.RemoveField(
-            model_name='suggestion',
-            name='theme',
-        ),
         migrations.DeleteModel(
             name='Suggestion',
         ),

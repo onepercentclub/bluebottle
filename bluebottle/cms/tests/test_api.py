@@ -500,13 +500,16 @@ class HomeTestCase(BluebottleTestCase):
         self.url = reverse('home-detail')
 
     def test_stats(self):
-        HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
+        stat = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
         ManualStatisticFactory.create(name='Trees planted', value=250, icon='trees')
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/stats')
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': stat.pk, 'type': 'pages/blocks/stats'}
+        )
 
         stats_block = get_include(response, 'pages/blocks/stats')
         self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list')
@@ -520,7 +523,11 @@ class HomeTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/stats')
+
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': block.pk, 'type': 'pages/blocks/stats'}
+        )
 
         stats_block = get_include(response, 'pages/blocks/stats')
         self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list?year=2023')
@@ -543,7 +550,10 @@ class HomeTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/steps')
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': block.pk, 'type': 'pages/blocks/steps'}
+        )
 
         step_block = get_include(response, 'pages/blocks/steps')
         self.assertEqual(step_block['attributes']['action-text'], 'Here you go')
@@ -580,7 +590,10 @@ class HomeTestCase(BluebottleTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/quotes')
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': block.pk, 'type': 'pages/blocks/quotes'}
+        )
 
         quotes_block = get_include(response, 'pages/blocks/quotes')
         self.assertEqual(quotes_block['relationships']['quotes']['meta']['count'], 1)

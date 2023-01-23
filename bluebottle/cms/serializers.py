@@ -690,12 +690,11 @@ class HomeSerializer(ModelSerializer):
         BlockSerializer,
         read_only=True,
         many=True,
-        source='contentitems',
         model=ContentItem
     )
 
     def get_blocks(self, obj):
-        return obj.contentitems.all().translated()
+        return obj.content.contentitems.all().translated()
 
     class Meta(object):
         model = Placeholder
@@ -713,10 +712,6 @@ class HomeSerializer(ModelSerializer):
 
     included_serializers = {
         'blocks': 'bluebottle.cms.serializers.BlockSerializer',
-        'steps': 'bluebottle.cms.serializers.StepSerializer',
-        'links': 'bluebottle.cms.serializers.LinkSerializer',
-        'slides': 'bluebottle.cms.serializers.SlideSerializer',
-        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
     }
 
 

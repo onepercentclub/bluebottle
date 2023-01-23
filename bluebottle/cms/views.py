@@ -53,7 +53,7 @@ class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
 
     def get_object(self):
         obj = super(HomeDetail, self).get_object()
-        return obj.content
+        return obj
 
 
 class BlockDetail(JsonApiViewMixin, RetrieveAPIView):

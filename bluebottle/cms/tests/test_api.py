@@ -19,7 +19,7 @@ from rest_framework import status
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent
+    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
@@ -607,6 +607,26 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(
             quote['attributes']['quote'],
             'Leuk! Al zeg ik het zelf.'
+        )
+
+    def test_logos(self):
+        block = LogosContent.objects.create_for_placeholder(self.placeholder)
+        block.logos.create(link='http://google.com')
+        block.logos.create(link='http://facebook.com')
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/logos')
+
+        logos_block = get_include(response, 'pages/blocks/logos')
+        self.assertEqual(logos_block['relationships']['logos']['meta']['count'], 2)
+
+        logo = get_include(response, 'pages/blocks/logos/logos')
+
+        self.assertEqual(
+            logo['attributes']['link'],
+            'http://google.com'
         )
 
 

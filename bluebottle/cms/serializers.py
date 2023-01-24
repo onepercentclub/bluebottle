@@ -276,6 +276,9 @@ class LogoSerializer(serializers.ModelSerializer):
         model = Logo
         fields = ('id', 'image', 'link')
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/logos/logos'
+
 
 class LogosContentSerializer(serializers.ModelSerializer):
     logos = LogoSerializer(many=True)
@@ -656,6 +659,23 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class LogosBlockSerializer(BaseBlockSerializer):
+    logos = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = LogosContent
+        fields = ('id', 'logos', 'type', 'title', 'sub_title')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/logos'
+        included_resources = [
+            'logos'
+        ]
+
+
 class BlockSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
@@ -665,7 +685,8 @@ class BlockSerializer(PolymorphicModelSerializer):
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
-        QuotesBlockSerializer
+        QuotesBlockSerializer,
+        LogosBlockSerializer,
     ]
 
     class Meta:
@@ -673,7 +694,7 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides'
+            'links', 'steps', 'quotes', 'slides', 'logos'
         ]
 
     included_serializers = {
@@ -681,6 +702,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'logos': 'bluebottle.cms.serializers.LogoSerializer',
     }
 
 
@@ -708,10 +730,16 @@ class HomeSerializer(ModelSerializer):
             'blocks.links',
             'blocks.slides',
             'blocks.quotes',
+            'blocks.logos',
         ]
 
     included_serializers = {
         'blocks': 'bluebottle.cms.serializers.BlockSerializer',
+        'steps': 'bluebottle.cms.serializers.StepSerializer',
+        'links': 'bluebottle.cms.serializers.LinkSerializer',
+        'slides': 'bluebottle.cms.serializers.SlideSerializer',
+        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'logos': 'bluebottle.cms.serializers.LogoSerializer',
     }
 
 

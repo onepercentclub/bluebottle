@@ -522,6 +522,9 @@ class LogosContent(TitledContent):
     def __str__(self):
         return str(_('Logos'))
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/logos'
+
 
 class ContentLink(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LinksContent', related_name='links', on_delete=models.CASCADE)

@@ -10,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext as _
+from django.utils.encoding import force_str
+
 from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
@@ -250,7 +252,7 @@ class PolymorphicManySerializerMethodResourceRelatedField(
         ]
 
         return [
-            {'type': serializer['type'], 'id': serializer['id']}
+            {'type': serializer['type'], 'id': force_str(serializer['id'])}
             for serializer in serializers
         ]
 

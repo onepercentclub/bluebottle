@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-11-23 16:04+0100\n"
-"PO-Revision-Date: 2022-11-23 15:17\n"
+"PO-Revision-Date: 2023-01-24 15:40\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -1824,11 +1824,11 @@ msgstr "Bekijk site"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:45
 msgid "Change password"
-msgstr ""
+msgstr "Wachtwoord aanpassen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:49
 msgid "Log out"
-msgstr ""
+msgstr "Uitloggen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:57
 #: bluebottle/settings/admin_dashboard.py:144 bluebottle/settings/base.py:673
@@ -2296,7 +2296,7 @@ msgstr "Tekst"
 
 #: bluebottle/cms/models.py:404
 msgid "Open in new tab"
-msgstr ""
+msgstr "Openen in nieuw tabblad"
 
 #: bluebottle/cms/models.py:424 bluebottle/cms/models.py:427
 msgid "Steps"
@@ -4476,11 +4476,11 @@ msgstr "Geef een doelbedrag op"
 #: bluebottle/funding_flutterwave/effects.py:10
 #: bluebottle/funding_flutterwave/states.py:21
 msgid "Migrate to Lipisha account"
-msgstr ""
+msgstr "Migreren naar Lipisha account"
 
 #: bluebottle/funding_flutterwave/effects.py:29
 msgid "Create a new Lipisha account based on this bank account."
-msgstr ""
+msgstr "Maak een nieuw Lipisha-account aan op basis van deze bankrekening."
 
 #: bluebottle/funding_flutterwave/models.py:155
 msgid "flutterwave account"
@@ -4512,29 +4512,29 @@ msgstr "Flutterwave bankrekeningen"
 
 #: bluebottle/funding_flutterwave/states.py:20
 msgid "Migrate to Lipisha"
-msgstr ""
+msgstr "Migreren naar Lipisha"
 
 #: bluebottle/funding_flutterwave/templates/admin/migrate_to_lipisha_effect.html:2
 #: bluebottle/funding_lipisha/templates/admin/generate_lipisha_accounts_effect.html:2
 msgid "Generate Lipisha Accounts"
-msgstr ""
+msgstr "Lipisha accounts genereren"
 
 #: bluebottle/funding_flutterwave/templates/admin/migrate_to_lipisha_effect.html:5
 #: bluebottle/funding_lipisha/templates/admin/generate_lipisha_accounts_effect.html:5
 msgid "Generate Lipisha accounts for"
-msgstr ""
+msgstr "Genereer Lipisha accounts voor"
 
 #: bluebottle/funding_lipisha/effects.py:9
 msgid "Generate Lipisha accounts"
-msgstr ""
+msgstr "Lipisha accounts genereren"
 
 #: bluebottle/funding_lipisha/effects.py:31
 msgid "Generate Lipisha accounts to receive a MPESA code."
-msgstr ""
+msgstr "Genereer Lipisha-accounts om een MPESA-code te ontvangen."
 
 #: bluebottle/funding_lipisha/models.py:17
 msgid "Use the Lipisha account name e.g. \"opc\""
-msgstr ""
+msgstr "Gebruik de Lipisha-accountnaam b.v. \"opc\""
 
 #: bluebottle/funding_lipisha/models.py:20
 msgid "Business Number"
@@ -5212,7 +5212,7 @@ msgstr "Verplicht initiatiefnemers om een partnerorganisatie op te geven bij het
 
 #: bluebottle/initiatives/models.py:291
 msgid "In initial search show all activities, not only upcoming."
-msgstr ""
+msgstr "Bij een eerste zoekopdracht worden alle activiteiten weergegeven, niet alleen aankomende."
 
 #: bluebottle/initiatives/models.py:296
 msgid "Allow activity managers to indicate the impact they make."
@@ -5513,11 +5513,11 @@ msgstr "Impact uren"
 
 #: bluebottle/members/admin.py:202
 msgid "Members are required to fill out the fields listed below after log in or when contributing to an activity."
-msgstr ""
+msgstr "Leden zijn verplicht om de hieronder vermelde velden in te vullen of wanneer ze bijdragen aan een activiteit."
 
 #: bluebottle/members/admin.py:205
 msgid "Members are required to fill out the fields listed below when contributing to an activity."
-msgstr ""
+msgstr "De leden zijn verplicht om de hieronder vermelde velden in te vullen wanneer zij een bijdrage leveren aan een activiteit."
 
 #: bluebottle/members/admin.py:208
 msgid "Required fields"
@@ -5626,11 +5626,11 @@ msgstr "Volledige naam"
 
 #: bluebottle/members/models.py:36
 msgid "After log in"
-msgstr ""
+msgstr "Na het inloggen"
 
 #: bluebottle/members/models.py:37
 msgid "When making a contribution"
-msgstr ""
+msgstr "Bij het leveren van een bijdrage"
 
 #: bluebottle/members/models.py:41
 msgid "Require login before accessing the platform"
@@ -5638,7 +5638,7 @@ msgstr "Verplicht om in te loggen voor toegang tot het platform"
 
 #: bluebottle/members/models.py:44
 msgid "Members can create initiatives"
-msgstr ""
+msgstr "Leden kunnen initiatieven creëren"
 
 #: bluebottle/members/models.py:49
 msgid "Leave empty if this feature won't be used."
@@ -5654,19 +5654,19 @@ msgstr "Stel het aantal maanden in dat uw fiscale jaar zal worden gecompenseerd.
 
 #: bluebottle/members/models.py:59
 msgid "Reminder Q1"
-msgstr ""
+msgstr "Herinneringen Q1"
 
 #: bluebottle/members/models.py:63
 msgid "Reminder Q2"
-msgstr ""
+msgstr "Herinneringen Q2"
 
 #: bluebottle/members/models.py:67
 msgid "Reminder Q3"
-msgstr ""
+msgstr "Herinneringen Q3"
 
 #: bluebottle/members/models.py:71
 msgid "Reminder Q4"
-msgstr ""
+msgstr "Herinneringen Q4"
 
 #: bluebottle/members/models.py:77
 msgid "Require verifying the user's email before signup"
@@ -5682,7 +5682,7 @@ msgstr "Beperk gebruikerssessie tot browsersessie"
 
 #: bluebottle/members/models.py:94
 msgid "When should the user be asked to complete their required profile fields?"
-msgstr ""
+msgstr "Wanneer moet de gebruiker worden gevraagd om zijn verplichte profielvelden in te vullen?"
 
 #: bluebottle/members/models.py:99
 msgid "Require users to consent to cookies"
@@ -5718,11 +5718,11 @@ msgstr "Verplicht leden om na het inloggen eenmalig onderstaande velden in te vo
 
 #: bluebottle/members/models.py:151
 msgid "Require members to enter their office location."
-msgstr ""
+msgstr "Vereis dat de gebruikers hun kantoor locatie opgeven."
 
 #: bluebottle/members/models.py:156
 msgid "Require members to enter their address."
-msgstr ""
+msgstr "Verplicht gebruikers om hun adres in te voeren."
 
 #: bluebottle/members/models.py:159
 msgid "Phone number"
@@ -5730,7 +5730,7 @@ msgstr "Telefoonnummer"
 
 #: bluebottle/members/models.py:161
 msgid "Require members to enter their phone number."
-msgstr ""
+msgstr "Verplicht gebruikers om hun telefoonnummer in te voeren."
 
 #: bluebottle/members/models.py:164
 msgid "Birthdate"
@@ -5738,7 +5738,7 @@ msgstr "Geboortedatum"
 
 #: bluebottle/members/models.py:166
 msgid "Require members to enter their date of birth."
-msgstr ""
+msgstr "Verplicht gebruikers om hun geboortedatum in te voeren."
 
 #: bluebottle/members/models.py:170
 msgid "Verify SSO data office location"
@@ -5774,11 +5774,11 @@ msgstr "Maandelijks overzicht van de activiteiten die overeenkomen met het profi
 
 #: bluebottle/members/models.py:216
 msgid "Receive reminder emails"
-msgstr ""
+msgstr "Herinneringen ontvangen"
 
 #: bluebottle/members/models.py:218
 msgid "User receives emails reminding them about their do good hours"
-msgstr ""
+msgstr "Gebruiker ontvangt e-mails die hen herinneren aan hun do-good uren"
 
 #: bluebottle/members/models.py:221 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
@@ -6121,7 +6121,11 @@ msgstr "Bericht aan"
 msgid "\n"
 "<p>Hi %(recipient_name)s,</p>\n\n"
 "<p>This is a test message!</p>\n"
-msgstr ""
+msgstr "\n"
+"Hi %(recipient_name)s,\n"
+"<p>\n"
+"Dit is een test bericht!\n"
+"</p>\n"
 
 #: bluebottle/notifications/templates/mails/test_messages/test_message.txt:5
 #, python-format
@@ -6419,11 +6423,11 @@ msgstr "Nieuw aangemaakte activiteiten erven de segmenten van de maker van de ac
 
 #: bluebottle/segments/models.py:32
 msgid "Visible"
-msgstr ""
+msgstr "Zichtbaar"
 
 #: bluebottle/segments/models.py:34
 msgid "Show segment on the activity detail page"
-msgstr ""
+msgstr "Toon segment op de activiteit detailpagina"
 
 #: bluebottle/segments/models.py:40
 msgid "Required for members"
@@ -6607,31 +6611,31 @@ msgstr "Deelnemers inzamelingsactie"
 
 #: bluebottle/settings/local.py:8
 msgid "Dutch"
-msgstr ""
+msgstr "Nederlands"
 
 #: bluebottle/settings/local.py:9 tenants/2scale/settings.py:33
 #: tenants/scale/settings.py:33
 msgid "French"
-msgstr ""
+msgstr "Frans"
 
 #: bluebottle/settings/local.py:10 tenants/2scale/settings.py:32
 #: tenants/action-against-corona/settings.py:30
 #: tenants/boost-your-business/settings.py:32 tenants/mars/settings.py:31
 #: tenants/scale/settings.py:32
 msgid "English"
-msgstr ""
+msgstr "Engels"
 
 #: bluebottle/settings/local.py:11
 msgid "Portugese"
-msgstr ""
+msgstr "Portugees"
 
 #: bluebottle/settings/local.py:12
 msgid "Spanish"
-msgstr ""
+msgstr "Spaans"
 
 #: bluebottle/settings/local.py:13
 msgid "German"
-msgstr ""
+msgstr "Duits"
 
 #: bluebottle/slides/admin.py:29
 msgid "Contents"
@@ -6985,7 +6989,7 @@ msgstr "Je evenement \"{title}\" vindt over een aantal dagen plaats!"
 #, python-brace-format
 msgctxt "email"
 msgid "The team activity \"{title}\" will take place in a few days!"
-msgstr ""
+msgstr "De team-activiteit \"{title}\" vindt over enkele dagen plaats!"
 
 #: bluebottle/time_based/messages.py:232 bluebottle/time_based/messages.py:255
 #, python-brace-format
@@ -6997,7 +7001,7 @@ msgstr "De details van activiteit \"{title}\" zijn veranderd"
 #, python-brace-format
 msgctxt "email"
 msgid "The details of the team activity \"{title}\" have changed"
-msgstr ""
+msgstr "De details van team-activiteit \"{title}\" zijn veranderd"
 
 #: bluebottle/time_based/messages.py:313
 #, python-brace-format
@@ -7051,7 +7055,7 @@ msgstr "Je hebt je aangemeld voor de activiteit \"{title}\""
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined {team_name} for \"{title}\""
-msgstr ""
+msgstr "Je hebt je aangemeld bij {team_name} voor \"{title}\""
 
 #: bluebottle/time_based/messages.py:603
 #, python-brace-format
@@ -7118,7 +7122,7 @@ msgstr "aanwezigheidslimiet"
 
 #: bluebottle/time_based/models.py:38
 msgid "Number of participants or teams that can join"
-msgstr ""
+msgstr "Aantal deelnemers of teams die kunnen deelnemen"
 
 #: bluebottle/time_based/models.py:42 bluebottle/time_based/models.py:238
 #: bluebottle/time_based/models.py:407
@@ -7144,7 +7148,7 @@ msgstr "selecteer deelnemers"
 
 #: bluebottle/time_based/models.py:72
 msgid "Activity manager accepts or rejects participants or teams"
-msgstr ""
+msgstr "Activiteitenmanager accepteert of verwerpt deelnemers of teams"
 
 #: bluebottle/time_based/models.py:76
 msgid "Preparation time"
@@ -7221,23 +7225,23 @@ msgstr "einddatum en -tijd"
 
 #: bluebottle/time_based/models.py:505
 msgid "period activity slot"
-msgstr ""
+msgstr "periode activiteit slot"
 
 #: bluebottle/time_based/models.py:506
 msgid "period activity slots"
-msgstr ""
+msgstr "periode activiteit slots"
 
 #: bluebottle/time_based/models.py:541
 msgid "team slot"
-msgstr ""
+msgstr "team slot"
 
 #: bluebottle/time_based/models.py:542
 msgid "team slots"
-msgstr ""
+msgstr "team slots"
 
 #: bluebottle/time_based/models.py:556
 msgid "Time slot for {}"
-msgstr ""
+msgstr "Tijdsslot voor {}"
 
 #: bluebottle/time_based/models.py:591
 msgid "Participant on a date"
@@ -7322,7 +7326,7 @@ msgstr "Stuur een herinnering vijf dagen voordat het evenement begint."
 
 #: bluebottle/time_based/periodic_tasks.py:173
 msgid "Send a reminder five days before the team activity slot."
-msgstr ""
+msgstr "Stuur een herinnering vijf dagen voor het team activiteit slot."
 
 #: bluebottle/time_based/states.py:18 bluebottle/time_based/states.py:158
 msgid "full"
@@ -7770,14 +7774,17 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "Some details of the team activity you are a part of have changed:\n"
-msgstr ""
+msgstr "\n"
+"Enkele details van de teamactiviteit waarvan u deel uitmaakt, zijn gewijzigd:\n"
 
 #: bluebottle/time_based/templates/mails/messages/changed_team_date.html:10
 msgctxt "email"
 msgid "\n"
 "        Updated details below:\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Bijgewerkte details hieronder:\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/changed_team_date.html:24
 msgctxt "email"

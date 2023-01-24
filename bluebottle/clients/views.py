@@ -32,6 +32,7 @@ class SettingsView(views.APIView):
                         'session_only': member_settings['session_only'],
                         'email_domain': member_settings['email_domain'],
                         'confirm_signup': member_settings['confirm_signup'],
+                        'consent_link': member_settings['consent_link'],
                     }
                 }
             }

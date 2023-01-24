@@ -82,18 +82,7 @@ class StatisticAdmin(SortableAdmin, PolymorphicParentModelAdmin):
                 return tuple(x for x in self.child_models if x != ImpactStatistic)
         return self.child_models
 
-    # We need this because Django Polymorphic uses a calculated property to
-    # override change_list_template instead of using get_changelist_template.
-    # adminsortable tries to set that value and then fails.
-    _change_list_template = 'adminsortable/change_list_with_sort_link.html'
-
-    @property
-    def change_list_template(self):
-        return self._change_list_template
-
-    @change_list_template.setter
-    def change_list_template(self, value):
-        self._change_list_template = value
+    change_list_template = 'adminsortable/change_list_with_sort_link.html'
 
     def name(self, obj):
         for child in self.child_models:

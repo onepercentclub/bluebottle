@@ -26,7 +26,7 @@ def data_retention_wallposts_task():
                 history = now() - relativedelta(months=settings.retention_anonymize)
                 wallposts = Wallpost.objects.filter(created__lt=history, author__isnull=False)
                 if wallposts.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wallposts.count} wallposts')
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {wallposts.count()} wallposts')
                     wallposts.update(
                         ip_address=None,
                         author=None,
@@ -45,7 +45,7 @@ def data_retention_wallposts_task():
                         except AttributeError:
                             pass
 
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wallposts.count} wallposts')
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {wallposts.count()} wallposts')
                     SystemWallpost.objects.filter(created__lt=history).all().delete()
                     MediaWallpost.objects.filter(created__lt=history).all().delete()
                     TextWallpost.objects.filter(created__lt=history).all().delete()

@@ -6,7 +6,7 @@ from celery.task import periodic_task
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count
 from django.utils.timezone import now
-from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll
+from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll, Term, Terms
 
 from bluebottle.activities.documents import activity
 from bluebottle.activities.messages import MatchingActivitiesNotification, DoGoodHoursReminderQ1Notification, \
@@ -23,7 +23,22 @@ logger = logging.getLogger('bluebottle')
 def get_matching_activities(user):
     search = activity.search().filter(
         Q('terms', status=['open', 'running']) &
-        Q('terms', type=['dateactivity', 'periodactivity'])
+        Q('terms', type=['dateactivity', 'periodactivity']) &
+        ~Nested(
+            path='segments',
+            query=(
+                Term(segments__closed=True)
+            )
+        ) | Nested(
+            path='segments',
+            query=(
+                Terms(
+                    segments__id=[
+                        segment.id for segment in user.segments.filter(closed=True)
+                    ]
+                )
+            )
+        )
     )
 
     query = ConstantScore(
@@ -174,7 +189,7 @@ def data_retention_contribution_task():
                 Activity.objects.filter(created__lt=history, has_deleted_data=False).update(has_deleted_data=True)
                 contributors = Contributor.objects.filter(created__lt=history, user__isnull=False)
                 if contributors.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {contributors.count} contributors')
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} anonymizing {contributors.count()} contributors')
                     contributors.update(
                         user=None,
                     )
@@ -183,7 +198,7 @@ def data_retention_contribution_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
                 if contributors.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count} contributors')
+                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors')
                     successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
                         annotate(total=Count('activity_id')).order_by('activity_id')
                     for success in successful:

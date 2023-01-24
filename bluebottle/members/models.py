@@ -190,7 +190,10 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=None,
         null=True,
         blank=True,
-        help_text=_('Set the number of months after which user data will be anonymised.')
+        help_text=_(
+            'Set the number of months after which user data will be anonymised. '
+            'Leave the field empty or with ‘0’ if you do not wish to anonymise user data.'
+        )
 
     )
 
@@ -199,7 +202,10 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=None,
         null=True,
         blank=True,
-        help_text=_('Set the number of months after which user data will be deleted.')
+        help_text=_(
+            'Set the number of months after which user data will be deleted. '
+            'Leave the field empty or with ‘0’ if you do not wish to delete user data.'
+        )
 
     )
 

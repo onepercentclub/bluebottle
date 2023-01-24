@@ -413,5 +413,5 @@ def connect_to_segments(sender, instance, created, **kwargs):
     USER_MODEL = get_user_model()
     if isinstance(instance, USER_MODEL) and '@' in instance.email:
         user_email_domain = instance.email.split('@')[1]
-        for segment in Segment.objects.filter(email_domains__contains=[user_email_domain]).all():
+        for segment in Segment.objects.filter(email_domains__icontains=user_email_domain).all():
             instance.segments.add(segment)

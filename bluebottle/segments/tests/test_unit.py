@@ -77,6 +77,19 @@ class MemberSegmentTestCase(BluebottleTestCase):
         )
         self.assertEqual(jan.segments.first(), None)
 
+    def test_new_user_added_to_segment_case_insensitive(self):
+        segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            email_domains=['leidse-ZANGERS.nl', 'wijngaarden.nl'],
+            closed=True
+        )
+
+        mart = BlueBottleUserFactory.create(
+            email='mart.hoogkamer@LEIDSE-zangers.nl'
+        )
+
+        self.assertEqual(mart.segments.first(), segment)
+
     def test_changing_user_added_to_segment(self):
         segment = SegmentFactory.create(
             segment_type=self.segment_type,

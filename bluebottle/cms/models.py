@@ -505,6 +505,9 @@ class Logo(SortableMixin, models.Model):
     class Meta:
         ordering = ['sequence']
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/logos/logos'
+
 
 @python_2_unicode_compatible
 class LogosContent(TitledContent):

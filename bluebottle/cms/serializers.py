@@ -8,7 +8,7 @@ from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField, ResourceRelatedField
+from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -30,7 +30,7 @@ from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionIte
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import BaseStatistic
 from bluebottle.statistics.statistics import Statistics
-from bluebottle.utils.fields import SafeField
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, SafeField
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -708,12 +708,15 @@ class BlockSerializer(PolymorphicModelSerializer):
 
 class HomeSerializer(ModelSerializer):
 
-    blocks = PolymorphicResourceRelatedField(
+    blocks = PolymorphicSerializerMethodResourceRelatedField(
         BlockSerializer,
         read_only=True,
         many=True,
-        source='contentitems'
+        model=ContentItem
     )
+
+    def get_blocks(self, obj):
+        return obj.content.contentitems.all().translated()
 
     class Meta(object):
         model = Placeholder

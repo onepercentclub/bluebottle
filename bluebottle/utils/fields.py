@@ -245,7 +245,14 @@ class PolymorphicManySerializerMethodResourceRelatedField(
         # self.child_relation.bind(field_name="", parent=self)
 
     def to_representation(self, value):
-        return [self.polymorphic_serializer(item).to_representation(item) for item in value]
+        serializers = [
+            self.polymorphic_serializer(item).to_representation(item) for item in value
+        ]
+
+        return [
+            {'type': serializer['type'], 'id': serializer['id']}
+            for serializer in serializers
+        ]
 
 
 class PolymorphicSerializerMethodResourceRelatedField(

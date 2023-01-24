@@ -51,10 +51,6 @@ class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = HomePage.objects.all()
     serializer_class = HomeSerializer
 
-    def get_object(self):
-        obj = super(HomeDetail, self).get_object()
-        return obj.content
-
 
 class BlockDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = ContentItem.objects.all()

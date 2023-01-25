@@ -485,6 +485,9 @@ class CategoriesContent(TitledContent):
     def __str__(self):
         return str(_('Categories'))
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories'
+
 
 class Logo(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LogosContent', related_name='logos', on_delete=models.CASCADE)

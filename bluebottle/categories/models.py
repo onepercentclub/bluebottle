@@ -71,6 +71,9 @@ class Category(TranslatableModel):
             ('api_read_category', 'Can view categories through API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories/categories'
+
     def __str__(self):
         return self.title
 

@@ -247,9 +247,6 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
         model = CategoriesContent
         fields = ('id', 'type', 'title', 'sub_title', 'categories',)
 
-    class JSONAPIMeta:
-        resource_name = 'pages/blocks/categories'
-
 class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField('200x200', crop='center')
     text = SafeField(required=False, allow_blank=True)
@@ -661,6 +658,26 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class CategoriesBlockSerializer(serializers.ModelSerializer):
+    categories = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = CategoriesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'categories')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories'
+        included_resources = [
+            'categories'
+        ]
+
+    included_serializers = {
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
+    }
+
 class LogosBlockSerializer(BaseBlockSerializer):
     logos = ResourceRelatedField(
         many=True,
@@ -688,7 +705,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StatsBlockSerializer,
         QuotesBlockSerializer,
         LogosBlockSerializer,
-        CategoriesContentSerializer
+        CategoriesBlockSerializer
     ]
 
     class Meta:

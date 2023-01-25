@@ -247,6 +247,8 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
         model = CategoriesContent
         fields = ('id', 'type', 'title', 'sub_title', 'categories',)
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories'
 
 class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField('200x200', crop='center')
@@ -675,7 +677,6 @@ class LogosBlockSerializer(BaseBlockSerializer):
             'logos'
         ]
 
-
 class BlockSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
@@ -687,6 +688,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StatsBlockSerializer,
         QuotesBlockSerializer,
         LogosBlockSerializer,
+        CategoriesContentSerializer
     ]
 
     class Meta:
@@ -694,7 +696,7 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides', 'logos'
+            'links', 'steps', 'quotes', 'slides', 'logos', 'categories'
         ]
 
     included_serializers = {
@@ -703,6 +705,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
 
 
@@ -731,6 +734,7 @@ class HomeSerializer(ModelSerializer):
             'blocks.slides',
             'blocks.quotes',
             'blocks.logos',
+            'blocks.categories',
         ]
 
     included_serializers = {
@@ -740,6 +744,7 @@ class HomeSerializer(ModelSerializer):
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
 
 

@@ -10,6 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
+from rest_framework_json_api.serializers import Serializer, ModelSerializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -67,6 +68,55 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
             msg = _('Must include "{username_field}" and "password".')
             msg = msg.format(username_field=self.username_field)
             raise serializers.ValidationError(msg)
+
+
+class PasswordValidator(object):
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        if serializer_field.parent.instance:
+            user = serializer_field.parent.instance
+        else:
+            user = None
+
+        password_validation.validate_password(value, user)
+        return value
+
+
+# Thanks to Neamar Tucote for this code:
+# https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
+class PasswordField(serializers.CharField):
+    """ Special field to update a password field. """
+    widget = forms.widgets.PasswordInput
+    hidden_password_string = '********'
+
+    def __init__(self, validate=True, **kwargs):
+        super(PasswordField, self).__init__(**kwargs)
+        if validate:
+            validator = PasswordValidator()
+            self.validators.append(validator)
+
+    def to_representation(self, value):
+        """ Hide hashed-password in API display. """
+        return self.hidden_password_string
+
+
+class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['email'] = serializers.CharField(
+            required=True
+        )
+    email = serializers.CharField(required=True)
+    password = PasswordField(required=True, validate=False)
+    token = serializers.CharField(read_only=True)
+
+    class Meta:
+        fields = ['token', 'email', 'password']
+
+    class JSONAPIMeta(object):
+        resource_name = 'auth/token'
 
 
 class PrivateProfileMixin(object):
@@ -144,6 +194,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
     User preview serializer that respects anonymization_age
     """
+
     def __init__(self, *args, **kwargs):
         self.hide_last_name = kwargs.pop('hide_last_name', None)
 
@@ -309,7 +360,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
         )
 
 
-class UserActivitySerializer(serializers.ModelSerializer):
+class OldUserActivitySerializer(serializers.ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
@@ -321,6 +372,23 @@ class UserActivitySerializer(serializers.ModelSerializer):
             'id',
             'path',
         )
+
+
+class UserActivitySerializer(ModelSerializer):
+    """
+    Serializer for user activity (log paths)
+    """
+    path = TruncatedCharField(length=200, required=False)
+
+    class Meta(object):
+        model = UserActivity
+        fields = (
+            'id',
+            'path',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'users/activities'
 
 
 class ManageProfileSerializer(UserProfileSerializer):
@@ -381,36 +449,6 @@ class UserDataExportSerializer(UserProfileSerializer):
         )
 
 
-class PasswordValidator(object):
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        if serializer_field.parent.instance:
-            user = serializer_field.parent.instance
-        else:
-            user = None
-
-        password_validation.validate_password(value, user)
-        return value
-
-
-# Thanks to Neamar Tucote for this code:
-# https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
-class PasswordField(serializers.CharField):
-    """ Special field to update a password field. """
-    widget = forms.widgets.PasswordInput
-    hidden_password_string = '********'
-
-    def __init__(self, **kwargs):
-        super(PasswordField, self).__init__(**kwargs)
-        validator = PasswordValidator()
-        self.validators.append(validator)
-
-    def to_representation(self, value):
-        """ Hide hashed-password in API display. """
-        return self.hidden_password_string
-
-
 class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
@@ -420,6 +458,13 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
+
+    def create(self, validated_data):
+        (instance, _) = BB_USER_MODEL.objects.get_or_create(
+            email__iexact=validated_data['email'],
+            defaults={'is_active': False, 'email': validated_data['email']}
+        )
+        return instance
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -438,7 +483,8 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
         if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
             raise serializers.ValidationError(
-                'a member with this email address already exists.', code='duplicate-facebook',
+                'A member with this email address already exists.',
+                code='email_in_use',
             )
         return email
 
@@ -472,7 +518,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
 class PasswordStrengthSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    email = serializers.CharField(write_only=True, allow_blank=True)
+    email = serializers.CharField(write_only=True, allow_blank=True, required=False)
     strength = serializers.SerializerMethodField()
 
     def validate(self, data):
@@ -481,7 +527,7 @@ class PasswordStrengthSerializer(serializers.ModelSerializer):
         return data
 
     def get_strength(self, data):
-        strength, _ = passwordmeter.test(data['password'])
+        strength, _ = passwordmeter.test(self.validated_data['password'])
         return strength
 
     class Meta(object):
@@ -490,6 +536,67 @@ class PasswordStrengthSerializer(serializers.ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'password-strengths'
+
+
+class UniqueEmailValidator(validators.UniqueValidator):
+    message = _('A user with this email address already exists')
+
+    def __call__(self, value, serializer_field):
+        try:
+            return super().__call__(value, serializer_field)
+        except serializers.ValidationError:
+            user = BB_USER_MODEL.objects.get(email__iexact=value)
+            if user.social_auth.count() > 0:
+                code = 'social_account_unique'
+            else:
+                code = 'email_unique'
+
+            raise serializers.ValidationError(self.message, code=code)
+
+
+class MemberSignUpSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating users. This can only be used for creating
+    users (POST) and should not be used for listing,
+    editing or viewing users.
+    """
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueEmailValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
+    password = PasswordField(required=True, max_length=128)
+    token = serializers.CharField(source='get_jwt_token', read_only=True)
+
+    @property
+    def errors(self):
+        return super(MemberSignUpSerializer, self).errors
+
+    def validate(self, data):
+        settings = MemberPlatformSettings.objects.get()
+        if settings.confirm_signup:
+            raise serializers.ValidationError(
+                {'email': _('Signup requires a confirmation token.')}
+            )
+
+        if settings.closed:
+            raise serializers.ValidationError(
+                {'email': _('The platform is closed.')}
+            )
+
+        passwordmeter.test(data['password'])
+        data['password'] = make_password(data['password'])
+        return data
+
+    class Meta(object):
+        model = BB_USER_MODEL
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token', )
+
+    class JSONAPIMeta:
+        resource_name = 'auth/signup'
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -576,7 +683,7 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta(object):
-        fields = ('email',)
+        fields = ('id', 'email',)
 
     class JSONAPIMeta(object):
         resource_name = 'reset-tokens'
@@ -588,7 +695,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     jwt_token = serializers.CharField(read_only=True)
 
     class Meta(object):
-        fields = ('token', 'jwt_token', )
+        fields = ('token', 'jwt_token', 'password')
 
     class JSONAPIMeta(object):
         resource_name = 'reset-token-confirmations'

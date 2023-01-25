@@ -1029,6 +1029,8 @@ class ParticipantTriggerTestCase(object):
 
         captain = BlueBottleUserFactory.create()
 
+        captain = BlueBottleUserFactory.create()
+
         team_captain = self.participant_factory.create(
             activity=self.activity,
             user=captain

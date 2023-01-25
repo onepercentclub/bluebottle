@@ -19,10 +19,12 @@ class SettingsView(views.APIView):
         obj = get_public_properties(request)
 
         member_settings = obj['platform']['members']
+        content_settings = obj['platform']['content']
         if member_settings['closed'] and not request.user.is_authenticated:
             obj = {
                 'tenant': connection.tenant.client_name,
                 'platform': {
+                    'content': content_settings,
                     'members': {
                         'closed': member_settings['closed'],
                         'background': member_settings['background'],
@@ -30,6 +32,7 @@ class SettingsView(views.APIView):
                         'session_only': member_settings['session_only'],
                         'email_domain': member_settings['email_domain'],
                         'confirm_signup': member_settings['confirm_signup'],
+                        'consent_link': member_settings['consent_link'],
                     }
                 }
             }

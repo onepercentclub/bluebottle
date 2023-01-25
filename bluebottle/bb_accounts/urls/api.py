@@ -1,12 +1,12 @@
-from django.conf.urls import url
 
-from bluebottle.bb_accounts.views import UserActivityDetail
+from django.conf.urls import url
+from bluebottle.bb_accounts.views import UserActivityDetail, OldUserActivityDetail
 from bluebottle.bb_accounts.views import (
-    ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
+    ManageProfileDetail, UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
     PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
-    PasswordStrengthDetail,
+    PasswordStrengthDetail, MemberSignUp
 )
 
 # Public User API:
@@ -29,12 +29,15 @@ urlpatterns = [
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^current/?$', CurrentUser.as_view(), name='user-current'),
     url(r'^captcha$', CaptchaVerification.as_view(), name='captcha-verification'),
-    url(r'^activities/$', UserActivityDetail.as_view(), name='user-activity'),
+    url(r'^activities/$', OldUserActivityDetail.as_view(), name='old-user-activity'),
+    url(r'^user-activities/$', UserActivityDetail.as_view(), name='user-activity'),
     url(r'^email$', EmailSetView.as_view(), name='user-set-email'),
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),
     url(r'^logout$', Logout.as_view(), name='user-logout'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
     url(r'^passwordreset/confirm$', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
+    url(r'^members/?$', MemberSignUp.as_view(), name='member-signup'),
+    url(r'^member/current$', CurrentMemberDetail.as_view(), name='current-member-detail'),
     url(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
     url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
         name='manage-profile'),

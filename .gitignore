@@ -119,3 +119,7 @@ reef-prod-current.sql.bz2
 .envrc
 .pre-commit-config.yml
 
+# docker
+bluebottle-data
+elasticsearch-data
+postgres-data

@@ -156,4 +156,42 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
-    exclude = ('logo', 'favicon')
+
+    fieldsets = (
+        (
+            _('Contact'),
+            {
+                'fields': (
+                    'contact_email', 'contact_phone', 'start_page'
+                )
+            }
+        ),
+        (
+            _('Powered by'),
+            {
+                'fields': (
+                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo'
+                )
+            }
+        ),
+        (
+            _('Metadata'),
+            {
+                'fields': (
+                    'metadata_title', 'metadata_description', 'metadata_keywords'
+                )
+            }
+        ),
+        (
+            _('Styling'),
+            {
+                'fields': (
+                    'logo', 'favicon',
+                    'action_color', 'action_text_color', 'alternative_link_color',
+                    'description_color', 'description_text_color',
+                    'footer_color', 'footer_text_color',
+                    'title_font', 'body_font'
+                )
+            }
+        ),
+    )

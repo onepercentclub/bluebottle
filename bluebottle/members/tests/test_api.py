@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
+from bluebottle.members.serializers import MemberSignUpSerializer
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -24,7 +25,7 @@ from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import PlaceFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
     SlotParticipantFactory
@@ -238,6 +239,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         member = Member.objects.get(email=email)
         self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
         self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
+        self.assertTrue('/auth/confirm' in mail.outbox[0].body)
         self.assertFalse(member.is_active)
 
     def test_create_custom_url(self):
@@ -306,7 +308,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
+        self.assertEqual(response.json()['errors'][0]['detail'], 'A member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_already_active_different_case(self):
@@ -320,7 +322,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(response.json()['errors'][0]['detail'], 'a member with this email address already exists.')
+        self.assertEqual(response.json()['errors'][0]['detail'], 'A member with this email address already exists.')
         self.assertEqual(len(mail.outbox), 1)
 
     def test_create_correct_domain(self):
@@ -803,7 +805,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(b'too short' in response.content)
+        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
@@ -858,13 +860,13 @@ class UserLogoutTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class UserActivityTest(BluebottleTestCase):
+class OldUserActivityTest(BluebottleTestCase):
     def setUp(self):
-        super(UserActivityTest, self).setUp()
+        super(OldUserActivityTest, self).setUp()
 
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.user_activity_url = reverse('user-activity')
+        self.user_activity_url = reverse('old-user-activity')
 
     def test_log_activity(self):
         data = {'path': '/'}
@@ -886,6 +888,55 @@ class UserActivityTest(BluebottleTestCase):
     def test_log_activity_long_path(self):
         data = {'path': '/' + ('a' * 300)}
         response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+
+        activity = UserActivity.objects.get()
+
+        self.assertEqual(
+            len(activity.path), 200
+        )
+        self.assertTrue(activity.path.startswith('/aaaaaaa'))
+
+
+class UserActivityTest(BluebottleTestCase):
+    def setUp(self):
+        super(UserActivityTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_activity_url = reverse('user-activity')
+        self.client = JSONAPITestClient()
+
+    def prepare_data(self, path='/'):
+        return {
+            "data": {
+                "type": "users/activities",
+                "attributes": {
+                    'path': path
+                }
+            }
+        }
+
+    def test_log_activity(self):
+        data = self.prepare_data()
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        data = self.prepare_data('/pages/about')
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        data = self.prepare_data('/initiatives/activities/list')
+        response = self.client.post(self.user_activity_url, data, user=self.user)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserActivity.objects.count(), 3)
+
+    def test_log_activity_anonymous(self):
+        data = self.prepare_data()
+        response = self.client.post(self.user_activity_url, data)
+        self.assertEqual(response.status_code, 401)
+
+    def test_log_activity_long_path(self):
+        data = self.prepare_data('/' + ('a' * 300))
+        response = self.client.post(self.user_activity_url, data, user=self.user)
         self.assertEqual(response.status_code, 201)
 
         activity = UserActivity.objects.get()
@@ -918,7 +969,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'This password is too short. It must contain at least 8 characters.'
+            'Password should at least be 8 characters.'
         )
 
     def test_common(self):
@@ -1192,3 +1243,142 @@ class MemberProfileAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
         self.assertFalse(self.user.receive_reminder_emails)
+
+
+class CurrentMemberAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.url = reverse('current-member-detail')
+
+    def test_get_logged_in(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertEqual(self.response.json()['data']['id'], str(self.user.pk))
+        self.assertAttribute('first-name')
+        self.assertAttribute('last-name')
+        self.assertMeta('permissions')
+
+    def test_get_logged_out(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class MemberSignUpAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('member-signup')
+
+        self.serializer = MemberSignUpSerializer
+
+        self.defaults = {
+            'first_name': 'Test',
+            'last_name': 'Tester',
+            'email': 'test@example.com',
+            'password': '32940udsonde!0f09hf'
+        }
+        self.fields = self.defaults.keys()
+
+    def test_signup(self):
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertAttribute('first-name', self.defaults['first_name'])
+        self.assertAttribute('last-name', self.defaults['last_name'])
+        self.assertAttribute('email', self.defaults['email'])
+
+        token = self.response.json()['data']['attributes']['token']
+        current_user_response = self.client.get(
+            reverse('current-member-detail'), HTTP_AUTHORIZATION=f'JWT {token}'
+        )
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+        user = Member.objects.get(email=self.defaults['email'])
+        self.assertTrue(
+            user.check_password(self.defaults['password'])
+        )
+
+    def test_create_short_password(self):
+        self.defaults['password'] = 'blabla'
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'Password should at least be 8 characters.'
+        )
+        self.assertEqual(
+            error['source']['pointer'],
+            '/data/attributes/password'
+        )
+
+    def test_create_common_password(self):
+        self.defaults['password'] = 'welcome123'
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'This password is too common.'
+        )
+        self.assertEqual(
+            error['source']['pointer'],
+            '/data/attributes/password'
+        )
+
+    def test_conflict(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'])
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'email_unique')
+
+    def test_conflict_facebook(self):
+        user = BlueBottleUserFactory.create(email=self.defaults['email'])
+        user.social_auth.create(provider='facebook')
+        self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'social_account_unique')
+
+    def test_conflict_case_insensitive(self):
+        BlueBottleUserFactory.create(email=self.defaults['email'].title())
+        self.perform_create()
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['code'], 'email_unique')
+
+    def test_create_closed(self):
+        with self.closed_site():
+            self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        error = self.response.json()['errors'][0]
+        self.assertEqual(
+            error['detail'],
+            'The platform is closed.'
+        )
+
+    def test_create_confirmation_enabled(self):
+        MemberPlatformSettings.objects.create(confirm_signup=True)
+        with self.closed_site():
+            self.perform_create()
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        error = self.response.json()['errors'][0]
+        self.assertEqual(error['detail'], 'Signup requires a confirmation token.')
+        self.assertEqual(error['source']['pointer'], '/data/attributes/email')

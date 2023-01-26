@@ -512,12 +512,6 @@ class Logo(SortableMixin, models.Model):
 @python_2_unicode_compatible
 class LogosContent(TitledContent):
     type = 'logos'
-    action_text = models.CharField(max_length=40, null=True, blank=True)
-    action_link = models.CharField(
-        max_length=100,
-        default="/start-project",
-        blank=True, null=True
-    )
 
     class Meta:
         verbose_name = _('Logos')

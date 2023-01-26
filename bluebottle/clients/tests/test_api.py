@@ -261,6 +261,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         MemberPlatformSettings.objects.create(
             closed=True,
             require_consent=True,
+            consent_link="example.com"
         )
 
         user = BlueBottleUserFactory.create()
@@ -269,11 +270,13 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         response = self.client.get(self.settings_url, token=user_token)
         self.assertEqual(response.data['platform']['members']['closed'], True)
         self.assertEqual(response.data['platform']['members']['require_consent'], True)
+        self.assertEqual(response.data['platform']['members']['consent_link'], 'example.com')
 
     def test_member_platform_settings_closed_anonymous(self):
         MemberPlatformSettings.objects.create(
             closed=True,
             require_consent=True,
+            consent_link="example.com"
         )
 
         response = self.client.get(self.settings_url)
@@ -309,6 +312,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'background': '',
             'login_methods': ['password'],
             'session_only': False,
+            'consent_link': 'example.com',
             'email_domain': None,
             'confirm_signup': False
         }

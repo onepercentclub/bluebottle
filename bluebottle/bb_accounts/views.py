@@ -387,7 +387,7 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         try:
-            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
+            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'], is_active=True)
             context = {
                 'email': user.email,
                 'site': tenant_url(),

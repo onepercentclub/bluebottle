@@ -52,11 +52,19 @@ class CreateOverallTimeContributionEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
+
+        if activity.start > date.today():
+            start = activity.start
+        elif activity.deadline:
+            start = activity.deadline
+        else:
+            start = now()
+
         contribution = TimeContribution(
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=now()
+            start=start
         )
         contribution.execute_triggers(**self.options)
         contribution.save()

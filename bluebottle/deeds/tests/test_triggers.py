@@ -330,6 +330,8 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_initiate_passed_start(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.user):
             self.assertEffect(CreateEffortContribution)
@@ -339,6 +341,8 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.succeed, self.model.contributions.first()
             )
+            contribution = self.model.contributions.first()
+            self.assertEqual(contribution.start.date(), date.today())
 
     def test_initiate_team(self):
         self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams

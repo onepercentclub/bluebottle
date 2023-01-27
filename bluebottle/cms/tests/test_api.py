@@ -508,7 +508,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': stat.pk, 'type': 'pages/blocks/stats'}
+            {'id': str(stat.pk), 'type': 'pages/blocks/stats'}
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
@@ -526,7 +526,7 @@ class HomeTestCase(BluebottleTestCase):
 
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/stats'}
+            {'id': str(block.pk), 'type': 'pages/blocks/stats'}
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
@@ -552,7 +552,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/steps'}
+            {'id': str(block.pk), 'type': 'pages/blocks/steps'}
         )
 
         step_block = get_include(response, 'pages/blocks/steps')
@@ -592,7 +592,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/quotes'}
+            {'id': str(block.pk), 'type': 'pages/blocks/quotes'}
         )
 
         quotes_block = get_include(response, 'pages/blocks/quotes')

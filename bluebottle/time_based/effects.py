@@ -51,19 +51,12 @@ class CreateOverallTimeContributionEffect(Effect):
     template = 'admin/create_period_time_contribution.html'
 
     def post_save(self, **kwargs):
-        tz = get_current_timezone()
         activity = self.instance.activity
-
-        # Just create a contribution for the full period
-        start = activity.start or date.today()
-        end = activity.deadline if hasattr(activity, 'deadline') else None
-
         contribution = TimeContribution(
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=tz.localize(datetime.combine(start, datetime.min.time())),
-            end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
+            start=now()
         )
         contribution.execute_triggers(**self.options)
         contribution.save()

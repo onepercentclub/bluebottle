@@ -19,11 +19,13 @@ from rest_framework import status
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent
+    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
+    CategoriesContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
@@ -508,7 +510,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': stat.pk, 'type': 'pages/blocks/stats'}
+            {'id': str(stat.pk), 'type': 'pages/blocks/stats'}
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
@@ -526,7 +528,7 @@ class HomeTestCase(BluebottleTestCase):
 
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/stats'}
+            {'id': str(block.pk), 'type': 'pages/blocks/stats'}
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
@@ -552,7 +554,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/steps'}
+            {'id': str(block.pk), 'type': 'pages/blocks/steps'}
         )
 
         step_block = get_include(response, 'pages/blocks/steps')
@@ -592,7 +594,7 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['relationships']['blocks']['data'][0],
-            {'id': block.pk, 'type': 'pages/blocks/quotes'}
+            {'id': str(block.pk), 'type': 'pages/blocks/quotes'}
         )
 
         quotes_block = get_include(response, 'pages/blocks/quotes')
@@ -628,6 +630,19 @@ class HomeTestCase(BluebottleTestCase):
             logo['attributes']['link'],
             'http://google.com'
         )
+
+    def test_categories(self):
+        categories = CategoryFactory.create_batch(3)
+        block = CategoriesContent.objects.create_for_placeholder(self.placeholder)
+        block.categories.set(categories)
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/categories')
+
+        logos_block = get_include(response, 'pages/blocks/categories')
+        self.assertEqual(logos_block['relationships']['categories']['meta']['count'], 3)
 
 
 class PageTestCase(BluebottleTestCase):

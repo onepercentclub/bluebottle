@@ -247,6 +247,9 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
         model = CategoriesContent
         fields = ('id', 'type', 'title', 'sub_title', 'categories',)
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories/categories'
+
 
 class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField('200x200', crop='center')
@@ -659,6 +662,27 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class CategoriesBlockSerializer(BaseBlockSerializer):
+    categories = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = CategoriesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'categories')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/categories'
+        included_resources = [
+            'categories'
+        ]
+
+    included_serializers = {
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
+    }
+
+
 class LogosBlockSerializer(BaseBlockSerializer):
     logos = ResourceRelatedField(
         many=True,
@@ -687,6 +711,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StatsBlockSerializer,
         QuotesBlockSerializer,
         LogosBlockSerializer,
+        CategoriesBlockSerializer
     ]
 
     class Meta:
@@ -694,7 +719,7 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides', 'logos'
+            'links', 'steps', 'quotes', 'slides', 'logos', 'categories'
         ]
 
     included_serializers = {
@@ -703,6 +728,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
 
 
@@ -731,6 +757,7 @@ class HomeSerializer(ModelSerializer):
             'blocks.slides',
             'blocks.quotes',
             'blocks.logos',
+            'blocks.categories',
         ]
 
     included_serializers = {
@@ -740,6 +767,7 @@ class HomeSerializer(ModelSerializer):
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
 
 

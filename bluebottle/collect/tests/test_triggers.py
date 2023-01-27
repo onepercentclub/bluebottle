@@ -1,5 +1,7 @@
 from datetime import timedelta, date
 
+from django.utils.timezone import now
+
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
@@ -287,6 +289,22 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
             self.assertNoNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_initiate_started_activity(self):
+        self.defaults['activity'].start = now() - timedelta(days=700)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute(user=self.model.user):
+            self.assertEffect(CreateCollectContribution)
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            contribution = self.model.contributions.first()
+            self.assertEqual(contribution.start.date(), date.today())
 
     def test_initiate_other_user(self):
         self.model = self.factory.build(**self.defaults)

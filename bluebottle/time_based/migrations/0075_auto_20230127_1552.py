@@ -8,7 +8,6 @@ from django.db import migrations, connection
 from django.db.models import F
 
 
-
 def migrate_back_dated_contributions(apps, schema_editor):
 
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)

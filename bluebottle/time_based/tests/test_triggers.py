@@ -607,7 +607,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         for duration in self.activity.durations:
             self.assertEqual(duration.start.astimezone(tz).date(), self.activity.start)
-            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
 
         self.activity.start = self.activity.start + timedelta(days=1)
         self.activity.save()

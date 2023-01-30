@@ -52,11 +52,11 @@ class CreateOverallTimeContributionEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
-
+        tz = get_current_timezone()
         if activity.start > date.today():
-            start = activity.start
+            start = tz.localize(datetime.combine(activity.start, datetime.min.time()))
         elif activity.deadline:
-            start = activity.deadline
+            start = tz.localize(datetime.combine(activity.deadline, datetime.min.time()))
         else:
             start = now()
 

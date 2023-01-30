@@ -196,7 +196,7 @@ def start_is_not_passed(effect):
     """
     return (
         effect.instance.start is None or
-        effect.instance.start.date() > date.today()
+        effect.instance.start > date.today()
     )
 
 

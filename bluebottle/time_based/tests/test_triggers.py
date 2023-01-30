@@ -1826,7 +1826,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         )
 
     def test_join_passed_start_no_end(self):
-        self.activity.start = now() - timedelta(days=700)
+        self.activity.start = (now() - timedelta(days=700)).date()
         self.activity.registration_deadline = None
         self.activity.deadline = None
         self.activity.duration_period = 'overall'

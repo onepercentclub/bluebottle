@@ -228,10 +228,9 @@ class APITestCase(BluebottleTestCase):
             url = self.url
 
         self.user = user
-
         self.response = self.client.get(
             url,
-            user=user,
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
         )
 
     def perform_update(self, to_change=None, user=None):
@@ -263,7 +262,7 @@ class APITestCase(BluebottleTestCase):
         self.response = self.client.patch(
             self.url,
             json.dumps({'data': data}, cls=DjangoJSONEncoder),
-            user=user
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
         )
 
         if self.response.status_code == status.HTTP_200_OK:
@@ -284,7 +283,7 @@ class APITestCase(BluebottleTestCase):
         self.response = self.client.post(
             self.url,
             json.dumps(data, cls=DjangoJSONEncoder),
-            user=user
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
         )
 
         if (
@@ -301,7 +300,7 @@ class APITestCase(BluebottleTestCase):
         """
         self.response = self.client.delete(
             self.url,
-            user=user
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
         )
 
     def loadLinkedRelated(self, relationship, user=None):
@@ -323,7 +322,13 @@ class APITestCase(BluebottleTestCase):
         be tested
         """
         group = Group.objects.get(name='Anonymous')
-        model_name = self.serializer.Meta.model._meta.model_name
+        if hasattr(self, 'serializer'):
+            model_name = self.serializer.Meta.model._meta.model_name
+        elif hasattr(self, 'model'):
+            model_name = self.model._meta.model_name
+        else:
+            raise TypeError('Testcase is missing model or serializer attribute')
+
         try:
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')

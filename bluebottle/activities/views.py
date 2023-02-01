@@ -41,11 +41,11 @@ from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 
 class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityLocationSerializer
-    paginiation_class = None
+    pagination_class = None
     model = Activity
 
     permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
+        TenantConditionalOpenClose,
     )
 
     def get_queryset(self):

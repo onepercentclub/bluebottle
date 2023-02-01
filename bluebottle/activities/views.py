@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -10,6 +10,8 @@ from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
+    ActivityLocation,
+    ActivityLocationSerializer,
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
@@ -35,6 +37,45 @@ from bluebottle.utils.views import (
     CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
 )
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
+
+
+class ActivityLocationList(JsonApiViewMixin, ListAPIView):
+    serializer_class = ActivityLocationSerializer
+    paginiation_class = None
+    model = Activity
+
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    def get_queryset(self):
+        queryset = Activity.objects.filter(status__in=("succeeded", "open"))
+        collects = [
+            activity for activity
+            in queryset.annotate(position=F('collectactivity__location__position')).filter(position__isnull=False)
+        ]
+
+        periods = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__periodactivity__location__position')
+            ).filter(position__isnull=False)
+        ]
+
+        dates = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__dateactivity__slots__location__position')
+            ).filter(position__isnull=False)
+        ]
+
+        return [
+            ActivityLocation(
+                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}',
+                position=model.position,
+                activity=model,
+            ) for model in collects + dates + periods
+        ]
 
 
 class ActivityPreviewList(JsonApiViewMixin, ListAPIView):

@@ -2635,3 +2635,22 @@ class TeamMemberListViewAPITestCase(APITestCase):
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class ActivityLocationAPITestCase(APITestCase):
+    def setUp(self):
+        CollectActivityFactory.create(status='succeeded')
+        PeriodActivityFactory.create(status='succeeded')
+
+        date_activity = DateActivityFactory.create(status="succeeded")
+        date_activity.slots.add(DateActivitySlotFactory.create(activity=date_activity))
+
+        self.url = reverse('activity-location-list')
+
+    def test_get(self):
+        self.perform_get()
+
+        print(self.response.status_code, self.response.json())
+
+        import ipdb
+        ipdb.set_trace()

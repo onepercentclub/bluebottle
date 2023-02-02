@@ -554,13 +554,13 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
-    initiatives = CustomHyperlinkRelatedSerializer(
-        link="/api/initiatives/preview/"
+    activities = CustomHyperlinkRelatedSerializer(
+        link="/api/activities/locations"
     )
 
     class Meta(object):
         model = ProjectsMapContent
-        fields = BaseBlockSerializer.Meta.fields + ('initiatives', )
+        fields = BaseBlockSerializer.Meta.fields + ('activities', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'

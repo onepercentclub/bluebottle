@@ -289,7 +289,7 @@ class LogosContentSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = LogosContent
         fields = ('id', 'type', 'title', 'sub_title',
-                  'logos', 'action_text', 'action_link')
+                  'logos')
 
 
 class LinkSerializer(serializers.ModelSerializer):

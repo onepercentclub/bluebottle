@@ -104,6 +104,7 @@ class CurrentMemberSerializer(MemberSerializer):
     permissions = UserPermissionsSerializer(read_only=True)
 
     class Meta(MemberSerializer.Meta):
+        fields = MemberSerializer.Meta.fields + ('hours_spent', 'hours_planned')
         meta_fields = ('permissions', )
 
 

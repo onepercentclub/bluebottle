@@ -2,12 +2,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_json_api.views import AutoPrefetchMixin
-from rest_framework import response
-
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework import response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
@@ -23,6 +22,7 @@ from bluebottle.activities.serializers import (
     TeamTransitionSerializer,
 )
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
@@ -39,7 +39,6 @@ from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
     CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
 )
-from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 
 
 class ActivityLocationList(JsonApiViewMixin, ListAPIView):
@@ -76,12 +75,19 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).filter(position__isnull=False)
         ]
 
+        fundings = [
+            activity for activity
+            in queryset.annotate(
+                position=F('funding__initiative__place__position')
+            ).filter(position__isnull=False)
+        ]
+
         return [
             ActivityLocation(
                 pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}',
                 position=model.position,
                 activity=model,
-            ) for model in collects + dates + periods
+            ) for model in collects + dates + periods + fundings
         ]
 
 

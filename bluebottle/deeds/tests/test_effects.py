@@ -49,6 +49,7 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
     def test_create_no_start(self):
         self.activity.start = None
+        self.activity.end = None
         self.activity.save()
 
         participant = DeedParticipantFactory.create(activity=self.activity)

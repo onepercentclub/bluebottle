@@ -6,6 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework import response
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
@@ -47,6 +50,10 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         TenantConditionalOpenClose,
     )
+
+    @method_decorator(cache_page(3600))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Activity.objects.filter(status__in=("succeeded", "open"))

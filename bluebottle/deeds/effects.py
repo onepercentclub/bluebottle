@@ -21,6 +21,12 @@ class CreateEffortContribution(Effect):
                     self.instance.activity.start, datetime.min.replace(hour=12).time()
                 )
             )
+        elif self.instance.activity.end and self.instance.activity.end < start.date():
+            start = tz.localize(
+                datetime.combine(
+                    self.instance.activity.end, datetime.min.replace(hour=12).time()
+                )
+            )
         self.contribution = EffortContribution(
             contributor=self.instance,
             contribution_type=EffortContribution.ContributionTypeChoices.deed,

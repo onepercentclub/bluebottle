@@ -54,17 +54,17 @@ class CreateOverallTimeContributionEffect(Effect):
         activity = self.instance.activity
         tz = get_current_timezone()
         if activity.start and activity.start > date.today():
-            start = tz.localize(datetime.combine(activity.start, datetime.min.time()))
-        elif activity.deadline:
-            start = tz.localize(datetime.combine(activity.deadline, datetime.min.time()))
+            contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
+        elif activity.deadline and activity.deadline < date.today():
+            contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
         else:
-            start = now()
+            contribution_date = now()
 
         contribution = TimeContribution(
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=start
+            start=contribution_date
         )
         contribution.execute_triggers(**self.options)
         contribution.save()

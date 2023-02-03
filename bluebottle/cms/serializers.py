@@ -285,10 +285,11 @@ class LogoSerializer(serializers.ModelSerializer):
 
 class LogosContentSerializer(serializers.ModelSerializer):
     logos = LogoSerializer(many=True)
+    action_text = serializers.CharField(source='title')
 
     class Meta(object):
         model = LogosContent
-        fields = ('id', 'type', 'title', 'sub_title',
+        fields = ('id', 'type', 'action_text', 'sub_title',
                   'logos')
 
 

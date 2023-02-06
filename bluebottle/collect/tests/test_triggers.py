@@ -1,5 +1,7 @@
 from datetime import timedelta, date
 
+from bluebottle.activities.effects import CreateTeamEffect
+from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
@@ -7,31 +9,25 @@ from bluebottle.activities.messages import (
     TeamMemberRemovedMessage
 )
 from bluebottle.activities.models import Activity
-from bluebottle.activities.effects import CreateTeamEffect
-
+from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.messages import (
+    CollectActivityDateChangedNotification, ParticipantJoinedNotification
+)
+from bluebottle.collect.states import (
+    CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
+)
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
+from bluebottle.impact.tests.factories import ImpactGoalFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     TeamParticipantRemovedNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification,
     NewParticipantNotification
 )
-from bluebottle.test.utils import TriggerTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from bluebottle.activities.states import OrganizerStateMachine
-from bluebottle.activities.effects import SetContributionDateEffect
-
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-
-from bluebottle.collect.states import (
-    CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
-)
-from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
-from bluebottle.collect.messages import (
-    CollectActivityDateChangedNotification, ParticipantJoinedNotification
-)
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
-from bluebottle.impact.tests.factories import ImpactGoalFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
 class CollectTriggersTestCase(TriggerTestCase):
@@ -287,6 +283,54 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
             self.assertNoNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_initiate_started_activity(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=700)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute(user=self.model.user):
+            self.assertEffect(CreateCollectContribution)
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            contribution = self.model.contributions.first()
+            self.assertEqual(contribution.start.date(), date.today())
+
+    def test_initiate_future_activity(self):
+        self.defaults['activity'].start = date.today() + timedelta(days=700)
+        self.defaults['activity'].end = None
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute(user=self.model.user):
+            self.assertEffect(CreateCollectContribution)
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            contribution = self.model.contributions.first()
+            self.assertEqual(contribution.start.date(), self.defaults['activity'].start)
+
+    def test_initiate_ended_activity(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].end = date.today() - timedelta(days=8)
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute(user=self.model.user):
+            self.assertEffect(CreateCollectContribution)
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            contribution = self.model.contributions.first()
+            self.assertEqual(contribution.start.date(), self.defaults['activity'].end)
 
     def test_initiate_other_user(self):
         self.model = self.factory.build(**self.defaults)

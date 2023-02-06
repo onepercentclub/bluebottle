@@ -57,37 +57,43 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         queryset = Activity.objects.filter(status__in=("succeeded", "open"))
         collects = [
             activity for activity
-            in queryset.annotate(position=F('collectactivity__location__position')).filter(position__isnull=False)
+            in queryset.annotate(
+                position=F('collectactivity__location__position'),
+                location_id=F('collectactivity__location__pk')
+            ).filter(position__isnull=False)
         ]
 
         periods = [
             activity for activity
             in queryset.annotate(
-                position=F('timebasedactivity__periodactivity__location__position')
+                position=F('timebasedactivity__periodactivity__location__position'),
+                location_id=F('timebasedactivity__periodactivity__location__pk')
             ).filter(position__isnull=False)
         ]
 
         dates = [
             activity for activity
             in queryset.annotate(
-                position=F('timebasedactivity__dateactivity__slots__location__position')
+                position=F('timebasedactivity__dateactivity__slots__location__position'),
+                location_id=F('timebasedactivity__dateactivity__slots__location__pk')
             ).filter(position__isnull=False)
         ]
 
         fundings = [
             activity for activity
             in queryset.annotate(
-                position=F('funding__initiative__place__position')
+                position=F('funding__initiative__place__position'),
+                location_id=F('funding__initiative__place__pk')
             ).filter(position__isnull=False)
         ]
 
-        return [
+        return list(set(
             ActivityLocation(
-                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}',
+                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
                 position=model.position,
                 activity=model,
             ) for model in collects + dates + periods + fundings
-        ]
+        ))
 
 
 class ActivityPreviewList(JsonApiViewMixin, ListAPIView):

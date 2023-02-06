@@ -213,7 +213,7 @@ class APITestCase(BluebottleTestCase):
         """
         Perform a get request and save the result in `self.response`
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         if query:
             parsed_url = urlparse(self.url)
@@ -228,10 +228,13 @@ class APITestCase(BluebottleTestCase):
             url = self.url
 
         self.user = user
-        self.response = self.client.get(
-            url,
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-        )
+        if user:
+            self.response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.get(url)
 
     def perform_update(self, to_change=None, user=None):
         """
@@ -321,7 +324,6 @@ class APITestCase(BluebottleTestCase):
         Context manager that will make the platform closed, so that scenarios on closed platforms can
         be tested
         """
-        group = Group.objects.get(name='Anonymous')
         if hasattr(self, 'serializer'):
             model_name = self.serializer.Meta.model._meta.model_name
         elif hasattr(self, 'model'):

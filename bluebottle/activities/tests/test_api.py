@@ -2652,7 +2652,6 @@ class ActivityLocationAPITestCase(APITestCase):
 
     def test_get(self):
         self.perform_get()
-
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(4)
         self.assertAttribute('position')
@@ -2661,11 +2660,9 @@ class ActivityLocationAPITestCase(APITestCase):
     def test_get_closed_platform(self):
         with self.closed_site():
             self.perform_get()
-
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_closed_platform_logged_in(self):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
-
         self.assertStatus(status.HTTP_200_OK)

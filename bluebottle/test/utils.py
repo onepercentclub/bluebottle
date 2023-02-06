@@ -283,11 +283,17 @@ class APITestCase(BluebottleTestCase):
         if data is None:
             data = self.data
 
-        self.response = self.client.post(
-            self.url,
-            json.dumps(data, cls=DjangoJSONEncoder),
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-        )
+        if user:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+            )
 
         if (
             self.response.status_code == status.HTTP_201_CREATED and

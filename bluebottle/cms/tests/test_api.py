@@ -32,7 +32,7 @@ from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, Col
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
+    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
@@ -641,8 +641,21 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/categories')
 
-        logos_block = get_include(response, 'pages/blocks/categories')
-        self.assertEqual(logos_block['relationships']['categories']['meta']['count'], 3)
+        categories_block = get_include(response, 'pages/blocks/categories')
+        self.assertEqual(categories_block['relationships']['categories']['meta']['count'], 3)
+
+    def test_slides(self):
+        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        for sequence in range(0, 3):
+            block.slides.create()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/slides')
+
+        slides_block = get_include(response, 'pages/blocks/slides')
+        self.assertEqual(slides_block['relationships']['slides']['meta']['count'], 3)
 
 
 class PageTestCase(BluebottleTestCase):

@@ -395,11 +395,6 @@ class Slide(SortableMixin, models.Model):
 class SlidesContent(TitledContent):
     type = 'slides'
 
-    def slides(self):
-        return Slide.objects.published().filter(
-            language=self.language_code
-        )
-
     class Meta:
         verbose_name = _('Slides')
 

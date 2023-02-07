@@ -12,6 +12,7 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
@@ -2635,3 +2636,33 @@ class TeamMemberListViewAPITestCase(APITestCase):
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class ActivityLocationAPITestCase(APITestCase):
+    model = Activity
+
+    def setUp(self):
+        CollectActivityFactory.create(status='succeeded')
+        PeriodActivityFactory.create(status='succeeded')
+
+        date_activity = DateActivityFactory.create(status="succeeded")
+        date_activity.slots.add(DateActivitySlotFactory.create(activity=date_activity))
+
+        self.url = reverse('activity-location-list')
+
+    def test_get(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_closed_platform(self):
+        with self.closed_site():
+            self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_logged_in(self):
+        with self.closed_site():
+            self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)

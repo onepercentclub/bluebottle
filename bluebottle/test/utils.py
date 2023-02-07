@@ -213,7 +213,7 @@ class APITestCase(BluebottleTestCase):
         """
         Perform a get request and save the result in `self.response`
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         if query:
             parsed_url = urlparse(self.url)
@@ -228,11 +228,13 @@ class APITestCase(BluebottleTestCase):
             url = self.url
 
         self.user = user
-
-        self.response = self.client.get(
-            url,
-            user=user,
-        )
+        if user:
+            self.response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.get(url)
 
     def perform_update(self, to_change=None, user=None):
         """
@@ -260,11 +262,17 @@ class APITestCase(BluebottleTestCase):
             else:
                 data['attributes'][field] = value
 
-        self.response = self.client.patch(
-            self.url,
-            json.dumps({'data': data}, cls=DjangoJSONEncoder),
-            user=user
-        )
+        if user:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder)
+            )
 
         if self.response.status_code == status.HTTP_200_OK:
             self.model.refresh_from_db()
@@ -281,11 +289,17 @@ class APITestCase(BluebottleTestCase):
         if data is None:
             data = self.data
 
-        self.response = self.client.post(
-            self.url,
-            json.dumps(data, cls=DjangoJSONEncoder),
-            user=user
-        )
+        if user:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+            )
 
         if (
             self.response.status_code == status.HTTP_201_CREATED and
@@ -299,10 +313,13 @@ class APITestCase(BluebottleTestCase):
 
         If `user` is None, perform an anoymous request
         """
-        self.response = self.client.delete(
-            self.url,
-            user=user
-        )
+        if user:
+            self.response = self.client.delete(
+                self.url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.delete(self.url)
 
     def loadLinkedRelated(self, relationship, user=None):
         """
@@ -322,8 +339,13 @@ class APITestCase(BluebottleTestCase):
         Context manager that will make the platform closed, so that scenarios on closed platforms can
         be tested
         """
-        group = Group.objects.get(name='Anonymous')
-        model_name = self.serializer.Meta.model._meta.model_name
+        if hasattr(self, 'serializer'):
+            model_name = self.serializer.Meta.model._meta.model_name
+        elif hasattr(self, 'model'):
+            model_name = self.model._meta.model_name
+        else:
+            raise TypeError('Testcase is missing model or serializer attribute')
+
         try:
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')

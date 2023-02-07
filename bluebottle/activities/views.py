@@ -1,15 +1,18 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from rest_framework import response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
-from rest_framework import response
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
+    ActivityLocation,
+    ActivityLocationSerializer,
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
@@ -18,6 +21,7 @@ from bluebottle.activities.serializers import (
     TeamTransitionSerializer,
 )
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
@@ -32,9 +36,64 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
+    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination, cache_on_auth
 )
-from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
+
+
+class ActivityLocationList(JsonApiViewMixin, ListAPIView):
+    serializer_class = ActivityLocationSerializer
+    pagination_class = None
+    model = Activity
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    @method_decorator(cache_on_auth(3600))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Activity.objects.filter(status__in=("succeeded", "open"))
+        collects = [
+            activity for activity
+            in queryset.annotate(
+                position=F('collectactivity__location__position'),
+                location_id=F('collectactivity__location__pk')
+            ).filter(position__isnull=False)
+        ]
+
+        periods = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__periodactivity__location__position'),
+                location_id=F('timebasedactivity__periodactivity__location__pk')
+            ).filter(position__isnull=False)
+        ]
+
+        dates = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__dateactivity__slots__location__position'),
+                location_id=F('timebasedactivity__dateactivity__slots__location__pk')
+            ).filter(position__isnull=False)
+        ]
+
+        fundings = [
+            activity for activity
+            in queryset.annotate(
+                position=F('funding__initiative__place__position'),
+                location_id=F('funding__initiative__place__pk')
+            ).filter(position__isnull=False)
+        ]
+
+        return list(set(
+            ActivityLocation(
+                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
+                position=model.position,
+                activity=model,
+            ) for model in collects + dates + periods + fundings
+        ))
 
 
 class ActivityPreviewList(JsonApiViewMixin, ListAPIView):

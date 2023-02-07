@@ -32,7 +32,7 @@ from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, Col
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
+    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
@@ -305,7 +305,7 @@ class OldHomePageTestCase(BluebottleTestCase):
 
             for i in range(0, 4):
                 SlideFactory(
-                    image=image,
+                    background_image=image,
                     sequence=i,
                     publication_date=now(),
                     status='published',
@@ -320,8 +320,8 @@ class OldHomePageTestCase(BluebottleTestCase):
         self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
 
         for slide in response.data['blocks'][0]['slides']:
-            self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('png'))
+            self.assertTrue(slide['background_image'].startswith('/media'))
+            self.assertTrue(slide['background_image'].endswith('png'))
 
     def test_slides_svg(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
@@ -331,7 +331,7 @@ class OldHomePageTestCase(BluebottleTestCase):
 
             for i in range(0, 4):
                 SlideFactory(
-                    image=image,
+                    background_image=image,
                     sequence=i,
                     publication_date=now(),
                     status='published',
@@ -344,8 +344,8 @@ class OldHomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
 
         for slide in response.data['blocks'][0]['slides']:
-            self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('svg'))
+            self.assertTrue(slide['background_image'].startswith('/media'))
+            self.assertTrue(slide['background_image'].endswith('svg'))
 
     def test_map(self):
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder)
@@ -641,8 +641,27 @@ class HomeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/categories')
 
-        logos_block = get_include(response, 'pages/blocks/categories')
-        self.assertEqual(logos_block['relationships']['categories']['meta']['count'], 3)
+        categories_block = get_include(response, 'pages/blocks/categories')
+        self.assertEqual(categories_block['relationships']['categories']['meta']['count'], 3)
+
+    def test_slides(self):
+        SlidesContent.objects.create_for_placeholder(self.placeholder)
+
+        for i in range(0, 3):
+            SlideFactory(
+                sequence=i,
+                publication_date=now(),
+                status='published',
+                language='en'
+            )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/slides')
+
+        slides_block = get_include(response, 'pages/blocks/slides')
+        self.assertEqual(len(slides_block['relationships']['slides']['data']), 3)
 
 
 class PageTestCase(BluebottleTestCase):

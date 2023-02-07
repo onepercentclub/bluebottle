@@ -607,6 +607,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_password_reset_inactive(self):
+        # Setup: create a user.
+        client = JSONAPITestClient()
+
+        user = BlueBottleUserFactory.create(is_active=False)
+
+        response = client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': user.email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_password_reset_validation(self):
         client = JSONAPITestClient()
         token = default_token_generator.make_token(self.user_1)       # Setup: create a user.

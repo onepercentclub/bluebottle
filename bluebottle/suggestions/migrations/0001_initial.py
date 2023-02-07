@@ -15,6 +15,9 @@ class Migration(migrations.Migration):
         ('bb_projects', '0001_initial'),
         ('projects', '0001_initial'),
     ]
+    run_before = [
+        ('bb_projects', '0018_auto_20210302_1417'),
+    ]
 
     operations = [
         migrations.CreateModel(
@@ -35,7 +38,6 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[(b'unconfirmed', 'Unconfirmed email'), (b'draft', 'Draft'), (b'accepted', 'Accepted'), (b'rejected', 'Rejected'), (b'in_progress', 'In progress'), (b'submitted', 'Submitted')], default=b'unconfirmed', max_length=64, verbose_name='status')),
                 ('token', models.CharField(max_length=100)),
                 ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='suggestions', to='projects.Project')),
-                ('theme', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bb_projects.ProjectTheme')),
             ],
         ),
     ]

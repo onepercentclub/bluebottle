@@ -35,17 +35,6 @@ class Slide(PublishableModel):
     # Contents
     title = models.CharField(_("Title"), max_length=100, blank=True)
     body = models.TextField(_("Body text"), blank=True)
-    image = ImageField(
-        _("Image"), max_length=255,
-        blank=True, null=True,
-        upload_to='banner_slides/',
-        validators=[
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
-            ),
-            validate_file_infection
-        ]
-    )
     background_image = ImageField(
         _("Background image"), max_length=255,
         blank=True, null=True,

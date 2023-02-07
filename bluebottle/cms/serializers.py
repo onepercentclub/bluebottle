@@ -8,7 +8,7 @@ from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -204,7 +204,6 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
 
 
 class SlideSerializer(serializers.ModelSerializer):
-    image = SorlImageField('1600x674', crop='center')
     background_image = SorlImageField('1600x674', crop='center')
 
     class Meta(object):
@@ -214,7 +213,6 @@ class SlideSerializer(serializers.ModelSerializer):
             'video',
             'body',
             'id',
-            'image',
             'link_text',
             'link_url',
             'tab_text',
@@ -285,11 +283,12 @@ class LogoSerializer(serializers.ModelSerializer):
 
 class LogosContentSerializer(serializers.ModelSerializer):
     logos = LogoSerializer(many=True)
+    action_text = serializers.CharField(source='title')
 
     class Meta(object):
         model = LogosContent
-        fields = ('id', 'type', 'title', 'sub_title',
-                  'logos', 'action_text', 'action_link')
+        fields = ('id', 'type', 'action_text', 'sub_title',
+                  'logos')
 
 
 class LinkSerializer(serializers.ModelSerializer):
@@ -581,10 +580,16 @@ class ActivitiesBlockSerializer(BaseBlockSerializer):
 
 
 class SlidesBlockSerializer(BaseBlockSerializer):
-    slides = ResourceRelatedField(
+    slides = SerializerMethodResourceRelatedField(
         many=True,
         read_only=True,
+        model=Slide
     )
+
+    def get_slides(self, obj):
+        return Slide.objects.published().filter(
+            language=obj.language_code
+        )
 
     class Meta(object):
         model = SlidesContent
@@ -713,6 +718,11 @@ class BlockSerializer(PolymorphicModelSerializer):
         LogosBlockSerializer,
         CategoriesBlockSerializer
     ]
+
+    def get_slides(self, obj):
+        return Slide.objects.published().filter(
+            language=obj.language_code
+        )
 
     class Meta:
         model = ContentItem

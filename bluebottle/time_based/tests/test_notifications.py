@@ -38,7 +38,7 @@ class DateActivityNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity "Save the world!" has been cancelled')
-        self.assertBodyContains('Unfortunately your activity "Save the world!" has been cancelled.')
+        self.assertBodyContains('Unfortunately, the activity "Save the world!" has been cancelled.')
         self.assertActionLink(self.obj.get_absolute_url())
 
     def test_activity_restored_notification(self):

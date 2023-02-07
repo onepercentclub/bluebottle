@@ -44,7 +44,18 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity "Save the world!" has been cancelled')
-        self.assertBodyContains('Unfortunately your activity "Save the world!" has been cancelled.')
+        self.assertBodyContains('Unfortunately, the activity "Save the world!" has been cancelled.')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_cancelled_notification_with_participants(self):
+        DateParticipantFactory.create(activity=self.obj, status='rejected')
+        participant = DateParticipantFactory.create(activity=self.obj, status='accepted')
+        self.message_class = ActivityCancelledNotification
+        self.create()
+        self.assertRecipients([self.obj.owner, participant.user])
+        self.assertSubject('Your activity "Save the world!" has been cancelled')
+        self.assertBodyContains('Unfortunately, the activity "Save the world!" has been cancelled.')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 

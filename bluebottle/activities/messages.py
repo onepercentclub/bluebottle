@@ -142,6 +142,15 @@ class ActivityCancelledNotification(ActivityNotification):
     subject = pgettext('email', 'Your activity "{title}" has been cancelled')
     template = 'messages/activity_cancelled'
 
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.owner] + [
+            contributor.user for contributor
+            in self.obj.contributors.filter(
+                status__in=['accepted', 'succeeded']
+            )
+        ]
+
 
 class ActivityExpiredNotification(ActivityNotification):
     """

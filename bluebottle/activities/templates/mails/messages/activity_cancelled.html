@@ -2,11 +2,15 @@
 {% load i18n %}
 
 {% block message %}
-    <p>
-        {% blocktrans context 'email' %}Unfortunately your activity "{{ title }}" has been cancelled.{% endblocktrans %}
-    </p>
+<p>
+    {% blocktrans context 'email' %}
+    Unfortunately, the activity "{{ title }}" has been cancelled.
+    {% endblocktrans %}
+</p>
 
-    <p>
-        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
-    </p>
+<p>
+    {% blocktrans context 'email' %}
+    If you have any questions, you can contact the platform manager by replying to this email.
+    {% endblocktrans %}
+</p>
 {% endblock %}

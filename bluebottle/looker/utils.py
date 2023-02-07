@@ -27,7 +27,7 @@ class LookerSSOEmbed(object):
     models = ('Projects', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
-    def __init__(self, user, type, id, hide_filters):
+    def __init__(self, user, type, id, hide_filters=None):
         if not hide_filters:
             hide_filters = []
         self.user = user

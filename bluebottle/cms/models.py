@@ -342,63 +342,9 @@ class SupporterTotalContent(TitledContent):
         return 'Supporter total'
 
 
-class Slide(SortableMixin, models.Model):
-    block = models.ForeignKey('cms.SlidesContent', related_name='slides', on_delete=models.CASCADE)
-    tab_text = models.CharField(
-        _("Tab text"), max_length=100,
-        help_text=_("This is shown on tabs beneath the banner.")
-    )
-    title = models.CharField(_("Title"), max_length=100, blank=True)
-    body = models.TextField(_("Body text"), blank=True)
-    image = ImageField(
-        _("Image"), max_length=255, blank=True, null=True,
-        upload_to='banner_slides/',
-
-        validators=[
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
-            ),
-            validate_file_infection
-        ]
-    )
-    background_image = ImageField(
-        _("Background image"), max_length=255, blank=True,
-        null=True, upload_to='banner_slides/',
-
-        validators=[
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
-            ),
-            validate_file_infection
-        ]
-    )
-    video_url = models.URLField(
-        _("Video url"), max_length=100, blank=True, default=''
-    )
-    link_text = models.CharField(
-        _("Link text"), max_length=400,
-        help_text=_("This is the text on the button inside the banner."),
-        blank=True
-    )
-    link_url = models.CharField(
-        _("Link url"), max_length=400,
-        help_text=_("This is the link for the button inside the banner."),
-        blank=True
-    )
-    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    class Meta:
-        ordering = ['sequence']
-
-
 @python_2_unicode_compatible
 class SlidesContent(TitledContent):
     type = 'slides'
-
-    def slides(self):
-        return Slide.objects.published().filter(
-            language=self.language_code
-        )
 
     class Meta:
         verbose_name = _('Slides')
@@ -407,7 +353,7 @@ class SlidesContent(TitledContent):
         resource_name = 'pages/blocks/slides'
 
     def __str__(self):
-        return str(self.slides)
+        return str(_('Slides'))
 
 
 class Step(SortableMixin, models.Model):

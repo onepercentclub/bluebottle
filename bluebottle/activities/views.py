@@ -161,6 +161,7 @@ class TeamList(JsonApiViewMixin, ListAPIView):
     serializer_class = TeamSerializer
 
     permission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
+    pagination_class = None
 
     def get_queryset(self, *args, **kwargs):
         queryset = super(TeamList, self).get_queryset(*args, **kwargs)

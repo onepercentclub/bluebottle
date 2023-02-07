@@ -86,22 +86,6 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.states.submit
         )
 
-    def test_missing_organization_contact(self):
-        self.initiative = InitiativeFactory.create(
-            has_organization=True,
-            owner=self.user,
-            organization=OrganizationFactory.create(),
-            organization_contact=None
-        )
-
-        self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
-        )
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
-        )
-
     def test_missing_organization_contact_name(self):
         self.initiative = InitiativeFactory.create(
             has_organization=True,

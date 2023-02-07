@@ -262,11 +262,17 @@ class APITestCase(BluebottleTestCase):
             else:
                 data['attributes'][field] = value
 
-        self.response = self.client.patch(
-            self.url,
-            json.dumps({'data': data}, cls=DjangoJSONEncoder),
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-        )
+        if user:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder)
+            )
 
         if self.response.status_code == status.HTTP_200_OK:
             self.model.refresh_from_db()
@@ -307,10 +313,13 @@ class APITestCase(BluebottleTestCase):
 
         If `user` is None, perform an anoymous request
         """
-        self.response = self.client.delete(
-            self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
-        )
+        if user:
+            self.response = self.client.delete(
+                self.url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.delete(self.url)
 
     def loadLinkedRelated(self, relationship, user=None):
         """

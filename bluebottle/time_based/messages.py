@@ -791,6 +791,13 @@ class SlotCancelledNotification(TransitionMessage):
         """participants that signed up"""
         return [
             self.obj.activity.owner
+        ] + [
+            slot_participant.participant.user for slot_participant
+            in self.obj.slot_participants.all()
+            if (
+                slot_participant.status == 'registered' and
+                slot_participant.participant.status == 'accepted'
+            )
         ]
 
     @property

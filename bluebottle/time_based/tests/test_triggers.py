@@ -891,7 +891,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'cancelled')
         self.assertEqual(
             len(mail.outbox),
-            2
+            3
         )
 
         self.assertEqual(
@@ -936,7 +936,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'cancelled')
         self.assertEqual(
             len(mail.outbox),
-            1
+            2
         )
 
         self.assertEqual(

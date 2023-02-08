@@ -891,17 +891,16 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'cancelled')
         self.assertEqual(
             len(mail.outbox),
-            2
+            3
         )
-
         self.assertEqual(
-            mail.outbox[1].subject,
+            mail.outbox[2].subject,
             'A slot for your activity "{}" has been cancelled'.format(self.activity.title)
         )
 
         self.assertTrue(
             'Session 1' in
-            mail.outbox[1].body
+            mail.outbox[2].body
         )
 
     def test_cancel_multiple_slots(self):

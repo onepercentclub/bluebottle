@@ -29,18 +29,25 @@ class LookerEmbedView(DetailView):
 
         if not Location.objects.exists():
             hide_filters.append('Office')
-            hide_filters.append('Office location')
+            hide_filters.append('Office group')
+            hide_filters.append('Office region')
+            hide_filters.append('Member office')
+            hide_filters.append('Member office group')
+            hide_filters.append('Member office region')
+            hide_filters.append('Activity office')
+            hide_filters.append('Activity office group')
+            hide_filters.append('Activity office region')
 
         if not Category.objects.exists():
             hide_filters.append('Category')
 
         if not SegmentType.objects.exists():
-            hide_filters.append('Segment Type')
+            hide_filters.append('Segment type')
             hide_filters.append('Segment')
-            hide_filters.append('Member Segment Type')
-            hide_filters.append('Member Segment')
-            hide_filters.append('Activity Segment Type')
-            hide_filters.append('Activity Segment')
+            hide_filters.append('Member segment type')
+            hide_filters.append('Member segment')
+            hide_filters.append('Activity segment type')
+            hide_filters.append('Activity segment')
 
         context['looker_embed_url'] = LookerSSOEmbed(
             self.request.user,

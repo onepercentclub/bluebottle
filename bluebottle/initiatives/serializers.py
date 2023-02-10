@@ -102,9 +102,13 @@ class MemberSerializer(ModelSerializer):
 
 class CurrentMemberSerializer(MemberSerializer):
     permissions = UserPermissionsSerializer(read_only=True)
+    has_initiatives = serializers.SerializerMethodField()
+
+    def get_has_initiatives(self, obj):
+        return obj.own_initiatives.exists()
 
     class Meta(MemberSerializer.Meta):
-        fields = MemberSerializer.Meta.fields + ('hours_spent', 'hours_planned')
+        fields = MemberSerializer.Meta.fields + ('hours_spent', 'hours_planned', 'has_initiatives')
         meta_fields = ('permissions', )
 
 

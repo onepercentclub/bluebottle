@@ -705,14 +705,22 @@ class LogosBlockSerializer(BaseBlockSerializer):
         ]
 
 class TextBlockSerializer(BaseBlockSerializer):
-    item_type = 'text'
-
     class Meta(object):
         model = TextItem
         fields = ('id', 'text', 'type', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/text'
+
+class ImageTextBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = ImageTextItem
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
 
 class BlockSerializer(PolymorphicModelSerializer):
 
@@ -726,6 +734,8 @@ class BlockSerializer(PolymorphicModelSerializer):
         QuotesBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
+        TextBlockSerializer,
+        ImageTextBlockSerializer,
     ]
 
     def get_slides(self, obj):
@@ -748,7 +758,6 @@ class BlockSerializer(PolymorphicModelSerializer):
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
-        'text': 'bluebottle.cms.serializers.TextBlockSerializer',
     }
 
 
@@ -789,7 +798,6 @@ class HomeSerializer(ModelSerializer):
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
-        'text': 'bluebottle.cms.serializers.TextBlockSerializer',
     }
 
 

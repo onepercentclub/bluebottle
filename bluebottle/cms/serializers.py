@@ -748,7 +748,7 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'text'
+            'links', 'steps', 'quotes', 'slides', 'logos', 'categories'
         ]
 
     included_serializers = {
@@ -787,7 +787,6 @@ class HomeSerializer(ModelSerializer):
             'blocks.quotes',
             'blocks.logos',
             'blocks.categories',
-            'blocks.text'
         ]
 
     included_serializers = {

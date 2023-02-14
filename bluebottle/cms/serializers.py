@@ -704,6 +704,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
             'logos'
         ]
 
+
 class TextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = TextItem
@@ -711,6 +712,7 @@ class TextBlockSerializer(BaseBlockSerializer):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/text'
+
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
@@ -721,6 +723,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-text'
+
 
 class BlockSerializer(PolymorphicModelSerializer):
 

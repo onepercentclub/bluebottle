@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
-    CategoriesContent
+    CategoriesContent, PlainTextItem, ImagePlainTextItem
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
@@ -662,6 +662,57 @@ class HomeTestCase(BluebottleTestCase):
 
         slides_block = get_include(response, 'pages/blocks/slides')
         self.assertEqual(len(slides_block['relationships']['slides']['data']), 3)
+
+    def test_plain_text(self):
+        block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
+        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/plain-text')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/plain-text'
+        )
+
+        self.assertEqual(
+            text_block['attributes']['text'],
+            "To boldly go were no man has gone before!"
+        )
+
+    def test_plain_text_image(self):
+        block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
+        block.text = "To <b>boldly</b> go were no man has gone before!"
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            block.image = File(f)
+            block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/plain-text-image')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/plain-text-image'
+        )
+
+        self.assertEqual(
+            text_block['attributes']['text'],
+            "To boldly go were no man has gone before!"
+        )
+        self.assertIsNotNone(
+            text_block['attributes']['image']['full']
+        )
+        self.assertEqual(
+            text_block['attributes']['ratio'],
+            "0.5"
+        )
+        self.assertEqual(
+            text_block['attributes']['align'],
+            "right"
+        )
 
 
 class PageTestCase(BluebottleTestCase):

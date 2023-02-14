@@ -145,6 +145,9 @@ class ImageTextItem(ContentItem):
         verbose_name = _('Picture + Text')
         verbose_name_plural = _('Picture + Text')
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
+
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 

@@ -713,7 +713,7 @@ class ImagePlainTextItem(ContentItem):
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Plain Text + Iamge')
+        verbose_name = _('Plain Text + Image')
         verbose_name_plural = _('Plain Text + Image')
 
     def __str__(self):

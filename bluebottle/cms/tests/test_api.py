@@ -630,6 +630,36 @@ class HomeTestCase(BluebottleTestCase):
             logo['attributes']['link'],
             'http://google.com'
         )
+        self.assertEqual(
+            logo['attributes']['open-in-new-tab'],
+            True
+        )
+
+    def test_links(self):
+        block = LinksContent.objects.create_for_placeholder(self.placeholder)
+        block.links.create(action_link='/iniitiatives/overview', action_text='Stay')
+        block.links.create(action_link='http://facebook.com', action_text='Away', open_in_new_tab=True)
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/links')
+
+        links_block = get_include(response, 'pages/blocks/links')
+        self.assertEqual(links_block['relationships']['links']['meta']['count'], 2)
+
+        link = get_include(response, 'pages/blocks/links/links')
+
+        print(link)
+
+        self.assertEqual(
+            link['attributes']['action-link'],
+            '/iniitiatives/overview'
+        )
+        self.assertEqual(
+            link['attributes']['open-in-new-tab'],
+            False
+        )
 
     def test_categories(self):
         categories = CategoryFactory.create_batch(3)

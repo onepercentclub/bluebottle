@@ -13,7 +13,7 @@ from bluebottle.cms.models import (
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent)
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem)
 
 
 class CMSContentItemForm(ContentItemForm):
@@ -57,8 +57,6 @@ class StatsBlockPlugin(CMSContentPlugin):
 class HomepageStatisticsBlockPlugin(CMSContentPlugin):
     model = HomepageStatisticsContent
     category = _('Stats')
-
-    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -131,4 +129,16 @@ class LinksBlockPlugin(CMSContentPlugin):
 class WelcomeBlockPlugin(CMSContentPlugin):
     model = WelcomeContent
     inlines = [GreetingInline]
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class PlainTextBlockPlugin(CMSContentPlugin):
+    model = PlainTextItem
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class ImagePlainTextBlockPlugin(CMSContentPlugin):
+    model = ImagePlainTextItem
     category = _('Homepage')

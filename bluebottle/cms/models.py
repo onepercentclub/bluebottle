@@ -4,8 +4,10 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
-from fluent_contents.models import PlaceholderField, ContentItem
+from fluent_contents.extensions import PluginImageField
+from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
@@ -657,3 +659,65 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     class Meta:
         verbose_name_plural = _('site platform settings')
         verbose_name = _('site platform settings')
+
+
+class PlainTextItem(ContentItem):
+    """
+    Just a plain text block
+    """
+    text = models.TextField()
+    objects = ContentItemManager()
+    preview_template = 'admin/cms/preview/default.html'
+
+    class Meta(object):
+        verbose_name = _('Plain Text')
+        verbose_name_plural = _('Plain Text')
+
+    def __str__(self):
+        return Truncator(self.text).words(20)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/plain-text'
+
+
+class ImagePlainTextItem(ContentItem):
+    """
+    A snippet of HTML text to display on a page.
+    """
+    text = models.TextField()
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    preview_template = 'admin/cms/preview/default.html'
+
+    ALIGN_CHOICES = (
+        ('left', _("Left")),
+        ('right', _("Right")),
+    )
+
+    RATIO_CHOICES = (
+        ('0.5', _("2:1 (Text twice as wide)")),
+        ('1', _("1:1 (Equal width)")),
+        ('2', _("1:2 (Image twice as wide)")),
+    )
+
+    align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")
+    ratio = models.CharField(_("Picture / Text ratio"), max_length=10, choices=RATIO_CHOICES, default='0.5')
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Plain Text + Iamge')
+        verbose_name_plural = _('Plain Text + Image')
+
+    def __str__(self):
+        return Truncator(self.text).words(20)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/plain-text-image'

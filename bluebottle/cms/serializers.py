@@ -3,6 +3,7 @@ from builtins import str
 
 from django.db.models import Sum
 from django.urls import reverse
+from django.utils.html import strip_tags
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -20,7 +21,7 @@ from bluebottle.cms.models import (
     ShareResultsContent, ProjectsMapContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent)
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem)
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.geo.serializers import OfficeSerializer
 from bluebottle.members.models import Member
@@ -523,7 +524,7 @@ class BaseBlockSerializer(ModelSerializer):
     type = serializers.SerializerMethodField(read_only=True)
 
     class Meta(object):
-        model = LinksContent
+        model = ContentItem
         fields = ('id', 'type', 'language_code', 'title', 'sub_title',)
 
     def get_type(self, obj):
@@ -706,23 +707,33 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
+
+    text = serializers.SerializerMethodField()
+
+    def get_text(self, obj):
+        return strip_tags(obj.text)
+
     class Meta(object):
-        model = TextItem
+        model = PlainTextItem
         fields = ('id', 'text', 'type', )
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/text'
+        resource_name = 'pages/blocks/plain-text'
 
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = serializers.SerializerMethodField()
+
+    def get_text(self, obj):
+        return strip_tags(obj.text)
 
     class Meta(object):
-        model = ImageTextItem
+        model = ImagePlainTextItem
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/image-text'
+        resource_name = 'pages/blocks/plain-text-image'
 
 
 class BlockSerializer(PolymorphicModelSerializer):

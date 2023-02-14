@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('ratio', models.IntegerField(blank=True, choices=[(8, '2:1 (Text twice as wide)'), (6, '1:1 (Equal width)'), (4, '1:2 (Image twice as wide)')], default=6, verbose_name='Picture / Text ratio')),
             ],
             options={
-                'verbose_name': 'Plain Text + Iamge',
+                'verbose_name': 'Plain Text + Image',
                 'verbose_name_plural': 'Plain Text + Image',
                 'db_table': 'contentitem_cms_imageplaintextitem',
             },

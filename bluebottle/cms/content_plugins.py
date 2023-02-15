@@ -74,7 +74,7 @@ class ShareResultsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(CMSContentPlugin):
     model = ProjectsMapContent
-    category = _('Projects')
+    category = _('Activities map')
 
 
 @plugin_pool.register

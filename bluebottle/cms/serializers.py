@@ -276,7 +276,7 @@ class LogoSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Logo
-        fields = ('id', 'image', 'link')
+        fields = ('id', 'image', 'link', 'open_in_new_tab')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/logos/logos'
@@ -297,7 +297,7 @@ class LinkSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = ContentLink
-        fields = ('id', 'image', 'action_link', 'action_text', )
+        fields = ('id', 'image', 'action_link', 'action_text', 'open_in_new_tab')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/links/links'

@@ -451,6 +451,8 @@ class Logo(SortableMixin, models.Model):
         ]
     )
     link = models.CharField(max_length=100, blank=True, null=True)
+    open_in_new_tab = models.BooleanField(default=True, blank=False, help_text=_('Open the link in a new browser tab'))
+
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
@@ -487,6 +489,7 @@ class ContentLink(SortableMixin, models.Model):
             validate_file_infection
         ]
     )
+    open_in_new_tab = models.BooleanField(default=False)
     action_text = models.CharField(max_length=40)
     action_link = models.CharField(
         max_length=100, blank=True, null=True

@@ -102,10 +102,31 @@ class MemberSerializer(ModelSerializer):
 
 class CurrentMemberSerializer(MemberSerializer):
     permissions = UserPermissionsSerializer(read_only=True)
+    segments = ResourceRelatedField(many=True, read_only=True)
+    has_initiatives = serializers.SerializerMethodField()
+
+    def get_has_initiatives(self, obj):
+        return obj.own_initiatives.exists()
 
     class Meta(MemberSerializer.Meta):
-        fields = MemberSerializer.Meta.fields + ('hours_spent', 'hours_planned')
+        fields = MemberSerializer.Meta.fields + (
+            'hours_spent',
+            'hours_planned',
+            'has_initiatives',
+            'segments',
+            'has_initiatives'
+        )
         meta_fields = ('permissions', )
+
+    class JSONAPIMeta:
+        resource_name = 'members'
+        included_resources = [
+            'segments',
+        ]
+
+    included_serializers = {
+        'segments': 'bluebottle.segments.serializers.SegmentDetailSerializer',
+    }
 
 
 class InitiativeImageSerializer(ImageSerializer):

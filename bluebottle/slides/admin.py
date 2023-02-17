@@ -28,7 +28,7 @@ class SlideAdmin(admin.ModelAdmin):
         }),
         (_('Contents'), {
             'fields': (
-                'title', 'body', 'image', 'background_image', 'video',
+                'title', 'body', 'background_image', 'video',
                 'video_url', 'link_text', 'link_url', 'style'),
         }),
         (_('Publication settings'), {

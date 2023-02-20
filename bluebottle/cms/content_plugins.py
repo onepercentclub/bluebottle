@@ -43,7 +43,7 @@ class CMSContentPlugin(ContentPlugin):
 class QuotesBlockPlugin(CMSContentPlugin):
     model = QuotesContent
     inlines = [QuoteInline]
-    category = _('Content')
+    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -56,13 +56,13 @@ class StatsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class HomepageStatisticsBlockPlugin(CMSContentPlugin):
     model = HomepageStatisticsContent
-    category = _('Stats')
+    category = _('Homepage')
 
 
 @plugin_pool.register
 class ActivitiesBlockPlugin(CMSContentPlugin):
     model = ActivitiesContent
-    category = _('Activities')
+    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -74,7 +74,7 @@ class ShareResultsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(CMSContentPlugin):
     model = ProjectsMapContent
-    category = _('Activities map')
+    category = _('Homepage')
 
 
 @plugin_pool.register

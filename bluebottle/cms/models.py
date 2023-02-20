@@ -58,7 +58,19 @@ class ResultPage(TranslatableModel):
 
 
 class HomePage(SingletonModel, TranslatableModel):
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'CategoriesBlockPlugin',
+        'LinksBlockPlugin',
+        'LocationsBlockPlugin',
+        'LogosBlockPlugin',
+        'PlainTextBlockPlugin',
+        'ImagePlainTextBlockPlugin',
+        'SlidesBlockPlugin',
+        'StepsBlockPlugin',
+        'ActivitiesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'HomepageStatisticsBlockPlugin'
+    ])
     translations = TranslatedFields()
 
     class Meta:

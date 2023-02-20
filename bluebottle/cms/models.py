@@ -69,7 +69,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'StepsBlockPlugin',
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
-        'HomepageStatisticsBlockPlugin'
+        'HomepageStatisticsBlockPlugin',
+        'QuotesBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -189,7 +190,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
-    quote = models.TextField()
+    quote = models.TextField(max_length=300)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='quote_images/',

@@ -677,7 +677,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         verbose_name = _('site platform settings')
 
 
-class PlainTextItem(ContentItem):
+class PlainTextItem(TitledContent):
     """
     Just a plain text block
     """
@@ -696,7 +696,7 @@ class PlainTextItem(ContentItem):
         resource_name = 'pages/blocks/plain-text'
 
 
-class ImagePlainTextItem(ContentItem):
+class ImagePlainTextItem(TitledContent):
     """
     A snippet of HTML text to display on a page.
     """

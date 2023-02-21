@@ -109,6 +109,8 @@ In your `local.py` file, set the `DATABASES` variable to the following::
 
 * If you are running into errors related to max_map_count, then run the following command in your terminal: `sysctl -w vm.max_map_count=262144`
 
+* Add `127.0.0.1 postgres` to your hosts file => /etc/hosts
+
 Running the containers:
 ~~~~~~~~~~~~~~~~~~~~~~~
 

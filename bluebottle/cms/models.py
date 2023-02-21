@@ -125,7 +125,6 @@ class LinkGroup(SortableMixin):
 
 
 class Link(SortableMixin):
-
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
     highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
@@ -272,6 +271,16 @@ class HomepageStatisticsContent(TitledContent):
 @python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
+
+    ACTIVITY_TYPES = (
+        ('highlighted', _("Highlighted")),
+        ('matching', _("Matching preferences")),
+        ('time_based', _("Time based")),
+        ('deed', _("Deeds")),
+        ('funding', _("Crowdfunding")),
+        ('collect', _("Collecting")),
+    )
+
     action_text = models.CharField(max_length=80,
                                    default=_('Find more activities'),
                                    blank=True, null=True)
@@ -279,6 +288,13 @@ class ActivitiesContent(TitledContent):
                                    blank=True, null=True)
 
     preview_template = 'admin/cms/preview/activities.html'
+
+    activity_type = models.CharField(
+        max_length=30,
+        choices=ACTIVITY_TYPES,
+        default='highlighted',
+        blank=True, null=True
+    )
 
     class Meta:
         verbose_name = _('Activities')

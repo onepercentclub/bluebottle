@@ -1,4 +1,5 @@
 from builtins import object
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -100,7 +101,7 @@ class StepsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class CategoriesBlockPlugin(CMSContentPlugin):
     model = CategoriesContent
-    raw_id_fields = ('categories', )
+    autocomplete_fields = ('categories',)
     category = _('Homepage')
 
 

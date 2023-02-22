@@ -26,18 +26,6 @@ services:
     volumes:
       - ./elasticsearch-data:/var/lib/elasticsearch/data
 
-  pg-admin:
-    container_name: pg-admin
-    depends_on:
-      - postgres
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    image: dpage/pgadmin4:latest
-    restart: always
-    ports:
-      - 5050:80
-
   postgres:
     container_name: postgres
     environment:

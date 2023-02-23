@@ -718,9 +718,9 @@ class ImagePlainTextItem(ContentItem):
     )
 
     RATIO_CHOICES = (
-        ('0.5', _("2:1 (Text twice as wide)")),
+        ('0.5', _("1:2 (Text twice as wide)")),
         ('1', _("1:1 (Equal width)")),
-        ('2', _("1:2 (Image twice as wide)")),
+        ('2', _("2:1 (Image twice as wide)")),
     )
 
     align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")

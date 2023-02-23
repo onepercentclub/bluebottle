@@ -185,9 +185,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         if self.has_organization:
             fields.append('organization')
 
-            if not self.owner.partner_organization:
-                fields.append('organization_contact')
-
         if not Location.objects.count():
             fields.append('place')
 

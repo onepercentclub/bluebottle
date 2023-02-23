@@ -1,3 +1,8 @@
+from bluebottle.segments.models import SegmentType
+
+from bluebottle.categories.models import Category
+
+from bluebottle.geo.models import Location
 from django.contrib.auth.decorators import login_required, permission_required
 from django.conf.urls import url
 from django.views.generic import DetailView
@@ -20,12 +25,36 @@ class LookerEmbedView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(LookerEmbedView, self).get_context_data(**kwargs)
+        hide_filters = []
+
+        if not Location.objects.exists():
+            hide_filters.append('Office')
+            hide_filters.append('Office group')
+            hide_filters.append('Office region')
+            hide_filters.append('Member office')
+            hide_filters.append('Member office group')
+            hide_filters.append('Member office region')
+            hide_filters.append('Activity office')
+            hide_filters.append('Activity office group')
+            hide_filters.append('Activity office region')
+
+        if not Category.objects.exists():
+            hide_filters.append('Category')
+
+        if not SegmentType.objects.exists():
+            hide_filters.append('Segment type')
+            hide_filters.append('Segment')
+            hide_filters.append('Member segment type')
+            hide_filters.append('Member segment')
+            hide_filters.append('Activity segment type')
+            hide_filters.append('Activity segment')
+
         context['looker_embed_url'] = LookerSSOEmbed(
             self.request.user,
             type=context['object'].type,
             id=context['object'].looker_id,
+            hide_filters=hide_filters
         ).url
-
         return context
 
 

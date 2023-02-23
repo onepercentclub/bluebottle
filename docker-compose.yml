@@ -7,8 +7,10 @@ services:
              python manage.py runserver 0.0.0.0:8000"
     container_name: bluebottle
     depends_on:
-      - elasticsearch
-      - postgres
+      elasticsearch:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     ports:
       - 8000:8000
     restart: always
@@ -24,18 +26,6 @@ services:
     volumes:
       - ./elasticsearch-data:/var/lib/elasticsearch/data
 
-  pg-admin:
-    container_name: pg-admin
-    depends_on:
-      - postgres
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    image: dpage/pgadmin4:latest
-    restart: always
-    ports:
-      - 5050:80
-
   postgres:
     container_name: postgres
     environment:
@@ -48,3 +38,8 @@ services:
     restart: always
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

@@ -47,7 +47,7 @@ from bluebottle.utils.serializers import (
 from bluebottle.utils.utils import get_current_language
 
 
-ActivityLocation = namedtuple('Position', ['pk', 'position', 'activity'])
+ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
 
 
 class ActivityLocationRelationSerializer(Serializer):

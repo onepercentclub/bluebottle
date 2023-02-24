@@ -69,7 +69,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'StepsBlockPlugin',
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
-        'HomepageStatisticsBlockPlugin'
+        'HomepageStatisticsBlockPlugin',
+        'QuotesBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -124,7 +125,6 @@ class LinkGroup(SortableMixin):
 
 
 class Link(SortableMixin):
-
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
     highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
@@ -189,7 +189,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
-    quote = models.TextField()
+    quote = models.TextField(max_length=300)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='quote_images/',
@@ -271,6 +271,16 @@ class HomepageStatisticsContent(TitledContent):
 @python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
+
+    ACTIVITY_TYPES = (
+        ('highlighted', _("Highlighted")),
+        ('matching', _("Matching preferences")),
+        ('time_based', _("Time based")),
+        ('deed', _("Deeds")),
+        ('funding', _("Crowdfunding")),
+        ('collect', _("Collecting")),
+    )
+
     action_text = models.CharField(max_length=80,
                                    default=_('Find more activities'),
                                    blank=True, null=True)
@@ -278,6 +288,13 @@ class ActivitiesContent(TitledContent):
                                    blank=True, null=True)
 
     preview_template = 'admin/cms/preview/activities.html'
+
+    activity_type = models.CharField(
+        max_length=30,
+        choices=ACTIVITY_TYPES,
+        default='highlighted',
+        blank=True, null=True
+    )
 
     class Meta:
         verbose_name = _('Activities')
@@ -676,7 +693,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         verbose_name = _('site platform settings')
 
 
-class PlainTextItem(ContentItem):
+class PlainTextItem(TitledContent):
     """
     Just a plain text block
     """
@@ -695,7 +712,7 @@ class PlainTextItem(ContentItem):
         resource_name = 'pages/blocks/plain-text'
 
 
-class ImagePlainTextItem(ContentItem):
+class ImagePlainTextItem(TitledContent):
     """
     A snippet of HTML text to display on a page.
     """

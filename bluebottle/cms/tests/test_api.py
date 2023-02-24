@@ -650,8 +650,6 @@ class HomeTestCase(BluebottleTestCase):
 
         link = get_include(response, 'pages/blocks/links/links')
 
-        print(link)
-
         self.assertEqual(
             link['attributes']['action-link'],
             '/iniitiatives/overview'

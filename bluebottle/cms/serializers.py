@@ -9,7 +9,8 @@ from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField, \
+    HyperlinkedRelatedField
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -568,15 +569,46 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/map'
 
 
+class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
+
+    def __init__(self, **kwargs):
+        super(HyperlinkedRelatedField, self).__init__(source='parent', read_only=True, **kwargs)
+
+    def get_links(self, *args, **kwargs):
+        link = reverse('activity-preview-list')
+        link += '?page[size]=4'
+        activity_type = self.root.data['activity_type']
+        if activity_type == 'highlighted':
+            link += '&filter[highlighted]=true'
+        elif activity_type == 'matching':
+            link += '&sort=popularity'
+        elif activity_type == 'deed':
+            link += '&filter[type]=deed'
+        elif activity_type == 'funding':
+            link += '&filter[type]=funding'
+        elif activity_type == 'collecting':
+            link += '&filter[type]=collect'
+        elif activity_type == 'time_based':
+            link += '&filter[type]=time_based'
+        return {
+            'related': link
+        }
+
+
 class ActivitiesBlockSerializer(BaseBlockSerializer):
 
-    activities = CustomHyperlinkRelatedSerializer(
-        link="/api/activities/search?filter[highlight]=true&page[size]=4"
-    )
+    activities = ActivitySearchRelatedSerializer()
+
+    def get_links(self, *args, **kwargs):
+        link = reverse('activity-preview-list')
+        link = "/api/activities/search?filter[highlight]=true&page[size]=4"
+        return {
+            'related': link
+        }
 
     class Meta(object):
         model = ActivitiesContent
-        fields = BaseBlockSerializer.Meta.fields + ('action_text', 'action_link', 'activities')
+        fields = BaseBlockSerializer.Meta.fields + ('action_text', 'action_link', 'activities', 'activity_type')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/activities'
@@ -717,7 +749,7 @@ class TextBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = PlainTextItem
-        fields = ('id', 'text', 'type', )
+        fields = ('id', 'text', 'type', 'title', 'sub_title', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text'
@@ -732,7 +764,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImagePlainTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title', )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'

@@ -227,6 +227,9 @@ form .aligned strong+p.help {
     background: transparent;
 }
 
+.inline-related {
+    border: 1px solid #ddd;
+}
 
 .inline-related h3 .delete label.vCheckboxLabel,
 .inline-related h3 span.delete label:before {

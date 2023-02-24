@@ -41,8 +41,7 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, crop='center',
-                 colorspace='RGB', **kwargs):
+    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
         self.sorl_options = {
             'crop': crop,

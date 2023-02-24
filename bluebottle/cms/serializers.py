@@ -206,11 +206,13 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
 
 class SlideSerializer(serializers.ModelSerializer):
     background_image = SorlImageField('1600x674', crop='center')
+    small_background_image = SorlImageField('200x84', crop='center', source='background_image')
 
     class Meta(object):
         model = Slide
         fields = (
             'background_image',
+            'small_background_image',
             'video',
             'body',
             'id',

@@ -29,6 +29,15 @@ class IsUser(permissions.BasePermission):
         return obj.user == request.user
 
 
+class IsCurrentUser(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if the user is the object granted, `False` otherwise.
+        """
+        return obj == request.user
+
+
 class BasePermission(permissions.BasePermission):
     """ BasePermission extends the standard BasePermission from DRF to include
     the ability to get the permissions without the request.

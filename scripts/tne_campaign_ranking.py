@@ -8,9 +8,9 @@ from bluebottle.funding.models import Funding, Donor
 from bluebottle.geo.models import Location
 
 
-OFFICE_NAME = 'Jos'
-TARGET = 165450
-DEADLINES = [date(2022, 11, 24)]
+OFFICE_NAME = 'Mogadishu'
+TARGET = 500
+DEADLINES = [date(2023, 1, 18)]
 
 
 def run():

@@ -6,7 +6,8 @@ from bluebottle.bb_accounts.views import (
     PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
-    PasswordStrengthDetail, MemberSignUp
+    PasswordStrengthDetail, MemberSignUp,
+    MemberProfileDetail
 )
 
 # Public User API:
@@ -38,6 +39,7 @@ urlpatterns = [
     url(r'^passwordreset/confirm$', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
     url(r'^members/?$', MemberSignUp.as_view(), name='member-signup'),
     url(r'^member/current$', CurrentMemberDetail.as_view(), name='current-member-detail'),
+    url(r'^member/profile/(?P<pk>\d+)$', MemberProfileDetail.as_view(), name='member-profile-detail'),
     url(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
     url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
         name='manage-profile'),

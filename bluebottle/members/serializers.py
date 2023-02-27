@@ -17,9 +17,9 @@ from rest_framework_jwt.settings import api_settings
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
-from bluebottle.geo.serializers import PlaceSerializer
+from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment, Member
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -397,7 +397,7 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()
-    place = PlaceSerializer(required=False, allow_null=True)
+    place = OldPlaceSerializer(required=False, allow_null=True)
 
     def get_from_facebook(self, instance):
         try:
@@ -687,6 +687,28 @@ class PasswordResetSerializer(serializers.Serializer):
 
     class JSONAPIMeta(object):
         resource_name = 'reset-tokens'
+
+
+class MemberProfileSerializer(ModelSerializer):
+    class Meta():
+        model = Member
+        fields = (
+            'id', 'first_name', 'last_name', 'about_me', 'required',
+            'birthdate', 'segments', 'location', 'place', 'phone_number', 'required'
+        )
+
+    class JSONAPIMeta():
+        resource_name = 'member/profile'
+        included_resources = [
+            'location', 'place.country', 'place', 'segments'
+        ]
+
+    included_serializers = {
+        'place': 'bluebottle.geo.serializers.PlaceSerializer',
+        'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
+        'location': 'bluebottle.geo.serializers.OfficeSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+    }
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

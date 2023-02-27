@@ -2,19 +2,19 @@ from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework.generics import (
-    ListAPIView, RetrieveAPIView, CreateAPIView, ListCreateAPIView,
+    ListAPIView, RetrieveAPIView, CreateAPIView,
     RetrieveUpdateAPIView
 )
+from rest_framework import permissions
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.geo.models import Location, Country, Geolocation, Place
 from bluebottle.geo.serializers import (
     GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
-    InitiativeCountrySerializer, PlaceSerializer
+    InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
 )
 
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
-from .serializers import CountrySerializer
 
 
 class CountryList(TranslatedApiViewMixin, ListAPIView):
@@ -81,18 +81,28 @@ class GeolocationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
 
-class PlaceList(JsonApiViewMixin, ListCreateAPIView):
+class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
 
     serializer_class = PlaceSerializer
 
 
+class IsPlaceOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return obj.member_set.filter(pk=request.user.pk).first() is not None
+
+
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
 
+    permission_classes = [IsPlaceOwner, ]
     serializer_class = PlaceSerializer
 
 
 class NewCountryList(JsonApiViewMixin, ListAPIView):
     queryset = Country.objects.all()
     serializer_class = InitiativeCountrySerializer
+    pagination_class = None

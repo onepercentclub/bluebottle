@@ -8,10 +8,13 @@ from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
+from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory, LocationFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.factory_models.geo import (
+    CountryFactory, GeolocationFactory, LocationFactory, PlaceFactory
+)
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory, DateActivitySlotFactory
 
 
@@ -232,3 +235,49 @@ class GeolocationCreateTestCase(GeoTestCase):
         self.assertTrue(
             'center={latitude},{longitude}'.format(**response.data['position']) in static_map_url
         )
+
+
+class JSONAPICountryListTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = InitiativeCountrySerializer
+        CountryFactory.create_batch(20)
+
+        self.url = reverse('new-country-list')
+
+    def test_get(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertSize(20)
+
+
+class PlaceDetailTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = PlaceSerializer
+
+        self.place = PlaceFactory.create()
+        self.user = BlueBottleUserFactory.create(place=self.place)
+
+        self.url = reverse('place-detail', args=(self.place.pk, ))
+
+    def test_get(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('locality', self.place.locality)
+
+    def test_get_anonymous(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)

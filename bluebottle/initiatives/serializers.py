@@ -128,7 +128,8 @@ class CurrentMemberSerializer(MemberSerializer):
             'hours_planned',
             'has_initiatives',
             'segments',
-            'has_initiatives'
+            'has_initiatives',
+            'profile',
         )
         meta_fields = ('permissions', )
 

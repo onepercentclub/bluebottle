@@ -47,7 +47,7 @@ from bluebottle.utils.serializers import (
 from bluebottle.utils.utils import get_current_language
 
 
-ActivityLocation = namedtuple('Position', ['pk', 'position', 'activity'])
+ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
 
 
 class ActivityLocationRelationSerializer(Serializer):
@@ -275,7 +275,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_slot_count(self, obj):
         if obj.slots:
-            return len(self.get_filtered_slots(obj))
+            return len(self.get_filtered_slots(obj, only_upcoming=True))
 
     def get_is_online(self, obj):
         if obj.slots:

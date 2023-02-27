@@ -184,6 +184,8 @@ class LivePayoutAccountRejected(TransitionMessage):
         for email in settings.SUPPORT_EMAIL_ADDRESSES:
             member, _c = Member.objects.get_or_create(email=email)
             members.append(member)
+        for member in Member.objects.filter(submitted_initiative_notifications=True).all():
+            members.append(member)
         return members
 
 

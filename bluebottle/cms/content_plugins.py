@@ -1,4 +1,5 @@
 from builtins import object
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -13,7 +14,7 @@ from bluebottle.cms.models import (
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent)
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem)
 
 
 class CMSContentItemForm(ContentItemForm):
@@ -43,7 +44,7 @@ class CMSContentPlugin(ContentPlugin):
 class QuotesBlockPlugin(CMSContentPlugin):
     model = QuotesContent
     inlines = [QuoteInline]
-    category = _('Content')
+    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -56,15 +57,13 @@ class StatsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class HomepageStatisticsBlockPlugin(CMSContentPlugin):
     model = HomepageStatisticsContent
-    category = _('Stats')
-
     category = _('Homepage')
 
 
 @plugin_pool.register
 class ActivitiesBlockPlugin(CMSContentPlugin):
     model = ActivitiesContent
-    category = _('Activities')
+    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -76,7 +75,7 @@ class ShareResultsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(CMSContentPlugin):
     model = ProjectsMapContent
-    category = _('Projects')
+    category = _('Homepage')
 
 
 @plugin_pool.register
@@ -102,7 +101,7 @@ class StepsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class CategoriesBlockPlugin(CMSContentPlugin):
     model = CategoriesContent
-    raw_id_fields = ('categories', )
+    autocomplete_fields = ('categories',)
     category = _('Homepage')
 
 
@@ -131,4 +130,16 @@ class LinksBlockPlugin(CMSContentPlugin):
 class WelcomeBlockPlugin(CMSContentPlugin):
     model = WelcomeContent
     inlines = [GreetingInline]
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class PlainTextBlockPlugin(CMSContentPlugin):
+    model = PlainTextItem
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class ImagePlainTextBlockPlugin(CMSContentPlugin):
+    model = ImagePlainTextItem
     category = _('Homepage')

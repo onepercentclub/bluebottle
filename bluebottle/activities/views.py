@@ -87,13 +87,15 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).filter(position__isnull=False)
         ]
 
-        return list(set(
+        locations = list(set(
             ActivityLocation(
                 pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
+                created=model.created,
                 position=model.position,
                 activity=model,
             ) for model in collects + dates + periods + fundings
         ))
+        return sorted(locations, key=lambda location: location.created, reverse=True)
 
 
 class ActivityPreviewList(JsonApiViewMixin, ListAPIView):

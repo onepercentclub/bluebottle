@@ -27,9 +27,13 @@ class LookerSSOEmbed(object):
     models = ('Projects', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
-    def __init__(self, user, type, id):
+    def __init__(self, user, type, id, hide_filters=None):
+        if not hide_filters:
+            hide_filters = []
         self.user = user
         self._path = '/embed/{}s/{}'.format(type, id)
+        hide_filters = "&".join([f'hide_filter={filter}' for filter in hide_filters])
+        self._path += '?' + hide_filters
 
     @property
     def path(self):

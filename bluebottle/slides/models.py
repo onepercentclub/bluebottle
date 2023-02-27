@@ -1,11 +1,11 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from django.conf import settings
 from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.validators import validate_video_file_size
@@ -33,11 +33,15 @@ class Slide(PublishableModel):
         help_text=_("This is shown on tabs beneath the banner."))
 
     # Contents
-    title = models.CharField(_("Title"), max_length=100, blank=True)
-    body = models.TextField(_("Body text"), blank=True)
+    title = models.CharField(_("Title"), max_length=72, blank=True)
+    body = models.TextField(_("Body text"), max_length=140, blank=True)
     background_image = ImageField(
         _("Background image"), max_length=255,
         blank=True, null=True,
+        help_text=_(
+            "The ideal image will have an aspect ratio of 16:9 and be no larger than 2Mb. "
+            "Sides of the image maybe cropped out on mobile screens."
+        ),
         upload_to='banner_slides/',
         validators=[
             FileMimetypeValidator(
@@ -55,13 +59,16 @@ class Slide(PublishableModel):
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
             )
         ],
-        help_text=_('This video will autoplay at the background. '
+        help_text=_('This video will autoplay at the background, without sound. '
                     'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
                     'File should be smaller then 10MB.'),
         upload_to='banner_slides/')
     video_url = models.URLField(
         _("Video url"),
         max_length=100, blank=True,
+        help_text=_(
+            "This video will only play after the 'Play' button is clicked. YouTube and Vimeo videos are supported."
+        ),
         default='')
     link_text = models.CharField(
         _("Link text"), max_length=400, blank=True,

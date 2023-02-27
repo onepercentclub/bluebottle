@@ -4,8 +4,10 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
-from fluent_contents.models import PlaceholderField, ContentItem
+from fluent_contents.extensions import PluginImageField
+from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
@@ -56,7 +58,20 @@ class ResultPage(TranslatableModel):
 
 
 class HomePage(SingletonModel, TranslatableModel):
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'CategoriesBlockPlugin',
+        'LinksBlockPlugin',
+        'LocationsBlockPlugin',
+        'LogosBlockPlugin',
+        'PlainTextBlockPlugin',
+        'ImagePlainTextBlockPlugin',
+        'SlidesBlockPlugin',
+        'StepsBlockPlugin',
+        'ActivitiesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'HomepageStatisticsBlockPlugin',
+        'QuotesBlockPlugin'
+    ])
     translations = TranslatedFields()
 
     class Meta:
@@ -110,7 +125,6 @@ class LinkGroup(SortableMixin):
 
 
 class Link(SortableMixin):
-
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
     highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
@@ -175,7 +189,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
-    quote = models.TextField()
+    quote = models.TextField(max_length=300)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='quote_images/',
@@ -257,6 +271,16 @@ class HomepageStatisticsContent(TitledContent):
 @python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
+
+    ACTIVITY_TYPES = (
+        ('highlighted', _("Highlighted")),
+        ('matching', _("Matching preferences")),
+        ('time_based', _("Time based")),
+        ('deed', _("Deeds")),
+        ('funding', _("Crowdfunding")),
+        ('collect', _("Collecting")),
+    )
+
     action_text = models.CharField(max_length=80,
                                    default=_('Find more activities'),
                                    blank=True, null=True)
@@ -264,6 +288,13 @@ class ActivitiesContent(TitledContent):
                                    blank=True, null=True)
 
     preview_template = 'admin/cms/preview/activities.html'
+
+    activity_type = models.CharField(
+        max_length=30,
+        choices=ACTIVITY_TYPES,
+        default='highlighted',
+        blank=True, null=True
+    )
 
     class Meta:
         verbose_name = _('Activities')
@@ -449,6 +480,8 @@ class Logo(SortableMixin, models.Model):
         ]
     )
     link = models.CharField(max_length=100, blank=True, null=True)
+    open_in_new_tab = models.BooleanField(default=True, blank=False, help_text=_('Open the link in a new browser tab'))
+
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
@@ -485,6 +518,7 @@ class ContentLink(SortableMixin, models.Model):
             validate_file_infection
         ]
     )
+    open_in_new_tab = models.BooleanField(default=False)
     action_text = models.CharField(max_length=40)
     action_link = models.CharField(
         max_length=100, blank=True, null=True
@@ -657,3 +691,65 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     class Meta:
         verbose_name_plural = _('site platform settings')
         verbose_name = _('site platform settings')
+
+
+class PlainTextItem(TitledContent):
+    """
+    Just a plain text block
+    """
+    text = models.TextField()
+    objects = ContentItemManager()
+    preview_template = 'admin/cms/preview/default.html'
+
+    class Meta(object):
+        verbose_name = _('Plain Text')
+        verbose_name_plural = _('Plain Text')
+
+    def __str__(self):
+        return Truncator(self.text).words(20)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/plain-text'
+
+
+class ImagePlainTextItem(TitledContent):
+    """
+    A snippet of HTML text to display on a page.
+    """
+    text = models.TextField()
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    preview_template = 'admin/cms/preview/default.html'
+
+    ALIGN_CHOICES = (
+        ('left', _("Left")),
+        ('right', _("Right")),
+    )
+
+    RATIO_CHOICES = (
+        ('0.5', _("1:2 (Text twice as wide)")),
+        ('1', _("1:1 (Equal width)")),
+        ('2', _("2:1 (Image twice as wide)")),
+    )
+
+    align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")
+    ratio = models.CharField(_("Picture / Text ratio"), max_length=10, choices=RATIO_CHOICES, default='0.5')
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Plain Text + Image')
+        verbose_name_plural = _('Plain Text + Image')
+
+    def __str__(self):
+        return Truncator(self.text).words(20)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/plain-text-image'

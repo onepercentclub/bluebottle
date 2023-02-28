@@ -350,7 +350,7 @@ class ProjectsMapContent(TitledContent):
     type = 'projects-map'
 
     class Meta:
-        verbose_name = _('Projects Map')
+        verbose_name = _('Activities Map')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'

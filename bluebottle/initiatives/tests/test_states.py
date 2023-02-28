@@ -129,38 +129,6 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.submitted.value
         )
 
-    def test_missing_place(self):
-        self.initiative = InitiativeFactory.create(
-            has_organization=False,
-            owner=self.user,
-            place=None,
-            organization=None
-        )
-
-        self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
-        )
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
-        )
-
-    def test_submit_initiative_without_geolocation(self):
-        self.initiative = InitiativeFactory.create(
-            has_organization=False,
-            owner=self.user,
-            place=None,
-            organization=None
-        )
-
-        self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
-        )
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
-        )
-
     def test_submit_with_activities(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
         funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)

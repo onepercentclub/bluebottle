@@ -42,6 +42,12 @@ class SegmentTypeList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose, ]
 
 
+class SegmentTypeDetail(JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = SegmentTypeSerializer
+    queryset = SegmentType.objects.filter(is_active=True).prefetch_related('segments')
+    permission_classes = [TenantConditionalOpenClose, ]
+
+
 class SegmentList(JsonApiViewMixin, ListAPIView):
     serializer_class = SegmentListSerializer
     queryset = Segment.objects.filter(segment_type__is_active=True).select_related('segment_type')

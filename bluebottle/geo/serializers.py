@@ -94,6 +94,31 @@ class OfficeSerializer(ModelSerializer):
     }
 
 
+class PlaceSerializer(ModelSerializer):
+    latitude = serializers.DecimalField(source='position.latitude', required=False, max_digits=10, decimal_places=3)
+    longitude = serializers.DecimalField(source='position.longitude', required=False, max_digits=10, decimal_places=3)
+
+    static_map_url = StaticMapsField(source='position')
+
+    class Meta(object):
+        model = Place
+        fields = (
+            'id', 'street', 'street_number', 'postal_code',
+            'locality', 'province', 'country', 'latitude', 'longitude',
+            'static_map_url'
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'places'
+        included_resources = [
+            'country',
+        ]
+
+    included_serializers = {
+        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
+    }
+
+
 class SimplePointSerializer(serializers.CharField):
 
     def to_representation(self, instance):
@@ -112,7 +137,7 @@ class SimplePointSerializer(serializers.CharField):
         return point
 
 
-class PlaceSerializer(serializers.ModelSerializer):
+class OldPlaceSerializer(serializers.ModelSerializer):
     position = SimplePointSerializer(required=False, allow_null=True)
 
     class Meta(object):

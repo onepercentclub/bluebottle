@@ -1267,6 +1267,32 @@ class CurrentMemberAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
+class MemberProfileJSONAPITestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory.create()
+        self.url = reverse('member-profile-detail', args=(self.user.pk, ))
+
+    def test_get_logged_in(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertEqual(self.response.json()['data']['id'], str(self.user.pk))
+        self.assertAttribute('first-name')
+        self.assertAttribute('last-name')
+        self.assertAttribute('required', self.user.required)
+
+    def test_get_logged_out(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+
 class MemberSignUpAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()

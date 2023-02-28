@@ -1,6 +1,7 @@
 from builtins import object
 
 from django.db.models import Q
+from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
@@ -100,8 +101,21 @@ class MemberSerializer(ModelSerializer):
         return representation
 
 
+class ProfileLinkField(HyperlinkedRelatedField):
+    model = Member
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, source='*', read_only=True, **kwargs)
+
+    def get_url(self, rel, link_view_name, self_kwargs, request):
+        return reverse(self.related_link_view_name, args=(self_kwargs['pk'], ))
+
+
 class CurrentMemberSerializer(MemberSerializer):
     permissions = UserPermissionsSerializer(read_only=True)
+    profile = ProfileLinkField(
+        related_link_view_name="member-profile-detail",
+    )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
 
@@ -114,7 +128,8 @@ class CurrentMemberSerializer(MemberSerializer):
             'hours_planned',
             'has_initiatives',
             'segments',
-            'has_initiatives'
+            'has_initiatives',
+            'profile',
         )
         meta_fields = ('permissions', )
 

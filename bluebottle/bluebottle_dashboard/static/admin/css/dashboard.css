@@ -186,3 +186,61 @@ form .aligned strong+p.help {
 .inline-related .description {
     margin: 16px;
 }
+
+.js-inline-admin-formset.nested-inline {
+    display: inline-block;
+    margin-left: 60px;
+}
+
+.js-inline-admin-formset fieldset{
+    padding: 4px
+}
+.nested-inline-bottom-border {
+    margin-top: 24px;
+}
+
+
+.inline-related h3 .inline_label {
+    background: transparent;
+    color: #666
+}
+
+
+.inline-related h3 b {
+    color: #000;
+    margin-left: 4px;
+}
+
+.js-inline-admin-formset .inline-related h3 {
+    background: #eee;
+}
+
+.inline-group h2 {
+    background: #ddd;
+    margin-top: 0;
+    text-transform: initial;
+    color: #241C46;
+
+}
+
+.inline-related h3 span.delete {
+    background: transparent;
+}
+
+.inline-related {
+    border: 1px solid #ddd;
+}
+
+.inline-related h3 .delete label.vCheckboxLabel,
+.inline-related h3 span.delete label:before {
+    color: darkred;
+}
+
+.form-row .cp-content .inline-related h2.cp-formset-item-title {
+    background: #ddd;
+}
+
+.inline-related .cp-item-controls {
+    margin-right: 12px;
+    margin-top: 5px;
+}

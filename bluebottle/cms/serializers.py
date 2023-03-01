@@ -168,7 +168,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Quote
-        fields = ('id', 'name', 'quote', 'image')
+        fields = ('id', 'name', 'role', 'quote', 'image')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/quotes/quotes'
@@ -804,6 +804,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }

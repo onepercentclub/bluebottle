@@ -189,6 +189,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
+    role = models.CharField(max_length=60, null=True, blank=True)
     quote = models.TextField(max_length=300)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,

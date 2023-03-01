@@ -731,15 +731,27 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('password', 'jwt_token')
+        fields = ('id', 'password', 'jwt_token')
 
 
 class EmailSetSerializer(PasswordProtectedMemberSerializer):
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueEmailValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
+
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
 
+    class JSONAPIMeta:
+        resource_name = 'email-set'
 
-class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
+
+class PasswordSetSerializer(PasswordProtectedMemberSerializer):
     new_password = PasswordField(
         write_only=True, required=True, max_length=128)
 
@@ -751,25 +763,8 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         fields = ('new_password', ) + \
             PasswordProtectedMemberSerializer.Meta.fields
 
-
-class PasswordSetSerializer(serializers.Serializer):
-    """
-    We can't use the PasswordField here because it hashes the passwords with
-    a salt which means we can't compare the
-    two passwords to see if they are the same.
-    """
-    new_password1 = PasswordField(required=True, max_length=128)
-    new_password2 = serializers.CharField(required=True, max_length=128)
-
-    def validate(self, data):
-        if data['new_password1'] != data['new_password2']:
-            raise serializers.ValidationError(
-                _('The two password fields didn\'t match.'))
-
-        return data
-
-    class Meta(object):
-        fields = ('new_password1', 'new_password2')
+    class JSONAPIMeta:
+        resource_name = 'password-set'
 
 
 class UserVerificationSerializer(serializers.Serializer):

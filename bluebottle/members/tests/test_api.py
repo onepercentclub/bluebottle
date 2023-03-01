@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
-from bluebottle.members.serializers import MemberSignUpSerializer
+from bluebottle.members.serializers import EmailSetSerializer, MemberSignUpSerializer, PasswordSetSerializer
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -627,10 +627,14 @@ class UserDataExportTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class EmailSetTest(BluebottleTestCase):
+class EmailSetTest(APITestCase):
+
     """
     Integration tests for the User API.
     """
+    serializer = EmailSetSerializer
+    model = Member
+    fields = ['email', 'password']
 
     def setUp(self):
         super(EmailSetTest, self).setUp()
@@ -638,194 +642,109 @@ class EmailSetTest(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
-        )
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.current_user_url = reverse('user-current')
 
-        self.set_email_url = reverse('user-set-email')
+        )
+        self.defaults = {
+            'email': 'new@example.com',
+            'password': 'some-password'
+        }
+        self.url = reverse('user-set-email')
 
     def test_update_email(self):
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'some-password', 'email': 'new@example.com'},
-            token=self.user_token
-        )
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['email'], 'new@example.com')
-        self.assertTrue('password' not in response.data)
-        self.assertTrue('jwt_token' in response.data)
+        self.assertEqual(self.response.json()['data']['attributes']['email'], 'new@example.com')
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'new@example.com')
-
-        old_token_response = self.client.get(
-            self.current_user_url, token=self.user_token
-        )
-        self.assertTrue(old_token_response.status_code, status.HTTP_403_FORBIDDEN)
-
-        new_token_response = self.client.get(
-            self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
-        )
-        self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
+        self.assertAttribute('jwt-token')
 
     def test_update_duplicate(self):
         existing_user = BlueBottleUserFactory.create()
+        self.defaults['email'] = existing_user.email
+        self.perform_create(user=self.user)
 
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'some-password', 'email': existing_user.email},
-            token=self.user_token
-        )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'email_unique')
 
     def test_update_duplicate_upper_case(self):
         existing_user = BlueBottleUserFactory.create()
+        self.defaults['email'] = existing_user.email.title()
+        self.perform_create(user=self.user)
 
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'some-password', 'email': existing_user.email},
-            token=self.user_token
-        )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'email_unique')
 
     def test_update_email_unauthenticated(self):
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'some-password', 'email': 'new@example.com'},
-        )
+        self.perform_create()
 
-        self.assertEqual(response.status_code, 401)
-
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, 'user@example.com')
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_update_email_wrong_password(self):
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'other-password', 'email': 'new@example.com'},
-            token=self.user_token
-        )
+        self.defaults['password'] = 'wrong-password'
+        self.perform_create(user=self.user)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, 'user@example.com')
+    def test_update_email_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
 
-    def test_update_email_wrong_token(self):
-        other_user = BlueBottleUserFactory.create(
-            password='some-password',
-            email='other@example.com'
-        )
-
-        response = self.client.put(
-            self.set_email_url,
-            {'password': 'other-password', 'email': 'new@example.com'},
-            token="JWT {0}".format(other_user.get_jwt_token())
-        )
-
-        self.assertEqual(response.status_code, 403)
-
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, 'user@example.com')
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
-class PasswordSetTest(BluebottleTestCase):
+class PasswordSetTest(APITestCase):
+
     """
     Integration tests for the User API.
     """
+    serializer = PasswordSetSerializer
+    model = Member
+    fields = ['new_password', 'password']
 
     def setUp(self):
-        super(PasswordSetTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
-        )
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.current_user_url = reverse('user-current')
-        self.set_password_url = reverse('user-set-password')
 
-    def test_update_paswword(self):
-        response = self.client.put(
-            self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
-            token=self.user_token
         )
+        self.defaults = {
+            'new_password': 'new-password',
+            'password': 'some-password'
+        }
+        self.url = reverse('user-set-password')
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue('jwt_token' in response.data)
-        self.assertTrue('password' not in response.data)
+    def test_update_password(self):
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
 
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('new-password'))
-
-        old_token_response = self.client.get(
-            self.current_user_url, token=self.user_token
-        )
-        self.assertTrue(old_token_response.status_code, status.HTTP_403_FORBIDDEN)
-
-        new_token_response = self.client.get(
-            self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
-        )
-        self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
-
-    def test_update_password_unauthenticated(self):
-        response = self.client.put(
-            self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
-        )
-
-        self.assertEqual(response.status_code, 401)
-
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('some-password'))
+        self.assertTrue(self.user.check_password(self.defaults['new_password']))
+        self.assertAttribute('jwt-token')
 
     def test_update_password_wrong_password(self):
-        response = self.client.put(
-            self.set_password_url,
-            {'password': 'other-password', 'new_password': 'new-password'},
-            token=self.user_token
-        )
+        self.defaults['password'] = 'wrong-password'
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response.status_code, 403)
+    def test_update_password_unauthenticated(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('some-password'))
+    def test_update_password_short_password(self):
+        self.defaults['new_password'] = 'short'
+        self.perform_create(user=self.user)
 
-    def test_update_password_short(self):
-        response = self.client.put(
-            self.set_password_url,
-            {'password': 'some-password', 'new_password': '123456'},
-            token=self.user_token
-        )
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'password_too_short')
 
-        self.assertEqual(response.status_code, 400)
-        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
-
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('some-password'))
-
-    def test_update_password_wrong_token(self):
-        other_user = BlueBottleUserFactory.create(
-            password='other-password'
-        )
-
-        response = self.client.put(
-            self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
-            token="JWT {0}".format(other_user.get_jwt_token())
-        )
-
-        self.assertEqual(response.status_code, 403)
-
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('some-password'))
-        self.assertTrue(other_user.check_password('other-password'))
+    def test_update_password_common_password(self):
+        self.defaults['new_password'] = 'admin123'
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'password_too_common')
 
 
 class UserLogoutTest(BluebottleTestCase):

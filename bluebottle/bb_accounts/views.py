@@ -16,7 +16,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
@@ -36,7 +36,7 @@ from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
-    EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
+    EmailSetSerializer, PasswordSetSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
     PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer,
@@ -47,7 +47,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
 from bluebottle.utils.views import (
-    RetrieveAPIView, UpdateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
+    RetrieveAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
 )
 
 USER_MODEL = get_user_model()
@@ -428,26 +428,25 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
         serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])
 
 
-class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
+class PasswordProtectedMemberUpdateApiView(JsonApiViewMixin, CreateAPIView):
     queryset = USER_MODEL.objects.all()
 
-    permission_classes = (CurrentUserPermission, )
+    permission_classes = (IsAuthenticated, CurrentUserPermission, )
 
-    def get_object(self):
-        if isinstance(self.request.user, AnonymousUser):
-            raise NotAuthenticated()
-        return self.request.user
-
-    def perform_update(self, serializer):
+    def perform_create(self, serializer):
         password = serializer.validated_data.pop('password')
 
         if not self.request.user.check_password(password):
-            raise PermissionDenied('Platform is closed')
+            raise PermissionDenied('Password does not match')
 
-        self.request.user.last_logout = now()
-        self.request.user.save()
+        serializer.instance = self.request.user
+        serializer.instance.last_logout = now()
 
-        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+        self.check_object_permissions(
+            self.request,
+            serializer.instance
+        )
+        serializer.save()
 
 
 class EmailSetView(PasswordProtectedMemberUpdateApiView):
@@ -455,7 +454,7 @@ class EmailSetView(PasswordProtectedMemberUpdateApiView):
 
 
 class PasswordSetView(PasswordProtectedMemberUpdateApiView):
-    serializer_class = PasswordUpdateSerializer
+    serializer_class = PasswordSetSerializer
 
 
 class TokenLogin(generics.CreateAPIView):

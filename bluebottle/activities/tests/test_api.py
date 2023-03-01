@@ -122,7 +122,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], False)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
-        self.assertEqual(attributes['slot-count'], 4)
+        self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
             dateutil.parser.parse(attributes['start']),
             min([slot.start for slot in activity.slots.all() if slot.start > now()])

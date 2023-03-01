@@ -19,26 +19,29 @@ def migrate_back_dated_contributions(apps, schema_editor):
         contributions = TimeContribution.objects.filter(contribution_type='period', start__date__lt=F('created__date'))
 
         for c in contributions:
-            a = c.contributor.activity.timebasedactivity.periodactivity
-            if a.deadline:
-                deadline = datetime.datetime.combine(a.deadline, datetime.time(0, 0, 0), c.created.tzinfo)
-            else:
-                deadline = None
-            if a.start:
-                start = datetime.datetime.combine(a.start, datetime.time(0, 0, 0), c.created.tzinfo)
-            else:
-                start = None
-
-            if deadline and c.created > deadline:
-                c.start = deadline
-            elif (not deadline or c.created < deadline) and start:
-                if c.created < start:
-                    c.start = start
+            try: 
+                a = c.contributor.activity.timebasedactivity.periodactivity
+                if a.deadline:
+                    deadline = datetime.datetime.combine(a.deadline, datetime.time(0, 0, 0), c.created.tzinfo)
                 else:
+                    deadline = None
+                if a.start:
+                    start = datetime.datetime.combine(a.start, datetime.time(0, 0, 0), c.created.tzinfo)
+                else:
+                    start = None
+
+                if deadline and c.created > deadline:
+                    c.start = deadline
+                elif (not deadline or c.created < deadline) and start:
+                    if c.created < start:
+                        c.start = start
+                    else:
+                        c.start = c.created
+                elif not start:
                     c.start = c.created
-            elif not start:
-                c.start = c.created
-            c.save()
+                c.save()
+            except AttributeError:
+                pass
 
 
 class Migration(migrations.Migration):

@@ -14,8 +14,11 @@ from bluebottle.time_based.messages import (
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
     TeamSlotChangedNotification, TeamParticipantJoinedNotification
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, \
-    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, DateParticipantFactory,
+    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory,
+    SlotParticipantFactory
+)
 
 
 class DateActivityNotificationTestCase(NotificationTestCase):
@@ -261,10 +264,6 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
 
 class DateSlotNotificationTestCase(NotificationTestCase):
     def setUp(self):
-        self.supporter = BlueBottleUserFactory.create(
-            first_name='Frans',
-            last_name='Beckenbauer'
-        )
         self.activity = DateActivityFactory.create(
             title="Save the world!"
         )
@@ -273,10 +272,34 @@ class DateSlotNotificationTestCase(NotificationTestCase):
             activity=self.activity
         )
 
-    def test_new_participant_notification(self):
+    def test_slot_cancelled(self):
         self.message_class = SlotCancelledNotification
         self.create()
         self.assertRecipients([self.activity.owner])
+        self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_slot_cancelled_with_participant(self):
+        participant = DateParticipantFactory.create(activity=self.activity, status='accepted')
+        SlotParticipantFactory.create(
+            status='registered', slot=self.obj, participant=participant
+        )
+        SlotParticipantFactory.create(
+            status='rejected',
+            slot=self.obj,
+            participant=DateParticipantFactory.create(activity=self.activity, status='accepted')
+        )
+
+        SlotParticipantFactory.create(
+            status='registered',
+            slot=self.obj,
+            participant=DateParticipantFactory.create(activity=self.activity, status='rejected')
+        )
+
+        self.message_class = SlotCancelledNotification
+        self.create()
+        self.assertRecipients([self.activity.owner, participant.user])
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

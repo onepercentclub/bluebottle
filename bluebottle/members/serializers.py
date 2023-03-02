@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
-from rest_framework_json_api.serializers import Serializer, ModelSerializer
+from rest_framework_json_api.serializers import Serializer, ModelSerializer, ResourceRelatedField
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -690,6 +690,11 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class MemberProfileSerializer(ModelSerializer):
+    segments = ResourceRelatedField(
+        many=True,
+        queryset=Segment.objects.all(),
+    )
+
     class Meta():
         model = Member
         fields = (

@@ -18,7 +18,7 @@ from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
 from rest_framework import status
-from rest_framework.relations import RelatedField
+from rest_framework.relations import ManyRelatedField, RelatedField
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
@@ -255,10 +255,17 @@ class APITestCase(BluebottleTestCase):
             if isinstance(self.serializer().get_fields()[field], RelatedField):
                 data['relationships'][field] = {
                     'data': {
-                        'id': value.pk,
+                        'id': str(value.pk),
                         'type': value.JSONAPIMeta.resource_name
                     }
                 }
+            elif isinstance(self.serializer().get_fields()[field], ManyRelatedField):
+                data['relationships'][field] = {'data': [
+                    {
+                        'id': str(item.pk),
+                        'type': item.JSONAPIMeta.resource_name
+                    } for item in value
+                ]}
             else:
                 data['attributes'][field] = value
 

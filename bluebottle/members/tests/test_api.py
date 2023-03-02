@@ -6,7 +6,9 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
-from bluebottle.members.serializers import EmailSetSerializer, MemberSignUpSerializer, PasswordSetSerializer
+from bluebottle.members.serializers import (
+    MemberProfileSerializer, EmailSetSerializer, MemberSignUpSerializer, PasswordSetSerializer
+)
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -1187,21 +1189,31 @@ class CurrentMemberAPITestCase(APITestCase):
 
 
 class MemberProfileJSONAPITestCase(APITestCase):
+    serializer = MemberProfileSerializer
 
     def setUp(self):
         super().setUp()
-        self.user = BlueBottleUserFactory.create()
-        self.url = reverse('member-profile-detail', args=(self.user.pk, ))
+        self.model = BlueBottleUserFactory.create()
+        self.url = reverse('member-profile-detail', args=(self.model.pk, ))
 
     def test_get_logged_in(self):
-        self.perform_get(user=self.user)
+        self.perform_get(user=self.model)
 
         self.assertStatus(status.HTTP_200_OK)
 
-        self.assertEqual(self.response.json()['data']['id'], str(self.user.pk))
+        self.assertEqual(self.response.json()['data']['id'], str(self.model.pk))
+        self.assertAttribute('email')
         self.assertAttribute('first-name')
         self.assertAttribute('last-name')
-        self.assertAttribute('required', self.user.required)
+        self.assertAttribute('about-me')
+        self.assertAttribute('phone-number')
+        self.assertAttribute('birthdate')
+        self.assertAttribute('required', self.model.required)
+        self.assertRelationship('segments')
+        self.assertRelationship('place')
+        self.assertRelationship('location')
+        self.assertRelationship('skills')
+        self.assertRelationship('favourite-themes')
 
     def test_get_logged_out(self):
         self.perform_get()
@@ -1210,6 +1222,34 @@ class MemberProfileJSONAPITestCase(APITestCase):
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_update(self):
+        self.perform_update({'phone_number': '0612345678'}, user=self.model)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertAttribute('phone-number', '0612345678')
+
+    def test_update_segment(self):
+        segment_type = SegmentTypeFactory.create()
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        self.perform_update({'segments': [segment]}, user=self.model)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+
+    def test_update_segment_required(self):
+        segment_type = SegmentTypeFactory.create(required=True, needs_verification=True)
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        self.perform_get(user=self.model)
+        self.assertAttribute('required', [f'segment_type.{segment_type.pk}'])
+        self.perform_update({'segments': [segment]}, user=self.model)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+        self.assertEqual(len(self.response.json()['data']['attributes']['required']), 0)
 
 
 class MemberSignUpAPITestCase(APITestCase):

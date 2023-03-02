@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
-from rest_framework_json_api.serializers import Serializer, ModelSerializer
+from rest_framework_json_api.serializers import Serializer, ModelSerializer, ResourceRelatedField
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
@@ -690,17 +690,35 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class MemberProfileSerializer(ModelSerializer):
+    segments = ResourceRelatedField(
+        many=True,
+        queryset=Segment.objects.all(),
+    )
+
+    skills = ResourceRelatedField(
+        queryset=Skill.objects.all(),
+        many=True,
+    )
+
+    favourite_themes = ResourceRelatedField(
+        queryset=Theme.objects.all(),
+        many=True,
+    )
+
+    email = serializers.CharField(read_only=True)
+
     class Meta():
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'about_me', 'required',
-            'birthdate', 'segments', 'location', 'place', 'phone_number', 'required'
+            'id', 'email', 'first_name', 'last_name', 'about_me', 'required',
+            'birthdate', 'phone_number', 'segments', 'location', 'place',
+            'skills', 'favourite_themes'
         )
 
     class JSONAPIMeta():
         resource_name = 'member/profile'
         included_resources = [
-            'location', 'place.country', 'place', 'segments'
+            'location', 'place.country', 'place', 'segments', 'skills', 'favourite_themes'
         ]
 
     included_serializers = {
@@ -708,7 +726,23 @@ class MemberProfileSerializer(ModelSerializer):
         'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'skills': 'bluebottle.time_based.serializers.SkillSerializer',
+        'favourite_themes': 'bluebottle.initiatives.serializers.ThemeSerializer',
     }
+
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

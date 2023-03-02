@@ -1308,6 +1308,19 @@ class MemberProfileJSONAPITestCase(APITestCase):
 
         self.assertRelationship('segments', [segment])
 
+    def test_update_segment_required(self):
+        segment_type = SegmentTypeFactory.create(required=True, needs_verification=True)
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        self.perform_get(user=self.model)
+        self.assertAttribute('required', [f'segment_type.{segment_type.pk}'])
+        self.perform_update({'segments': [segment]}, user=self.model)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+        self.assertEqual(len(self.response.json()['data']['attributes']['required']), 0)
+
 
 class MemberSignUpAPITestCase(APITestCase):
     def setUp(self):

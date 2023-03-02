@@ -715,6 +715,20 @@ class MemberProfileSerializer(ModelSerializer):
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
     }
 
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField(required=True, max_length=254)

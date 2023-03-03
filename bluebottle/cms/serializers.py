@@ -770,6 +770,18 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/plain-text-image'
 
 
+class FallbackBlockSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        return {'id': instance.pk, 'type': self.JSONAPIMeta.resource_name}
+
+    class Meta(object):
+        model = None
+        fields = ('id', 'type', )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/unknown'
+
+
 class BlockSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
@@ -790,6 +802,13 @@ class BlockSerializer(PolymorphicModelSerializer):
         return Slide.objects.published().filter(
             language=obj.language_code
         )
+
+    @classmethod
+    def get_polymorphic_serializer_for_instance(cls, instance):
+        try:
+            return super().get_polymorphic_serializer_for_instance(instance)
+        except NotImplementedError:
+            return FallbackBlockSerializer
 
     class Meta:
         model = ContentItem

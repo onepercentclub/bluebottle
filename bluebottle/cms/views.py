@@ -14,6 +14,7 @@ from bluebottle.cms.serializers import (
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
+from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermission
 from bluebottle.utils.utils import get_language_from_request
 from bluebottle.utils.views import RetrieveAPIView, JsonApiViewMixin
 
@@ -51,12 +52,14 @@ class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = HomePage.objects.all()
     serializer_class = HomeSerializer
 
+    permission_classes = [TenantConditionalOpenClose, ResourcePermission]
+
 
 class BlockDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = ContentItem.objects.all()
     serializer_class = BlockSerializer
 
-    permission_classes = []
+    permission_classes = [TenantConditionalOpenClose, ResourcePermission]
 
 
 class OldPageDetail(RetrieveAPIView):

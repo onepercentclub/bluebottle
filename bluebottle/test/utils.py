@@ -357,9 +357,10 @@ class APITestCase(BluebottleTestCase):
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')
             try:
-                group.permissions.remove(
-                    Permission.objects.get(codename='api_read_{}'.format(model_name))
-                )
+                for permission in Permission.objects.filter(codename='api_read_{}'.format(model_name)):
+                    group.permissions.remove(
+                        permission
+                    )
             except Permission.DoesNotExist:
                 pass
 
@@ -586,7 +587,7 @@ class APITestCase(BluebottleTestCase):
         ]
         self.assertIn(field, error_fields)
 
-    @property
+    @ property
     def data(self):
         """
         randomly generated data that can be used to perform creates
@@ -694,7 +695,7 @@ class TriggerTestCase(BluebottleTestCase):
     def create(self):
         self.model = self.factory.create(**self.defaults)
 
-    @contextmanager
+    @ contextmanager
     def execute(self, user=None, **kwargs):
         try:
             self.effects = self.model.execute_triggers(user=user, **kwargs)
@@ -765,7 +766,7 @@ class NotificationTestCase(BluebottleTestCase):
     def create(self, **kwargs):
         self.message = self.message_class(self.obj, **kwargs)
 
-    @property
+    @ property
     def _html(self):
         return BeautifulSoup(self.message.get_content_html(
             self.message.get_recipients()[0]), 'html.parser'
@@ -807,11 +808,11 @@ class NotificationTestCase(BluebottleTestCase):
         if text in self.html_content:
             self.fail("HTML body does contain '{}'".format(text))
 
-    @property
+    @ property
     def text_content(self):
         return self.message.get_content_text(self.message.get_recipients()[0])
 
-    @property
+    @ property
     def html_content(self):
         return self.message.get_content_html(self.message.get_recipients()[0])
 
@@ -864,7 +865,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 form.field_order.append((name, new))
 
 
-@override_settings(
+@ override_settings(
     CELERY_ALWAYS_EAGER=True,
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
 )
@@ -877,7 +878,7 @@ class CeleryTestCase(SimpleTestCase):
         for factory in self.factories:
             factory._meta.model.objects.all().delete()
 
-    @classmethod
+    @ classmethod
     def setUpClass(cls):
         from celery.contrib.testing.tasks import ping  # noqa
 
@@ -887,7 +888,7 @@ class CeleryTestCase(SimpleTestCase):
 
         super().setUpClass()
 
-    @classmethod
+    @ classmethod
     def tearDownClass(cls):
         cls.celery_worker.__exit__(None, None, None)
         app.conf.task_always_eager = True

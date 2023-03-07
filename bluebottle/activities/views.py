@@ -104,7 +104,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).annotate(
             total_duration=Sum(
                 'contributions__timecontribution__value',
-                filter=Q(contributions__status='failed')
+                filter=Q(contributions__status__in=['succeeded', 'new'])
             )
         )
 

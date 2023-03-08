@@ -24,6 +24,7 @@ from bluebottle.cms.models import (
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory
@@ -36,7 +37,7 @@ from bluebottle.test.factory_models.cms import (
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
 class ResultPageTestCase(BluebottleTestCase):
@@ -489,10 +490,11 @@ class NewsItemTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][0]['html'], html.html)
 
 
-class HomeTestCase(BluebottleTestCase):
+class HomeTestCase(APITestCase):
     """
     Integration tests for the Home API.
     """
+    model = HomePage
 
     def setUp(self):
         super(HomeTestCase, self).setUp()
@@ -741,6 +743,37 @@ class HomeTestCase(BluebottleTestCase):
             text_block['attributes']['align'],
             "right"
         )
+
+    def test_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_closed_user(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_closed_partner(self):
+        group = Group.objects.get(name='Authenticated')
+        try:
+            for permission in Permission.objects.filter(
+                codename='api_read_{}'.format(self.model._meta.model_name)
+            ):
+                group.permissions.remove(
+                    permission
+                )
+        except Permission.DoesNotExist:
+            pass
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 403)
 
 
 class PageTestCase(BluebottleTestCase):

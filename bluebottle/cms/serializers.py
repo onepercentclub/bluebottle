@@ -918,6 +918,7 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'copyright',
             'powered_by_link',
             'powered_by_logo',
+            'footer_banner',
             'powered_by_text',
             'metadata_title',
             'metadata_description',

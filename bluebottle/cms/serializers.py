@@ -22,7 +22,8 @@ from bluebottle.cms.models import (
     ShareResultsContent, ProjectsMapContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem)
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem
+)
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.geo.serializers import OfficeSerializer
 from bluebottle.members.models import Member
@@ -770,6 +771,17 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/plain-text-image'
 
 
+class ImageBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = ImageItem
+        fields = ('id', 'type', 'image', )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image'
+
+
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
         return {'id': instance.pk, 'type': self.JSONAPIMeta.resource_name}
@@ -796,6 +808,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         CategoriesBlockSerializer,
         TextBlockSerializer,
         ImageTextBlockSerializer,
+        ImageBlockSerializer
     ]
 
     def get_slides(self, obj):

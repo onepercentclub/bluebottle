@@ -14,7 +14,8 @@ from bluebottle.cms.models import (
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem)
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem
+)
 
 
 class CMSContentItemForm(ContentItemForm):
@@ -142,4 +143,10 @@ class PlainTextBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ImagePlainTextBlockPlugin(CMSContentPlugin):
     model = ImagePlainTextItem
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class ImageBlockPlugin(CMSContentPlugin):
+    model = ImageItem
     category = _('Homepage')

@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
-    CategoriesContent, PlainTextItem, ImagePlainTextItem
+    CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
@@ -742,6 +742,26 @@ class HomeTestCase(APITestCase):
         self.assertEqual(
             text_block['attributes']['align'],
             "right"
+        )
+
+    def test_image(self):
+        block = ImageItem.objects.create_for_placeholder(self.placeholder)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            block.image = File(f)
+            block.save()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/image')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/image'
+        )
+
+        self.assertIsNotNone(
+            text_block['attributes']['image']['full']
         )
 
     def test_closed(self):

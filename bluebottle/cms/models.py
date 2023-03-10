@@ -754,3 +754,32 @@ class ImagePlainTextItem(TitledContent):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'
+
+
+class ImageItem(TitledContent):
+    """
+    A single image to display on the page
+    """
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    preview_template = 'admin/cms/preview/default.html'
+
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Image')
+        verbose_name_plural = _('Image')
+
+    def __str__(self):
+        return self.image.name
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image'

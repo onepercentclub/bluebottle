@@ -624,6 +624,18 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    footer_banner = models.ImageField(
+        _('Footer banner'),
+        help_text=_('Banner shown just above the footer'),
+        null=True, blank=True, upload_to='site_content/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+
     title_font = models.FileField(
         _('Title font'), null=True, blank=True,
         help_text=_(

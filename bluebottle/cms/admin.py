@@ -165,7 +165,7 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Powered by'),
             {
                 'fields': (
-                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo'
+                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
                 )
             }
         ),

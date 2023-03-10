@@ -49,7 +49,7 @@ class RawHtmlItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = RawHtmlItem
-        fields = ('id', 'html', 'type', )
+        fields = ('id', 'html', 'type',)
 
 
 class DocumentItemSerializer(ItemSerializer):
@@ -57,7 +57,7 @@ class DocumentItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = DocumentItem
-        fields = ('id', 'text', 'document', 'type', )
+        fields = ('id', 'text', 'document', 'type',)
 
 
 class ImageTextItemSerializer(ItemSerializer):
@@ -66,7 +66,7 @@ class ImageTextItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = ImageTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type',)
 
 
 class ImageTextRoundItemSerializer(ItemSerializer):
@@ -75,7 +75,7 @@ class ImageTextRoundItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = ImageTextItem
-        fields = ('id', 'text', 'image', 'type', )
+        fields = ('id', 'text', 'image', 'type',)
 
 
 class PictureItemSerializer(ItemSerializer):
@@ -84,7 +84,7 @@ class PictureItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = PictureItem
-        fields = ('id', 'align', 'image', 'type', )
+        fields = ('id', 'align', 'image', 'type',)
 
 
 class OEmbedItemSerializer(ItemSerializer):
@@ -92,7 +92,7 @@ class OEmbedItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = OEmbedItem
-        fields = ('id', 'title', 'width', 'height', 'html', 'type', )
+        fields = ('id', 'title', 'width', 'height', 'html', 'type',)
 
 
 class TextItemSerializer(ItemSerializer):
@@ -100,7 +100,7 @@ class TextItemSerializer(ItemSerializer):
 
     class Meta(object):
         model = TextItem
-        fields = ('id', 'text', 'type', )
+        fields = ('id', 'text', 'type',)
 
 
 class MediaFileContentSerializer(serializers.Serializer):
@@ -147,7 +147,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = StatsContent
-        fields = ('id', 'type', 'stats', 'title', 'sub_title', )
+        fields = ('id', 'type', 'stats', 'title', 'sub_title',)
 
 
 class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
@@ -199,7 +199,6 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ActivitiesContentSerializer(serializers.ModelSerializer):
-
     class Meta(object):
         model = ActivitiesContent
         fields = ('id', 'type', 'title', 'sub_title',
@@ -312,7 +311,7 @@ class ActionSerializer(ItemSerializer):
 
     class Meta(object):
         model = ActionItem
-        fields = ('id', 'type', 'link', 'title', )
+        fields = ('id', 'type', 'link', 'title',)
 
 
 class ColumnsSerializer(ItemSerializer):
@@ -320,7 +319,7 @@ class ColumnsSerializer(ItemSerializer):
 
     class Meta(object):
         model = ColumnsItem
-        fields = ('id', 'type', 'text1', 'text2', )
+        fields = ('id', 'type', 'text1', 'text2',)
 
 
 class LinksContentSerializer(serializers.ModelSerializer):
@@ -328,7 +327,7 @@ class LinksContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = LinksContent
-        fields = ('id', 'type', 'title', 'sub_title', 'links', )
+        fields = ('id', 'type', 'title', 'sub_title', 'links',)
 
 
 class WelcomeContentSerializer(serializers.ModelSerializer):
@@ -547,7 +546,7 @@ class LinksBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = LinksContent
         includes_resources = ['links']
-        fields = BaseBlockSerializer.Meta.fields + ('links', )
+        fields = BaseBlockSerializer.Meta.fields + ('links',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/links'
@@ -564,7 +563,7 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ProjectsMapContent
-        fields = BaseBlockSerializer.Meta.fields + ('activities', )
+        fields = BaseBlockSerializer.Meta.fields + ('activities',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'
@@ -580,7 +579,7 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
         link += '?page[size]=4'
         activity_type = self.root.data['activity_type']
         if activity_type == 'highlighted':
-            link += '&filter[highlighted]=true'
+            link += '&filter[highlight]=true'
         elif activity_type == 'matching':
             link += '&sort=popularity'
         elif activity_type == 'deed':
@@ -597,7 +596,6 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
 
 
 class ActivitiesBlockSerializer(BaseBlockSerializer):
-
     activities = ActivitySearchRelatedSerializer()
 
     def get_links(self, *args, **kwargs):
@@ -629,7 +627,7 @@ class SlidesBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = SlidesContent
-        fields = BaseBlockSerializer.Meta.fields + ('slides', )
+        fields = BaseBlockSerializer.Meta.fields + ('slides',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/slides'
@@ -742,7 +740,6 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
-
     text = serializers.SerializerMethodField()
 
     def get_text(self, obj):
@@ -750,7 +747,7 @@ class TextBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = PlainTextItem
-        fields = ('id', 'text', 'type', 'title', 'sub_title', )
+        fields = ('id', 'text', 'type', 'title', 'sub_title',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text'
@@ -765,7 +762,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImagePlainTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title', )
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'
@@ -788,14 +785,13 @@ class FallbackBlockSerializer(serializers.Serializer):
 
     class Meta(object):
         model = None
-        fields = ('id', 'type', )
+        fields = ('id', 'type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/unknown'
 
 
 class BlockSerializer(PolymorphicModelSerializer):
-
     polymorphic_serializers = [
         SlidesBlockSerializer,
         StepsBlockSerializer,
@@ -843,7 +839,6 @@ class BlockSerializer(PolymorphicModelSerializer):
 
 
 class HomeSerializer(ModelSerializer):
-
     blocks = PolymorphicSerializerMethodResourceRelatedField(
         BlockSerializer,
         read_only=True,

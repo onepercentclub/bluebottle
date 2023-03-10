@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import mock
 from django.contrib.auth.models import Group, Permission
+from django.core.files.base import File
 from django.test.utils import override_settings
 from django.urls import reverse
 from django_elasticsearch_dsl.test import ESTestCase
@@ -179,20 +180,30 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.settings_url = reverse('settings')
 
     def test_site_platform_settings(self):
-        # Create site platform settings and confirm they end up correctly in settings api
-        SitePlatformSettings.objects.create(
-            contact_email='malle@epp.ie',
-            contact_phone='+3163202128',
-            copyright='Malle Eppie Ltd.',
-            powered_by_text='Powered by',
-            powered_by_link='https://epp.ie'
-        )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            # Create site platform settings and confirm they end up correctly in settings api
+            SitePlatformSettings.objects.create(
+                contact_email='malle@epp.ie',
+                contact_phone='+3163202128',
+                copyright='Malle Eppie Ltd.',
+                powered_by_text='Powered by',
+                powered_by_link='https://epp.ie',
+                footer_banner=image
+            )
+
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['content']['contact_email'], 'malle@epp.ie')
         self.assertEqual(response.data['platform']['content']['contact_phone'], '+3163202128')
         self.assertEqual(response.data['platform']['content']['copyright'], 'Malle Eppie Ltd.')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+        self.assertTrue(
+            response.data['platform']['content']['footer_banner'].startswith(
+                '/media/site_content/bluebottle/cms/tests/test_images/upload_'
+            )
+        )
 
     def test_initiative_platform_settings(self):
         # Create initiative platform settings and confirm they end up correctly in settings api
@@ -305,7 +316,8 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'footer_color': '#3b3b3b',
             'footer_text_color': '#ffffff',
             'title_font': None,
-            'body_font': None
+            'body_font': None,
+            'footer_banner': None,
         }
         members = {
             'closed': True,

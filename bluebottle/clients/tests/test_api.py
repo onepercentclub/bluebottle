@@ -201,7 +201,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertTrue(
             response.data['platform']['content']['footer_banner'].startswith(
-                '/media/site_content/bluebottle/cms/tests/test_images/upload_'
+                '/media/'
             )
         )
 

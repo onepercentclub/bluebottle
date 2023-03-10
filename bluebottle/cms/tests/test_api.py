@@ -20,10 +20,11 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
-    CategoriesContent, PlainTextItem, ImagePlainTextItem
+    CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory
@@ -36,7 +37,7 @@ from bluebottle.test.factory_models.cms import (
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
 class ResultPageTestCase(BluebottleTestCase):
@@ -489,10 +490,11 @@ class NewsItemTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][0]['html'], html.html)
 
 
-class HomeTestCase(BluebottleTestCase):
+class HomeTestCase(APITestCase):
     """
     Integration tests for the Home API.
     """
+    model = HomePage
 
     def setUp(self):
         super(HomeTestCase, self).setUp()
@@ -741,6 +743,57 @@ class HomeTestCase(BluebottleTestCase):
             text_block['attributes']['align'],
             "right"
         )
+
+    def test_image(self):
+        block = ImageItem.objects.create_for_placeholder(self.placeholder)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            block.image = File(f)
+            block.save()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/image')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/image'
+        )
+
+        self.assertIsNotNone(
+            text_block['attributes']['image']['full']
+        )
+
+    def test_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_closed_user(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_closed_partner(self):
+        group = Group.objects.get(name='Authenticated')
+        try:
+            for permission in Permission.objects.filter(
+                codename='api_read_{}'.format(self.model._meta.model_name)
+            ):
+                group.permissions.remove(
+                    permission
+                )
+        except Permission.DoesNotExist:
+            pass
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 403)
 
 
 class PageTestCase(BluebottleTestCase):

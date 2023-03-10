@@ -120,7 +120,7 @@ class CurrentMemberSerializer(MemberSerializer):
     has_initiatives = serializers.SerializerMethodField()
 
     def get_has_initiatives(self, obj):
-        return obj.own_initiatives.exists()
+        return obj.is_initiator
 
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (

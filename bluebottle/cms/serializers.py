@@ -581,15 +581,15 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
         if activity_type == 'highlighted':
             link += '&filter[highlight]=true'
         elif activity_type == 'matching':
-            link += '&sort=popularity'
+            link += '&sort=popularity&filter[status]=open&filter[matching]=true'
         elif activity_type == 'deed':
-            link += '&filter[type]=deed'
+            link += '&filter[type]=deed&filter[status]=open'
         elif activity_type == 'funding':
-            link += '&filter[type]=funding'
-        elif activity_type == 'collecting':
-            link += '&filter[type]=collect'
+            link += '&filter[type]=funding&filter[status]=open'
+        elif activity_type == 'collect':
+            link += '&filter[type]=collect&filter[status]=open'
         elif activity_type == 'time_based':
-            link += '&filter[type]=time_based'
+            link += '&filter[type]=time_based&filter[status]=open'
         return {
             'related': link
         }

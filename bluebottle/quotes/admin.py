@@ -17,7 +17,7 @@ class QuoteAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('quote', 'language', 'user'),
+            'fields': ('quote', 'language', 'user', 'role'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date'),

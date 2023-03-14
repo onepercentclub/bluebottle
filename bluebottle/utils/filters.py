@@ -32,6 +32,8 @@ class ElasticSearchFilter(filters.SearchFilter):
         if search_query:
             search = search.query(search_query)
 
+        search = self.get_extra(search, request)
+
         sort = self.get_sort(request)
         if sort:
             try:
@@ -41,6 +43,9 @@ class ElasticSearchFilter(filters.SearchFilter):
                 search = search.sort(*sort)
 
         return (queryset, search)
+
+    def get_extra(self, search, request):
+        return search
 
     def get_filter_fields(self, request):
         return [

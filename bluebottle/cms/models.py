@@ -64,6 +64,7 @@ class HomePage(SingletonModel, TranslatableModel):
         'LogosBlockPlugin',
         'PlainTextBlockPlugin',
         'ImagePlainTextBlockPlugin',
+        'ImageBlockPlugin',
         'SlidesBlockPlugin',
         'StepsBlockPlugin',
         'ActivitiesBlockPlugin',

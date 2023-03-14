@@ -447,6 +447,81 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
         self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
 
+    def test_filter_matching(self):
+        theme = ThemeFactory.create()
+        self.owner.favourite_themes.add(theme)
+
+        skill = SkillFactory.create()
+        self.owner.skills.add(skill)
+
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
+        self.owner.save()
+
+        initiative = InitiativeFactory.create(theme=theme)
+
+        first = DateActivityFactory.create(
+            status='open',
+            initiative=initiative,
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
+            is_online=False
+        )
+
+        second = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            is_online=False
+        )
+        third = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            expertise=skill,
+            is_online=False
+        )
+
+        fourth = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            is_online=False
+        )
+
+        fifth = PeriodActivityFactory.create(
+            status='open',
+            expertise=skill,
+            is_online=False
+        )
+
+        PeriodActivityFactory.create(
+            status='open',
+        )
+
+        PeriodActivityFactory.create(
+            status='closed',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            expertise=skill,
+            is_online=False
+        )
+
+        response = self.client.get(
+            self.url + '?filter[matching]',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            set([str(first.pk), str(second.pk), str(third.pk), str(fourth.pk), str(fifth.pk)]),
+            set(activity['id'] for activity in data['data'])
+        )
+        for activity in data['data']:
+            self.assertTrue(
+                any([activity['attributes']['matching-properties'].values()])
+            )
+
     def test_filter_owner(self):
         owned = DateActivityFactory.create(owner=self.owner, status='open')
         DateActivityFactory.create(status='open')

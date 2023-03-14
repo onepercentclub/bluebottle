@@ -22,6 +22,7 @@ class Quote(PublishableModel):
     language = models.CharField(_("language"), max_length=7,
                                 choices=lazy(get_language_choices, list)())
     quote = models.TextField()
+    role = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              verbose_name=_('Quoted member'),
                              related_name="quote_user",

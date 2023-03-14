@@ -61,10 +61,10 @@ class HomePage(SingletonModel, TranslatableModel):
     content = PlaceholderField('content', plugins=[
         'CategoriesBlockPlugin',
         'LinksBlockPlugin',
-        'LocationsBlockPlugin',
         'LogosBlockPlugin',
         'PlainTextBlockPlugin',
         'ImagePlainTextBlockPlugin',
+        'ImageBlockPlugin',
         'SlidesBlockPlugin',
         'StepsBlockPlugin',
         'ActivitiesBlockPlugin',

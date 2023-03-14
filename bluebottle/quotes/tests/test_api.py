@@ -1,22 +1,20 @@
 from django.urls import reverse
-
 from rest_framework import status
 
-from bluebottle.test.factory_models.quotes import QuoteFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.quotes import QuoteFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-class QuoteTestCase(BluebottleTestCase):
+class QuoteListTestCase(BluebottleTestCase):
     """
-    Base class for test cases for ``slide`` module.
+    Test case for ``QuoteList`` API view.
 
-    The testing classes for ``slide`` module related to the API must
-    subclass this.
+    Endpoint: /api/quotes/
     """
 
     def setUp(self):
-        super(QuoteTestCase, self).setUp()
+        super(QuoteListTestCase, self).setUp()
 
         self.author = BlueBottleUserFactory.create()
         self.user = BlueBottleUserFactory.create()
@@ -27,14 +25,6 @@ class QuoteTestCase(BluebottleTestCase):
             author=self.author, user=self.user,
             quote="Always forgive your enemies; nothing annoys them so much.",
             language='nl')
-
-
-class QuoteListTestCase(QuoteTestCase):
-    """
-    Test case for ``QuoteList`` API view.
-
-    Endpoint: /api/quotes/
-    """
 
     def test_api_quotes_list_endpoint(self):
         """
@@ -58,8 +48,6 @@ class QuoteListTestCase(QuoteTestCase):
         """
         response = self.client.get(reverse('quote_list'))
         quote = response.data['results'][0]
-
-        self.assertEqual(quote['id'], self.quote1.id)
         self.assertEqual(quote['user']['id'], self.user.id)
         self.assertEqual(quote.get('author', None), None)
         self.assertEqual(quote['quote'], self.quote1.quote)

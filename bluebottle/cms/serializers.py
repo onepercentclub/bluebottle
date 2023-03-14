@@ -581,7 +581,7 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
         if activity_type == 'highlighted':
             link += '&filter[highlight]=true'
         elif activity_type == 'matching':
-            link += '&sort=popularity&filter[status]=open&filter[matching]=true'
+            link += '&sort=popularity&filter[matching]'
         elif activity_type == 'deed':
             link += '&filter[type]=deed&filter[status]=open'
         elif activity_type == 'funding':
@@ -773,7 +773,7 @@ class ImageBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImageItem
-        fields = ('id', 'type', 'image', )
+        fields = ('id', 'type', 'image', 'title', 'sub_title')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

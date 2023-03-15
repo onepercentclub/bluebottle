@@ -1,3 +1,5 @@
+from random import randrange
+
 from future import standard_library
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 
@@ -8,7 +10,6 @@ from os.path import isfile
 import sys
 from urllib.error import URLError
 import urllib.parse
-
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -58,6 +59,9 @@ class SorlImageField(RestrictedImageField):
             return ""
 
         if not os.path.exists(value.path):
+            if settings.DEBUG and settings.RANDOM_IMAGE_PROVIDER:
+                (width, height) = self.geometry_string.split('x')
+                return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
             return ""
 
         _, ext = os.path.splitext(value.path)

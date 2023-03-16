@@ -1,6 +1,6 @@
 import mimetypes
 from os.path import exists
-from random import random
+from random import randrange
 
 import magic
 from django.conf import settings
@@ -83,7 +83,7 @@ class ImageContentView(FileContentView):
         else:
             width = self.kwargs['size']
             height = int(width) / 1.5
-        return settings.RANDOM_IMAGE_PROVIDER.format(seed=random(), width=width, height=height)
+        return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
 
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()

@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
@@ -60,7 +61,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             in queryset.annotate(
                 position=F('collectactivity__location__position'),
                 location_id=F('collectactivity__location__pk')
-            ).filter(position__isnull=False)
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
         periods = [
@@ -68,7 +69,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             in queryset.annotate(
                 position=F('timebasedactivity__periodactivity__location__position'),
                 location_id=F('timebasedactivity__periodactivity__location__pk')
-            ).filter(position__isnull=False)
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
         dates = [
@@ -76,7 +77,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             in queryset.annotate(
                 position=F('timebasedactivity__dateactivity__slots__location__position'),
                 location_id=F('timebasedactivity__dateactivity__slots__location__pk')
-            ).filter(position__isnull=False)
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
         fundings = [
@@ -84,7 +85,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             in queryset.annotate(
                 position=F('funding__initiative__place__position'),
                 location_id=F('funding__initiative__place__pk')
-            ).filter(position__isnull=False)
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
         locations = list(set(

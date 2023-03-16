@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: goodup
     services:
       db:
         image: postgis/postgis:11-2.5
@@ -38,36 +38,36 @@ jobs:
         image: celery
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [ 3.7 ]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Update package manager
-      run: sudo apt-get update
-    - name: Install packages
-      run: sudo apt-get install -y libxmlsec1 libxmlsec1-dev libgdal-dev openjdk-8-jdk-headless
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Test data
-      run: |
-        psql -h localhost -U bb test_bluebottle_test < testdata.sql
-      env:
-        PGPASSWORD: bb
-    - name: Setup Locale
-      run: |
-        export LC_ALL="en_US.UTF-8"
-        export LC_CTYPE="en_US.UTF-8"
-        sudo dpkg-reconfigure locales
-    - uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ hashFiles('setup.py') }}-${{ hashFiles('setup.py') }}
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[test] --trusted-host github.com
-    - name: Run Tests
-      run: |
-        python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8 --keepdb --settings bluebottle.settings.github
+      - uses: actions/checkout@v3
+      - name: Update package manager
+        run: sudo apt-get update
+      - name: Install packages
+        run: sudo apt-get install -y libxmlsec1 libxmlsec1-dev libgdal-dev openjdk-8-jdk-headless
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Test data
+        run: |
+          psql -h localhost -U bb test_bluebottle_test < testdata.sql
+        env:
+          PGPASSWORD: bb
+      - name: Setup Locale
+        run: |
+          export LC_ALL="en_US.UTF-8"
+          export LC_CTYPE="en_US.UTF-8"
+          sudo dpkg-reconfigure locales
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('setup.py') }}
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test] --trusted-host github.com
+      - name: Run Tests
+        run: |
+          python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8 --keepdb --settings bluebottle.settings.github

@@ -375,7 +375,6 @@ TENANT_APPS = (
     'bluebottle.notifications',
     'bluebottle.news',
     'bluebottle.slides',
-    'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_beyonic',
     'bluebottle.payments_docdata',

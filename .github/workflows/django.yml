@@ -44,8 +44,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Update package manager
         run: sudo apt-get update
-      - name: Install packages
-        run: sudo apt-get install -y libxmlsec1 libxmlsec1-dev libgdal-dev openjdk-8-jdk-headless
+      #      - name: Install packages
+      #        run: sudo apt-get install -y libxmlsec1 libxmlsec1-dev libgdal-dev openjdk-8-jdk-headless
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:

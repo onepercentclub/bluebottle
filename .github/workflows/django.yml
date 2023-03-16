@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: goodup
+    runs-on: self-hosted
     services:
       db:
         image: postgis/postgis:11-2.5

@@ -23,8 +23,6 @@ urlpatterns = [
         include('bluebottle.geo.urls.api')),
     url(r'^api/news/',
         include('bluebottle.news.urls.api')),
-    url(r'^api/quotes/',
-        include('bluebottle.quotes.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/',

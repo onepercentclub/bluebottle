@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^geolocations$', GeolocationList.as_view(),
         name='geolocation-list'),
 
-    url(r'^places/$', PlaceList.as_view(),
+    url(r'^places(/)?$', PlaceList.as_view(),
         name='place-list'),
 
     url(r'^places/(?P<pk>\d+)$', PlaceDetail.as_view(),

@@ -267,7 +267,12 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.activity.accepted_participants
+            slot_participant.participant.user for slot_participant
+            in self.obj.slot_participants.all()
+            if (
+                slot_participant.status == 'registered' and
+                slot_participant.participant.status == 'accepted'
+            )
         ]
 
 
@@ -283,8 +288,9 @@ class TeamSlotChangedNotification(TransitionMessage):
         'start': 'start',
         'duration': 'duration',
         'end': 'end',
+        'is_online': 'activity.is_online',
+        'location': 'location.formatted_address',
         'timezone': 'timezone',
-        'location': 'location',
     }
 
     @property
@@ -785,6 +791,13 @@ class SlotCancelledNotification(TransitionMessage):
         """participants that signed up"""
         return [
             self.obj.activity.owner
+        ] + [
+            slot_participant.participant.user for slot_participant
+            in self.obj.slot_participants.all()
+            if (
+                slot_participant.status == 'registered' and
+                slot_participant.participant.status == 'accepted'
+            )
         ]
 
     @property

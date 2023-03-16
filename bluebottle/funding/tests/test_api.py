@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor, FundingPlatformSettings
+from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding
 from bluebottle.funding.tests.factories import (
     FundingFactory, RewardFactory, DonorFactory,
     BudgetLineFactory
@@ -678,6 +678,12 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
+        settings = InitiativePlatformSettings.objects.get()
+        settings.activity_types.append('funding')
+        settings.save()
+
+        self.bank_account = PledgeBankAccountFactory.create(status='verified')
+
         self.create_url = reverse('funding-list')
 
         self.data = {
@@ -685,22 +691,26 @@ class FundingTestCase(BluebottleTestCase):
                 'type': 'activities/fundings',
                 'attributes': {
                     'title': 'test',
+                    'description': 'Yeah',
+                    'target': {'currency': 'EUR', 'amount': 3500},
+                    'deadline': str(now() + timedelta(days=30))
                 },
                 'relationships': {
                     'initiative': {
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
-                        }
-                    }
+                        },
+                    },
                 }
             }
         }
 
     def test_create(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
         self.assertTrue(
             data['data']['meta']['permissions']['PATCH']
         )
@@ -735,6 +745,46 @@ class FundingTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_without_errors(self):
+        self.initiative.status = 'approved'
+        self.initiative.save()
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.json()
+        update_url = reverse('funding-detail', args=(data['data']['id'],))
+        response = self.client.put(update_url, data, user=self.user)
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        funding = Funding.objects.last()
+        funding.bank_account = self.bank_account
+        BudgetLineFactory.create_batch(2, activity=funding)
+        funding.save()
+
+        response = self.client.get(update_url, data, user=self.user)
+        data = response.json()
+
+        self.assertEqual(
+            len(data['data']['meta']['errors']),
+            0
+        )
+        self.assertEqual(
+            len(data['data']['meta']['required']),
+            0
+        )
+        funding.states.submit(save=True)
+        funding.states.approve(save=True)
+        data['data']['attributes'] = {
+            'deadline': now() + timedelta(days=80),
+        }
+        response = self.client.put(update_url, data, user=self.user)
+        data = response.json()
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['title'],
+            'The deadline should not be more then 60 days in the future'
+        )
 
 
 class DonationTestCase(BluebottleTestCase):
@@ -1438,8 +1488,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation.states.fail()
             donation.save()
 
-        self.funding.states.succeed()
-        self.funding.save()
+        self.funding.states.succeed(save=True)
 
         with mock.patch(
                 'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock

@@ -367,6 +367,13 @@ class DonorTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
+            DonorStateMachine.expire,
+            effects=[
+                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
+            ]
+        ),
+
+        TransitionTrigger(
             DonorStateMachine.refund,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),

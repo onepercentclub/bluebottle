@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-
 from future.utils import python_2_unicode_compatible
 from past.utils import old_div
 from builtins import object
@@ -477,7 +474,6 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
         if self.account_id and not self.country == self.account.country:
-
             self.account_id = None
 
         if not self.account_id:

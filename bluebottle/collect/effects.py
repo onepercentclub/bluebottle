@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.collect.models import CollectContributor, CollectContribution
@@ -11,10 +13,23 @@ class CreateCollectContribution(Effect):
     display = False
 
     def pre_save(self, effects):
-
+        contribution_date = now()
+        tz = get_current_timezone()
+        if self.instance.activity.start and self.instance.activity.start > contribution_date.date():
+            contribution_date = tz.localize(
+                datetime.combine(
+                    self.instance.activity.start, datetime.min.replace(hour=12).time()
+                )
+            )
+        elif self.instance.activity.end and self.instance.activity.end < contribution_date.date():
+            contribution_date = tz.localize(
+                datetime.combine(
+                    self.instance.activity.end, datetime.min.replace(hour=12).time()
+                )
+            )
         self.contribution = CollectContribution(
             contributor=self.instance,
-            start=now(),
+            start=contribution_date,
             type=self.instance.activity.collect_type
         )
         effects.extend(self.contribution.execute_triggers())
@@ -33,11 +48,12 @@ class SetOverallContributor(Effect):
     display = False
 
     def post_save(self):
-        contributor, _ = CollectContributor.objects.get_or_create(
-            user=None,
-            activity=self.instance,
-            defaults={'value': self.instance.realized}
-        )
+        contributor = CollectContributor.objects.filter(user=None, activity=self.instance).first()
+        if not contributor:
+            contributor = CollectContributor.objects.create(
+                user=None,
+                activity=self.instance
+            )
         contributor.value = self.instance.realized
         contributor.save()
         contribution = contributor.contributions.get()

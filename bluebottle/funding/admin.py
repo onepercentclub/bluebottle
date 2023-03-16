@@ -2,6 +2,7 @@ from __future__ import division
 
 import logging
 from builtins import object
+from datetime import timedelta
 
 from babel.numbers import get_currency_symbol
 from django import forms
@@ -9,6 +10,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models, connection
+from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
@@ -119,6 +121,19 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
 
 class FundingAdminForm(ActivityForm):
+
+    def clean(self):
+        clean = super(FundingAdminForm, self).clean()
+        donation = self.instance.donations.filter(status='succeeded').order_by('created').first()
+        if donation and clean['deadline'] > donation.created + timedelta(days=61):
+            message = str(_("Can't extend a deadline to more then 60 days from the first donation, which was {date}. "
+                            "Maximum deadline is {deadline}"))
+            message = message.format(
+                date=str(donation.created.date()),
+                deadline=str(donation.created.date() + timedelta(days=60)),
+            )
+            self.errors['deadline'] = ErrorList([message])
+        return clean
 
     class Meta(object):
         model = Funding
@@ -287,6 +302,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
+        ('id', 'Order ID'),
     )
 
     def get_exclude(self, request, obj=None):

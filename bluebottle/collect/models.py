@@ -132,6 +132,10 @@ class CollectActivity(Activity):
         )
 
     @property
+    def succeeded_contributor_count(self):
+        return self.active_contributors.count() + self.deleted_successful_contributors
+
+    @property
     def required_fields(self):
         return super().required_fields + [
             'title', 'description', 'location', 'start', 'end', 'collect_type'

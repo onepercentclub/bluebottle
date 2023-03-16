@@ -9,13 +9,13 @@ from bluebottle.funding.models import Funding, Payout, PaymentProvider
 
 class RecentFunding(DashboardModule):
     title = _('Recently submitted funding activities')
-    title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:funding_funding_changelist'))
+    title_url = "{}?status[]=submitted".format(reverse('admin:funding_funding_changelist'))
     template = 'dashboard/recent_funding.html'
     limit = 5
     column = 0
 
     def init_with_context(self, context):
-        activities = Funding.objects.filter(status__in=['draft', 'open']).order_by('-created')
+        activities = Funding.objects.filter(status='submitted').order_by('-created')
         self.children = activities[:self.limit]
 
 

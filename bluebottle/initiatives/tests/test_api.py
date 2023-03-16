@@ -1358,3 +1358,22 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data['platform']['initiatives']['show_all_activities'])
+
+    def test_get_office_restriction_settings(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['platform']['initiatives']['enable_office_restrictions'])
+        self.assertFalse(data['platform']['initiatives']['enable_office_regions'])
+        self.assertEqual(data['platform']['initiatives']['default_office_restriction'], 'all')
+
+        self.settings.enable_office_restrictions = True
+        self.settings.enable_office_regions = True
+        self.settings.default_office_restriction = 'office_subregion'
+        self.settings.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['platform']['initiatives']['enable_office_restrictions'])
+        self.assertTrue(data['platform']['initiatives']['enable_office_regions'])
+        self.assertEqual(data['platform']['initiatives']['default_office_restriction'], 'office_subregion')

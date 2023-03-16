@@ -13,9 +13,10 @@ from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.scim.models import SCIMPlatformSettings
+from bluebottle.scim.models import SCIMPlatformSettings, SCIMSegmentSetting
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 
 
 class SCIMEndpointTestCaseMixin(object):
@@ -683,6 +684,67 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
         self.assertEqual(user.location.name, location_name)
 
+    def test_post_segment(self):
+        """
+        Create a user with a location that does not exist yet.
+        """
+        department = SegmentTypeFactory.create(name="Department", slug="department")
+
+        SCIMSegmentSetting.objects.create(
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
+            segment_type=department
+        )
+
+        country = SegmentTypeFactory.create(name='Country', slug='country')
+        SCIMSegmentSetting.objects.create(
+            path='addresses[type eq "work"].country',
+            segment_type=country
+        )
+        country_name = 'NL'
+        department_name = 'Engineering'
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': '123',
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            },
+            'addresses': [
+                {'country': 'NL', 'type': 'work'}
+            ],
+            'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User': {
+                'department': department_name
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(
+            response.json()['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
+            department_name
+        )
+
+        self.assertEqual(
+            response.json()['addresses'][0]['country'],
+            country_name
+        )
+        user = Member.objects.get(pk=response.json()['id'].replace('goodup-user-', ''))
+        self.assertEqual(user.segments.get(segment_type=department).name, department_name)
+        self.assertEqual(user.segments.get(segment_type=country).name, country_name)
+
 
 class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
@@ -731,6 +793,31 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         )
         group = data['groups'][0]
         self.assertEqual(group['id'], 'goodup-group-{}'.format(Group.objects.get(name='Staff').pk))
+
+    def test_get_segments(self):
+        """
+        Test authenticated request
+        """
+        segment_type = SegmentTypeFactory.create(name="Department", slug="department")
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        SCIMSegmentSetting.objects.create(
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
+            segment_type=segment_type
+        )
+        self.user.segments.add(segment)
+
+        response = self.client.get(
+            self.url,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.data
+        self.assertEqual(
+            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
+            segment.name
+        )
 
     def test_put(self):
         """
@@ -887,12 +974,12 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             "Operations": [
                 {
                     "op": "Replace",
-                    "path": "name/givenName",
+                    "path": "name.givenName",
                     "value": "Tester"
                 },
                 {
                     "op": "Replace",
-                    "path": "name/familyName",
+                    "path": "name.familyName",
                     "value": "Example"
                 },
                 {
@@ -920,6 +1007,59 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.first_name, 'Tester')
         self.assertEqual(self.user.last_name, 'Example')
         self.assertEqual(self.user.email, 'test@example.com')
+
+    def test_patch_segment(self):
+        department = SegmentTypeFactory.create(name='Department', slug='department')
+
+        SCIMSegmentSetting.objects.create(
+            path='urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
+            segment_type=department
+        )
+        country = SegmentTypeFactory.create(name='Country', slug='country')
+        SCIMSegmentSetting.objects.create(
+            path='addresses[type eq "work"].country',
+            segment_type=country
+        )
+
+        request_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "Add",
+                    "path": 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department',
+                    "value": 'Engineering'
+                },
+
+                {
+                    "op": "Add",
+                    "path": 'addresses[type eq "work"].country',
+                    "value": 'NL'
+                },
+
+            ]
+        }
+
+        response = self.client.patch(
+            self.url,
+            request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.user.refresh_from_db()
+        segment = self.user.segments.get(segment_type=department)
+        self.assertEqual(segment.name, 'Engineering')
+
+        self.assertEqual(
+            data['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User']['department'],
+            segment.name
+        )
+        self.assertEqual(
+            data['addresses'][0]['country'],
+            'NL'
+        )
 
     def test_patch_deactivate(self):
         request_data = {

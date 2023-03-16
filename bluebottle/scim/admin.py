@@ -5,12 +5,20 @@ from django.urls import reverse
 
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.scim.forms import ResetTokenConfirmationForm
-from bluebottle.scim.models import SCIMPlatformSettings
+from bluebottle.scim.models import SCIMPlatformSettings, SCIMSegmentSetting
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, log_action
 
 
+class SCIMSegmentSettingInline(admin.TabularInline):
+    model = SCIMSegmentSetting
+    fields = ('path', 'segment_type')
+    extra = 0
+
+
+@admin.register(SCIMPlatformSettings)
 class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     readonly_fields = ('bearer_token', )
+    inlines = [SCIMSegmentSettingInline]
 
     def get_urls(self):
         urls = super(SCIMPlatformSettingsAdmin, self).get_urls()
@@ -38,6 +46,3 @@ class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         log_action(scim_settings, request.user, 'Reset Token')
         url = reverse('admin:scim_scimplatformsettings_change', args=(scim_settings.pk,))
         return HttpResponseRedirect(url)
-
-
-admin.site.register(SCIMPlatformSettings, SCIMPlatformSettingsAdmin)

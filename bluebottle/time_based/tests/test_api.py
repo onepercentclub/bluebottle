@@ -22,7 +22,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
-    APITestCase
+    APITestCase, get_count_included_by_type
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill, PeriodActivity
@@ -658,6 +658,23 @@ class TimeBasedDetailAPIViewTestCase():
 
         invite = get_first_included_by_type(response, 'activities/invites')
         self.assertEqual(str(participant.invite.pk), invite['id'])
+
+    def test_get_my_contributor_new_team_captain(self):
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+        participant = self.participant_factory.create(activity=self.activity)
+        new_participant = self.participant_factory.create(activity=self.activity, accepted_invite=participant.invite)
+        team = participant.team
+        response = self.client.get(self.url, user=new_participant.user)
+        self.assertEqual(get_count_included_by_type(response, 'activities/invites'), 0)
+
+        team.owner = new_participant.user
+        team.save()
+
+        response = self.client.get(self.url, user=new_participant.user)
+        invite = get_first_included_by_type(response, 'activities/invites')
+        new_participant.refresh_from_db()
+        self.assertEqual(str(new_participant.invite.pk), invite['id'])
 
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
@@ -2612,8 +2629,6 @@ class RelatedParticipantsAPIViewTestCase():
         self.response = self.client.get(self.url, user=self.participants[0].user)
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
         self.assertTotal(9)
-        included_documents = self.included_by_type(self.response, 'private-documents')
-        self.assertEqual(len(included_documents), 1)
 
     def test_get_filter_new(self):
         participant = self.participants[1]
@@ -2775,7 +2790,8 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.slot.capacity = 1
         self.slot.save()
 
-        SlotParticipantFactory.create(slot=self.slot)
+        part = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(slot=self.slot, participant=part)
         response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

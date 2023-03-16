@@ -8,12 +8,12 @@ from bluebottle.funding.models import Funding, Donor
 from bluebottle.geo.models import Location
 
 
-OFFICE_NAME = 'Mogadishu'
-TARGET = 500
-DEADLINES = [date(2022, 8, 20), date(2022, 8, 21)]
+OFFICE_NAME = 'Jos'
+TARGET = 165450
+DEADLINES = [date(2022, 11, 24)]
 
 
-def run(*args):
+def run():
     tne = Client.objects.get(client_name='nexteconomy')
 
     with LocalTenant(tne, clear_tenant=True):
@@ -22,14 +22,10 @@ def run(*args):
         location = Location.objects.get(name=OFFICE_NAME)
 
         campaigns = Funding.objects.filter(
-            initiative__location__name=OFFICE_NAME,
+            office_location=location,
             deadline__date__in=DEADLINES,
             status__in=('succeeded', 'partially_funded')
         )
-        print(len(campaigns))
-
-        for activity in campaigns:
-            print(activity.title, activity.amount_raised, activity.status)
 
         for campaign in campaigns:
             donors = campaign.contributors.instance_of(

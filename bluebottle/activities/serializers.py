@@ -85,7 +85,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if obj.slots:
-            slots = self.get_filtered_slots(obj)
+            slots = self.get_filtered_slots(obj, only_upcoming=True)
             if slots:
                 return slots[0].start
 
@@ -94,7 +94,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if obj.slots:
-            slots = self.get_filtered_slots(obj)
+            slots = self.get_filtered_slots(obj, only_upcoming=True)
             if slots:
                 return slots[0].end
 
@@ -248,7 +248,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_slot_count(self, obj):
         if obj.slots:
-            return len(self.get_filtered_slots(obj))
+            return len(self.get_filtered_slots(obj, only_upcoming=True))
 
     def get_is_online(self, obj):
         if obj.slots:

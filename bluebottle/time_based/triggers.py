@@ -628,7 +628,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     conditions=[
                         not_all_slots_finished,
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
             ]
@@ -691,7 +690,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     conditions=[
                         not_all_slots_finished,
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
@@ -705,7 +703,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     TimeBasedStateMachine.lock,
                     conditions=[
                         all_slots_will_be_full,
-                        slot_selection_is_free
                     ]
                 ),
             ]
@@ -717,7 +714,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     'activity',
                     TimeBasedStateMachine.unlock,
                     conditions=[
-                        slot_selection_is_free,
                         activity_has_status_full
                     ]
                 ),
@@ -1223,11 +1219,6 @@ class ParticipantTriggers(ContributorTriggers):
                         team_is_open
                     ]
                 ),
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.reset,
-                    conditions=[team_is_active]
-                ),
                 FollowActivityEffect,
             ]
         ),
@@ -1261,9 +1252,8 @@ class ParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.reset,
                 ),
-
                 RelatedTransitionEffect(
-                    'finished_contributions',
+                    'started_contributions',
                     TimeContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
@@ -1358,7 +1348,7 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[team_is_active]
                 ),
                 RelatedTransitionEffect(
-                    'finished_contributions',
+                    'started_contributions',
                     TimeContributionStateMachine.succeed,
                     conditions=[team_is_active]
                 ),
@@ -1660,16 +1650,6 @@ class PeriodParticipantTriggers(ParticipantTriggers):
         ),
 
         TransitionTrigger(
-            ParticipantStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    'finished_contributions',
-                    TimeContributionStateMachine.succeed
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
             PeriodParticipantStateMachine.stop,
             effects=[
                 NotificationEffect(ParticipantFinishedNotification),
@@ -1679,15 +1659,18 @@ class PeriodParticipantTriggers(ParticipantTriggers):
     ]
 
 
-def duration_is_finished(effect):
+def should_succeed_instantly(effect):
     """
     contribution (slot) has finished
     """
+    activity = effect.instance.contributor.activity
     if effect.instance.contribution_type == 'preparation':
         if effect.instance.contributor.status in ('accepted',):
             return True
         else:
             return False
+    elif isinstance(activity, PeriodActivity):
+        return True
     return (
         (effect.instance.end is None or effect.instance.end < now()) and
         effect.instance.contributor.status in ('accepted', 'new') and
@@ -1704,7 +1687,7 @@ class TimeContributionTriggers(ContributionTriggers):
                 TransitionEffect(
                     TimeContributionStateMachine.succeed,
                     conditions=[
-                        duration_is_finished
+                        should_succeed_instantly
                     ]),
             ]
         ),
@@ -1715,7 +1698,7 @@ class TimeContributionTriggers(ContributionTriggers):
                 TransitionEffect(
                     TimeContributionStateMachine.succeed,
                     conditions=[
-                        duration_is_finished
+                        should_succeed_instantly
                     ]),
             ]
         ),

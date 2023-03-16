@@ -40,9 +40,17 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
     per_page = 20
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
                        'created', 'transition_date', 'status')
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = self.readonly_fields
+        if obj and getattr(obj, 'has_deleted_data', False):
+            fields += ('user',)
+        return fields
+
     raw_id_fields = ('user', 'document')
     extra = 0
     ordering = ['-created']
+    template = 'admin/participant_list.html'
 
     def get_template(self):
         pass
@@ -70,6 +78,8 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
         return None
 
     def edit(self, obj):
+        if not obj.user and obj.activity.has_deleted_data:
+            return format_html(f'<i>{_("Anonymous")}</i>')
         if not obj.id:
             return '-'
         return format_html(
@@ -166,7 +176,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter]
 
-    raw_id_fields = ActivityChildAdmin.raw_id_fields
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['expertise']
 
     export_to_csv_fields = (
         ('title', 'Title'),
@@ -317,7 +327,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     duration.short_description = _('Slots')
 
     def participant_count(self, obj):
-        return obj.accepted_participants.count()
+        return obj.accepted_participants.count() + obj.deleted_successful_contributors or 0
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
@@ -352,7 +362,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     ]
 
     def get_detail_fields(self, request, obj):
-        fields = ActivityChildAdmin.detail_fields + (
+        fields = super().get_detail_fields(request, obj) + (
             'start',
             'deadline',
             'registration_deadline',

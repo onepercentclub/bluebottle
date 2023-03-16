@@ -111,7 +111,10 @@ class TransitionMessage(object):
             'action_title': getattr(self, 'action_title', None)
         }
         for key, item in list(self.context.items()):
-            context[key] = attrgetter(item)(self.obj)
+            try:
+                context[key] = attrgetter(item)(self.obj)
+            except AttributeError:
+                context[key] = None
 
         if 'context' in self.options:
             context.update(self.options['context'])

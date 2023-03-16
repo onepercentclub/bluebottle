@@ -51,20 +51,23 @@ class CreateOverallTimeContributionEffect(Effect):
     template = 'admin/create_period_time_contribution.html'
 
     def post_save(self, **kwargs):
-        tz = get_current_timezone()
         activity = self.instance.activity
+        tz = get_current_timezone()
+        if activity.start and activity.start > date.today():
+            contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
+        elif activity.deadline and activity.deadline < date.today():
+            contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
+        else:
+            contribution_date = now()
 
-        # Just create a contribution for the full period
-        start = activity.start or date.today()
-        end = activity.deadline if hasattr(activity, 'deadline') else None
-
-        TimeContribution.objects.create(
+        contribution = TimeContribution(
             contributor=self.instance,
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
-            start=tz.localize(datetime.combine(start, datetime.min.time())),
-            end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
+            start=contribution_date
         )
+        contribution.execute_triggers(**self.options)
+        contribution.save()
 
     def __str__(self):
         return _('Create overall contribution')
@@ -251,7 +254,9 @@ class CreateSlotParticipantsForParticipantsEffect(Effect):
         activity = self.instance.activity
         if activity.slot_selection == 'all':
             for slot in activity.slots.all():
-                SlotParticipant.objects.create(participant=participant, slot=slot)
+                slot_participant = SlotParticipant(participant=participant, slot=slot)
+                slot_participant.execute_triggers(**self.options)
+                slot_participant.save()
 
 
 class UnlockUnfilledSlotsEffect(Effect):

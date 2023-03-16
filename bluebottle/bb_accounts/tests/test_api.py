@@ -576,6 +576,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(len(mail.outbox), 1)
 
+        self.assertTrue('/auth/set-password' in mail.outbox[0].body)
+
         # Setup: get the password reset token and url.
         token_regex = re.compile(
             '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})',
@@ -589,6 +591,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
             reset_confirm_url,
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
+        confirm_data = response.json()['data']
+        self.assertTrue('id' in confirm_data)
+        self.assertTrue('token' in confirm_data['attributes'])
+        self.assertTrue('jwt-token' in confirm_data['attributes'])
+        self.assertTrue('password' in confirm_data['attributes'])
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 
@@ -598,6 +606,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_password_reset_inactive(self):
+        # Setup: create a user.
+        client = JSONAPITestClient()
+
+        user = BlueBottleUserFactory.create(is_active=False)
+
+        response = client.post(
+            self.user_password_reset_api_url,
+            {'data': {'attributes': {'email': user.email}, 'type': 'reset-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_password_reset_validation(self):
         client = JSONAPITestClient()
@@ -613,7 +634,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(b'This password is too short' in response.content)
+        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(
@@ -840,3 +861,137 @@ class MemberDetailViewAPITestCase(APITestCase):
         self.perform_get(user=self.user2)
         self.assertStatus(status.HTTP_200_OK)
         self.assertEqual(self.response.data['id'], self.user1.id)
+
+
+class LoginJsonApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory(password='psssssst')
+        self.url = reverse('auth')
+        self.data = {
+            'data': {
+                'attributes': {
+                    'email': self.user.email,
+                    'password': 'psssssst'
+                },
+                'type': "auth/token"
+            },
+        }
+
+    def test_login_wrong_pwd(self):
+        expected = {
+            'errors': [{
+                'code': 'invalid',
+                'detail': 'Unable to log in with provided credentials.',
+                'source': {
+                    'pointer': '/data/attributes/non-field-errors'
+                },
+                'status': '400'
+            }]
+        }
+        self.data['data']['attributes']['password'] = 'awildguess'
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_pwd_null(self):
+        expected = {
+            'errors': [{
+                'code': 'null',
+                'detail': 'This field may not be null.',
+                'source': {
+                    'pointer': '/data/attributes/password'
+                },
+                'status': '400'
+            }]
+        }
+        self.data['data']['attributes']['password'] = None
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_pwd_empty(self):
+        expected = {
+            'errors': [{
+                'code': 'blank',
+                'detail': 'This field may not be blank.',
+                'source': {
+                    'pointer': '/data/attributes/password'
+                },
+                'status': '400'
+            }]
+        }
+        self.data['data']['attributes']['password'] = ''
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_login_too_many_failed_attempts(self):
+        expected = {
+            'errors': [{
+                'code': 'throttled',
+                'detail': 'Too many failed password attempts. Expected available in 600 seconds.',
+                'source': {
+                    'pointer': '/data'
+                },
+                'status': '429'
+            }]
+        }
+        self.data['data']['attributes']['password'] = 'awildguess'
+        for i in range(10):
+            self.client.post(self.url, self.data)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 429)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+
+class UserSignupTokenApiTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.client = JSONAPITestClient()
+        self.url = reverse('user-signup-token')
+        self.data = {
+            'data': {
+                'attributes': {
+                    'email': 'malle@eppie.hh',
+                },
+                'type': "signup-tokens"
+            },
+        }
+
+    def test_create_user(self):
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertIsNotNone(data['data']['id'])
+
+    def test_existing__user(self):
+        user = BlueBottleUserFactory.create()
+        self.data['data']['attributes']['email'] = user.email
+        expected = {
+            'errors': [{
+                'code': 'email_in_use',
+                'detail': 'A member with this email address already exists.',
+                'source': {
+                    'pointer': '/data/attributes/email'
+                },
+                'status': '400'
+            }]
+        }
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertEqual(expected, data)
+
+    def test_existing_inactive_user(self):
+        user = BlueBottleUserFactory.create(is_active=False)
+        self.data['data']['attributes']['email'] = user.email
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data['data']['id'], str(user.id))

@@ -58,6 +58,15 @@ class BaseTokenAuthentication():
                 user.save()
             except Location.DoesNotExist:
                 pass
+        if 'location.name' in data:
+            try:
+                if user.location_verified:
+                    return
+
+                user.location = Location.objects.get(name=data['location.name'])
+                user.save()
+            except Location.DoesNotExist:
+                pass
 
     def get_segments_from_data(self, data):
         segment_list = {}
@@ -72,7 +81,7 @@ class BaseTokenAuthentication():
                 segment_type = SegmentType.objects.get(slug=type_slug)
             except SegmentType.DoesNotExist:
                 logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
-                return
+                return segment_list
 
             if not isinstance(value, (list, tuple)):
                 value = [value]

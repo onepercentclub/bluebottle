@@ -107,6 +107,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_date_preview_multiple_slots(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity)
+        DateActivitySlotFactory.create(
+            status='succeeded', activity=activity, start=now() - timedelta(days=10)
+        )
         response = self.client.get(self.url, user=self.owner)
         attributes = response.json()['data'][0]['attributes']
 
@@ -120,6 +123,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(
+            dateutil.parser.parse(attributes['start']),
+            min([slot.start for slot in activity.slots.all() if slot.start > now()])
+        )
+
+        self.assertEqual(
+            dateutil.parser.parse(attributes['end']),
+            min([slot.end for slot in activity.slots.all() if slot.start > now()])
+        )
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertIsNone(attributes['location'])
 
@@ -1896,7 +1908,11 @@ class ContributorListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        DateParticipantFactory.create_batch(2, user=self.user)
+        participants = DateParticipantFactory.create_batch(2, user=self.user)
+        for participant in participants:
+            slot = DateActivitySlotFactory.create(activity=participant.activity)
+            slot.slot_participants.all()[0].states.remove(save=True)
+
         PeriodParticipantFactory.create_batch(2, user=self.user)
         DonorFactory.create_batch(2, user=self.user, status='succeeded')
         DonorFactory.create_batch(2, user=self.user, status='new')
@@ -1943,8 +1959,8 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 )
             )
 
-            if contributor['type'] == 'activities/time-based/date-participants':
-                self.assertTrue('related' in contributor['relationships']['slots']['links'])
+            if contributor['type'] == 'contributors/time-based/date-participants':
+                self.assertEqual(contributor['attributes']['total-duration'], '02:00:00')
 
         self.assertEqual(
             len([
@@ -2580,15 +2596,18 @@ class TeamMemberListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(len(self.accepted_members) + len(self.withdrawn_members) + 1)
+        ids = [m.id for m in self.accepted_members] + [m.id for m in self.withdrawn_members]
+
+        self.assertEqual(len(set(ids)), 6)
         self.assertObjectList(self.accepted_members + self.withdrawn_members + [self.team_captain])
         self.assertRelationship('user')
 
         self.assertAttribute('status')
         self.assertMeta('transitions')
 
-        self.assertEqual(
-            self.response.json()['data'][0]['relationships']['user']['data']['id'],
-            str(self.team.owner.pk)
+        self.assertTrue(
+            str(self.team.owner.pk) in
+            [m['relationships']['user']['data']['id'] for m in self.response.json()['data']]
         )
 
     def test_get_team_member(self):

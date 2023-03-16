@@ -17,6 +17,7 @@ from django.forms.widgets import Select
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
+from django.template.response import TemplateResponse
 from django.urls import reverse, NoReverseMatch
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
@@ -177,6 +178,19 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 ),
             }
         ),
+        (
+            _('User data'),
+            {
+                'description': _('User data can be anonymised and/or deleted after a set number of months from '
+                                 'the time it was created to comply with company policies and local laws. User '
+                                 'data includes names, contributions and wall posts. Please contact the support '
+                                 'team at GoodUp for more information.'),
+                'fields': (
+                    'retention_anonymize',
+                    'retention_delete'
+                )
+            }
+        )
     )
 
     def get_fieldsets(self, request, obj=None):
@@ -216,6 +230,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     readonly_fields = ('segment_types', 'reminder_info', 'impact_hours_info')
 
+    def get_readonly_fields(self, request, obj=None):
+        read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            read_only_fields += ('retention_anonymize', 'retention_delete')
+        return read_only_fields
+
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {
@@ -223,6 +243,41 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             'link': reverse('admin:segments_segmenttype_changelist')
         }
         return template.render(context)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        """
+        Show confirmation page if retention params change
+        """
+
+        obj = MemberPlatformSettings.load()
+
+        if object_id and request.method == 'POST' and not request.POST.get('post', False):
+            model_form = self.get_form(request, obj)
+            form = model_form(request.POST, request.FILES, instance=obj)
+
+            if 'confirm' in request.POST and request.POST['confirm']:
+                if form.is_valid():
+                    form.save(commit=False)
+                    return HttpResponseRedirect(reverse('admin:members_memberplatformsettings'))
+
+            data = request.POST
+            if (
+                    data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
+            ) or (
+                    data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
+            ):
+                context = dict(
+                    obj=obj,
+                    title=_('Are you sure?'),
+                    post=request.POST,
+                    opts=self.model._meta,
+                    media=self.media,
+                )
+                return TemplateResponse(
+                    request, "admin/members/set_retention_confirmation.html", context
+                )
+
+        return super(MemberPlatformSettingsAdmin, self).changeform_view(request, object_id, form_url, extra_context)
 
 
 admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
@@ -343,7 +398,7 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 class MemberAdmin(UserAdmin):
-    raw_id_fields = ('partner_organization', 'place')
+    raw_id_fields = ('partner_organization', 'place', 'location')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
@@ -373,6 +428,7 @@ class MemberAdmin(UserAdmin):
                         'fields': [
                             'email',
                             'remote_id',
+                            'username',
                             'first_name',
                             'last_name',
                             'phone_number',
@@ -412,17 +468,8 @@ class MemberAdmin(UserAdmin):
                 [
                     _('Engagement'),
                     {
-                        'fields':
-                        [
-                            'hours_spent',
-                            'hours_planned',
-                            'initiatives',
-                            'date_activities',
-                            'period_activities',
-                            'funding',
-                            'deeds',
-                            'collect',
-                        ]
+                        'fields': self.get_impact_fields(obj)
+
                     }
                 ],
                 [
@@ -471,7 +518,8 @@ class MemberAdmin(UserAdmin):
             'reset_password', 'resend_welcome_link',
             'initiatives', 'period_activities', 'date_activities',
             'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned'
+            'hours_spent', 'hours_planned', 'all_contributions',
+            'data_retention_info'
         ]
 
         user_groups = request.user.groups.all()
@@ -488,6 +536,44 @@ class MemberAdmin(UserAdmin):
             readonly_fields.append('is_superuser')
 
         return readonly_fields
+
+    def get_impact_fields(self, obj):
+        fields = [
+            'all_contributions',
+            'hours_spent',
+            'hours_planned',
+            'initiatives',
+            'date_activities',
+            'period_activities',
+            'funding',
+            'deeds',
+            'collect',
+        ]
+        member_settings = MemberPlatformSettings.load()
+        if member_settings.retention_delete or member_settings.retention_anonymize:
+            fields.insert(0, 'data_retention_info')
+
+        return fields
+
+    def data_retention_info(self, obj):
+        member_settings = MemberPlatformSettings.load()
+        months = member_settings.retention_anonymize or member_settings.retention_delete
+        return admin_info_box(
+            _('Only data from the last {months} months is shown.').format(months=months)
+        )
+
+    def hours_spent(self, obj):
+        return obj.hours_spent
+    hours_spent.short_description = _("Hours spent this year")
+
+    def hours_planned(self, obj):
+        return obj.hours_planned
+    hours_planned.short_description = _("Hours planned this year")
+
+    def all_contributions(self, obj):
+        url = reverse('admin:activities_contribution_changelist') + f'?contributor__user_id={obj.id}'
+        return format_html('<a href={}>{}</a>', url, _("Show all contributions"))
+    all_contributions.short_description = _("All contributions")
 
     export_fields = (
         ('email', 'email'),
@@ -561,7 +647,9 @@ class MemberAdmin(UserAdmin):
                     Initiative.objects.filter(status='approved', **{field: obj}).count(),
                     field,
                 ))
-        return format_html('<br/>'.join(initiatives)) or _('None')
+        if len(initiatives):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(initiatives)))
+        return _('None')
     initiatives.short_description = _('Initiatives')
 
     def date_activities(self, obj):
@@ -576,8 +664,11 @@ class MemberAdmin(UserAdmin):
                     DateParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(participants)) or _('None')
-    date_activities.short_description = _('Activity on a date participation')
+
+        if len(participants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(participants)))
+        return _('None')
+    date_activities.short_description = _('Activity on a date')
 
     def period_activities(self, obj):
         applicants = []
@@ -591,8 +682,9 @@ class MemberAdmin(UserAdmin):
                     PeriodParticipant.objects.filter(status=status, user=obj).count(),
                     status,
                 ))
-        return format_html('<br/>'.join(applicants)) or _('None')
-    date_activities.short_description = _('Activity during a date participation')
+        if len(applicants):
+            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
+    period_activities.short_description = _('Activity over a period')
 
     def funding(self, obj):
         donations = []

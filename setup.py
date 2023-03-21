@@ -111,6 +111,7 @@ install_requires = [
     'requests==2.24.0',
     'schwifty==2.1.0',
     'scss==0.8.73',
+    'social-auth-core==4.3.0',
     'social-auth-app-django==4.0.0',
     'sorl-thumbnail==12.6.3',
     'staticmaps-signature==0.2.0',

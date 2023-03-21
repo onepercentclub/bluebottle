@@ -649,7 +649,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     body_font = models.FileField(
         _('Body font'), null=True, blank=True,
         help_text=_(
-            'Font to use for paragraph texts. Should be .woff2 type'
+            'Font to use for paragraph texts. Should be .woff2 type. Try to avoid overriding this font'
         ),
         validators=[validate_file_extension]
     )

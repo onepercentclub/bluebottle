@@ -1908,7 +1908,11 @@ class ContributorListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        DateParticipantFactory.create_batch(2, user=self.user)
+        participants = DateParticipantFactory.create_batch(2, user=self.user)
+        for participant in participants:
+            slot = DateActivitySlotFactory.create(activity=participant.activity)
+            slot.slot_participants.all()[0].states.remove(save=True)
+
         PeriodParticipantFactory.create_batch(2, user=self.user)
         DonorFactory.create_batch(2, user=self.user, status='succeeded')
         DonorFactory.create_batch(2, user=self.user, status='new')
@@ -1955,8 +1959,8 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 )
             )
 
-            if contributor['type'] == 'activities/time-based/date-participants':
-                self.assertTrue('related' in contributor['relationships']['slots']['links'])
+            if contributor['type'] == 'contributors/time-based/date-participants':
+                self.assertEqual(contributor['attributes']['total-duration'], '02:00:00')
 
         self.assertEqual(
             len([

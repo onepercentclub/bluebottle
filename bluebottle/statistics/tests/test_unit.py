@@ -278,7 +278,7 @@ class PeriodActivityStatisticsTest(StatisticsTest):
             self.stats.time_activities_succeeded, 1
         )
         self.assertEqual(
-            self.stats.time_spent, datetime.timedelta(hours=4)
+            self.stats.time_spent, 4.0
         )
         self.assertEqual(
             self.stats.time_activities_succeeded, 1

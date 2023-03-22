@@ -51,7 +51,7 @@ class Slide(PublishableModel):
         ]
     )
     video = models.FileField(
-        _("Video"), max_length=255,
+        _("Background video"), max_length=255,
         blank=True, null=True,
         validators=[
             validate_video_file_size,
@@ -59,27 +59,28 @@ class Slide(PublishableModel):
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
             )
         ],
-        help_text=_('This video will autoplay at the background, without sound. '
-                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
-                    'File should be smaller then 10MB.'),
+        help_text=_(
+            'This video will autoplay and loop in the background, '
+            'without sound. Allowed formats are mp4, ogg, 3gp, avi, mov and webm. '
+            'The file should be smaller than 10 MB. Adding a background video will '
+            'replace the background image.'
+        ),
         upload_to='banner_slides/')
     video_url = models.URLField(
-        _("Video url"),
+        _("Video"),
         max_length=100, blank=True,
         help_text=_(
-            "This video will only play after the 'Play' button is clicked. YouTube and Vimeo videos are supported."
+            "YouTube and Vimeo videos are supported, add the video by pasting their URL above. "
+            "This will add a 'play' button to the slider. "
+            "The video will play after the 'Play' button is selected."
         ),
         default='')
     link_text = models.CharField(
-        _("Link text"), max_length=400, blank=True,
-        help_text=_("This is the text on the button inside the banner."))
+        _("Button label"), max_length=400, blank=True,
+        help_text=_("This is the text displayed on the button."))
     link_url = models.CharField(
-        _("Link url"), max_length=400, blank=True,
-        help_text=_("This is the link for the button inside the banner."))
-    style = models.CharField(
-        _("Style"), max_length=40,
-        help_text=_("Styling class name"),
-        default='default', blank=True)
+        _("Button URL"), max_length=400, blank=True,
+        help_text=_("This is the URL to which the button links."))
 
     # Metadata
     sequence = models.IntegerField()

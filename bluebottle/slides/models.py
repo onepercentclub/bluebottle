@@ -81,10 +81,6 @@ class Slide(PublishableModel):
     link_url = models.CharField(
         _("Button URL"), max_length=400, blank=True,
         help_text=_("This is the URL to which the button links."))
-    style = models.CharField(
-        _("Style"), max_length=40,
-        help_text=_("Styling class name"),
-        default='default', blank=True)
 
     # Metadata
     sequence = models.IntegerField()

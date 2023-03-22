@@ -67,10 +67,12 @@ class Slide(PublishableModel):
         ),
         upload_to='banner_slides/')
     video_url = models.URLField(
-        _("Video url"),
+        _("Video"),
         max_length=100, blank=True,
         help_text=_(
-            "This video will only play after the 'Play' button is clicked. YouTube and Vimeo videos are supported."
+            "YouTube and Vimeo videos are supported, add the video by pasting their URL above. "
+            "This will add a 'play' button to the slider. "
+            "The video will play after the 'Play' button is selected."
         ),
         default='')
     link_text = models.CharField(

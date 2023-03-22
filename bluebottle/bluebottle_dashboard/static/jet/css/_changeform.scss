@@ -108,6 +108,7 @@ form {
       margin-left: 0;
     }
   }
+
   .checkbox {
     input[type=checkbox] + label {
       width: 24px;
@@ -161,7 +162,7 @@ form .aligned {
   p.help {
     clear: left;
     margin-top: 0;
-    margin-left: 0;
+    margin-left: 12.85714rem;
     padding-left: 0;
     color: lighten($text-color, 30);
 
@@ -314,7 +315,7 @@ form .wide p.help {
 /* MONOSPACE TEXTAREAS */
 
 fieldset.monospace textarea {
-    font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+  font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
 }
 
 /* SUBMIT ROW */
@@ -394,6 +395,7 @@ fieldset.monospace textarea {
         background-color: darken($danger-button-background-color, 10);
         color: $danger-button-text-color;
       }
+
       @include for-phone {
         display: block;
         width: 100%;
@@ -447,7 +449,7 @@ body.popup .submit-row {
     display: inline-block;
 
     @include for-width(374px) {
-       display: none;
+      display: none;
     }
 
     span {
@@ -867,13 +869,13 @@ body.popup .submit-row {
 /* RELATED FIELD ADD ONE / LOOKUP */
 
 form .related-widget-wrapper ul {
-    display: inline-block;
-    margin-left: 0;
-    padding-left: 0;
+  display: inline-block;
+  margin-left: 0;
+  padding-left: 0;
 }
 
 .clearable-file-input input {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 .changeform-navigation {
@@ -1016,8 +1018,8 @@ form .related-widget-wrapper ul {
       color: $dim-text-color;
       font-weight: 500;
       transition: background-color $fast-transitions-duration,
-                  color $fast-transitions-duration,
-                  border-color $transitions-duration;
+      color $fast-transitions-duration,
+      border-color $transitions-duration;
 
       @include for-mobile {
         margin: 0 5px 5px 0;

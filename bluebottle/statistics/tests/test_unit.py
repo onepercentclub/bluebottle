@@ -1,5 +1,4 @@
 import datetime
-
 from builtins import range
 from datetime import timedelta
 
@@ -8,20 +7,20 @@ from django.utils import timezone
 from django.utils.timezone import now
 from moneyed.classes import Money
 
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
-    PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory
-)
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, DateParticipantFactory,
+    PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory
+)
 
 
 class InitialStatisticsTest(BluebottleTestCase):
@@ -82,7 +81,7 @@ class DateActivityStatisticsTest(StatisticsTest):
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
             start=now() + timedelta(days=2),
-            duration=timedelta(minutes=6)
+            duration=timedelta(minutes=90)
         )
         self.activity.states.submit(save=True)
 
@@ -148,7 +147,7 @@ class DateActivityStatisticsTest(StatisticsTest):
             self.stats.time_activities_succeeded, 1
         )
         self.assertEqual(
-            self.stats.time_spent.total_seconds(), 360
+            self.stats.time_spent, 1.5
         )
         self.assertEqual(
             self.stats.activity_participants, 1
@@ -279,7 +278,7 @@ class PeriodActivityStatisticsTest(StatisticsTest):
             self.stats.time_activities_succeeded, 1
         )
         self.assertEqual(
-            self.stats.time_spent, datetime.timedelta(hours=4)
+            self.stats.time_spent, 4.0
         )
         self.assertEqual(
             self.stats.time_activities_succeeded, 1

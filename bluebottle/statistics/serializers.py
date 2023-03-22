@@ -1,6 +1,6 @@
 import datetime
-from builtins import str
 from builtins import object
+from builtins import str
 
 from dateutil.relativedelta import relativedelta
 from django.utils.timezone import get_current_timezone
@@ -11,7 +11,6 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
-
 
 tz = get_current_timezone()
 
@@ -49,7 +48,6 @@ class ManualStatisticSerializer(BaseStatisticSerializer):
 
 
 class DatabaseStatisticSerializer(BaseStatisticSerializer):
-
     class Meta(object):
         model = DatabaseStatistic
         fields = ('value', 'name', 'query', 'icon', 'sequence')
@@ -73,7 +71,6 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
 
 
 class OldStatisticSerializer(PolymorphicModelSerializer):
-
     polymorphic_serializers = [
         DatabaseStatisticSerializer,
         ManualStatisticSerializer,

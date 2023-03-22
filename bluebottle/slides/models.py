@@ -51,7 +51,7 @@ class Slide(PublishableModel):
         ]
     )
     video = models.FileField(
-        _("Video"), max_length=255,
+        _("Background video"), max_length=255,
         blank=True, null=True,
         validators=[
             validate_video_file_size,
@@ -59,9 +59,12 @@ class Slide(PublishableModel):
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
             )
         ],
-        help_text=_('This video will autoplay at the background, without sound. '
-                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
-                    'File should be smaller then 10MB.'),
+        help_text=_(
+            'This video will autoplay and loop in the background, '
+            'without sound. Allowed formats are mp4, ogg, 3gp, avi, mov and webm. '
+            'The file should be smaller than 10 MB. Adding a background video will '
+            'replace the background image.'
+        ),
         upload_to='banner_slides/')
     video_url = models.URLField(
         _("Video url"),

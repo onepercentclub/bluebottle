@@ -76,11 +76,11 @@ class Slide(PublishableModel):
         ),
         default='')
     link_text = models.CharField(
-        _("Link text"), max_length=400, blank=True,
-        help_text=_("This is the text on the button inside the banner."))
+        _("Button label"), max_length=400, blank=True,
+        help_text=_("This is the text displayed on the button."))
     link_url = models.CharField(
-        _("Link url"), max_length=400, blank=True,
-        help_text=_("This is the link for the button inside the banner."))
+        _("Button URL"), max_length=400, blank=True,
+        help_text=_("This is the URL to which the button links."))
     style = models.CharField(
         _("Style"), max_length=40,
         help_text=_("Styling class name"),

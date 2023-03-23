@@ -7,9 +7,11 @@
         <span class="float-right" title="Date submitted">
             {{ contributor.created|date }}<br>
         </span>
-        <a href="{% url 'admin:activities_contributor_change' contributor.id %}" >{{ contributor }}</a>
+        <a href="{% url 'admin:activities_contributor_change' contributor.id %}" >
+            <b>{{ contributor.type }}</b> {{ contributor.status }}
+        </a>
         <br>
-        <b>{{ contributor.type }}</b> {{ contributor.status }}
+            {{ contributor }}
         <br>
         <i>{{ contributor.activity.title }}</i>
     </li>

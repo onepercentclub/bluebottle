@@ -235,7 +235,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     @property
     def type(self):
-        return self.polymorphic_ctype.model
+        return self.polymorphic_ctype.model_class()._meta.verbose_name
 
     def __str__(self):
         if self.user:

@@ -7,7 +7,7 @@ from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 from jet.dashboard.modules import LinkList
 
-from bluebottle.activities.dashboard import RecentActivities
+from bluebottle.activities.dashboard import RecentActivities, RecentContributors
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import MyReviewingInitiatives, RecentInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
@@ -26,6 +26,7 @@ class CustomIndexDashboard(Dashboard):
         # Activities
         self.children.append(RecentActivities())
         self.children.append(RecentFunding())
+        self.children.append(RecentContributors())
 
         # Payouts
         self.children.append(PayoutsReadForApprovalDashboardModule())

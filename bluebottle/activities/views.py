@@ -163,7 +163,10 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).order_by(
             '-created'
         ).annotate(
-            total_duration=Sum('contributions__timecontribution__value'),
+            total_duration=Sum(
+                'contributions__timecontribution__value',
+                filter=Q(contributions__status__in=['succeeded', 'new'])
+            )
         )
 
     serializer_class = ContributorListSerializer

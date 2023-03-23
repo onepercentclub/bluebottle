@@ -38,6 +38,8 @@ jobs:
         image: celery
     steps:
       - uses: actions/checkout@v3
+      - name: Update apt
+        run: sudo apt-get update
       - name: Install packages
         run: sudo apt-get install libxmlsec1 libxmlsec1-dev libgdal-dev swig openjdk-8-jdk-headless
       - uses: actions/setup-python@v4

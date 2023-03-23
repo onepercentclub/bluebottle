@@ -65,4 +65,4 @@ jobs:
           pip install -e .[test] --trusted-host github.com
       - name: Run Tests
         run: |
-          python -m coverage run  --source=bluebottle manage.py test --keepdb --settings bluebottle.settings.github
+          python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8 --keepdb --settings bluebottle.settings.github

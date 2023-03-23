@@ -1,0 +1,23 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for wallpost in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right">
+            {{ wallpost.created|date }}<br>
+        </span>
+        <a href="{% url 'admin:wallposts_wallpost_change' wallpost.id %}" >
+            <b>{{ wallpost.author }}</b>
+        </a>
+        <br>
+            {{ wallpost.text|truncatewords:12 }}
+        <br>
+        <b>{{ wallpost.content_type }}</b>
+        <br>
+        <i>{{ wallpost.content_object }}</i>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

@@ -27,8 +27,8 @@ class RecentContributors(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        activities = Contributor.objects.order_by('-created')
-        self.children = activities[:self.limit]
+        contributors = Contributor.objects.order_by('-created')
+        self.children = contributors[:self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):

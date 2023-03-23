@@ -36,16 +36,13 @@ jobs:
           - 5672:5672
       celery:
         image: celery
-    strategy:
-      matrix:
-        python-version: [ 3.x ]
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip'
+      - run: pip install -e .[test]
       - name: Test data
         run: |
           psql -h localhost -U bb test_bluebottle_test < testdata.sql

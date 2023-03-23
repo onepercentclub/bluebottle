@@ -164,7 +164,6 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         if obj and obj.contributor_id:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
-
     contributor_link.short_description = _('Contributor')
 
     def contribution_type(self, obj):
@@ -250,7 +249,6 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             obj
         )
-
     team_link.short_description = _('Edit')
 
     def slot_link(self, obj):
@@ -272,14 +270,13 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             _('Add time slot')
         )
-
     slot_link.short_description = _('Time slot')
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
-    inlines = (FollowAdminInline, WallpostInline,)
+    inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
 
     def lookup_allowed(self, key, value):
@@ -360,8 +357,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
                 inlines.append(impact_goal_inline)
 
         if obj and (
-                obj.team_activity != Activity.TeamActivityChoices.teams or
-                obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+            obj.team_activity != Activity.TeamActivityChoices.teams or
+            obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):
             inlines = [
                 inline for inline in inlines if not isinstance(inline, TeamInline)
@@ -429,7 +426,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
             obj.initiative
         )
-
     initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):
@@ -610,7 +606,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
             return "-"
         url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.office_location)
-
     location_link.short_description = _('office')
 
     def get_list_display(self, request):
@@ -637,6 +632,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 
 class ActivityInlineChild(StackedPolymorphicInline.Child):
+
     ordering = ['-created']
 
     def state_name(self, obj):

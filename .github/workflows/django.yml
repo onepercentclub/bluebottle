@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install packages
-        run: sudo apt-get install libxmlsec1 libxmlsec1-dev
+        run: sudo apt-get install libxmlsec1 libxmlsec1-dev libgdal-dev swig openjdk-8-jdk-headless
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'

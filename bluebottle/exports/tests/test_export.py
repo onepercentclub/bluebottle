@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
-from unittest import skip
 
 import xlrd
 from django.db import connection
@@ -32,7 +31,6 @@ class TestExportAdmin(BluebottleTestCase):
     def setUp(self):
         super(TestExportAdmin, self).setUp()
 
-    @skip('Re-enable when celery is working in Github actions')
     def test_export(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
@@ -130,7 +128,6 @@ class TestExportAdmin(BluebottleTestCase):
             'End'
         )
 
-    @skip('Re-enable when celery is working in Github actions')
     def test_export_user_segments(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
@@ -189,7 +186,6 @@ class TestExportAdmin(BluebottleTestCase):
                 )
             t += 1
 
-    @skip('Re-enable when celery is working in Github actions')
     def test_export_impact(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
@@ -237,7 +233,6 @@ class TestExportAdmin(BluebottleTestCase):
             750
         )
 
-    @skip('Re-enable when celery is working in Github actions')
     def test_export_teams(self):
         self.settings = InitiativePlatformSettingsFactory.create(
             team_activities=False

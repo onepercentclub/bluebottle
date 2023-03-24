@@ -2,8 +2,10 @@
 # flake8: noqa
 import os
 import sys
-import bluebottle
+
 from setuptools import setup, find_packages
+
+import bluebottle
 
 
 def read_file(name):
@@ -145,7 +147,7 @@ tests_requires = [
     'pylint==2.7.0',
     'pyquery==1.2.17',
     'pylint-django==2.4.4',
-    'tblib==1.3.2',
+    'tblib==1.7',
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
     'sniffer==0.4.0',

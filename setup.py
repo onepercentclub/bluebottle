@@ -104,7 +104,7 @@ install_requires = [
     'pyparsing==3.0.9',
     'python-dateutil==2.6.1',
     'python-magic==0.4.15',
-    'python-memcached==1.58',
+    'python-memcached==1.59',
     'python-social-auth==0.3.6',
     'python3-saml==1.9.0',
     'rave-python==1.0.2',

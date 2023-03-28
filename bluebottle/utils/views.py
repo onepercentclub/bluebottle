@@ -307,7 +307,11 @@ class ESPaginator(Paginator):
         if top + self.orphans >= self.count:
             top = self.count
 
-        return self._get_page(self.object_list[1][bottom:top].execute(), number, self)
+        result = self.object_list[1][bottom:top].execute()
+
+        page = self._get_page(result, number, self)
+        page.aggs = result.aggs
+        return page
 
 
 class JsonApiPagination(JsonApiPageNumberPagination):
@@ -320,6 +324,22 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator
+
+    def paginate_queryset(self, queryset, request, view=None):
+        result = super().paginate_queryset(queryset, request, view)
+
+        return result
+
+    def get_paginated_response(self, data):
+        result = super().get_paginated_response(data)
+        result.data['meta']['facets'] = dict(
+            (
+                key,
+                [{'value': bucket['key'], 'count': bucket['doc_count']} for bucket in facet['buckets']]
+            ) for key, facet in self.page.aggs.to_dict().items()
+        )
+
+        return result
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):

@@ -231,6 +231,11 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return search
 
+    def get_aggregations(self, search, request):
+        search.aggs.bucket('activity-type', 'terms', field='activity_type')
+
+        return search
+
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)
         regex = re.compile('^filter\[segment\.(?P<type>[\w\-]+)\]$')

@@ -123,6 +123,7 @@ class ActivityDocument(Document):
     contributors = fields.DateField()
     contributor_count = fields.IntegerField()
     donation_count = fields.IntegerField()
+    activity_type = fields.KeywordField()
 
     start = fields.DateField()
     end = fields.DateField()
@@ -193,6 +194,16 @@ class ActivityDocument(Document):
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
+
+    def prepare_activity_type(self, instance):
+        mapping = {
+            'dateactivity': 'time',
+            'periodactivity': 'time',
+            'funding': 'funding',
+            'collectactivity': 'collect',
+            'deed': 'deed'
+        }
+        return mapping[str(instance.__class__.__name__.lower())]
 
     def prepare_country(self, instance):
         country_ids = []

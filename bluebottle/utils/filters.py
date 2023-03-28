@@ -33,6 +33,7 @@ class ElasticSearchFilter(filters.SearchFilter):
             search = search.query(search_query)
 
         search = self.get_extra(search, request)
+        search = self.get_aggregations(search, request)
 
         sort = self.get_sort(request)
         if sort:
@@ -45,6 +46,9 @@ class ElasticSearchFilter(filters.SearchFilter):
         return (queryset, search)
 
     def get_extra(self, search, request):
+        return search
+
+    def get_aggregations(self, search, request):
         return search
 
     def get_filter_fields(self, request):

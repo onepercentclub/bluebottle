@@ -65,6 +65,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 

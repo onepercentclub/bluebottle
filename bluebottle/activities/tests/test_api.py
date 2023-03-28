@@ -1714,6 +1714,47 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(facets['collect'], 4)
         self.assertEqual(facets['deed'], 3)
 
+    def test_facet_theme(self):
+        initiatives = InitiativeFactory.create_batch(4, status='approved')
+        for initiative in initiatives:
+            DateActivityFactory.create_batch(2, status='open', initiative=initiative)
+            PeriodActivityFactory.create_batch(3, status='open', initiative=initiative)
+            CollectActivityFactory.create_batch(4, status='open', initiative=initiative)
+            DeedFactory.create_batch(3, status='open', initiative=initiative)
+            FundingFactory.create_batch(1, status='open', initiative=initiative)
+
+        response = self.client.get(
+            f'{self.url}?filter[theme]={initiatives[0].theme.pk}',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        types = dict(
+            (facet['id'], facet['count']) for facet in data['meta']['facets']['activity-type']
+        )
+        self.assertEqual(types['time'], 5)
+        self.assertEqual(types['funding'], 1)
+        self.assertEqual(types['collect'], 4)
+        self.assertEqual(types['deed'], 3)
+
+        for initiative in initiatives[1:]:
+            self.assertTrue({
+                    'name': initiative.theme.name,
+                    'id': str(initiative.theme.pk),
+                    'count': 13,
+                    'active': False
+                } in data['meta']['facets']['theme']
+            )
+
+        self.assertTrue({
+                'name': initiatives[0].theme.name,
+                'id': str(initiatives[0].theme.pk),
+                'count': 13,
+                'active': True
+            } in data['meta']['facets']['theme']
+        )
+
+
     def test_filter_country(self):
         country1 = CountryFactory.create()
         country2 = CountryFactory.create()

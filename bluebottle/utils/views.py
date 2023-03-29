@@ -5,6 +5,7 @@ from functools import wraps
 from io import BytesIO
 from operator import attrgetter
 
+
 import icalendar
 import magic
 import xlsxwriter
@@ -28,6 +29,8 @@ from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from taggit.models import Tag
+
+from elasticsearch_dsl.utils import AttrList
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
@@ -307,7 +310,11 @@ class ESPaginator(Paginator):
         if top + self.orphans >= self.count:
             top = self.count
 
-        return self._get_page(self.object_list[1][bottom:top].execute(), number, self)
+        result = self.object_list[1][bottom:top].execute()
+
+        page = self._get_page(result, number, self)
+        page.facets = result.facets
+        return page
 
 
 class JsonApiPagination(JsonApiPageNumberPagination):
@@ -320,6 +327,38 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator
+
+    def paginate_queryset(self, queryset, request, view=None):
+        result = super().paginate_queryset(queryset, request, view)
+
+        return result
+
+    def get_paginated_response(self, data):
+        result = super().get_paginated_response(data)
+
+        facets = {}
+        for filter, facet in self.page.facets.to_dict().items():
+            facets[filter] = []
+
+            for key, count, active in facet:
+                if isinstance(key, AttrList):
+                    if key[1] == get_current_language():
+                        facets[filter].append({
+                            'name': key[0],
+                            'id': key[2],
+                            'count': count,
+                            'active': active
+                        })
+                else:
+                    facets[filter].append({
+                        'id': key,
+                        'count': count,
+                        'active': active
+                    })
+
+        result.data['meta']['facets'] = facets
+
+        return result
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):

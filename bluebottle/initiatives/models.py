@@ -281,7 +281,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_("Require initiators to specify a partner organisation when creating an initiative.")
     )
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
-    activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
+    activity_highlighted_filters = MultiSelectField(
+        _('Activity search: highlighted filters'),
+        max_length=1000, default=[], choices=ACTIVITY_SEARCH_FILTERS
+    )
+    activity_search_filters = MultiSelectField(
+        _('Activity search: more filters'),
+        max_length=1000, default=[], choices=ACTIVITY_SEARCH_FILTERS
+    )
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
     show_all_activities = models.BooleanField(

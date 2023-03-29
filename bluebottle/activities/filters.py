@@ -1,4 +1,5 @@
 import re
+from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.utils.utils import get_current_language
 from elasticsearch_dsl.query import (
@@ -6,7 +7,7 @@ from elasticsearch_dsl.query import (
 )
 
 from elasticsearch_dsl import (
-    FacetedSearch, NestedFacet, TermsFacet, Facet
+    FacetedSearch, TermsFacet, Facet
 )
 
 from elasticsearch_dsl.aggs import Bucket, A
@@ -36,18 +37,34 @@ class MultiTermsFacet(Facet):
         return key[-1] in filter_values
 
 
-class FilterFacet(Facet):
-    agg_type = 'filter'
+class NamedNestedFacet(Facet):
+    def __init__(self, path, name='name'):
+        self.path = path
+        self.name = name
+        super().__init__()
+
+    def get_aggregation(self):
+        return A(
+            'nested',
+            path=self.path,
+            aggs={
+                'inner': A('multi_terms', terms=[
+                    {'field': f'{self.path}.{self.name}'},
+                    {'field': f'{self.path}.id'}
+                ])
+            }
+        )
+
+    def get_values(self, data, filter_values):
+        result = super().get_values(data.inner, filter_values)
+        return result
 
     def add_filter(self, filter_values):
         if filter_values:
-            self._params['filter']
-
-    def is_filtered(self, key, filter_values):
-        """
-        Is a filter active on the given key.
-        """
-        return key[-1] in filter_values
+            return Nested(
+                path=self.path,
+                query=Terms(**{f'{self.path}__id': filter_values})
+            )
 
 
 class FilteredNestedFacet(Facet):
@@ -91,7 +108,7 @@ class FilteredNestedFacet(Facet):
 
 
 class TranslatedFacet(FilteredNestedFacet):
-    def __init__(self, path, name):
+    def __init__(self, path, name='name'):
         super().__init__(
             path,
             {f'{path}.language': get_current_language()},
@@ -112,13 +129,30 @@ class ActivitySearch(FacetedSearch):
     ]
 
     facets = {
-        'theme': TranslatedFacet('theme', 'name'),
-        'country': NestedFacet('country', TermsFacet(field='country.id')),
+        'upcoming': TermsFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
+    }
+
+    possible_facets = {
+        'team_activity': TermsFacet(field='team_activity'),
+        'theme': TranslatedFacet('theme'),
+        'category': TranslatedFacet('categories', 'title'),
+        'skill': TranslatedFacet('expertise'),
+        'country': NamedNestedFacet('country'),
+        'location': NamedNestedFacet('office'),
     }
 
     def __new__(cls, search, filter):
         result = super().__new__(cls)
+
+        settings = InitiativePlatformSettings.objects.get()
+
+        for filter in settings.activity_search_filters:
+            try:
+                result.facets[filter] = cls.possible_facets[filter]
+            except KeyError:
+                pass
+
         for segment_type in SegmentType.objects.all():
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)
 
@@ -134,8 +168,9 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         for key, value in request.GET.items():
             match = regex.match(key)
-            if match:
-                filter[match.groups()[0]] = value
+            filter_name = match.groups()[0]
+            if match and filter_name != 'search':
+                filter[filter_name] = value
 
         search = request.GET.get('filter[search]')
 

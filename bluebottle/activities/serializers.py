@@ -206,7 +206,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         user = self.context['request'].user
         matching = {'skill': False, 'theme': False, 'location': False}
 
-        if not user.is_authenticated or obj.status != 'open':
+        if not user.is_authenticated or not obj.is_upcoming:
             return matching
 
         if 'skills' not in self.context:
@@ -264,7 +264,6 @@ class ActivityPreviewSerializer(ModelSerializer):
         except (ValueError, TypeError):
             end = None
 
-
         if hasattr(obj, 'slots') and obj.slots:
             return [
                 slot for slot in obj.slots
@@ -275,7 +274,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                     (not end or slot.end <= end)
                 )
             ]
-        else: 
+        else:
             return []
 
     def get_slot_count(self, obj):

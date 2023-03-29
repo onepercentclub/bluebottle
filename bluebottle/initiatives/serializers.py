@@ -451,6 +451,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
+            'activity_search_filters',
+            'activity_highlighted_filters',
             'require_organization',
             'team_activities',
             'contact_method',

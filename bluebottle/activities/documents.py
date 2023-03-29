@@ -92,8 +92,9 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'type': fields.KeywordField(attr='segment_type.slug'),
-            'name': fields.TextField(),
+            'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -285,6 +286,17 @@ class ActivityDocument(Document):
                 }
                 for translation in instance.initiative.theme.translations.all()
             ]
+
+    def prepare_segments(self, instance):
+        return [
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': segment.name,
+                'closed': segment.closed,
+            }
+            for segment in instance.segments.all()
+        ]
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):

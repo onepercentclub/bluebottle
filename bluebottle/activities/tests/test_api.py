@@ -34,7 +34,7 @@ from bluebottle.time_based.tests.factories import (
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -1714,6 +1714,49 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(facets['collect'], 4)
         self.assertEqual(facets['deed'], 3)
 
+        self.assertEqual(data['meta']['pagination']['count'], 13)
+
+    def test_facet_segment(self):
+        segment_types = SegmentTypeFactory.create_batch(2, is_active=True, enable_search=True)
+
+        for segment_type in segment_types:
+            segments = SegmentFactory.create_batch(2, segment_type=segment_type)
+            for segment in segments:
+                date_activity = DateActivityFactory.create(status='open')
+                date_activity.segments.add(segment)
+
+                collect_activity = CollectActivityFactory.create(status='open')
+                collect_activity.segments.add(segment)
+
+        selected_segment = segment_types[0].segments.first()
+        response = self.client.get(
+            f'{self.url}?filter[segment.{selected_segment.segment_type.slug}]={selected_segment.pk}',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            set(activity['id'] for activity in data['data']),
+            set(str(activity.pk) for activity in selected_segment.activities.all())
+        )
+
+        for segment_type in segment_types:
+            if segment_type == selected_segment.segment_type:
+                for segment in segment_type.segments.all():
+                    self.assertTrue(
+                        {
+                            'name': segment.name,
+                            'id': str(segment.pk),
+                            'count': 2,
+                            'active': segment == selected_segment
+                        } in data['meta']['facets'][f'segment.{segment_type.slug}']
+                    )
+            else:
+                self.assertEqual(data['meta']['facets'][f'segment.{segment_type.slug}'], [])
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
     def test_facet_theme(self):
         initiatives = InitiativeFactory.create_batch(4, status='approved')
         for initiative in initiatives:
@@ -1738,7 +1781,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(types['deed'], 3)
 
         for initiative in initiatives[1:]:
-            self.assertTrue({
+            self.assertTrue(
+                {
                     'name': initiative.theme.name,
                     'id': str(initiative.theme.pk),
                     'count': 13,
@@ -1746,7 +1790,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 } in data['meta']['facets']['theme']
             )
 
-        self.assertTrue({
+        self.assertTrue(
+            {
                 'name': initiatives[0].theme.name,
                 'id': str(initiatives[0].theme.pk),
                 'count': 13,
@@ -1754,6 +1799,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             } in data['meta']['facets']['theme']
         )
 
+        self.assertEqual(data['meta']['pagination']['count'], 13)
 
     def test_filter_country(self):
         country1 = CountryFactory.create()

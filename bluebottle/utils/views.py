@@ -300,20 +300,17 @@ class ESPaginator(Paginator):
         """
         Returns the total number of objects, across all pages.
         """
-        return self.object_list[1].count()
+        return self.result.hits.total.value
 
     def page(self, number):
-        number = self.validate_number(number)
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        if top + self.orphans >= self.count:
-            top = self.count
+        self.result = self.object_list[1][bottom:top].execute()
 
-        result = self.object_list[1][bottom:top].execute()
+        page = self._get_page(self.result, number, self)
+        page.facets = self.result.facets
 
-        page = self._get_page(result, number, self)
-        page.facets = result.facets
         return page
 
 
@@ -342,13 +339,12 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
 
             for key, count, active in facet:
                 if isinstance(key, AttrList):
-                    if key[1] == get_current_language():
-                        facets[filter].append({
-                            'name': key[0],
-                            'id': key[2],
-                            'count': count,
-                            'active': active
-                        })
+                    facets[filter].append({
+                        'name': key[0],
+                        'id': key[1],
+                        'count': count,
+                        'active': active
+                    })
                 else:
                     facets[filter].append({
                         'id': key,

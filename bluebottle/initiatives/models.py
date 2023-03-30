@@ -260,7 +260,7 @@ def get_search_filters():
     filters = ACTIVITY_SEARCH_FILTERS
     if connection.tenant.schema_name != 'public':
         for segment in SegmentType.objects.all():
-            filters = filters + ((f'segment.{segment.slug}', f'Segment: {segment.name}'),)
+            filters = filters + ((f'segment.{segment.slug}', segment.name),)
     return filters
 
 

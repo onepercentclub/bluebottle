@@ -789,6 +789,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             set(activity['id'] for activity in data['data'])
         )
 
+    def test_filter_date(self):
+        matching_activities = [
+            PeriodActivityFactory.create(start='2025-04-01', deadline='2025-04-02'),
+            PeriodActivityFactory.create(start='2025-04-01', deadline='2025-04-03'),
+            DeedFactory.create(start='2025-04-05', end='2025-04-07'),
+            CollectActivityFactory.create(start='2025-04-05', end='2025-04-07'),
+        ]
+
+        PeriodActivityFactory.create(start='2025-05-01', deadline='2025-05-02'),
+        PeriodActivityFactory.create(start='2025-05-01', deadline='2025-05-03'),
+        DeedFactory.create(start='2025-05-05', end='2025-05-07'),
+        CollectActivityFactory.create(start='2025-05-05', end='2025-05-07'),
+
+        response = self.client.get(
+            f'{self.url}?filter[date]=2025-03-30,2025-04-10',
+        )
+
+        data = json.loads(response.content)
+        facets = dict(
+            (facet['id'], facet['count']) for facet in data['meta']['facets']['date']
+        )
+
+        self.assertEqual(facets['2025-04-01'], 2)
+        self.assertEqual(facets['2025-04-02'], 2)
+        self.assertEqual(facets['2025-04-03'], 1)
+        self.assertEqual(facets['2025-04-04'], 0)
+        self.assertEqual(facets['2025-04-05'], 2)
+        self.assertEqual(facets['2025-04-06'], 2)
+        self.assertEqual(facets['2025-04-07'], 2)
+
+        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
+        self.assertEqual(
+            set(str(activity.pk) for activity in matching_activities),
+            set(activity['id'] for activity in data['data'])
+        )
+
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):
     def setUp(self):

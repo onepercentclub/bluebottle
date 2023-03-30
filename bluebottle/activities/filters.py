@@ -3,7 +3,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.utils.utils import get_current_language
 from elasticsearch_dsl.query import (
-    Terms, Term, Nested, MultiMatch, Bool
+    Terms, Term, Nested, MultiMatch, Bool, Range
 )
 
 from elasticsearch_dsl import (
@@ -11,6 +11,8 @@ from elasticsearch_dsl import (
 )
 
 from elasticsearch_dsl.aggs import Bucket, A
+
+import dateutil
 
 from bluebottle.activities.documents import activity, Activity
 from bluebottle.segments.models import SegmentType
@@ -121,6 +123,29 @@ class SegmentFacet(FilteredNestedFacet):
         super().__init__('segments', {'segments.type': segment_type.slug})
 
 
+class DateRangeFacet(Facet):
+    agg_type = "date_histogram"
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("min_doc_count", 0)
+        super().__init__(**kwargs)
+
+    def get_value(self, bucket):
+        return dateutil.parser.parse(bucket['key_as_string']).date()
+
+    def get_value_filter(self, filter_value):
+        start, end = filter_value.split(',')
+        return Range(
+            _expand__to_dot=False,
+            **{
+                self._params["field"]: {
+                    "gte": dateutil.parser.parse(start),
+                    "lt": dateutil.parser.parse(end)
+                }
+            }
+        )
+
+
 class ActivitySearch(FacetedSearch):
     doc_types = [Activity]
     fields = [
@@ -142,6 +167,7 @@ class ActivitySearch(FacetedSearch):
         'skill': TranslatedFacet('expertise'),
         'country': NamedNestedFacet('country'),
         'location': NamedNestedFacet('office'),
+        'date': DateRangeFacet(field='duration', calendar_interval="day"),
     }
 
     def __new__(cls, search, filter):
@@ -164,26 +190,29 @@ class ActivitySearch(FacetedSearch):
         return search
 
     def query(self, search, query):
-        queries = []
-        for path, fields in self.fields:
-            if path:
-                queries.append(
-                    Nested(
-                        path=path,
-                        query=MultiMatch(
-                            fields=[f'{path}.{field}' for field in fields],
-                            query=query
+        if query:
+            queries = []
+            for path, fields in self.fields:
+                if path:
+                    queries.append(
+                        Nested(
+                            path=path,
+                            query=MultiMatch(
+                                fields=[f'{path}.{field}' for field in fields],
+                                query=query
+                            )
                         )
                     )
-                )
-            else:
-                queries.append(
-                    MultiMatch(
-                        fields=fields, query=query
+                else:
+                    queries.append(
+                        MultiMatch(
+                            fields=fields, query=query
+                        )
                     )
-                )
 
-        return search.query(Bool(should=queries))
+            return search.query(Bool(should=queries))
+        else:
+            return search
 
 
 class ActivitySearchFilter(ElasticSearchFilter):

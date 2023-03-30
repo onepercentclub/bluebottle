@@ -364,10 +364,18 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 class SearchFilter(SortableMixin, models.Model):
-    settings = models.ForeignKey(InitiativePlatformSettings, on_delete=models.deletion.CASCADE)
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name="search_filters",
+        on_delete=models.deletion.CASCADE
+    )
     type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
     highlight = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def name(self):
+        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
 
     class Meta:
         ordering = ['order']

@@ -1,20 +1,18 @@
 import re
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
-from bluebottle.utils.utils import get_current_language
-from elasticsearch_dsl.query import (
-    Terms, Term, Nested,
-)
 
 from elasticsearch_dsl import (
     FacetedSearch, TermsFacet, Facet
 )
-
 from elasticsearch_dsl.aggs import Bucket, A
+from elasticsearch_dsl.query import (
+    Terms, Term, Nested,
+)
 
 from bluebottle.activities.documents import activity, Activity
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import ElasticSearchFilter
+from bluebottle.utils.utils import get_current_language
 
 
 class MultiTerms(Bucket):  # noqa
@@ -168,10 +166,10 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         for key, value in request.GET.items():
             match = regex.match(key)
-            filter_name = match.groups()[0]
-            if match and filter_name != 'search':
-                filter[filter_name] = value
-
+            if match:
+                filter_name = match.groups()[0]
+                if filter_name != 'search':
+                    filter[filter_name] = value
         search = request.GET.get('filter[search]')
 
         return ActivitySearch(search, filter)

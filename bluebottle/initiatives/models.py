@@ -1,12 +1,14 @@
 from builtins import object
 from builtins import str
 
+from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, connection
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
+from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -19,6 +21,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.segments.models import SegmentType
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
     SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
@@ -239,6 +242,28 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             self.activity_managers.add(self.owner)
 
 
+ACTIVITY_SEARCH_FILTERS = (
+    ('location', _('Office location')),
+    ('country', _('Country')),
+    ('date', _('Date')),
+    ('skill', _('Skill')),
+    ('type', _('Type')),
+    ('team_activity', _('Team activities')),
+    ('theme', _('Theme')),
+    ('category', _('Category')),
+    ('segments', _('Segments')),
+    ('status', _('Status')),
+)
+
+
+def get_search_filters():
+    filters = ACTIVITY_SEARCH_FILTERS
+    if connection.tenant.schema_name != 'public':
+        for segment in SegmentType.objects.all():
+            filters = filters + ((f'segment.{segment.slug}', f'Segment: {segment.name}'),)
+    return filters
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
@@ -246,19 +271,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('dateactivity', _('Activity on a specific date')),
         ('deed', _('Deed')),
         ('collect', _('Collect activity')),
-    )
-
-    ACTIVITY_SEARCH_FILTERS = (
-        ('location', _('Office location')),
-        ('country', _('Country')),
-        ('date', _('Date')),
-        ('skill', _('Skill')),
-        ('type', _('Type')),
-        ('team_activity', _('Team activities')),
-        ('theme', _('Theme')),
-        ('category', _('Category')),
-        ('segments', _('Segments')),
-        ('status', _('Status')),
     )
     INITIATIVE_SEARCH_FILTERS = (
         ('location', _('Office location')),
@@ -349,6 +361,16 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
+
+
+class SearchFilter(SortableMixin, models.Model):
+    settings = models.ForeignKey(InitiativePlatformSettings, on_delete=models.deletion.CASCADE)
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
+    highlight = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['order']
 
 
 class Theme(SortableTranslatableModel):

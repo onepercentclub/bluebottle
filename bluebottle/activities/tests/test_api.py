@@ -37,7 +37,6 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
@@ -427,7 +426,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_search(self):
-        text = 'some text'
+        text = 'consectetur adipiscing elit,'
         title = PeriodActivityFactory.create(
             title=f'title with {text}',
         )
@@ -449,22 +448,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         slot_title = DateActivityFactory.create()
         DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
 
-        theme_name = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(theme=ThemeFactory.create(name=f'theme name with {text}'))
-        )
-
-        category_title = PeriodActivityFactory.create()
-        category_title.initiative.categories.add(CategoryFactory.create(title=f'category title {text}'))
-
         response = self.client.get(
-            self.url + f'?filter[search]={text}',
-            user=self.owner
+            f'{self.url}?filter[search]={text}',
         )
 
         data = json.loads(response.content)
-        __import__('ipdb').set_trace()
+        self.assertEqual(data['data'][0]['id'], str(title.pk))
+        self.assertEqual(data['data'][1]['id'], str(description.pk))
+        self.assertEqual(data['data'][2]['id'], str(initiative_title.pk))
 
-        self.assertEqual(data['meta']['pagination']['count'], 8)
+        ids = [int(activity['id']) for activity in data['data']]
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
 
     def test_filter_type(self):
         DateActivityFactory.create_batch(3, status='open')
@@ -754,6 +752,36 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertEqual(facets[str(matching_office.pk)], len(matching_activities))
         self.assertEqual(facets[str(other_office.pk)], len(other_activities))
+
+        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
+        self.assertEqual(
+            set(str(activity.pk) for activity in matching_activities),
+            set(activity['id'] for activity in data['data'])
+        )
+
+    def test_filter_highlight(self):
+        matching_activities = PeriodActivityFactory.create_batch(
+            2,
+            highlight=True,
+            status='open',
+        )
+
+        other_activities = PeriodActivityFactory.create_batch(
+            3,
+            highlight=False,
+            status='open',
+        )
+
+        response = self.client.get(
+            f'{self.url}?filter[highlight]=true',
+        )
+
+        data = json.loads(response.content)
+        facets = dict(
+            (facet['id'], facet['count']) for facet in data['meta']['facets']['highlight']
+        )
+        self.assertEqual(facets[1], len(matching_activities))
+        self.assertEqual(facets[0], len(other_activities))
 
         self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
         self.assertEqual(

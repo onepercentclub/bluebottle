@@ -3,7 +3,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 
 from bluebottle.utils.utils import get_current_language
 from elasticsearch_dsl.query import (
-    Terms, Term, Nested,
+    Terms, Term, Nested, MultiMatch, Bool
 )
 
 from elasticsearch_dsl import (
@@ -124,13 +124,15 @@ class SegmentFacet(FilteredNestedFacet):
 class ActivitySearch(FacetedSearch):
     doc_types = [Activity]
     fields = [
-        'title^3', 'description^2', 'initiative.title^2', 'initiative.story', 'initiative.pitch',
-        'slots.title', 'theme.name', 'categories.name'
+        (None, ('title^3', 'description^2')),
+        ('initiative', ('title^2', 'story', 'pitch')),
+        ('slots', ('title',)),
     ]
 
     facets = {
         'upcoming': TermsFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
+        'highlight': TermsFacet(field='highlight'),
     }
 
     possible_facets = {
@@ -157,6 +159,31 @@ class ActivitySearch(FacetedSearch):
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)
 
         return result
+
+    def highlight(self, search):
+        return search
+
+    def query(self, search, query):
+        queries = []
+        for path, fields in self.fields:
+            if path:
+                queries.append(
+                    Nested(
+                        path=path,
+                        query=MultiMatch(
+                            fields=[f'{path}.{field}' for field in fields],
+                            query=query
+                        )
+                    )
+                )
+            else:
+                queries.append(
+                    MultiMatch(
+                        fields=fields, query=query
+                    )
+                )
+
+        return search.query(Bool(should=queries))
 
 
 class ActivitySearchFilter(ElasticSearchFilter):

@@ -1,44 +1,42 @@
-import re
 import io
-from builtins import str
 import json
+import re
+from builtins import str
 from datetime import timedelta
-import dateutil
-from openpyxl import load_workbook
-from bluebottle.test.factory_models.categories import CategoryFactory
 
+import dateutil
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
-from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
+from openpyxl import load_workbook
 from rest_framework import status
 
-from bluebottle.files.tests.factories import ImageFactory
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-
+from bluebottle.activities.models import Activity
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
-from bluebottle.activities.serializers import TeamTransitionSerializer
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory, TeamSlotFactory
 )
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 @override_settings(
@@ -428,28 +426,28 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search(self):
         text = 'some text'
-        title = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             title=f'title with {text}',
         )
-        description = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             description=f'description with {text}',
         )
 
-        initiative_title = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
-        initiative_story = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(story=f'story with {text}'),
         )
 
-        initiative_pitch = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
         )
 
         slot_title = DateActivityFactory.create()
         DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
 
-        theme_name = PeriodActivityFactory.create(
+        PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(theme=ThemeFactory.create(name=f'theme name with {text}'))
         )
 

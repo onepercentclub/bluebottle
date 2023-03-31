@@ -245,7 +245,6 @@ class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettin
             'fields': (
                 'show_all_activities',
                 'initiative_search_filters',
-                'activity_highlighted_filters',
                 'activity_search_filters'
             )
         }),

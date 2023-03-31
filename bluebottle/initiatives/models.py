@@ -247,7 +247,7 @@ ACTIVITY_SEARCH_FILTERS = (
     ('country', _('Country')),
     ('date', _('Date')),
     ('skill', _('Skill')),
-    ('type', _('Type')),
+    ('activity-type', _('Type')),
     ('team_activity', _('Team activities')),
     ('theme', _('Theme')),
     ('category', _('Category')),

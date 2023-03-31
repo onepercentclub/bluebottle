@@ -14,7 +14,8 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.geo.models import Country
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, SearchFilter
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
+    InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.wallposts.admin import WallpostInline
@@ -219,15 +220,20 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     autocomplete_fields = ['activity_managers']
 
 
-class SearchFilterInline(SortableTabularInline):
-    model = SearchFilter
+class ActivitySearchFilterInline(SortableTabularInline):
+    model = ActivitySearchFilter
+    extra = 0
+
+
+class InitiativeSearchFilterInline(SortableTabularInline):
+    model = InitiativeSearchFilter
     extra = 0
 
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettingsAdmin):
 
-    inlines = [SearchFilterInline]
+    inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
 
     fieldsets = (
         (_('Activity types'), {

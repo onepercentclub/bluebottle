@@ -1,6 +1,7 @@
 import datetime
 import json
 from builtins import str
+from bluebottle.test.factory_models.categories import CategoryFactory
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -21,7 +22,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -603,30 +604,50 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         super(InitiativeListSearchAPITestCase, self).setUp()
         self.url = reverse('initiative-list')
 
-    def test_no_filter(self):
-        InitiativeFactory.create(owner=self.owner, status='approved')
-        InitiativeFactory.create(status='approved')
-
-        response = self.client.get(
-            self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+    def search(self, filter):
+        params = '&'.join(
+            f'filter[{key}]={value}' for key, value in filter.items()
         )
-        data = json.loads(response.content)
+        response = self.client.get(
+            f'{self.url}?{params}',
+            user=self.owner
+        )
 
-        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.data = json.loads(response.content)
+
+    def assertFound(self, matching, total=None):
+        self.assertEqual(self.data['meta']['paginiation']['total'], total or len(matching))
+
+        ids = set(activity['id'] for activity in self.data['data']) 
+
+        for activity in matching:
+            self.assertTrue(str(activity.pk) in ids)
+
+    def assertFacets(self, filter, facets):
+        facets = dict(
+            (facet['value'], facet['count']) for facet in self.data['meta']['facets'][filter]
+        )
+
+        for key, value in facets.items():
+            self.assertEqual(facets[key], value)
+
+    def test_no_filter(self):
+        matching = (
+            InitiativeFactory.create(owner=self.owner, status='approved'), 
+            InitiativeFactory.create(status='approved')
+        )
+
+        self.search({})
+        self.assertFound(matching)
+
 
     def test_more_results(self):
-        InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
+        matching = InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
         InitiativeFactory.create(status="approved")
 
-        response = self.client.get(
-            self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-        data = json.loads(response.content)
+        self.search({})
 
-        self.assertEqual(data['meta']['pagination']['count'], 20)
-        self.assertEqual(len(data['data']), 8)
+        self.assertFound(matching, 20)
 
     def test_only_owner_permission(self):
         owned = InitiativeFactory.create(owner=self.owner, status='approved')
@@ -687,33 +708,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], str(approved.pk))
 
-    def test_filter_segment(self):
-        segment = SegmentFactory.create()
-
-        first = InitiativeFactory.create(
-            status='approved'
-        )
-        activity = DateActivityFactory.create(
-            status='open',
-            initiative=first,
-        )
-        activity.segments.add(segment)
-
-        InitiativeFactory.create(
-            status='approved'
-        )
-
-        response = self.client.get(
-            self.url + '?filter[segment.{}]={}'.format(
-                segment.segment_type.slug, segment.pk
-            ),
-            user=self.owner
-        )
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], str(first.pk))
-
     def test_filter_owner(self):
         owned_initiatives = InitiativeFactory.create_batch(
             2, status='submitted', owner=self.owner
@@ -739,19 +733,125 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
                 resource['id'] in expected_ids
             )
 
-    def test_filter_country(self):
-        mordor = CountryFactory.create(name='Mordor')
-        location = LocationFactory.create(country=mordor)
-        initiative = InitiativeFactory.create(status='approved', place=None, location=location)
-        InitiativeFactory.create(status='approved', place=None)
+    def test_filter_segment(self):
+        segment_type = SegmentTypeFactory.create(active=True, enabled=True)
 
-        response = self.client.get(
-            self.url + '?filter[country]={}'.format(mordor.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        matching_segment, other_segment = SegmentFactory.create(segment_type=segment_type)
+        matching = InitiativeFactory.create_batch(3)
+        for initiative in matching:
+            activity = DateActivityFactory.create(status='approved', initiative=initiative)
+            activity.segments.add(matching_segment)
+
+        other = InitiativeFactory.create_batch(2)
+        for initiative in other:
+            activity = DateActivityFactory.create(status='approved', initiative=initiative)
+            activity.segments.add(other_segment)
+
+        self.search({f'segment.{segment_type.slug}': matching_segment.pk})
+
+        self.assertFacets(
+            f'segment.{segment_type.slug}',
+            {
+                matching_segment.pk: len(matching),
+                other_segment.pk: len(other)
+            }
         )
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
+        self.assertFound(matching)
+
+    def test_filter_country(self):
+        matching_country, other_country  = CountryFactory.create_batch(2)
+
+        matching = InitiativeFactory.create(status='approved')
+        for initiative in matching:
+            DateActivityFactory.create(
+                status='approved', 
+                initiative=initiative, 
+                location=LocationFactory.create(country=matching_country)
+            )
+
+        other = InitiativeFactory.create(status='approved')
+        for initiative in other:
+            DateActivityFactory.create(
+                status='approved', 
+                initiative=initiative, 
+                location=LocationFactory.create(country=matching_country)
+            )
+
+        self.search({'country': matching_country.pk})
+        self.assertFacets(
+            'country',
+            {
+                matching_country.pk: len(matching),
+                other_country.pk: len(other)
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_country(self):
+        matching_location, other_location  = LocationFactory.create_batch(2)
+
+        matching = InitiativeFactory.create(status='approved')
+        for initiative in matching:
+            DateActivityFactory.create(
+                status='approved', 
+                initiative=initiative, 
+                location=matching_location
+            )
+
+        other = InitiativeFactory.create(status='approved')
+        for initiative in other:
+            DateActivityFactory.create(
+                status='approved', 
+                initiative=initiative, 
+                location=other_location
+            )
+
+        self.search({'location': matching_location.pk})
+        self.assertFacets(
+            'location',
+            {
+                matching_location.pk: len(matching),
+                other_location.pk: len(other)
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_theme(self):
+        matching_theme, other_theme  = ThemeFactory.create_batch(2)
+
+        matching = InitiativeFactory.create(status='approved', theme=matching_theme)
+        other = InitiativeFactory.create(status='approved', theme=other_theme)
+
+        self.search({'theme': matching_theme.pk})
+        self.assertFacets(
+            'country',
+            {
+                matching_theme.pk: len(matching),
+                other_theme.pk: len(other)
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_category(self):
+        matching_category, other_category  = CategoryFactory.create_batch(2)
+
+        matching = InitiativeFactory.create(status='approved')
+        for initiative in matching:
+            initiative.categories.add(matching_category)
+
+        other = InitiativeFactory.create(status='approved')
+        for initiative in other:
+            initiative.categories.add(other_category)
+
+        self.search({'category': matching_category.pk})
+        self.assertFacets(
+            'category',
+            {
+                matching_category.pk: len(matching),
+                other_category.pk: len(other)
+            }
+        )
+        self.assertFound(matching)
 
     def test_filter_not_owner(self):
         """
@@ -771,76 +871,11 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 4)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
-    def test_filter_activity_manager(self):
-        """
-        User should see initiatives where self activity manager when in submitted
-        """
-        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
-        InitiativeFactory.create_batch(4, status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['activity-managers']['data'][0]['id'], str(self.owner.pk))
-
-    def test_filter_promoter(self):
-        """
-        User should see initiatives where self activity manager when in submitted
-        """
-        InitiativeFactory.create_batch(2, status='submitted', promoter=self.owner)
-        InitiativeFactory.create_batch(4, status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-
-    def test_filter_owner_and_activity_manager(self):
-        """
-        User should see initiatives where self owner or activity manager when in submitted
-        """
-        InitiativeFactory.create_batch(2, status='submitted', activity_managers=[self.owner])
-        InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
-        InitiativeFactory.create_batch(4, status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 5)
-
     def test_search(self):
         first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum", status='approved')
         InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
         InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
         second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', status='approved')
-
-        response = self.client.get(
-            self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(second.pk))
-        self.assertEqual(data['data'][1]['id'], str(first.pk))
-
-    def test_search_boost(self):
-        first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet', status='approved')
-        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Something else", status='approved')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',

@@ -166,6 +166,19 @@ class Search(FacetedSearch):
 
         return result
 
+    @property
+    def default_sort(self):
+        return list(self.sorting.keys())[0]
+
+    def sort(self, search):
+        """
+        Add sorting information to the request.
+        """
+        return search 
+        sort = self._sort or self.default_sort
+
+        return search.sort(*self.sorting[sort])
+
     def highlight(self, search):
         return search
 
@@ -196,8 +209,6 @@ class Search(FacetedSearch):
 
 
 class ElasticSearchFilter(filters.SearchFilter):
-    search_field = 'filter[search]'
-
     def filter_queryset(self, request, queryset, view):
         self.search_class.index = self.index._name
 
@@ -206,10 +217,9 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         for key, value in request.GET.items():
             match = regex.match(key)
-            filter_name = match.groups()[0]
-            if match and filter_name != 'search':
-                filter[filter_name] = value
+            if match and match.groups()[0] != 'search':
+                filter[match.groups()[0]] = value
 
         search = request.GET.get('filter[search]')
 
-        return self.search_class(search, filter)
+        return self.search_class(search, filter, request.GET.get('sort'))

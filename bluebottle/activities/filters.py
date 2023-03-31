@@ -13,8 +13,14 @@ from bluebottle.utils.filters import (
 
 
 class ActivitySearch(Search):
-
     doc_types = [Activity]
+
+    sorting = {
+        'upcoming': ['duration'],
+        'date': ['duration'],
+        'distance': ['-distance']
+    }
+
     fields = [
         (None, ('title^3', 'description^2')),
         ('initiative', ('title^2', 'story', 'pitch')),
@@ -37,7 +43,7 @@ class ActivitySearch(Search):
         'date': DateRangeFacet(field='duration', calendar_interval="day"),
     }
 
-    def __new__(cls, search, filter):
+    def __new__(cls, *args):
         settings = InitiativePlatformSettings.objects.get()
         result = super().__new__(cls, settings.activity_search_filters)
 

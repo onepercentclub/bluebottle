@@ -29,10 +29,9 @@ class ActivityDocument(Document):
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
     description = fields.TextField()
-    status = fields.KeywordField()
-    status_score = fields.FloatField()
-    created = fields.DateField()
     highlight = fields.BooleanField()
+    is_upcoming = fields.BooleanField()
+    status = fields.KeywordField()
 
     type = fields.KeywordField()
 
@@ -73,12 +72,18 @@ class ActivityDocument(Document):
         attr='initiative.categories',
         properties={
             'id': fields.KeywordField(),
-            'slug': fields.KeywordField(),
+            'title': fields.KeywordField(),
+            'language': fields.KeywordField()
         }
     )
     position = fields.GeoPointField()
 
-    country = fields.KeywordField()
+    country = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
 
     expertise = fields.NestedField(
         properties={
@@ -92,8 +97,9 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'type': fields.KeywordField(attr='segment_type.slug'),
-            'name': fields.TextField(),
+            'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -108,6 +114,14 @@ class ActivityDocument(Document):
             'city': fields.TextField(),
             'country': fields.TextField(attr='country.name'),
             'country_code': fields.TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    office = fields.NestedField(
+        attr='office_location',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 
@@ -207,12 +221,18 @@ class ActivityDocument(Document):
         return mapping[str(instance.__class__.__name__.lower())]
 
     def prepare_country(self, instance):
-        country_ids = []
-        if hasattr(instance, 'office_location') and instance.office_location:
-            country_ids.append(instance.office_location.country_id)
-        if instance.initiative.place:
-            country_ids.append(instance.initiative.place.country_id)
-        return country_ids
+        country = None
+
+        if instance.office_location:
+            country = instance.office_location.country
+        elif hasattr(instance, 'place') and instance.place:
+            country = instance.place.country
+
+        if country:
+            return {
+                'id': country.id,
+                'name': country.name
+            }
 
     def prepare_location(self, instance):
         locations = []
@@ -286,9 +306,35 @@ class ActivityDocument(Document):
                 for translation in instance.initiative.theme.translations.all()
             ]
 
+    def prepare_categories(self, instance):
+        if instance.initiative:
+            return [
+                {
+                    'id': category.pk,
+                    'title': translation.title,
+                    'language': translation.language_code,
+                }
+                for category in instance.initiative.categories.all()
+                for translation in category.translations.all()
+            ]
+
+    def prepare_segments(self, instance):
+        return [
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': segment.name,
+                'closed': segment.closed,
+            }
+            for segment in instance.segments.all()
+        ]
+
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):
             return instance.is_online
+
+    def prepare_is_upcoming(self, instance):
+        return instance.status in ['open', 'full']
 
     def prepare_position(self, instance):
         return []

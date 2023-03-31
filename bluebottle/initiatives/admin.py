@@ -1,4 +1,6 @@
 from builtins import object
+
+from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -9,12 +11,12 @@ from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.geo.models import Country
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
-from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
-from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.geo.models import Country
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, SearchFilter
+from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.wallposts.admin import WallpostInline
 
 
@@ -217,8 +219,16 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     autocomplete_fields = ['activity_managers']
 
 
+class SearchFilterInline(SortableTabularInline):
+    model = SearchFilter
+    extra = 0
+
+
 @admin.register(InitiativePlatformSettings)
-class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
+class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettingsAdmin):
+
+    inlines = [SearchFilterInline]
+
     fieldsets = (
         (_('Activity types'), {
             'fields': (
@@ -229,6 +239,7 @@ class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
             'fields': (
                 'show_all_activities',
                 'initiative_search_filters',
+                'activity_highlighted_filters',
                 'activity_search_filters'
             )
         }),

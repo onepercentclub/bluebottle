@@ -25,7 +25,8 @@ from bluebottle.fsm.serializers import (
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, SearchFilter
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
+    InitiativeSearchFilter
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -438,17 +439,25 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
         resource_name = 'initiative-transitions'
 
 
-class SearchFilterSerializer(serializers.ModelSerializer):
+class ActivitySearchFilterSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = SearchFilter
+        model = ActivitySearchFilter
+        fields = ['type', 'name', 'highlight']
+
+
+class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InitiativeSearchFilter
         fields = ['type', 'name', 'highlight']
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     has_locations = serializers.SerializerMethodField()
 
-    search_filters = SearchFilterSerializer(many=True)
+    search_filters_activities = ActivitySearchFilterSerializer(many=True)
+    search_filters_initiatives = InitiativeSearchFilterSerializer(many=True)
 
     def get_has_locations(self, obj):
         return Location.objects.count()
@@ -461,8 +470,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',
-            'search_filters',
-            'activity_highlighted_filters',
+            'search_filters_activities',
+            'search_filters_initiatives',
             'require_organization',
             'team_activities',
             'contact_method',

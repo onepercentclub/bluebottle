@@ -246,8 +246,9 @@ ACTIVITY_SEARCH_FILTERS = (
     ('location', _('Office location')),
     ('country', _('Country')),
     ('date', _('Date')),
+    ('distance', _('Distance')),
     ('skill', _('Skill')),
-    ('type', _('Type')),
+    ('activity-type', _('Type')),
     ('team_activity', _('Team activities')),
     ('theme', _('Theme')),
     ('category', _('Category')),
@@ -293,10 +294,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_("Require initiators to specify a partner organisation when creating an initiative.")
     )
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
-    activity_highlighted_filters = MultiSelectField(
-        _('Activity search: highlighted filters'),
-        max_length=1000, default=[], choices=ACTIVITY_SEARCH_FILTERS
-    )
     activity_search_filters = MultiSelectField(
         _('Activity search: more filters'),
         max_length=1000, default=[], choices=ACTIVITY_SEARCH_FILTERS
@@ -363,10 +360,28 @@ class InitiativePlatformSettings(BasePlatformSettings):
         verbose_name = _('initiative settings')
 
 
-class SearchFilter(SortableMixin, models.Model):
+class ActivitySearchFilter(SortableMixin, models.Model):
     settings = models.ForeignKey(
         InitiativePlatformSettings,
-        related_name="search_filters",
+        related_name='search_filters_activities',
+        on_delete=models.deletion.CASCADE
+    )
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
+    highlight = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def name(self):
+        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
+
+    class Meta:
+        ordering = ['order']
+
+
+class InitiativeSearchFilter(SortableMixin, models.Model):
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name='search_filters_initiatives',
         on_delete=models.deletion.CASCADE
     )
     type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())

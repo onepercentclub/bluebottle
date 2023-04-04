@@ -171,7 +171,6 @@ class Search(FacetedSearch):
         """
         Add sorting information to the request.
         """
-        return search
         sort = self._sort or self.default_sort
 
         return search.sort(*self.sorting[sort])

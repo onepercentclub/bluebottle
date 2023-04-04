@@ -16,8 +16,8 @@ class ActivitySearch(Search):
     doc_types = [Activity]
 
     sorting = {
-        'upcoming': ['duration'],
-        'date': ['duration'],
+        'upcoming': ['start'],
+        'date': ['-start'],
         'distance': ['-distance']
     }
 

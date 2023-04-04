@@ -25,7 +25,8 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
@@ -1351,7 +1352,7 @@ class InviteDetailViewAPITestCase(APITestCase):
         activity = PeriodActivityFactory.create(status='open', team_activity='teams')
         self.contributor = PeriodParticipantFactory.create(activity=activity)
 
-        self.url = reverse('invite-detail', args=(self.contributor.invite.pk, ))
+        self.url = reverse('invite-detail', args=(self.contributor.invite.pk,))
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -1495,7 +1496,7 @@ class TeamMemberListViewAPITestCase(APITestCase):
         for member in self.withdrawn_members:
             member.states.withdraw(save=True)
 
-        self.url = reverse('team-members', args=(self.team.pk, ))
+        self.url = reverse('team-members', args=(self.team.pk,))
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)

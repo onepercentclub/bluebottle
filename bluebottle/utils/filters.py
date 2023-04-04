@@ -5,7 +5,7 @@ from elasticsearch_dsl import (
 )
 from elasticsearch_dsl.aggs import Bucket, A
 from elasticsearch_dsl.query import (
-    Terms, Term, Nested, MultiMatch, Bool, Range
+    Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
 )
 from rest_framework import filters
 
@@ -132,14 +132,11 @@ class SegmentFacet(FilteredNestedFacet):
 
 
 class DateRangeFacet(Facet):
-    agg_type = "date_histogram"
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault("min_doc_count", 0)
-        super().__init__(**kwargs)
-
-    def get_value(self, bucket):
-        return dateutil.parser.parse(bucket['key_as_string']).date()
+    def get_values(self, data, filter_values):
+        return []
 
     def get_value_filter(self, filter_value):
         start, end = filter_value.split(',')
@@ -174,7 +171,6 @@ class Search(FacetedSearch):
         """
         Add sorting information to the request.
         """
-        return search 
         sort = self._sort or self.default_sort
 
         return search.sort(*self.sorting[sort])

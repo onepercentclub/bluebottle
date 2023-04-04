@@ -25,7 +25,7 @@ from bluebottle.fsm.serializers import (
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, SearchFilter
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -438,8 +438,17 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
         resource_name = 'initiative-transitions'
 
 
+class SearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SearchFilter
+        fields = ['type', 'name', 'highlight']
+
+
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     has_locations = serializers.SerializerMethodField()
+
+    search_filters = SearchFilterSerializer(many=True)
 
     def get_has_locations(self, obj):
         return Location.objects.count()
@@ -451,6 +460,9 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
+            'activity_search_filters',
+            'search_filters',
+            'activity_highlighted_filters',
             'require_organization',
             'team_activities',
             'contact_method',

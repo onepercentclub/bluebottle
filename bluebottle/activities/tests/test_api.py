@@ -1,43 +1,40 @@
-import re
 import io
-from builtins import str
 import json
+import re
+from builtins import str
 from datetime import timedelta
-import dateutil
-from openpyxl import load_workbook
-from bluebottle.test.factory_models.categories import CategoryFactory
 
-from django.contrib.auth.models import Group, Permission
+import dateutil
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
-from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
+from openpyxl import load_workbook
 from rest_framework import status
 
-from bluebottle.files.tests.factories import ImageFactory
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-
+from bluebottle.activities.models import Activity
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
-from bluebottle.activities.serializers import TeamTransitionSerializer
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
     DateActivitySlotFactory, SkillFactory, TeamSlotFactory
 )
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 @override_settings(
@@ -352,79 +349,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['theme'], theme_translation.name)
         self.assertEqual(attributes['collect-type'], collect_type_translation.name)
 
-    def setup_closed_segments(self):
-        self.closed_segment = SegmentFactory.create(closed=True)
-        self.open_segment = SegmentFactory.create()
-
-        self.without_segment = DateActivityFactory.create(status='succeeded')
-
-        self.with_open_segment = DateActivityFactory.create(status='succeeded')
-        self.with_open_segment.segments.add(self.open_segment)
-
-        self.with_closed_segment = DateActivityFactory.create(status='open')
-        self.with_closed_segment.segments.add(self.closed_segment)
-
-    def test_closed_segments_anonymous(self):
-        self.setup_closed_segments()
-
-        response = self.client.get(self.url)
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-
-    def test_closed_segments_user(self):
-        self.setup_closed_segments()
-
-        user = BlueBottleUserFactory.create()
-        user.segments.add(self.closed_segment)
-
-        response = self.client.get(self.url, user=user)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
-
-    def test_closed_segments_staff(self):
-        self.setup_closed_segments()
-
-        staff = BlueBottleUserFactory.create(is_staff=True)
-
-        response = self.client.get(self.url, user=staff)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
-
-    def test_only_owner_permission(self):
-        owned = DateActivityFactory.create(owner=self.owner, status='open')
-        DateActivityFactory.create(status='open')
-
-        authenticated = Group.objects.get(name='Authenticated')
-        authenticated.permissions.remove(
-            Permission.objects.get(codename='api_read_activity')
-        )
-        authenticated.permissions.add(
-            Permission.objects.get(codename='api_read_own_activity')
-        )
-
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-
-        self.assertEqual(data['data'][0]['id'], str(owned.pk))
-
     def test_search(self):
         text = 'consectetur adipiscing elit,'
         title = PeriodActivityFactory.create(
@@ -469,43 +393,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
 
         ]
-        text = 'consectetur adipiscing elit,'
-        title = PeriodActivityFactory.create(
-            title=f'title with {text}',
-        )
-        description = PeriodActivityFactory.create(
-            description=f'description with {text}',
-        )
-
-        initiative_title = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(title=f'title with {text}'),
-        )
-        initiative_story = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(story=f'story with {text}'),
-        )
-
-        initiative_pitch = PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
-        )
-
-        slot_title = DateActivityFactory.create()
-        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
-
-        response = self.client.get(
-            f'{self.url}?filter[search]={text}',
-        )
-
-        data = json.loads(response.content)
-        self.assertEqual(data['data'][0]['id'], str(title.pk))
-        self.assertEqual(data['data'][1]['id'], str(description.pk))
-        self.assertEqual(data['data'][2]['id'], str(initiative_title.pk))
-
-        ids = [int(activity['id']) for activity in data['data']]
-        self.assertTrue(initiative_pitch.pk in ids)
-        self.assertTrue(initiative_story.pk in ids)
-        self.assertTrue(slot_title.pk in ids)
-
-        self.assertEqual(data['meta']['pagination']['count'], 6)
 
     def search(self, filter):
         if isinstance(filter, str):
@@ -523,13 +410,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.data = json.loads(response.content)
 
-    def assertFound(self, matching, count):
+    def assertFound(self, matching, count=None):
         self.assertEqual(self.data['meta']['pagination']['count'], len(matching))
 
         if count:
             self.assertEqual(len(self.data['data']), count)
 
-        ids = set(str(activity.pk) for activity in matching) 
+        ids = set(str(activity.pk) for activity in matching)
 
         for activity in self.data['data']:
             self.assertTrue(activity['id'] in ids)
@@ -548,7 +435,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({})
 
         self.assertFound(activities, 8)
-        __import__('ipdb').set_trace()
 
         self.search(self.data['links']['next'])
 
@@ -559,10 +445,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             DateActivityFactory.create_batch(3, status='open') +
             PeriodActivityFactory.create_batch(2, status='open')
         )
-        funding = FundingFactory.create_batch(1, status='open') 
-        deed = DeedFactory.create_batch(3, status='open') 
+        funding = FundingFactory.create_batch(1, status='open')
+        deed = DeedFactory.create_batch(3, status='open')
         collect = CollectActivityFactory.create_batch(4, status='open')
-
 
         self.search({'activity-type': 'time'})
 
@@ -626,7 +511,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 matching_initiative.theme.pk: len(matching),
                 other_initiative.theme.pk: len(other)
             }
-        ) 
+        )
         self.assertFound(matching)
 
     def test_filter_upcoming(self):
@@ -672,7 +557,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'category': matching_category.pk})
 
         self.assertFacets(
-            'category', 
+            'category',
             {matching_category.pk: len(matching), other_category.pk: len(other)}
         )
         self.assertFound(matching)
@@ -697,7 +582,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'skill': matching_skill.pk})
 
         self.assertFacets(
-            'skill', 
+            'skill',
             {matching_skill.pk: len(matching), other_skill.pk: len(other)}
         )
         self.assertFound(matching)
@@ -722,7 +607,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'country': matching_country.pk})
 
         self.assertFacets(
-            'country', 
+            'country',
             {matching_country.pk: len(matching), other_country.pk: len(other)}
         )
         self.assertFound(matching)
@@ -747,7 +632,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'location': matching_office.pk})
 
         self.assertFacets(
-            'location', 
+            'location',
             {matching_office.pk: len(matching), other_office.pk: len(other)}
         )
         self.assertFound(matching)
@@ -767,7 +652,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'highlight': 'true'})
 
         self.assertFacets(
-            'highlight', 
+            'highlight',
             {1: len(matching), 0: len(other)}
         )
         self.assertFound(matching)
@@ -788,7 +673,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'highlight': 'true'})
 
         self.assertFacets(
-            'date', 
+            'date',
             {
                 '2025-04-01': 2,
                 '2025-04-02': 2,

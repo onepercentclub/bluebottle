@@ -16,8 +16,10 @@ from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerialize
 from bluebottle.scim import scim_data
 from bluebottle.scim.filters import SCIMFilter
 
-
 from rest_framework import pagination
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class SCIMPaginator(pagination.LimitOffsetPagination):
@@ -114,7 +116,14 @@ class SCIMViewMixin(object):
 
         return response.Response(data, status=status_code)
 
+    def update(self, request, *args, **kwargs):
+        logger.error(request.body)
+
+        return super().update(request, *args, **kwargs)
+
     def partial_update(self, request, *args, **kwargs):
+        logger.error(request.body)
+
         instance = self.get_object()
         data = self.get_serializer(instance).data
 

@@ -389,19 +389,63 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
     def test_sort_upcoming(self):
+        today = now().date()
         activities = [
-
-
+            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
+            DateActivityFactory.create(slots=[]),
+            DateActivityFactory.create(slots=[]),
+            PeriodActivityFactory(start=today + timedelta(days=8)),
+            CollectActivityFactory(start=today + timedelta(days=9)),
         ]
+        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
+        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
 
-    def search(self, filter):
+        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
+        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+
+        self.search({})
+
+        self.assertEqual(
+            [str(activity.pk) for activity in activities],
+            [activity['id'] for activity in self.data['data']]
+        )
+
+    def test_sort_date(self):
+        today = now().date()
+        activities = [
+            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
+            DateActivityFactory.create(slots=[]),
+            DateActivityFactory.create(slots=[]),
+            PeriodActivityFactory(start=today + timedelta(days=8)),
+            CollectActivityFactory(start=today + timedelta(days=9)),
+        ]
+        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
+        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
+
+        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
+        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+
+        self.search({}, 'date')
+
+        self.assertEqual(
+            [str(activity.pk) for activity in reversed(activities)],
+            [activity['id'] for activity in self.data['data']]
+        )
+
+    def search(self, filter, sort=None):
         if isinstance(filter, str):
             url = filter
         else:
-            params = '&'.join(
-                f'filter[{key}]={value}' for key, value in filter.items()
+            params = dict(
+                (f'filter[{key}]', value) for key, value in filter.items()
             )
-            url = f'{self.url}?{params}'
+
+            if sort:
+                params['sort'] = sort
+
+            query = '&'.join(f'{key}={value}' for key, value in params.items())
+
+            url = f'{self.url}?{query}'
 
         response = self.client.get(
             url,

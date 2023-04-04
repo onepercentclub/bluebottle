@@ -1,7 +1,6 @@
 import datetime
 import json
 from builtins import str
-from bluebottle.test.factory_models.categories import CategoryFactory
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -24,6 +23,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
@@ -618,7 +618,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
     def assertFound(self, matching, total=None):
         self.assertEqual(self.data['meta']['paginiation']['total'], total or len(matching))
 
-        ids = set(activity['id'] for activity in self.data['data']) 
+        ids = set(activity['id'] for activity in self.data['data'])
 
         for activity in matching:
             self.assertTrue(str(activity.pk) in ids)
@@ -633,13 +633,12 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
     def test_no_filter(self):
         matching = (
-            InitiativeFactory.create(owner=self.owner, status='approved'), 
+            InitiativeFactory.create(owner=self.owner, status='approved'),
             InitiativeFactory.create(status='approved')
         )
 
         self.search({})
         self.assertFound(matching)
-
 
     def test_more_results(self):
         matching = InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
@@ -759,21 +758,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertFound(matching)
 
     def test_filter_country(self):
-        matching_country, other_country  = CountryFactory.create_batch(2)
+        matching_country, other_country = CountryFactory.create_batch(2)
 
         matching = InitiativeFactory.create(status='approved')
         for initiative in matching:
             DateActivityFactory.create(
-                status='approved', 
-                initiative=initiative, 
+                status='approved',
+                initiative=initiative,
                 location=LocationFactory.create(country=matching_country)
             )
 
         other = InitiativeFactory.create(status='approved')
         for initiative in other:
             DateActivityFactory.create(
-                status='approved', 
-                initiative=initiative, 
+                status='approved',
+                initiative=initiative,
                 location=LocationFactory.create(country=matching_country)
             )
 
@@ -787,37 +786,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
         self.assertFound(matching)
 
-    def test_filter_country(self):
-        matching_location, other_location  = LocationFactory.create_batch(2)
-
-        matching = InitiativeFactory.create(status='approved')
-        for initiative in matching:
-            DateActivityFactory.create(
-                status='approved', 
-                initiative=initiative, 
-                location=matching_location
-            )
-
-        other = InitiativeFactory.create(status='approved')
-        for initiative in other:
-            DateActivityFactory.create(
-                status='approved', 
-                initiative=initiative, 
-                location=other_location
-            )
-
-        self.search({'location': matching_location.pk})
-        self.assertFacets(
-            'location',
-            {
-                matching_location.pk: len(matching),
-                other_location.pk: len(other)
-            }
-        )
-        self.assertFound(matching)
-
     def test_filter_theme(self):
-        matching_theme, other_theme  = ThemeFactory.create_batch(2)
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
         matching = InitiativeFactory.create(status='approved', theme=matching_theme)
         other = InitiativeFactory.create(status='approved', theme=other_theme)
@@ -833,7 +803,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertFound(matching)
 
     def test_filter_category(self):
-        matching_category, other_category  = CategoryFactory.create_batch(2)
+        matching_category, other_category = CategoryFactory.create_batch(2)
 
         matching = InitiativeFactory.create(status='approved')
         for initiative in matching:
@@ -1132,7 +1102,6 @@ class InitiativeRedirectTest(TestCase):
         )
 
     def test_does_not_exist(self):
-
         data = {
             'data': {
                 'type': 'initiative-redirects',

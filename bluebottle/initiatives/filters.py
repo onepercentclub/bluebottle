@@ -1,6 +1,3 @@
-import re
-
-from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.initiatives.documents import InitiativeDocument, initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
@@ -9,6 +6,7 @@ from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, NamedNestedFacet,
     SegmentFacet
 )
+
 
 class InitiativeSearch(Search):
     doc_types = [InitiativeDocument]

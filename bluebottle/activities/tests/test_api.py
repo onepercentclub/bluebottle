@@ -389,12 +389,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
-    def test_sort_upcoming(self):
-        activities = [
-
-
-        ]
-
     def search(self, filter):
         if isinstance(filter, str):
             url = filter

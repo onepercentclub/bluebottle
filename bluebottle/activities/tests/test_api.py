@@ -460,8 +460,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         data = json.loads(response.content)
-        __import__('ipdb').set_trace()
-
         self.assertEqual(data['meta']['pagination']['count'], 8)
 
     def test_filter_type(self):

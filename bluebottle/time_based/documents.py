@@ -30,6 +30,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
+        'title': fields.TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),

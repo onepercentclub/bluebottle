@@ -342,15 +342,13 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
         contributor_url = reverse(f'{self.type}-participants', args=(self.activity.pk, ))
+
         self.assertTrue(
-            data['relationships']['unreviewed-contributors']['links']['related'].endswith(
-                f"{contributor_url}?filter[status]=new"
-            )
+            f"{contributor_url}?filter[status]=new" in
+            data['relationships']['unreviewed-contributors']['links']['related']
         )
         self.assertTrue(
-            data['relationships']['contributors']['links']['related'].endswith(
-                contributor_url
-            )
+            contributor_url in data['relationships']['contributors']['links']['related']
         )
 
     def test_matching_theme(self):

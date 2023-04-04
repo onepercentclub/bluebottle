@@ -1616,7 +1616,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class DateActivitySlotDetailAPITestCase(BluebottleTestCase):

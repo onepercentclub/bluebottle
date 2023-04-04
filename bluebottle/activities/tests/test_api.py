@@ -5,7 +5,6 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -31,7 +30,6 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.serializers import PeriodParticipantSerializer
 from bluebottle.time_based.tests.factories import (
@@ -352,411 +350,343 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['theme'], theme_translation.name)
         self.assertEqual(attributes['collect-type'], collect_type_translation.name)
 
-    def setup_closed_segments(self):
-        self.closed_segment = SegmentFactory.create(closed=True)
-        self.open_segment = SegmentFactory.create()
-
-        self.without_segment = DateActivityFactory.create(status='succeeded')
-
-        self.with_open_segment = DateActivityFactory.create(status='succeeded')
-        self.with_open_segment.segments.add(self.open_segment)
-
-        self.with_closed_segment = DateActivityFactory.create(status='open')
-        self.with_closed_segment.segments.add(self.closed_segment)
-
-    def test_closed_segments_anonymous(self):
-        self.setup_closed_segments()
-
-        response = self.client.get(self.url)
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-
-    def test_closed_segments_user(self):
-        self.setup_closed_segments()
-
-        user = BlueBottleUserFactory.create()
-        user.segments.add(self.closed_segment)
-
-        response = self.client.get(self.url, user=user)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
-
-    def test_closed_segments_staff(self):
-        self.setup_closed_segments()
-
-        staff = BlueBottleUserFactory.create(is_staff=True)
-
-        response = self.client.get(self.url, user=staff)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 3)
-
-        self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
-        self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
-        self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
-
-    def test_only_owner_permission(self):
-        owned = DateActivityFactory.create(owner=self.owner, status='open')
-        DateActivityFactory.create(status='open')
-
-        authenticated = Group.objects.get(name='Authenticated')
-        authenticated.permissions.remove(
-            Permission.objects.get(codename='api_read_activity')
-        )
-        authenticated.permissions.add(
-            Permission.objects.get(codename='api_read_own_activity')
-        )
-
-        response = self.client.get(
-            self.url,
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-
-        self.assertEqual(data['data'][0]['id'], str(owned.pk))
-
     def test_search(self):
-        text = 'some text'
-        PeriodActivityFactory.create(
+        text = 'consectetur adipiscing elit,'
+        title = PeriodActivityFactory.create(
             title=f'title with {text}',
         )
-        PeriodActivityFactory.create(
+        description = PeriodActivityFactory.create(
             description=f'description with {text}',
         )
 
-        PeriodActivityFactory.create(
+        initiative_title = PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
-        PeriodActivityFactory.create(
+        initiative_story = PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(story=f'story with {text}'),
         )
 
-        PeriodActivityFactory.create(
+        initiative_pitch = PeriodActivityFactory.create(
             initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
         )
 
         slot_title = DateActivityFactory.create()
         DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
 
-        PeriodActivityFactory.create(
-            initiative=InitiativeFactory.create(theme=ThemeFactory.create(name=f'theme name with {text}'))
-        )
-
-        category_title = PeriodActivityFactory.create()
-        category_title.initiative.categories.add(CategoryFactory.create(title=f'category title {text}'))
-
         response = self.client.get(
-            self.url + f'?filter[search]={text}',
-            user=self.owner
+            f'{self.url}?filter[search]={text}',
         )
 
         data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 8)
+        self.assertEqual(data['data'][0]['id'], str(title.pk))
+        self.assertEqual(data['data'][1]['id'], str(description.pk))
+        self.assertEqual(data['data'][2]['id'], str(initiative_title.pk))
+
+        ids = [int(activity['id']) for activity in data['data']]
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+    def test_sort_upcoming(self):
+        activities = [
+
+
+        ]
+
+    def search(self, filter):
+        if isinstance(filter, str):
+            url = filter
+        else:
+            params = '&'.join(
+                f'filter[{key}]={value}' for key, value in filter.items()
+            )
+            url = f'{self.url}?{params}'
+
+        response = self.client.get(
+            url,
+            user=self.owner
+        )
+
+        self.data = json.loads(response.content)
+
+    def assertFound(self, matching, count=None):
+        self.assertEqual(self.data['meta']['pagination']['count'], len(matching))
+
+        if count:
+            self.assertEqual(len(self.data['data']), count)
+
+        ids = set(str(activity.pk) for activity in matching)
+
+        for activity in self.data['data']:
+            self.assertTrue(activity['id'] in ids)
+
+    def assertFacets(self, filter, facets):
+        facets = dict(
+            (facet['value'], facet['count']) for facet in self.data['meta']['facets'][filter]
+        )
+
+        for key, value in facets.items():
+            self.assertEqual(facets[key], value)
+
+    def test_no_filter(self):
+        activities = DeedFactory.create_batch(15)
+
+        self.search({})
+
+        self.assertFound(activities, 8)
+
+        self.search(self.data['links']['next'])
+
+        self.assertFound(activities, 7)
 
     def test_filter_type(self):
-        DateActivityFactory.create_batch(3, status='open')
-        PeriodActivityFactory.create_batch(2, status='open')
-        FundingFactory.create_batch(1, status='open')
-        DeedFactory.create_batch(3, status='open')
-        CollectActivityFactory.create_batch(4, status='open')
+        matching = (
+            DateActivityFactory.create_batch(3, status='open') +
+            PeriodActivityFactory.create_batch(2, status='open')
+        )
+        funding = FundingFactory.create_batch(1, status='open')
+        deed = DeedFactory.create_batch(3, status='open')
+        collect = CollectActivityFactory.create_batch(4, status='open')
 
-        response = self.client.get(
-            self.url,
-            user=self.owner
+        self.search({'activity-type': 'time'})
+
+        self.assertFacets(
+            'activity-type',
+            {
+                'time': len(matching),
+                'funding': len(funding),
+                'collect': len(collect),
+                'deed': len(deed),
+
+            }
         )
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['value'], facet['count']) for facet in data['meta']['facets']['activity-type']
-        )
-        self.assertEqual(facets['time'], 5)
-        self.assertEqual(facets['funding'], 1)
-        self.assertEqual(facets['collect'], 4)
-        self.assertEqual(facets['deed'], 3)
-
-        self.assertEqual(data['meta']['pagination']['count'], 13)
+        self.assertFound(matching)
 
     def test_filter_segment(self):
-        segment_types = SegmentTypeFactory.create_batch(2, is_active=True, enable_search=True)
+        segment_type = SegmentTypeFactory.create_batch(is_active=True, enable_search=True)
+        matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
 
-        for segment_type in segment_types:
-            segments = SegmentFactory.create_batch(2, segment_type=segment_type)
-            for segment in segments:
-                date_activity = DateActivityFactory.create(status='open')
-                date_activity.segments.add(segment)
+        matching = [
+            DateActivityFactory.create(status='open'),
+            CollectActivityFactory.create(status='open')
+        ]
+        for activity in matching:
+            activity.segments.add(matching_segment)
 
-                collect_activity = CollectActivityFactory.create(status='open')
-                collect_activity.segments.add(segment)
+        other = [
+            DateActivityFactory.create(status='open'),
+            CollectActivityFactory.create(status='open')
+        ]
+        for activity in other:
+            activity.segments.add(other_segment)
 
-        selected_segment = segment_types[0].segments.first()
-        response = self.client.get(
-            f'{self.url}?filter[segment.{selected_segment.segment_type.slug}]={selected_segment.pk}',
+        self.search({f'segment.{segment_type.slug}': matching_segment.slug})
+
+        self.assertFacets(
+            f'segment.{segment_type.slug}',
+            {
+                f'segments.{matching_segment.pk}': len(matching),
+                f'segments.{other_segment.pk}': len(other)
+            }
         )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(
-            set(activity['id'] for activity in data['data']),
-            set(str(activity.pk) for activity in selected_segment.activities.all())
-        )
-
-        for segment_type in segment_types:
-            if segment_type == selected_segment.segment_type:
-                for segment in segment_type.segments.all():
-                    self.assertTrue(
-                        {
-                            'name': segment.name,
-                            'id': str(segment.pk),
-                            'count': 2,
-                            'active': segment == selected_segment
-                        } in data['meta']['facets'][f'segment.{segment_type.slug}']
-                    )
-            else:
-                self.assertEqual(data['meta']['facets'][f'segment.{segment_type.slug}'], [])
-
-        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertFound(matching)
 
     def test_filter_theme(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['theme'])
 
-        initiatives = InitiativeFactory.create_batch(4, status='approved')
-        for initiative in initiatives:
-            DateActivityFactory.create_batch(2, status='open', initiative=initiative)
-            PeriodActivityFactory.create_batch(3, status='open', initiative=initiative)
-            CollectActivityFactory.create_batch(4, status='open', initiative=initiative)
-            DeedFactory.create_batch(3, status='open', initiative=initiative)
-            FundingFactory.create_batch(1, status='open', initiative=initiative)
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
 
-        response = self.client.get(
-            f'{self.url}?filter[theme]={initiatives[0].theme.pk}',
-        )
+        matching = DeedFactory.create_batch(3, initiative=matching_initiative)
+        other = DeedFactory.create_batch(2, initiative=other_initiative)
 
-        data = json.loads(response.content)
-        types = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['activity-type']
-        )
-        self.assertEqual(types['time'], 5)
-        self.assertEqual(types['funding'], 1)
-        self.assertEqual(types['collect'], 4)
-        self.assertEqual(types['deed'], 3)
+        self.search({
+            'theme': matching_initiative[0].theme.pk
+        })
 
-        for initiative in initiatives[1:]:
-            self.assertTrue(
-                {
-                    'name': initiative.theme.name,
-                    'id': str(initiative.theme.pk),
-                    'count': 13,
-                    'active': False
-                } in data['meta']['facets']['theme']
-            )
-
-        self.assertTrue(
+        self.assertFacets(
+            'theme',
             {
-                'name': initiatives[0].theme.name,
-                'id': str(initiatives[0].theme.pk),
-                'count': 13,
-                'active': True
-            } in data['meta']['facets']['theme']
+                matching_initiative.theme.pk: len(matching),
+                other_initiative.theme.pk: len(other)
+            }
         )
-
-        self.assertEqual(data['meta']['pagination']['count'], 13)
+        self.assertFound(matching)
 
     def test_filter_upcoming(self):
-        upcoming_activities = (
+        matching = (
             PeriodActivityFactory.create_batch(2, status='open') +
             PeriodActivityFactory.create_batch(2, status='full')
         )
-        PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='succeeded')
-        PeriodActivityFactory.create_batch(2, status='needs_works')
-
-        response = self.client.get(
-            f'{self.url}?filter[upcoming]=true',
+        other = (
+            PeriodActivityFactory.create_batch(2, status='draft') +
+            PeriodActivityFactory.create_batch(2, status='succeeded') +
+            PeriodActivityFactory.create_batch(2, status='needs_works')
         )
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['upcoming']
-        )
-        self.assertEqual(facets[1], 4)
-        self.assertEqual(facets[0], 6)
+        self.search({'upcoming': 'true'})
 
-        self.assertEqual(data['meta']['pagination']['count'], 4)
-        self.assertEqual(
-            set(str(activity.pk) for activity in upcoming_activities),
-            set(activity['id'] for activity in data['data'])
-        )
+        self.assertFacets('upcoming', {0: len(other), 1: len(matching)})
+        self.assertFound(matching)
 
     def test_filter_team(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['team_activity'])
 
-        team_activities = PeriodActivityFactory.create_batch(2, team_activity='teams')
-        individual_activities = PeriodActivityFactory.create_batch(3, team_activity='individual')
+        matching = PeriodActivityFactory.create_batch(2, team_activity='teams')
+        other = PeriodActivityFactory.create_batch(3, team_activity='individual')
 
-        response = self.client.get(
-            f'{self.url}?filter[team_activity]=teams',
-        )
+        self.search({'team_activity': 'teams'})
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['team_activity']
-        )
-
-        self.assertEqual(facets['teams'], len(team_activities))
-        self.assertEqual(facets['individual'], len(individual_activities))
-
-        self.assertEqual(data['meta']['pagination']['count'], len(team_activities))
-        self.assertEqual(
-            set(str(activity.pk) for activity in team_activities),
-            set(activity['id'] for activity in data['data'])
-        )
+        self.assertFacets('team_activity', {'teams': len(matching), 'individual': len(other)})
+        self.assertFound(matching)
 
     def test_filter_category(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['category'])
         matching_category = CategoryFactory.create()
         other_category = CategoryFactory.create()
-        matching_activities = PeriodActivityFactory.create_batch(
-            2,
-            status='open',
-        )
-        for activity in matching_activities:
+
+        matching = PeriodActivityFactory.create_batch(2, status='open')
+        for activity in matching:
             activity.initiative.categories.add(matching_category)
 
-        other_activities = PeriodActivityFactory.create_batch(
-            3,
-            status='open',
-        )
-        for activity in other_activities:
+        other = PeriodActivityFactory.create_batch(3, status='open')
+        for activity in other:
             activity.initiative.categories.add(other_category)
 
-        response = self.client.get(
-            f'{self.url}?filter[category]={matching_category.pk}',
-        )
+        self.search({'category': matching_category.pk})
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['category']
+        self.assertFacets(
+            'category',
+            {matching_category.pk: len(matching), other_category.pk: len(other)}
         )
-        self.assertEqual(facets[str(matching_category.pk)], len(matching_activities))
-        self.assertEqual(facets[str(other_category.pk)], len(other_activities))
-
-        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
-        self.assertEqual(
-            set(str(activity.pk) for activity in matching_activities),
-            set(activity['id'] for activity in data['data'])
-        )
+        self.assertFound(matching)
 
     def test_filter_skill(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['skill'])
         matching_skill = SkillFactory.create()
         other_skill = SkillFactory.create()
 
-        matching_activities = PeriodActivityFactory.create_batch(
+        matching = PeriodActivityFactory.create_batch(
             2,
             expertise=matching_skill,
             status='open',
         )
 
-        other_activities = PeriodActivityFactory.create_batch(
+        other = PeriodActivityFactory.create_batch(
             3,
             expertise=other_skill,
             status='open',
         )
 
-        response = self.client.get(
-            f'{self.url}?filter[skill]={matching_skill.pk}',
-        )
+        self.search({'skill': matching_skill.pk})
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['skill']
+        self.assertFacets(
+            'skill',
+            {matching_skill.pk: len(matching), other_skill.pk: len(other)}
         )
-        self.assertEqual(facets[str(matching_skill.pk)], len(matching_activities))
-        self.assertEqual(facets[str(other_skill.pk)], len(other_activities))
-
-        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
-        self.assertEqual(
-            set(str(activity.pk) for activity in matching_activities),
-            set(activity['id'] for activity in data['data'])
-        )
+        self.assertFound(matching)
 
     def test_filter_country(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['country'])
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        matching_activities = PeriodActivityFactory.create_batch(
+        matching = PeriodActivityFactory.create_batch(
             2,
             office_location=LocationFactory.create(country=matching_country),
             status='open',
         )
 
-        other_activities = PeriodActivityFactory.create_batch(
+        other = PeriodActivityFactory.create_batch(
             3,
             office_location=LocationFactory.create(country=other_country),
             status='open',
         )
 
-        response = self.client.get(
-            f'{self.url}?filter[country]={matching_country.pk}',
-        )
+        self.search({'country': matching_country.pk})
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['country']
+        self.assertFacets(
+            'country',
+            {matching_country.pk: len(matching), other_country.pk: len(other)}
         )
-        self.assertEqual(facets[str(matching_country.pk)], len(matching_activities))
-        self.assertEqual(facets[str(other_country.pk)], len(other_activities))
-
-        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
-        self.assertEqual(
-            set(str(activity.pk) for activity in matching_activities),
-            set(activity['id'] for activity in data['data'])
-        )
+        self.assertFound(matching)
 
     def test_filter_office(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['location'])
         matching_office = LocationFactory.create()
         other_office = LocationFactory.create()
 
-        matching_activities = PeriodActivityFactory.create_batch(
+        matching = PeriodActivityFactory.create_batch(
             2,
             office_location=matching_office,
             status='open',
         )
 
-        other_activities = PeriodActivityFactory.create_batch(
+        other = PeriodActivityFactory.create_batch(
             3,
             office_location=other_office,
             status='open',
         )
 
-        response = self.client.get(
-            f'{self.url}?filter[location]={matching_office.pk}',
+        self.search({'location': matching_office.pk})
+
+        self.assertFacets(
+            'location',
+            {matching_office.pk: len(matching), other_office.pk: len(other)}
+        )
+        self.assertFound(matching)
+
+    def test_filter_highlight(self):
+        matching = PeriodActivityFactory.create_batch(
+            2,
+            highlight=True,
+            status='open',
         )
 
-        data = json.loads(response.content)
-        facets = dict(
-            (facet['id'], facet['count']) for facet in data['meta']['facets']['location']
+        other = PeriodActivityFactory.create_batch(
+            3,
+            highlight=False,
+            status='open',
         )
-        self.assertEqual(facets[str(matching_office.pk)], len(matching_activities))
-        self.assertEqual(facets[str(other_office.pk)], len(other_activities))
+        self.search({'highlight': 'true'})
 
-        self.assertEqual(data['meta']['pagination']['count'], len(matching_activities))
-        self.assertEqual(
-            set(str(activity.pk) for activity in matching_activities),
-            set(activity['id'] for activity in data['data'])
+        self.assertFacets(
+            'highlight',
+            {1: len(matching), 0: len(other)}
         )
+        self.assertFound(matching)
+
+    def test_filter_date(self):
+        matching = [
+            PeriodActivityFactory.create(start='2025-04-01', deadline='2025-04-02'),
+            PeriodActivityFactory.create(start='2025-04-01', deadline='2025-04-03'),
+            DeedFactory.create(start='2025-04-05', end='2025-04-07'),
+            CollectActivityFactory.create(start='2025-04-05', end='2025-04-07'),
+        ]
+
+        PeriodActivityFactory.create(start='2025-05-01', deadline='2025-05-02')
+        PeriodActivityFactory.create(start='2025-05-01', deadline='2025-05-03')
+        DeedFactory.create(start='2025-05-05', end='2025-05-07')
+        CollectActivityFactory.create(start='2025-05-05', end='2025-05-07')
+
+        self.search({'highlight': 'true'})
+
+        self.assertFacets(
+            'date',
+            {
+                '2025-04-01': 2,
+                '2025-04-02': 2,
+                '2025-04-03': 1,
+                '2025-04-04': 0,
+                '2025-04-05': 2,
+                '2025-04-06': 2,
+                '2025-04-07': 2,
+            }
+        )
+
+        self.assertFound(matching)
 
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):

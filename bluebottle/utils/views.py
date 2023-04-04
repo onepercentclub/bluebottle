@@ -303,6 +303,7 @@ class ESPaginator(Paginator):
         return self.result.hits.total.value
 
     def page(self, number):
+        number = int(number)
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 

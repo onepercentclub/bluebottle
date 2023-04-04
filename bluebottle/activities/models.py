@@ -233,6 +233,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         verbose_name = _('Contribution')
         verbose_name_plural = _('Contributions')
 
+    @property
+    def type(self):
+        return self.polymorphic_ctype.model_class()._meta.verbose_name
+
     def __str__(self):
         if self.user:
             return str(self.user)

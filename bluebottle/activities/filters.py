@@ -16,8 +16,8 @@ class ActivitySearch(Search):
     doc_types = [Activity]
 
     sorting = {
-        'upcoming': ['duration'],
-        'date': ['duration'],
+        'upcoming': ['start'],
+        'date': ['-start'],
         'distance': ['-distance']
     }
 
@@ -40,7 +40,7 @@ class ActivitySearch(Search):
         'skill': TranslatedFacet('expertise'),
         'country': NamedNestedFacet('country'),
         'location': NamedNestedFacet('office'),
-        'date': DateRangeFacet(field='duration', calendar_interval="day"),
+        'date': DateRangeFacet(field='duration'),
     }
 
     def __new__(cls, *args):

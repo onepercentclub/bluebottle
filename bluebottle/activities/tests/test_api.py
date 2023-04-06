@@ -51,6 +51,47 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
+    def search(self, filter, sort=None, user=None):
+        if isinstance(filter, str):
+            url = filter
+        else:
+            params = dict(
+                (f'filter[{key}]', value) for key, value in filter.items()
+            )
+
+            if sort:
+                params['sort'] = sort
+
+            query = '&'.join(f'{key}={value}' for key, value in params.items())
+
+            url = f'{self.url}?{query}'
+
+        response = self.client.get(
+            url,
+            user=user
+        )
+
+        self.data = json.loads(response.content)
+
+    def assertFound(self, matching, count=None):
+        self.assertEqual(self.data['meta']['pagination']['count'], len(matching))
+
+        if count:
+            self.assertEqual(len(self.data['data']), count)
+
+        ids = set(str(activity.pk) for activity in matching)
+
+        for activity in self.data['data']:
+            self.assertTrue(activity['id'] in ids)
+
+    def assertFacets(self, filter, facets):
+        found_facets = dict(
+            (facet['id'], facet['count']) for facet in self.data['meta']['facets'][filter]
+        )
+
+        for key, value in facets.items():
+            self.assertEqual(found_facets[key], value)
+
     def test_images(self):
         DateActivityFactory.create(
             owner=self.owner, status='open', image=ImageFactory.create()
@@ -184,7 +225,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         start = now()
         end = start + timedelta(days=8)
         response = self.client.get(
-            self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
+            self.url + '?filter[date]={}-{}-{},{}-{}-{}'.format(
                 start.year, start.month, start.day,
                 end.year, end.month, end.day),
         )
@@ -433,47 +474,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [activity['id'] for activity in self.data['data']]
         )
 
-    def search(self, filter, sort=None):
-        if isinstance(filter, str):
-            url = filter
-        else:
-            params = dict(
-                (f'filter[{key}]', value) for key, value in filter.items()
-            )
-
-            if sort:
-                params['sort'] = sort
-
-            query = '&'.join(f'{key}={value}' for key, value in params.items())
-
-            url = f'{self.url}?{query}'
-
-        response = self.client.get(
-            url,
-            user=self.owner
-        )
-
-        self.data = json.loads(response.content)
-
-    def assertFound(self, matching, count=None):
-        self.assertEqual(self.data['meta']['pagination']['count'], len(matching))
-
-        if count:
-            self.assertEqual(len(self.data['data']), count)
-
-        ids = set(str(activity.pk) for activity in matching)
-
-        for activity in self.data['data']:
-            self.assertTrue(activity['id'] in ids)
-
-    def assertFacets(self, filter, facets):
-        facets = dict(
-            (facet['value'], facet['count']) for facet in self.data['meta']['facets'][filter]
-        )
-
-        for key, value in facets.items():
-            self.assertEqual(facets[key], value)
-
     def test_no_filter(self):
         activities = DeedFactory.create_batch(15)
 
@@ -484,6 +484,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search(self.data['links']['next'])
 
         self.assertFound(activities, 7)
+
+    def test_filter_closed_segments(self):
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        open_segment = SegmentFactory.create(segment_type=segment_type, closed=False)
+        closed_segment = SegmentFactory.create(segment_type=segment_type, closed=True)
+
+        open = [
+            DateActivityFactory.create(status='open'),
+            CollectActivityFactory.create(status='open')
+        ]
+        for activity in open:
+            activity.segments.add(open_segment)
+
+        closed = [
+            DateActivityFactory.create(status='open'),
+            CollectActivityFactory.create(status='open')
+        ]
+        for activity in closed:
+            activity.segments.add(closed_segment)
+
+        self.search({})
+        self.assertFound(open)
+
+        user = BlueBottleUserFactory.create()
+        user.segments.add(closed_segment)
+
+        self.search({}, user=user)
+        self.assertFound(open + closed)
+
+        staff_user = BlueBottleUserFactory.create(is_staff=True)
+
+        self.search({}, user=staff_user)
+        self.assertFound(open + closed)
 
     def test_filter_type(self):
         matching = (
@@ -510,7 +543,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_segment(self):
-        segment_type = SegmentTypeFactory.create_batch(is_active=True, enable_search=True)
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
         matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
 
         matching = [
@@ -527,7 +560,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         for activity in other:
             activity.segments.add(other_segment)
 
-        self.search({f'segment.{segment_type.slug}': matching_segment.slug})
+        self.search({f'segment.{segment_type.slug}': matching_segment.pk})
 
         self.assertFacets(
             f'segment.{segment_type.slug}',
@@ -547,14 +580,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DeedFactory.create_batch(2, initiative=other_initiative)
 
         self.search({
-            'theme': matching_initiative[0].theme.pk
+            'theme': matching_initiative.theme.pk
         })
 
         self.assertFacets(
             'theme',
             {
-                matching_initiative.theme.pk: len(matching),
-                other_initiative.theme.pk: len(other)
+                str(matching_initiative.theme.pk): len(matching),
+                str(other_initiative.theme.pk): len(other)
             }
         )
         self.assertFound(matching)
@@ -603,7 +636,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'category',
-            {matching_category.pk: len(matching), other_category.pk: len(other)}
+            {str(matching_category.pk): len(matching), str(other_category.pk): len(other)}
         )
         self.assertFound(matching)
 
@@ -628,7 +661,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'skill',
-            {matching_skill.pk: len(matching), other_skill.pk: len(other)}
+            {str(matching_skill.pk): len(matching), str(other_skill.pk): len(other)}
         )
         self.assertFound(matching)
 
@@ -653,7 +686,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'country',
-            {matching_country.pk: len(matching), other_country.pk: len(other)}
+            {str(matching_country.pk): len(matching), str(other_country.pk): len(other)}
         )
         self.assertFound(matching)
 
@@ -678,7 +711,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'location',
-            {matching_office.pk: len(matching), other_office.pk: len(other)}
+            {str(matching_office.pk): len(matching), str(other_office.pk): len(other)}
         )
         self.assertFound(matching)
 
@@ -715,19 +748,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DeedFactory.create(start='2025-05-05', end='2025-05-07')
         CollectActivityFactory.create(start='2025-05-05', end='2025-05-07')
 
-        self.search({'highlight': 'true'})
+        self.search({'date': '2025-04-01,2025-04-08'})
 
         self.assertFacets(
-            'date',
-            {
-                '2025-04-01': 2,
-                '2025-04-02': 2,
-                '2025-04-03': 1,
-                '2025-04-04': 0,
-                '2025-04-05': 2,
-                '2025-04-06': 2,
-                '2025-04-07': 2,
-            }
+            'date', {}
         )
 
         self.assertFound(matching)

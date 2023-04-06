@@ -5,12 +5,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.db import connection
-from rest_framework import generics
+from rest_framework import generics, response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Funding
@@ -30,12 +31,13 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination
+    RetrieveUpdateAPIView, JsonApiViewMixin,
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    JsonApiElasticSearchPagination,
 )
 
 
-class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = Initiative.objects.prefetch_related(
         'place', 'location', 'owner', 'activity_managers', 'image', 'categories', 'theme'
     )
@@ -48,10 +50,6 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    filter_backends = (
-        InitiativeSearchFilter,
     )
 
     filterset_fields = {
@@ -81,6 +79,31 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
+class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
+    serializer_class = InitiativePreviewSerializer
+    model = Initiative
+    pagination_class = JsonApiElasticSearchPagination
+    renderer_classes = (ElasticSearchJSONAPIRenderer, )
+    filter_backends = (
+        InitiativeSearchFilter,
+    )
+
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def list(self, request, *args, **kwargs):
+        result = self.filter_queryset(None)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result, many=True)
+        return response.Response(serializer.data)
+
+
 class TinyProjectPagination(PageNumberPagination):
     page_size = 10000
 
@@ -100,26 +123,6 @@ class InitiativeMapList(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         cache_key = '{}.initiative_preview_data'.format(connection.tenant.schema_name)
         cache.set(cache_key, None)
-        data = cache.get(cache_key)
-        if not data:
-            queryset = self.get_queryset().order_by('created')
-            serializer = self.get_serializer(queryset, many=True)
-            data = serializer.data
-            cache.set(cache_key, data)
-        return Response(data)
-
-
-class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
-    queryset = Initiative.objects.filter(
-        status='approved',
-        place__position__isnull=False
-    ).exclude(place__position=Point(0, 0))
-    serializer_class = InitiativePreviewSerializer
-
-    owner_filter_field = 'owner'
-
-    def list(self, request, *args, **kwargs):
-        cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
         data = cache.get(cache_key)
         if not data:
             queryset = self.get_queryset().order_by('created')

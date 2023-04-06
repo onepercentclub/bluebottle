@@ -1,10 +1,9 @@
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
-from elasticsearch_dsl import (
-    TermsFacet
-)
+from elasticsearch_dsl import TermsFacet
+from elasticsearch_dsl.query import Term, Terms, Nested
 
-from bluebottle.activities.documents import Activity, activity
+from bluebottle.activities.documents import activity
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -13,7 +12,7 @@ from bluebottle.utils.filters import (
 
 
 class ActivitySearch(Search):
-    doc_types = [Activity]
+    doc_types = [activity]
 
     sorting = {
         'upcoming': ['start'],
@@ -43,7 +42,7 @@ class ActivitySearch(Search):
         'date': DateRangeFacet(field='duration'),
     }
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
         result = super().__new__(cls, settings.activity_search_filters)
 
@@ -51,6 +50,32 @@ class ActivitySearch(Search):
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)
 
         return result
+
+    def query(self, search, query):
+        search = super().query(search, query)
+
+        if not self.user.is_staff:
+            search = search.filter(
+                ~Nested(
+                    path='segments',
+                    query=(
+                        Term(segments__closed=True)
+                    )
+                ) |
+                Nested(
+                    path='segments',
+                    query=(
+
+                        Terms(
+                            segments__id=[
+                                segment.id for segment in self.user.segments.filter(closed=True)
+                            ] if self.user.is_authenticated else []
+                        )
+                    )
+                )
+            )
+
+        return search
 
 
 class ActivitySearchFilter(ElasticSearchFilter):

@@ -117,7 +117,11 @@ class BaseTokenAuthentication():
                 ).count()
             ):
                 user.segments.remove(*user.segments.filter(segment_type__id=segment_type_id))
-                user.segments.add(*segments)
+                for segment in segments:
+                    try:
+                        user.segments.add(segment)
+                    except IntegrityError as e:
+                        logger.error(e)
 
     def get_or_create_user(self, data):
         """

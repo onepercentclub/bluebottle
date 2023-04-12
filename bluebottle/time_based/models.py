@@ -1,10 +1,10 @@
 from html import unescape
 from urllib.parse import urlencode
 
+
 import pytz
 from django.db import connection
 from django.utils import timezone
-from django.utils.html import strip_tags
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
@@ -18,7 +18,7 @@ from bluebottle.time_based.validators import (
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, to_text
 from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
@@ -139,7 +139,7 @@ class TimeBasedActivity(Activity):
     def details(self):
         details = unescape(
             u'{}\n{}'.format(
-                strip_tags(self.description), self.get_absolute_url()
+                to_text.handle(self.description), self.get_absolute_url()
             )
         )
         return details

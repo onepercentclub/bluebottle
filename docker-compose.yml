@@ -25,7 +25,8 @@ services:
     restart: always
     volumes:
       - ./elasticsearch-data:/var/lib/elasticsearch/data
-
+    environment:
+      - discovery.type=single-node
   postgres:
     container_name: postgres
     environment:

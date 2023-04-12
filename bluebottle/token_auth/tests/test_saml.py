@@ -190,6 +190,68 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
+    def test_existing_without_remote_id(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            user = BlueBottleUserFactory.create(
+                remote_id=None,
+                email='smartin@yaco.es',
+                username='blah'
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request)
+
+            user, created = auth_backend.authenticate()
+
+            self.assertFalse(created)
+
+            self.assertEqual(user.username, 'smartin')
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
+    def test_existing_without_remote_id_different_case(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            user = BlueBottleUserFactory.create(
+                remote_id=None,
+                email='SMartin@yaco.es',
+                username='blah'
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request)
+
+            user, created = auth_backend.authenticate()
+
+            self.assertFalse(created)
+
+            self.assertEqual(user.username, 'smartin')
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
     def test_auth_existing_success(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with remote_id with caps

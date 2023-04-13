@@ -139,7 +139,7 @@ class BaseTokenAuthentication():
                 user.save()
             except user_model.DoesNotExist:
                 try:
-                    user = user_model.objects.get(email=user_data['email'])
+                    user = user_model.objects.get(email__iexact=user_data['email'])
                 except (KeyError, user_model.DoesNotExist):
                     if self.settings.get('provision', True):
                         user = user_model.objects.create(**user_data)

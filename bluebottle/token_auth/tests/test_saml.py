@@ -389,13 +389,48 @@ class TestSAMLTokenAuthentication(TestCase):
             )
             auth_backend = SAMLAuthentication(request)
 
-            # Login should stil work.
+            # Login should still work.
             user, created = auth_backend.authenticate()
             self.assertFalse(created)
             self.assertEqual(user.username, 'smartin')
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
             self.assertEqual(user.segments.first().name, 'user')
+
+    def test_auth_existing_with_segment_slug(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.enable_segments = True
+        member_settings.create_segments = True
+        member_settings.save()
+
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings['assertion_mapping']['segment.function'] = 'eduPersonAffiliation'
+        segment_type = SegmentTypeFactory.create(slug='function', name='Function')
+        SegmentFactory.create(segment_type=segment_type, slug='user', name='Some other')
+
+        with self.settings(TOKEN_AUTH=settings):
+            BlueBottleUserFactory.create(
+                remote_id='492882615ACF31C8096B627245D76AE53036C090',
+                email='smartin@yaco.es',
+                username='smartin'
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request)
+            user, created = auth_backend.authenticate()
+            self.assertFalse(created)
 
     def test_auth_existing_with_office_and_segment(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

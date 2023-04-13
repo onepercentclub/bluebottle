@@ -8,7 +8,7 @@
             {{ contributor.created|date }}<br>
         </span>
         <a href="{% url 'admin:activities_contributor_change' contributor.id %}" >
-            <b>{{ contributor }}</b> - {{ contributor.status }}
+            <b>{{ contributor }}</b> - {{ contributor.status_label }}
         </a>
         <br>
         {{ contributor.activity.title }}

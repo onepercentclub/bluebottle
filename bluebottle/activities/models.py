@@ -219,6 +219,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     @property
+    def status_label(self):
+        if self.states.current_state:
+            return self.states.current_state.name
+
+    @property
     def owner(self):
         return self.user
 

@@ -1706,6 +1706,9 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
 
+        self.activity.description = "Test<br>bla"
+        self.activity.save()
+
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1721,9 +1724,10 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
         self.assertEqual(params['action'], ['TEMPLATE'])
         self.assertEqual(params['text'][0], self.activity.title)
+
         self.assertEqual(
             params['details'][0],
-            f'{self.activity.description}\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
+            f'Test  \nbla\n\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
         )
 
     def test_get_calendar_links_location(self):
@@ -3151,9 +3155,8 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}\nJoin: {}'.format(
-                    self.activity.description,
-                    self.activity.get_absolute_url(),
+                '{}\nJoin: {}'.format(
+                    self.activity.details,
                     self.slot.online_meeting_url
                 )
             )
@@ -3254,9 +3257,8 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}\nJoin: {}'.format(
-                    self.activity.description,
-                    self.activity.get_absolute_url(),
+                '{}\nJoin: {}'.format(
+                    self.activity.details,
                     slot.online_meeting_url
                 )
             )
@@ -3301,9 +3303,8 @@ class DateIcalTestCase(BluebottleTestCase):
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(
             str(ical_event['description']),
-            '{}\n{}\nJoin: {}'.format(
-                self.activity.description,
-                self.activity.get_absolute_url(),
+            '{}\nJoin: {}'.format(
+                self.activity.details,
                 slot.online_meeting_url
             )
         )

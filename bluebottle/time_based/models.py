@@ -77,6 +77,8 @@ class TimeBasedActivity(Activity):
         null=True, blank=True,
     )
 
+    activity_type = _('Time-based activity')
+
     @property
     def local_timezone(self):
         if self.location and self.location.position:

@@ -119,6 +119,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     auto_approve = True
 
+    activity_type = _('Activity')
+
     @property
     def activity_date(self):
         raise NotImplementedError

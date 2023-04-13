@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.utils.text import slugify
 
 from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
@@ -96,7 +97,10 @@ class BaseTokenAuthentication():
                     ).get()
                     segment_list[segment_type.id].append(segment)
                 except Segment.DoesNotExist:
-                    if MemberPlatformSettings.load().create_segments:
+                    segment = Segment.objects.filter(slug=slugify(val)).first()
+                    if segment:
+                        segment_list[segment_type.id].append(segment)
+                    elif MemberPlatformSettings.load().create_segments:
                         segment = Segment.objects.create(
                             segment_type=segment_type,
                             name=val,

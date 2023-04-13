@@ -1,4 +1,5 @@
 from builtins import object
+import hashlib
 
 from django.db.models import Q
 from django.urls.base import reverse
@@ -176,14 +177,28 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
+IMAGE_SIZES = {
+    'preview': '300x168',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '960x540'
+}
+
+
 class InitiativePreviewSerializer(ModelSerializer):
-    position = TinyPointSerializer()
-    id = serializers.CharField()
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        if obj.image:
+            hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+
+            return f'{url}?_={hash}'
 
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'position',
+            'id', 'title', 'slug', 'image',
         )
 
     class JSONAPIMeta(object):

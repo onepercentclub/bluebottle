@@ -339,7 +339,7 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
             facets[filter] = []
 
             for key, count, active in facet:
-                if isinstance(key, AttrList):
+                if isinstance(key, (AttrList, list, tuple)):
                     facets[filter].append({
                         'name': key[0],
                         'id': key[1],

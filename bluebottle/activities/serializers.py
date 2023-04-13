@@ -1,7 +1,7 @@
 from builtins import object
 from collections import namedtuple
 
-from datetime import datetime, time
+from datetime import datetime
 import dateutil
 import hashlib
 from django.urls import reverse
@@ -248,20 +248,12 @@ class ActivityPreviewSerializer(ModelSerializer):
         tz = get_current_timezone()
 
         try:
-            start = dateutil.parser.parse(
-                self.context['request'].GET.get('filter[start]')
-            ).astimezone(tz)
-        except (ValueError, TypeError):
+            start, end = (
+                dateutil.parser.parse(date).astimezone(tz)
+                for date in self.context['request'].GET.get('filter[date]').split(',')
+            )
+        except (ValueError, AttributeError):
             start = None
-
-        try:
-            end = datetime.combine(
-                dateutil.parser.parse(
-                    self.context['request'].GET.get('filter[end]'),
-                ),
-                time.max
-            ).astimezone(tz)
-        except (ValueError, TypeError):
             end = None
 
         if hasattr(obj, 'slots') and obj.slots:
@@ -270,8 +262,8 @@ class ActivityPreviewSerializer(ModelSerializer):
                 if (
                     slot.status not in ['draft', 'cancelled'] and
                     (not only_upcoming or datetime.fromisoformat(slot.start) >= now()) and
-                    (not start or slot.start >= start) and
-                    (not end or slot.end <= end)
+                    (not start or dateutil.parser.parse(slot.start) >= start) and
+                    (not end or dateutil.parser.parse(slot.end) <= end)
                 )
             ]
         else:

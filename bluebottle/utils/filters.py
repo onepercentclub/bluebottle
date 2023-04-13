@@ -130,6 +130,12 @@ class SegmentFacet(FilteredNestedFacet):
     def __init__(self, segment_type):
         super().__init__('segments', {'segments.type': segment_type.slug})
 
+    def get_values(self, data, filter_values):
+        values = super().get_values(data, filter_values)
+        return [
+            ((value[0][0], f'segments.{value[0][1]}'), value[1], value[2]) for value in values
+        ]
+
 
 class DateRangeFacet(Facet):
     def get_aggregation(self):
@@ -162,6 +168,12 @@ class Search(FacetedSearch):
                 pass
 
         return result
+
+    def __init__(self, query=None, filters={}, sort=(), user=None):
+        self.user = user
+        self.index = self.doc_types[0]._name
+
+        super().__init__(query, filters, sort)
 
     @property
     def default_sort(self):
@@ -197,6 +209,7 @@ class Search(FacetedSearch):
                         MultiMatch(
                             fields=fields, query=query
                         )
+
                     )
 
             return search.query(Bool(should=queries))
@@ -206,8 +219,6 @@ class Search(FacetedSearch):
 
 class ElasticSearchFilter(filters.SearchFilter):
     def filter_queryset(self, request, queryset, view):
-        self.search_class.index = self.index._name
-
         filter = {}
         regex = re.compile(r'^filter\[([\w,\-\.]+)\]$')
 
@@ -218,4 +229,4 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         search = request.GET.get('filter[search]')
 
-        return self.search_class(search, filter, request.GET.get('sort'))
+        return self.search_class(search, filter, request.GET.get('sort'), user=request.user)

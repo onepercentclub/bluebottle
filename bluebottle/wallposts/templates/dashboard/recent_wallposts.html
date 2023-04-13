@@ -11,11 +11,10 @@
             <b>{{ wallpost.author }}</b>
         </a>
         <br>
-            {{ wallpost.text|truncatewords:12 }}
+            {{ wallpost.content_object }}
         <br>
-        <b>{{ wallpost.content_type }}</b>
         <br>
-        <i>{{ wallpost.content_object }}</i>
+        <i>{{ wallpost.text|truncatewords:12 }}</i>
     </li>
     {% endfor %}
     {% endspaceless %}

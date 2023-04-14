@@ -303,7 +303,7 @@ class SCIMPatchSerializer(serializers.Serializer):
     def patch(self, data):
         if self.is_valid():
             for operation in self.validated_data['Operations']:
-                path = SCIMPath(operation['path'])
+                path = SCIMPath(operation['path'].replace('\\', ''))
                 value = operation['value']
 
                 path.set(data, value)

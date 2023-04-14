@@ -69,9 +69,11 @@ class SCIMPath():
                 # First get `emails`
                 attr = part.attrs[0]
 
-                if attr not in data or not any(item for item in data if data.get(part[1]) == part[2]):
+                if attr not in data or not data[attr]:
                     # Not set, so create it
                     data[attr] = [{part[1]: part[2]}]
+                elif not any(item for item in data if data.get(part[1]) == part[2]):
+                    data[attr] = [{part[1]: part[2], **data[attr][0]}]
 
                 # Return the correct item from the list
                 data = [item for item in data[attr] if item[part[1]] == part[2]][0]

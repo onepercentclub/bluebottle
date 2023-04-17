@@ -34,13 +34,17 @@ class Slide(PublishableModel):
 
     # Contents
     title = models.CharField(_("Title"), max_length=72, blank=True)
-    body = models.TextField(_("Body text"), max_length=140, blank=True)
+    body = models.TextField(
+        _("Body text"), max_length=140, blank=True,
+        help_text=_('Body text has a limit of 140 characters.')
+    )
     background_image = ImageField(
         _("Background image"), max_length=255,
         blank=True, null=True,
         help_text=_(
-            "The ideal image will have an aspect ratio of 16:9 and be no larger than 2Mb. "
-            "Sides of the image maybe cropped out on mobile screens."
+            "The ideal image will have an aspect ratio of 21:9 on large screens and 4:3 on mobile "
+            "(Sides of the image maybe slightly cropped on mobile screens). "
+            "Image should be no larger than 2Mb."
         ),
         upload_to='banner_slides/',
         validators=[

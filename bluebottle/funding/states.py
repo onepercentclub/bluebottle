@@ -23,6 +23,11 @@ class FundingStateMachine(ActivityStateMachine):
         'cancelled',
         _("The activity has ended without any donations.")
     )
+    on_hold = State(
+        _('on_hold'),
+        'on_hold',
+        _("The activity is on-hold until KYC is completed")
+    )
 
     def should_finish(self):
         """the deadline has passed"""
@@ -65,12 +70,12 @@ class FundingStateMachine(ActivityStateMachine):
     approve = Transition(
         [
             ActivityStateMachine.needs_work,
-            ActivityStateMachine.submitted
+            ActivityStateMachine.submitted,
+            on_hold
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
-        description=_(
-            'The campaign will be visible in the frontend and people can donate.'),
+        description=_('The campaign will be visible in the frontend and people can donate.'),
         automatic=False,
         permission=can_approve,
         conditions=[
@@ -111,6 +116,18 @@ class FundingStateMachine(ActivityStateMachine):
         ),
         automatic=False,
         permission=can_approve
+    )
+
+    put_on_hold = Transition(
+        [
+            ActivityStateMachine.open,
+        ],
+        on_hold,
+        name=_('Put on hold'),
+        description=_(
+            'The campaign will not be able to receive donations'),
+        automatic=True,
+        permission=can_approve,
     )
 
     reject = Transition(

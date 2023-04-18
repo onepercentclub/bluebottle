@@ -1,11 +1,12 @@
-from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
 
 SCORE_MAP = {
     'open': 1,
+    'on_hold': 0.6,
     'succeeded': 0.5,
     'partially_funded': 0.5,
     'refundend': 0.3,

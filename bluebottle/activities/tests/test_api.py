@@ -756,6 +756,51 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFound(matching)
 
+    def test_filter_distance(self):
+        lat = 52.0
+        lon = 10
+        matching = [
+            DateActivityFactory.create(slots=[]),
+            DateActivityFactory.create(slots=[]),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+            ),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
+            )
+        ]
+
+        DateActivitySlotFactory.create(
+            activity=matching[0],
+            location=GeolocationFactory.create(position=Point(lon + 0.05, lat + 0.05))
+        )
+        DateActivitySlotFactory.create(
+            activity=matching[1],
+            location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
+        )
+
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        DeedFactory.create()
+
+        other = DateActivityFactory.create(slots=[])
+        DateActivitySlotFactory.create(
+            activity=other,
+            location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
+        )
+
+        self.search({'distance': '52.0000:10.0000:100km'})
+
+        self.assertFacets(
+            'distance', {}
+        )
+
+        self.assertFound(matching)
+
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):
     def setUp(self):

@@ -41,6 +41,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'team_activity',
         'initiative.id',
         'highlight',
+        'matching',
     )
 
     search_fields = (
@@ -194,6 +195,9 @@ class ActivitySearchFilter(ElasticSearchFilter):
             )
         return []
 
+    def get_matching_filter(self, value, request):
+        return Term()
+
     def get_duration_filter(self, value, request):
         start = request.GET.get('filter[start]')
         end = request.GET.get('filter[end]')
@@ -220,6 +224,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
             fields = fields + ['duration']
 
         return fields
+
+    def get_extra(self, search, request):
+        if 'filter[matching]' in request.GET:
+            return search.extra(min_score=11)
+
+        return search
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)

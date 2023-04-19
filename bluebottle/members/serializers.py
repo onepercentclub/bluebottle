@@ -10,16 +10,16 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, exceptions, validators
-from rest_framework_json_api.serializers import Serializer, ModelSerializer
+from rest_framework_json_api.serializers import Serializer, ModelSerializer, ResourceRelatedField
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
-from bluebottle.geo.serializers import PlaceSerializer
+from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
-from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, UserSegment, Member
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
@@ -278,7 +278,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     has_initiatives = serializers.SerializerMethodField()
 
     def get_has_initiatives(self, obj):
-        return obj.own_initiatives.exists()
+        return obj.is_initiator
 
     class Meta(object):
         model = BB_USER_MODEL
@@ -397,7 +397,7 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()
-    place = PlaceSerializer(required=False, allow_null=True)
+    place = OldPlaceSerializer(required=False, allow_null=True)
 
     def get_from_facebook(self, instance):
         try:
@@ -687,6 +687,47 @@ class PasswordResetSerializer(serializers.Serializer):
 
     class JSONAPIMeta(object):
         resource_name = 'reset-tokens'
+
+
+class MemberProfileSerializer(ModelSerializer):
+    segments = ResourceRelatedField(
+        many=True,
+        queryset=Segment.objects.all(),
+    )
+
+    class Meta():
+        model = Member
+        fields = (
+            'id', 'first_name', 'last_name', 'about_me', 'required',
+            'birthdate', 'segments', 'location', 'place', 'phone_number', 'required'
+        )
+
+    class JSONAPIMeta():
+        resource_name = 'member/profile'
+        included_resources = [
+            'location', 'place.country', 'place', 'segments'
+        ]
+
+    included_serializers = {
+        'place': 'bluebottle.geo.serializers.PlaceSerializer',
+        'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
+        'location': 'bluebottle.geo.serializers.OfficeSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+    }
+
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+
+        if 'location' in self.validated_data:
+            # if we are setting the location, make sure we verify the location too
+            instance.location_verified = True
+            instance.save()
+
+        if 'segments' in self.validated_data:
+            # if we are setting segments, make sure we verify them too
+            UserSegment.objects.filter(member_id=instance.pk).update(verified=True)
+
+        return instance
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

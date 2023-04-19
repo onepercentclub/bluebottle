@@ -1,6 +1,9 @@
 from django.conf.urls import url
 
-from ..views import CountryList, CountryDetail, LocationList, GeolocationList, OfficeList, OfficeDetail
+from bluebottle.geo.views import (
+    CountryList, CountryDetail, LocationList, GeolocationList, OfficeList, OfficeDetail,
+    PlaceList, PlaceDetail, NewCountryList
+)
 
 urlpatterns = [
     url(r'^countries/$', CountryList.as_view(),
@@ -19,4 +22,13 @@ urlpatterns = [
 
     url(r'^geolocations$', GeolocationList.as_view(),
         name='geolocation-list'),
+
+    url(r'^places(/)?$', PlaceList.as_view(),
+        name='place-list'),
+
+    url(r'^places/(?P<pk>\d+)$', PlaceDetail.as_view(),
+        name='place-detail'),
+
+    url(r'^countries-list/$', NewCountryList.as_view(),
+        name='new-country-list'),
 ]

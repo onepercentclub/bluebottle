@@ -19,20 +19,25 @@ from rest_framework import status
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent, ActivitiesContent
+    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
+    CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
 from bluebottle.contentplugins.models import PictureItem
+from bluebottle.initiatives.tests.test_api import get_include
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.statistics.tests.factories import ManualStatisticFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
+    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
 class ResultPageTestCase(BluebottleTestCase):
@@ -266,13 +271,13 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
 
-class HomePageTestCase(BluebottleTestCase):
+class OldHomePageTestCase(BluebottleTestCase):
     """
     Integration tests for the Home Page API.
     """
 
     def setUp(self):
-        super(HomePageTestCase, self).setUp()
+        super(OldHomePageTestCase, self).setUp()
         HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
@@ -301,7 +306,7 @@ class HomePageTestCase(BluebottleTestCase):
 
             for i in range(0, 4):
                 SlideFactory(
-                    image=image,
+                    background_image=image,
                     sequence=i,
                     publication_date=now(),
                     status='published',
@@ -316,8 +321,8 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
 
         for slide in response.data['blocks'][0]['slides']:
-            self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('png'))
+            self.assertTrue(slide['background_image'].startswith('/media'))
+            self.assertTrue(slide['background_image'].endswith('png'))
 
     def test_slides_svg(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
@@ -327,7 +332,7 @@ class HomePageTestCase(BluebottleTestCase):
 
             for i in range(0, 4):
                 SlideFactory(
-                    image=image,
+                    background_image=image,
                     sequence=i,
                     publication_date=now(),
                     status='published',
@@ -340,8 +345,8 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
 
         for slide in response.data['blocks'][0]['slides']:
-            self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('svg'))
+            self.assertTrue(slide['background_image'].startswith('/media'))
+            self.assertTrue(slide['background_image'].endswith('svg'))
 
     def test_map(self):
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder)
@@ -483,6 +488,312 @@ class NewsItemTestCase(BluebottleTestCase):
         self.assertTrue(response.data['main_image'].startswith('/media/cache'))
         self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
         self.assertEqual(response.data['blocks'][0]['html'], html.html)
+
+
+class HomeTestCase(APITestCase):
+    """
+    Integration tests for the Home API.
+    """
+    model = HomePage
+
+    def setUp(self):
+        super(HomeTestCase, self).setUp()
+        HomePage.objects.get(pk=1).delete()
+        self.page = HomePageFactory(pk=1)
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
+        self.url = reverse('home-detail')
+
+    def test_stats(self):
+        stat = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
+        ManualStatisticFactory.create(name='Trees planted', value=250, icon='trees')
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(stat.pk), 'type': 'pages/blocks/stats'}
+        )
+
+        stats_block = get_include(response, 'pages/blocks/stats')
+        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list')
+
+    def test_stats_with_year(self):
+        block = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
+        block.year = '2023'
+        block.save()
+        ManualStatisticFactory.create(name='Trees planted', value=250, icon='trees')
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/stats'}
+        )
+
+        stats_block = get_include(response, 'pages/blocks/stats')
+        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list?year=2023')
+
+    def test_steps(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+        block.action_text = 'Here you go'
+        block.save()
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            for i in range(0, 4):
+                StepFactory.create(
+                    block=block,
+                    header='test header',
+                    text='<a href="http://example.com">link</a>',
+                    image=image
+                )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/steps'}
+        )
+
+        step_block = get_include(response, 'pages/blocks/steps')
+        self.assertEqual(step_block['attributes']['action-text'], 'Here you go')
+
+        step = get_include(response, 'pages/blocks/steps/steps')
+        self.assertEqual(step['attributes']['header'], 'test header')
+        self.assertEqual(step['attributes']['text'], '<a href="http://example.com">link</a>')
+
+    def test_steps_unsafe(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            StepFactory.create(
+                block=block,
+                header='test header',
+                text='<script src="http://example.com"></script>Some text',
+                image=image
+            )
+
+        response = self.client.get(self.url)
+
+        step = get_include(response, 'pages/blocks/steps/steps')
+        self.assertEqual(
+            step['attributes']['text'],
+            '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+        )
+
+    def test_quotes(self):
+        block = QuotesContent.objects.create_for_placeholder(self.placeholder)
+        block.quotes.create(name='Ik zelf', quote="Leuk! Al zeg ik het zelf.")
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/quotes'}
+        )
+
+        quotes_block = get_include(response, 'pages/blocks/quotes')
+        self.assertEqual(quotes_block['relationships']['quotes']['meta']['count'], 1)
+
+        quote = get_include(response, 'pages/blocks/quotes/quotes')
+
+        self.assertEqual(
+            quote['attributes']['name'],
+            'Ik zelf'
+        )
+        self.assertEqual(
+            quote['attributes']['quote'],
+            'Leuk! Al zeg ik het zelf.'
+        )
+
+    def test_logos(self):
+        block = LogosContent.objects.create_for_placeholder(self.placeholder)
+        block.logos.create(link='http://google.com')
+        block.logos.create(link='http://facebook.com')
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/logos')
+
+        logos_block = get_include(response, 'pages/blocks/logos')
+        self.assertEqual(logos_block['relationships']['logos']['meta']['count'], 2)
+
+        logo = get_include(response, 'pages/blocks/logos/logos')
+
+        self.assertEqual(
+            logo['attributes']['link'],
+            'http://google.com'
+        )
+        self.assertEqual(
+            logo['attributes']['open-in-new-tab'],
+            True
+        )
+
+    def test_links(self):
+        block = LinksContent.objects.create_for_placeholder(self.placeholder)
+        block.links.create(action_link='/iniitiatives/overview', action_text='Stay')
+        block.links.create(action_link='http://facebook.com', action_text='Away', open_in_new_tab=True)
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/links')
+
+        links_block = get_include(response, 'pages/blocks/links')
+        self.assertEqual(links_block['relationships']['links']['meta']['count'], 2)
+
+        link = get_include(response, 'pages/blocks/links/links')
+
+        self.assertEqual(
+            link['attributes']['action-link'],
+            '/iniitiatives/overview'
+        )
+        self.assertEqual(
+            link['attributes']['open-in-new-tab'],
+            False
+        )
+
+    def test_categories(self):
+        categories = CategoryFactory.create_batch(3)
+        block = CategoriesContent.objects.create_for_placeholder(self.placeholder)
+        block.categories.set(categories)
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/categories')
+
+        categories_block = get_include(response, 'pages/blocks/categories')
+        self.assertEqual(categories_block['relationships']['categories']['meta']['count'], 3)
+
+    def test_slides(self):
+        SlidesContent.objects.create_for_placeholder(self.placeholder)
+
+        for i in range(0, 3):
+            SlideFactory(
+                sequence=i,
+                publication_date=now(),
+                status='published',
+                language='en'
+            )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/slides')
+
+        slides_block = get_include(response, 'pages/blocks/slides')
+        self.assertEqual(len(slides_block['relationships']['slides']['data']), 3)
+
+    def test_plain_text(self):
+        block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
+        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/plain-text')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/plain-text'
+        )
+
+        self.assertEqual(
+            text_block['attributes']['text'],
+            "To boldly go were no man has gone before!"
+        )
+
+    def test_plain_text_image(self):
+        block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
+        block.text = "To <b>boldly</b> go were no man has gone before!"
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            block.image = File(f)
+            block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/plain-text-image')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/plain-text-image'
+        )
+
+        self.assertEqual(
+            text_block['attributes']['text'],
+            "To boldly go were no man has gone before!"
+        )
+        self.assertIsNotNone(
+            text_block['attributes']['image']['full']
+        )
+        self.assertEqual(
+            text_block['attributes']['ratio'],
+            "0.5"
+        )
+        self.assertEqual(
+            text_block['attributes']['align'],
+            "right"
+        )
+
+    def test_image(self):
+        block = ImageItem.objects.create_for_placeholder(self.placeholder)
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            block.image = File(f)
+            block.save()
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/image')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/image'
+        )
+
+        self.assertIsNotNone(
+            text_block['attributes']['image']['full']
+        )
+
+    def test_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_closed_user(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_closed_partner(self):
+        group = Group.objects.get(name='Authenticated')
+        try:
+            for permission in Permission.objects.filter(
+                codename='api_read_{}'.format(self.model._meta.model_name)
+            ):
+                group.permissions.remove(
+                    permission
+                )
+        except Permission.DoesNotExist:
+            pass
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 403)
 
 
 class PageTestCase(BluebottleTestCase):

@@ -189,26 +189,27 @@ class Statistics(object):
         """ Total number of activities that have been in campaign mode"""
         date_activities = DateActivity.objects.filter(
             self.date_filter('slots__start'),
-            status__in=('open', 'full', 'running', )
+            status__in=('open', 'full', 'running',)
         )
 
         period_activities = PeriodActivity.objects.filter(
             self.date_filter('deadline'),
-            status__in=('open', 'full', 'running', )
+            status__in=('open', 'full', 'running',)
         )
 
         funding_activities = Funding.objects.filter(
             self.date_filter('deadline'),
-            status__in=('open', 'full', 'running', )
+            status__in=('open', 'full', 'running',)
         )
 
         deed_activities = Deed.objects.filter(
             self.date_filter('end'),
-            status__in=('open', 'running', )
+            status__in=('open', 'running',)
         )
         return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
 
     @property
+    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
         donations = Donor.objects.filter(
@@ -232,8 +233,9 @@ class Statistics(object):
             self.date_filter('start'),
             status='succeeded'
         ).aggregate(time_spent=Sum('value'))
-
-        return contributions['time_spent'] or 0
+        if contributions['time_spent']:
+            return contributions['time_spent'].total_seconds() / 3600
+        return 0
 
     @property
     @memoize(timeout=timeout)

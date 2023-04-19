@@ -23,10 +23,6 @@ urlpatterns = [
         include('bluebottle.geo.urls.api')),
     url(r'^api/news/',
         include('bluebottle.news.urls.api')),
-    url(r'^api/pages/',
-        include('bluebottle.pages.urls.api')),
-    url(r'^api/quotes/',
-        include('bluebottle.quotes.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/',
@@ -39,6 +35,8 @@ urlpatterns = [
     url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
+        include('bluebottle.cms.urls.api')),
+    url(r'^api/pages/',
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives',
         include('bluebottle.initiatives.urls.api')),
@@ -80,6 +78,9 @@ urlpatterns = [
 
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
+
+    # New JSON-API auth route
+    url(r'^api/auth/', AxesObtainJSONWebToken.as_view(), name='auth'),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 

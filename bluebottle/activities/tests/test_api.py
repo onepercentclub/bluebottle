@@ -11,6 +11,7 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
 from openpyxl import load_workbook
 from rest_framework import status
@@ -443,6 +444,81 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(self.without_segment.pk))
         self.assertEqual(data['data'][1]['id'], str(self.with_open_segment.pk))
         self.assertEqual(data['data'][2]['id'], str(self.with_closed_segment.pk))
+
+    def test_filter_matching(self):
+        theme = ThemeFactory.create()
+        self.owner.favourite_themes.add(theme)
+
+        skill = SkillFactory.create()
+        self.owner.skills.add(skill)
+
+        self.owner.location = LocationFactory.create(position=Point(20.0, 10.0))
+        self.owner.save()
+
+        initiative = InitiativeFactory.create(theme=theme)
+
+        first = DateActivityFactory.create(
+            status='open',
+            initiative=initiative,
+        )
+        DateActivitySlotFactory.create(
+            activity=first,
+            is_online=False
+        )
+
+        second = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            is_online=False
+        )
+        third = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            expertise=skill,
+            is_online=False
+        )
+
+        fourth = PeriodActivityFactory.create(
+            status='open',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            is_online=False
+        )
+
+        fifth = PeriodActivityFactory.create(
+            status='open',
+            expertise=skill,
+            is_online=False
+        )
+
+        PeriodActivityFactory.create(
+            status='open',
+        )
+
+        PeriodActivityFactory.create(
+            status='closed',
+            location=GeolocationFactory.create(position=Point(20.1, 10.1)),
+            initiative=initiative,
+            expertise=skill,
+            is_online=False
+        )
+
+        response = self.client.get(
+            self.url + '?filter[matching]',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            set([str(first.pk), str(second.pk), str(third.pk), str(fourth.pk), str(fifth.pk)]),
+            set(activity['id'] for activity in data['data'])
+        )
+        for activity in data['data']:
+            self.assertTrue(
+                any([activity['attributes']['matching-properties'].values()])
+            )
 
     def test_filter_owner(self):
         owned = DateActivityFactory.create(owner=self.owner, status='open')
@@ -2637,3 +2713,33 @@ class TeamMemberListViewAPITestCase(APITestCase):
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class ActivityLocationAPITestCase(APITestCase):
+    model = Activity
+
+    def setUp(self):
+        CollectActivityFactory.create(status='succeeded')
+        PeriodActivityFactory.create(status='succeeded')
+
+        date_activity = DateActivityFactory.create(status="succeeded")
+        date_activity.slots.add(DateActivitySlotFactory.create(activity=date_activity))
+
+        self.url = reverse('activity-location-list')
+
+    def test_get(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_closed_platform(self):
+        with self.closed_site():
+            self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_closed_platform_logged_in(self):
+        with self.closed_site():
+            self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)

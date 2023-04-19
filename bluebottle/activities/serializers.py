@@ -1,4 +1,5 @@
 from builtins import object
+from collections import namedtuple
 
 from datetime import datetime, time
 import dateutil
@@ -7,13 +8,15 @@ from django.urls import reverse
 
 from django.utils.timezone import get_current_timezone, now
 from django.conf import settings
+from bluebottle.geo.serializers import PointSerializer
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 
 
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
-from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
+from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
 from geopy.distance import distance, lonlat
 
@@ -42,6 +45,30 @@ from bluebottle.utils.serializers import (
     MoneySerializer
 )
 from bluebottle.utils.utils import get_current_language
+
+
+ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
+
+
+class ActivityLocationRelationSerializer(Serializer):
+    class JSONAPIMeta:
+        resource_name = 'activity-location-relations'
+
+
+class ActivityLocationSerializer(Serializer):
+    position = PointSerializer()
+    activity = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityLocationRelationSerializer,
+        read_only=True,
+        model=ActivityLocation,
+    )
+
+    def get_activity(self, obj):
+        return obj.activity
+
+    class JSONAPIMeta:
+        resource_name = 'activity-locations'
+
 
 IMAGE_SIZES = {
     'preview': '300x168',

@@ -1,7 +1,8 @@
 from django.conf.urls import url
 
 from bluebottle.segments.views import (
-    SegmentList, SegmentDetail, RelatedSegmentDetail, SegmentPublicDetail, SegmentTypeList
+    SegmentList, SegmentDetail, RelatedSegmentDetail, SegmentPublicDetail, SegmentTypeList,
+    SegmentTypeDetail
 )
 
 
@@ -10,6 +11,11 @@ urlpatterns = [
         r'^types/$',
         SegmentTypeList.as_view(),
         name='segment-type-list'
+    ),
+    url(
+        r'^types/(?P<pk>\d+)$',
+        SegmentTypeDetail.as_view(),
+        name='segment-type-detail'
     ),
     url(
         r'^$',

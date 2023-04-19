@@ -4,7 +4,7 @@ from bluebottle.initiatives.views import (
     InitiativeList, InitiativeDetail, InitiativeImage,
     RelatedInitiativeImageList, RelatedInitiativeImageContent,
     InitiativeReviewTransitionList,
-    InitiativeMapList, InitiativeRedirectList,
+    InitiativeMapList, InitiativePreviewList, InitiativeRedirectList,
     ThemeList, ThemeDetail
 )
 
@@ -64,5 +64,10 @@ urlpatterns = [
         r'^/map/$',
         InitiativeMapList.as_view(),
         name='initiative-map-list'
+    ),
+    url(
+        r'^/preview/$',
+        InitiativePreviewList.as_view(),
+        name='initiative-preview-list'
     ),
 ]

@@ -1,11 +1,10 @@
-import re
 import io
-from builtins import str
 import json
+import re
+from builtins import str
 from datetime import timedelta, date
-import dateutil
-from openpyxl import load_workbook
 
+import dateutil
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -14,31 +13,30 @@ from django.urls import reverse
 from django.utils.timezone import now
 from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
+from openpyxl import load_workbook
 from rest_framework import status
 
-from bluebottle.files.tests.factories import ImageFactory
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-
+from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
-from bluebottle.activities.serializers import TeamTransitionSerializer
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.offices.tests.factories import OfficeRegionFactory, OfficeSubRegionFactory
-from bluebottle.time_based.serializers import PeriodParticipantSerializer
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SkillFactory, TeamSlotFactory
-)
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.offices.tests.factories import OfficeRegionFactory, OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.time_based.serializers import PeriodParticipantSerializer
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
+    DateActivitySlotFactory, SkillFactory, TeamSlotFactory
+)
 
 
 @override_settings(
@@ -2511,7 +2509,7 @@ class InviteDetailViewAPITestCase(APITestCase):
         activity = PeriodActivityFactory.create(status='open', team_activity='teams')
         self.contributor = PeriodParticipantFactory.create(activity=activity)
 
-        self.url = reverse('invite-detail', args=(self.contributor.invite.pk, ))
+        self.url = reverse('invite-detail', args=(self.contributor.invite.pk,))
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -2655,7 +2653,7 @@ class TeamMemberListViewAPITestCase(APITestCase):
         for member in self.withdrawn_members:
             member.states.withdraw(save=True)
 
-        self.url = reverse('team-members', args=(self.team.pk, ))
+        self.url = reverse('team-members', args=(self.team.pk,))
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)

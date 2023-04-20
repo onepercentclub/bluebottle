@@ -79,8 +79,8 @@ urlpatterns = [
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
-    # New JSON-API auth route
-    url(r'^api/auth/', AxesObtainJSONWebToken.as_view(), name='auth'),
+    url(r'^api/auth/facebook$',
+        AuthFacebookView.as_view()),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
@@ -124,9 +124,6 @@ urlpatterns += [
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),
-    url(r'^api/auth/facebook$',
-        AuthFacebookView.as_view()),
-
 
     # Needed for the self-documenting API in Django Rest Framework.
     url(r'^api-auth/', include('rest_framework.urls',

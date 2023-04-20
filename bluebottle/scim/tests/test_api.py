@@ -1113,15 +1113,16 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         location_name = 'Test Location'
         request_data = {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            "Operations": [
-                {
-                    'op': 'Add',
-                    'path': 'addresses[type eq "work"].locality',
-                    'value': location_name
-                },
-            ]
+            "Operations": [{
+                "op": "Add",
+                "path": 'addresses[type eq \\"work\\"].locality',
+                "value": "Test Location"
+            }, {
+                "op": "Add",
+                "path": 'addresses[type eq \\"work\\"].country',
+                "value": "Netherlands"
+            }]
         }
-
         response = self.client.patch(
             self.url,
             request_data,

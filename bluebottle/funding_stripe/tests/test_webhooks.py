@@ -1,8 +1,8 @@
-from builtins import object
 import json
+from builtins import object
 
-import munch
 import mock
+import munch
 import stripe
 from django.core import mail
 from django.urls import reverse
@@ -811,6 +811,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.connect_account.update(munch.munchify({
             'country': 'NL',
+            'charges_enabled': True,
+            'payouts_enabled': True,
             'requirements': {
                 'disabled': False,
                 'eventually_due': [],
@@ -843,7 +845,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             self.payout_account = StripePayoutAccountFactory.create(owner=self.user)
 
         external_account = ExternalAccountFactory.create(connect_account=self.payout_account)
-
         self.funding = FundingFactory.create(bank_account=external_account)
         self.funding.initiative.states.submit(save=True)
         BudgetLineFactory.create(activity=self.funding)
@@ -965,6 +966,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
     def test_incomplete_open(self):
         mail.outbox = []
+        self.funding.initiative.status = 'approved'
+        self.funding.initiative.save()
         self.funding.status = 'open'
         self.funding.save()
         data = {
@@ -977,7 +980,9 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account.individual.requirements.eventually_due = ['dob.day']
         self.connect_account.individual.requirements.currently_due = []
         self.connect_account.individual.requirements.past_due = []
-        self.connect_account.individual.requirements.pending_verification = False
+        self.connect_account.individual.requirements.pending_verification = []
+        self.connect_account.charges_enabled = True
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
@@ -992,10 +997,71 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout_account.refresh_from_db()
         self.assertEqual(self.payout_account.status, 'rejected')
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'open')
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
         self.assertEqual(mail.outbox[1].subject, 'Live campaign identity verification failed!')
         self.assertEqual(mail.outbox[2].subject, 'Live campaign identity verification failed!')
+
+    def test_incomplete_open_charges_disabled(self):
+        mail.outbox = []
+        self.funding.initiative.status = 'approved'
+        self.funding.initiative.save()
+        self.funding.status = 'open'
+        self.funding.save()
+        data = {
+            "object": {
+                "id": self.payout_account.account_id,
+                "object": "account"
+            }
+        }
+        # Missing fields
+        self.connect_account.individual.requirements.eventually_due = ['dob.day']
+        self.connect_account.individual.requirements.currently_due = []
+        self.connect_account.individual.requirements.past_due = []
+        self.connect_account.individual.requirements.pending_verification = []
+        self.connect_account.charges_enabled = False
+
+        with mock.patch(
+                'stripe.Webhook.construct_event',
+                return_value=MockEvent(
+                    'account.updated', data
+                )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, 'rejected')
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'on_hold')
+
+        self.connect_account.individual.requirements.eventually_due = []
+        self.connect_account.individual.requirements.currently_due = []
+        self.connect_account.individual.requirements.past_due = []
+        self.connect_account.individual.requirements.pending_verification = []
+        self.connect_account.charges_enabled = True
+
+        with mock.patch(
+                'stripe.Webhook.construct_event',
+                return_value=MockEvent(
+                    'account.updated', data
+                )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, 'verified')
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'open')
 
     def test_pending(self):
         data = {

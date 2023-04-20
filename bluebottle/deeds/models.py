@@ -1,13 +1,12 @@
-from datetime import timedelta
+import datetime
 from urllib.parse import urlencode
 
-from django.db import models, connection
-
-from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
-from bluebottle.activities.models import Organizer
+from django.db import models, connection
+from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
+from bluebottle.activities.models import Organizer
 from bluebottle.deeds.validators import EndDateValidator
 
 
@@ -24,6 +23,8 @@ class Deed(Activity):
     )
 
     auto_approve = True
+
+    activity_type = _('Deed')
 
     @property
     def activity_date(self):
@@ -65,8 +66,7 @@ class Deed(Activity):
     @property
     def google_calendar_link(self):
         details = self.description
-
-        end = self.end + timedelta(days=1)
+        end = self.end + datetime.timedelta(days=1)
         dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
 
         url = u'https://calendar.google.com/calendar/render'

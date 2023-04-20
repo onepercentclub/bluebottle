@@ -150,7 +150,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     )
                 )
 
-            score = score | (Q('terms', status=['open', 'running', 'full']) & matching)
+            score = score | (Q('terms', status=['open', 'running', 'full', 'on_hold']) & matching)
 
         return score
 
@@ -162,7 +162,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_upcoming_filter(self, value, request):
         if value == 'true':
-            return Terms(status=['open', 'full'])
+            return Terms(status=['open', 'full', 'on_hold'])
         if value == 'false':
             return Terms(status=['succeeded', 'partially_funded'])
 

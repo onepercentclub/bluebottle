@@ -3,8 +3,7 @@ services:
   bluebottle:
     build: .
     command: >
-      sh -c "python manage.py migrate_schemas --shared --settings=bluebottle.settings.local &&
-             python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py runserver 0.0.0.0:8000"
     container_name: bluebottle
     depends_on:
       elasticsearch:

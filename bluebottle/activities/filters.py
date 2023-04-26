@@ -1,11 +1,10 @@
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
 from elasticsearch_dsl import TermsFacet, Facet
-
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -33,6 +32,36 @@ class DistanceFacet(Facet):
         )
 
 
+class OfficeRestrictionFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        if not filter_value:
+            return []
+        office = Location.objects.filter(id=filter_value).first()
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.enable_office_restrictions:
+            return Nested(
+                path='office_restriction',
+                query=Term(
+                    office_restriction__restriction='all'
+                ) | (
+                    Term(office_restriction__office=office.id) &
+                    Term(office_restriction__restriction='office')
+                ) | (
+                    Term(office_restriction__subregion=office.subregion.id) &
+                    Term(office_restriction__restriction='office_subregion')
+                ) | (
+                    Term(office_restriction__region=office.subregion.region.id) &
+                    Term(office_restriction__restriction='office_region')
+                )
+            )
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -53,6 +82,9 @@ class ActivitySearch(Search):
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
+        'is_online': TermsFacet(field='is_online'),
+        'office': TermsFacet(field='office'),
+        'office_restriction': OfficeRestrictionFacet(),
     }
 
     possible_facets = {
@@ -61,7 +93,7 @@ class ActivitySearch(Search):
         'category': TranslatedFacet('categories', 'title'),
         'skill': TranslatedFacet('expertise'),
         'country': NamedNestedFacet('country'),
-        'location': NamedNestedFacet('office'),
+        'office': NamedNestedFacet('office'),
         'date': DateRangeFacet(field='duration'),
     }
 

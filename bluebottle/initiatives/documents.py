@@ -1,17 +1,15 @@
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
+from bluebottle.activities.models import Activity
+from bluebottle.categories.models import Category
+from bluebottle.deeds.models import Deed
+from bluebottle.funding.models import Funding
+from bluebottle.geo.models import Geolocation
+from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.members.models import Member
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
-
-from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.geo.models import Geolocation
-from bluebottle.categories.models import Category
-from bluebottle.activities.models import Activity
-from bluebottle.funding.models import Funding
-from bluebottle.deeds.models import Deed
-from bluebottle.members.models import Member
-
 
 SCORE_MAP = {
     'open': 1,
@@ -136,10 +134,11 @@ class InitiativeDocument(Document):
             return [related_instance.initiative]
 
     def prepare_image(self, instance):
-        return {
-            'id': instance.pk,
-            'file': instance.image.file.name,
-        }
+        if instance.image and instance.image.file:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+            }
 
     def prepare_activities(self, instance):
         return [
@@ -165,7 +164,7 @@ class InitiativeDocument(Document):
         for manager in instance.activity_managers.all():
             owners.append(manager.pk)
         if instance.promoter:
-            owners.append(instance.owner.promoter)
+            owners.append(instance.promoter.pk)
 
         return owners
 
@@ -175,12 +174,12 @@ class InitiativeDocument(Document):
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
-            if activity.office_location:
+            if activity.office_location and activity.office_location.country:
                 countries.append({
                     'id': activity.office_location.country.pk,
                     'name': activity.office_location.country.name,
                 })
-            elif hasattr(activity, 'place') and instance.place:
+            elif hasattr(activity, 'place') and instance.place and activity.place.country:
                 countries.append({
                     'id': activity.place.country.pk,
                     'name': activity.place.country.name,

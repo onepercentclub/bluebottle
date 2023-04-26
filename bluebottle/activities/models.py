@@ -119,6 +119,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     auto_approve = True
 
+    activity_type = _('Activity')
+
     @property
     def activity_date(self):
         raise NotImplementedError
@@ -215,6 +217,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     accepted_invite = models.ForeignKey(
         'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
     )
+
+    @property
+    def status_label(self):
+        if self.states.current_state:
+            return self.states.current_state.name
 
     @property
     def owner(self):

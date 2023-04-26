@@ -18,7 +18,7 @@ class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (
             action not in ('POST', 'DELETE') or
-            obj.activity.status in ['draft', 'needs_work', 'submitted', 'open']
+            obj.activity.status not in ['cancelled', 'rejected']
         )
 
     def has_action_permission(self, action, user, model_cls):
@@ -27,7 +27,7 @@ class DateSlotActivityStatusPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
             request.method not in ('POST', 'DELETE') or
-            obj.activity.status in ['draft', 'needs_work', 'submitted', 'open']
+            obj.activity.status not in ['cancelled', 'rejected']
         )
 
 

@@ -8,12 +8,12 @@
             {{ contributor.created|date }}<br>
         </span>
         <a href="{% url 'admin:activities_contributor_change' contributor.id %}" >
-            <b>{{ contributor.type }}</b> {{ contributor.status }}
+            <b>{{ contributor }}</b> - {{ contributor.status_label }}
         </a>
         <br>
-            {{ contributor }}
+        {{ contributor.activity.title }}
         <br>
-        <i>{{ contributor.activity.title }}</i>
+        <i>{{ contributor.activity.activity_type }}</i>
     </li>
     {% endfor %}
     {% endspaceless %}

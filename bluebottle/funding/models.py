@@ -154,6 +154,8 @@ class Funding(Activity):
 
     auto_approve = False
 
+    activity_type = _('Crowdfunding campaign')
+
     def admin_clean(self):
         for val in self.validators:
             validator = val(self)

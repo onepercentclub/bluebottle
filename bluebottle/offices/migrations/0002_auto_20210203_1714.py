@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, connection
 
-from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.utils.utils import update_group_permissions
@@ -26,9 +25,8 @@ def add_group_permissions(apps, schema_editor):
                     'delete_officeregion',
                 )
             },
-    }
-
-    update_group_permissions('offices', group_perms, apps)
+        }
+        update_group_permissions('offices', group_perms, apps)
 
 
 class Migration(migrations.Migration):

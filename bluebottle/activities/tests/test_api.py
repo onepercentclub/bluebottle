@@ -691,7 +691,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_office(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['location'])
+        InitiativePlatformSettings.objects.create(activity_search_filters=['office'])
         matching_office = LocationFactory.create()
         other_office = LocationFactory.create()
 
@@ -707,10 +707,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open',
         )
 
-        self.search({'location': matching_office.pk})
+        self.search({'office': matching_office.pk})
 
         self.assertFacets(
-            'location',
+            'office',
             {str(matching_office.pk): len(matching), str(other_office.pk): len(other)}
         )
         self.assertFound(matching)

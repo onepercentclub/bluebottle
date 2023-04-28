@@ -145,7 +145,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.initiatives_url = reverse('initiative-list')
+        self.initiatives_url = reverse('initiative-preview-list')
 
     def test_open_api(self):
         """ request open api, expect projects """
@@ -163,6 +163,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
         response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_authenticated(self):
         """ request closed api, expect projects if authenticated """
         response = self.client.get(self.initiatives_url, token=self.user_token)

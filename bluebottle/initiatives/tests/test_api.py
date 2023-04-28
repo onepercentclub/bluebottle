@@ -1,7 +1,6 @@
 import datetime
 import json
 from builtins import str
-from bluebottle.test.factory_models.categories import CategoryFactory
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -24,6 +23,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
@@ -734,6 +734,10 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_segment(self):
         segment_type = SegmentTypeFactory.create()
+        segment_filter = f'segment.{segment_type.slug}'
+        settings = InitiativePlatformSettings.load()
+        settings.activity_search_filters = [segment_filter]
+        settings.save()
 
         matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
         matching = InitiativeFactory.create_batch(3)
@@ -746,10 +750,10 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity = DateActivityFactory.create(status='approved', initiative=initiative)
             activity.segments.add(other_segment)
 
-        self.search({f'segment.{segment_type.slug}': matching_segment.pk})
+        self.search({segment_filter: matching_segment.pk})
 
         self.assertFacets(
-            f'segment.{segment_type.slug}',
+            segment_filter,
             {
                 str(f'segments.{matching_segment.pk}'): len(matching),
                 str(f'segments.{other_segment.pk}'): len(other)

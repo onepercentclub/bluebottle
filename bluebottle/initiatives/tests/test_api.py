@@ -659,12 +659,11 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_more_results(self):
-        matching = InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
-        InitiativeFactory.create(status="approved")
+        matching = InitiativeFactory.create_batch(4, owner=self.owner, status='approved')
+        non_matching = InitiativeFactory.create_batch(2, status="approved")
 
         self.search({})
-
-        self.assertFound(matching, 20)
+        self.assertFound(matching + non_matching, 6)
 
     def test_only_owner_permission(self):
         owned = InitiativeFactory.create(owner=self.owner, status='approved')
@@ -750,7 +749,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity = DateActivityFactory.create(status='approved', initiative=initiative)
             activity.segments.add(other_segment)
 
-        self.search({segment_filter: matching_segment.pk})
+        self.search({segment_filter: f'segments.{matching_segment.pk}'})
 
         self.assertFacets(
             segment_filter,

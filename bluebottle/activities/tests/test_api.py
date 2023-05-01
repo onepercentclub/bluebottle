@@ -5,6 +5,7 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -690,31 +691,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
-    def test_filter_office(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['location'])
-        matching_office = LocationFactory.create()
-        other_office = LocationFactory.create()
-
-        matching = PeriodActivityFactory.create_batch(
-            2,
-            office_location=matching_office,
-            status='open',
-        )
-
-        other = PeriodActivityFactory.create_batch(
-            3,
-            office_location=other_office,
-            status='open',
-        )
-
-        self.search({'location': matching_office.pk})
-
-        self.assertFacets(
-            'location',
-            {str(matching_office.pk): len(matching), str(other_office.pk): len(other)}
-        )
-        self.assertFound(matching)
-
     def test_filter_highlight(self):
         matching = PeriodActivityFactory.create_batch(
             2,
@@ -794,6 +770,46 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.search({'distance': '52.0000:10.0000:100km'})
+
+        self.assertFacets(
+            'distance', {}
+        )
+
+        self.assertFound(matching)
+
+    def test_filter_office(self):
+        office = LocationFactory.create(subregion=OfficeSubRegionFactory.create())
+        within_sub_region = LocationFactory.create(subregion=office.subregion)
+        within_region = LocationFactory.create(
+            subregion=OfficeSubRegionFactory(region=office.subregion.region)
+        )
+
+        matching = [
+            PeriodActivityFactory.create(
+                office_location=office, office_restriction='office'
+            ),
+            PeriodActivityFactory.create(
+                office_location=within_region, office_restriction='office_region'
+            ),
+            PeriodActivityFactory.create(
+                office_location=within_sub_region, office_restriction='office_subregion'
+            ),
+            PeriodActivityFactory.create(
+                office_location=LocationFactory.create(), office_restriction='all'
+            ),
+        ]
+
+        PeriodActivityFactory.create(
+            office_location=LocationFactory.create(), office_restriction='office'
+        )
+        PeriodActivityFactory.create(
+            office_location=within_region, office_restriction='office'
+        )
+        PeriodActivityFactory.create(
+            office_location=within_region, office_restriction='office_subregion'
+        )
+
+        self.search({'office': str(office.pk)})
 
         self.assertFacets(
             'distance', {}

@@ -1,7 +1,9 @@
 from bluebottle.initiatives.models import InitiativePlatformSettings
 
-from elasticsearch_dsl import TermsFacet
-from elasticsearch_dsl.query import Term, Terms, Nested
+from elasticsearch_dsl import TermsFacet, Facet
+
+from elasticsearch_dsl.aggs import A
+from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
 from bluebottle.segments.models import SegmentType
@@ -9,6 +11,26 @@ from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
     SegmentFacet
 )
+
+
+class DistanceFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        lat, lon, distance = filter_value.split(':')
+
+        return GeoDistance(
+            _expand__to_dot=False,
+            distance=distance,
+            position={
+                'lat': float(lat),
+                'lon': float(lon),
+            }
+        )
 
 
 class ActivitySearch(Search):
@@ -30,6 +52,7 @@ class ActivitySearch(Search):
         'upcoming': TermsFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
+        'distance': DistanceFacet(),
     }
 
     possible_facets = {

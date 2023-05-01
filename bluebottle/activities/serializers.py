@@ -112,7 +112,9 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            only_upcoming = obj.status in ['open', 'full']
+
+            slots = self.get_filtered_slots(obj, only_upcoming=only_upcoming)
             if slots:
                 return slots[0].start
 
@@ -121,9 +123,10 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            only_upcoming = obj.status in ['open', 'full']
+            slots = self.get_filtered_slots(obj, only_upcoming=only_upcoming)
             if slots:
-                return slots[0].end
+                return slots[-1].end
 
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]

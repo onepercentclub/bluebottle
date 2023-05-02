@@ -6,6 +6,7 @@ from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
+from bluebottle.geo.models import Location
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -33,6 +34,33 @@ class DistanceFacet(Facet):
         )
 
 
+class OfficeFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        office = Location.objects.get(pk=filter_value)
+
+        return Nested(
+            path='office_restriction',
+            query=Term(
+                office_restriction__restriction='all'
+            ) | (
+                Term(office_restriction__office=office.id) &
+                Term(office_restriction__restriction='office')
+            ) | (
+                Term(office_restriction__subregion=office.subregion.id) &
+                Term(office_restriction__restriction='office_subregion')
+            ) | (
+                Term(office_restriction__region=office.subregion.region.id) &
+                Term(office_restriction__restriction='office_region')
+            )
+        )
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -53,6 +81,7 @@ class ActivitySearch(Search):
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
+        'office_restriction': OfficeFacet(),
     }
 
     possible_facets = {
@@ -61,7 +90,6 @@ class ActivitySearch(Search):
         'category': TranslatedFacet('categories', 'title'),
         'skill': TranslatedFacet('expertise'),
         'country': NamedNestedFacet('country'),
-        'location': NamedNestedFacet('office'),
         'date': DateRangeFacet(field='duration'),
     }
 

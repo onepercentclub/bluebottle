@@ -81,7 +81,7 @@ class ActivitySearch(Search):
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
-        'office': OfficeFacet(),
+        'office_restriction': OfficeFacet(),
     }
 
     possible_facets = {

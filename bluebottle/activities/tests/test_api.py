@@ -809,7 +809,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             office_location=within_region, office_restriction='office_subregion'
         )
 
-        self.search({'office': str(office.pk)})
+        self.search({'office_restriction': str(office.pk)})
 
         self.assertFacets(
             'distance', {}

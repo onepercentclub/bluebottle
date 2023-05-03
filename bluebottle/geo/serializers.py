@@ -105,7 +105,7 @@ class PlaceSerializer(ModelSerializer):
         fields = (
             'id', 'street', 'street_number', 'postal_code',
             'locality', 'province', 'country', 'latitude', 'longitude',
-            'static_map_url'
+            'static_map_url', 'mapbox_id'
         )
 
     class JSONAPIMeta(object):

@@ -193,6 +193,8 @@ class Place(models.Model):
 
     position = PointField(null=True)
 
+    mapbox_id = models.CharField(max_length=50, null=True)
+
     def save(self, *args, **kwargs):
         if self.locality and self.country and not self.position:
             result = geocoder.google(

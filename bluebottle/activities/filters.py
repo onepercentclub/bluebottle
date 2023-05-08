@@ -20,8 +20,8 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        lat, lon, distance = filter_value.split(':')
-        return GeoDistance(
+        lat, lon, distance, include_online = filter_value.split(':')
+        geo_filter = GeoDistance(
             _expand__to_dot=False,
             distance=distance,
             position={
@@ -29,6 +29,9 @@ class DistanceFacet(Facet):
                 'lon': float(lon),
             }
         )
+        if include_online == 'with_online':
+            return geo_filter | Term(is_online=True)
+        return geo_filter
 
 
 class OfficeFacet(Facet):
@@ -75,6 +78,7 @@ class ActivitySearch(Search):
 
     facets = {
         'upcoming': TermsFacet(field='is_upcoming'),
+        'is_online': TermsFacet(field='is_online'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
@@ -92,10 +96,9 @@ class ActivitySearch(Search):
 
     def sort(self, search):
         search = super().sort(search)
-
         if self._sort == 'distance':
-            lat, lon, distance = self.filter_values['distance'][0].split(':')
-            search = search.sort({
+            lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
+            geo_sort = {
                 "_geo_distance": {
                     "position": {
                         "lat": float(lat),
@@ -104,7 +107,15 @@ class ActivitySearch(Search):
                     "order": "asc",
                     "distance_type": "arc"
                 }
-            })
+            }
+
+            if include_online == 'with_online':
+                search = search.sort(
+                    {"is_online": {"order": "desc"}},
+                    geo_sort
+                )
+            else:
+                search = search.sort(geo_sort)
         return search
 
     def __new__(cls, *args, **kwargs):

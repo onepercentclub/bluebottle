@@ -1,12 +1,10 @@
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
 from elasticsearch_dsl import TermsFacet, Facet
-
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -23,7 +21,6 @@ class DistanceFacet(Facet):
 
     def get_value_filter(self, filter_value):
         lat, lon, distance = filter_value.split(':')
-
         return GeoDistance(
             _expand__to_dot=False,
             distance=distance,
@@ -67,7 +64,7 @@ class ActivitySearch(Search):
     sorting = {
         'upcoming': ['start'],
         'date': ['-start'],
-        'distance': ['-distance']
+        'distance': ['distance']
     }
 
     fields = [
@@ -92,6 +89,23 @@ class ActivitySearch(Search):
         'country': NamedNestedFacet('country'),
         'date': DateRangeFacet(field='duration'),
     }
+
+    def sort(self, search):
+        search = super().sort(search)
+
+        if self._sort == 'distance':
+            lat, lon, distance = self.filter_values['distance'][0].split(':')
+            search = search.sort({
+                "_geo_distance": {
+                    "position": {
+                        "lat": float(lat),
+                        "lon": float(lon),
+                    },
+                    "order": "asc",
+                    "distance_type": "arc"
+                }
+            })
+        return search
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()

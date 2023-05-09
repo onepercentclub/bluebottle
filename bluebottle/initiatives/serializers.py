@@ -1,4 +1,5 @@
 from builtins import object
+import hashlib
 
 from django.db.models import Q
 from django.urls.base import reverse
@@ -25,7 +26,8 @@ from bluebottle.fsm.serializers import (
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
+    InitiativeSearchFilter
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -175,14 +177,28 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
+IMAGE_SIZES = {
+    'preview': '300x168',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '960x540'
+}
+
+
 class InitiativePreviewSerializer(ModelSerializer):
-    position = TinyPointSerializer()
-    id = serializers.CharField()
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        if obj.image:
+            hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+
+            return f'{url}?_={hash}'
 
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'position',
+            'id', 'title', 'slug', 'image',
         )
 
     class JSONAPIMeta(object):
@@ -438,8 +454,25 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
         resource_name = 'initiative-transitions'
 
 
+class ActivitySearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActivitySearchFilter
+        fields = ['type', 'name', 'highlight']
+
+
+class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InitiativeSearchFilter
+        fields = ['type', 'name', 'highlight']
+
+
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     has_locations = serializers.SerializerMethodField()
+
+    search_filters_activities = ActivitySearchFilterSerializer(many=True)
+    search_filters_initiatives = InitiativeSearchFilterSerializer(many=True)
 
     def get_has_locations(self, obj):
         return Location.objects.count()
@@ -451,6 +484,9 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
+            'activity_search_filters',
+            'search_filters_activities',
+            'search_filters_initiatives',
             'require_organization',
             'team_activities',
             'contact_method',

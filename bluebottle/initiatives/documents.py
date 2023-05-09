@@ -1,17 +1,15 @@
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
+from bluebottle.activities.models import Activity
+from bluebottle.categories.models import Category
+from bluebottle.deeds.models import Deed
+from bluebottle.funding.models import Funding
+from bluebottle.geo.models import Geolocation
+from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.members.models import Member
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
-
-from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.geo.models import Geolocation
-from bluebottle.categories.models import Category
-from bluebottle.activities.models import Activity
-from bluebottle.funding.models import Funding
-from bluebottle.deeds.models import Deed
-from bluebottle.members.models import Member
-
 
 SCORE_MAP = {
     'open': 1,
@@ -38,45 +36,50 @@ class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     story = fields.TextField()
+
     pitch = fields.TextField()
     status = fields.KeywordField()
     created = fields.DateField()
 
-    owner = fields.NestedField(properties={
+    image = fields.NestedField(properties={
         'id': fields.KeywordField(),
-        'full_name': fields.TextField()
-    })
-    promoter = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'full_name': fields.TextField()
-    })
-    activity_managers = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'full_name': fields.TextField()
-    })
-    activity_owners = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'full_name': fields.TextField()
+        'name': fields.KeywordField(),
     })
 
-    country = fields.LongField()
-    owner_id = fields.KeywordField()
+    owner = fields.KeywordField()
+
+    country = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
 
-    theme = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-    })
-    categories = fields.NestedField(properties={
-        'id': fields.KeywordField(),
-        'slug': fields.KeywordField(),
-    })
+    theme = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
+        }
+    )
+
+    categories = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'title': fields.KeywordField(),
+            'language': fields.KeywordField()
+        }
+    )
 
     segments = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
-            'segment_type': fields.KeywordField(attr='segment_type.slug'),
-            'name': fields.TextField()
+            'type': fields.KeywordField(attr='segment_type.slug'),
+            'name': fields.KeywordField(),
+            'closed': fields.BooleanField(),
         }
     )
 
@@ -130,6 +133,13 @@ class InitiativeDocument(Document):
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
 
+    def prepare_image(self, instance):
+        if instance.image and instance.image.file:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+            }
+
     def prepare_activities(self, instance):
         return [
             {
@@ -148,15 +158,67 @@ class InitiativeDocument(Document):
             )
         ]
 
+    def prepare_owner(self, instance):
+        owners = [instance.owner.pk]
+
+        for manager in instance.activity_managers.all():
+            owners.append(manager.pk)
+        if instance.promoter:
+            owners.append(instance.promoter.pk)
+
+        return owners
+
+    def prepare_country(self, instance):
+        countries = []
+
+        for activity in instance.activities.filter(
+                status__in=['open', 'succeeded', 'full', 'partially_funded']
+        ):
+            if activity.office_location and activity.office_location.country:
+                countries.append({
+                    'id': activity.office_location.country.pk,
+                    'name': activity.office_location.country.name,
+                })
+            elif hasattr(activity, 'place') and instance.place and activity.place.country:
+                countries.append({
+                    'id': activity.place.country.pk,
+                    'name': activity.place.country.name,
+                })
+
+        return countries
+
+    def prepare_theme(self, instance):
+        if hasattr(instance, 'theme') and instance.theme:
+            return [
+                {
+                    'id': instance.theme_id,
+                    'name': translation.name,
+                    'language': translation.language_code,
+                }
+                for translation in instance.theme.translations.all()
+            ]
+
+    def prepare_categories(self, instance):
+        return [
+            {
+                'id': category.pk,
+                'title': translation.title,
+                'language': translation.language_code,
+            }
+            for category in instance.categories.all()
+            for translation in category.translations.all()
+        ]
+
     def prepare_segments(self, instance):
         segments = []
 
         for activity in instance.activities.all():
             segments += [
                 {
-                    'id': segment.id,
+                    'id': segment.pk,
+                    'type': segment.segment_type.slug,
                     'name': segment.name,
-                    'segment_type': segment.segment_type.slug
+                    'closed': segment.closed,
                 }
                 for segment in activity.segments.all()
             ]
@@ -169,19 +231,3 @@ class InitiativeDocument(Document):
             'name': activity.office_location.name,
             'city': activity.office_location.city
         } for activity in instance.activities.all() if activity.office_location]
-
-    def prepare_activity_owners(self, instance):
-        return [
-            {
-                'id': activity.owner.pk,
-                'full_name': activity.owner.full_name
-            } for activity in instance.activities.all()
-        ]
-
-    def prepare_country(self, instance):
-        countries = []
-        if instance.place and instance.place.country_id:
-            countries += [instance.place.country_id]
-        if instance.location and instance.location.country_id:
-            countries += [instance.location.country_id]
-        return countries

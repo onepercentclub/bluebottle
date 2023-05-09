@@ -1,7 +1,7 @@
 from builtins import object
 from collections import namedtuple
 
-from datetime import datetime, time
+from datetime import datetime
 import dateutil
 import hashlib
 from django.urls import reverse
@@ -111,7 +111,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
 
     def get_start(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             only_upcoming = obj.status in ['open', 'full']
 
             slots = self.get_filtered_slots(obj, only_upcoming=only_upcoming)
@@ -122,7 +122,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.start[0]
 
     def get_end(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             only_upcoming = obj.status in ['open', 'full']
             slots = self.get_filtered_slots(obj, only_upcoming=only_upcoming)
             if slots:
@@ -142,13 +142,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_contribution_duration(self, obj):
-        if len(obj.contribution_duration) == 0:
-            return {}
-        elif len(obj.contribution_duration) == 1:
-            return {
-                'period': obj.contribution_duration[0].period,
-                'value': obj.contribution_duration[0].value,
-            }
+        if hasattr(obj, 'contribution_duration'):
+            if len(obj.contribution_duration) == 0:
+                return {}
+            elif len(obj.contribution_duration) == 1:
+                return {
+                    'period': obj.contribution_duration[0].period,
+                    'value': obj.contribution_duration[0].value,
+                }
 
     def get_collect_type(self, obj):
         try:
@@ -175,7 +176,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_location(self, obj):
         location = False
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             slots = self.get_filtered_slots(obj)
 
             if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
@@ -208,7 +209,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         user = self.context['request'].user
         matching = {'skill': False, 'theme': False, 'location': False}
 
-        if not user.is_authenticated or obj.status != 'open':
+        if not user.is_authenticated or not obj.is_upcoming:
             return matching
 
         if 'skills' not in self.context:
@@ -250,38 +251,33 @@ class ActivityPreviewSerializer(ModelSerializer):
         tz = get_current_timezone()
 
         try:
-            start = dateutil.parser.parse(
-                self.context['request'].GET.get('filter[start]')
-            ).astimezone(tz)
-        except (ValueError, TypeError):
+            start, end = (
+                dateutil.parser.parse(date).astimezone(tz)
+                for date in self.context['request'].GET.get('filter[date]').split(',')
+            )
+        except (ValueError, AttributeError):
             start = None
-
-        try:
-            end = datetime.combine(
-                dateutil.parser.parse(
-                    self.context['request'].GET.get('filter[end]'),
-                ),
-                time.max
-            ).astimezone(tz)
-        except (ValueError, TypeError):
             end = None
 
-        return [
-            slot for slot in obj.slots
-            if (
-                slot.status not in ['draft', 'cancelled'] and
-                (not only_upcoming or slot.start >= now()) and
-                (not start or slot.start >= start) and
-                (not end or slot.end <= end)
-            )
-        ]
+        if hasattr(obj, 'slots') and obj.slots:
+            return [
+                slot for slot in obj.slots
+                if (
+                    slot.status not in ['draft', 'cancelled'] and
+                    (not only_upcoming or datetime.fromisoformat(slot.start) >= now()) and
+                    (not start or dateutil.parser.parse(slot.start) >= start) and
+                    (not end or dateutil.parser.parse(slot.end) <= end)
+                )
+            ]
+        else:
+            return []
 
     def get_slot_count(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             return len(self.get_filtered_slots(obj, only_upcoming=True))
 
     def get_is_online(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             return all(slot.is_online for slot in self.get_filtered_slots(obj))
         else:
             return obj.is_online

@@ -30,6 +30,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
+        'title': fields.TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),
@@ -102,9 +103,12 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         ]
 
     def prepare_country(self, instance):
-        countries = [super().prepare_country(instance)]
-        return countries + [
-            slot.location.country_id for slot in instance.slots.all()
+        country = [super().prepare_country(instance)]
+        return [country] + [
+            {
+                'id': slot.location.country.pk,
+                'name': slot.location.country.name,
+            } for slot in instance.slots.all()
             if not slot.is_online and slot.location
         ]
 
@@ -139,12 +143,6 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Django:
         related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
         model = PeriodActivity
-
-    def prepare_country(self, instance):
-        if not instance.is_online and instance.location:
-            return instance.location.country_id
-        else:
-            return super().prepare_country(instance)
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:

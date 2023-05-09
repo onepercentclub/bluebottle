@@ -448,7 +448,7 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         ['picture', 'about_me', 'matching_options_set',
-                         'favourite_themes', 'skills', 'place']
+                         'campaign_notifications', ]
 
                     }
                 ],
@@ -473,10 +473,13 @@ class MemberAdmin(UserAdmin):
                     }
                 ],
                 [
-                    _('Notifications'),
+                    _('Search'),
                     {
                         'fields':
-                        ['campaign_notifications', 'subscribed']
+                        [
+                            'search_distance', 'any_search_distance', 'include_online',
+                            'place', 'favourite_themes', 'skills', 'subscribed',
+                        ]
                     }
                 ],
             ]
@@ -495,7 +498,7 @@ class MemberAdmin(UserAdmin):
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
             if obj and (obj.is_staff or obj.is_superuser):
-                fieldsets[4][1]['fields'].append('submitted_initiative_notifications')
+                fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
 
             if SegmentType.objects.count():
                 extra = (

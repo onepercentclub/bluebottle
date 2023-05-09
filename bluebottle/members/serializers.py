@@ -694,12 +694,25 @@ class MemberProfileSerializer(ModelSerializer):
         many=True,
         queryset=Segment.objects.all(),
     )
+    themes = ResourceRelatedField(
+        many=True,
+        queryset=Theme.objects.all(),
+        source='favourite_themes'
+    )
+
+    skills = ResourceRelatedField(
+        many=True,
+        queryset=Skill.objects.all(),
+    )
 
     class Meta():
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'about_me', 'required',
-            'birthdate', 'segments', 'location', 'place', 'phone_number', 'required'
+            'birthdate', 'segments', 'phone_number',
+            'location', 'place', 'themes', 'skills',
+            'search_distance', 'any_search_distance', 'include_online',
+            'subscribed'
         )
 
     class JSONAPIMeta():

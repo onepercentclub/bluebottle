@@ -219,7 +219,10 @@ class Place(models.Model):
         )
 
     def __str__(self):
-        return "{0}, {1}".format(self.locality, self.country)
+        if self.locality and self.country:
+            return "{0}, {1}".format(self.locality, self.country)
+        else:
+            return self.formatted_address
 
 
 @python_2_unicode_compatible

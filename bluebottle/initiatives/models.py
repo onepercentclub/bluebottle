@@ -246,6 +246,7 @@ ACTIVITY_SEARCH_FILTERS = (
     ('location', _('Office location')),
     ('country', _('Country')),
     ('date', _('Date')),
+    ('distance', _('Distance')),
     ('skill', _('Skill')),
     ('activity-type', _('Type')),
     ('team_activity', _('Team activities')),

@@ -816,7 +816,60 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
         )
 
-        self.search({'distance': '52.0000:10.0000:100km'})
+        PeriodActivityFactory.create(
+            is_online=True
+        )
+
+        self.search({'distance': '52.0000:10.0000:100km:without_online'})
+
+        self.assertFacets(
+            'distance', {}
+        )
+
+        self.assertFound(matching)
+
+    def test_filter_distance_with_online(self):
+        lat = 52.0
+        lon = 10
+        matching = [
+            DateActivityFactory.create(slots=[]),
+            DateActivityFactory.create(slots=[]),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+            ),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
+            ),
+            PeriodActivityFactory.create(
+                is_online=True
+            )
+
+        ]
+
+        DateActivitySlotFactory.create(
+            activity=matching[0],
+            location=GeolocationFactory.create(position=Point(lon + 0.05, lat + 0.05))
+        )
+        DateActivitySlotFactory.create(
+            activity=matching[1],
+            location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
+        )
+
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        DeedFactory.create()
+
+        other = DateActivityFactory.create(slots=[])
+        DateActivitySlotFactory.create(
+            activity=other,
+            location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
+        )
+
+        self.search({'distance': '52.0000:10.0000:100km:with_online'})
 
         self.assertFacets(
             'distance', {}

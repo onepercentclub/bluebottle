@@ -61,6 +61,11 @@ class InitiativeSearch(Search):
         if 'owner' not in self._filters:
             search = search.filter(Term(status='approved'))
 
+        permission = 'initiatives.api_read_initiative'
+        user = get_current_user()
+        if user and not user.has_perm(permission):
+            search = search.filter(Term(owner=user.pk))
+
         return search
 
 

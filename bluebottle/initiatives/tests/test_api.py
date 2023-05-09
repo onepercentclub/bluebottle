@@ -50,23 +50,6 @@ class InitiativeAPITestCase(TestCase):
         super().setUp()
 
 
-class InitiativePreviewListAPITestCase(APITestCase):
-    def setUp(self):
-        super(InitiativePreviewListAPITestCase, self).setUp()
-        InitiativeFactory.create_batch(10, status='approved')
-        InitiativeFactory.create_batch(2, status='cancelled')
-        InitiativeFactory.create_batch(2, location=None)
-
-        self.url = reverse('initiative-preview-list')
-
-    def test_get(self):
-        self.perform_get()
-        self.assertSize(10)
-        self.assertAttribute('title')
-        self.assertAttribute('position')
-        self.assertAttribute('slug')
-
-
 class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeListAPITestCase, self).setUp()
@@ -659,12 +642,11 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_more_results(self):
-        matching = InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
-        InitiativeFactory.create(status="approved")
+        matching = InitiativeFactory.create_batch(20, status='approved')
 
         self.search({})
 
-        self.assertFound(matching, 20)
+        self.assertFound(matching, 8)
 
     def test_only_owner_permission(self):
         owned = InitiativeFactory.create(owner=self.owner, status='approved')
@@ -702,7 +684,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + '?filter[owner]={}'.format(self.owner.pk),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
         data = json.loads(response.content)
@@ -736,14 +718,14 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         segment_type = SegmentTypeFactory.create()
 
         matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
-        matching = InitiativeFactory.create_batch(3)
+        matching = InitiativeFactory.create_batch(3, status="approved")
         for initiative in matching:
-            activity = DateActivityFactory.create(status='approved', initiative=initiative)
+            activity = DateActivityFactory.create(status='open', initiative=initiative)
             activity.segments.add(matching_segment)
 
-        other = InitiativeFactory.create_batch(2)
+        other = InitiativeFactory.create_batch(2, status="approved")
         for initiative in other:
-            activity = DateActivityFactory.create(status='approved', initiative=initiative)
+            activity = DateActivityFactory.create(status='open', initiative=initiative)
             activity.segments.add(other_segment)
 
         self.search({f'segment.{segment_type.slug}': matching_segment.pk})

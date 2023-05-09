@@ -98,24 +98,30 @@ class ActivitySearch(Search):
         search = super().sort(search)
         if self._sort == 'distance':
             lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            geo_sort = {
-                "_geo_distance": {
-                    "position": {
-                        "lat": float(lat),
-                        "lon": float(lon),
-                    },
-                    "order": "asc",
-                    "distance_type": "arc"
-                }
-            }
-
-            if include_online == 'with_online':
-                search = search.sort(
-                    {"is_online": {"order": "desc"}},
-                    geo_sort
-                )
+            if not lat or not lon or not distance:
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}}
+                    )
             else:
-                search = search.sort(geo_sort)
+                geo_sort = {
+                    "_geo_distance": {
+                        "position": {
+                            "lat": float(lat),
+                            "lon": float(lon),
+                        },
+                        "order": "asc",
+                        "distance_type": "arc"
+                    }
+                }
+
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}},
+                        geo_sort
+                    )
+                else:
+                    search = search.sort(geo_sort)
         return search
 
     def __new__(cls, *args, **kwargs):

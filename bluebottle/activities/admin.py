@@ -1,5 +1,3 @@
-from pytz import timezone
-
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -13,6 +11,7 @@ from django_admin_inline_paginator.admin import PaginationFormSetBase
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
+from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
@@ -436,12 +435,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
-
         if Location.objects.count():
-            if settings.enable_office_restrictions and 'office_restriction' not in self.office_fields:
-                self.office_fields += (
-                    'office_restriction',
-                )
+            if settings.enable_office_restrictions:
+                if 'office_restriction' not in self.office_fields:
+                    self.office_fields += (
+                        'office_restriction',
+                    )
                 fieldsets.insert(1, (
                     _('Office'), {'fields': self.office_fields}
                 ))

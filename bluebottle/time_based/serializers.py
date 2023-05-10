@@ -52,7 +52,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
         url = super().get_url(*args, **kwargs)
 
         if url:
-            return f"{url}?filter[status]=new"
+            return f"{url}?filter[status]=new&page[size]=100"
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -139,7 +139,6 @@ class ActivitySlotSerializer(ModelSerializer):
 
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
-
     participants = HyperlinkedRelatedField(
         read_only=True,
         many=True,
@@ -155,7 +154,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                'ical': reverse_signed('slot-ical', args=(instance.pk, )),
+                'ical': reverse_signed('slot-ical', args=(instance.pk,)),
                 'google': instance.google_calendar_link,
             }
         else:
@@ -210,7 +209,7 @@ class TeamSlotSerializer(ActivitySlotSerializer):
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                'ical': reverse_signed('team-ical', args=(instance.pk, )),
+                'ical': reverse_signed('team-ical', args=(instance.pk,)),
                 'google': instance.google_calendar_link,
             }
         else:
@@ -345,8 +344,8 @@ class DateActivitySlotInfoMixin():
 
         user = self.context['request'].user
         if (
-            user.is_authenticated and
-            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+                user.is_authenticated and
+                obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
         ):
             meeting_url = slot.online_meeting_url or None
         else:
@@ -400,8 +399,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
                         ParticipantStateMachine.new.value,
                         ParticipantStateMachine.accepted.value,
                         ParticipantStateMachine.succeeded.value
-                    ] or
-                    user in (instance.owner, instance.initiative.owner, contributor.user)
+                    ] or user in (instance.owner, instance.initiative.owner, contributor.user)
                 )
             )
         ]
@@ -415,8 +413,8 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         )
 
         if (
-            user not in (instance.owner, instance.initiative.owner) and
-            user not in instance.activity_managers.all()
+                user not in (instance.owner, instance.initiative.owner) and
+                user not in instance.activity_managers.all()
         ):
             unreviewed_participants = unreviewed_participants.filter(user=user)
 
@@ -424,7 +422,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
         read_only=True
@@ -447,7 +445,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
-        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count', )
+        meta_fields = TimeBasedBaseSerializer.Meta.meta_fields + ('slot_count',)
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
@@ -513,7 +511,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
     participants_export_url = PrivateFileSerializer(
         'period-participant-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
         read_only=True
@@ -528,8 +526,8 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         )
 
         if (
-            user not in (instance.owner, instance.initiative.owner) and
-            user not in instance.activity_managers.all()
+                user not in (instance.owner, instance.initiative.owner) and
+                user not in instance.activity_managers.all()
         ):
             unreviewed_participants = unreviewed_participants.filter(user=user)
 
@@ -577,7 +575,6 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
 
 
 class TimeBasedActivitySerializer(PolymorphicModelSerializer):
-
     polymorphic_serializers = [
         DateActivitySerializer,
         PeriodActivitySerializer,
@@ -710,7 +707,7 @@ class ParticipantListSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
 
     class Meta(BaseContributorSerializer.Meta):
-        fields = BaseContributorSerializer.Meta.fields + ('total_duration', )
+        fields = BaseContributorSerializer.Meta.fields + ('total_duration',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/participants'
@@ -725,7 +722,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
 
     class Meta(ParticipantListSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantListSerializer.Meta.fields + ('slots', )
+        fields = ParticipantListSerializer.Meta.fields + ('slots',)
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
@@ -792,7 +789,6 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 
 class TeamMemberSerializer(BaseContributorSerializer):
-
     activity = PolymorphicResourceRelatedField(
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
@@ -838,8 +834,8 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
-        fields = ParticipantSerializer.Meta.fields + ('slots', )
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions',)
+        fields = ParticipantSerializer.Meta.fields + ('slots',)
         validators = [
             UniqueTogetherValidator(
                 queryset=DateParticipant.objects.all(),
@@ -880,7 +876,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         model = PeriodParticipant
 
-        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', )
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions',)
         fields = ParticipantSerializer.Meta.fields + (
             'contributions',
         )
@@ -931,7 +927,7 @@ class SlotParticipantSerializer(ModelSerializer):
     class Meta:
         model = SlotParticipant
         fields = ['id', 'slot', 'participant']
-        meta_fields = ('status', 'transitions', )
+        meta_fields = ('status', 'transitions',)
 
         validators = [
             UniqueTogetherValidator(
@@ -975,7 +971,7 @@ class TimeContributionSerializer(BaseContributionSerializer):
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
 
-        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions', )
+        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-contributions'

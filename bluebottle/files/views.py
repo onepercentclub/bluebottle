@@ -36,13 +36,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         'owner': ['owner'],
     }
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class PrivateFileList(FileList):
-    queryset = PrivateDocument.objects.all()
-    serializer_class = PrivateFileSerializer
+    allowed_mime_types = settings.PRIVATE_FILE_ALLOWED_MIME_TYPES
 
     def perform_create(self, serializer):
         uploaded_file = self.request.FILES['file']
@@ -50,9 +44,15 @@ class PrivateFileList(FileList):
         if not mime_type == uploaded_file.content_type:
             raise ValidationError('Mime-type does not match Content-Type')
 
-        if mime_type not in settings.PRIVATE_FILE_ALLOWED_MIME_TYPES:
+        if mime_type not in self.allowed_mime_types:
             raise ValidationError('Mime-type is not allowed for this endpoint')
+
         serializer.save(owner=self.request.user)
+
+
+class PrivateFileList(FileList):
+    queryset = PrivateDocument.objects.all()
+    serializer_class = PrivateFileSerializer
 
 
 class FileContentView(RetrieveAPIView):
@@ -116,13 +116,4 @@ class ImageList(FileList):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
-    def perform_create(self, serializer):
-        uploaded_file = self.request.FILES['file']
-        mime_type = mime.from_buffer(uploaded_file.read())
-        if not mime_type == uploaded_file.content_type:
-            raise ValidationError('Mime-type does not match Content-Type')
-
-        if mime_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
-            raise ValidationError('Mime-type is not allowed for this endpoint')
-
-        serializer.save(owner=self.request.user)
+    allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES

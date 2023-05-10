@@ -1,12 +1,10 @@
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
 from elasticsearch_dsl import TermsFacet, Facet
-
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -22,9 +20,8 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        lat, lon, distance = filter_value.split(':')
-
-        return GeoDistance(
+        lat, lon, distance, include_online = filter_value.split(':')
+        geo_filter = GeoDistance(
             _expand__to_dot=False,
             distance=distance,
             position={
@@ -32,6 +29,9 @@ class DistanceFacet(Facet):
                 'lon': float(lon),
             }
         )
+        if include_online == 'with_online':
+            return geo_filter | Term(is_online=True)
+        return geo_filter
 
 
 class OfficeFacet(Facet):
@@ -67,7 +67,7 @@ class ActivitySearch(Search):
     sorting = {
         'upcoming': ['start'],
         'date': ['-start'],
-        'distance': ['-distance']
+        'distance': ['distance']
     }
 
     fields = [
@@ -78,6 +78,7 @@ class ActivitySearch(Search):
 
     facets = {
         'upcoming': TermsFacet(field='is_upcoming'),
+        'is_online': TermsFacet(field='is_online'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
@@ -92,6 +93,36 @@ class ActivitySearch(Search):
         'country': NamedNestedFacet('country'),
         'date': DateRangeFacet(field='duration'),
     }
+
+    def sort(self, search):
+        search = super().sort(search)
+        if self._sort == 'distance':
+            lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
+            if not lat or not lon or not distance:
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}}
+                    )
+            else:
+                geo_sort = {
+                    "_geo_distance": {
+                        "position": {
+                            "lat": float(lat),
+                            "lon": float(lon),
+                        },
+                        "order": "asc",
+                        "distance_type": "arc"
+                    }
+                }
+
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}},
+                        geo_sort
+                    )
+                else:
+                    search = search.sort(geo_sort)
+        return search
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()

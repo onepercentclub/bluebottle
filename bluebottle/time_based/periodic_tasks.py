@@ -45,7 +45,7 @@ class DateActivityFinishedTask(ModelPeriodicTask):
         return self.model.objects.filter(
             status__in=['open', 'full']
         ).exclude(
-            slots__status__in=['open', 'full']
+            slots__status__in=['open', 'full', 'running']
         )
 
     effects = [

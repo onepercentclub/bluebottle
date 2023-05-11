@@ -21,17 +21,19 @@ class DistanceFacet(Facet):
 
     def get_value_filter(self, filter_value):
         lat, lon, distance, include_online = filter_value.split(':')
-        geo_filter = GeoDistance(
-            _expand__to_dot=False,
-            distance=distance,
-            position={
-                'lat': float(lat),
-                'lon': float(lon),
-            }
-        )
-        if include_online == 'with_online':
-            return geo_filter | Term(is_online=True)
-        return geo_filter
+        if lat and lon and distance:
+            geo_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=distance,
+                position={
+                    'lat': float(lat),
+                    'lon': float(lon),
+                }
+            )
+            if include_online == 'with_online':
+                return geo_filter | Term(is_online=True)
+            return geo_filter
+        return
 
 
 class OfficeFacet(Facet):
@@ -98,7 +100,7 @@ class ActivitySearch(Search):
         search = super().sort(search)
         if self._sort == 'distance':
             lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            if not lat or not lon or not distance:
+            if not lat or not lon:
                 if include_online == 'with_online':
                     search = search.sort(
                         {"is_online": {"order": "desc"}}

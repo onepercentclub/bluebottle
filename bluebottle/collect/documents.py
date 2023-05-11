@@ -1,6 +1,5 @@
-from django_elasticsearch_dsl.registries import registry
-
 from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType
@@ -51,6 +50,12 @@ class CollectDocument(ActivityDocument):
 
     def prepare_end(self, instance):
         return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start,
+            'end': instance.end
+        }]
 
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:

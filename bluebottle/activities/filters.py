@@ -65,10 +65,10 @@ class ActivitySearch(Search):
     doc_types = [activity]
 
     sorting = {
-        'upcoming': ['start'],
-        'date': ['-start'],
+        'date': ['dates.start'],
         'distance': ['distance']
     }
+    default_filter = "date"
 
     fields = [
         (None, ('title^3', 'description^2')),
@@ -122,6 +122,23 @@ class ActivitySearch(Search):
                     )
                 else:
                     search = search.sort(geo_sort)
+
+        elif self.filter_values['upcoming']:
+            search = search.sort({
+                "dates.start": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.start": {
+                                "gte": "now"
+                            }
+                        }
+                    }
+
+                }
+            })
+
         return search
 
     def __new__(cls, *args, **kwargs):

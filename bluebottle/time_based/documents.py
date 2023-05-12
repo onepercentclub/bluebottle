@@ -86,7 +86,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_dates(self, instance):
         return [
-            {'start': slot.start, 'end': slot.start + slot.duration}
+            {
+                'start': slot.start,
+                'end': slot.start + slot.duration,
+                'status': slot.status
+            }
             for slot in instance.slots.all()
             if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
         ]
@@ -178,7 +182,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_dates(self, instance):
         return [{
             'start': instance.start,
-            'end': instance.deadline
+            'end': instance.deadline,
         }]
 
     def prepare_duration(self, instance):

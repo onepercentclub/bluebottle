@@ -488,6 +488,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
         self.assertEqual(len(data), 4)
 
+        # With online
         self.search(
             filter={'distance': '52.166758:4.491056:500km:with_online'},
             sort='distance'
@@ -498,6 +499,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[2]['id'], str(activity_leiden.id))
         self.assertEqual(data[3]['id'], str(activity_amsterdam.id))
         self.assertEqual(data[4]['id'], str(activity_texel.id))
+        self.assertEqual(len(data), 5)
+
+        # Any distance
+        self.search(
+            filter={'distance': '52.166758:4.491056::without_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[2]['id'], str(activity_leiden.id))
+        self.assertEqual(data[3]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[4]['id'], str(activity_texel.id))
+        self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
         self.assertEqual(len(data), 5)
 
     def test_sort_date(self):

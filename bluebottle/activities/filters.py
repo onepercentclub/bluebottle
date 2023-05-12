@@ -30,10 +30,12 @@ class DistanceFacet(Facet):
                     'lon': float(lon),
                 }
             )
+            print(geo_filter)
             if include_online == 'with_online':
                 return geo_filter | Term(is_online=True)
             return geo_filter
-        return
+        if include_online == 'without_online':
+            return Term(is_online=False)
 
 
 class OfficeFacet(Facet):
@@ -70,7 +72,7 @@ class ActivitySearch(Search):
         'date': ['dates.start'],
         'distance': ['distance']
     }
-    default_filter = "date"
+    default_sort = "date"
 
     fields = [
         (None, ('title^3', 'description^2')),
@@ -100,12 +102,7 @@ class ActivitySearch(Search):
         search = super().sort(search)
         if self._sort == 'distance':
             lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            if not lat or not lon:
-                if include_online == 'with_online':
-                    search = search.sort(
-                        {"is_online": {"order": "desc"}}
-                    )
-            else:
+            if lat and lon and lat != 'undefined' and lon != 'undefined':
                 geo_sort = {
                     "_geo_distance": {
                         "position": {
@@ -124,8 +121,17 @@ class ActivitySearch(Search):
                     )
                 else:
                     search = search.sort(geo_sort)
+            else:
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}}
+                    )
 
         elif self.filter_values['upcoming']:
+            if 'date' in self.filter_values:
+                start = self.filter_values['date'][0].split(',')[0]
+            else:
+                start = 'now'
             search = search.sort({
                 "dates.start": {
                     "order": "asc",
@@ -133,7 +139,20 @@ class ActivitySearch(Search):
                     "nested_filter": {
                         "range": {
                             "dates.start": {
-                                "gte": "now"
+                                "gte": start
+                            }
+                        }
+                    }
+
+                }
+            }, {
+                "dates.end": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.end": {
+                                "gte": start
                             }
                         }
                     }

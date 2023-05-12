@@ -127,7 +127,7 @@ class ActivitySearch(Search):
                         {"is_online": {"order": "desc"}}
                     )
 
-        elif self.filter_values['upcoming']:
+        elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
             if 'date' in self.filter_values:
                 start = self.filter_values['date'][0].split(',')[0]
             else:

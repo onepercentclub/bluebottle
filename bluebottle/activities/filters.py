@@ -21,17 +21,21 @@ class DistanceFacet(Facet):
 
     def get_value_filter(self, filter_value):
         lat, lon, distance, include_online = filter_value.split(':')
-        geo_filter = GeoDistance(
-            _expand__to_dot=False,
-            distance=distance,
-            position={
-                'lat': float(lat),
-                'lon': float(lon),
-            }
-        )
-        if include_online == 'with_online':
-            return geo_filter | Term(is_online=True)
-        return geo_filter
+        if lat and lon and distance:
+            geo_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=distance,
+                position={
+                    'lat': float(lat),
+                    'lon': float(lon),
+                }
+            )
+            print(geo_filter)
+            if include_online == 'with_online':
+                return geo_filter | Term(is_online=True)
+            return geo_filter
+        if include_online == 'without_online':
+            return Term(is_online=False)
 
 
 class OfficeFacet(Facet):
@@ -65,10 +69,10 @@ class ActivitySearch(Search):
     doc_types = [activity]
 
     sorting = {
-        'upcoming': ['start'],
-        'date': ['-start'],
+        'date': ['dates.start'],
         'distance': ['distance']
     }
+    default_sort = "date"
 
     fields = [
         (None, ('title^3', 'description^2')),
@@ -98,12 +102,7 @@ class ActivitySearch(Search):
         search = super().sort(search)
         if self._sort == 'distance':
             lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            if not lat or not lon or not distance:
-                if include_online == 'with_online':
-                    search = search.sort(
-                        {"is_online": {"order": "desc"}}
-                    )
-            else:
+            if lat and lon and lat != 'undefined' and lon != 'undefined':
                 geo_sort = {
                     "_geo_distance": {
                         "position": {
@@ -122,6 +121,45 @@ class ActivitySearch(Search):
                     )
                 else:
                     search = search.sort(geo_sort)
+            else:
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}}
+                    )
+
+        elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
+            if 'date' in self.filter_values:
+                start = self.filter_values['date'][0].split(',')[0]
+            else:
+                start = 'now'
+            search = search.sort({
+                "dates.start": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.start": {
+                                "gte": start
+                            }
+                        }
+                    }
+
+                }
+            }, {
+                "dates.end": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.end": {
+                                "gte": start
+                            }
+                        }
+                    }
+
+                }
+            })
+
         return search
 
     def __new__(cls, *args, **kwargs):

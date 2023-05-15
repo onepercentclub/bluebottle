@@ -44,6 +44,12 @@ class FundingDocument(ActivityDocument):
     def prepare_end(self, instance):
         return [instance.deadline]
 
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.deadline,
+            'end': instance.deadline
+        }]
+
     def prepare_duration(self, instance):
         if instance.started and instance.deadline and instance.started > instance.deadline:
             return {}

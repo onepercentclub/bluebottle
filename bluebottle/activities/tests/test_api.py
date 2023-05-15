@@ -434,19 +434,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_upcoming(self):
         today = now().date()
         activities = [
-            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
-            DateActivityFactory.create(slots=[]),
-            DateActivityFactory.create(slots=[]),
-            PeriodActivityFactory(start=today + timedelta(days=8)),
-            CollectActivityFactory(start=today + timedelta(days=9)),
+            DateActivityFactory.create(status='open', slots=[]),
+            DateActivityFactory.create(status='open', slots=[]),
+            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
 
-        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
 
-        self.search({})
+        self.search({'upcoming': 'true'})
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
@@ -488,6 +488,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
         self.assertEqual(len(data), 4)
 
+        # With online
         self.search(
             filter={'distance': '52.166758:4.491056:500km:with_online'},
             sort='distance'
@@ -500,25 +501,37 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data[4]['id'], str(activity_texel.id))
         self.assertEqual(len(data), 5)
 
+        # Any distance
+        self.search(
+            filter={'distance': '52.166758:4.491056::without_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[0]['id'], str(activity_leiden.id))
+        self.assertEqual(data[1]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[2]['id'], str(activity_texel.id))
+        self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
+        self.assertEqual(len(data), 4)
+
     def test_sort_date(self):
         today = now().date()
         activities = [
-            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
-            DateActivityFactory.create(slots=[]),
-            DateActivityFactory.create(slots=[]),
-            PeriodActivityFactory(start=today + timedelta(days=8)),
-            CollectActivityFactory(start=today + timedelta(days=9)),
+            DateActivityFactory.create(status='open', slots=[]),
+            DateActivityFactory.create(status='open', slots=[]),
+            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
 
-        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
 
-        self.search({}, 'date')
+        self.search({'upcoming': 'true'}, 'date')
 
         self.assertEqual(
-            [str(activity.pk) for activity in reversed(activities)],
+            [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 

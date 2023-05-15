@@ -1,5 +1,5 @@
-from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.time_based.models import (
@@ -80,6 +80,17 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_end(self, instance):
         return [
             slot.start + slot.duration
+            for slot in instance.slots.all()
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+        ]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': slot.start,
+                'end': slot.start + slot.duration,
+                'status': slot.status
+            }
             for slot in instance.slots.all()
             if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
         ]
@@ -167,6 +178,12 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_end(self, instance):
         return [instance.deadline]
+
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start,
+            'end': instance.deadline,
+        }]
 
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:

@@ -143,6 +143,13 @@ class ActivityDocument(Document):
     start = fields.DateField()
     end = fields.DateField()
 
+    dates = fields.NestedField(
+        properties={
+            'start': fields.DateField(),
+            'end': fields.DateField(),
+        }
+    )
+
     duration = DateRangeField()
     activity_date = fields.DateField()
 

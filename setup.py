@@ -42,7 +42,7 @@ install_requires = [
     'django-elasticsearch-dsl==6.5.0',
     'django-extensions==1.7.9',
     'django-filter==2.4.0',
-    'django-fluent-contents==3.0.1',
+    'django-fluent-contents==3.0',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
     'django-hashers-passlib==0.3',

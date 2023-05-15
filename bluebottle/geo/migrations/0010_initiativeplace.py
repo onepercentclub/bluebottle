@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
-import geoposition.fields
 
 
 class Migration(migrations.Migration):
@@ -24,7 +23,7 @@ class Migration(migrations.Migration):
                 ('locality', models.CharField(blank=True, max_length=255, null=True, verbose_name='Locality')),
                 ('province', models.CharField(blank=True, max_length=255, null=True, verbose_name='Province')),
                 ('formatted_address', models.CharField(blank=True, max_length=255, null=True, verbose_name='Address')),
-                ('position', geoposition.fields.GeopositionField(max_length=42)),
+                ('position', models.CharField(max_length=42)),
                 ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='geo.Country')),
             ],
         ),

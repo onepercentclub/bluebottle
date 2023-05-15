@@ -164,6 +164,7 @@ MIDDLEWARE = (
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'axes.middleware.AxesMiddleware',
 )
 
@@ -298,12 +299,13 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+    'bluebottle.exports',
 )
 
 TENANT_APPS = (
+    'django.contrib.contenttypes',
     'polymorphic',
     'social_django',
-    'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
     'bluebottle.token_auth',
@@ -1167,3 +1169,5 @@ else:
     CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
 
 MATCHING_DISTANCE = 50
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

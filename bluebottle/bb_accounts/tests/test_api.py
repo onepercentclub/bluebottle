@@ -580,7 +580,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Setup: get the password reset token and url.
         token_regex = re.compile(
-            '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})',
+            '\?token=(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})',
             re.DOTALL)
         token_matches = token_regex.search(mail.outbox[0].body)
         reset_confirm_url = reverse('password-reset-confirm')

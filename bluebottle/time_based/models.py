@@ -38,21 +38,6 @@ class TimeBasedActivity(Activity):
         help_text=_('Number of participants or teams that can join'),
         null=True, blank=True)
 
-    old_is_online = models.NullBooleanField(
-        _('is online'),
-        db_column='is_online',
-        choices=ONLINE_CHOICES,
-        null=True, default=None)
-    old_location = models.ForeignKey(
-        Geolocation,
-        db_column='location_id',
-        verbose_name=_('location'),
-        null=True, blank=True, on_delete=models.SET_NULL)
-    old_location_hint = models.TextField(
-        _('location hint'),
-        db_column='location_hint',
-        null=True, blank=True)
-
     registration_deadline = models.DateField(
         _('registration deadline'),
         null=True,
@@ -67,7 +52,7 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
-    review = models.NullBooleanField(
+    review = models.BooleanField(
         _('review participants'),
         help_text=_('Activity manager accepts or rejects participants or teams'),
         null=True, default=None)
@@ -240,7 +225,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(
+    is_online = models.BooleanField(
         _('is online'),
         choices=DateActivity.ONLINE_CHOICES,
         null=True, default=None
@@ -410,7 +395,7 @@ class PeriodActivity(TimeBasedActivity):
         (False, 'No, enter a location')
     )
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
         null=True, blank=True, on_delete=models.SET_NULL

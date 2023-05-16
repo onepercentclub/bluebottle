@@ -1,11 +1,10 @@
 var $ = require("jquery");
 
-require("jquery-ui/ui/core");
 require("jquery-ui/ui/widgets/datepicker");
 
 require("timepicker");
 
-var DateTimeWidgets = function() {};
+var DateTimeWidgets = function() { };
 
 DateTimeWidgets.prototype = {
   removeInputTextNode: function($input) {

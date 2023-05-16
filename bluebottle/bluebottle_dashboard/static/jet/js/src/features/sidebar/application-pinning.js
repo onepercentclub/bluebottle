@@ -2,7 +2,8 @@ require("./../../utils/jquery-slidefade");
 
 var $ = require("jquery");
 
-require("jquery-ui/ui/core");
+require("jquery-ui/ui/version");
+require("jquery-ui/ui/plugin");
 require("jquery-ui/ui/widget");
 require("jquery-ui/ui/widgets/mouse");
 require("jquery-ui/ui/widgets/draggable");

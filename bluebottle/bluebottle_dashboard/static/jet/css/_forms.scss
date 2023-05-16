@@ -2,7 +2,7 @@
 
 /* FORM BUTTONS */
 
-.button, input[type="submit"], input[type="button"], .object-tools a {
+.button, .btn, input[type="submit"], input[type="button"], .object-tools a {
   &, &:visited, &:hover {
     font-family: $font;
     display: inline-block;
@@ -32,7 +32,7 @@
     }
   }
 
-  &.danger {
+  &.danger, &.btn-danger {
       background-color: $danger-button-background-color;
       color: $danger-button-text-color;
       border-bottom: darken($danger-button-background-color, 10) 2px solid;
@@ -154,31 +154,6 @@ textarea {
     border-radius: 0 4px 4px 0;
   }
 }
-
-input[type=checkbox] {
-  display: none;
-
-  &#action-toggle {
-    display: none !important;
-  }
-
-  + label:before {
-    @include font-icon;
-    color: $input-icon-color;
-    font-size: 0.9rem;
-    content: $icon-checkbox-outline;
-    letter-spacing: 5px;
-
-    .action-checkbox-column & {
-      color: $content-contrast2-text-color;
-    }
-  }
-
-  &:checked + label:before {
-    content: $icon-checkbox;
-  }
-}
-
 
 input[type=checkbox] {
   display: none;

@@ -2265,9 +2265,12 @@ istextorbinary@1.0.2:
     binaryextensions "~1.0.0"
     textextensions "~1.0.0"
 
-"jquery-ui@https://github.com/jquery/jquery-ui#1.11.4":
-  version "1.11.4"
-  resolved "https://github.com/jquery/jquery-ui#d6713024e16de90ea71dc0544ba34e1df01b4d8a"
+jquery-ui@1.13.2:
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/jquery-ui/-/jquery-ui-1.13.2.tgz#de03580ae6604773602f8d786ad1abfb75232034"
+  integrity sha512-wBZPnqWs5GaYJmo1Jj0k/mrSkzdQzKDwhXNtHKcBdAcKVxMM3KNYFq+iJ2i1rwiG53Z8M4mTn3Qxrm17uH1D4Q==
+  dependencies:
+    jquery ">=1.8.0 <4.0.0"
 
 jquery.cookie@1.4.1:
   version "1.4.1"
@@ -2279,15 +2282,20 @@ jquery.mousewheel@3.1.9:
   resolved "https://registry.yarnpkg.com/jquery.mousewheel/-/jquery.mousewheel-3.1.9.tgz#b1e162f1df8aaf6c24fbf923d3d6c58c52d9553e"
   integrity sha1-seFi8d+Kr2wk+/kj09bFjFLZVT4=
 
-jquery@1.11.3:
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/jquery/-/jquery-1.11.3.tgz#dd8b74278b27102d29df63eae28308a8cfa1b583"
-  integrity sha512-pHM/XLofp0FJc0/0AsRm8q/5ob+a1kno+vfclXGozaMBPv3qD7Xq19loECVcBB4MOLdygnyneQMPTsH5QiVNBQ==
+jquery@3.6.4:
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.6.4.tgz#ba065c188142100be4833699852bf7c24dc0252f"
+  integrity sha512-v28EW9DWDFpzcD9O5iyJXg3R3+q+mET5JhnjJzQUZMHOv67bpSIHq81GEYpPNZHG+XXHsfSme3nxp/hndKEcsQ==
 
 jquery@>=1.5.1:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.6.0.tgz#c72a09f15c1bdce142f49dbf1170bdf8adac2470"
   integrity sha512-JVzAR/AjBvVt2BmYhxRCSYysDsPcssdmTFnzyLEts9qNwmjmu4JTAMYubEfwVOSwpQ1I1sKKFcxhZCI2buerfw==
+
+"jquery@>=1.8.0 <4.0.0":
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.7.0.tgz#fe2c01a05da500709006d8790fe21c8a39d75612"
+  integrity sha512-umpJ0/k8X0MvD1ds0P9SfowREz2LenHsQaxSohMZ5OMNEU2r0tf8pdeEFTHMFxWVxKNyU9rTtK3CWzUCTKJUeQ==
 
 js-base64@^2.1.8, js-base64@^2.1.9:
   version "2.6.4"

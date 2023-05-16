@@ -2,8 +2,10 @@
 # flake8: noqa
 import os
 import sys
-import bluebottle
+
 from setuptools import setup, find_packages
+
+import bluebottle
 
 
 def read_file(name):
@@ -69,7 +71,6 @@ install_requires = [
     'django-tenant-schemas==1.11.0',
     'django-tinymce==2.7.0',
     'django-tools==0.48.3',
-    'django-two-factor-auth==1.15.2',
     'django-two-factor-auth[phonenumbers]==1.15.2',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
@@ -85,7 +86,7 @@ install_requires = [
     'geopy==2.1.0',
     'html2text==2020.1.16',
     'gunicorn==19.10.0',
-    'html5lib==1.0b10',
+    'html5lib==1.1',
     'icalendar==4.0.4',
     'influxdb==4.1.1',
     'lipisha==0.3.0',

@@ -2,11 +2,11 @@ import datetime
 import os
 from collections import OrderedDict
 
-from .admin_dashboard import *  # noqa
-from django.utils.translation import gettext_lazy as _
-
 import rules
 from PIL import ImageFile
+from django.utils.translation import gettext_lazy as _
+
+from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -306,6 +306,7 @@ SHARED_APPS = (
 )
 
 TENANT_APPS = (
+    'bluebottle.bluebottle_dashboard',
     'django_otp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
@@ -314,6 +315,7 @@ TENANT_APPS = (
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
     'two_factor.plugins.email',  # <- if you want email capability.
 
+
     'django.contrib.contenttypes',
     'polymorphic',
     'social_django',
@@ -321,7 +323,6 @@ TENANT_APPS = (
     'bluebottle.common',
     'bluebottle.token_auth',
 
-    'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
     'rest_framework',

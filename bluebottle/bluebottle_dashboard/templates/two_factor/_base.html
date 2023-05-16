@@ -14,11 +14,16 @@
 
 {% block content_title %}{% endblock %}
 
-{% block breadcrumbs %}{% endblock %}
-
-<div id="content-main">
-
-{% block content %}
-
+{% block breadcrumbs %}
+    <div class="two-factor-back">
+        <a href="/admin">
+            &larr; Back to back office
+        </a>
+    </div>
 {% endblock %}
+
+<div class="2fa">
+    {% block content %}
+        {{ block.super }} <H2>JAjaja</H2>
+    {% endblock %}
 </div>

@@ -2,8 +2,9 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />
-{{ form.media }}
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}"/>
+    {{ form.media }}
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} login{% endblock %}
@@ -15,11 +16,13 @@
 {% block content_title %}{% endblock %}
 
 {% block breadcrumbs %}
-    <div class="two-factor-back">
-        <a href="/admin">
-            &larr; Back to back office
-        </a>
-    </div>
+    {% if user.is_staff %}
+        <div class="two-factor-back">
+            <a href="/admin">
+                &larr; Back to back office
+            </a>
+        </div>
+    {% endif %}
 {% endblock %}
 
 <div class="2fa">

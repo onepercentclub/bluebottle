@@ -9,7 +9,6 @@ from bluebottle.bb_accounts.views import AxesObtainJSONWebToken, AuthView
 
 from bluebottle.auth.views import GetAuthToken, AuthFacebookView
 from bluebottle.utils.views import LoginWithView
-from two_factor.urls import urlpatterns as tf_urls
 
 urlpatterns = [
     url(r'^api/config',
@@ -98,8 +97,6 @@ urlpatterns = [
 
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
-
-    url('two-factor/', include(tf_urls)),
 
 ]
 

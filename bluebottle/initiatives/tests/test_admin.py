@@ -65,7 +65,10 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.url, '/en/admin/')
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages), 1)
-        self.assertEqual(str(messages[0]), 'Initiative with ID "123456789" doesn\'t exist. Perhaps it was deleted?')
+        self.assertEqual(
+            str(messages[0]),
+            'Initiative with ID “123456789” doesn’t exist. Perhaps it was deleted?'
+        )
 
     def test_initiative_admin_with_organization_contact(self):
         self.initiative.contact = OrganizationFactory.create()

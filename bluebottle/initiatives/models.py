@@ -126,7 +126,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         default=False
     )
 
-    has_organization = models.NullBooleanField(null=True, default=None)
+    has_organization = models.BooleanField(null=True, default=None)
 
     organization = models.ForeignKey(
         Organization,

@@ -65,7 +65,9 @@ class OfficeFacet(Facet):
         )
 
 
-class BooleanFacet(TermsFacet):
+class BooleanFacet(Facet):
+
+    agg_type = "terms"
 
     def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
         self.label_yes = label_yes or _('Yes')

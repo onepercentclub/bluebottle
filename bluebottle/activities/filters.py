@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
@@ -66,25 +67,15 @@ class OfficeFacet(Facet):
 
 class BooleanFacet(TermsFacet):
 
-    def __init__(self, metric=None, metric_sort="desc", label_on='Yes', label_off='No', **kwargs):
-        self.label_on = label_on
-        self.label_off = label_off
+    def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
+        self.label_yes = label_yes or _('Yes')
+        self.label_no = label_no or _('None')
         super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
         if bucket["key"]:
-            return str(self.label_on)
-        return str(self.label_off)
-
-    def add_filter(self, filter_values):
-        if filter_values:
-            if filter_values == [self.label_on]:
-                filter_values = [True]
-            else:
-                filter_values = [False]
-            return Terms(
-                _expand__to_dot=False, **{self._params["field"]: filter_values}
-            )
+            return (self.label_yes, 1)
+        return (self.label_no, 0)
 
 
 class ActivitySearch(Search):
@@ -107,7 +98,7 @@ class ActivitySearch(Search):
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
-        'is_online': BooleanFacet(field='is_online', label_off='In person', label_on='Online'),
+        'is_online': BooleanFacet(field='is_online', label_no=_('In person'), label_yes=_('Online')),
         'office_restriction': OfficeFacet(),
     }
 

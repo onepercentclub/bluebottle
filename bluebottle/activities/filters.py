@@ -1,12 +1,10 @@
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
 from elasticsearch_dsl import TermsFacet, Facet
-
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
@@ -22,16 +20,22 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        lat, lon, distance = filter_value.split(':')
-
-        return GeoDistance(
-            _expand__to_dot=False,
-            distance=distance,
-            position={
-                'lat': float(lat),
-                'lon': float(lon),
-            }
-        )
+        lat, lon, distance, include_online = filter_value.split(':')
+        if lat and lon and distance:
+            geo_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=distance,
+                position={
+                    'lat': float(lat),
+                    'lon': float(lon),
+                }
+            )
+            print(geo_filter)
+            if include_online == 'with_online':
+                return geo_filter | Term(is_online=True)
+            return geo_filter
+        if include_online == 'without_online':
+            return Term(is_online=False)
 
 
 class OfficeFacet(Facet):
@@ -65,10 +69,10 @@ class ActivitySearch(Search):
     doc_types = [activity]
 
     sorting = {
-        'upcoming': ['start'],
-        'date': ['-start'],
-        'distance': ['-distance']
+        'date': ['dates.start'],
+        'distance': ['distance']
     }
+    default_sort = "date"
 
     fields = [
         (None, ('title^3', 'description^2')),
@@ -78,6 +82,7 @@ class ActivitySearch(Search):
 
     facets = {
         'upcoming': TermsFacet(field='is_upcoming'),
+        'is_online': TermsFacet(field='is_online'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
@@ -92,6 +97,70 @@ class ActivitySearch(Search):
         'country': NamedNestedFacet('country'),
         'date': DateRangeFacet(field='duration'),
     }
+
+    def sort(self, search):
+        search = super().sort(search)
+        if self._sort == 'distance':
+            lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
+            if lat and lon and lat != 'undefined' and lon != 'undefined':
+                geo_sort = {
+                    "_geo_distance": {
+                        "position": {
+                            "lat": float(lat),
+                            "lon": float(lon),
+                        },
+                        "order": "asc",
+                        "distance_type": "arc"
+                    }
+                }
+
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}},
+                        geo_sort
+                    )
+                else:
+                    search = search.sort(geo_sort)
+            else:
+                if include_online == 'with_online':
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}}
+                    )
+
+        elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
+            if 'date' in self.filter_values:
+                start = self.filter_values['date'][0].split(',')[0]
+            else:
+                start = 'now'
+            search = search.sort({
+                "dates.start": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.start": {
+                                "gte": start
+                            }
+                        }
+                    }
+
+                }
+            }, {
+                "dates.end": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "range": {
+                            "dates.end": {
+                                "gte": start
+                            }
+                        }
+                    }
+
+                }
+            })
+
+        return search
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()

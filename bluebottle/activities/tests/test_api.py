@@ -5,7 +5,6 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -26,6 +25,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -434,44 +434,104 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_upcoming(self):
         today = now().date()
         activities = [
-            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
-            DateActivityFactory.create(slots=[]),
-            DateActivityFactory.create(slots=[]),
-            PeriodActivityFactory(start=today + timedelta(days=8)),
-            CollectActivityFactory(start=today + timedelta(days=9)),
+            DateActivityFactory.create(status='open', slots=[]),
+            DateActivityFactory.create(status='open', slots=[]),
+            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
 
-        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
 
-        self.search({})
+        self.search({'upcoming': 'true'})
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 
+    def test_sort_distance(self):
+        amsterdam = GeolocationFactory.create(position=Point(4.922114, 52.362438))
+        leiden = GeolocationFactory.create(position=Point(4.491056, 52.166758))
+        texel = GeolocationFactory.create(position=Point(4.853281, 53.154617))
+        lyutidol = GeolocationFactory.create(position=Point(23.676222, 43.068555))
+
+        activity_amsterdam = PeriodActivityFactory(location=amsterdam)
+        activity_online1 = PeriodActivityFactory(is_online=True)
+        activity_leiden = PeriodActivityFactory(location=leiden)
+        activity_texel = PeriodActivityFactory(location=texel)
+        activity_online2 = PeriodActivityFactory(is_online=True)
+        activity_lyutidol = PeriodActivityFactory(location=lyutidol)
+
+        self.search(
+            filter={'distance': '52.166758:4.491056:500km:without_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[0]['id'], str(activity_leiden.id))
+        self.assertEqual(data[1]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[2]['id'], str(activity_texel.id))
+        self.assertEqual(len(data), 3)
+
+        # Widen search and search from Texel
+        self.search(
+            filter={'distance': '53.15:4.48:5000km:without_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[0]['id'], str(activity_texel.id))
+        self.assertEqual(data[1]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[2]['id'], str(activity_leiden.id))
+        self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
+        self.assertEqual(len(data), 4)
+
+        # With online
+        self.search(
+            filter={'distance': '52.166758:4.491056:500km:with_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[0]['id'], str(activity_online1.id))
+        self.assertEqual(data[1]['id'], str(activity_online2.id))
+        self.assertEqual(data[2]['id'], str(activity_leiden.id))
+        self.assertEqual(data[3]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[4]['id'], str(activity_texel.id))
+        self.assertEqual(len(data), 5)
+
+        # Any distance
+        self.search(
+            filter={'distance': '52.166758:4.491056::without_online'},
+            sort='distance'
+        )
+        data = self.data['data']
+        self.assertEqual(data[0]['id'], str(activity_leiden.id))
+        self.assertEqual(data[1]['id'], str(activity_amsterdam.id))
+        self.assertEqual(data[2]['id'], str(activity_texel.id))
+        self.assertEqual(data[3]['id'], str(activity_lyutidol.id))
+        self.assertEqual(len(data), 4)
+
     def test_sort_date(self):
         today = now().date()
         activities = [
-            PeriodActivityFactory(start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
-            DateActivityFactory.create(slots=[]),
-            DateActivityFactory.create(slots=[]),
-            PeriodActivityFactory(start=today + timedelta(days=8)),
-            CollectActivityFactory(start=today + timedelta(days=9)),
+            DateActivityFactory.create(status='open', slots=[]),
+            DateActivityFactory.create(status='open', slots=[]),
+            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(start=now() + timedelta(days=2), activity=activities[1])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=5), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
 
-        DateActivitySlotFactory.create(start=now() + timedelta(days=4), activity=activities[2])
-        DateActivitySlotFactory.create(start=now() + timedelta(days=7), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
 
-        self.search({}, 'date')
+        self.search({'upcoming': 'true'}, 'date')
 
         self.assertEqual(
-            [str(activity.pk) for activity in reversed(activities)],
+            [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 
@@ -769,7 +829,60 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
         )
 
-        self.search({'distance': '52.0000:10.0000:100km'})
+        PeriodActivityFactory.create(
+            is_online=True
+        )
+
+        self.search({'distance': '52.0000:10.0000:100km:without_online'})
+
+        self.assertFacets(
+            'distance', {}
+        )
+
+        self.assertFound(matching)
+
+    def test_filter_distance_with_online(self):
+        lat = 52.0
+        lon = 10
+        matching = [
+            DateActivityFactory.create(slots=[]),
+            DateActivityFactory.create(slots=[]),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+            ),
+            PeriodActivityFactory.create(
+                location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
+            ),
+            PeriodActivityFactory.create(
+                is_online=True
+            )
+
+        ]
+
+        DateActivitySlotFactory.create(
+            activity=matching[0],
+            location=GeolocationFactory.create(position=Point(lon + 0.05, lat + 0.05))
+        )
+        DateActivitySlotFactory.create(
+            activity=matching[1],
+            location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
+        )
+
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        PeriodActivityFactory.create(
+            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+        )
+        DeedFactory.create()
+
+        other = DateActivityFactory.create(slots=[])
+        DateActivitySlotFactory.create(
+            activity=other,
+            location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
+        )
+
+        self.search({'distance': '52.0000:10.0000:100km:with_online'})
 
         self.assertFacets(
             'distance', {}

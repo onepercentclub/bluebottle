@@ -680,6 +680,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets('team_activity', {'teams': len(matching), 'individuals': len(other)})
         self.assertFound(matching)
 
+    def test_filter_online(self):
+        matching = PeriodActivityFactory.create_batch(2, is_online=True)
+        other = PeriodActivityFactory.create_batch(3, is_online=False)
+
+        self.search({'is_online': '1'})
+
+        self.assertFacets('is_online', {1: len(matching), 0: len(other)})
+        self.assertFound(matching)
+
     def test_filter_category(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['category'])
         matching_category = CategoryFactory.create()

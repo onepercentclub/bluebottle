@@ -30,7 +30,6 @@ class DistanceFacet(Facet):
                     'lon': float(lon),
                 }
             )
-            print(geo_filter)
             if include_online == 'with_online':
                 return geo_filter | Term(is_online=True)
             return geo_filter

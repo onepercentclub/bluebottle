@@ -16,7 +16,7 @@ def add_group_permissions(apps, schema_editor):
         },
     }
 
-    update_group_permissions('geo', group_perms, apps)
+    # update_group_permissions('geo', group_perms, apps)
 
 
 class Migration(migrations.Migration):

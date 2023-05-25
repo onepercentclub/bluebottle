@@ -39,8 +39,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            migrate_points,
-            migrations.RunPython.noop
-        )
+        # migrations.RunPython(
+        #     migrate_points,
+        #     migrations.RunPython.noop
+        # )
     ]

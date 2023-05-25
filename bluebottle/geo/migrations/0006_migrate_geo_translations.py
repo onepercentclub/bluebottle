@@ -40,5 +40,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(translate_geo)
+        # migrations.RunPython(translate_geo)
     ]

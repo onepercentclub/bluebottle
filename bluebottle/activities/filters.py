@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
@@ -30,7 +31,6 @@ class DistanceFacet(Facet):
                     'lon': float(lon),
                 }
             )
-            print(geo_filter)
             if include_online == 'with_online':
                 return geo_filter | Term(is_online=True)
             return geo_filter
@@ -65,6 +65,38 @@ class OfficeFacet(Facet):
         )
 
 
+class BooleanFacet(Facet):
+    agg_type = 'terms'
+
+    def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
+        self.label_yes = label_yes or _('Yes')
+        self.label_no = label_no or _('None')
+        super().__init__(metric, metric_sort, **kwargs)
+
+    def get_value(self, bucket):
+        if bucket["key"]:
+            return (self.label_yes, 1)
+        return (self.label_no, 0)
+
+    def add_filter(self, filter_values):
+        if filter_values == ['0']:
+            filter_values = [False]
+        if filter_values == ['1']:
+            filter_values = [True]
+        if filter_values:
+            return Terms(
+                **{self._params["field"]: filter_values}
+            )
+
+
+class TeamActivityFacet(BooleanFacet):
+
+    def get_value(self, bucket):
+        if bucket["key"] == 'teams':
+            return (_("Teams"), 'teams')
+        return (_('Individuals'), 'individuals')
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -82,15 +114,15 @@ class ActivitySearch(Search):
 
     facets = {
         'upcoming': TermsFacet(field='is_upcoming'),
-        'is_online': TermsFacet(field='is_online'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeFacet(),
+        'is_online': BooleanFacet(field='is_online', label_no=_('In person'), label_yes=_('Online')),
+        'team_activity': TeamActivityFacet(field='team_activity'),
     }
 
     possible_facets = {
-        'team_activity': TermsFacet(field='team_activity'),
         'theme': TranslatedFacet('theme'),
         'category': TranslatedFacet('categories', 'title'),
         'skill': TranslatedFacet('expertise'),

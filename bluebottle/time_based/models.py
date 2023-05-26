@@ -753,5 +753,8 @@ class Skill(TranslatableModel):
         verbose_name = _(u'Skill')
         verbose_name_plural = _(u'Skills')
 
+    class JSONAPIMeta(object):
+        resource_name = 'skills'
+
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

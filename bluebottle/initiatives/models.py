@@ -423,5 +423,8 @@ class Theme(SortableTranslatableModel):
             ('api_read_theme', 'Can view theme through API'),
         )
 
+    class JSONAPIMeta(object):
+        resource_name = 'themes'
+
 
 from bluebottle.initiatives.wallposts import *  # noqa

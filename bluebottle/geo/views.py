@@ -86,6 +86,17 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
     serializer_class = PlaceSerializer
 
+    def perform_create(self, serializer):
+        try:
+            if 'mapbox_id' in serializer.validated_data:
+                serializer.instance = Place.objects.get(
+                    mapbox_id=serializer.validated_data['mapbox_id'],
+                )
+        except Place.DoesNotExist:
+            pass
+
+        return super().perform_create(serializer)
+
 
 class IsPlaceOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):

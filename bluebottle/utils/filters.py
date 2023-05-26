@@ -134,7 +134,7 @@ class SegmentFacet(FilteredNestedFacet):
     def get_values(self, data, filter_values):
         values = super().get_values(data, filter_values)
         return [
-            ((value[0][0], f'segments.{value[0][1]}'), value[1], value[2]) for value in values
+            ((value[0][0], value[0][1]), value[1], value[2]) for value in values
         ]
 
 

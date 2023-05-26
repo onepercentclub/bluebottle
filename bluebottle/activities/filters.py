@@ -38,7 +38,7 @@ class DistanceFacet(Facet):
             return Term(is_online=False)
 
 
-class OfficeFacet(Facet):
+class OfficeRestrictionFacet(Facet):
     def get_aggregation(self):
         return A('filter', filter=MatchAll())
 
@@ -117,9 +117,10 @@ class ActivitySearch(Search):
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
-        'office_restriction': OfficeFacet(),
+        'office_restriction': OfficeRestrictionFacet(),
         'is_online': BooleanFacet(field='is_online', label_no=_('In person'), label_yes=_('Online')),
         'team_activity': TeamActivityFacet(field='team_activity'),
+        'office': NamedNestedFacet('office'),
     }
 
     possible_facets = {

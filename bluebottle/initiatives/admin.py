@@ -232,20 +232,12 @@ class InitiativeSearchFilterInline(SortableTabularInline):
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettingsAdmin):
-
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
 
     fieldsets = (
         (_('Activity types'), {
             'fields': (
-                'activity_types', 'team_activities'
-            )
-        }),
-        (_('Search filters'), {
-            'fields': (
-                'show_all_activities',
-                'initiative_search_filters',
-                'activity_search_filters'
+                'activity_types', 'team_activities',
             )
         }),
         (_('Offices'), {

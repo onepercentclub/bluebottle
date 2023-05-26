@@ -899,7 +899,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFound(matching)
 
-    def test_filter_office(self):
+    def test_filter_office_restriction(self):
         office = LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         within_sub_region = LocationFactory.create(subregion=office.subregion)
         within_region = LocationFactory.create(

@@ -243,18 +243,16 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
 
 ACTIVITY_SEARCH_FILTERS = (
-    ('location', _('Office location')),
+    ('office', _('Office')),
     ('country', _('Country')),
     ('date', _('Date')),
     ('distance', _('Distance')),
     ('is_online', _('Online / In person')),
     ('skill', _('Skill')),
-    ('activity-type', _('Type')),
     ('team_activity', _('Team activities')),
     ('theme', _('Theme')),
     ('category', _('Category')),
     ('segments', _('Segments')),
-    ('status', _('Status')),
 )
 
 

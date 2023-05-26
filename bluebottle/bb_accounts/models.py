@@ -145,9 +145,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
 
-    search_distance = models.IntegerField(_('Distance'), default=50)
-    any_search_distance = models.BooleanField(_('Any distance'), default=False)
-    include_online = models.BooleanField(_('Include online activities'), default=False)
+    search_distance = models.IntegerField(_('Distance'), default=50, blank=True, null=True)
+    any_search_distance = models.BooleanField(_('Any distance'), default=True)
+    include_online = models.BooleanField(_('Include online activities'), default=True)
 
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)

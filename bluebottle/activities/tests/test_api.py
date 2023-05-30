@@ -804,6 +804,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_distance(self):
         lat = 52.0
         lon = 10
+
+        place = PlaceFactory.create(
+            position=Point(lat, lon)
+        )
         matching = [
             DateActivityFactory.create(slots=[]),
             DateActivityFactory.create(slots=[]),
@@ -842,7 +846,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': '52.0000:10.0000:100km:without_online'})
+        self.search({'distance': f'{place.pk}:100km:without_online'})
 
         self.assertFacets(
             'distance', {}

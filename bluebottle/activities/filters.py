@@ -4,7 +4,7 @@ from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
-from bluebottle.geo.models import Location
+from bluebottle.geo.models import Location, Place
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
@@ -21,14 +21,16 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        lat, lon, distance, include_online = filter_value.split(':')
-        if lat and lon and distance:
+        pk, distance, include_online = filter_value.split(':')
+
+        place = Place.objects.get(pk=pk)
+        if place and distance:
             geo_filter = GeoDistance(
                 _expand__to_dot=False,
                 distance=distance,
                 position={
-                    'lat': float(lat),
-                    'lon': float(lon),
+                    'lat': float(place.position[0]),
+                    'lon': float(place.position[1]),
                 }
             )
             if include_online == 'with_online':

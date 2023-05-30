@@ -1,7 +1,6 @@
 import datetime
 import json
 from builtins import str
-from bluebottle.test.factory_models.categories import CategoryFactory
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -24,6 +23,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
@@ -733,8 +733,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             f'segment.{segment_type.slug}',
             {
-                str(f'segments.{matching_segment.pk}'): len(matching),
-                str(f'segments.{other_segment.pk}'): len(other)
+                str(f'{matching_segment.pk}'): len(matching),
+                str(f'{other_segment.pk}'): len(other)
             }
         )
         self.assertFound(matching)

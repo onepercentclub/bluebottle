@@ -626,8 +626,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             f'segment.{segment_type.slug}',
             {
-                f'segments.{matching_segment.pk}': len(matching),
-                f'segments.{other_segment.pk}': len(other)
+                f'{matching_segment.pk}': len(matching),
+                f'{other_segment.pk}': len(other)
             }
         )
         self.assertFound(matching)

@@ -13,9 +13,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='initiative',
-            name='place',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='geo.InitiativePlace'),
-        ),
+        # we're going to change this to geo.GeoPosition later
+        # migrations.AlterField(
+        #     model_name='initiative',
+        #     name='place',
+        #     field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='geo.InitiativePlace'),
+        # ),
     ]

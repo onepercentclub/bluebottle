@@ -452,17 +452,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_upcoming(self):
         today = now().date()
         activities = [
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
             PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
-            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[1])
 
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[2])
 
         self.search({'upcoming': 'true'})
 
@@ -534,17 +534,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_date(self):
         today = now().date()
         activities = [
+            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
             PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
-            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
         ]
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[0])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[0])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[1])
 
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[1])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[1])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[2])
+        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[2])
 
         self.search({'upcoming': 'true'}, 'date')
 

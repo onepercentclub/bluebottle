@@ -247,7 +247,7 @@ ACTIVITY_SEARCH_FILTERS = (
     ('country', _('Country')),
     ('date', _('Date')),
     ('distance', _('Distance')),
-    ('is_online', _('Online / In person')),
+    ('is_online', _('Online / In-person')),
     ('skill', _('Skill')),
     ('team_activity', _('Individual / Team activities')),
     ('theme', _('Theme')),

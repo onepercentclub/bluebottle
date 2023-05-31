@@ -258,6 +258,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertEqual(attributes['is-online'], False)
+
         self.assertEqual(dateutil.parser.parse(attributes['start']), first.start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), last.end)
 

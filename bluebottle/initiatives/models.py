@@ -249,7 +249,7 @@ ACTIVITY_SEARCH_FILTERS = (
     ('distance', _('Distance')),
     ('is_online', _('Online / In person')),
     ('skill', _('Skill')),
-    ('team_activity', _('Team activities')),
+    ('team_activity', _('Individual / Team activities')),
     ('theme', _('Theme')),
     ('category', _('Category')),
     ('segments', _('Segments')),

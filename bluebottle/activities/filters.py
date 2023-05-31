@@ -166,25 +166,47 @@ class ActivitySearch(Search):
             else:
                 start = 'now'
             search = search.sort({
-                "dates.start": {
+                "dates.end": {
                     "order": "asc",
                     "nested_path": "dates",
                     "nested_filter": {
-                        "range": {
-                            "dates.start": {
-                                "gte": start
+                        "bool": {
+                            "must": {
+                                "match_all": {}
+                            },
+                            "filter": {
+                                "bool": {
+                                    "must": [
+                                        {
+                                            "range": {
+                                                "dates.start": {
+                                                    "lt": start
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "range": {
+                                                "dates.end": {
+                                                    "gte": start
+                                                }
+                                            }
+                                        }
+
+                                    ]
+
+                                }
                             }
                         }
                     }
 
                 }
             }, {
-                "dates.end": {
+                "dates.start": {
                     "order": "asc",
                     "nested_path": "dates",
                     "nested_filter": {
                         "range": {
-                            "dates.end": {
+                            "dates.start": {
                                 "gte": start
                             }
                         }

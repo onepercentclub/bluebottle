@@ -150,7 +150,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='succeeded', activity=activity, start=now() - timedelta(days=10)
         )
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url + '?filter[upcoming]=true', user=self.owner)
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)

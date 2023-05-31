@@ -77,6 +77,12 @@ class NamedNestedFacet(Facet):
                 query=Terms(**{f'{self.path}__id': filter_values})
             )
 
+    def is_filtered(self, key, filter_values):
+        """
+        Is a filter active on the given key.
+        """
+        return key[-1] in filter_values
+
 
 class FilteredNestedFacet(Facet):
     def __init__(self, path, filter, name='name'):
@@ -225,7 +231,7 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         for key, value in request.GET.items():
             match = regex.match(key)
-            if match and match.groups()[0] != 'search':
+            if value and match and match.groups()[0] != 'search':
                 filter[match.groups()[0]] = value
 
         search = request.GET.get('filter[search]')

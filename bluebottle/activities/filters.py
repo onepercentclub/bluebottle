@@ -23,19 +23,20 @@ class DistanceFacet(Facet):
     def get_value_filter(self, filter_value):
         pk, distance, include_online = filter_value.split(':')
 
-        place = Place.objects.get(pk=pk)
-        if place and distance:
-            geo_filter = GeoDistance(
-                _expand__to_dot=False,
-                distance=distance,
-                position={
-                    'lat': float(place.position[0]),
-                    'lon': float(place.position[1]),
-                }
-            )
-            if include_online == 'with_online':
-                return geo_filter | Term(is_online=True)
-            return geo_filter
+        if pk:
+            place = Place.objects.get(pk=pk)
+            if place and distance:
+                geo_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=distance + 'km',
+                    position={
+                        'lat': float(place.position[0]),
+                        'lon': float(place.position[1]),
+                    }
+                )
+                if include_online == 'with_online':
+                    return geo_filter | Term(is_online=True)
+                return geo_filter
         if include_online == 'without_online':
             return Term(is_online=False)
 

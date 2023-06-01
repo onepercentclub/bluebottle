@@ -876,45 +876,47 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_distance_with_online(self):
-        lat = 52.0
-        lon = 10
-        place = PlaceFactory(position=Point(lon, lat))
+        amsterdam = Point(4.922114, 52.362438)
+        leiden = Point(4.491056, 52.166758)
+        lyutidol = Point(23.676222, 43.068555)
+
+        place = PlaceFactory(position=leiden)
         matching = [
             DateActivityFactory.create(slots=[]),
             DateActivityFactory.create(slots=[]),
             PeriodActivityFactory.create(
-                location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+                location=GeolocationFactory.create(position=leiden),
             ),
             PeriodActivityFactory.create(
-                location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
+                location=GeolocationFactory.create(position=amsterdam),
             ),
             PeriodActivityFactory.create(
-                is_online=True
+                is_online=True,
             )
 
         ]
 
         DateActivitySlotFactory.create(
             activity=matching[0],
-            location=GeolocationFactory.create(position=Point(lon + 0.05, lat + 0.05))
+            location=GeolocationFactory.create(position=leiden)
         )
         DateActivitySlotFactory.create(
             activity=matching[1],
-            location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
+            location=GeolocationFactory.create(position=amsterdam)
         )
 
         PeriodActivityFactory.create(
-            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+            location=GeolocationFactory.create(position=lyutidol)
         )
         PeriodActivityFactory.create(
-            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+            location=GeolocationFactory.create(position=lyutidol)
         )
         DeedFactory.create()
 
         other = DateActivityFactory.create(slots=[])
         DateActivitySlotFactory.create(
             activity=other,
-            location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
+            location=GeolocationFactory.create(position=lyutidol)
         )
 
         self.search({'distance': f'{place.id}:100:with_online'})

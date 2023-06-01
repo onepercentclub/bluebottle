@@ -30,8 +30,8 @@ class DistanceFacet(Facet):
                     _expand__to_dot=False,
                     distance=distance + 'km',
                     position={
-                        'lat': float(place.position[0]),
-                        'lon': float(place.position[1]),
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
                     }
                 )
                 if include_online == 'with_online':
@@ -137,13 +137,15 @@ class ActivitySearch(Search):
     def sort(self, search):
         search = super().sort(search)
         if self._sort == 'distance':
-            lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            if lat and lon and lat != 'undefined' and lon != 'undefined':
+            pk, distance, include_online = self.filter_values['distance'][0].split(':')
+
+            if pk:
+                place = Place.objects.get(pk=pk)
                 geo_sort = {
                     "_geo_distance": {
                         "position": {
-                            "lat": float(lat),
-                            "lon": float(lon),
+                            'lat': float(place.position[1]),
+                            'lon': float(place.position[0]),
                         },
                         "order": "asc",
                         "distance_type": "arc"

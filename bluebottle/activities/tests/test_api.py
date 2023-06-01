@@ -484,8 +484,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity_online2 = PeriodActivityFactory(is_online=True)
         activity_lyutidol = PeriodActivityFactory(location=lyutidol)
 
+        leiden_place = PlaceFactory.create(position=leiden.position)
+        texel_place = PlaceFactory.create(position=texel.position)
+
         self.search(
-            filter={'distance': '52.166758:4.491056:500km:without_online'},
+            filter={'distance': f'{leiden_place.id}:500:without_online'},
             sort='distance'
         )
         data = self.data['data']
@@ -496,7 +499,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Widen search and search from Texel
         self.search(
-            filter={'distance': '53.15:4.48:5000km:without_online'},
+            filter={'distance': f'{texel_place.id}:5000:without_online'},
             sort='distance'
         )
         data = self.data['data']
@@ -508,7 +511,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # With online
         self.search(
-            filter={'distance': '52.166758:4.491056:500km:with_online'},
+            filter={'distance': f'{leiden_place.id}:500:with_online'},
             sort='distance'
         )
         data = self.data['data']
@@ -521,7 +524,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Any distance
         self.search(
-            filter={'distance': '52.166758:4.491056::without_online'},
+            filter={'distance': f'{leiden_place.id}::without_online'},
             sort='distance'
         )
         data = self.data['data']
@@ -824,7 +827,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         lon = 10
 
         place = PlaceFactory.create(
-            position=Point(lat, lon)
+            position=Point(lon, lat)
         )
         matching = [
             DateActivityFactory.create(slots=[]),
@@ -864,7 +867,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': f'{place.pk}:100km:without_online'})
+        self.search({'distance': f'{place.pk}:100:without_online'})
 
         self.assertFacets(
             'distance', {}
@@ -875,6 +878,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_distance_with_online(self):
         lat = 52.0
         lon = 10
+        place = PlaceFactory(position=Point(lon, lat))
         matching = [
             DateActivityFactory.create(slots=[]),
             DateActivityFactory.create(slots=[]),
@@ -913,7 +917,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
         )
 
-        self.search({'distance': '52.0000:10.0000:100km:with_online'})
+        self.search({'distance': f'{place.id}:100:with_online'})
 
         self.assertFacets(
             'distance', {}

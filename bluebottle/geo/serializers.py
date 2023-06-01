@@ -29,7 +29,7 @@ class PointSerializer(serializers.CharField):
         if not data:
             return None
         try:
-            point = Point(float(data['longitude']), float(data['latitude']))
+            point = Point(float(data['latitude']), float(data['longitude']))
         except ValueError as e:
             raise serializers.ValidationError("Invalid point. {}".format(e))
         return point

@@ -8,6 +8,7 @@ from urllib.parse import (
 )
 
 from bs4 import BeautifulSoup
+from celery.contrib.testing.worker import start_worker
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
@@ -24,8 +25,6 @@ from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
-
-from celery.contrib.testing.worker import start_worker
 
 from bluebottle.celery import app
 from bluebottle.clients import properties
@@ -370,7 +369,7 @@ class APITestCase(BluebottleTestCase):
 
     def assertStatus(self, status):
         """
-        Assert that the status code of the reponse is as expected
+        Assert that the status code of the response is as expected
         """
         self.assertEqual(self.response.status_code, status)
 

@@ -30,8 +30,8 @@ class DistanceFacet(Facet):
                     _expand__to_dot=False,
                     distance=distance + 'km',
                     position={
-                        'lat': float(place.position[1]),
-                        'lon': float(place.position[0]),
+                        'lat': float(place.position[0]),
+                        'lon': float(place.position[1]),
                     }
                 )
                 if include_online == 'with_online':
@@ -144,8 +144,8 @@ class ActivitySearch(Search):
                 geo_sort = {
                     "_geo_distance": {
                         "position": {
-                            'lat': float(place.position[1]),
-                            'lon': float(place.position[0]),
+                            'lat': float(place.position[0]),
+                            'lon': float(place.position[1]),
                         },
                         "order": "asc",
                         "distance_type": "arc"

@@ -21,15 +21,15 @@ class PointSerializer(serializers.CharField):
 
     def to_representation(self, instance):
         return {
-            'latitude': instance.coords[1],
-            'longitude': instance.coords[0]
+            'longitude': instance.coords[0],
+            'latitude': instance.coords[1]
         }
 
     def to_internal_value(self, data):
         if not data:
             return None
         try:
-            point = Point(float(data['latitude']), float(data['longitude']))
+            point = Point(float(data['longitude']), float(data['latitude']))
         except ValueError as e:
             raise serializers.ValidationError("Invalid point. {}".format(e))
         return point

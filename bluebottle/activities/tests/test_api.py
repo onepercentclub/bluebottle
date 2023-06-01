@@ -243,6 +243,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
+    def test_date_preview_multiple_slots_succeeded(self):
+        activity = DateActivityFactory.create(slots=[])
+        first = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=21))
+        DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=14))
+        last = DateActivitySlotFactory.create(activity=activity, start=now() - timedelta(days=7))
+
+        activity.status = 'succeeded'
+        activity.save()
+
+        response = self.client.get(self.url)
+        attributes = response.json()['data'][0]['attributes']
+        self.assertEqual(attributes['slot-count'], 0)
+
+        self.assertEqual(attributes['has-multiple-locations'], True)
+        self.assertEqual(attributes['is-online'], False)
+        self.assertEqual(dateutil.parser.parse(attributes['start']), first.start)
+        self.assertEqual(dateutil.parser.parse(attributes['end']), last.end)
+
     def test_date_preview_all_full(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity, status='full')
@@ -626,8 +644,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             f'segment.{segment_type.slug}',
             {
-                f'segments.{matching_segment.pk}': len(matching),
-                f'segments.{other_segment.pk}': len(other)
+                f'{matching_segment.pk}': len(matching),
+                f'{other_segment.pk}': len(other)
             }
         )
         self.assertFound(matching)

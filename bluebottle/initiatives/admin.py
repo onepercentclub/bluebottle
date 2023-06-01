@@ -224,6 +224,12 @@ class ActivitySearchFilterInline(SortableTabularInline):
     model = ActivitySearchFilter
     extra = 0
 
+    readonly_fields = ('drag',)
+    fields = readonly_fields + ('type', 'highlight')
+
+    def drag(self, obj):
+        return format_html('<div style="font-size: 20px">⠿</div>')
+
 
 class InitiativeSearchFilterInline(SortableTabularInline):
     model = InitiativeSearchFilter

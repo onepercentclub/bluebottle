@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('geo', '0005_translate_geo'),
+        ('clients', '0001_initial'),
     ]
 
     operations = [

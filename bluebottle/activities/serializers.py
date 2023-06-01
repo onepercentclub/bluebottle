@@ -123,7 +123,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         if hasattr(obj, 'slots') and obj.slots:
             slots = self.get_filtered_slots(obj, only_upcoming=True)
             if slots:
-                return slots[0].end
+                return slots[-1].end
 
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]

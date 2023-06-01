@@ -96,8 +96,8 @@ class TeamActivityFacet(BooleanFacet):
 
     def get_value(self, bucket):
         if bucket["key"] == 'teams':
-            return (_("Teams"), 'teams')
-        return (_('Individuals'), 'individuals')
+            return (_("With your team"), 'teams')
+        return (_('As an individual'), 'individuals')
 
 
 class ActivitySearch(Search):
@@ -121,7 +121,7 @@ class ActivitySearch(Search):
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
-        'is_online': BooleanFacet(field='is_online', label_no=_('In person'), label_yes=_('Online')),
+        'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),
         'team_activity': TeamActivityFacet(field='team_activity'),
         'office': NamedNestedFacet('office'),
     }

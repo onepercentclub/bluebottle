@@ -1,3 +1,4 @@
+from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -46,8 +47,8 @@ class FundingDocument(ActivityDocument):
 
     def prepare_dates(self, instance):
         return [{
-            'start': instance.deadline,
-            'end': instance.deadline
+            'start': datetime.min,
+            'end': instance.deadline or datetime.max
         }]
 
     def prepare_duration(self, instance):

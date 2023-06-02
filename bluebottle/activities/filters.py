@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
-from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
+from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
 
 from bluebottle.activities.documents import activity
 from bluebottle.geo.models import Location, Place
@@ -167,82 +169,34 @@ class ActivitySearch(Search):
                     )
 
         elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
+            start = now()
+            end = datetime.max
+
             if 'date' in self.filter_values:
-                start = self.filter_values['date'][0].split(',')[0]
-            else:
-                start = now().date()
+                start, end = self.filter_values['date'][0].split(',')
+
             search = search.sort({
                 "dates.end": {
                     "order": "asc",
-                    "nested_path": "dates",
-                    "nested_filter": {
-                        "bool": {
-                            "must": [
-                                {
-                                    "bool": {
-                                        "minimum_should_match": 1,
-                                        "should": [
-                                            {
-                                                "range": {
-                                                    "dates.start": {
-                                                        "lt": start
-                                                    }
-                                                }
-                                            }, {
-                                                "bool": {
-                                                    "must_not": {
-                                                        "exists": {
-                                                            "field": "dates.start"
-                                                        }
-                                                    }
-                                                }
-                                            },
-
-                                        ]
-                                    }
-                                },
-                                {
-                                    "bool": {
-                                        "minimum_should_match": 1,
-                                        "should": [
-                                            {
-                                                "bool": {
-                                                    "must_not": {
-                                                        "exists": {
-                                                            "field": "dates.end"
-                                                        }
-                                                    }
-                                                }
-                                            }, {
-                                                "range": {
-                                                    "dates.end": {
-                                                        "gte": start
-                                                    }
-                                                }
-                                            },
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                                Range(**{'dates.start': {'lte': start}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                        )
                     }
-
-                }
-            }, {
+                },
                 "dates.start": {
                     "order": "asc",
-                    "nested_path": "dates",
-                    "nested_filter": {
-                        "range": {
-                            "dates.start": {
-                                "gte": start
-                            }
-                        }
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                            Range(**{'dates.start': {'lte': end}}) &
+                            Range(**{'dates.end': {'gte': start}})
+                        )
                     }
-
-                }
+                },
             })
-
         return search
 
     def __new__(cls, *args, **kwargs):

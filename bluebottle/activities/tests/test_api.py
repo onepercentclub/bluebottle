@@ -452,18 +452,46 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_upcoming(self):
         today = now().date()
+        first_date_activity = DateActivityFactory.create(status='open', slots=[])
+        second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
-            DateActivityFactory.create(status='open', slots=[]),
-            DateActivityFactory.create(status='open', slots=[]),
+            PeriodActivityFactory(
+                status='open', start=None, deadline=now() + timedelta(days=1)
+            ),
+            PeriodActivityFactory(
+                status='open', start=None, deadline=None
+            ),
+
+            PeriodActivityFactory(
+                status='open', start=now() - timedelta(days=1), deadline=None
+            ),
+
+            first_date_activity,
+            second_date_activity,
+
             PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
         ]
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[1])
 
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[2])
-        DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[2])
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=2), activity=first_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=5), activity=first_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() - timedelta(days=5), activity=first_date_activity
+        )
+
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=4), activity=second_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=7), activity=second_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() - timedelta(days=7), activity=second_date_activity
+        )
 
         self.search({'upcoming': 'true'})
 

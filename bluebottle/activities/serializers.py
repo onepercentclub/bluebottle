@@ -1,24 +1,18 @@
+import hashlib
 from builtins import object
 from collections import namedtuple
-
 from datetime import datetime
+
 import dateutil
-import hashlib
-from django.urls import reverse
-
-from django.utils.timezone import get_current_timezone, now
 from django.conf import settings
-from bluebottle.geo.serializers import PointSerializer
-from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
-
-
+from django.urls import reverse
+from django.utils.timezone import get_current_timezone, now
+from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
-
-from geopy.distance import distance, lonlat
 
 from bluebottle.activities.models import Contributor, Activity, Team
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
@@ -33,6 +27,7 @@ from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonorListSerializer, TinyFundingSerializer
 )
+from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     PeriodActivityListSerializer,
@@ -41,11 +36,11 @@ from bluebottle.time_based.serializers import (
     PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
     DateParticipantListSerializer, PeriodParticipantListSerializer,
 )
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
     MoneySerializer
 )
 from bluebottle.utils.utils import get_current_language
-
 
 ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
 
@@ -112,7 +107,8 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, 'slots') and obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            upcoming = self.context['request'].GET.get('filter[upcoming]')
+            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
 
@@ -121,7 +117,8 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, 'slots') and obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            upcoming = self.context['request'].GET.get('filter[upcoming]')
+            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[-1].end
 

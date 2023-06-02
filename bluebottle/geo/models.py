@@ -221,8 +221,7 @@ class Place(models.Model):
     def __str__(self):
         if self.locality and self.country:
             return "{0}, {1}".format(self.locality, self.country)
-        else:
-            return self.formatted_address
+        return self.locality or self.formatted_address or '-unknown-'
 
 
 @python_2_unicode_compatible

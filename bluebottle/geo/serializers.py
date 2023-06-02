@@ -21,8 +21,8 @@ class PointSerializer(serializers.CharField):
 
     def to_representation(self, instance):
         return {
-            'latitude': instance.coords[1],
-            'longitude': instance.coords[0]
+            'longitude': instance.coords[0],
+            'latitude': instance.coords[1]
         }
 
     def to_internal_value(self, data):

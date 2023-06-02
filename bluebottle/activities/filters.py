@@ -1,10 +1,11 @@
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance
 
 from bluebottle.activities.documents import activity
-from bluebottle.geo.models import Location
+from bluebottle.geo.models import Location, Place
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
@@ -21,19 +22,22 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        lat, lon, distance, include_online = filter_value.split(':')
-        if lat and lon and distance:
-            geo_filter = GeoDistance(
-                _expand__to_dot=False,
-                distance=distance,
-                position={
-                    'lat': float(lat),
-                    'lon': float(lon),
-                }
-            )
-            if include_online == 'with_online':
-                return geo_filter | Term(is_online=True)
-            return geo_filter
+        pk, distance, include_online = filter_value.split(':')
+
+        if pk:
+            place = Place.objects.get(pk=pk)
+            if place and distance:
+                geo_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=distance + 'km',
+                    position={
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
+                    }
+                )
+                if include_online == 'with_online':
+                    return geo_filter | Term(is_online=True)
+                return geo_filter
         if include_online == 'without_online':
             return Term(is_online=False)
 
@@ -134,13 +138,15 @@ class ActivitySearch(Search):
     def sort(self, search):
         search = super().sort(search)
         if self._sort == 'distance':
-            lat, lon, distance, include_online = self.filter_values['distance'][0].split(':')
-            if lat and lon and lat != 'undefined' and lon != 'undefined':
+            pk, distance, include_online = self.filter_values['distance'][0].split(':')
+
+            if pk:
+                place = Place.objects.get(pk=pk)
                 geo_sort = {
                     "_geo_distance": {
                         "position": {
-                            "lat": float(lat),
-                            "lon": float(lon),
+                            'lat': float(place.position[1]),
+                            'lon': float(place.position[0]),
                         },
                         "order": "asc",
                         "distance_type": "arc"
@@ -164,27 +170,71 @@ class ActivitySearch(Search):
             if 'date' in self.filter_values:
                 start = self.filter_values['date'][0].split(',')[0]
             else:
-                start = 'now'
+                start = now().date()
             search = search.sort({
+                "dates.end": {
+                    "order": "asc",
+                    "nested_path": "dates",
+                    "nested_filter": {
+                        "bool": {
+                            "must": [
+                                {
+                                    "bool": {
+                                        "minimum_should_match": 1,
+                                        "should": [
+                                            {
+                                                "range": {
+                                                    "dates.start": {
+                                                        "lt": start
+                                                    }
+                                                }
+                                            }, {
+                                                "bool": {
+                                                    "must_not": {
+                                                        "exists": {
+                                                            "field": "dates.start"
+                                                        }
+                                                    }
+                                                }
+                                            },
+
+                                        ]
+                                    }
+                                },
+                                {
+                                    "bool": {
+                                        "minimum_should_match": 1,
+                                        "should": [
+                                            {
+                                                "bool": {
+                                                    "must_not": {
+                                                        "exists": {
+                                                            "field": "dates.end"
+                                                        }
+                                                    }
+                                                }
+                                            }, {
+                                                "range": {
+                                                    "dates.end": {
+                                                        "gte": start
+                                                    }
+                                                }
+                                            },
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                }
+            }, {
                 "dates.start": {
                     "order": "asc",
                     "nested_path": "dates",
                     "nested_filter": {
                         "range": {
                             "dates.start": {
-                                "gte": start
-                            }
-                        }
-                    }
-
-                }
-            }, {
-                "dates.end": {
-                    "order": "asc",
-                    "nested_path": "dates",
-                    "nested_filter": {
-                        "range": {
-                            "dates.end": {
                                 "gte": start
                             }
                         }

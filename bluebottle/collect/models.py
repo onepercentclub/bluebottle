@@ -181,3 +181,6 @@ class CollectContribution(Contribution):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributions'
+
+
+from bluebottle.collect.periodic_tasks import *  # noqa

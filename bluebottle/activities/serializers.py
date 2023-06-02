@@ -258,9 +258,9 @@ class ActivityPreviewSerializer(ModelSerializer):
                 slot for slot in obj.slots
                 if (
                     slot.status not in ['draft', 'cancelled'] and
-                    (not only_upcoming or datetime.fromisoformat(slot.start) >= now()) and
-                    (not start or dateutil.parser.parse(slot.start) >= start) and
-                    (not end or dateutil.parser.parse(slot.end) <= end)
+                    (not only_upcoming or datetime.fromisoformat(slot.start).date() >= now().date()) and
+                    (not start or dateutil.parser.parse(slot.start).date() >= start.date()) and
+                    (not end or dateutil.parser.parse(slot.end).date() <= end.date())
                 )
             ]
         else:

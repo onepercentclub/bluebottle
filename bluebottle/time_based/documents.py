@@ -1,3 +1,4 @@
+from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -181,8 +182,8 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_dates(self, instance):
         return [{
-            'start': instance.start,
-            'end': instance.deadline,
+            'start': instance.start or datetime.min,
+            'end': instance.deadline or datetime.max,
         }]
 
     def prepare_duration(self, instance):

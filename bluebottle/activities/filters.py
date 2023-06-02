@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl import TermsFacet, Facet
@@ -168,15 +170,22 @@ class ActivitySearch(Search):
 
         elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
             start = now()
-            end = None
+            end = datetime.max
 
             if 'date' in self.filter_values:
-                start = self.filter_values['date'][0].split(',')[0]
-
-            if 'end' in self.filter_values:
-                end = self.filter_values['date'][0].split(',')[0]
+                start, end = self.filter_values['date'][0].split(',')
 
             search = search.sort({
+                "dates.end": {
+                    "order": "asc",
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                                Range(**{'dates.start': {'lte': start}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                        )
+                    }
+                },
                 "dates.start": {
                     "order": "asc",
                     "nested": {
@@ -187,19 +196,7 @@ class ActivitySearch(Search):
                         )
                     }
                 },
-
-                "dates.end": {
-                    "order": "desc",
-                    "nested": {
-                        "path": "dates",
-                        "filter": (
-                            Range(**{'dates.start': {'lte': end}}) &
-                            Range(**{'dates.end': {'gte': start}})
-                        )
-                    }
-                },
             })
-
         return search
 
     def __new__(cls, *args, **kwargs):

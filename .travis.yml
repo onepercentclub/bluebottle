@@ -2,7 +2,7 @@ dist: bionic
 sudo: false
 language: python
 addons:
-  postgresql: "10"
+  postgresql: "11"
   apt:
     packages:
       - libxmlsec1
@@ -10,8 +10,8 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
-      - postgresql-client-10
-      - postgresql-10-postgis-2.4
+      - postgresql-client-11
+      - postgresql-11-postgis-2.4
       - postgis
 cache: pip
   - "$HOME/.cache/pip/"

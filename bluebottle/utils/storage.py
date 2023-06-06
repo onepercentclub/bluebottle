@@ -29,4 +29,4 @@ class TenantFileSystemStorage(BaseTenantFileSystemStorage):
         if connection.tenant:
             return os.path.abspath(safe_join(self.base_location, connection.tenant.schema_name))
         else:
-            return super().location()
+            return super().location

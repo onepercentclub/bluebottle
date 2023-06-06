@@ -2,7 +2,10 @@
 
 SECRET_KEY = '1, 2, this is just a test!'
 
-from bluebottle.settings.local import RECAPTCHA_PRIVATE_KEY, RECAPTCHA_PUBLIC_KEY
+
+RECAPTCHA_PRIVATE_KEY = 'test-private-key'
+RECAPTCHA_PUBLIC_KEY = 'test-public-key'
+
 from .base import *
 
 import warnings
@@ -374,5 +377,3 @@ CONFLUENCE = {
     ]}
 
 RANDOM_IMAGE_PROVIDER = "https://picsum.photos/seed/{seed}/{width}/{height}"
-RECAPTCHA_PRIVATE_KEY = 'test-private-key'
-RECAPTCHA_PUBLIC_KEY = 'test-public-key'

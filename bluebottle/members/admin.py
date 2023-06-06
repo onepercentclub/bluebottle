@@ -447,8 +447,11 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        ['picture', 'about_me', 'matching_options_set',
-                         'campaign_notifications', ]
+                        [
+                            'picture',
+                            'about_me',
+                            'campaign_notifications',
+                        ]
 
                     }
                 ],
@@ -477,6 +480,7 @@ class MemberAdmin(UserAdmin):
                     {
                         'fields':
                         [
+                            'matching_options_set',
                             'search_distance', 'any_search_distance', 'include_online',
                             'place', 'favourite_themes', 'skills', 'subscribed',
                         ]

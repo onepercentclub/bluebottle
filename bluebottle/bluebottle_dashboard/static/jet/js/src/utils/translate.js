@@ -1,6 +1,6 @@
 module.exports = function(str) {
-    if (window.django == undefined) {
-        return str;
+    if (window.gettext) {
+        return window.gettext(str);
     }
-    return django.gettext(str);
+    return str;
 };

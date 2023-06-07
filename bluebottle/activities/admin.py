@@ -306,7 +306,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             segments += form.cleaned_data.get(segment_type.field_name, [])
 
         if segments:
-            del form.cleaned_data['segments']
             obj.segments.set(segments)
             obj.save()
 

@@ -47,8 +47,8 @@ urlpatterns = [
         include('django.contrib.auth.urls'),
     ),
 
-    url(r'^admin/summernote/', include('django_summernote.urls')),
     url(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
-    url('two-factor/', include(tf_urls)),
+    url(r'^utils/summernote/', include('django_summernote.urls')),
+    url(r'^utils/two_factor/', include(tf_urls)),
     url(r'^', HomeView.as_view(), name='home'),
 ]

@@ -359,40 +359,47 @@ class InitiativePlatformSettings(BasePlatformSettings):
         verbose_name = _('initiative settings')
 
 
-class ActivitySearchFilter(SortableMixin, models.Model):
+class SearchFilter(SortableMixin, models.Model):
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name='search_filters',
+        on_delete=models.deletion.CASCADE
+    )
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
+    highlight = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def name(self):
+        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
+
+    @property
+    def placeholder(self):
+        if self.type == 'office':
+            return _('Select an office')
+        if self.type in ['is_online', 'team_activity']:
+            return _('Make a choice')
+        return _('Select a {filter_name}').format(filter_name=self.name.lower())
+
+    class Meta:
+        abstract = True
+        ordering = ['order']
+
+
+class ActivitySearchFilter(SearchFilter):
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name='search_filters_activities',
         on_delete=models.deletion.CASCADE
     )
-    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
-    highlight = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    @property
-    def name(self):
-        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
-
-    class Meta:
-        ordering = ['order']
 
 
-class InitiativeSearchFilter(SortableMixin, models.Model):
+class InitiativeSearchFilter(SearchFilter):
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name='search_filters_initiatives',
         on_delete=models.deletion.CASCADE
     )
-    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
-    highlight = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    @property
-    def name(self):
-        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
-
-    class Meta:
-        ordering = ['order']
 
 
 class Theme(SortableTranslatableModel):

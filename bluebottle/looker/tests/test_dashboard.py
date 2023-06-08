@@ -119,7 +119,7 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
     def test_view_not_authenticated(self):
         response = self.client.get(self.embed_url)
         path = urlparse(response['location']).path
-        self.assertEqual(path, '/en/two-factor/account/login/')
+        self.assertEqual(path, '/en/utils/two_factor/account/login/')
 
     def test_view_no_permission(self):
         staff_user = BlueBottleUserFactory.create(is_staff=True)

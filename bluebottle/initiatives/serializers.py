@@ -1,5 +1,5 @@
-from builtins import object
 import hashlib
+from builtins import object
 
 from django.db.models import Q
 from django.urls.base import reverse
@@ -458,14 +458,14 @@ class ActivitySearchFilterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivitySearchFilter
-        fields = ['type', 'name', 'highlight']
+        fields = ['type', 'name', 'highlight', 'placeholder']
 
 
 class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InitiativeSearchFilter
-        fields = ['type', 'name', 'highlight']
+        fields = ['type', 'name', 'highlight', 'placeholder']
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):

@@ -500,6 +500,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [activity['id'] for activity in self.data['data']]
         )
 
+    def test_sort_upcoming_false(self):
+        today = now().date()
+        first_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
+        second_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
+        activities = [
+            PeriodActivityFactory(
+                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+            ),
+            PeriodActivityFactory(
+                status='succeeded', start=None, deadline=now() - timedelta(days=6)
+            ),
+
+            first_date_activity,
+            second_date_activity,
+
+            CollectActivityFactory(status='succeeded', start=today + timedelta(days=1)),
+        ]
+
+        DateActivitySlotFactory.create(
+            status='finished', start=now() - timedelta(days=4), activity=first_date_activity
+        )
+
+        DateActivitySlotFactory.create(
+            status='finished', start=now() - timedelta(days=5), activity=second_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='finished', start=now() - timedelta(days=2), activity=second_date_activity
+        )
+
+        self.search({'upcoming': 'false'})
+
+        self.assertEqual(
+            [str(activity.pk) for activity in reversed(activities)],
+            [activity['id'] for activity in self.data['data']]
+        )
+
     def test_sort_distance(self):
         amsterdam = GeolocationFactory.create(position=Point(4.922114, 52.362438))
         leiden = GeolocationFactory.create(position=Point(4.491056, 52.166758))
@@ -584,17 +620,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
-
-    def test_no_filter(self):
-        activities = DeedFactory.create_batch(15)
-
-        self.search({})
-
-        self.assertFound(activities, 8)
-
-        self.search(self.data['links']['next'])
-
-        self.assertFound(activities, 7)
 
     def test_filter_closed_segments(self):
         segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
@@ -717,6 +742,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'upcoming': 'true'})
 
         self.assertFacets('upcoming', {0: len(other), 1: len(matching)})
+        self.assertFound(matching)
+
+    def test_no_filter(self):
+        matching = (
+            PeriodActivityFactory.create_batch(2, status='open') +
+            PeriodActivityFactory.create_batch(2, status='full') +
+            PeriodActivityFactory.create_batch(2, status='full') +
+            PeriodActivityFactory.create_batch(2, status='partially_funded')
+        )
+        PeriodActivityFactory.create_batch(2, status='draft')
+        PeriodActivityFactory.create_batch(2, status='needs_works')
+        PeriodActivityFactory.create_batch(2, status='needs_works')
+
+        self.search({})
+
         self.assertFound(matching)
 
     def test_filter_team(self):

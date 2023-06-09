@@ -168,8 +168,8 @@ class ActivitySearch(Search):
                         {"is_online": {"order": "desc"}}
                     )
 
-        elif 'upcoming' in self.filter_values:
-            if self.filter_values['upcoming'] == 'true':
+        if self._sort == 'date' or not self._sort:
+            if'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':
                 start = now()
                 end = datetime.max
 
@@ -199,7 +199,7 @@ class ActivitySearch(Search):
                     },
                 })
             else:
-                search.sort({
+                search = search.sort({
                     "dates.end": {
                         "order": "desc",
                         "mode": "max",

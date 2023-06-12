@@ -168,35 +168,48 @@ class ActivitySearch(Search):
                         {"is_online": {"order": "desc"}}
                     )
 
-        elif 'upcoming' in self.filter_values and self.filter_values['upcoming']:
-            start = now()
-            end = datetime.max
+        if self._sort == 'date' or not self._sort:
+            if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':
+                start = now()
+                end = datetime.max
 
-            if 'date' in self.filter_values:
-                start, end = self.filter_values['date'][0].split(',')
+                if 'date' in self.filter_values:
+                    start, end = self.filter_values['date'][0].split(',')
 
-            search = search.sort({
-                "dates.end": {
-                    "order": "asc",
-                    "nested": {
-                        "path": "dates",
-                        "filter": (
-                                Range(**{'dates.start': {'lte': start}}) &
+                search = search.sort({
+                    "dates.end": {
+                        "order": "asc",
+                        "nested": {
+                            "path": "dates",
+                            "filter": (
+                                    Range(**{'dates.start': {'lte': start}}) &
+                                    Range(**{'dates.end': {'gte': start}})
+                            )
+                        }
+                    },
+                    "dates.start": {
+                        "order": "asc",
+                        "nested": {
+                            "path": "dates",
+                            "filter": (
+                                Range(**{'dates.start': {'lte': end}}) &
                                 Range(**{'dates.end': {'gte': start}})
-                        )
+                            )
+                        }
+                    },
+                })
+            else:
+                search = search.sort({
+                    "dates.end": {
+                        "order": "desc",
+                        "mode": "max",
+                        "nested": {
+                            "path": "dates",
+                        }
                     }
-                },
-                "dates.start": {
-                    "order": "asc",
-                    "nested": {
-                        "path": "dates",
-                        "filter": (
-                            Range(**{'dates.start': {'lte': end}}) &
-                            Range(**{'dates.end': {'gte': start}})
-                        )
-                    }
-                },
-            })
+                })
+                return search
+
         return search
 
     def __new__(cls, *args, **kwargs):
@@ -231,6 +244,10 @@ class ActivitySearch(Search):
                     )
                 )
             )
+
+        search = search.filter(
+            Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+        )
 
         return search
 

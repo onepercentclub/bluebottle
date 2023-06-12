@@ -7,7 +7,6 @@ from bluebottle.deeds.models import Deed
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.members.models import Member
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
 
@@ -113,7 +112,6 @@ class InitiativeDocument(Document):
         model = Initiative
         related_models = (
             Geolocation,
-            Member,
             Theme,
             Funding,
             PeriodActivity,
@@ -132,8 +130,6 @@ class InitiativeDocument(Document):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):
             return related_instance.initiative_set.all()
-        if isinstance(related_instance, Member):
-            return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
 

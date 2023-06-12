@@ -169,7 +169,7 @@ class ActivitySearch(Search):
                     )
 
         if self._sort == 'date' or not self._sort:
-            if'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':
+            if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':
                 start = now()
                 end = datetime.max
 

@@ -10,7 +10,6 @@ from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Funding
 from bluebottle.deeds.models import Deed
-from bluebottle.members.models import Member
 
 
 SCORE_MAP = {
@@ -106,7 +105,6 @@ class InitiativeDocument(Document):
         model = Initiative
         related_models = (
             Geolocation,
-            Member,
             Theme,
             Funding,
             PeriodActivity,
@@ -125,8 +123,6 @@ class InitiativeDocument(Document):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):
             return related_instance.initiative_set.all()
-        if isinstance(related_instance, Member):
-            return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
 

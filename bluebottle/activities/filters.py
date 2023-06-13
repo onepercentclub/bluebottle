@@ -24,7 +24,7 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        pk, distance, include_online = filter_value.split(':')
+        pk, distance = filter_value.split(':')
 
         if pk:
             place = Place.objects.get(pk=pk)
@@ -37,11 +37,7 @@ class DistanceFacet(Facet):
                         'lon': float(place.position[0]),
                     }
                 )
-                if include_online == 'with_online':
-                    return geo_filter | Term(is_online=True)
                 return geo_filter
-        if include_online == 'without_online':
-            return Term(is_online=False)
 
 
 class OfficeRestrictionFacet(Facet):
@@ -77,6 +73,7 @@ class BooleanFacet(Facet):
     def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
         self.label_yes = label_yes or _('Yes')
         self.label_no = label_no or _('None')
+
         super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
@@ -93,6 +90,12 @@ class BooleanFacet(Facet):
             return Terms(
                 **{self._params["field"]: filter_values}
             )
+
+    def is_filtered(self, key, filter_values):
+        """
+        Is a filter active on the given key.
+        """
+        return str(key[-1]) in filter_values
 
 
 class TeamActivityFacet(BooleanFacet):

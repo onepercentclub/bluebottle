@@ -107,7 +107,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, 'slots') and obj.slots:
-            upcoming = self.context['request'].GET.get('filter[upcoming]')
+            upcoming = self.context['request'].GET.get('filter[upcoming]') == 'yes'
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
@@ -117,7 +117,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, 'slots') and obj.slots:
-            upcoming = self.context['request'].GET.get('filter[upcoming]')
+            upcoming = self.context['request'].GET.get('filter[upcoming]') == 'yes'
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[-1].end

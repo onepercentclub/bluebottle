@@ -38,7 +38,7 @@ class DistanceFacet(Facet):
                         'lon': float(place.position[0]),
                     }
                 )
-                return geo_filter
+                return geo_filter | Term(is_online=True)
 
 
 class OfficeRestrictionFacet(Facet):

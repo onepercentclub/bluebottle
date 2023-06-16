@@ -553,7 +553,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         texel_place = PlaceFactory.create(position=texel.position)
 
         self.search(
-            filter={'distance': f'{leiden_place.id}:500:without_online'},
+            filter={'distance': f'{leiden_place.id}:500', 'is_online': '0'},
             sort='distance'
         )
         data = self.data['data']
@@ -564,7 +564,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Widen search and search from Texel
         self.search(
-            filter={'distance': f'{texel_place.id}:5000:without_online'},
+            filter={'distance': f'{texel_place.id}:5000', 'is_online': '0'},
             sort='distance'
         )
         data = self.data['data']
@@ -576,20 +576,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # With online
         self.search(
-            filter={'distance': f'{leiden_place.id}:500:with_online'},
+            filter={'distance': f'{leiden_place.id}:500'},
             sort='distance'
         )
         data = self.data['data']
+        self.assertEqual(len(data), 5)
         self.assertEqual(data[0]['id'], str(activity_online1.id))
         self.assertEqual(data[1]['id'], str(activity_online2.id))
         self.assertEqual(data[2]['id'], str(activity_leiden.id))
         self.assertEqual(data[3]['id'], str(activity_amsterdam.id))
         self.assertEqual(data[4]['id'], str(activity_texel.id))
-        self.assertEqual(len(data), 5)
 
         # Any distance
         self.search(
-            filter={'distance': f'{leiden_place.id}::without_online'},
+            filter={'distance': f'{leiden_place.id}:', 'is_online': '0'},
             sort='distance'
         )
         data = self.data['data']
@@ -938,7 +938,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': f'{place.pk}:100:without_online'})
+        self.search({'distance': f'{place.pk}:100', 'is_online': '0'})
 
         self.assertFacets(
             'distance', {}
@@ -990,7 +990,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=lyutidol)
         )
 
-        self.search({'distance': f'{place.id}:100:with_online'})
+        self.search({'distance': f'{place.id}:100'})
 
         self.assertFacets(
             'distance', {}
@@ -1030,7 +1030,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", office_location=within_region, office_restriction='office_subregion'
         )
 
-        self.search({'office_restriction': str(office.pk)})
+        user = BlueBottleUserFactory.create(location=office)
+
+        self.search({'office_restriction': '1'}, user=user)
 
         self.assertFacets(
             'distance', {}

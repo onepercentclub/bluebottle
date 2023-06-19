@@ -2,12 +2,13 @@ from datetime import datetime
 
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
 
 from bluebottle.activities.documents import activity
-from bluebottle.geo.models import Location, Place
+from bluebottle.geo.models import Place
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
@@ -37,7 +38,7 @@ class DistanceFacet(Facet):
                         'lon': float(place.position[0]),
                     }
                 )
-                return geo_filter
+                return geo_filter | Term(is_online=True)
 
 
 class OfficeRestrictionFacet(Facet):
@@ -48,8 +49,10 @@ class OfficeRestrictionFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        office = Location.objects.get(pk=filter_value)
-
+        user = get_current_user()
+        if filter_value == '0' or not user.is_authenticated or not user.location:
+            return
+        office = user.location
         return Nested(
             path='office_restriction',
             query=Term(
@@ -143,8 +146,7 @@ class ActivitySearch(Search):
     def sort(self, search):
         search = super().sort(search)
         if self._sort == 'distance':
-            pk, distance, include_online = self.filter_values['distance'][0].split(':')
-
+            pk, distance = self.filter_values['distance'][0].split(':')
             if pk:
                 place = Place.objects.get(pk=pk)
                 geo_sort = {
@@ -158,18 +160,14 @@ class ActivitySearch(Search):
                     }
                 }
 
-                if include_online == 'with_online':
-                    search = search.sort(
-                        {"is_online": {"order": "desc"}},
-                        geo_sort
-                    )
-                else:
-                    search = search.sort(geo_sort)
+                search = search.sort(
+                    {"is_online": {"order": "desc"}},
+                    geo_sort
+                )
             else:
-                if include_online == 'with_online':
-                    search = search.sort(
-                        {"is_online": {"order": "desc"}}
-                    )
+                search = search.sort(
+                    {"is_online": {"order": "desc"}}
+                )
 
         if self._sort == 'date' or not self._sort:
             if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':

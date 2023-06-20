@@ -150,7 +150,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='succeeded', activity=activity, start=now() - timedelta(days=10)
         )
-        response = self.client.get(self.url + '?filter[upcoming]=true', user=self.owner)
+        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner)
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -493,7 +493,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='open', start=now() - timedelta(days=7), activity=second_date_activity
         )
 
-        self.search({'upcoming': 'true'})
+        self.search({'upcoming': 1})
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
@@ -529,7 +529,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status='finished', start=now() - timedelta(days=2), activity=second_date_activity
         )
 
-        self.search({'upcoming': 'false'})
+        self.search({'upcoming': 0})
 
         self.assertEqual(
             [str(activity.pk) for activity in reversed(activities)],
@@ -614,7 +614,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=4), activity=activities[2])
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=7), activity=activities[2])
 
-        self.search({'upcoming': 'true'}, 'date')
+        self.search({'upcoming': '1'}, 'date')
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
@@ -738,7 +738,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         PeriodActivityFactory.create_batch(2, status='draft')
         PeriodActivityFactory.create_batch(2, status='needs_works')
 
-        self.search({'upcoming': 'true'})
+        self.search({'upcoming': 1})
 
         self.assertFacets('upcoming', {0: len(other), 1: len(matching)})
         self.assertFound(matching)

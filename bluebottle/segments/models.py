@@ -2,12 +2,12 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django_better_admin_arrayfield.models.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -144,6 +144,21 @@ class Segment(models.Model):
         _('Background color'), null=True, blank=True,
         help_text=_(
             'Add a background colour to your segment page.'
+        )
+    )
+
+    button_color = ColorField(
+        _('Button color'), null=True, blank=True,
+        help_text=_(
+            'Add a button colour to your segment page.'
+        )
+    )
+
+    button_text_color = ColorField(
+        _('Button text color'), null=True, blank=True,
+        default='#FFFFFF',
+        help_text=_(
+            'Add a button text colour to your segment page.'
         )
     )
 

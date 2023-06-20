@@ -75,7 +75,7 @@ class BooleanFacet(Facet):
 
     def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
         self.label_yes = label_yes or _('Yes')
-        self.label_no = label_no or _('None')
+        self.label_no = label_no or _('No')
 
         super().__init__(metric, metric_sort, **kwargs)
 
@@ -125,7 +125,7 @@ class ActivitySearch(Search):
     ]
 
     facets = {
-        'upcoming': TermsFacet(field='is_upcoming'),
+        'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
         'distance': DistanceFacet(),
@@ -170,7 +170,7 @@ class ActivitySearch(Search):
                 )
 
         if self._sort == 'date' or not self._sort:
-            if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == 'true':
+            if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == '1':
                 start = now()
                 end = datetime.max
 

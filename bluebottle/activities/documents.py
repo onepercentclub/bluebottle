@@ -135,7 +135,7 @@ class ActivityDocument(Document):
         }
     )
 
-    contributors = fields.DateField()
+    contributors = fields.KeywordField()
     contributor_count = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
@@ -204,8 +204,9 @@ class ActivityDocument(Document):
 
     def prepare_contributors(self, instance):
         return [
-            contributor.created for contributor
+            contributor.user.pk for contributor
             in instance.contributors.filter(status__in=('succeeded', 'accepted'))
+            if contributor.user
         ]
 
     def prepare_contributor_count(self, instance):

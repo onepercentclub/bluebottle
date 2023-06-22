@@ -42,6 +42,7 @@ from bluebottle.utils.fields import (
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
 )
+from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):
@@ -187,6 +188,7 @@ IMAGE_SIZES = {
 
 class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
+    theme = serializers.SerializerMethodField()
 
     def get_image(self, obj):
         if obj.image:
@@ -195,10 +197,20 @@ class InitiativePreviewSerializer(ModelSerializer):
 
             return f'{url}?_={hash}'
 
+    def get_theme(self, obj):
+        try:
+            return [
+                theme.name
+                for theme in obj.theme or []
+                if theme.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
+
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image',
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme'
         )
 
     class JSONAPIMeta(object):

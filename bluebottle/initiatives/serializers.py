@@ -42,7 +42,7 @@ from bluebottle.utils.fields import (
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
 )
-from build.lib.bluebottle.utils.utils import get_current_language
+from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):

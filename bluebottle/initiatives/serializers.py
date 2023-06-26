@@ -189,6 +189,7 @@ IMAGE_SIZES = {
 class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
+    activity_count = serializers.SerializerMethodField()
 
     def get_image(self, obj):
         if obj.image:
@@ -196,6 +197,12 @@ class InitiativePreviewSerializer(ModelSerializer):
             url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
 
             return f'{url}?_={hash}'
+
+    def get_activity_count(self, obj):
+        return {
+            'total': len(obj.activities),
+            'open': len([act for act in obj.activities if act.status in ['open', 'full', 'running']])
+        }
 
     def get_theme(self, obj):
         try:
@@ -210,7 +217,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme'
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'activity_count'
         )
 
     class JSONAPIMeta(object):

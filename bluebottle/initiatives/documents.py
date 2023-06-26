@@ -86,6 +86,7 @@ class InitiativeDocument(Document):
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
         'title': fields.KeywordField(),
+        'status': fields.KeywordField(),
         'activity_date': fields.DateField(),
         'status_score': fields.FloatField()
     })
@@ -146,6 +147,7 @@ class InitiativeDocument(Document):
                 'id': activity.pk,
                 'title': activity.title,
                 'activity_date': activity.activity_date,
+                'status': activity.status,
                 'status_score': SCORE_MAP[activity.status],
             } for activity in instance.activities.filter(
                 status__in=(

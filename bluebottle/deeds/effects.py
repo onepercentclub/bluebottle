@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -57,3 +57,14 @@ class RescheduleEffortsEffect(Effect):
             self.instance.efforts.update(
                 start=start,
             )
+
+
+class SetEndDateEffect(Effect):
+    title = _('Set end date, if no deadline is specified')
+    template = 'admin/set_end_date.html'
+
+    def is_valid(self):
+        return not self.instance.end
+
+    def pre_save(self, **kwargs):
+        self.instance.end = date.today() - timedelta(days=1)

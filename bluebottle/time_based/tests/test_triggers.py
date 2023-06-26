@@ -567,6 +567,28 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 'The activity "{}" has succeeded 🎉'.format(self.activity.title)
             )
 
+    def test_succeed(self):
+        self.activity.duration_period = 'weeks'
+        self.activity.save()
+
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+
+        self.activity.states.succeed(save=True)
+        self.assertEqual(self.activity.deadline, date.today() - timedelta(days=1))
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.status, 'succeeded')
+
     def test_succeed_manually_review_new(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()

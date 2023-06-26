@@ -1,6 +1,7 @@
 import uuid
 from datetime import timedelta, date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
@@ -8,10 +9,9 @@ from bluebottle.activities.messages import (
     ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
     TeamMemberRemovedMessage
 )
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
@@ -196,7 +196,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ActivityExpiredNotification),
             self.assertEffect(RescheduleEffortsEffect)
 
-    def test_manual_succeed(self):
+    def test_set_end_date(self):
         self.create()
 
         self.model.states.submit(save=True)
@@ -215,6 +215,26 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
+            self.assertNoEffect(SetEndDateEffect)
+
+    def test_succeed(self):
+        self.create()
+
+        self.model.states.submit(save=True)
+        participant = DeedParticipantFactory.create(activity=self.model)
+
+        self.model.states.succeed()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
+            self.assertEffect(SetEndDateEffect)
 
     def test_restart_succeeded(self):
         self.defaults['status'] = 'succeeded'

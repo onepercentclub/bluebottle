@@ -1,5 +1,6 @@
 from datetime import date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
@@ -12,10 +13,7 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, TeamTriggers
 )
-
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-
-from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
     ParticipantJoinedNotification
@@ -177,6 +175,7 @@ class DeedTriggers(ActivityTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[is_not_started]
                 ),
+                SetEndDateEffect,
                 NotificationEffect(ActivitySucceededNotification),
             ]
         ),

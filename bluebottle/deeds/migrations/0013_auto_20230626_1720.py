@@ -7,7 +7,11 @@ def set_end_date(apps, schema_editor):
     Deed = apps.get_model('deeds', 'Deed')
     DeedParticipant = apps.get_model('deeds', 'DeedParticipant')
     for deed in Deed.objects.filter(status='succeeded', end__isnull=True).all():
-        deed.end  = DeedParticipant.objects.filter(activity_id=deed.id).order_by('-updated')[0].updated
+        participants = DeedParticipant.objects.filter(activity_id=deed.id).order_by('-updated')
+        if participants.exists():
+            deed.end = participants[0].updated
+        else:
+            deed.end = deed.updated
         deed.save()
 
 

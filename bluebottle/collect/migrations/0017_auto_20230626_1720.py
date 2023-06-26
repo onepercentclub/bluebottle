@@ -7,7 +7,11 @@ def set_end_date(apps, schema_editor):
     CollectActivity = apps.get_model('collect', 'CollectActivity')
     CollectContributor = apps.get_model('collect', 'CollectContributor')
     for collect in CollectActivity.objects.filter(status='succeeded', end__isnull=True).all():
-        collect.end  = CollectContributor.objects.filter(activity_id=collect.id).order_by('-updated')[0].updated
+        contributors = CollectContributor.objects.filter(activity_id=collect.id).order_by('-updated')
+        if contributors.exists():
+            collect.end = contributors[0].updated
+        else:
+            collect.end = collect.updated
         collect.save()
 
 

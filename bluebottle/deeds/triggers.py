@@ -102,8 +102,6 @@ class DeedTriggers(ActivityTriggers):
             'end',
             effects=[
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
-                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
-                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
                 RescheduleEffortsEffect,
                 NotificationEffect(
                     DeedDateChangedNotification,
@@ -175,8 +173,8 @@ class DeedTriggers(ActivityTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[is_not_started]
                 ),
-                SetEndDateEffect,
                 NotificationEffect(ActivitySucceededNotification),
+                SetEndDateEffect,
             ]
         ),
 
@@ -184,7 +182,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(ActivityExpiredNotification)
+                NotificationEffect(ActivityExpiredNotification),
             ]
         ),
 
@@ -228,6 +226,11 @@ def activity_expired(effect):
     return (
         effect.instance.activity.status == 'expired'
     )
+
+
+def activity_not_expired(effect):
+    """activity did not expire"""
+    return not activity_expired(effect)
 
 
 def activity_did_start(effect):

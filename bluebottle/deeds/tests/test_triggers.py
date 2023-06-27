@@ -215,7 +215,6 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
-            self.assertNoEffect(SetEndDateEffect)
 
     def test_succeed(self):
         self.create()
@@ -661,7 +660,8 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
     def test_accept_expired(self):
         self.defaults['activity'].start = date.today() - timedelta(days=20)
         self.defaults['activity'].end = date.today() - timedelta(days=10)
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].status = 'expired'
+        self.defaults['activity'].save()
 
         self.create()
 
@@ -670,30 +670,26 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.succeed, self.model.contributions.first()
-            )
-
-            self.assertTransitionEffect(
                 DeedParticipantStateMachine.succeed
             )
-
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
             self.assertTransitionEffect(
                 DeedStateMachine.succeed, self.model.activity
             )
 
     def test_succeed_accept(self):
         self.defaults['status'] = 'rejected'
-        self.defaults['activity'] = DeedFactory.create(
+        activity = DeedFactory.create(
             status='expired',
             initiative=InitiativeFactory.create(status='approved'),
-            owner=self.owner,
             start=date.today() - timedelta(days=10),
-            end=date.today() - timedelta(days=20),
+            end=date.today() - timedelta(days=2),
         )
+        self.defaults['activity'] = activity
         self.create()
-
         self.model.activity.save()
-
         self.model.states.accept()
 
         with self.execute():

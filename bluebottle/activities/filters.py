@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from django_tools.middlewares.ThreadLocal import get_current_user
+from django_tools.middlewares.ThreadLocal import get_current_user, get_current_request
 from elasticsearch_dsl import TermsFacet, Facet
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
@@ -25,14 +25,15 @@ class DistanceFacet(Facet):
         return []
 
     def get_value_filter(self, filter_value):
-        pk, distance = filter_value.split(':')
+        request = get_current_request()
 
-        if pk:
-            place = Place.objects.get(pk=pk)
-            if place and distance:
+        place_id = request.GET.get('place')
+        if place_id:
+            place = Place.objects.first(pk=place_id)
+            if place and place.position and filter_value:
                 geo_filter = GeoDistance(
                     _expand__to_dot=False,
-                    distance=distance + 'km',
+                    distance=f'{filter_value}km',
                     position={
                         'lat': float(place.position[1]),
                         'lon': float(place.position[0]),
@@ -146,24 +147,26 @@ class ActivitySearch(Search):
     def sort(self, search):
         search = super().sort(search)
         if self._sort == 'distance':
-            pk, distance = self.filter_values['distance'][0].split(':')
-            if pk:
-                place = Place.objects.get(pk=pk)
-                geo_sort = {
-                    "_geo_distance": {
-                        "position": {
-                            'lat': float(place.position[1]),
-                            'lon': float(place.position[0]),
-                        },
-                        "order": "asc",
-                        "distance_type": "arc"
+            request = get_current_request()
+            place_id = request.GET.get('place')
+            if place_id:
+                place = Place.objects.filter(pk=place_id).first()
+                if place and place.position:
+                    geo_sort = {
+                        "_geo_distance": {
+                            "position": {
+                                'lat': float(place.position[1]),
+                                'lon': float(place.position[0]),
+                            },
+                            "order": "asc",
+                            "distance_type": "arc"
+                        }
                     }
-                }
 
-                search = search.sort(
-                    {"is_online": {"order": "desc"}},
-                    geo_sort
-                )
+                    search = search.sort(
+                        {"is_online": {"order": "desc"}},
+                        geo_sort
+                    )
             else:
                 search = search.sort(
                     {"is_online": {"order": "desc"}}

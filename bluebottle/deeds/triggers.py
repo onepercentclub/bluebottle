@@ -102,6 +102,8 @@ class DeedTriggers(ActivityTriggers):
             'end',
             effects=[
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
                 RescheduleEffortsEffect,
                 NotificationEffect(
                     DeedDateChangedNotification,

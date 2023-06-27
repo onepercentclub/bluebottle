@@ -66,5 +66,5 @@ class SetEndDateEffect(Effect):
     def is_valid(self):
         return not self.instance.end
 
-    def pre_save(self, **kwargs):
+    def post_save(self, **kwargs):
         self.instance.end = date.today() - timedelta(days=1)

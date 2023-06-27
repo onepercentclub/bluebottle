@@ -1,6 +1,7 @@
 import uuid
 from datetime import timedelta, date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
@@ -8,10 +9,9 @@ from bluebottle.activities.messages import (
     ParticipantWithdrewConfirmationNotification, TeamMemberAddedMessage, TeamMemberWithdrewMessage,
     TeamMemberRemovedMessage
 )
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.activities.models import Activity
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution
+from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
@@ -196,7 +196,7 @@ class DeedTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ActivityExpiredNotification),
             self.assertEffect(RescheduleEffortsEffect)
 
-    def test_manual_succeed(self):
+    def test_set_end_date(self):
         self.create()
 
         self.model.states.submit(save=True)
@@ -215,6 +215,25 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
+
+    def test_succeed(self):
+        self.create()
+
+        self.model.states.submit(save=True)
+        participant = DeedParticipantFactory.create(activity=self.model)
+
+        self.model.states.succeed()
+
+        with self.execute():
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.succeed,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed,
+                participant.contributions.first()
+            )
+            self.assertEffect(SetEndDateEffect)
 
     def test_restart_succeeded(self):
         self.defaults['status'] = 'succeeded'
@@ -641,7 +660,8 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
     def test_accept_expired(self):
         self.defaults['activity'].start = date.today() - timedelta(days=20)
         self.defaults['activity'].end = date.today() - timedelta(days=10)
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].status = 'expired'
+        self.defaults['activity'].save()
 
         self.create()
 
@@ -650,30 +670,26 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertTransitionEffect(
-                EffortContributionStateMachine.succeed, self.model.contributions.first()
-            )
-
-            self.assertTransitionEffect(
                 DeedParticipantStateMachine.succeed
             )
-
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.succeed, self.model.contributions.first()
+            )
             self.assertTransitionEffect(
                 DeedStateMachine.succeed, self.model.activity
             )
 
     def test_succeed_accept(self):
         self.defaults['status'] = 'rejected'
-        self.defaults['activity'] = DeedFactory.create(
+        activity = DeedFactory.create(
             status='expired',
             initiative=InitiativeFactory.create(status='approved'),
-            owner=self.owner,
             start=date.today() - timedelta(days=10),
-            end=date.today() - timedelta(days=20),
+            end=date.today() - timedelta(days=2),
         )
+        self.defaults['activity'] = activity
         self.create()
-
         self.model.activity.save()
-
         self.model.states.accept()
 
         with self.execute():

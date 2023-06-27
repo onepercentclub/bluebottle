@@ -161,7 +161,7 @@ class CollectTriggersTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ActivityExpiredNotification),
 
-    def test_succeed(self):
+    def test_set_end_date(self):
         self.create()
 
         self.model.states.submit(save=True)

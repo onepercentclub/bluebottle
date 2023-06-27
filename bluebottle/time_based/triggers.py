@@ -226,7 +226,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.succeed,
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
             ]
         ),
 
@@ -878,6 +878,14 @@ class PeriodActivityTriggers(TimeBasedTriggers):
                 SetEndDateEffect,
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
                 NotificationEffect(ActivitySucceededManuallyNotification),
+            ]
+        ),
+
+        TransitionTrigger(
+            PeriodStateMachine.succeed,
+            effects=[
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
+                SetEndDateEffect,
             ]
         ),
 

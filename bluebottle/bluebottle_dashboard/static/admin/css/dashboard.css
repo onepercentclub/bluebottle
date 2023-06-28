@@ -252,3 +252,53 @@ form .aligned p.file-upload + p.help {
     margin-right: 12px;
     margin-top: 5px;
 }
+
+
+/* For 2fa settings */
+#container #content > h1 {
+    display: block;
+}
+
+body.login .form-row input[name=method-method] {
+    clear: none;
+    width: 20px;
+}
+
+
+ul#id_method-method {
+    padding-inline-start: 0;
+}
+
+ul#id_method-method li {
+    list-style: none;
+}
+
+.two-factor-back {
+    padding: 8px;
+    position: absolute;
+}
+
+#id_understand {
+    display: inline;
+    width: 20px;
+    clear: none
+}
+
+
+.user-tools ul {
+    font-size: 1em;
+    padding-bottom: 8px;
+}
+
+.user-tools ul li {
+    white-space: normal;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.user-tools ul li.user-tools-link a,
+.user-tools ul li.user-tools-link a:visited,
+.user-tools ul li.user-tools-link a:hover {
+    line-height: 1.2em;
+    cursor: pointer;
+}

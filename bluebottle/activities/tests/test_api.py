@@ -11,11 +11,11 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
-from bluebottle.activities.models import Activity
 from django_elasticsearch_dsl.test import ESTestCase
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import TeamTransitionSerializer
 from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
@@ -383,8 +383,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][1]['id'], str(succeeded.pk))
-        self.assertEqual(data['data'][0]['id'], str(open.pk))
+        self.assertEqual(data['data'][0]['id'], str(succeeded.pk))
+        self.assertEqual(data['data'][1]['id'], str(open.pk))
 
     def test_anonymous(self):
         succeeded = DateActivityFactory.create(

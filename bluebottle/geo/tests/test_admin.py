@@ -37,7 +37,10 @@ class GeolocationAdminTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         messages = list(get_messages(response.wsgi_request))
         geolocation = Geolocation.objects.last()
-        expected = 'The geolocation "<a href="/en/admin/geo/geolocation/{}/change/">' \
-                   '{}</a>" was added successfully.'.format(geolocation.id, geolocation.country.name)
+
+        expected = (
+            'The geolocation “<a href="/en/admin/geo/geolocation/{}/change/">{}</a>” '
+            'was added successfully.'
+        ).format(geolocation.id, geolocation.country.name)
         self.assertEqual(str(messages[0]), expected)
         self.assertEqual(geolocation.position.wkt, Point(23.6765763312, 43.0681866356).wkt)

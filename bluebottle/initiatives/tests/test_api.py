@@ -648,20 +648,12 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFound(matching, 8)
 
-    def test_only_owner_permission(self):
-        owned = InitiativeFactory.create(owner=self.owner, status='approved')
-        InitiativeFactory.create(status="approved")
-
-        authenticated = Group.objects.get(name='Authenticated')
-        authenticated.permissions.remove(
-            Permission.objects.get(codename='api_read_initiative')
-        )
-        authenticated.permissions.add(
-            Permission.objects.get(codename='api_read_own_initiative')
-        )
+    def test_only_owner(self):
+        owned = InitiativeFactory.create(owner=self.owner, status='draft')
+        InitiativeFactory.create(status="draft")
 
         response = self.client.get(
-            self.url,
+            self.url + '?filter[owner]=me',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
         data = json.loads(response.content)

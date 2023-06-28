@@ -43,7 +43,7 @@
 
       {% if properties.TOKEN_AUTH.admin_login and wizard.steps.current == 'auth' %}
           <p>or</p>
-          <a href="/token/redirect/?url={{next}}" class="button default">Login using SSO</a>
+          <a href="/token/redirect/?url={{request.GET.next}}" class="button default">{% trans "Login using SSO" %}</a>
       {% endif %}
     </div>
 

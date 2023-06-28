@@ -52,7 +52,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
-    def search(self, filter, sort=None, user=None):
+    def search(self, filter, sort=None, user=None, place=None):
         if isinstance(filter, str):
             url = filter
         else:
@@ -62,6 +62,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
             if sort:
                 params['sort'] = sort
+
+            if place:
+                params['place'] = place
 
             query = '&'.join(f'{key}={value}' for key, value in params.items())
 
@@ -553,8 +556,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         texel_place = PlaceFactory.create(position=texel.position)
 
         self.search(
-            filter={'distance': f'{leiden_place.id}:500', 'is_online': '0'},
-            sort='distance'
+            filter={'distance': '500', 'is_online': '0'},
+            sort='distance',
+            place=leiden_place.pk
         )
         data = self.data['data']
         self.assertEqual(data[0]['id'], str(activity_leiden.id))
@@ -564,8 +568,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Widen search and search from Texel
         self.search(
-            filter={'distance': f'{texel_place.id}:5000', 'is_online': '0'},
-            sort='distance'
+            filter={'distance': '5000', 'is_online': '0'},
+            sort='distance',
+            place=texel_place.pk
         )
         data = self.data['data']
         self.assertEqual(data[0]['id'], str(activity_texel.id))
@@ -576,8 +581,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # With online
         self.search(
-            filter={'distance': f'{leiden_place.id}:500'},
-            sort='distance'
+            filter={'distance': '500'},
+            sort='distance',
+            place=leiden_place.pk
         )
         data = self.data['data']
         self.assertEqual(len(data), 5)
@@ -589,8 +595,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Any distance
         self.search(
-            filter={'distance': f'{leiden_place.id}:', 'is_online': '0'},
-            sort='distance'
+            filter={'is_online': '0'},
+            sort='distance',
+            place=leiden_place.pk
         )
         data = self.data['data']
         self.assertEqual(data[0]['id'], str(activity_leiden.id))
@@ -938,7 +945,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': f'{place.pk}:100', 'is_online': '0'})
+        self.search({'distance': '100', 'is_online': '0'}, place=place.pk)
 
         self.assertFacets(
             'distance', {}
@@ -990,7 +997,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=lyutidol)
         )
 
-        self.search({'distance': f'{place.id}:100'})
+        self.search({'distance': '100'}, place=place.pk)
 
         self.assertFacets(
             'distance', {}

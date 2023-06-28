@@ -217,7 +217,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'activity_count'
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
         )
 
     class JSONAPIMeta(object):

@@ -701,7 +701,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({}, user=self.owner)
         self.assertFound(matching)
 
-        self.search({'owner': True}, user=self.owner)
+        self.search({'owner': 'me'}, user=self.owner)
         self.assertFound(matching + other)
 
     def test_filter_owner(self):
@@ -711,7 +711,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             InitiativeFactory.create_batch(2, activity_managers=[self.owner], status='approved')
         )
 
-        self.search({'owner': True}, user=self.owner)
+        self.search({'owner': 'me'}, user=self.owner)
         self.assertFound(matching)
 
     def test_filter_segment(self):

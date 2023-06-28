@@ -29,7 +29,7 @@ class DistanceFacet(Facet):
 
         place_id = request.GET.get('place')
         if place_id:
-            place = Place.objects.first(pk=place_id)
+            place = Place.objects.filter(pk=place_id).first()
             if place and place.position and filter_value:
                 geo_filter = GeoDistance(
                     _expand__to_dot=False,

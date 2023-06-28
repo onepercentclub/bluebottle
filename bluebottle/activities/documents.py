@@ -34,6 +34,9 @@ class ActivityDocument(Document):
     status = fields.KeywordField()
 
     type = fields.KeywordField()
+    manager = fields.NestedField(properties={
+        'id': fields.KeywordField()
+    })
 
     image = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -201,6 +204,16 @@ class ActivityDocument(Document):
                 'file': instance.initiative.image.file.name,
                 'type': 'initiative'
             }
+
+    def prepare_manager(self, instance):
+        managers = [
+            {'id': instance.owner.pk},
+            {'id': instance.initiative.owner.pk}
+        ]
+        for manager in instance.initiative.activity_managers.all():
+            managers.append({'id': manager.pk})
+        if instance.initiative.promoter:
+            managers.append({'id': instance.initiative.promoter.pk})
 
     def prepare_contributors(self, instance):
         return [

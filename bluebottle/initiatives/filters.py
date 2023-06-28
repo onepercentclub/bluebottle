@@ -1,10 +1,9 @@
-from elasticsearch_dsl.query import Term
+from django_tools.middlewares.ThreadLocal import get_current_user
 from elasticsearch_dsl.faceted_search import TermsFacet
+from elasticsearch_dsl.query import Term
+
 from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings
-
-from django_tools.middlewares.ThreadLocal import get_current_user
-
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, TranslatedFacet, NamedNestedFacet,
@@ -57,15 +56,8 @@ class InitiativeSearch(Search):
 
     def query(self, search, query):
         search = super().query(search, query)
-
         if 'owner' not in self._filters:
             search = search.filter(Term(status='approved'))
-
-        permission = 'initiatives.api_read_initiative'
-        user = get_current_user()
-        if user and not user.has_perm(permission):
-            search = search.filter(Term(owner=user.pk))
-
         return search
 
 

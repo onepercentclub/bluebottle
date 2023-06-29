@@ -110,6 +110,28 @@ class TeamActivityFacet(BooleanFacet):
         return (_('As an individual'), 'individuals')
 
 
+class InitiativeFacet(TermsFacet):
+    def __init__(self, **kwargs):
+        super().__init__(field='owner', **kwargs)
+
+    def add_filter(self, filter_values):
+        terms = Nested(
+            path='initiative',
+            query=(
+                Terms(initiative__id=filter_values)
+            )
+        )
+        user = get_current_user()
+        if user.is_authenticated:
+            return terms + Nested(
+                path='manager',
+                query=(
+                    Term(manager__id=user.id)
+                )
+            )
+        return terms + Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -126,6 +148,7 @@ class ActivitySearch(Search):
     ]
 
     facets = {
+        'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
         'highlight': TermsFacet(field='highlight'),
@@ -249,9 +272,10 @@ class ActivitySearch(Search):
                 )
             )
 
-        search = search.filter(
-            Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
-        )
+        if 'initiative' not in self._filters:
+            search = search.filter(
+                Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+            )
 
         return search
 

@@ -1,13 +1,14 @@
-require('select2');
 
 var $ = require('jquery');
 var t = require('../utils/translate');
+
+require('select2')($);
 
 var Select2 = function() { };
 
 Select2.prototype = {
     updateAttachBody: function(AttachBody) {
-        AttachBody.prototype._positionDropdown = function () {
+        AttachBody.prototype._positionDropdown = function() {
             var $window = $(window);
 
             var isCurrentlyAbove = this.$dropdown.hasClass('select2-dropdown--above');
@@ -80,7 +81,7 @@ Select2.prototype = {
             this.$dropdownContainer.css(css);
         };
 
-        AttachBody.prototype.render = function (decorated) {
+        AttachBody.prototype.render = function(decorated) {
             var $container = $('<span></span>');
 
             var $dropdown = decorated.call(this);
@@ -99,7 +100,7 @@ Select2.prototype = {
         };
     },
     updateDropdownAdapter: function(DropdownAdapter) {
-        DropdownAdapter.prototype.render = function () {
+        DropdownAdapter.prototype.render = function() {
             var buttons = '';
 
             if (this.options.get('multiple')) {
@@ -123,17 +124,17 @@ Select2.prototype = {
 
             var $element = this.$element;
 
-            $dropdown.find('.select2-buttons-button-select-all').on('click', function (e) {
+            $dropdown.find('.select2-buttons-button-select-all').on('click', function(e) {
                 e.preventDefault();
                 var selected = [];
-                $element.find('option').each(function () {
+                $element.find('option').each(function() {
                     selected.push($(this).val());
                 });
                 $element.select2('val', selected);
                 $element.select2('close');
             });
 
-            $dropdown.find('.select2-buttons-button-deselect-all').on('click', function (e) {
+            $dropdown.find('.select2-buttons-button-deselect-all').on('click', function(e) {
                 e.preventDefault();
                 $element.select2('val', '');
                 $element.select2('close');
@@ -160,7 +161,7 @@ Select2.prototype = {
 
             settings['ajax'] = {
                 dataType: 'json',
-                data: function (params) {
+                data: function(params) {
                     return {
                         content_type: contentTypeId,
                         app_label: appLabel,
@@ -171,7 +172,7 @@ Select2.prototype = {
                         object_id: objectId
                     };
                 },
-                processResults: function (data, params) {
+                processResults: function(data, params) {
                     if (data.error) {
                         return {}
                     }
@@ -180,10 +181,10 @@ Select2.prototype = {
                     var more = (params.page * pageSize) < data.total;
 
                     return {
-                      results: data.items,
-                      pagination: {
-                        more: more
-                      }
+                        results: data.items,
+                        pagination: {
+                            more: more
+                        }
                     };
                 }
             };

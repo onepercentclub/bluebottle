@@ -24,7 +24,6 @@ require('./features/checkboxes');
 require('./features/date-time-widgets');
 require('./features/inlines');
 require('./features/changelist');
-require('./features/tooltips');
 require('./features/dashboard');
 require('./features/changeform');
 require('./features/themes');

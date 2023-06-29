@@ -3,7 +3,6 @@ from django.contrib.gis.geos import Point
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 from rest_framework import response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -37,7 +36,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination, cache_on_auth
+    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
 )
 
 
@@ -50,7 +49,6 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         TenantConditionalOpenClose,
     )
 
-    @method_decorator(cache_on_auth(3600))
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 

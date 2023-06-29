@@ -213,7 +213,7 @@ class Segment(models.Model):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/segments/details/{}/{}/".format(
+        return u"{}/{}/segments/{}/{}/activities/list".format(
             domain, language,
             self.pk,
             self.slug

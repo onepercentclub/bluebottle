@@ -1,16 +1,16 @@
 from builtins import object
+
 from adminsortable.admin import SortableMixin
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -84,7 +84,13 @@ class Category(TranslatableModel):
         super(Category, self).save(**kwargs)
 
     def get_absolute_url(self):
-        return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/categories/{}/{}/activities/list".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
 
 @python_2_unicode_compatible

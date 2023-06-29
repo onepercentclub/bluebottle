@@ -12,6 +12,7 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import SuspiciousFileOperation, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
@@ -32,6 +33,7 @@ from bluebottle.utils.permissions import (
     OneOf
 )
 from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
 
@@ -125,9 +127,7 @@ class TenantAwareStorageTest(unittest.TestCase):
         specified
         """
         # The storage must be imported after the db connection is mocked
-        with mock.patch("django.db.connection") as connection:
-            from ..storage import TenantFileSystemStorage
-
+        with mock.patch.object(connection.tenant, 'schema_name', return_value='dummy_schema_name'):
             name = 'testname'
 
             connection.tenant.schema_name = 'dummy_schema_name'
@@ -145,39 +145,25 @@ class TenantAwareStorageTest(unittest.TestCase):
         Test that there is no tenant location path when there is no tenant
         specified
         """
-        with mock.patch("django.db.connection") as connection:
-            from ..storage import TenantFileSystemStorage
+        connection.tenant = None
+        name = 'testname'
 
-            name = 'testname'
+        storage = TenantFileSystemStorage()
 
-            connection.tenant = None
-            connection.location = "/"
+        res = storage.path(name=name)
 
-            storage = TenantFileSystemStorage()
-
-            res = storage.path(name=name)
-            self.assertEqual(res.split("/")[-1], name)
-            self.assertEqual(res.split("/")[-3:-1], ['static', 'media'])
+        self.assertEqual(res.split("/")[-1], name)
+        self.assertEqual(res.split("/")[-3:-1], ['static', 'media'])
 
     def test_raise_suspicious_error(self):
         """
         Test that a SuspiciousFileOperation is raised when the location
         path is generated
         """
-        with mock.patch("django.utils._os.safe_join") as safe_join, \
-                mock.patch("django.db.connection") as connection:
-            from ..storage import TenantFileSystemStorage
+        name = '../../testname_join'
+        storage = TenantFileSystemStorage()
 
-            # Make sure that the 2nd safe_join is called in the storage code
-            connection.tenant = None
-
-            name = 'testname_join'
-
-            safe_join.side_effect = ValueError
-
-            storage = TenantFileSystemStorage()
-
-            self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
+        self.assertRaises(SuspiciousFileOperation, storage.path, name=name)
 
 
 class SendMailTestCase(BluebottleTestCase):

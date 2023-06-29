@@ -23,7 +23,7 @@ from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
@@ -214,8 +214,20 @@ class EffortContributionAdmin(ContributionChildAdmin):
     model = EffortContribution
 
 
-class ActivityForm(StateMachineModelForm):
+class ActivityFormMetaClass(StateMachineModelFormMetaClass):
+    def __new__(cls, name, bases, attrs):
+        if 'Meta' in attrs and connection.tenant.schema_name != 'public':
+            for segment_type in SegmentType.objects.all():
+                attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                    required=False,
+                    label=segment_type.name,
+                    queryset=segment_type.segments,
+                )
 
+        return super().__new__(cls, name, bases, attrs)
+
+
+class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(ActivityForm, self).__init__(*args, **kwargs)
         f = self.fields.get('user_permissions', None)
@@ -224,11 +236,6 @@ class ActivityForm(StateMachineModelForm):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
-                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
-                    required=False,
-                    label=segment_type.name,
-                    queryset=segment_type.segments,
-                )
                 if self.instance.pk:
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
@@ -299,7 +306,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             segments += form.cleaned_data.get(segment_type.field_name, [])
 
         if segments:
-            del form.cleaned_data['segments']
             obj.segments.set(segments)
             obj.save()
 

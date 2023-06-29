@@ -2,6 +2,10 @@
 
 SECRET_KEY = '1, 2, this is just a test!'
 
+
+RECAPTCHA_PRIVATE_KEY = 'test-private-key'
+RECAPTCHA_PUBLIC_KEY = 'test-public-key'
+
 from .base import *
 
 import warnings

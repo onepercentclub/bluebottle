@@ -835,6 +835,26 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({}, 'created')
         self.assertFound(matching)
 
+    def test_sort_open_activities(self):
+        matching = InitiativeFactory.create_batch(3, status='approved')
+
+        matching[0].created = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        DeedFactory.create_batch(4, initiative=matching[0], status='open')
+        matching[0].save()
+
+        matching[1].created = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+        DeedFactory.create_batch(2, initiative=matching[0], status='open')
+        DeedFactory.create_batch(5, initiative=matching[0], status='succeeded')
+        matching[1].save()
+
+        matching[2].created = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+        DeedFactory.create_batch(2, initiative=matching[0], status='open')
+        DeedFactory.create_batch(3, initiative=matching[0], status='succeeded')
+        matching[2].save()
+
+        self.search({}, 'open_activities')
+        self.assertFound(matching)
+
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
     def setUp(self):

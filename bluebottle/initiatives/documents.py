@@ -91,6 +91,9 @@ class InitiativeDocument(Document):
         'status_score': fields.FloatField()
     })
 
+    open_activities_count = fields.IntegerField()
+    succeeded_activities_count = fields.IntegerField()
+
     place = fields.NestedField(properties={
         'province': fields.TextField(),
         'locality': fields.TextField(),
@@ -159,6 +162,23 @@ class InitiativeDocument(Document):
                 )
             )
         ]
+
+    def prepare_open_activities_count(self, instance):
+        return instance.activities.filter(
+            status__in=(
+                'open',
+                'full',
+                'running'
+            )
+        ).count()
+
+    def prepare_succeeded_activities_count(self, instance):
+        return instance.activities.filter(
+            status__in=(
+                'succeeded',
+                'partially_funded',
+            )
+        ).count()
 
     def prepare_owner(self, instance):
         owners = [instance.owner.pk]

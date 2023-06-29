@@ -51,6 +51,9 @@ body.login {
     width: 100%;
   }
 
+  p {
+    padding-top: 20px;
+  }
   .form-row {
     padding: 4px;
     float: left;
@@ -68,7 +71,7 @@ body.login {
       }
     }
 
-    #id_username, #id_password {
+    input {
       clear: both;
       padding: 6px;
       width: 100%;
@@ -87,7 +90,7 @@ body.login {
     margin: 0;
     text-align: center;
 
-    input[type="submit"] {
+    input[type="submit"], button {
       font-weight: 500;
       background-color: $secondary-button-background-color;
       color: $secondary-button-text-color;

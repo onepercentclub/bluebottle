@@ -2,11 +2,11 @@ import datetime
 import os
 from collections import OrderedDict
 
-from .admin_dashboard import *  # noqa
-from django.utils.translation import gettext_lazy as _
-
 import rules
 from PIL import ImageFile
+from django.utils.translation import gettext_lazy as _
+
+from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -164,8 +164,12 @@ MIDDLEWARE = (
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'axes.middleware.AxesMiddleware',
 )
+
+LOGIN_URL = 'two_factor:login'
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
@@ -298,17 +302,25 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+    'bluebottle.exports',
 )
 
 TENANT_APPS = (
+    'bluebottle.bluebottle_dashboard',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
+    'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
+
+
+    'django.contrib.contenttypes',
     'polymorphic',
     'social_django',
-    'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
     'bluebottle.token_auth',
 
-    'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
     'rest_framework',
@@ -1152,8 +1164,6 @@ AXES_META_PRECEDENCE_ORDER = [
 AXES_NUM_PROXIES = 1
 AXES_USERNAME_FORM_FIELD = 'email'
 
-RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
-RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
 USE_X_FORWARDED_HOST = True
 
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
@@ -1167,3 +1177,5 @@ else:
     CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
 
 MATCHING_DISTANCE = 50
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

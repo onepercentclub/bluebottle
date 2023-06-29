@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}"/>
+    {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% if user.is_staff %}
+        <div class="two-factor-back">
+            <a href="/admin">
+                &larr; Back to back office
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}
+
+<div class="2fa">
+    {% block content %}
+        {{ block.super }} <H2>JAjaja</H2>
+    {% endblock %}
+</div>

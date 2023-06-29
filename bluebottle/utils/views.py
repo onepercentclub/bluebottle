@@ -1,7 +1,6 @@
 import mimetypes
 import os
 import re
-from functools import wraps
 from io import BytesIO
 from operator import attrgetter
 
@@ -13,9 +12,7 @@ from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
 from django.http import Http404, HttpResponse
 from django.utils import translation
-from django.utils.decorators import available_attrs
 from django.utils.functional import cached_property
-from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
@@ -416,15 +413,3 @@ class ExportView(PrivateFileView):
         response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         return response
-
-
-def cache_on_auth(timeout):
-    def decorator(view_func):
-        @wraps(view_func, assigned=available_attrs(view_func))
-        def _wrapped_view(request, *args, **kwargs):
-            if request.user.is_authenticated:
-                return cache_page(timeout)(view_func)(request, *args, **kwargs)
-            else:
-                return view_func(request, *args, **kwargs)
-        return _wrapped_view
-    return decorator

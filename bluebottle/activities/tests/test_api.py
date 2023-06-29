@@ -735,6 +735,35 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_initiative(self):
+
+        initiator = BlueBottleUserFactory.create()
+        activity_manager = BlueBottleUserFactory.create()
+        draft_owner = BlueBottleUserFactory.create()
+        random_user = BlueBottleUserFactory.create()
+
+        initiative = InitiativeFactory.create(status='approved', owner=initiator)
+        initiative.activity_managers.add(activity_manager)
+
+        open = DeedFactory.create(status="open", initiative=initiative)
+        draft = DeedFactory.create(status="draft", initiative=initiative, owner=draft_owner)
+        DeedFactory.create(status="open")
+
+        self.search({'initiative.id': initiative.id}, user=initiator)
+        self.assertFound([open, draft])
+
+        self.search({'initiative.id': initiative.id}, user=activity_manager)
+        self.assertFound([open, draft])
+
+        self.search({'initiative.id': initiative.id}, user=draft_owner)
+        self.assertFound([open, draft])
+
+        self.search({'initiative.id': initiative.id}, user=random_user)
+        self.assertFound([open])
+
+        self.search({'initiative.id': initiative.id})
+        self.assertFound([open])
+
     def test_filter_upcoming(self):
         matching = (
             PeriodActivityFactory.create_batch(2, status='open') +

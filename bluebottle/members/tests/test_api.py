@@ -979,7 +979,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'This password is too common.'
+            'This password is too common, be adventurous!'
         )
 
     def test_email(self):
@@ -989,7 +989,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'The password is too similar to the email address.'
+            'The password is too similar to your email address, think outside the box!'
         )
 
     def test_valid_fair(self):
@@ -1382,7 +1382,7 @@ class MemberSignUpAPITestCase(APITestCase):
         error = self.response.json()['errors'][0]
         self.assertEqual(
             error['detail'],
-            'This password is too common.'
+            'This password is too common, be adventurous!'
         )
         self.assertEqual(
             error['source']['pointer'],

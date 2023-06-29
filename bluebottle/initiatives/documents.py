@@ -87,7 +87,6 @@ class InitiativeDocument(Document):
         'title': fields.KeywordField(),
         'status': fields.KeywordField(),
         'activity_date': fields.DateField(),
-        'status_score': fields.FloatField()
     })
 
     open_activities_count = fields.IntegerField()
@@ -147,7 +146,6 @@ class InitiativeDocument(Document):
                 'title': activity.title,
                 'activity_date': activity.activity_date,
                 'status': activity.status,
-                'status_score': SCORE_MAP[activity.status],
             } for activity in instance.activities.filter(
                 status__in=(
                     'succeeded',

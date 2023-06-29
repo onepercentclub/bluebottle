@@ -809,17 +809,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'search': text})
         self.assertFound(matching)
 
-    def test_sort_title(self):
-        matching = [
-            InitiativeFactory.create(title='Start with a', status='approved'),
-            InitiativeFactory.create(title='Start with b', status='approved'),
-            InitiativeFactory.create(title='Start with c', status='approved'),
-            InitiativeFactory.create(title='Start with d', status='approved'),
-        ]
-
-        self.search({}, 'alphabetical')
-        self.assertFound(matching)
-
     def test_sort_created(self):
         matching = InitiativeFactory.create_batch(3, status='approved')
 
@@ -832,7 +821,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching[2].created = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
         matching[2].save()
 
-        self.search({}, 'created')
+        self.search({}, 'date_created')
         self.assertFound(matching)
 
     def test_sort_open_activities(self):

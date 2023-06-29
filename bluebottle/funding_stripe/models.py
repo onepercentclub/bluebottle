@@ -4,7 +4,6 @@ from builtins import object
 from operator import attrgetter
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.functional import cached_property
@@ -297,7 +296,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-    eventually_due = JSONField(null=True, default=list)
+    eventually_due = models.JSONField(null=True, default=list)
 
     @property
     def country_spec(self):

@@ -200,8 +200,9 @@ class InitiativePreviewSerializer(ModelSerializer):
 
     def get_activity_count(self, obj):
         return {
-            'total': len(obj.activities),
-            'open': len([act for act in obj.activities if act.status in ['open', 'full', 'running']])
+            'total': obj.succeeded_activities_count + obj.open_activities_count,
+            'succeeded': obj.succeeded_activities_count,
+            'open': obj.open_activities_count
         }
 
     def get_theme(self, obj):

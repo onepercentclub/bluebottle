@@ -115,21 +115,17 @@ class InitiativeFacet(TermsFacet):
         super().__init__(field='owner', **kwargs)
 
     def add_filter(self, filter_values):
-        terms = Nested(
+        initiative_filter = Nested(
             path='initiative',
             query=(
                 Terms(initiative__id=filter_values)
             )
         )
+        open_filter = Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
         user = get_current_user()
         if user.is_authenticated:
-            return terms + Nested(
-                path='manager',
-                query=(
-                    Term(manager__id=user.id)
-                )
-            )
-        return terms + Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+            return initiative_filter & (Term(manager=user.id) | open_filter)
+        return initiative_filter & open_filter
 
 
 class ActivitySearch(Search):
@@ -272,7 +268,7 @@ class ActivitySearch(Search):
                 )
             )
 
-        if 'initiative' not in self._filters:
+        if 'initiative.id' not in self._filters:
             search = search.filter(
                 Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
             )

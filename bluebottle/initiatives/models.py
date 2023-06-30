@@ -252,12 +252,18 @@ ACTIVITY_SEARCH_FILTERS = (
     ('team_activity', _('Individual / Team')),
     ('theme', _('Theme')),
     ('category', _('Category')),
-    ('segments', _('Segments')),
 )
 
 
-def get_search_filters():
-    filters = ACTIVITY_SEARCH_FILTERS
+INITIATIVE_SEARCH_FILTERS = (
+    ('office', _('Office')),
+    ('country', _('Country')),
+    ('theme', _('Theme')),
+    ('category', _('Category')),
+)
+
+
+def get_search_filters(filters):
     if connection.tenant.schema_name != 'public':
         for segment in SegmentType.objects.all():
             filters = filters + ((f'segment.{segment.slug}', segment.name),)
@@ -364,18 +370,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 class SearchFilter(SortableMixin, models.Model):
+
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name='search_filters',
         on_delete=models.deletion.CASCADE
     )
-    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)())
     highlight = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    @property
-    def name(self):
-        return [filter[1] for filter in get_search_filters() if filter[0] == self.type][0]
 
     @property
     def placeholder(self):
@@ -391,6 +393,12 @@ class SearchFilter(SortableMixin, models.Model):
 
 
 class ActivitySearchFilter(SearchFilter):
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)(ACTIVITY_SEARCH_FILTERS))
+
+    @property
+    def name(self):
+        return [filter[1] for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS) if filter[0] == self.type][0]
+
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name='search_filters_activities',
@@ -399,6 +407,12 @@ class ActivitySearchFilter(SearchFilter):
 
 
 class InitiativeSearchFilter(SearchFilter):
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)(INITIATIVE_SEARCH_FILTERS))
+
+    @property
+    def name(self):
+        return [filter[1] for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS) if filter[0] == self.type][0]
+
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name='search_filters_initiatives',

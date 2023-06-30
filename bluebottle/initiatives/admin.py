@@ -235,6 +235,12 @@ class InitiativeSearchFilterInline(SortableTabularInline):
     model = InitiativeSearchFilter
     extra = 0
 
+    readonly_fields = ('drag',)
+    fields = readonly_fields + ('type', 'highlight')
+
+    def drag(self, obj):
+        return format_html('<div style="font-size: 20px">⠿</div>')
+
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettingsAdmin):

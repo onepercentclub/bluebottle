@@ -26,8 +26,8 @@ class InitiativeSearch(Search):
     doc_types = [initiative]
 
     sorting = {
-        'created': ['-created'],
-        'alphabetical': ('title_keyword', ),
+        'date_created': ['-created'],
+        'open_activities': ['-open_activities_count', '-succeeded_activities_count'],
     }
 
     fields = [

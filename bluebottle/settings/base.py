@@ -1179,3 +1179,5 @@ else:
 MATCHING_DISTANCE = 50
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+X_FRAME_OPTIONS = "SAMEORIGIN"

@@ -747,6 +747,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         open = DeedFactory.create(status="open", initiative=initiative)
         draft = DeedFactory.create(status="draft", initiative=initiative, owner=draft_owner)
+        DeedFactory.create(status="deleted", initiative=initiative)
         DeedFactory.create(status="open")
 
         self.search({'initiative.id': initiative.id}, user=initiator)

@@ -124,7 +124,7 @@ class InitiativeFacet(TermsFacet):
         open_filter = Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
         user = get_current_user()
         if user.is_authenticated:
-            return initiative_filter & (Term(manager=user.id) | open_filter)
+            return initiative_filter & (Term(manager=user.id) | open_filter) & ~Terms(status=['deleted'])
         return initiative_filter & open_filter
 
 

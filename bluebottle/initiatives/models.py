@@ -338,11 +338,11 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_("Add a link to activities so managers van download a contributor list.")
     )
     enable_matching_emails = models.BooleanField(
-        _('Matching'),
+        _('Enable matching'),
         default=False,
         help_text=_((
-            "When enabled: show matching wizard, show my matching preferences, "
-            "show matching labels, send monthly matching emails"
+            "Users will be able to set their preferences for a personalised activity overview "
+            "and receive monthly emails with activities that best suit them."
         ))
     )
 

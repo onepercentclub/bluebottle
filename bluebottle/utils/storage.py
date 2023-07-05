@@ -2,7 +2,6 @@ import os
 
 from django.core.exceptions import SuspiciousFileOperation
 from tenant_schemas.storage import TenantFileSystemStorage as BaseTenantFileSystemStorage
-from django.utils.functional import cached_property
 
 from django.utils._os import safe_join
 from django.db import connection
@@ -24,7 +23,7 @@ class TenantFileSystemStorage(BaseTenantFileSystemStorage):
                 "Attempted access to '%s' denied." % name)
         return os.path.normpath(path)
 
-    @cached_property
+    @property
     def location(self):
         if connection.tenant:
             return os.path.abspath(safe_join(self.base_location, connection.tenant.schema_name))

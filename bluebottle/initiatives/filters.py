@@ -23,6 +23,9 @@ class OwnerFacet(TermsFacet):
                 return Term(owner=user.pk)
             raise NotAuthenticated
 
+    def get_values(self, data, filter_values):
+        return []
+
 
 class InitiativeSearch(Search):
     doc_types = [initiative]
@@ -44,12 +47,13 @@ class InitiativeSearch(Search):
         'theme': TranslatedFacet('theme'),
         'category': TranslatedFacet('categories', 'title'),
         'country': NamedNestedFacet('country'),
-        'location': NamedNestedFacet('office'),
+        'office': NamedNestedFacet('location'),
     }
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
-        result = super().__new__(cls, settings.activity_search_filters)
+        print(settings.initiative_search_filters)
+        result = super().__new__(cls, settings.search_filters_initiatives.all())
 
         for segment_type in SegmentType.objects.all():
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)

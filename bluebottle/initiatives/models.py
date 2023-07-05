@@ -278,12 +278,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('deed', _('Deed')),
         ('collect', _('Collect activity')),
     )
-    INITIATIVE_SEARCH_FILTERS = (
-        ('location', _('Office location')),
-        ('country', _('Country')),
-        ('theme', _('Theme')),
-        ('category', _('Category')),
-    )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),
         ('phone', _('Phone')),

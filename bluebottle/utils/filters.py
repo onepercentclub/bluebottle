@@ -168,11 +168,16 @@ class Search(FacetedSearch):
     def __new__(cls, enabled_filters):
         result = super().__new__(cls)
 
+        # Make sure that we copy the original facets, so that things do not add up
+        facets = dict(**result.facets)
+
         for filter in enabled_filters:
             try:
-                result.facets[filter] = cls.possible_facets[filter]
+                facets[filter.type] = cls.possible_facets[filter.type]
             except KeyError:
                 pass
+
+        result.facets = facets
 
         return result
 

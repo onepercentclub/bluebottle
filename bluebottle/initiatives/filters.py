@@ -1,13 +1,14 @@
 from django_tools.middlewares.ThreadLocal import get_current_user
 from elasticsearch_dsl.faceted_search import TermsFacet
 from elasticsearch_dsl.query import Term
+from rest_framework.exceptions import NotAuthenticated
 
 from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, TranslatedFacet, NamedNestedFacet,
-    SegmentFacet
+    ElasticSearchFilter, Search, NamedNestedFacet,
+    SegmentFacet, TranslatedFacet
 )
 
 
@@ -20,6 +21,7 @@ class OwnerFacet(TermsFacet):
             user = get_current_user()
             if user.is_authenticated:
                 return Term(owner=user.pk)
+            raise NotAuthenticated
 
 
 class InitiativeSearch(Search):

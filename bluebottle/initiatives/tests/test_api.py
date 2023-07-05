@@ -663,6 +663,15 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
+    def test_only_owner_as_guest(self):
+        InitiativeFactory.create(status='approved')
+        InitiativeFactory.create(status="draft")
+
+        response = self.client.get(
+            self.url + '?filter[owner]=me'
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_only_owner_permission_owner(self):
         owned = InitiativeFactory.create(owner=self.owner, status='draft')
         InitiativeFactory.create(status="approved")

@@ -22,7 +22,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import InitiativePlatformSettings, ActivitySearchFilter
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory
@@ -715,7 +715,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_theme(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['theme'])
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
         matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
 
@@ -816,7 +817,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_category(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['category'])
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="category")
+
         matching_category = CategoryFactory.create()
         other_category = CategoryFactory.create()
 
@@ -837,7 +840,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_skill(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['skill'])
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="skill")
+
         matching_skill = SkillFactory.create()
         other_skill = SkillFactory.create()
 
@@ -862,7 +867,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_country(self):
-        InitiativePlatformSettings.objects.create(activity_search_filters=['country'])
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 

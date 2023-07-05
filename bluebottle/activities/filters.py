@@ -237,7 +237,7 @@ class ActivitySearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
-        result = super().__new__(cls, settings.activity_search_filters)
+        result = super().__new__(cls, settings.search_filters_activities.all())
 
         for segment_type in SegmentType.objects.all():
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)

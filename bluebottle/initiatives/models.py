@@ -391,7 +391,10 @@ class ActivitySearchFilter(SearchFilter):
 
     @property
     def name(self):
-        return [filter[1] for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS) if filter[0] == self.type][0]
+        filters = [filter[1] for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS) if filter[0] == self.type]
+        if len(filters):
+            return filters[0]
+        return '--------'
 
     settings = models.ForeignKey(
         InitiativePlatformSettings,
@@ -405,7 +408,10 @@ class InitiativeSearchFilter(SearchFilter):
 
     @property
     def name(self):
-        return [filter[1] for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS) if filter[0] == self.type][0]
+        filters = [filter[1] for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS) if filter[0] == self.type]
+        if len(filters):
+            return filters[0]
+        return '--------'
 
     settings = models.ForeignKey(
         InitiativePlatformSettings,

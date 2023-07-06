@@ -17,7 +17,8 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.impact.models import ImpactType
 from bluebottle.impact.tests.factories import ImpactGoalFactory
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, InitiativeSearchFilter, \
+    ActivitySearchFilter
 from bluebottle.initiatives.models import Theme
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -989,7 +990,6 @@ class InitiativeRedirectTest(TestCase):
         )
 
     def test_does_not_exist(self):
-
         data = {
             'data': {
                 'type': 'initiative-redirects',
@@ -1286,3 +1286,62 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertTrue(data['platform']['initiatives']['enable_office_restrictions'])
         self.assertTrue(data['platform']['initiatives']['enable_office_regions'])
         self.assertEqual(data['platform']['initiatives']['default_office_restriction'], 'office_subregion')
+
+    def test_get_search_filters(self):
+        self.settings.search_filters_activities.all().delete()
+        self.settings.search_filters_initiatives.all().delete()
+
+        for filter_type in ['date', 'distance', 'is_online']:
+            self.settings.search_filters_activities.add(
+                ActivitySearchFilter.objects.create(
+                    settings=self.settings,
+                    type=filter_type
+                )
+            )
+        for filter_type in ['theme', 'country']:
+            self.settings.search_filters_initiatives.add(
+                InitiativeSearchFilter.objects.create(
+                    settings=self.settings,
+                    type=filter_type
+                )
+            )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(
+            data['platform']['initiatives']['search_filters_activities'],
+            [
+                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
+                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select a distance'},
+                {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
+            ]
+
+        )
+        self.assertEqual(
+            data['platform']['initiatives']['search_filters_initiatives'],
+            [
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'}
+            ]
+
+        )
+
+        self.settings.search_filters_initiatives.add(
+            InitiativeSearchFilter.objects.create(
+                settings=self.settings,
+                type='old_filter'
+            )
+        )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(
+            data['platform']['initiatives']['search_filters_initiatives'],
+            [
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'},
+                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select a --------'}
+            ]
+        )

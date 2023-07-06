@@ -54,13 +54,6 @@ class InitiativeDocument(Document):
         }
     )
 
-    office = fields.NestedField(
-        properties={
-            'id': fields.KeywordField(),
-            'name': fields.KeywordField(),
-        }
-    )
-
     promoter_id = fields.KeywordField()
     reviewer_id = fields.KeywordField()
 
@@ -214,18 +207,6 @@ class InitiativeDocument(Document):
                 })
 
         return countries
-
-    def prepare_office(self, instance):
-        offices = []
-        for activity in instance.activities.filter(
-                status__in=['open', 'succeeded', 'full', 'partially_funded']
-        ):
-            if activity.office_location:
-                offices.append({
-                    'id': activity.office_location.pk,
-                    'name': activity.office_location.name,
-                })
-        return offices
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:

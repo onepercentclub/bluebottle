@@ -7,8 +7,7 @@ from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, NamedNestedFacet,
-    SegmentFacet, TranslatedFacet
+    ElasticSearchFilter, Search, SegmentFacet, TranslatedFacet, NamedNestedFacet
 )
 
 

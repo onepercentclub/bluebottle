@@ -1,6 +1,7 @@
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
+from bluebottle.activities.documents import get_country_to_elastic_list
 from bluebottle.activities.models import Activity
 from bluebottle.categories.models import Category
 from bluebottle.deeds.models import Deed
@@ -51,6 +52,7 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -187,21 +189,19 @@ class InitiativeDocument(Document):
     def prepare_country(self, instance):
         countries = []
 
+        if instance.place and instance.place.country:
+            countries += get_country_to_elastic_list(instance.place.country)
+
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
             if activity.office_location and activity.office_location.country:
-                countries.append({
-                    'id': activity.office_location.country.pk,
-                    'name': activity.office_location.country.name,
-                })
-            elif hasattr(activity, 'place') and instance.place and activity.place.country:
-                countries.append({
-                    'id': activity.place.country.pk,
-                    'name': activity.place.country.name,
-                })
+                countries += get_country_to_elastic_list(activity.office_location.country)
 
-        return countries
+            elif hasattr(activity, 'place') and instance.place and activity.place.country:
+                countries += get_country_to_elastic_list(activity.place.country)
+
+        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:

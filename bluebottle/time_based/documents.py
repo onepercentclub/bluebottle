@@ -1,8 +1,9 @@
 from datetime import datetime
+
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity
+from bluebottle.activities.documents import ActivityDocument, activity, get_country_to_elastic_list
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
 )
@@ -115,14 +116,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         ]
 
     def prepare_country(self, instance):
-        country = [super().prepare_country(instance)]
-        return [country] + [
-            {
-                'id': slot.location.country.pk,
-                'name': slot.location.country.name,
-            } for slot in instance.slots.all()
-            if not slot.is_online and slot.location
-        ]
+        countries = super().prepare_country(instance)
+        for slot in instance.slots.all():
+            if not slot.is_online and slot.location and slot.location.country:
+                countries + get_country_to_elastic_list(slot.location.country)
+        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
 
     def prepare_position(self, instance):
         return [

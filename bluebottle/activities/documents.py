@@ -23,6 +23,17 @@ activity.settings(
 )
 
 
+def get_country_to_elastic_list(country):
+    return [
+        {
+            'id': country.pk,
+            'name': translation.name,
+            'language_code': translation.language_code
+        }
+        for translation in country.translations.all()
+    ]
+
+
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
@@ -82,6 +93,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -238,18 +250,14 @@ class ActivityDocument(Document):
         return mapping[str(instance.__class__.__name__.lower())]
 
     def prepare_country(self, instance):
-        country = None
-
-        if instance.office_location:
-            country = instance.office_location.country
-        elif hasattr(instance, 'place') and instance.place:
-            country = instance.place.country
-
-        if country:
-            return {
-                'id': country.id,
-                'name': country.name
-            }
+        countries = []
+        if instance.office_location and instance.office_location.country:
+            countries += get_country_to_elastic_list(instance.office_location.country)
+        if hasattr(instance, 'place') and instance.place and instance.place.country:
+            countries += get_country_to_elastic_list(instance.place.country)
+        if instance.initiative.place and instance.initiative.place.country:
+            countries += get_country_to_elastic_list(instance.initiative.place.country)
+        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
 
     def prepare_location(self, instance):
         locations = []

@@ -893,6 +893,43 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_country_slots(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        matching_country = CountryFactory.create()
+        other_country = CountryFactory.create()
+
+        matching = DateActivityFactory.create_batch(
+            2,
+            status='open',
+        )
+        for activity in matching:
+            DateActivitySlotFactory.create_batch(
+                2,
+                activity=activity,
+                location=GeolocationFactory.create(country=matching_country)
+            )
+
+        other = DateActivityFactory.create_batch(
+            3,
+            status='open',
+        )
+        for activity in other:
+            DateActivitySlotFactory.create_batch(
+                2,
+                activity=activity,
+                location=GeolocationFactory.create(country=other_country)
+            )
+
+        self.search({'country': matching_country.pk})
+
+        self.assertFacets(
+            'country',
+            {str(matching_country.pk): len(matching), str(other_country.pk): len(other)}
+        )
+        self.assertFound(matching)
+
     def test_filter_highlight(self):
         matching = PeriodActivityFactory.create_batch(
             2,

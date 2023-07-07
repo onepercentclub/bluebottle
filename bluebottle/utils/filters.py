@@ -74,7 +74,7 @@ class NamedNestedFacet(Facet):
         if filter_values:
             return Nested(
                 path=self.path,
-                query=Terms(**{f'{self.path}__id': filter_values})
+                query=Terms(**{f'{self.path}.id': filter_values})
             )
 
     def is_filtered(self, key, filter_values):
@@ -131,6 +131,10 @@ class TranslatedFacet(FilteredNestedFacet):
             {f'{path}.language': get_current_language()},
             name
         )
+
+    def get_aggregation(self):
+        self.filter = {f'{self.path}.language': get_current_language()}
+        return super().get_aggregation()
 
 
 class SegmentFacet(FilteredNestedFacet):

@@ -22,6 +22,10 @@ class TimeBasedActivityDocument:
         return SCORE_MAP.get(instance.status, 0)
 
 
+def deduplicate(items):
+    return [dict(s) for s in set(frozenset(d.items()) for d in items)]
+
+
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
@@ -119,8 +123,8 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         countries = super().prepare_country(instance)
         for slot in instance.slots.all():
             if not slot.is_online and slot.location and slot.location.country:
-                countries + get_country_to_elastic_list(slot.location.country)
-        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
+                countries += get_country_to_elastic_list(slot.location.country)
+        return deduplicate(countries)
 
     def prepare_position(self, instance):
         return [

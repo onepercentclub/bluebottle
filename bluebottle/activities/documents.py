@@ -5,6 +5,7 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
+from bluebottle.initiatives.documents import deduplicate, get_country_to_elastic_list
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
@@ -21,17 +22,6 @@ activity.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
-
-
-def get_country_to_elastic_list(country):
-    return [
-        {
-            'id': country.pk,
-            'name': translation.name,
-            'language_code': translation.language_code
-        }
-        for translation in country.translations.all()
-    ]
 
 
 class ActivityDocument(Document):
@@ -257,7 +247,7 @@ class ActivityDocument(Document):
             countries += get_country_to_elastic_list(instance.place.country)
         if instance.initiative.place and instance.initiative.place.country:
             countries += get_country_to_elastic_list(instance.initiative.place.country)
-        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
+        return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []

@@ -1,7 +1,6 @@
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import get_country_to_elastic_list
 from bluebottle.activities.models import Activity
 from bluebottle.categories.models import Category
 from bluebottle.deeds.models import Deed
@@ -28,6 +27,21 @@ initiative.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
+
+
+def deduplicate(items):
+    return [dict(s) for s in set(frozenset(d.items()) for d in items)]
+
+
+def get_country_to_elastic_list(country):
+    return [
+        {
+            'id': country.pk,
+            'name': translation.name,
+            'language_code': translation.language_code
+        }
+        for translation in country.translations.all()
+    ]
 
 
 @registry.register_document
@@ -103,7 +117,7 @@ class InitiativeDocument(Document):
 
     location = fields.NestedField(
         properties={
-            'id': fields.LongField(),
+            'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'city': fields.TextField(),
         }
@@ -184,7 +198,7 @@ class InitiativeDocument(Document):
         if instance.promoter:
             owners.append(instance.promoter.pk)
 
-        return owners
+        return list(set(owners))
 
     def prepare_country(self, instance):
         countries = []
@@ -201,7 +215,7 @@ class InitiativeDocument(Document):
             elif hasattr(activity, 'place') and instance.place and activity.place.country:
                 countries += get_country_to_elastic_list(activity.place.country)
 
-        return [dict(s) for s in set(frozenset(d.items()) for d in countries)]
+        return deduplicate(countries)
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:
@@ -239,11 +253,16 @@ class InitiativeDocument(Document):
                 for segment in activity.segments.all()
             ]
 
-        return segments
+        return deduplicate(segments)
 
     def prepare_location(self, instance):
-        return [{
-            'id': activity.office_location.id,
-            'name': activity.office_location.name,
-            'city': activity.office_location.city
-        } for activity in instance.activities.all() if activity.office_location]
+        return deduplicate(
+            [
+                {
+                    'id': activity.office_location.id,
+                    'name': activity.office_location.name,
+                    'city': activity.office_location.city
+                }
+                for activity in instance.activities.all() if activity.office_location
+            ]
+        )

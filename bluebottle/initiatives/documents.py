@@ -202,6 +202,11 @@ class InitiativeDocument(Document):
 
     def prepare_country(self, instance):
         countries = []
+        if instance.place and instance.place.country:
+            countries.append({
+                'id': instance.place.country.pk,
+                'name': instance.place.country.name,
+            })
 
         if instance.place and instance.place.country:
             countries += get_country_to_elastic_list(instance.place.country)

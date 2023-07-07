@@ -625,13 +625,16 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         for activity in self.data['data']:
             self.assertTrue(activity['id'] in ids)
 
-    def assertFacets(self, filter, facets):
+    def assertFacets(self, filter, facets, active=None):
         found_facets = dict(
-            (facet['id'], facet['count']) for facet in self.data['meta']['facets'][filter]
+            (facet['id'], facet) for facet in self.data['meta']['facets'][filter]
         )
 
         for key, value in facets.items():
-            self.assertEqual(found_facets[key], value)
+            self.assertEqual(found_facets[key]['count'], value)
+
+        if active:
+            self.assertTrue(found_facets[active]['active'])
 
     def test_no_filter(self):
         matching = (
@@ -767,6 +770,45 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 str(matching_country.pk): len(matching),
                 str(other_country.pk): len(other)
             }
+        )
+        self.assertFound(matching)
+
+    def test_filter_office(self):
+        settings, _ = InitiativePlatformSettings.objects.get_or_create()
+        settings.search_filters_initiatives.add(
+            InitiativeSearchFilter.objects.create(
+                settings=settings,
+                type='office'
+            )
+        )
+
+        matching_office = LocationFactory.create()
+
+        matching = InitiativeFactory.create_batch(2, status='approved')
+        for initiative in matching:
+            PeriodActivityFactory.create(
+                status='open',
+                initiative=initiative,
+                office_location=matching_office
+            )
+
+        other_office = LocationFactory.create()
+        other = InitiativeFactory.create_batch(2, status='approved')
+        for initiative in other:
+            PeriodActivityFactory.create(
+                status='open',
+                initiative=initiative,
+                office_location=other_office
+            )
+
+        self.search({'office': matching_office.pk})
+        self.assertFacets(
+            'office',
+            {
+                str(matching_office.pk): len(matching),
+                str(other_office.pk): len(other)
+            },
+            active=str(matching_office.pk)
         )
         self.assertFound(matching)
 

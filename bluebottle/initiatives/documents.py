@@ -101,7 +101,7 @@ class InitiativeDocument(Document):
 
     location = fields.NestedField(
         properties={
-            'id': fields.LongField(),
+            'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'city': fields.TextField(),
         }

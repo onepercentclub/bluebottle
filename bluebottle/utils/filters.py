@@ -74,7 +74,7 @@ class NamedNestedFacet(Facet):
         if filter_values:
             return Nested(
                 path=self.path,
-                query=Terms(**{f'{self.path}__id': filter_values})
+                query=Terms(**{f'{self.path}.id': filter_values})
             )
 
     def is_filtered(self, key, filter_values):

@@ -786,7 +786,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
-            PeriodActivityFactory.create(
+            PeriodActivityFactory.create_batch(
+                3,
                 status='open',
                 initiative=initiative,
                 office_location=matching_office
@@ -795,7 +796,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other_office = LocationFactory.create()
         other = InitiativeFactory.create_batch(2, status='approved')
         for initiative in other:
-            PeriodActivityFactory.create(
+            PeriodActivityFactory.create_batch(
+                3,
                 status='open',
                 initiative=initiative,
                 office_location=other_office

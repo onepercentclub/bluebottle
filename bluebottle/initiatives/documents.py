@@ -29,6 +29,10 @@ initiative.settings(
 )
 
 
+def deduplicate(items):
+    return [dict(s) for s in set(frozenset(d.items()) for d in items)]
+
+
 @registry.register_document
 @initiative.document
 class InitiativeDocument(Document):
@@ -182,7 +186,7 @@ class InitiativeDocument(Document):
         if instance.promoter:
             owners.append(instance.promoter.pk)
 
-        return owners
+        return list(set(owners))
 
     def prepare_country(self, instance):
         countries = []
@@ -201,7 +205,7 @@ class InitiativeDocument(Document):
                     'name': activity.place.country.name,
                 })
 
-        return countries
+        return deduplicate(countries)
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:
@@ -239,11 +243,16 @@ class InitiativeDocument(Document):
                 for segment in activity.segments.all()
             ]
 
-        return segments
+        return deduplicate(segments)
 
     def prepare_location(self, instance):
-        return [{
-            'id': activity.office_location.id,
-            'name': activity.office_location.name,
-            'city': activity.office_location.city
-        } for activity in instance.activities.all() if activity.office_location]
+        return deduplicate(
+            [
+                {
+                    'id': activity.office_location.id,
+                    'name': activity.office_location.name,
+                    'city': activity.office_location.city
+                }
+                for activity in instance.activities.all() if activity.office_location
+            ]
+        )

@@ -132,6 +132,10 @@ class TranslatedFacet(FilteredNestedFacet):
             name
         )
 
+    def get_aggregation(self):
+        self.filter = {f'{self.path}.language': get_current_language()}
+        return super().get_aggregation()
+
 
 class SegmentFacet(FilteredNestedFacet):
     def __init__(self, segment_type):

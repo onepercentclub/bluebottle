@@ -7,8 +7,7 @@ from bluebottle.initiatives.documents import initiative
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, NamedNestedFacet,
-    SegmentFacet, TranslatedFacet
+    ElasticSearchFilter, Search, SegmentFacet, TranslatedFacet, NamedNestedFacet
 )
 
 
@@ -52,7 +51,6 @@ class InitiativeSearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
-        print(settings.initiative_search_filters)
         result = super().__new__(cls, settings.search_filters_initiatives.all())
 
         for segment_type in SegmentType.objects.all():

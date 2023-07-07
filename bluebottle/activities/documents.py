@@ -5,6 +5,7 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
+from bluebottle.initiatives.documents import deduplicate, get_country_to_elastic_list
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
@@ -82,6 +83,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -238,18 +240,14 @@ class ActivityDocument(Document):
         return mapping[str(instance.__class__.__name__.lower())]
 
     def prepare_country(self, instance):
-        country = None
-
-        if instance.office_location:
-            country = instance.office_location.country
-        elif hasattr(instance, 'place') and instance.place:
-            country = instance.place.country
-
-        if country:
-            return {
-                'id': country.id,
-                'name': country.name
-            }
+        countries = []
+        if instance.office_location and instance.office_location.country:
+            countries += get_country_to_elastic_list(instance.office_location.country)
+        if hasattr(instance, 'place') and instance.place and instance.place.country:
+            countries += get_country_to_elastic_list(instance.place.country)
+        if instance.initiative.place and instance.initiative.place.country:
+            countries += get_country_to_elastic_list(instance.initiative.place.country)
+        return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []

@@ -33,6 +33,17 @@ def deduplicate(items):
     return [dict(s) for s in set(frozenset(d.items()) for d in items)]
 
 
+def get_country_to_elastic_list(country):
+    return [
+        {
+            'id': country.pk,
+            'name': translation.name,
+            'language_code': translation.language_code
+        }
+        for translation in country.translations.all()
+    ]
+
+
 @registry.register_document
 @initiative.document
 class InitiativeDocument(Document):
@@ -55,6 +66,7 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -191,19 +203,17 @@ class InitiativeDocument(Document):
     def prepare_country(self, instance):
         countries = []
 
+        if instance.place and instance.place.country:
+            countries += get_country_to_elastic_list(instance.place.country)
+
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
             if activity.office_location and activity.office_location.country:
-                countries.append({
-                    'id': activity.office_location.country.pk,
-                    'name': activity.office_location.country.name,
-                })
+                countries += get_country_to_elastic_list(activity.office_location.country)
+
             elif hasattr(activity, 'place') and instance.place and activity.place.country:
-                countries.append({
-                    'id': activity.place.country.pk,
-                    'name': activity.place.country.name,
-                })
+                countries += get_country_to_elastic_list(activity.place.country)
 
         return deduplicate(countries)
 

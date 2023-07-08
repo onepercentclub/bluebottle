@@ -355,12 +355,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
         if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
-            if (
-                    impact_goal_inline.has_add_permission(request) and
-                    impact_goal_inline.has_change_permission(request, obj) and
-                    impact_goal_inline.has_delete_permission(request, obj)
-            ):
-                inlines.append(impact_goal_inline)
+            inlines.append(impact_goal_inline)
 
         if obj and (
             obj.team_activity != Activity.TeamActivityChoices.teams or

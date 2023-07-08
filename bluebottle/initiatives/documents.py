@@ -9,7 +9,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
-from bluebottle.utils.models import get_language_choices
+from bluebottle.utils.models import Language
 
 SCORE_MAP = {
     'open': 1,
@@ -36,13 +36,14 @@ def deduplicate(items):
 
 def get_translated_list(obj, field='name'):
     data = []
-    for language_code, _name in get_language_choices():
-        obj.set_current_language(language_code)
+
+    for lang in Language.objects.all():
+        obj.set_current_language(lang.full_code)
         data.append(
             {
                 'id': obj.pk,
                 field: getattr(obj, field),
-                'language': language_code
+                'language': lang.full_code
             }
         )
     return data

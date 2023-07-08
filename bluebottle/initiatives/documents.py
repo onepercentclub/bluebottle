@@ -9,6 +9,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.models import get_language_choices
 
 SCORE_MAP = {
     'open': 1,
@@ -33,15 +34,18 @@ def deduplicate(items):
     return [dict(s) for s in set(frozenset(d.items()) for d in items)]
 
 
-def get_country_to_elastic_list(country):
-    return [
-        {
-            'id': country.pk,
-            'name': translation.name,
-            'language_code': translation.language_code
-        }
-        for translation in country.translations.all()
-    ]
+def get_translated_list(obj, field='name'):
+    data = []
+    for language_code, _name in get_language_choices():
+        obj.set_current_language(language_code)
+        data.append(
+            {
+                'id': obj.pk,
+                field: getattr(obj, field),
+                'language': language_code
+            }
+        )
+    return data
 
 
 @registry.register_document
@@ -204,40 +208,28 @@ class InitiativeDocument(Document):
         countries = []
 
         if instance.place and instance.place.country:
-            countries += get_country_to_elastic_list(instance.place.country)
+            countries += get_translated_list(instance.place.country)
 
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
             if activity.office_location and activity.office_location.country:
-                countries += get_country_to_elastic_list(activity.office_location.country)
+                countries += get_translated_list(activity.office_location.country)
 
             elif hasattr(activity, 'place') and instance.place and activity.place.country:
-                countries += get_country_to_elastic_list(activity.place.country)
+                countries += get_translated_list(activity.place.country)
 
         return deduplicate(countries)
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:
-            return [
-                {
-                    'id': instance.theme_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.theme.translations.all()
-            ]
+            return get_translated_list(instance.theme)
 
     def prepare_categories(self, instance):
-        return [
-            {
-                'id': category.pk,
-                'title': translation.title,
-                'language': translation.language_code,
-            }
-            for category in instance.categories.all()
-            for translation in category.translations.all()
-        ]
+        categories = []
+        for category in instance.categories.all():
+            categories += get_translated_list(category, 'title')
+        return categories
 
     def prepare_segments(self, instance):
         segments = []

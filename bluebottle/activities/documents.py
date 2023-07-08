@@ -5,7 +5,7 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
-from bluebottle.initiatives.documents import deduplicate, get_country_to_elastic_list
+from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
@@ -242,11 +242,11 @@ class ActivityDocument(Document):
     def prepare_country(self, instance):
         countries = []
         if instance.office_location and instance.office_location.country:
-            countries += get_country_to_elastic_list(instance.office_location.country)
+            countries += get_translated_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
-            countries += get_country_to_elastic_list(instance.place.country)
+            countries += get_translated_list(instance.place.country)
         if instance.initiative.place and instance.initiative.place.country:
-            countries += get_country_to_elastic_list(instance.initiative.place.country)
+            countries += get_translated_list(instance.initiative.place.country)
         return deduplicate(countries)
 
     def prepare_location(self, instance):
@@ -301,37 +301,18 @@ class ActivityDocument(Document):
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
-            return [
-                {
-                    'id': instance.expertise_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.expertise.translations.all()
-            ]
+            return get_translated_list(instance.expertise)
 
     def prepare_theme(self, instance):
         if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
-            return [
-                {
-                    'id': instance.initiative.theme_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.initiative.theme.translations.all()
-            ]
+            return get_translated_list(instance.initiative.theme)
 
     def prepare_categories(self, instance):
+        categories = []
         if instance.initiative:
-            return [
-                {
-                    'id': category.pk,
-                    'title': translation.title,
-                    'language': translation.language_code,
-                }
-                for category in instance.initiative.categories.all()
-                for translation in category.translations.all()
-            ]
+            for category in instance.initiative.categories.all():
+                categories += get_translated_list(category, 'title')
+        return categories
 
     def prepare_segments(self, instance):
         return [

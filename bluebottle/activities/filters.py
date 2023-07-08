@@ -159,7 +159,7 @@ class ActivitySearch(Search):
         'theme': TranslatedFacet('theme'),
         'category': TranslatedFacet('categories', 'title'),
         'skill': TranslatedFacet('expertise'),
-        'country': NamedNestedFacet('country'),
+        'country': TranslatedFacet('country'),
         'date': DateRangeFacet(field='duration'),
     }
 

@@ -228,8 +228,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
         current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
-        start = now()
-        end = start + timedelta(days=8)
+        start = now() + timedelta(1)
+        end = start + timedelta(days=12)
         response = self.client.get(
             self.url + '?filter[date]={}-{}-{},{}-{}-{}'.format(
                 start.year, start.month, start.day,
@@ -510,17 +510,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         second_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         activities = [
-            PeriodActivityFactory(
-                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+
+            CollectActivityFactory(
+                status='succeeded',
+                start=today - timedelta(days=10),
+                end=today - timedelta(days=1)
             ),
+
+            second_date_activity,
+            first_date_activity,
+
             PeriodActivityFactory(
                 status='succeeded', start=None, deadline=now() - timedelta(days=6)
             ),
 
-            first_date_activity,
-            second_date_activity,
+            PeriodActivityFactory(
+                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+            ),
 
-            CollectActivityFactory(status='succeeded', start=today + timedelta(days=1)),
         ]
 
         DateActivitySlotFactory.create(
@@ -537,7 +544,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'upcoming': 0})
 
         self.assertEqual(
-            [str(activity.pk) for activity in reversed(activities)],
+            [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 

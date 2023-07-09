@@ -139,9 +139,10 @@ class ActivityDateRangeFacet(Facet):
 
     def get_value_filter(self, filter_value):
         start, end = filter_value.split(',')
-        start = dateutil.parser.parse(start).astimezone(UTC)
-        end = dateutil.parser.parse(end).astimezone(UTC)
-        if start >= now():
+        start = dateutil.parser.parse(start)
+        end = dateutil.parser.parse(end)
+
+        if start.astimezone(UTC) >= now():
             return Range(
                 _expand__to_dot=False,
                 **{

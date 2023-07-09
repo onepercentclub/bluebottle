@@ -143,12 +143,12 @@ class ActivityPreviewSerializer(ModelSerializer):
                     slot.end for slot in obj.slots
                     if (
                         slot.status not in ['draft', 'cancelled'] and
-                        (datetime.fromisoformat(slot.start).date() < now().date()) and
                         (not start or dateutil.parser.parse(slot.end).date() > start.date()) and
                         (not end or dateutil.parser.parse(slot.end).date() <= end.date())
                     )
                 ]
-            max(ends)
+            if ends:
+                max(ends)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 

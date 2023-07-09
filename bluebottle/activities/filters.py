@@ -1,9 +1,10 @@
 from datetime import datetime
 
+import dateutil
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user, get_current_request
-from elasticsearch_dsl import TermsFacet, Facet
+from elasticsearch_dsl import TermsFacet, Facet, Q
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
 
@@ -12,7 +13,7 @@ from bluebottle.geo.models import Place
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
+    ElasticSearchFilter, Search, TranslatedFacet, NamedNestedFacet,
     SegmentFacet
 )
 
@@ -128,6 +129,38 @@ class InitiativeFacet(TermsFacet):
         return initiative_filter & open_filter
 
 
+class ActivityDateRangeFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        start, end = filter_value.split(',')
+        start = dateutil.parser.parse(start)
+        end = dateutil.parser.parse(end)
+        if start >= now():
+            return Range(
+                _expand__to_dot=False,
+                **{
+                    'duration': {
+                        "gte": start,
+                        "lt": end
+                    }
+                }
+            )
+        else:
+            return Q(
+                'nested',
+                path='dates',
+                query=Q(
+                    'range',
+                    **{'dates.end': {'gt': start, 'lt': end}}
+                )
+            )
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -160,7 +193,7 @@ class ActivitySearch(Search):
         'category': TranslatedFacet('categories', 'title'),
         'skill': TranslatedFacet('expertise'),
         'country': TranslatedFacet('country'),
-        'date': DateRangeFacet(field='duration'),
+        'date': ActivityDateRangeFacet(),
     }
 
     def sort(self, search):
@@ -215,8 +248,8 @@ class ActivitySearch(Search):
                         "nested": {
                             "path": "dates",
                             "filter": (
-                                Range(**{'dates.start': {'lte': end}}) &
-                                Range(**{'dates.end': {'gte': start}})
+                                    Range(**{'dates.start': {'lte': end}}) &
+                                    Range(**{'dates.end': {'gte': start}})
                             )
                         }
                     },

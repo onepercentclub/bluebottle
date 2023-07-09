@@ -7,6 +7,7 @@ from django_tools.middlewares.ThreadLocal import get_current_user, get_current_r
 from elasticsearch_dsl import TermsFacet, Facet, Q
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
+from pytz import UTC
 
 from bluebottle.activities.documents import activity
 from bluebottle.geo.models import Place
@@ -138,8 +139,8 @@ class ActivityDateRangeFacet(Facet):
 
     def get_value_filter(self, filter_value):
         start, end = filter_value.split(',')
-        start = dateutil.parser.parse(start)
-        end = dateutil.parser.parse(end)
+        start = dateutil.parser.parse(start).astimezone(UTC)
+        end = dateutil.parser.parse(end).astimezone(UTC)
         if start >= now():
             return Range(
                 _expand__to_dot=False,

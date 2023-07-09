@@ -996,14 +996,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ]
 
         self.search({'date': '2022-05-01,2022-05-31'})
-
-        self.assertFacets(
-            'date', {}
-        )
-
         self.assertFound(matching)
-
-        self.data['data']
+        self.assertEqual(
+            self.data['data'][0]['attributes']['end'],
+            "2022-05-30T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][1]['attributes']['end'],
+            "2022-05-25T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][2]['attributes']['end'],
+            "2022-05-15"
+        )
 
     def test_filter_distance(self):
         lat = 52.0

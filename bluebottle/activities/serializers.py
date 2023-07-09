@@ -129,7 +129,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                 start = None
                 end = None
 
-            if upcoming:
+            if upcoming or (start and start >= now()):
                 ends = [
                     slot.end for slot in obj.slots
                     if (
@@ -148,7 +148,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                     )
                 ]
             if ends:
-                max(ends)
+                return max(ends)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 

@@ -256,12 +256,22 @@ class ActivitySearch(Search):
                     },
                 })
             else:
+                start = datetime.min
+                end = now()
+
+                if 'date' in self.filter_values:
+                    start, end = self.filter_values['date'][0].split(',')
+
                 search = search.sort({
                     "dates.end": {
                         "order": "desc",
                         "mode": "max",
                         "nested": {
                             "path": "dates",
+                            "filter": (
+                                Range(**{'dates.end': {'lte': end}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                            )
                         }
                     }
                 })

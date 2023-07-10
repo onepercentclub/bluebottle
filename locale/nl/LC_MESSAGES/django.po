@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-24 16:26+0100\n"
-"PO-Revision-Date: 2023-01-24 15:41\n"
+"PO-Revision-Date: 2023-07-10 13:29\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -8042,7 +8042,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page to see the changes.\n"
-msgstr ""
+msgstr "\n"
+"Bekijk je team vanaf de activiteitspagina om de wijzigingen te zien.\n"
 
 #: bluebottle/time_based/templates/mails/messages/deadline_changed.html:5
 #, python-format
@@ -8293,13 +8294,15 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The team activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"De teamactiviteit vindt over een paar dagen plaats!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_team_slot.html:20
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page.\n"
-msgstr ""
+msgstr "\n"
+"Bekijk je team op de activiteitspagina.\n"
 
 #: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:6
 #, python-format
@@ -8327,14 +8330,16 @@ msgctxt "email"
 msgid "\n"
 "            You joined %(team_name)s for an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je neemt deel aan %(team_name)s voor een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/team_member_joined.html:19
 msgctxt "email"
 msgid "\n"
 "                The activity manager will be in touch to confirm details such as time, date and location.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"De activiteitenbeheerder zal via e-mail contact opnemen om details zoals tijd, datum en locatie te bevestigen.            "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_added.html:4
 #, python-format

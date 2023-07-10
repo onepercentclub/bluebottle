@@ -45,7 +45,7 @@ class InitiativeSearch(Search):
     possible_facets = {
         'theme': TranslatedFacet('theme'),
         'category': TranslatedFacet('categories', 'title'),
-        'country': NamedNestedFacet('country'),
+        'country': TranslatedFacet('country'),
         'office': NamedNestedFacet('location'),
     }
 

@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import re
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from openpyxl import load_workbook
+from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
@@ -227,11 +229,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
         start = now()
-        end = start + timedelta(days=8)
+        end = start + timedelta(days=12)
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{},{}-{}-{}'.format(
-                start.year, start.month, start.day,
-                end.year, end.month, end.day),
+            self.url + '?filter[date]={},{}'.format(
+                start.strftime('%Y-%m-%d'),
+                end.strftime('%Y-%m-%d')
+            )
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
@@ -508,17 +511,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         second_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         activities = [
-            PeriodActivityFactory(
-                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+
+            CollectActivityFactory(
+                status='succeeded',
+                start=today - timedelta(days=10),
+                end=today - timedelta(days=1)
             ),
+
+            second_date_activity,
+            first_date_activity,
+
             PeriodActivityFactory(
                 status='succeeded', start=None, deadline=now() - timedelta(days=6)
             ),
 
-            first_date_activity,
-            second_date_activity,
+            PeriodActivityFactory(
+                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+            ),
 
-            CollectActivityFactory(status='succeeded', start=today + timedelta(days=1)),
         ]
 
         DateActivitySlotFactory.create(
@@ -535,7 +545,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'upcoming': 0})
 
         self.assertEqual(
-            [str(activity.pk) for activity in reversed(activities)],
+            [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 
@@ -970,6 +980,43 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def test_filter_past_dates(self):
+        activity1 = DateActivityFactory.create(status="succeeded")
+        activity2 = DateActivityFactory.create(status="succeeded")
+        activity3 = DateActivityFactory.create(status="succeeded")
+        activity4 = PeriodActivityFactory.create(status="succeeded", start='2022-04-15', deadline='2022-05-15')
+        PeriodActivityFactory.create(status="succeeded", start='2022-03-01', deadline='2022-06-01')
+
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 3, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 25, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 6, 3, tzinfo=UTC))
+
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 5, 30, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 5, 25, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 4, 25, tzinfo=UTC))
+
+        DateActivitySlotFactory.create(activity=activity3, start=datetime.datetime(2022, 6, 3, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity3, start=datetime.datetime(2022, 4, 23, tzinfo=UTC))
+
+        matching = [
+            activity1, activity2, activity4
+        ]
+
+        self.search({'date': '2022-05-01,2022-05-31'})
+        self.assertFound(matching)
+        self.assertEqual(
+            self.data['data'][0]['attributes']['end'],
+            "2022-05-30T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][1]['attributes']['end'],
+            "2022-05-25T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][2]['attributes']['end'],
+            "2022-05-15"
+        )
 
     def test_filter_distance(self):
         lat = 52.0

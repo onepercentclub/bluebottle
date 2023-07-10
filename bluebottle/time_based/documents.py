@@ -3,7 +3,7 @@ from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity, get_country_to_elastic_list
+from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
 )
@@ -123,7 +123,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         countries = super().prepare_country(instance)
         for slot in instance.slots.all():
             if not slot.is_online and slot.location and slot.location.country:
-                countries += get_country_to_elastic_list(slot.location.country)
+                countries += get_translated_list(slot.location.country)
         return deduplicate(countries)
 
     def prepare_position(self, instance):

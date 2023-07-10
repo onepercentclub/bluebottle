@@ -88,6 +88,7 @@ install_requires = [
     'gunicorn==19.10.0',
     'html5lib==1.1',
     'icalendar==4.0.4',
+    'importlib_resources==5.12.0',
     'influxdb==4.1.1',
     'lipisha==0.3.0',
     'lxml==4.6.3',

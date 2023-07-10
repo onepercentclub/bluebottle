@@ -228,12 +228,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
         current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
-        start = now() + timedelta(1)
+        start = now()
         end = start + timedelta(days=12)
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{},{}-{}-{}'.format(
-                start.year, start.month, start.day,
-                end.year, end.month, end.day),
+            self.url + '?filter[date]={},{}'.format(
+                start.strftime('%Y-%m-%d'),
+                end.strftime('%Y-%m-%d')
+            )
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)

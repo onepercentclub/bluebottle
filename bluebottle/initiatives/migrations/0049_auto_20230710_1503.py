@@ -13,7 +13,7 @@ def add_default_search_filters(apps, schema_editor):
     initiative_settings = InitiativePlatformSettings.objects.first()
 
     if initiative_settings.enable_matching_emails:
-        ActivitySearchFilter.objects.get_or_create(settings=initiative_settings, type='distances')
+        ActivitySearchFilter.objects.get_or_create(settings=initiative_settings, type='distance')
         ActivitySearchFilter.objects.get_or_create(settings=initiative_settings, type='is_online')
 
     ActivitySearchFilter.objects.update(highlight=True)

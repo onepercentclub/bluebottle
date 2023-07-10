@@ -23,6 +23,8 @@ logger = logging.getLogger('bluebottle')
 
 
 def get_matching_activities(user):
+    settings = InitiativePlatformSettings.objects.get()
+
     query = ConstantScore(
         filter=Nested(
             path='expertise',
@@ -58,39 +60,40 @@ def get_matching_activities(user):
         ~Term(contributors=user.pk)
     )
 
-    if user.location:
-        search = search.filter(
-            Nested(
-                path='office_restriction',
-                query=Term(
-                    office_restriction__restriction='all'
-                ) | (
-                    Term(office_restriction__office=user.location.id) &
-                    Term(office_restriction__restriction='office')
-                ) | (
-                    Term(
-                        office_restriction__subregion=user.location.subregion.id
-                        if user.location.subregion else ''
-                    ) &
-                    Term(office_restriction__restriction='office_subregion')
-                ) | (
-                    Term(
-                        office_restriction__region=user.location.subregion.region.id
-                        if user.location.subregion and user.location.subregion.region else ''
-                    ) &
-                    Term(office_restriction__restriction='office_region')
+    if settings.enable_office_restrictions:
+        if user.location:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    ) | (
+                        Term(office_restriction__office=user.location.id) &
+                        Term(office_restriction__restriction='office')
+                    ) | (
+                        Term(
+                            office_restriction__subregion=user.location.subregion.id
+                            if user.location.subregion else ''
+                        ) &
+                        Term(office_restriction__restriction='office_subregion')
+                    ) | (
+                        Term(
+                            office_restriction__region=user.location.subregion.region.id
+                            if user.location.subregion and user.location.subregion.region else ''
+                        ) &
+                        Term(office_restriction__restriction='office_region')
+                    )
                 )
             )
-        )
-    else:
-        search = search.filter(
-            Nested(
-                path='office_restriction',
-                query=Term(
-                    office_restriction__restriction='all'
+        else:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    )
                 )
             )
-        )
 
     if user.exclude_online:
         search = search.filter(

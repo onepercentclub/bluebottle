@@ -25,6 +25,9 @@ env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
+  - sudo find -name elasticsearch.yml
+  - sudo echo "xpack.security.enabled: false" >> /etc/default/elasticsearch/elasticsearch.yml
+  - sudo systemctl restart elasticsearch
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
   - psql -c "CREATE USER testuser WITH PASSWORD 'password'"
@@ -36,8 +39,6 @@ install:
   - pip install --upgrade -I flake8==5.0.4
   - pip install -e .[test] --trusted-host github.com
 before_script:
-  - sudo echo "xpack.security.enabled: false" >> /etc/default/elasticsearch/elasticsearch.yml
-  - sudo systemctl restart elasticsearch
   - flake8 .
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb

@@ -450,7 +450,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['last_name'], self.user_1.first_name)
 
         self.assertEqual(response.data['permissions']['project_list'],
-                         {u'GET': True, u'OPTIONS': True, u'POST': True})
+                         {u'OPTIONS': True, u'POST': True})
         self.assertEqual(response.data['permissions']['homepage'],
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()

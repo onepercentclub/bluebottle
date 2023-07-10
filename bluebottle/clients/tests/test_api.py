@@ -145,7 +145,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.initiatives_url = reverse('initiative-list')
+        self.initiatives_url = reverse('initiative-preview-list')
 
     def test_open_api(self):
         """ request open api, expect projects """
@@ -163,6 +163,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
         response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_authenticated(self):
         """ request closed api, expect projects if authenticated """
         response = self.client.get(self.initiatives_url, token=self.user_token)
@@ -233,14 +234,12 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_notification_platform_settings(self):
         # Create notification platform settings and confirm they end up correctly in settings api
         NotificationPlatformSettings.objects.create(
-            match_options=True,
             share_options=['twitter', 'facebook_at_work'],
             default_yammer_group_id='1234',
             facebook_at_work_url='https://my.facebook.com'
         )
 
         response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['notifications']['match_options'], True)
         self.assertEqual(response.data['platform']['notifications']['share_options'], ['twitter', 'facebook_at_work'])
         self.assertEqual(response.data['platform']['notifications']['facebook_at_work_url'], 'https://my.facebook.com')
         self.assertEqual(response.data['platform']['notifications']['default_yammer_group_id'], '1234')

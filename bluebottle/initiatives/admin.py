@@ -1,4 +1,6 @@
 from builtins import object
+
+from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -9,12 +11,13 @@ from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.geo.models import Country
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
-from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
-from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.geo.models import Country
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
+    InitiativeSearchFilter
+from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.wallposts.admin import WallpostInline
 
 
@@ -217,19 +220,36 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     autocomplete_fields = ['activity_managers']
 
 
+class ActivitySearchFilterInline(SortableTabularInline):
+    model = ActivitySearchFilter
+    extra = 0
+
+    readonly_fields = ('drag',)
+    fields = readonly_fields + ('type', 'highlight')
+
+    def drag(self, obj):
+        return format_html('<div style="font-size: 20px">⠿</div>')
+
+
+class InitiativeSearchFilterInline(SortableTabularInline):
+    model = InitiativeSearchFilter
+    extra = 0
+
+    readonly_fields = ('drag',)
+    fields = readonly_fields + ('type', 'highlight')
+
+    def drag(self, obj):
+        return format_html('<div style="font-size: 20px">⠿</div>')
+
+
 @admin.register(InitiativePlatformSettings)
-class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
+class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettingsAdmin):
+    inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
+
     fieldsets = (
         (_('Activity types'), {
             'fields': (
-                'activity_types', 'team_activities'
-            )
-        }),
-        (_('Search filters'), {
-            'fields': (
-                'show_all_activities',
-                'initiative_search_filters',
-                'activity_search_filters'
+                'activity_types', 'team_activities',
             )
         }),
         (_('Offices'), {

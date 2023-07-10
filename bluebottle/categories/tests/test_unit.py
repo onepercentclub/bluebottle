@@ -1,5 +1,5 @@
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class TestCategoryModel(BluebottleTestCase):
@@ -17,5 +17,5 @@ class TestCategoryModel(BluebottleTestCase):
 
         self.assertEqual(
             category.get_absolute_url(),
-            'https://testserver/projects/?category=test-title'
+            f'http://testserver/en/categories/{category.id}/{category.slug}/activities/list'
         )

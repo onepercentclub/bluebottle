@@ -179,6 +179,9 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'primary_language': 'en',
             'user_type': 'person',
             'date_joined': timezone.now(),
+            'search_distance': None,
+            'any_search_distance': True,
+            'exclude_online': False,
             'groups': [self.staff.groups.get().pk]
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
@@ -198,6 +201,9 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'password': 'bla',
             'primary_language': 'en',
             'user_type': 'person',
+            'search_distance': None,
+            'any_search_distance': True,
+            'exclude_online': False,
             'date_joined': timezone.now(),
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
@@ -219,7 +225,10 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'primary_language': 'en',
             'user_type': 'person',
             'date_joined': timezone.now(),
-            'groups': [group.pk]
+            'groups': [group.pk],
+            'search_distance': None,
+            'any_search_distance': True,
+            'exclude_online': False,
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
         self.assertTrue('groups' in form.errors)

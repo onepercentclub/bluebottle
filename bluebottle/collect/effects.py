@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now, get_current_timezone
+from django.utils.translation import gettext_lazy as _
 
-from bluebottle.fsm.effects import Effect
 from bluebottle.collect.models import CollectContributor, CollectContribution
+from bluebottle.fsm.effects import Effect
 
 
 class CreateCollectContribution(Effect):
@@ -63,3 +63,14 @@ class SetOverallContributor(Effect):
 
     def __str__(self):
         return str(_('Create overall contributor'))
+
+
+class SetEndDateEffect(Effect):
+    title = _('Set end date, if no deadline is specified')
+    template = 'admin/set_end_date.html'
+
+    def is_valid(self):
+        return not self.instance.end
+
+    def pre_save(self, **kwargs):
+        self.instance.end = date.today() - timedelta(days=1)

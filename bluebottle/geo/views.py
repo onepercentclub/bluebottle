@@ -5,7 +5,6 @@ from rest_framework.generics import (
     ListAPIView, RetrieveAPIView, CreateAPIView,
     RetrieveUpdateAPIView
 )
-from rest_framework import permissions
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.geo.models import Location, Country, Geolocation, Place
@@ -86,19 +85,22 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
     serializer_class = PlaceSerializer
 
+    def perform_create(self, serializer):
+        try:
+            if 'mapbox_id' in serializer.validated_data:
+                serializer.instance = Place.objects.get(
+                    mapbox_id=serializer.validated_data['mapbox_id'],
+                )
+        except Place.DoesNotExist:
+            pass
 
-class IsPlaceOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        """
-        Return `True` if user is owner of the object granted, `False` otherwise.
-        """
-        return obj.member_set.filter(pk=request.user.pk).first() is not None
+        return super().perform_create(serializer)
 
 
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
 
-    permission_classes = [IsPlaceOwner, ]
+    permission_classes = []
     serializer_class = PlaceSerializer
 
 

@@ -1,5 +1,6 @@
 from datetime import date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
@@ -12,10 +13,7 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, TeamTriggers
 )
-
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-
-from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
     ParticipantJoinedNotification
@@ -178,6 +176,7 @@ class DeedTriggers(ActivityTriggers):
                     conditions=[is_not_started]
                 ),
                 NotificationEffect(ActivitySucceededNotification),
+                SetEndDateEffect,
             ]
         ),
 
@@ -185,7 +184,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(ActivityExpiredNotification)
+                NotificationEffect(ActivityExpiredNotification),
             ]
         ),
 
@@ -229,6 +228,11 @@ def activity_expired(effect):
     return (
         effect.instance.activity.status == 'expired'
     )
+
+
+def activity_not_expired(effect):
+    """activity did not expire"""
+    return not activity_expired(effect)
 
 
 def activity_did_start(effect):

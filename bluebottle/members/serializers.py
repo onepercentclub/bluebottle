@@ -694,12 +694,25 @@ class MemberProfileSerializer(ModelSerializer):
         many=True,
         queryset=Segment.objects.all(),
     )
+    themes = ResourceRelatedField(
+        many=True,
+        queryset=Theme.objects.all(),
+        source='favourite_themes'
+    )
+
+    skills = ResourceRelatedField(
+        many=True,
+        queryset=Skill.objects.all(),
+    )
 
     class Meta():
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'about_me', 'required',
-            'birthdate', 'segments', 'location', 'place', 'phone_number', 'required'
+            'birthdate', 'segments', 'phone_number',
+            'location', 'place', 'themes', 'skills',
+            'search_distance', 'any_search_distance', 'exclude_online',
+            'subscribed', 'matching_options_set'
         )
 
     class JSONAPIMeta():
@@ -801,6 +814,13 @@ class UserVerificationSerializer(serializers.Serializer):
 
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
+    read_only_fields = serializers.SerializerMethodField()
+
+    def get_read_only_fields(self, obj):
+        try:
+            return properties.TOKEN_AUTH['assertion_mapping'].keys()
+        except (AttributeError, IndexError):
+            return []
 
     class Meta(object):
         model = MemberPlatformSettings
@@ -829,7 +849,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'fiscal_year_start',
             'fiscal_year_end',
             'retention_anonymize',
-            'retention_delete'
+            'retention_delete',
+            'read_only_fields'
         )
 
 

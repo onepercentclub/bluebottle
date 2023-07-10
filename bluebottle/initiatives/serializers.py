@@ -1,3 +1,4 @@
+import hashlib
 from builtins import object
 
 from django.db.models import Q
@@ -25,7 +26,8 @@ from bluebottle.fsm.serializers import (
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
+    InitiativeSearchFilter
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -40,6 +42,7 @@ from bluebottle.utils.fields import (
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
 )
+from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):
@@ -175,14 +178,47 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
         )
 
 
+IMAGE_SIZES = {
+    'preview': '300x168',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '960x540'
+}
+
+
 class InitiativePreviewSerializer(ModelSerializer):
-    position = TinyPointSerializer()
-    id = serializers.CharField()
+    image = serializers.SerializerMethodField()
+    theme = serializers.SerializerMethodField()
+    activity_count = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        if obj.image:
+            hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+
+            return f'{url}?_={hash}'
+
+    def get_activity_count(self, obj):
+        return {
+            'total': obj.succeeded_activities_count + obj.open_activities_count,
+            'succeeded': obj.succeeded_activities_count,
+            'open': obj.open_activities_count
+        }
+
+    def get_theme(self, obj):
+        try:
+            return [
+                theme.name
+                for theme in obj.theme or []
+                if theme.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
 
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'position',
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
         )
 
     class JSONAPIMeta(object):
@@ -438,8 +474,25 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
         resource_name = 'initiative-transitions'
 
 
+class ActivitySearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActivitySearchFilter
+        fields = ['type', 'name', 'highlight', 'placeholder']
+
+
+class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InitiativeSearchFilter
+        fields = ['type', 'name', 'highlight', 'placeholder']
+
+
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     has_locations = serializers.SerializerMethodField()
+
+    search_filters_activities = ActivitySearchFilterSerializer(many=True)
+    search_filters_initiatives = InitiativeSearchFilterSerializer(many=True)
 
     def get_has_locations(self, obj):
         return Location.objects.count()
@@ -451,6 +504,9 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
+            'activity_search_filters',
+            'search_filters_activities',
+            'search_filters_initiatives',
             'require_organization',
             'team_activities',
             'contact_method',
@@ -462,7 +518,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_participant_exports',
             'enable_open_initiatives',
             'show_all_activities',
-            'has_locations'
+            'has_locations',
+            'enable_matching_emails'
         )
 
 

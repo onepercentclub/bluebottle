@@ -4,9 +4,11 @@ from datetime import date, datetime
 from celery.schedules import crontab
 from celery.task import periodic_task
 from dateutil.relativedelta import relativedelta
-from django.db.models import Count
+from django.db.models import Count, Case, When
 from django.utils.timezone import now
-from elasticsearch_dsl.query import Nested, Q, FunctionScore, ConstantScore, MatchAll, Term, Terms
+from elasticsearch_dsl.query import (
+    Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
+)
 
 from bluebottle.activities.documents import activity
 from bluebottle.activities.messages import MatchingActivitiesNotification, DoGoodHoursReminderQ1Notification, \
@@ -21,102 +23,111 @@ logger = logging.getLogger('bluebottle')
 
 
 def get_matching_activities(user):
-    search = activity.search().filter(
-        Q('terms', status=['open', 'running']) &
-        Q('terms', type=['dateactivity', 'periodactivity']) &
-        ~Nested(
-            path='segments',
-            query=(
-                Term(segments__closed=True)
-            )
-        ) | Nested(
-            path='segments',
-            query=(
-                Terms(
-                    segments__id=[
-                        segment.id for segment in user.segments.filter(closed=True)
-                    ]
-                )
-            )
-        )
-    )
+    settings = InitiativePlatformSettings.objects.get()
 
     query = ConstantScore(
-        boost=.5,
         filter=Nested(
-            path='theme',
-            query=Q(
-                'terms',
-                theme__id=[
-                    theme.pk for theme in user.favourite_themes.all()
-                ]
-            )
+            path='expertise',
+            query=Q('terms', expertise__id=[skill.pk for skill in user.skills.all()])
         )
     ) | ConstantScore(
-        filter=Q('term', is_online=True)
+        boost=1.5,
+        filter=Nested(
+            path='theme',
+            query=Q('terms', theme__id=[theme.pk for theme in user.favourite_themes.all()])
+        )
+    ) | ConstantScore(boost=0.5, filter=MatchAll())
+
+    search = activity.search().filter(
+        Q('terms', status=['open', 'running']) &
+        (
+            ~Nested(
+                path='segments',
+                query=(
+                    Term(segments__closed=True)
+                )
+            ) | Nested(
+                path='segments',
+                query=(
+                    Terms(
+                        segments__id=[
+                            segment.id for segment in user.segments.filter(closed=True)
+                        ]
+                    )
+                )
+            )
+        ) &
+        ~Term(contributors=user.pk)
     )
 
-    skills = user.skills.all()
-    if skills:
-        query = query | ConstantScore(
-            filter=Nested(
-                path='expertise',
-                query=Q(
-                    'terms',
-                    expertise__id=[
-                        skill.pk for skill in user.skills.all()
-                    ]
+    if settings.enable_office_restrictions:
+        if user.location:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    ) | (
+                        Term(office_restriction__office=user.location.id) &
+                        Term(office_restriction__restriction='office')
+                    ) | (
+                        Term(
+                            office_restriction__subregion=user.location.subregion.id
+                            if user.location.subregion else ''
+                        ) &
+                        Term(office_restriction__restriction='office_subregion')
+                    ) | (
+                        Term(
+                            office_restriction__region=user.location.subregion.region.id
+                            if user.location.subregion and user.location.subregion.region else ''
+                        ) &
+                        Term(office_restriction__restriction='office_region')
+                    )
                 )
             )
-        ) | ConstantScore(
-            boost=0.75,
-            filter=~Nested(
-                path='expertise',
-                query=Q(
-                    'exists',
-                    field='expertise.id'
+        else:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    )
                 )
             )
-        )
-    else:
-        query = query | ConstantScore(boost=0.5, filter=MatchAll())
 
-    location = user.location or user.place
-    if location and location.position:
+    if user.exclude_online:
+        search = search.filter(
+            Term(is_online=True)
+        )
+
+    if user.search_distance and user.place:
+        position = {
+            'lat': float(user.place.position[1]),
+            'lon': float(user.place.position[0]),
+        }
+        distance = f'{str(user.search_distance)}km'
+
+        search = search.filter(
+            GeoDistance(distance=distance, position=position) |
+            Term(is_online=True)
+        )
         query = query | ConstantScore(
+            boost=0.001,
             filter=Q(
                 'geo_distance',
-                distance='50000m',
-                position={
-                    'lat': location.position.y,
-                    'lon': location.position.x
-                },
+                distance=distance,
+                position=position
             )
         )
 
-    result = search.query(
-        FunctionScore(
-            score_mode='sum',
-            query=query
-        )
-    ).extra(explain=True).execute()
+    result = search.query(query).extra(explain=True).execute()
 
-    matched = [activity for activity in result if activity.meta.score > 2]
-    activities = list(
-        Activity.objects.filter(
-            pk__in=[int(match.meta.id) for match in matched],
-        ).exclude(contributors__user=user)
-    )
+    pks = [int(match.meta.id) for match in result]
+    preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pks)])
 
-    if len(activities) < 3:
-        partially_matched = [activity for activity in result if activity.meta.score == 2]
-        activities += list(
-            Activity.objects.filter(
-                pk__in=[int(match.meta.id) for match in partially_matched],
-            ).exclude(contributors__user=user)
-        )
-
-    return activities
+    return Activity.objects.filter(
+        pk__in=[int(match.meta.id) for match in result]
+    ).order_by(preserved)
 
 
 @periodic_task(

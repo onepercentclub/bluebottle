@@ -4,6 +4,7 @@ import re
 from io import BytesIO
 from operator import attrgetter
 
+
 import icalendar
 import magic
 import xlsxwriter
@@ -25,6 +26,8 @@ from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from taggit.models import Tag
+
+from elasticsearch_dsl.utils import AttrList
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
@@ -294,17 +297,19 @@ class ESPaginator(Paginator):
         """
         Returns the total number of objects, across all pages.
         """
-        return self.object_list[1].count()
+        return self.result.hits.total.value
 
     def page(self, number):
-        number = self.validate_number(number)
+        number = int(number)
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        if top + self.orphans >= self.count:
-            top = self.count
+        self.result = self.object_list[1][bottom:top].execute()
 
-        return self._get_page(self.object_list[1][bottom:top].execute(), number, self)
+        page = self._get_page(self.result, number, self)
+        page.facets = self.result.facets
+
+        return page
 
 
 class JsonApiPagination(JsonApiPageNumberPagination):
@@ -317,6 +322,37 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator
+
+    def paginate_queryset(self, queryset, request, view=None):
+        result = super().paginate_queryset(queryset, request, view)
+
+        return result
+
+    def get_paginated_response(self, data):
+        result = super().get_paginated_response(data)
+
+        facets = {}
+        for filter, facet in self.page.facets.to_dict().items():
+            facets[filter] = []
+
+            for key, count, active in facet:
+                if isinstance(key, (AttrList, list, tuple)):
+                    facets[filter].append({
+                        'name': key[0],
+                        'id': key[1],
+                        'count': count,
+                        'active': active
+                    })
+                else:
+                    facets[filter].append({
+                        'id': key,
+                        'count': count,
+                        'active': active
+                    })
+
+        result.data['meta']['facets'] = facets
+
+        return result
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):

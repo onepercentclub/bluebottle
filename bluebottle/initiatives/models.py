@@ -1,12 +1,14 @@
 from builtins import object
 from builtins import str
 
+from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, connection
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
+from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -19,6 +21,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.segments.models import SegmentType
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
     SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
@@ -239,6 +242,34 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             self.activity_managers.add(self.owner)
 
 
+ACTIVITY_SEARCH_FILTERS = (
+    ('office', _('Office')),
+    ('country', _('Country')),
+    ('date', _('Date')),
+    ('distance', _('Distance')),
+    ('is_online', _('Online / In-person')),
+    ('skill', _('Skill')),
+    ('team_activity', _('Individual / Team')),
+    ('theme', _('Theme')),
+    ('category', _('Category')),
+)
+
+
+INITIATIVE_SEARCH_FILTERS = (
+    ('office', _('Office')),
+    ('country', _('Country')),
+    ('theme', _('Theme')),
+    ('category', _('Category')),
+)
+
+
+def get_search_filters(filters):
+    if connection.tenant.schema_name != 'public':
+        for segment in SegmentType.objects.all():
+            filters = filters + ((f'segment.{segment.slug}', segment.name),)
+    return filters
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
@@ -246,25 +277,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('dateactivity', _('Activity on a specific date')),
         ('deed', _('Deed')),
         ('collect', _('Collect activity')),
-    )
-
-    ACTIVITY_SEARCH_FILTERS = (
-        ('location', _('Office location')),
-        ('country', _('Country')),
-        ('date', _('Date')),
-        ('skill', _('Skill')),
-        ('type', _('Type')),
-        ('team_activity', _('Team activities')),
-        ('theme', _('Theme')),
-        ('category', _('Category')),
-        ('segments', _('Segments')),
-        ('status', _('Status')),
-    )
-    INITIATIVE_SEARCH_FILTERS = (
-        ('location', _('Office location')),
-        ('country', _('Country')),
-        ('theme', _('Theme')),
-        ('category', _('Category')),
     )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),
@@ -281,7 +293,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_("Require initiators to specify a partner organisation when creating an initiative.")
     )
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
-    activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
+    activity_search_filters = MultiSelectField(
+        _('Activity search: more filters'),
+        max_length=1000, default=[], choices=ACTIVITY_SEARCH_FILTERS
+    )
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
     show_all_activities = models.BooleanField(
@@ -323,8 +338,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_("Add a link to activities so managers van download a contributor list.")
     )
     enable_matching_emails = models.BooleanField(
+        _('Enable matching'),
         default=False,
-        help_text=_("Send monthly updates with matching activities to users that are subscribed.")
+        help_text=_((
+            "Users will be able to set their preferences for a personalised activity overview "
+            "and receive monthly emails with activities that best suit them."
+        ))
     )
 
     @property
@@ -342,6 +361,63 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
+
+
+class SearchFilter(SortableMixin, models.Model):
+
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name='search_filters',
+        on_delete=models.deletion.CASCADE
+    )
+    highlight = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def placeholder(self):
+        if self.type == 'office':
+            return _('Select an office')
+        if self.type in ['is_online', 'team_activity']:
+            return _('Make a choice')
+        return _('Select a {filter_name}').format(filter_name=self.name.lower())
+
+    class Meta:
+        abstract = True
+        ordering = ['order']
+
+
+class ActivitySearchFilter(SearchFilter):
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)(ACTIVITY_SEARCH_FILTERS))
+
+    @property
+    def name(self):
+        filters = [filter[1] for filter in get_search_filters(ACTIVITY_SEARCH_FILTERS) if filter[0] == self.type]
+        if len(filters):
+            return filters[0]
+        return '--------'
+
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name='search_filters_activities',
+        on_delete=models.deletion.CASCADE
+    )
+
+
+class InitiativeSearchFilter(SearchFilter):
+    type = models.CharField(max_length=100, choices=lazy(get_search_filters, tuple)(INITIATIVE_SEARCH_FILTERS))
+
+    @property
+    def name(self):
+        filters = [filter[1] for filter in get_search_filters(INITIATIVE_SEARCH_FILTERS) if filter[0] == self.type]
+        if len(filters):
+            return filters[0]
+        return '--------'
+
+    settings = models.ForeignKey(
+        InitiativePlatformSettings,
+        related_name='search_filters_initiatives',
+        on_delete=models.deletion.CASCADE
+    )
 
 
 class Theme(SortableTranslatableModel):
@@ -369,6 +445,9 @@ class Theme(SortableTranslatableModel):
         permissions = (
             ('api_read_theme', 'Can view theme through API'),
         )
+
+    class JSONAPIMeta(object):
+        resource_name = 'themes'
 
 
 from bluebottle.initiatives.wallposts import *  # noqa

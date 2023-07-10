@@ -181,7 +181,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'date_joined': timezone.now(),
             'search_distance': None,
             'any_search_distance': True,
-            'include_online': True,
+            'exclude_online': False,
             'groups': [self.staff.groups.get().pk]
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
@@ -203,7 +203,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'user_type': 'person',
             'search_distance': None,
             'any_search_distance': True,
-            'include_online': True,
+            'exclude_online': False,
             'date_joined': timezone.now(),
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
@@ -228,7 +228,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
             'groups': [group.pk],
             'search_distance': None,
             'any_search_distance': True,
-            'include_online': True,
+            'exclude_online': False,
         }
         form = MemberCreationForm(current_user=self.staff, data=data)
         self.assertTrue('groups' in form.errors)

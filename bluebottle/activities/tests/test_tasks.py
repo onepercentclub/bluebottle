@@ -45,7 +45,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             subscribed=True,
             search_distance=50,
             any_search_distance=False,
-            include_online=True
+            exclude_online=False
         )
         self.user.place = PlaceFactory.create(
             position=self.amsterdam
@@ -298,7 +298,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.assertFalse(activity in activities)
 
     def test_exclude_online(self):
-        self.user.include_online = False
+        self.user.exclude_online = True
         self.user.save()
 
         activities = get_matching_activities(self.user)

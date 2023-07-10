@@ -481,7 +481,7 @@ class MemberAdmin(UserAdmin):
                         'fields':
                         [
                             'matching_options_set',
-                            'search_distance', 'any_search_distance', 'include_online',
+                            'search_distance', 'any_search_distance', 'exclude_online',
                             'place', 'favourite_themes', 'skills', 'subscribed',
                         ]
                     }

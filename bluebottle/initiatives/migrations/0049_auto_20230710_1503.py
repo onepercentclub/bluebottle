@@ -20,6 +20,7 @@ def add_default_search_filters(apps, schema_editor):
     InitiativeSearchFilter.objects.update(highlight=True)
 
     if initiative_settings.enable_matching_emails:
+        # Make sure all users get the pref popup again
         Member.objects.update(matching_options_set=None)
 
 

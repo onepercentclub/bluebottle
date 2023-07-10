@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-07-10 13:28\n"
+"PO-Revision-Date: 2023-07-10 13:48\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -166,7 +166,7 @@ msgstr "Recentelijk ingediende activiteiten"
 
 #: bluebottle/activities/dashboard.py:23
 msgid "Recent contributions"
-msgstr ""
+msgstr "Recente bijdragen"
 
 #: bluebottle/activities/effects.py:24
 msgid "Create organizer"
@@ -198,27 +198,27 @@ msgstr "Team resetten"
 
 #: bluebottle/activities/filters.py:80
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: bluebottle/activities/filters.py:81
 msgid "No"
-msgstr ""
+msgstr "Nee"
 
 #: bluebottle/activities/filters.py:111
 msgid "With your team"
-msgstr ""
+msgstr "Met jou team"
 
 #: bluebottle/activities/filters.py:112
 msgid "As an individual"
-msgstr ""
+msgstr "Als individu"
 
 #: bluebottle/activities/filters.py:188
 msgid "In-person"
-msgstr ""
+msgstr "Fysiek"
 
 #: bluebottle/activities/filters.py:188
 msgid "Online/remote"
-msgstr ""
+msgstr "Online / op afstand"
 
 #: bluebottle/activities/forms.py:6
 msgid "Send impact reminder message"
@@ -1495,12 +1495,12 @@ msgstr[1] "Wachtwoord moet ten minste %(min_length)d tekens bevatten."
 
 #: bluebottle/auth/password_validation.py:34
 msgid "This password is too common, be adventurous!"
-msgstr ""
+msgstr "Dit wachtwoord wordt te vaak gebruikt, wees avontuurlijk!"
 
 #: bluebottle/auth/password_validation.py:56
 #, python-format
 msgid "The password is too similar to your %(verbose_name)s, think outside the box!"
-msgstr ""
+msgstr "Het wachtwoord lijkt te veel op jouw %(verbose_name)s, wees creatief!"
 
 #: bluebottle/auth/serializers.py:28
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
@@ -1659,15 +1659,15 @@ msgstr "Kantoorlocatie is geverifieerd door de gebruiker"
 
 #: bluebottle/bb_accounts/models.py:148 bluebottle/initiatives/models.py:249
 msgid "Distance"
-msgstr ""
+msgstr "Afstand"
 
 #: bluebottle/bb_accounts/models.py:149
 msgid "Any distance"
-msgstr ""
+msgstr "Elke afstand"
 
 #: bluebottle/bb_accounts/models.py:150
 msgid "Don’t show online/remote activities"
-msgstr ""
+msgstr "Toon geen online activiteiten en activiteiten op afstand"
 
 #: bluebottle/bb_accounts/models.py:152
 msgid "phone number"
@@ -1906,11 +1906,11 @@ msgstr "Wachtwoord aanpassen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:48
 msgid "Two factor authentication"
-msgstr ""
+msgstr "Tweestapsverificatie"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
 msgid "Enable two factor authentication"
-msgstr ""
+msgstr "Schakel tweestapsverificatie in"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:53
 msgid "Log out"
@@ -2008,95 +2008,95 @@ msgstr "Opslaan en blijf aanpassen"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/_wizard_actions.html:6
 msgid "Back"
-msgstr ""
+msgstr "Terug"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/_wizard_actions.html:12
 msgid "Next"
-msgstr ""
+msgstr "Volgende"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:14
 msgid "Use this form for entering backup tokens for logging in. These tokens have been generated for you to print and keep safe. Please enter one of these backup tokens to login to your account."
-msgstr ""
+msgstr "Gebruik dit formulier voor het invoeren van back-uptokens om in te loggen. Deze tokens zijn gegenereerd om te printen en veilig te houden. Voer een van deze backup tokens in om in te loggen in uw account."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:24
 msgid "Or, alternatively, use one of your other authentication methods:"
-msgstr ""
+msgstr "Of gebruik als alternatief, een van je andere authenticatiemethoden:"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:46
 msgid "Login using SSO"
-msgstr ""
+msgstr "Inloggen via SSO"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:58
 msgid "As a last resort, you can use a backup token:"
-msgstr ""
+msgstr "Als laatste redmiddel kunt u een reservetoken gebruiken:"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:61
 msgid "Use Backup Token"
-msgstr ""
+msgstr "Gebruik Backup Token"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:9
 msgid "Enable Two-Factor Authentication"
-msgstr ""
+msgstr "Activeer tweefactorverificatie"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:11
 msgid "You are about to take your account security to the next level. Follow the steps in this wizard to enable two-factor authentication."
-msgstr ""
+msgstr "Je staat op het punt je accountbeveiliging naar een hoger niveau te tillen. Volg de stappen in deze wizard om tweestapsverificatie in te schakelen."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:15
 msgid "Please select which authentication method you would like to use."
-msgstr ""
+msgstr "Selecteer welke authenticatiemethode u wilt gebruiken."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:18
 msgid "To start using a token generator, please use your smartphone to scan the QR code below. For example, use Google Authenticator."
-msgstr ""
+msgstr "Om te beginnen met het gebruiken van een token generator, gebruik uw smartphone om de QR-code hieronder te scannen. Gebruik bijvoorbeeld Google Authenticator."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:22
 msgid "Alternatively you can use the following secret to setup TOTP in your authenticator or password manager manually."
-msgstr ""
+msgstr "U kunt ook het volgende geheim gebruiken om TOTP handmatig in uw authenticator of wachtwoordbeheerder in te stellen."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:24
 msgid "TOTP Secret:"
-msgstr ""
+msgstr "TOTP-geheim:"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:25
 msgid "Then, enter the token generated by the app."
-msgstr ""
+msgstr "Voer vervolgens het token in dat gegenereerd is door de app."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:28
 msgid "Please enter the phone number you wish to receive the text messages on. This number will be validated in the next step."
-msgstr ""
+msgstr "Voer het telefoonnummer in waarop u de tekstberichten wilt ontvangen. Dit nummer zal in de volgende stap worden gevalideerd."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:32
 msgid "Please enter the phone number you wish to be called on. This number will be validated in the next step."
-msgstr ""
+msgstr "Voer het telefoonnummer in waarop u wilt worden aangeroepen. Dit nummer zal in de volgende stap worden gevalideerd."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:37
 msgid "We are calling your phone right now, please enter the digits you hear."
-msgstr ""
+msgstr "We bellen je telefoon op dit moment, vul alstublieft de cijfers in die je hoort."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:40
 msgid "We sent you a text message, please enter the tokens we sent."
-msgstr ""
+msgstr "We hebben je een sms gestuurd, voer de tokens in die we hebben verzonden."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:44
 msgid "We've encountered an issue with the selected authentication method. Please go back and verify that you entered your information correctly, try again, or use a different authentication method instead. If the issue persists, contact the site administrator."
-msgstr ""
+msgstr "Er is een probleem opgetreden met de geselecteerde verificatiemethode. Ga terug en controleer of u uw gegevens correct hebt ingevoerd, probeer het opnieuw of gebruik in plaats daarvan een andere authenticatiemethode. Neem contact op met de beheerder van de site."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:51
 msgid "To identify and verify your YubiKey, please insert a token in the field below. Your YubiKey will be linked to your account."
-msgstr ""
+msgstr "Om jou YubiKey te identificeren en te verifiëren, dien je een token in het onderstaande veld in te voeren. Jou YubiKey wordt gekoppeld aan jou account."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:5
 msgid "Disable Two-factor Authentication"
-msgstr ""
+msgstr "Tweestapsverificatie inschakelen"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:6
 msgid "You are about to disable two-factor authentication. This weakens your account security, are you sure?"
-msgstr ""
+msgstr "Je staat op het punt tweestapsverificatie uit te schakelen. Dit verzwakt jou accountbeveiliging, weet u het zeker?"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:18
 msgid "Disable"
-msgstr ""
+msgstr "Deactiveer"
 
 #: bluebottle/categories/admin.py:46
 msgid "initiatives"
@@ -2412,15 +2412,15 @@ msgstr "Platformstatistieken"
 
 #: bluebottle/cms/models.py:277
 msgid "Highlighted"
-msgstr ""
+msgstr "Gemarkeerd"
 
 #: bluebottle/cms/models.py:278
 msgid "Matching preferences"
-msgstr ""
+msgstr "Matching voorkeuren"
 
 #: bluebottle/cms/models.py:279
 msgid "Time based"
-msgstr ""
+msgstr "Tijdgebonden"
 
 #: bluebottle/cms/models.py:280 bluebottle/deeds/models.py:35
 #: bluebottle/settings/admin_dashboard.py:97
@@ -2429,11 +2429,11 @@ msgstr "Daden"
 
 #: bluebottle/cms/models.py:281
 msgid "Crowdfunding"
-msgstr ""
+msgstr "Crowdfunding"
 
 #: bluebottle/cms/models.py:282
 msgid "Collecting"
-msgstr ""
+msgstr "Inzamelingsacties"
 
 #: bluebottle/cms/models.py:286
 msgid "Find more activities"
@@ -2453,7 +2453,7 @@ msgstr "Deel deze resultaten"
 
 #: bluebottle/cms/models.py:354
 msgid "Activities Map"
-msgstr ""
+msgstr "Activiteitenkaart"
 
 #: bluebottle/cms/models.py:371
 msgid "Supporter total"
@@ -2465,7 +2465,7 @@ msgstr "Slides"
 
 #: bluebottle/cms/models.py:403
 msgid "The image will be displayed in a square. Upload a square or round image with equal height, to prevent your image from being cropped."
-msgstr ""
+msgstr "De afbeelding wordt in een vierkant weergegeven. Upload een vierkant of ronde afbeelding met dezelfde hoogte, om te voorkomen dat je afbeelding wordt bijgesneden."
 
 #: bluebottle/cms/models.py:406
 msgid "Header"
@@ -2561,11 +2561,11 @@ msgstr "Als de voettekstkleur redelijk licht is, kun je dit instellen op een don
 
 #: bluebottle/cms/models.py:630
 msgid "Footer banner"
-msgstr ""
+msgstr "Voettekst banner"
 
 #: bluebottle/cms/models.py:631
 msgid "Banner shown just above the footer"
-msgstr ""
+msgstr "Banner wordt net boven de voettekst getoond"
 
 #: bluebottle/cms/models.py:642
 msgid "Title font"
@@ -2581,7 +2581,7 @@ msgstr "Tekst-lettertype"
 
 #: bluebottle/cms/models.py:652
 msgid "Font to use for paragraph texts. Should be .woff2 type. Deprecated: Do not override body font for new tenants"
-msgstr ""
+msgstr "Lettertype om te gebruiken voor alinea-teksten. Moet het .woff2-type zijn. Afgekeurd: Overschrijf: Overschrijft het body lettertype niet voor nieuwe tenants"
 
 #: bluebottle/cms/models.py:702
 msgid "Slug of the start initiative page"
@@ -2593,7 +2593,7 @@ msgstr "platform instellingen"
 
 #: bluebottle/cms/models.py:721 bluebottle/cms/models.py:722
 msgid "Plain Text"
-msgstr ""
+msgstr "Platte Tekst"
 
 #: bluebottle/cms/models.py:749 bluebottle/pages/models.py:122
 msgid "Left"
@@ -2605,7 +2605,7 @@ msgstr "Rechts"
 
 #: bluebottle/cms/models.py:754
 msgid "1:2 (Text twice as wide)"
-msgstr ""
+msgstr "1:2 (tekst twee keer zo breed)"
 
 #: bluebottle/cms/models.py:755 bluebottle/pages/models.py:128
 msgid "1:1 (Equal width)"
@@ -2613,7 +2613,7 @@ msgstr "1:1 (gelijke breedte)"
 
 #: bluebottle/cms/models.py:756
 msgid "2:1 (Image twice as wide)"
-msgstr ""
+msgstr "2:1 (afbeelding tweemaal zo breed)"
 
 #: bluebottle/cms/models.py:759 bluebottle/pages/models.py:132
 msgid "Picture placement"
@@ -2625,7 +2625,7 @@ msgstr "Beeld / tekstverhouding"
 
 #: bluebottle/cms/models.py:764 bluebottle/cms/models.py:765
 msgid "Plain Text + Image"
-msgstr ""
+msgstr "Platte tekst + afbeelding"
 
 #: bluebottle/cms/templates/admin/cms/preview/activities.html:3
 msgid "Toggle 'highlight' on activities to show them in this block."
@@ -2656,7 +2656,7 @@ msgstr "Creëer een algemene bijdrager"
 
 #: bluebottle/collect/effects.py:69 bluebottle/deeds/effects.py:63
 msgid "Set end date, if no deadline is specified"
-msgstr ""
+msgstr "Stel einddatum als er geen deadline is opgegeven"
 
 #: bluebottle/collect/messages.py:9 bluebottle/deeds/messages.py:9
 #, python-brace-format
@@ -3698,7 +3698,7 @@ msgstr "gestart"
 
 #: bluebottle/funding/models.py:157
 msgid "Crowdfunding campaign"
-msgstr ""
+msgstr "Crowdfunding campagne"
 
 #: bluebottle/funding/models.py:178 bluebottle/impact/models.py:27
 #: bluebottle/initiatives/models.py:275
@@ -3861,11 +3861,11 @@ msgstr "De activiteit is beëindigd zonder donaties."
 
 #: bluebottle/funding/states.py:27
 msgid "on_hold"
-msgstr ""
+msgstr "on_hold"
 
 #: bluebottle/funding/states.py:29
 msgid "The activity is on-hold until KYC is completed"
-msgstr ""
+msgstr "De activiteit blijft in de wacht totdat de KYC voltooid is"
 
 #: bluebottle/funding/states.py:78
 msgid "The campaign will be visible in the frontend and people can donate."
@@ -3885,11 +3885,11 @@ msgstr "De status van de campagne wordt gezet op 'aanpassingen nodig'. De initia
 
 #: bluebottle/funding/states.py:126
 msgid "Put on hold"
-msgstr ""
+msgstr "In de wacht zetten"
 
 #: bluebottle/funding/states.py:128
 msgid "The campaign will not be able to receive donations"
-msgstr ""
+msgstr "De campagne kan geen donaties ontvangen"
 
 #: bluebottle/funding/states.py:142
 msgid "Reject in case this campaign doesn't fit your program or the rules of the game. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
@@ -5470,7 +5470,7 @@ msgstr "Alle aangemelde gebruikers kunnen een activiteit starten onder dit initi
 
 #: bluebottle/initiatives/models.py:250
 msgid "Online / In-person"
-msgstr ""
+msgstr "Online / Op locatie"
 
 #: bluebottle/initiatives/models.py:251 bluebottle/time_based/models.py:738
 msgid "Skill"
@@ -5478,7 +5478,7 @@ msgstr "Expertise"
 
 #: bluebottle/initiatives/models.py:252
 msgid "Individual / Team"
-msgstr ""
+msgstr "Individueel / Team"
 
 #: bluebottle/initiatives/models.py:253 bluebottle/initiatives/models.py:261
 msgid "Theme"
@@ -5514,7 +5514,7 @@ msgstr "Verplicht initiatiefnemers om een partnerorganisatie op te geven bij het
 
 #: bluebottle/initiatives/models.py:297
 msgid "Activity search: more filters"
-msgstr ""
+msgstr "Activiteit zoeken: meer filters"
 
 #: bluebottle/initiatives/models.py:304
 msgid "In initial search show all activities, not only upcoming."
@@ -5550,7 +5550,7 @@ msgstr "Toon een link bij activiteiten zodat managers een lijst met deelnemers k
 
 #: bluebottle/initiatives/models.py:341
 msgid "Enable matching"
-msgstr ""
+msgstr "Matchen inschakelen"
 
 #: bluebottle/initiatives/models.py:362 bluebottle/initiatives/models.py:363
 msgid "initiative settings"
@@ -5558,16 +5558,16 @@ msgstr "initiatief instellingen"
 
 #: bluebottle/initiatives/models.py:379
 msgid "Select an office"
-msgstr ""
+msgstr "Kies een kantoor"
 
 #: bluebottle/initiatives/models.py:381
 msgid "Make a choice"
-msgstr ""
+msgstr "Maak een keuze"
 
 #: bluebottle/initiatives/models.py:382
 #, python-brace-format
 msgid "Select a {filter_name}"
-msgstr ""
+msgstr "Selecteer een {filter_name}"
 
 #: bluebottle/initiatives/models.py:443
 msgid "theme"
@@ -6906,19 +6906,19 @@ msgstr "Voeg een achtergrondkleur toe aan je segment pagina."
 
 #: bluebottle/segments/models.py:151
 msgid "Button color"
-msgstr ""
+msgstr "Knopkleur"
 
 #: bluebottle/segments/models.py:153
 msgid "Add a button colour to your segment page."
-msgstr ""
+msgstr "Voeg een knopkleur toe aan je segment pagina."
 
 #: bluebottle/segments/models.py:158
 msgid "Button text color"
-msgstr ""
+msgstr "Tekstkleur knop"
 
 #: bluebottle/segments/models.py:161
 msgid "Add a button text colour to your segment page."
-msgstr ""
+msgstr "Voeg een knoptekstkleur toe aan je segment pagina."
 
 #: bluebottle/segments/models.py:166
 msgid "cover image"
@@ -7086,7 +7086,7 @@ msgstr "Body teksten"
 
 #: bluebottle/slides/models.py:39
 msgid "Body text has a limit of 140 characters."
-msgstr ""
+msgstr "Tekst in de inhoud heeft een limiet van 140 tekens."
 
 #: bluebottle/slides/models.py:42
 msgid "Background image"
@@ -7094,15 +7094,15 @@ msgstr "Achtergrond foto"
 
 #: bluebottle/slides/models.py:45
 msgid "The ideal image will have an aspect ratio of 21:9 on large screens and 4:3 on mobile (Sides of the image maybe slightly cropped on mobile screens). Image should be no larger than 2Mb."
-msgstr ""
+msgstr "De ideale afbeelding heeft een hoogte-breedteverhouding van 21:9 op grote schermen en 4:3 op mobiel (Hiermee wordt de afbeelding misschien enigszins bijgesneden op mobiele schermen). Afbeelding mag niet groter zijn dan 2Mb."
 
 #: bluebottle/slides/models.py:58
 msgid "Background video"
-msgstr ""
+msgstr "Achtergrond video"
 
 #: bluebottle/slides/models.py:67
 msgid "This video will autoplay and loop in the background, without sound. Allowed formats are mp4, ogg, 3gp, avi, mov and webm. The file should be smaller than 10 MB. Adding a background video will replace the background image."
-msgstr ""
+msgstr "Deze video zal automatisch afspelen en herhalen op de achtergrond, zonder geluid. Toegestane formaten zijn mp4, ogg, 3gp, avi, mov en webm. Het bestand moet kleiner zijn dan 10 MB. Het toevoegen van een achtergrondvideo vervangt de achtergrondafbeelding."
 
 #: bluebottle/slides/models.py:74
 msgid "Video"
@@ -7110,23 +7110,23 @@ msgstr "Video"
 
 #: bluebottle/slides/models.py:77
 msgid "YouTube and Vimeo videos are supported, add the video by pasting their URL above. This will add a 'play' button to the slider. The video will play after the 'Play' button is selected."
-msgstr ""
+msgstr "YouTube- en Vimeo-video's worden ondersteund, voeg de video toe door bovenstaand URL te plakken. Hiermee wordt een 'Afspelen' knop aan de slider toegevoegd. De video wordt afgespeeld nadat de knop 'Afspelen' is geselecteerd."
 
 #: bluebottle/slides/models.py:83
 msgid "Button label"
-msgstr ""
+msgstr "Knoplabel"
 
 #: bluebottle/slides/models.py:84
 msgid "This is the text displayed on the button."
-msgstr ""
+msgstr "Dit is de tekst wat getoond dient te worden in de knop."
 
 #: bluebottle/slides/models.py:86
 msgid "Button URL"
-msgstr ""
+msgstr "URL van de knop"
 
 #: bluebottle/slides/models.py:87
 msgid "This is the URL to which the button links."
-msgstr ""
+msgstr "Dit is de URL waarnaar de knop linkt."
 
 #: bluebottle/statistics/admin.py:77 bluebottle/statistics/models.py:215
 msgid "Type"
@@ -7625,7 +7625,7 @@ msgstr "Voorbereidingstijd"
 
 #: bluebottle/time_based/models.py:65
 msgid "Time-based activity"
-msgstr ""
+msgstr "Tijdgebonden activiteiten"
 
 #: bluebottle/time_based/models.py:137
 msgid "Free"
@@ -7784,7 +7784,7 @@ msgstr "Sluit inschrijvingen voor een activiteit nadat de registratiedeadline is
 
 #: bluebottle/time_based/periodic_tasks.py:61
 msgid "Finish an activity when all slots are completed."
-msgstr ""
+msgstr "Voltooi een activiteit wanneer alle slots zijn voltooid."
 
 #: bluebottle/time_based/periodic_tasks.py:82
 msgid "Finish an activity when deadline has passed."
@@ -8545,13 +8545,15 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The team activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"De teamactiviteit vindt over een paar dagen plaats!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_team_slot.html:20
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page.\n"
-msgstr ""
+msgstr "\n"
+"Bekijk je team op de activiteitspagina.\n"
 
 #: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:6
 #, python-format
@@ -8579,14 +8581,16 @@ msgctxt "email"
 msgid "\n"
 "            You joined %(team_name)s for an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je neemt deel aan %(team_name)s voor een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/team_member_joined.html:19
 msgctxt "email"
 msgid "\n"
 "                The activity manager will be in touch to confirm details such as time, date and location.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"De activiteitenbeheerder zal via e-mail contact opnemen om details zoals tijd, datum en locatie te bevestigen.            "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_added.html:4
 #, python-format
@@ -8637,7 +8641,9 @@ msgctxt "email"
 msgid "\n"
 "            The activity manager will be in touch to confirm details such as time, date and location. You can start inviting team members, or wait until the details have been set.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            De activiteit manager zal contact opnemen om details zoals tijd, datum en locatie te bevestigen. Je kan beginnen met het uitnodigen van teamleden, of wachten tot de details zijn ingesteld.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_joined.html:23
 msgctxt "email"
@@ -8837,7 +8843,7 @@ msgstr "Bekijk update wall"
 
 #: bluebottle/wallposts/dashboard.py:11
 msgid "Recent wallposts"
-msgstr ""
+msgstr "Recente berichten"
 
 #: bluebottle/wallposts/models.py:48 bluebottle/wallposts/models.py:200
 #: bluebottle/wallposts/models.py:272

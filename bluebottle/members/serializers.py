@@ -711,7 +711,7 @@ class MemberProfileSerializer(ModelSerializer):
             'id', 'first_name', 'last_name', 'about_me', 'required',
             'birthdate', 'segments', 'phone_number',
             'location', 'place', 'themes', 'skills',
-            'search_distance', 'any_search_distance', 'include_online',
+            'search_distance', 'any_search_distance', 'exclude_online',
             'subscribed', 'matching_options_set'
         )
 

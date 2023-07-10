@@ -92,7 +92,7 @@ def get_matching_activities(user):
             )
         )
 
-    if user.include_online is False:
+    if user.exclude_online:
         search = search.filter(
             Term(is_online=True)
         )

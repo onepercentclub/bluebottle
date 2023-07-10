@@ -36,6 +36,8 @@ install:
   - pip install --upgrade -I flake8==5.0.4
   - pip install -e .[test] --trusted-host github.com
 before_script:
+  - sudo echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
+  - sudo systemctl restart elasticsearch
   - flake8 .
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb

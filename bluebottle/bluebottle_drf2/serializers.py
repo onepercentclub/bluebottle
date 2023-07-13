@@ -1,4 +1,8 @@
+from random import randrange
+
 from future import standard_library
+from rest_framework_json_api.relations import HyperlinkedRelatedField
+
 standard_library.install_aliases()
 import logging
 import os
@@ -6,7 +10,6 @@ from os.path import isfile
 import sys
 from urllib.error import URLError
 import urllib.parse
-
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -39,8 +42,7 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, crop='center',
-                 colorspace='RGB', **kwargs):
+    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
         self.sorl_options = {
             'crop': crop,
@@ -57,6 +59,9 @@ class SorlImageField(RestrictedImageField):
             return ""
 
         if not os.path.exists(value.path):
+            if settings.DEBUG and settings.RANDOM_IMAGE_PROVIDER:
+                (width, height) = self.geometry_string.split('x')
+                return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
             return ""
 
         _, ext = os.path.splitext(value.path)
@@ -253,4 +258,16 @@ class PrivateFileSerializer(FileSerializer):
         return {
             'url': url,
             'name': filename
+        }
+
+
+class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
+
+    def __init__(self, link=None, **kwargs):
+        self.link = link
+        super(CustomHyperlinkRelatedSerializer, self).__init__(source='parent', read_only=True, **kwargs)
+
+    def get_links(self, *args, **kwargs):
+        return {
+            'related': self.link
         }

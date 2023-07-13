@@ -173,12 +173,12 @@ class ImpactStatistic(BaseStatistic):
     @property
     def icon(self):
         if not self.impact_type:
-            return
+            return 'default'
         return self.impact_type.icon
 
     @property
     def name(self):
-        return self.impact_type
+        return str(self.impact_type.name)
 
     def __str__(self):
         return str(self.impact_type.name)

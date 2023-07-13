@@ -1,15 +1,18 @@
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import Sum, Q, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
+from rest_framework import response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
-from rest_framework import response
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Team, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
+    ActivityLocation,
+    ActivityLocationSerializer,
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
@@ -18,6 +21,7 @@ from bluebottle.activities.serializers import (
     TeamTransitionSerializer,
 )
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
@@ -34,7 +38,63 @@ from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
     CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
 )
-from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
+
+
+class ActivityLocationList(JsonApiViewMixin, ListAPIView):
+    serializer_class = ActivityLocationSerializer
+    pagination_class = None
+    model = Activity
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Activity.objects.filter(status__in=("succeeded", "open"))
+        collects = [
+            activity for activity
+            in queryset.annotate(
+                position=F('collectactivity__location__position'),
+                location_id=F('collectactivity__location__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        periods = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__periodactivity__location__position'),
+                location_id=F('timebasedactivity__periodactivity__location__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        dates = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__dateactivity__slots__location__position'),
+                location_id=F('timebasedactivity__dateactivity__slots__location__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        fundings = [
+            activity for activity
+            in queryset.annotate(
+                position=F('funding__initiative__place__position'),
+                location_id=F('funding__initiative__place__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        locations = list(set(
+            ActivityLocation(
+                pk=f'{model.JSONAPIMeta.resource_name}-{model.pk}-{model.location_id}',
+                created=model.created,
+                position=model.position,
+                activity=model,
+            ) for model in collects + dates + periods + fundings
+        ))
+        return sorted(locations, key=lambda location: location.created, reverse=True)
 
 
 class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
@@ -102,7 +162,10 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).order_by(
             '-created'
         ).annotate(
-            total_duration=Sum('contributions__timecontribution__value'),
+            total_duration=Sum(
+                'contributions__timecontribution__value',
+                filter=Q(contributions__status__in=['succeeded', 'new'])
+            )
         )
 
     serializer_class = ContributorListSerializer

@@ -39,12 +39,16 @@ from bluebottle.members.serializers import (
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
     SignUpTokenConfirmationSerializer, UserActivitySerializer,
     CaptchaSerializer, AxesJSONWebTokenSerializer, MemberSignUpSerializer,
-    PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer, OldUserActivitySerializer
+    PasswordStrengthSerializer, PasswordResetConfirmSerializer, AuthTokenSerializer,
+    OldUserActivitySerializer, MemberProfileSerializer
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
-from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
+from bluebottle.utils.permissions import IsCurrentUser
+from bluebottle.utils.views import (
+    RetrieveAPIView, UpdateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
+)
 
 USER_MODEL = get_user_model()
 
@@ -189,6 +193,15 @@ class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
 
     def get_object(self, *args, **kwargs):
         return self.request.user
+
+
+class MemberProfileDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = MemberProfileSerializer
+    permission_classes = [IsCurrentUser]
 
 
 class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -387,7 +400,7 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         try:
-            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
+            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'], is_active=True)
             context = {
                 'email': user.email,
                 'site': tenant_url(),

@@ -144,6 +144,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
+
+    search_distance = models.IntegerField(_('Distance'), default=50, blank=True, null=True)
+    any_search_distance = models.BooleanField(_('Any distance'), default=True)
+    exclude_online = models.BooleanField(_('Don’t show online/remote activities'), default=False)
+
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)
@@ -333,7 +338,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_initiator(self):
-        return bool(self.own_initiatives.count())
+        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists()
 
     @cached_property
     def is_supporter(self):
@@ -411,7 +416,7 @@ def connect_to_segments(sender, instance, created, **kwargs):
     from django.contrib.auth import get_user_model
 
     USER_MODEL = get_user_model()
-    if isinstance(instance, USER_MODEL) and created and '@' in instance.email:
+    if isinstance(instance, USER_MODEL) and '@' in instance.email:
         user_email_domain = instance.email.split('@')[1]
-        for segment in Segment.objects.filter(email_domains__contains=[user_email_domain]).all():
+        for segment in Segment.objects.filter(email_domains__icontains=user_email_domain).all():
             instance.segments.add(segment)

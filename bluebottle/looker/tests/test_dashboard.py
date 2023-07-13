@@ -1,4 +1,11 @@
+import urllib
+
 from future import standard_library
+
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
+
 standard_library.install_aliases()
 from builtins import range
 from urllib.parse import quote_plus
@@ -74,6 +81,27 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Giving - Donations')
         self.assertContains(response, 'Giving - Supporters')
 
+    def test_hide_filters(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.embed_url)
+        self.assertTrue(
+            urllib.parse.quote('hide_filter=Office') in response.content.decode()
+        )
+        self.assertTrue(
+            urllib.parse.quote('hide_filter=Category') in response.content.decode()
+        )
+        self.assertTrue(
+            urllib.parse.quote('hide_filter=Segment') in response.content.decode()
+        )
+
+        CategoryFactory.create()
+        LocationFactory.create()
+        SegmentTypeFactory.create()
+        response = self.client.get(self.embed_url)
+        self.assertFalse(
+            'hide_filter' in response.content.decode()
+        )
+
     def test_view_permission(self):
         staff_user = BlueBottleUserFactory.create(is_staff=True)
         staff_user.user_permissions.add(
@@ -91,7 +119,7 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
     def test_view_not_authenticated(self):
         response = self.client.get(self.embed_url)
         path = urlparse(response['location']).path
-        self.assertEqual(path, '/accounts/login/')
+        self.assertEqual(path, '/en/utils/two_factor/account/login/')
 
     def test_view_no_permission(self):
         staff_user = BlueBottleUserFactory.create(is_staff=True)

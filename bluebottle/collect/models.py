@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 
 from django.db import models, connection
 from django.db.models import SET_NULL
-
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
@@ -73,6 +72,8 @@ class CollectActivity(Activity):
     enable_impact = models.BooleanField(default=False)
 
     auto_approve = True
+
+    activity_type = _('Collect activity')
 
     @property
     def activity_date(self):
@@ -180,3 +181,6 @@ class CollectContribution(Contribution):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributions'
+
+
+from bluebottle.collect.periodic_tasks import *  # noqa

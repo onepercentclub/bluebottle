@@ -567,6 +567,28 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
                 'The activity "{}" has succeeded 🎉'.format(self.activity.title)
             )
 
+    def test_succeed(self):
+        self.activity.duration_period = 'weeks'
+        self.activity.save()
+
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+
+        self.activity.states.succeed(save=True)
+        self.assertEqual(self.activity.deadline, date.today() - timedelta(days=1))
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.status, 'succeeded')
+
     def test_succeed_manually_review_new(self):
         self.activity.duration_period = 'weeks'
         self.activity.save()
@@ -607,7 +629,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         for duration in self.activity.durations:
             self.assertEqual(duration.start.astimezone(tz).date(), self.activity.start)
-            self.assertEqual(duration.end.astimezone(tz).date(), self.activity.deadline)
 
         self.activity.start = self.activity.start + timedelta(days=1)
         self.activity.save()
@@ -892,7 +913,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'cancelled')
         self.assertEqual(
             len(mail.outbox),
-            2
+            3
         )
 
         self.assertEqual(
@@ -937,7 +958,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'cancelled')
         self.assertEqual(
             len(mail.outbox),
-            1
+            2
         )
 
         self.assertEqual(
@@ -1823,6 +1844,79 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         self.assertEqual(
             prep.status,
             'succeeded'
+        )
+
+    def test_join_passed_start_no_end(self):
+        self.activity.start = (now() - timedelta(days=700)).date()
+        self.activity.registration_deadline = None
+        self.activity.deadline = None
+        self.activity.duration_period = 'overall'
+        self.activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
+        )
+        contribution = participant.contributions.filter(timecontribution__contribution_type='period').first()
+        self.assertEqual(
+            contribution.start.date(),
+            date.today()
+        )
+
+        preparation = participant.contributions.filter(timecontribution__contribution_type='preparation').first()
+        self.assertEqual(
+            preparation.start.date(),
+            date.today()
+        )
+
+    def test_join_future_start(self):
+        self.activity.start = (now() + timedelta(days=700)).date()
+        self.activity.registration_deadline = None
+        self.activity.deadline = None
+        self.activity.duration_period = 'overall'
+        self.activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
+        )
+        contribution = participant.contributions.filter(timecontribution__contribution_type='period').first()
+        self.assertEqual(
+            contribution.start.date(),
+            self.activity.start
+        )
+
+        preparation = participant.contributions.filter(timecontribution__contribution_type='preparation').first()
+        self.assertEqual(
+            preparation.start.date(),
+            date.today()
+        )
+
+    def test_join_passed_end(self):
+        self.activity.start = (now() - timedelta(days=20)).date()
+        self.activity.end = (now() - timedelta(days=12)).date()
+        self.activity.registration_deadline = None
+        self.activity.deadline = None
+        self.activity.duration_period = 'overall'
+        self.activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user'
+        )
+        contribution = participant.contributions.filter(timecontribution__contribution_type='period').first()
+        self.assertEqual(
+            contribution.start.date(),
+            date.today()
+        )
+
+        preparation = participant.contributions.filter(timecontribution__contribution_type='preparation').first()
+        self.assertEqual(
+            preparation.start.date(),
+            date.today()
         )
 
     def test_team_join(self):

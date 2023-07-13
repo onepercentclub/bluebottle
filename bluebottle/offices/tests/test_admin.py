@@ -124,6 +124,14 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Office group')
         self.assertContains(response, 'Office region')
 
+    def test_office_admin_staff(self):
+        self.client.force_login(self.staff_member)
+        url = reverse('admin:geo_location_changelist')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Office group')
+        self.assertContains(response, 'Office region')
+
     def test_activity_admin_region_filters(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.activities_url)

@@ -1,23 +1,20 @@
-from future.utils import python_2_unicode_compatible
-from past.utils import old_div
-from builtins import object
-import re
 import json
+import re
+from builtins import object
 from operator import attrgetter
 
-from django.utils.functional import cached_property
-from djmoney.money import Money
-
-from django.contrib.postgres.fields import JSONField
-
-from bluebottle.funding.exception import PaymentException
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from djmoney.money import Money
+from future.utils import python_2_unicode_compatible
 from memoize import memoize
+from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
+from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
@@ -299,7 +296,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-    eventually_due = JSONField(null=True, default=list)
+    eventually_due = models.JSONField(null=True, default=list)
 
     @property
     def country_spec(self):
@@ -461,6 +458,27 @@ class StripePayoutAccount(PayoutAccount):
             external_account.save()
         self.save()
 
+        self.update_live_campaigns()
+
+    def update_live_campaigns(self):
+        from bluebottle.funding.models import Funding
+        if self.payments_enabled:
+            campaigns = Funding.objects.filter(
+                bank_account__connect_account=self,
+                status='on_hold'
+            ).all()
+            for campaign in campaigns:
+                campaign.states.approve()
+                campaign.save()
+        else:
+            campaigns = Funding.objects.filter(
+                bank_account__connect_account=self,
+                status='open'
+            ).all()
+            for campaign in campaigns:
+                campaign.states.put_on_hold()
+                campaign.save()
+
     @cached_property
     def account(self):
         if not hasattr(self, '_account'):
@@ -526,6 +544,12 @@ class StripePayoutAccount(PayoutAccount):
             self.account.individual.verification.status == 'verified' and
             not self.account.individual.requirements.eventually_due
         )
+
+    @property
+    def payments_enabled(self):
+        if 'charges_enabled' in self.account:
+            return self.account.charges_enabled
+        return True
 
     @property
     def rejected(self):

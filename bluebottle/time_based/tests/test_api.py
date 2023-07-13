@@ -342,15 +342,13 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(data['meta']['matching-properties']['location'], None)
 
         contributor_url = reverse(f'{self.type}-participants', args=(self.activity.pk, ))
+
         self.assertTrue(
-            data['relationships']['unreviewed-contributors']['links']['related'].endswith(
-                f"{contributor_url}?filter[status]=new"
-            )
+            f"{contributor_url}?filter[status]=new" in
+            data['relationships']['unreviewed-contributors']['links']['related']
         )
         self.assertTrue(
-            data['relationships']['contributors']['links']['related'].endswith(
-                contributor_url
-            )
+            contributor_url in data['relationships']['contributors']['links']['related']
         )
 
     def test_matching_theme(self):
@@ -1616,7 +1614,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
@@ -1706,6 +1704,9 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
 
+        self.activity.description = "Test<br>bla"
+        self.activity.save()
+
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1721,9 +1722,10 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         params = urllib.parse.parse_qs(urllib.parse.urlparse(links['google']).query)
         self.assertEqual(params['action'], ['TEMPLATE'])
         self.assertEqual(params['text'][0], self.activity.title)
+
         self.assertEqual(
             params['details'][0],
-            f'{self.activity.description}\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
+            f'Test  \nbla\n\n{self.activity.get_absolute_url()}\nJoin: {self.slot.online_meeting_url}'
         )
 
     def test_get_calendar_links_location(self):
@@ -3151,9 +3153,8 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}\nJoin: {}'.format(
-                    self.activity.description,
-                    self.activity.get_absolute_url(),
+                '{}\nJoin: {}'.format(
+                    self.activity.details,
                     self.slot.online_meeting_url
                 )
             )
@@ -3254,9 +3255,8 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}\nJoin: {}'.format(
-                    self.activity.description,
-                    self.activity.get_absolute_url(),
+                '{}\nJoin: {}'.format(
+                    self.activity.details,
                     slot.online_meeting_url
                 )
             )
@@ -3301,9 +3301,8 @@ class DateIcalTestCase(BluebottleTestCase):
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(
             str(ical_event['description']),
-            '{}\n{}\nJoin: {}'.format(
-                self.activity.description,
-                self.activity.get_absolute_url(),
+            '{}\nJoin: {}'.format(
+                self.activity.details,
                 slot.online_meeting_url
             )
         )

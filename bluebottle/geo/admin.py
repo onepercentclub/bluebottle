@@ -105,7 +105,8 @@ class PlaceInline(admin.ModelAdmin):
         'postal_code',
         'country',
         'formatted_address',
-        'position'
+        'position',
+        'mapbox_id'
     ]
 
 

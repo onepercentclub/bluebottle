@@ -1,11 +1,11 @@
-from builtins import str
 from builtins import object
+from builtins import str
+
 from django.conf import settings
 from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.validators import validate_video_file_size
@@ -33,22 +33,19 @@ class Slide(PublishableModel):
         help_text=_("This is shown on tabs beneath the banner."))
 
     # Contents
-    title = models.CharField(_("Title"), max_length=100, blank=True)
-    body = models.TextField(_("Body text"), blank=True)
-    image = ImageField(
-        _("Image"), max_length=255,
-        blank=True, null=True,
-        upload_to='banner_slides/',
-        validators=[
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
-            ),
-            validate_file_infection
-        ]
+    title = models.CharField(_("Title"), max_length=72, blank=True)
+    body = models.TextField(
+        _("Body text"), max_length=140, blank=True,
+        help_text=_('Body text has a limit of 140 characters.')
     )
     background_image = ImageField(
         _("Background image"), max_length=255,
         blank=True, null=True,
+        help_text=_(
+            "The ideal image will have an aspect ratio of 21:9 on large screens and 4:3 on mobile "
+            "(Sides of the image maybe slightly cropped on mobile screens). "
+            "Image should be no larger than 2Mb."
+        ),
         upload_to='banner_slides/',
         validators=[
             FileMimetypeValidator(
@@ -58,7 +55,7 @@ class Slide(PublishableModel):
         ]
     )
     video = models.FileField(
-        _("Video"), max_length=255,
+        _("Background video"), max_length=255,
         blank=True, null=True,
         validators=[
             validate_video_file_size,
@@ -66,24 +63,28 @@ class Slide(PublishableModel):
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
             )
         ],
-        help_text=_('This video will autoplay at the background. '
-                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
-                    'File should be smaller then 10MB.'),
+        help_text=_(
+            'This video will autoplay and loop in the background, '
+            'without sound. Allowed formats are mp4, ogg, 3gp, avi, mov and webm. '
+            'The file should be smaller than 10 MB. Adding a background video will '
+            'replace the background image.'
+        ),
         upload_to='banner_slides/')
     video_url = models.URLField(
-        _("Video url"),
+        _("Video"),
         max_length=100, blank=True,
+        help_text=_(
+            "YouTube and Vimeo videos are supported, add the video by pasting their URL above. "
+            "This will add a 'play' button to the slider. "
+            "The video will play after the 'Play' button is selected."
+        ),
         default='')
     link_text = models.CharField(
-        _("Link text"), max_length=400, blank=True,
-        help_text=_("This is the text on the button inside the banner."))
+        _("Button label"), max_length=400, blank=True,
+        help_text=_("This is the text displayed on the button."))
     link_url = models.CharField(
-        _("Link url"), max_length=400, blank=True,
-        help_text=_("This is the link for the button inside the banner."))
-    style = models.CharField(
-        _("Style"), max_length=40,
-        help_text=_("Styling class name"),
-        default='default', blank=True)
+        _("Button URL"), max_length=400, blank=True,
+        help_text=_("This is the URL to which the button links."))
 
     # Metadata
     sequence = models.IntegerField()
@@ -97,3 +98,6 @@ class Slide(PublishableModel):
 
     class Meta(object):
         ordering = ('language', 'sequence')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/slides/slides'

@@ -13,6 +13,7 @@ from bluebottle.utils.utils import update_group_permissions
 
 def add_group_permissions(apps, schema_editor):
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
+
     with LocalTenant(tenant):
         group_perms = {
             'Staff': {
@@ -26,15 +27,15 @@ def add_group_permissions(apps, schema_editor):
                     'delete_officeregion',
                 )
             },
-    }
-
-    update_group_permissions('offices', group_perms, apps)
+        }
+        update_group_permissions('offices', group_perms, apps)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('offices', '0001_initial'),
+        ('auth', '0001_initial'),
     ]
 
     operations = [

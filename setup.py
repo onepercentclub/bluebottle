@@ -2,8 +2,10 @@
 # flake8: noqa
 import os
 import sys
-import bluebottle
+
 from setuptools import setup, find_packages
+
+import bluebottle
 
 
 def read_file(name):
@@ -15,7 +17,7 @@ changes = ''
 
 install_requires = [
     'Babel==2.9.1',
-    'Django==2.2.24',
+    'Django==3.2.19',
     'Pillow==8.3.0',
     'South==1.0.2',
     'South==1.0.2',
@@ -39,12 +41,12 @@ install_requires = [
     'django-cors-headers==3.7.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==1.9.5',
-    'django-elasticsearch-dsl==6.5.0',
+    'django-elasticsearch-dsl==7.3',
     'django-extensions==1.7.9',
     'django-filter==2.4.0',
+    'django-fluent-contents==3.0',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
-    'django-geoposition==0.3.0',
     'django-hashers-passlib==0.3',
     'django-ipware==3.0.2',
     'django-jet2==1.0.12',
@@ -56,6 +58,7 @@ install_requires = [
     'django-money==1.3.1',
     'django-multiselectfield==0.1.12',
     'django-nested-inline==0.4.2',
+    'django-otp==1.2.0',
     'django-parler==2.1',
     'django-permissions-widget==1.5.2',
     'django-recaptcha==2.0.6',
@@ -65,25 +68,27 @@ install_requires = [
     'django-subquery==1.0.4',
     'django-summernote==0.8.20.0',
     'django-taggit==1.3.0',
-    'django-tenant-schemas==1.10.0',
+    'django-tenant-schemas==1.11.0',
     'django-tinymce==2.7.0',
     'django-tools==0.48.3',
+    'django-two-factor-auth[phonenumbers]==1.15.2',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
-    'django_polymorphic==2.1.2',
-    'djangorestframework-jsonapi==4.1.0',
+    'django_polymorphic==3.1.0',
+    'djangorestframework-jsonapi==4.2.1',
     'djangorestframework==3.12.4',
     'dkimpy==1.0.5',
     'dotted==0.1.8', 
     'drf-jwt==1.19.0',
-    'elasticsearch-dsl==6.4.0',
-    'elasticsearch==6.8.2',
+    'elasticsearch-dsl==7.4.1',
+    'elasticsearch==7.17.9',
     'geocoder==1.37.0',
     'geopy==2.1.0',
     'html2text==2020.1.16',
     'gunicorn==19.10.0',
-    'html5lib==1.0b10',
+    'html5lib==1.1',
     'icalendar==4.0.4',
+    'importlib_resources==5.12.0',
     'influxdb==4.1.1',
     'lipisha==0.3.0',
     'lxml==4.6.3',
@@ -111,6 +116,7 @@ install_requires = [
     'requests==2.24.0',
     'schwifty==2.1.0',
     'scss==0.8.73',
+    'social-auth-core==4.3.0',
     'social-auth-app-django==4.0.0',
     'sorl-thumbnail==12.6.3',
     'staticmaps-signature==0.2.0',
@@ -126,8 +132,8 @@ install_requires = [
 
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
-    'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@dc14004b5d732100a0d619618bfc96edfcfcde1a#egg=django-tenant-extras-2.0.16',
-    'django-fluent-contents@git+https://github.com/onepercentclub/django-fluent-contents.git@4e9ca11585ac2a3fae6c3ca94f9d1e6ddc38880b#egg=django-fluent-contents-4e9ca11',
+    'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@1ac34b9c0760c75be59f461ce231411346688824#egg=django-tenant-extras-2.0.17',
+    'django-fluent-contents@git+https://github.com/onepercentclub/django-fluent-contents.git@27f309c7b54bdfa4fada4a8a2d9ae744e967bc31#egg=django-fluent-contents-27f309',
     'django-taggit-autocomplete-modified@git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
 ]
 

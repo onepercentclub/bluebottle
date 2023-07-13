@@ -1,8 +1,8 @@
+from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.segments.models import Segment
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
-from bluebottle.segments.models import Segment
-from bluebottle.deeds.tests.factories import DeedFactory
 
 
 class TestSegmentModel(BluebottleTestCase):
@@ -42,6 +42,14 @@ class TestSegmentModel(BluebottleTestCase):
             segment.background_color = color
             self.assertEqual(segment.text_color, text_color)
 
+    def test_absolute_url(self):
+        segment = SegmentFactory.create()
+
+        self.assertEqual(
+            segment.get_absolute_url(),
+            f'http://testserver/en/segments/{segment.id}/{segment.slug}/activities/list'
+        )
+
 
 class MemberSegmentTestCase(BluebottleTestCase):
 
@@ -76,6 +84,37 @@ class MemberSegmentTestCase(BluebottleTestCase):
             email='jan.keizer@paling-sound.nl'
         )
         self.assertEqual(jan.segments.first(), None)
+
+    def test_new_user_added_to_segment_case_insensitive(self):
+        segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            email_domains=['leidse-ZANGERS.nl', 'wijngaarden.nl'],
+            closed=True
+        )
+
+        mart = BlueBottleUserFactory.create(
+            email='mart.hoogkamer@LEIDSE-zangers.nl'
+        )
+
+        self.assertEqual(mart.segments.first(), segment)
+
+    def test_changing_user_added_to_segment(self):
+        segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            email_domains=['leidse-zangers.nl'],
+            closed=True
+        )
+
+        mart = BlueBottleUserFactory.create(
+            email='mart.hoogkamer@dds.nl'
+        )
+
+        self.assertEqual(mart.segments.first(), None)
+
+        mart.email = 'mart.hoogkamer@leidse-zangers.nl'
+        mart.save()
+
+        self.assertEqual(mart.segments.first(), segment)
 
     def test_user_added_to_segment_when_setting_email_domain(self):
         robbie = BlueBottleUserFactory.create(

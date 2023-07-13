@@ -119,6 +119,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     auto_approve = True
 
+    activity_type = _('Activity')
+
     @property
     def activity_date(self):
         raise NotImplementedError
@@ -217,6 +219,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     @property
+    def status_label(self):
+        if self.states.current_state:
+            return self.states.current_state.name
+
+    @property
     def owner(self):
         return self.user
 
@@ -232,6 +239,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         ordering = ('-created',)
         verbose_name = _('Contribution')
         verbose_name_plural = _('Contributions')
+
+    @property
+    def type(self):
+        return self.polymorphic_ctype.model_class()._meta.verbose_name
 
     def __str__(self):
         if self.user:

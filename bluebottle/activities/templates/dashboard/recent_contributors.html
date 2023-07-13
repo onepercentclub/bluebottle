@@ -1,0 +1,21 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for contributor in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ contributor.created|date }}<br>
+        </span>
+        <a href="{% url 'admin:activities_contributor_change' contributor.id %}" >
+            <b>{{ contributor }}</b> - {{ contributor.status_label }}
+        </a>
+        <br>
+        {{ contributor.activity.title }}
+        <br>
+        <i>{{ contributor.activity.activity_type }}</i>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

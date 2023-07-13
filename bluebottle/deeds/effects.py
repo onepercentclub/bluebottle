@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -13,18 +13,24 @@ class CreateEffortContribution(Effect):
     display = False
 
     def pre_save(self, effects):
-        start = now()
+        contribution_date = now()
         tz = get_current_timezone()
-        if self.instance.activity.start and self.instance.activity.start > start.date():
-            start = tz.localize(
+        if self.instance.activity.start and self.instance.activity.start > contribution_date.date():
+            contribution_date = tz.localize(
                 datetime.combine(
                     self.instance.activity.start, datetime.min.replace(hour=12).time()
+                )
+            )
+        elif self.instance.activity.end and self.instance.activity.end < contribution_date.date():
+            contribution_date = tz.localize(
+                datetime.combine(
+                    self.instance.activity.end, datetime.min.replace(hour=12).time()
                 )
             )
         self.contribution = EffortContribution(
             contributor=self.instance,
             contribution_type=EffortContribution.ContributionTypeChoices.deed,
-            start=start,
+            start=contribution_date,
         )
         effects.extend(self.contribution.execute_triggers())
 
@@ -51,3 +57,14 @@ class RescheduleEffortsEffect(Effect):
             self.instance.efforts.update(
                 start=start,
             )
+
+
+class SetEndDateEffect(Effect):
+    title = _('Set end date, if no deadline is specified')
+    template = 'admin/set_end_date.html'
+
+    def is_valid(self):
+        return not self.instance.end
+
+    def post_save(self, **kwargs):
+        self.instance.end = date.today() - timedelta(days=1)

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
-from bluebottle.members.serializers import MemberSignUpSerializer
+from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -979,7 +979,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'This password is too common.'
+            'This password is too common, be adventurous!'
         )
 
     def test_email(self):
@@ -989,7 +989,7 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'The password is too similar to the email address.'
+            'The password is too similar to your email address, think outside the box!'
         )
 
     def test_valid_fair(self):
@@ -1267,6 +1267,61 @@ class CurrentMemberAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
+class MemberProfileJSONAPITestCase(APITestCase):
+    serializer = MemberProfileSerializer
+
+    def setUp(self):
+        super().setUp()
+        self.model = BlueBottleUserFactory.create()
+        self.url = reverse('member-profile-detail', args=(self.model.pk, ))
+
+    def test_get_logged_in(self):
+        self.perform_get(user=self.model)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertEqual(self.response.json()['data']['id'], str(self.model.pk))
+        self.assertAttribute('first-name')
+        self.assertAttribute('last-name')
+        self.assertAttribute('required', self.model.required)
+
+    def test_get_logged_out(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_update(self):
+        self.perform_update({'phone_number': '0612345678'}, user=self.model)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertAttribute('phone-number', '0612345678')
+
+    def test_update_segment(self):
+        segment_type = SegmentTypeFactory.create()
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        self.perform_update({'segments': [segment]}, user=self.model)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+
+    def test_update_segment_required(self):
+        segment_type = SegmentTypeFactory.create(required=True, needs_verification=True)
+        segment = SegmentFactory.create(segment_type=segment_type)
+
+        self.perform_get(user=self.model)
+        self.assertAttribute('required', [f'segment_type.{segment_type.pk}'])
+        self.perform_update({'segments': [segment]}, user=self.model)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertRelationship('segments', [segment])
+        self.assertEqual(len(self.response.json()['data']['attributes']['required']), 0)
+
+
 class MemberSignUpAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
@@ -1327,7 +1382,7 @@ class MemberSignUpAPITestCase(APITestCase):
         error = self.response.json()['errors'][0]
         self.assertEqual(
             error['detail'],
-            'This password is too common.'
+            'This password is too common, be adventurous!'
         )
         self.assertEqual(
             error['source']['pointer'],

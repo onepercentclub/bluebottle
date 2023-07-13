@@ -9,6 +9,7 @@
 .sidebar-center-link:hover {
     padding: 0
 }
+
 .apps-hide-label {
     padding: 0 8px;
 }
@@ -17,30 +18,36 @@
     clear: both;
 }
 
-form .aligned strong+p.help {
+form .aligned strong + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
+
+form .aligned p.file-upload + p.help {
+    margin-left: 12.85714rem;
+    padding-top: 4px;
+}
+
 
 #toolbar form #searchbar {
     width: 280px;
 }
 
 .site-title {
-  text-align: right;
-  padding: 0 6px 8px 0;
-  font-size: 1.2rem;
+    text-align: right;
+    padding: 0 6px 8px 0;
+    font-size: 1.2rem;
 }
 
 #branding-menu {
-  background: url("/static/assets/admin/images/goodup_icon.jpg");
-  background-size: 100%;
-  width: 50px;
-  height: 50px;
+    background: url("/static/assets/admin/images/goodup_icon.jpg");
+    background-size: 100%;
+    width: 50px;
+    height: 50px;
 }
 
 #branding-menu:before {
-  content: ''
+    content: ''
 }
 
 .video-container {
@@ -172,7 +179,7 @@ form .aligned strong+p.help {
 }
 
 .select2-container .select2-selection--single {
-    height: 38px!important;
+    height: 38px !important;
 }
 
 .array-item {
@@ -185,4 +192,113 @@ form .aligned strong+p.help {
 
 .inline-related .description {
     margin: 16px;
+}
+
+.js-inline-admin-formset.nested-inline {
+    display: inline-block;
+    margin-left: 60px;
+}
+
+.js-inline-admin-formset fieldset {
+    padding: 4px
+}
+
+.nested-inline-bottom-border {
+    margin-top: 24px;
+}
+
+
+.inline-related h3 .inline_label {
+    background: transparent;
+    color: #666
+}
+
+
+.inline-related h3 b {
+    color: #000;
+    margin-left: 4px;
+}
+
+.js-inline-admin-formset .inline-related h3 {
+    background: #eee;
+}
+
+.inline-group h2 {
+    background: #ddd;
+    margin-top: 0;
+    text-transform: initial;
+    color: #241C46;
+
+}
+
+.inline-related h3 span.delete {
+    background: transparent;
+}
+
+.inline-related {
+    border: 1px solid #ddd;
+}
+
+.inline-related h3 .delete label.vCheckboxLabel,
+.inline-related h3 span.delete label:before {
+    color: darkred;
+}
+
+.form-row .cp-content .inline-related h2.cp-formset-item-title {
+    background: #ddd;
+}
+
+.inline-related .cp-item-controls {
+    margin-right: 12px;
+    margin-top: 5px;
+}
+
+
+/* For 2fa settings */
+#container #content > h1 {
+    display: block;
+}
+
+body.login .form-row input[name=method-method] {
+    clear: none;
+    width: 20px;
+}
+
+
+ul#id_method-method {
+    padding-inline-start: 0;
+}
+
+ul#id_method-method li {
+    list-style: none;
+}
+
+.two-factor-back {
+    padding: 8px;
+    position: absolute;
+}
+
+#id_understand {
+    display: inline;
+    width: 20px;
+    clear: none
+}
+
+
+.user-tools ul {
+    font-size: 1em;
+    padding-bottom: 8px;
+}
+
+.user-tools ul li {
+    white-space: normal;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.user-tools ul li.user-tools-link a,
+.user-tools ul li.user-tools-link a:visited,
+.user-tools ul li.user-tools-link a:hover {
+    line-height: 1.2em;
+    cursor: pointer;
 }

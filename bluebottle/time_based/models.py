@@ -1,10 +1,10 @@
 from html import unescape
 from urllib.parse import urlencode
 
+
 import pytz
 from django.db import connection
 from django.utils import timezone
-from django.utils.html import strip_tags
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
@@ -18,7 +18,7 @@ from bluebottle.time_based.validators import (
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, to_text
 from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
@@ -38,21 +38,6 @@ class TimeBasedActivity(Activity):
         help_text=_('Number of participants or teams that can join'),
         null=True, blank=True)
 
-    old_is_online = models.NullBooleanField(
-        _('is online'),
-        db_column='is_online',
-        choices=ONLINE_CHOICES,
-        null=True, default=None)
-    old_location = models.ForeignKey(
-        Geolocation,
-        db_column='location_id',
-        verbose_name=_('location'),
-        null=True, blank=True, on_delete=models.SET_NULL)
-    old_location_hint = models.TextField(
-        _('location hint'),
-        db_column='location_hint',
-        null=True, blank=True)
-
     registration_deadline = models.DateField(
         _('registration deadline'),
         null=True,
@@ -67,7 +52,7 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
-    review = models.NullBooleanField(
+    review = models.BooleanField(
         _('review participants'),
         help_text=_('Activity manager accepts or rejects participants or teams'),
         null=True, default=None)
@@ -76,6 +61,8 @@ class TimeBasedActivity(Activity):
         _('Preparation time'),
         null=True, blank=True,
     )
+
+    activity_type = _('Time-based activity')
 
     @property
     def local_timezone(self):
@@ -139,7 +126,7 @@ class TimeBasedActivity(Activity):
     def details(self):
         details = unescape(
             u'{}\n{}'.format(
-                strip_tags(self.description), self.get_absolute_url()
+                to_text.handle(self.description), self.get_absolute_url()
             )
         )
         return details
@@ -238,7 +225,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(
+    is_online = models.BooleanField(
         _('is online'),
         choices=DateActivity.ONLINE_CHOICES,
         null=True, default=None
@@ -408,7 +395,7 @@ class PeriodActivity(TimeBasedActivity):
         (False, 'No, enter a location')
     )
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
         null=True, blank=True, on_delete=models.SET_NULL
@@ -750,6 +737,9 @@ class Skill(TranslatableModel):
         )
         verbose_name = _(u'Skill')
         verbose_name_plural = _(u'Skills')
+
+    class JSONAPIMeta(object):
+        resource_name = 'skills'
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

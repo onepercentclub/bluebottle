@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from bluebottle.activities.views import (
-    ActivityPreviewList, ActivityDetail, ActivityTransitionList,
+    ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
     ContributorList, RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
     TeamList, TeamTransitionList, TeamMembersList,
@@ -63,5 +63,11 @@ urlpatterns = [
         r'^/invites/(?P<pk>[\w\-]+)/$',
         InviteDetailView.as_view(),
         name='invite-detail'
+    ),
+
+    url(
+        r'^/locations/$',
+        ActivityLocationList.as_view(),
+        name='activity-location-list'
     ),
 ]

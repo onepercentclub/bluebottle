@@ -39,6 +39,28 @@ class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
         return str(_("Lock an activity when the registration date has passed."))
 
 
+class DateActivityFinishedTask(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            status__in=['open', 'full']
+        ).exclude(
+            slots__status__in=['open', 'full', 'running']
+        )
+
+    effects = [
+        TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
+            has_participants
+        ]),
+        TransitionEffect(TimeBasedStateMachine.expire, conditions=[
+            has_no_participants
+        ]),
+    ]
+
+    def __str__(self):
+        return str(_("Finish an activity when all slots are completed."))
+
+
 class PeriodActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
@@ -189,6 +211,7 @@ class TeamSlotFinishedTask(SlotFinishedTask):
 
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
+    DateActivityFinishedTask,
 ]
 
 DateActivitySlot.periodic_tasks = [

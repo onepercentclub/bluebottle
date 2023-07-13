@@ -1,5 +1,3 @@
-from pytz import timezone
-
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -13,6 +11,7 @@ from django_admin_inline_paginator.admin import PaginationFormSetBase
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
+from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
@@ -24,7 +23,7 @@ from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
@@ -215,8 +214,20 @@ class EffortContributionAdmin(ContributionChildAdmin):
     model = EffortContribution
 
 
-class ActivityForm(StateMachineModelForm):
+class ActivityFormMetaClass(StateMachineModelFormMetaClass):
+    def __new__(cls, name, bases, attrs):
+        if 'Meta' in attrs and connection.tenant.schema_name != 'public':
+            for segment_type in SegmentType.objects.all():
+                attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
+                    required=False,
+                    label=segment_type.name,
+                    queryset=segment_type.segments,
+                )
 
+        return super().__new__(cls, name, bases, attrs)
+
+
+class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(ActivityForm, self).__init__(*args, **kwargs)
         f = self.fields.get('user_permissions', None)
@@ -225,11 +236,6 @@ class ActivityForm(StateMachineModelForm):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
-                self.fields[segment_type.field_name] = forms.ModelMultipleChoiceField(
-                    required=False,
-                    label=segment_type.name,
-                    queryset=segment_type.segments,
-                )
                 if self.instance.pk:
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
@@ -300,7 +306,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             segments += form.cleaned_data.get(segment_type.field_name, [])
 
         if segments:
-            del form.cleaned_data['segments']
             obj.segments.set(segments)
             obj.save()
 
@@ -350,12 +355,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
         if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
-            if (
-                    impact_goal_inline.has_add_permission(request) and
-                    impact_goal_inline.has_change_permission(request, obj) and
-                    impact_goal_inline.has_delete_permission(request, obj)
-            ):
-                inlines.append(impact_goal_inline)
+            inlines.append(impact_goal_inline)
 
         if obj and (
             obj.team_activity != Activity.TeamActivityChoices.teams or
@@ -436,12 +436,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
-
         if Location.objects.count():
-            if settings.enable_office_restrictions and 'office_restriction' not in self.office_fields:
-                self.office_fields += (
-                    'office_restriction',
-                )
+            if settings.enable_office_restrictions:
+                if 'office_restriction' not in self.office_fields:
+                    self.office_fields += (
+                        'office_restriction',
+                    )
                 fieldsets.insert(1, (
                     _('Office'), {'fields': self.office_fields}
                 ))

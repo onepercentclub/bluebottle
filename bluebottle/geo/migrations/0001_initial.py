@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
-import geoposition.fields
 import re
 import sorl.thumbnail.fields
 
@@ -40,7 +39,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255, verbose_name='name')),
-                ('position', geoposition.fields.GeopositionField(max_length=42, null=True)),
+                ('position', models.CharField(max_length=42, null=True)),
                 ('city', models.CharField(blank=True, max_length=255, null=True, verbose_name='city')),
                 ('description', models.TextField(blank=True, verbose_name='description')),
                 ('image', sorl.thumbnail.fields.ImageField(blank=True, help_text='Location picture', max_length=255, null=True, upload_to=b'location_images/', verbose_name='image')),

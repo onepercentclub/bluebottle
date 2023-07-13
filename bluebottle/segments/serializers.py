@@ -45,8 +45,10 @@ class SegmentListSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = Segment
         fields = (
-            'id', 'name', 'segment_type', 'email_domains', 'slug', 'tag_line', 'background_color',
-            'text_color', 'logo', 'cover_image', 'story', 'closed',
+            'id', 'name', 'segment_type', 'email_domains', 'slug', 'tag_line',
+            'background_color', 'text_color',
+            'button_color', 'button_text_color',
+            'logo', 'cover_image', 'story', 'closed',
         )
 
     class JSONAPIMeta(object):

@@ -105,7 +105,9 @@ In your `local.py` file, set the `DATABASES` variable to the following::
     $ docker exec -it -u postgres postgres dropdb reef
     $ docker exec -it -u postgres postgres createdb reef
     $ bzcat reef-prod-current.sql.bz2 | docker exec -i -u postgres postgres psql reef
-    $ echo "UPDATE clients_client
+    $ echo "UPDATE clients_client SET domain_url=CONCAT(client_name, '.localhost');" | docker exec -i -u postgres postgres psql reef
+
+* If you are running into errors related to max_map_count, then run the following command in your terminal: `sysctl -w vm.max_map_count=262144`
 
 Running the containers:
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,8 +159,3 @@ The BlueBottle test suite can be run completely using:
 #. Run the tests
 
     $ python manage.py test -k
-
-
-Pull request - Testing, Reviewing and Merging Flow
-------------
-https://www.lucidchart.com/invitations/accept/89cab398-8c15-4701-8897-d2fef42c0aa7

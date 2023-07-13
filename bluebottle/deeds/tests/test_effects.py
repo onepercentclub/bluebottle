@@ -25,7 +25,7 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
         self.assertEqual(
             participant.contributions.first().start.date(),
-            participant.created.date()
+            self.activity.end
         )
 
         self.assertIsNone(
@@ -49,6 +49,7 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
     def test_create_no_start(self):
         self.activity.start = None
+        self.activity.end = None
         self.activity.save()
 
         participant = DeedParticipantFactory.create(activity=self.activity)
@@ -64,6 +65,7 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
 
     def test_create_future_start(self):
         self.activity.start = date.today() + timedelta(days=10)
+        self.activity.end = None
         self.activity.save()
 
         participant = DeedParticipantFactory.create(activity=self.activity)

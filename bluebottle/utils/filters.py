@@ -12,6 +12,8 @@ from rest_framework import filters
 
 from bluebottle.utils.utils import get_current_language
 
+FACET_LIMIT = 10000
+
 
 class TrigramFilter(filters.SearchFilter):
 
@@ -62,7 +64,7 @@ class NamedNestedFacet(Facet):
                 'inner': A('multi_terms', terms=[
                     {'field': f'{self.path}.{self.name}'},
                     {'field': f'{self.path}.id'}
-                ])
+                ], size=FACET_LIMIT)
             }
         )
 
@@ -103,7 +105,7 @@ class FilteredNestedFacet(Facet):
                         'inner': A('multi_terms', terms=[
                             {'field': f'{self.path}.{self.name}'},
                             {'field': f'{self.path}.id'}
-                        ], size=100)
+                        ], size=FACET_LIMIT)
                     }
                 )
             }

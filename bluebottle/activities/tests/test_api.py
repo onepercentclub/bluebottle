@@ -903,6 +903,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_more_country_facets(self):
+        countries = CountryFactory.create_batch(12)
+        matching = []
+        for country in countries:
+            location = GeolocationFactory.create(country=country)
+            matching.append(PeriodActivityFactory.create(location=location, status='open'))
+
+        self.search({})
+        self.assertEqual(len(self.data['meta']['facets']['country']), 12)
+        self.assertFound(matching)
+
     def test_filter_country_slots(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")

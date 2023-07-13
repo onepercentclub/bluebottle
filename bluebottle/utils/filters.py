@@ -103,7 +103,7 @@ class FilteredNestedFacet(Facet):
                         'inner': A('multi_terms', terms=[
                             {'field': f'{self.path}.{self.name}'},
                             {'field': f'{self.path}.id'}
-                        ])
+                        ], size=100)
                     }
                 )
             }

@@ -201,7 +201,7 @@ class Search(FacetedSearch):
         """
         sort = self._sort or self.default_sort
 
-        return search.sort(*self.sorting[sort])
+        return search.sort(*self.sorting.get(sort, self.sorting[self.default_sort]))
 
     def highlight(self, search):
         return search

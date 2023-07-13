@@ -1,10 +1,9 @@
-from optparse import make_option
-
 import subprocess
 from multiprocessing import Pool
-from bluebottle.common.management.commands.base import Command as BaseCommand
+from optparse import make_option
 
 from bluebottle.clients.models import Client
+from bluebottle.common.management.commands.base import Command as BaseCommand
 
 
 def reindex(schema_name):
@@ -27,17 +26,25 @@ class Command(BaseCommand):
             default=8,
             help='How many processes run in parallel'
         ),
+        make_option(
+            '-s',
+            default=None,
+            help='Only run for specified tenant schema'
+        ),
     )
 
     def handle(self, *args, **options):
-        pool = Pool(processes=options['processes'])
+        tenant_schema = options['s']
+        if tenant_schema:
+            reindex(tenant_schema)
+        else:
+            pool = Pool(processes=options['processes'])
+            tasks = [pool.apply_async(reindex, args=[str(tenant.schema_name)]) for tenant in Client.objects.all()]
 
-        tasks = [pool.apply_async(reindex, args=[str(tenant.schema_name)]) for tenant in Client.objects.all()]
+            results = [result.get() for result in tasks]
 
-        results = [result.get() for result in tasks]
+            for tenant, result in results:
+                if result != 0:
+                    print(f'Tenant failed to index: {tenant}')
 
-        for tenant, result in results:
-            if result != 0:
-                print(f'Tenant failed to index: {tenant}')
-
-        pool.close()
+            pool.close()

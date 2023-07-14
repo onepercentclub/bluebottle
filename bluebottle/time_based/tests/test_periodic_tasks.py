@@ -361,7 +361,9 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
         activity = DateActivityFactory.create(
             slot_selection='all',
-            status='open'
+            owner=BlueBottleUserFactory.create(),
+            status='open',
+            slots=[]
         )
         slot = DateActivitySlotFactory.create(
             activity=activity,

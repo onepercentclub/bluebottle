@@ -596,7 +596,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         texel_place = PlaceFactory.create(position=texel.position)
 
         self.search(
-            filter={'distance': '500', 'is_online': '0'},
+            filter={'distance': '500km', 'is_online': '0'},
             sort='distance',
             place=leiden_place.pk
         )
@@ -608,7 +608,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Widen search and search from Texel
         self.search(
-            filter={'distance': '5000', 'is_online': '0'},
+            filter={'distance': '5000km', 'is_online': '0'},
             sort='distance',
             place=texel_place.pk
         )
@@ -621,7 +621,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # With online
         self.search(
-            filter={'distance': '500'},
+            filter={'distance': '500km'},
             sort='distance',
             place=leiden_place.pk
         )
@@ -1178,7 +1178,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': '100', 'is_online': '0'}, place=place.pk)
+        self.search({'distance': '100km', 'is_online': '0'}, place=place.pk)
 
         self.assertFacets(
             'distance', {}
@@ -1230,7 +1230,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=lyutidol)
         )
 
-        self.search({'distance': '100'}, place=place.pk)
+        self.search({'distance': '100km'}, place=place.pk)
 
         self.assertFacets(
             'distance', {}

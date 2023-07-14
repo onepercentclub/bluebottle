@@ -35,7 +35,7 @@ class DistanceFacet(Facet):
             if place and place.position and filter_value:
                 geo_filter = GeoDistance(
                     _expand__to_dot=False,
-                    distance=f'{filter_value}km',
+                    distance=filter_value,
                     position={
                         'lat': float(place.position[1]),
                         'lon': float(place.position[0]),

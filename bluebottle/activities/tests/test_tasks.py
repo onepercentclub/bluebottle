@@ -43,7 +43,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.user = BlueBottleUserFactory.create(
             subscribed=True,
-            search_distance=50,
+            search_distance='50km',
             any_search_distance=False,
             exclude_online=False
         )

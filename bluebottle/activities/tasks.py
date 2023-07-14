@@ -105,17 +105,15 @@ def get_matching_activities(user):
             'lat': float(user.place.position[1]),
             'lon': float(user.place.position[0]),
         }
-        distance = f'{str(user.search_distance)}km'
-
         search = search.filter(
-            GeoDistance(distance=distance, position=position) |
+            GeoDistance(distance=user.search_distance, position=position) |
             Term(is_online=True)
         )
         query = query | ConstantScore(
             boost=0.001,
             filter=Q(
                 'geo_distance',
-                distance=distance,
+                distance=user.search_distance,
                 position=position
             )
         )

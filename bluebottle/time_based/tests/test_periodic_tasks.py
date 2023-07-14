@@ -357,6 +357,30 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'succeeded')
 
+    def test_finished_expired_slot(self):
+
+        activity = DateActivityFactory.create(
+            slot_selection='all',
+            status='open'
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            capacity=5,
+            duration=timedelta(hours=3)
+        )
+
+        self.run_task(now() + timedelta(days=1))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'running')
+        self.assertEqual(activity.status, 'open')
+        self.run_task(now() + timedelta(days=2))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'finished')
+        self.assertEqual(activity.status, 'expired')
+
     def test_finished_multiple_past_dates(self):
         self.slot.title = "First slot"
         self.slot.save()

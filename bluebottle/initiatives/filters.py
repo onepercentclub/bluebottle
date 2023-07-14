@@ -3,12 +3,16 @@ from elasticsearch_dsl.faceted_search import TermsFacet
 from elasticsearch_dsl.query import Term
 from rest_framework.exceptions import NotAuthenticated
 
+from bluebottle.categories.models import Category
+from bluebottle.geo.models import Country, Location
 from bluebottle.initiatives.documents import initiative
-from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import InitiativePlatformSettings, Theme
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, SegmentFacet, TranslatedFacet, NamedNestedFacet
+    ElasticSearchFilter, Search, SegmentFacet, ModelFacet
 )
+
+from elasticsearch_dsl.query import MatchAll
 
 
 class OwnerFacet(TermsFacet):
@@ -24,6 +28,15 @@ class OwnerFacet(TermsFacet):
 
     def get_values(self, data, filter_values):
         return []
+
+
+class OfficeFacet(ModelFacet):
+    def __init__(self):
+        super().__init__('location', Location)
+
+    @property
+    def filter(self):
+        return MatchAll()
 
 
 class InitiativeSearch(Search):
@@ -43,10 +56,10 @@ class InitiativeSearch(Search):
     }
 
     possible_facets = {
-        'theme': TranslatedFacet('theme'),
-        'category': TranslatedFacet('categories', 'title'),
-        'country': TranslatedFacet('country'),
-        'office': NamedNestedFacet('location'),
+        'theme': ModelFacet('theme', Theme),
+        'category': ModelFacet('categories', Category, 'title'),
+        'country': ModelFacet('country', Country),
+        'office': OfficeFacet()
     }
 
     def __new__(cls, *args, **kwargs):

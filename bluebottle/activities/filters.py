@@ -10,13 +10,13 @@ from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, 
 from pytz import UTC
 
 from bluebottle.activities.documents import activity
-from bluebottle.geo.models import Place
+from bluebottle.categories.models import Category
+from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
-from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, TranslatedFacet, NamedNestedFacet,
-    SegmentFacet
-)
+from bluebottle.time_based.models import Skill
+from bluebottle.initiatives.models import Theme
+from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
 
 
 class DistanceFacet(Facet):
@@ -80,7 +80,7 @@ class BooleanFacet(Facet):
         self.label_yes = label_yes or _('Yes')
         self.label_no = label_no or _('No')
 
-        super().__init__(metric, metric_sort, **kwargs)
+        super().__init__(metric, metric_sort, min_doc_count=0, **kwargs)
 
     def get_value(self, bucket):
         if bucket["key"]:
@@ -105,7 +105,6 @@ class BooleanFacet(Facet):
 
 
 class TeamActivityFacet(BooleanFacet):
-
     def get_value(self, bucket):
         if bucket["key"] == 'teams':
             return (_("With your team"), 'teams')
@@ -187,14 +186,14 @@ class ActivitySearch(Search):
         'office_restriction': OfficeRestrictionFacet(),
         'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': NamedNestedFacet('office'),
+        'office': ModelFacet('office', Location),
     }
 
     possible_facets = {
-        'theme': TranslatedFacet('theme'),
-        'category': TranslatedFacet('categories', 'title'),
-        'skill': TranslatedFacet('expertise'),
-        'country': TranslatedFacet('country'),
+        'theme': ModelFacet('theme', Theme),
+        'category': ModelFacet('categories', Category, 'title'),
+        'skill': ModelFacet('expertise', Skill),
+        'country': ModelFacet('country', Country),
         'date': ActivityDateRangeFacet(),
     }
 

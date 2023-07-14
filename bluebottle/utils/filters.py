@@ -4,12 +4,13 @@ import dateutil
 from elasticsearch_dsl import (
     FacetedSearch, Facet
 )
-from elasticsearch_dsl.aggs import Bucket, A
+from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import (
     Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
 )
 from rest_framework import filters
 
+from bluebottle.segments.models import Segment
 from bluebottle.utils.utils import get_current_language
 
 FACET_LIMIT = 10000
@@ -30,46 +31,48 @@ class TrigramFilter(filters.SearchFilter):
         return None
 
 
-class MultiTerms(Bucket):  # noqa
-    name = "multi_terms"
-
-
-class MultiTermsFacet(Facet):
-    agg_type = 'multi_terms'
-
-    def add_filter(self, filter_values):
-        if filter_values:
-            return Terms(
-                _expand__to_dot=False, **{self._params["terms"][-1]['field']: filter_values}
-            )
-
-    def is_filtered(self, key, filter_values):
-        """
-        Is a filter active on the given key.
-        """
-        return key[-1] in filter_values
-
-
-class NamedNestedFacet(Facet):
-    def __init__(self, path, name='name'):
+class ModelFacet(Facet):
+    def __init__(self, path, model, attr='name'):
         self.path = path
-        self.name = name
+        self.model = model
+        self.attr = attr
         super().__init__()
+
+    @property
+    def filter(self):
+        return Term(**{f'{self.path}.language': get_current_language()})
 
     def get_aggregation(self):
         return A(
             'nested',
             path=self.path,
             aggs={
-                'inner': A('multi_terms', terms=[
-                    {'field': f'{self.path}.{self.name}'},
-                    {'field': f'{self.path}.id'}
-                ], size=FACET_LIMIT)
+                'filter': A(
+                    'filter',
+                    filter=self.filter,
+                    aggs={
+                        'inner': A('terms', size=FACET_LIMIT, field=f"{self.path}.id")
+                    }
+                )
             }
         )
 
     def get_values(self, data, filter_values):
-        result = super().get_values(data.inner, filter_values)
+        result = super().get_values(data.filter.inner, filter_values)
+        ids = [facet[0] for facet in result]
+
+        if filter_values and filter_values[0] not in ids and filter_values[0].isnumeric():
+            result.append((filter_values[0], 0, True))
+            ids.append(filter_values[0])
+
+        models = dict(
+            (str(model.pk), model)
+            for model in self.model.objects.filter(pk__in=ids)
+        )
+        result = [
+            ((getattr(models[id], self.attr), id), count, active)
+            for (id, count, active) in result
+        ]
         return result
 
     def add_filter(self, filter_values):
@@ -79,75 +82,15 @@ class NamedNestedFacet(Facet):
                 query=Terms(**{f'{self.path}.id': filter_values})
             )
 
-    def is_filtered(self, key, filter_values):
-        """
-        Is a filter active on the given key.
-        """
-        return key[-1] in filter_values
 
-
-class FilteredNestedFacet(Facet):
-    def __init__(self, path, filter, name='name'):
-        self.path = path
-        self.filter = filter
-        self.name = name
-        super().__init__()
-
-    def get_aggregation(self):
-        return A(
-            'nested',
-            path=self.path,
-            aggs={
-                'filter': A(
-                    'filter',
-                    filter=Term(**self.filter),
-                    aggs={
-                        'inner': A('multi_terms', terms=[
-                            {'field': f'{self.path}.{self.name}'},
-                            {'field': f'{self.path}.id'}
-                        ], size=FACET_LIMIT)
-                    }
-                )
-            }
-        )
-
-    def get_values(self, data, filter_values):
-        result = super().get_values(data.filter.inner, filter_values)
-        return result
-
-    def add_filter(self, filter_values):
-        if filter_values:
-            return Nested(
-                path=self.path,
-                query=Terms(**{f'{self.path}__id': filter_values})
-            )
-
-    def is_filtered(self, key, filter_values):
-        return key[-1] in filter_values
-
-
-class TranslatedFacet(FilteredNestedFacet):
-    def __init__(self, path, name='name'):
-        super().__init__(
-            path,
-            {f'{path}.language': get_current_language()},
-            name
-        )
-
-    def get_aggregation(self):
-        self.filter = {f'{self.path}.language': get_current_language()}
-        return super().get_aggregation()
-
-
-class SegmentFacet(FilteredNestedFacet):
+class SegmentFacet(ModelFacet):
     def __init__(self, segment_type):
-        super().__init__('segments', {'segments.type': segment_type.slug})
+        self.segment_type = segment_type
+        super().__init__('segments', Segment)
 
-    def get_values(self, data, filter_values):
-        values = super().get_values(data, filter_values)
-        return [
-            ((value[0][0], value[0][1]), value[1], value[2]) for value in values
-        ]
+    @property
+    def filter(self):
+        return Term(**{'segments.type': self.segment_type.slug})
 
 
 class DateRangeFacet(Facet):

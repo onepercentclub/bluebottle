@@ -54,7 +54,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
-    def search(self, filter, sort=None, user=None, place=None):
+    def search(self, filter, sort=None, user=None, place=None, headers=None):
         if isinstance(filter, str):
             url = filter
         else:
@@ -72,9 +72,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
             url = f'{self.url}?{query}'
 
+        if headers is None:
+            headers = {}
+
         response = self.client.get(
             url,
-            user=user
+            user=user,
+            **headers
         )
 
         self.data = json.loads(response.content)
@@ -91,12 +95,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.assertTrue(activity['id'] in ids)
 
     def assertFacets(self, filter, facets):
-        found_facets = dict(
+        counts = dict(
             (facet['id'], facet['count']) for facet in self.data['meta']['facets'][filter]
         )
+        names = dict(
+            (facet['id'], facet.get('name')) for facet in self.data['meta']['facets'][filter]
+        )
 
-        for key, value in facets.items():
-            self.assertEqual(found_facets[key], value)
+        for key, (name, value) in facets.items():
+            self.assertEqual(counts[key], value)
+            self.assertEqual(names[key], name)
 
     def test_images(self):
         DateActivityFactory.create(
@@ -707,10 +715,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             'activity-type',
             {
-                'time': len(matching),
-                'funding': len(funding),
-                'collect': len(collect),
-                'deed': len(deed),
+                'time': (None, len(matching)),
+                'funding': (None, len(funding)),
+                'collect': (None, len(collect)),
+                'deed': (None, len(deed)),
 
             }
         )
@@ -740,8 +748,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             f'segment.{segment_type.slug}',
             {
-                f'{matching_segment.pk}': len(matching),
-                f'{other_segment.pk}': len(other)
+                f'{matching_segment.pk}': (matching_segment.name, len(matching)),
+                f'{other_segment.pk}': (other_segment.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -756,14 +764,67 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
 
         self.search({
-            'theme': matching_initiative.theme.pk
+            'theme': matching_initiative.theme.pk,
         })
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): len(matching),
-                str(other_initiative.theme.pk): len(other)
+                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
+                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_theme_no_matches(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme")
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+
+        DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
+        DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+
+        self.search({
+            'theme': matching_initiative.theme.pk,
+            'country': 'something-that-does-not-match'
+        })
+
+        self.assertFacets(
+            'theme',
+            {
+                str(matching_initiative.theme.pk): (matching_initiative.theme.name, 0),
+            }
+        )
+        self.assertFound([])
+
+    def test_filter_theme_dutch(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme")
+
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+
+        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
+        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+
+        self.search(
+            {'theme': matching_initiative.theme.pk},
+            headers={'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
+        )
+
+        matching_theme_translation = matching_initiative.theme.translations.get(
+            language_code='nl'
+        )
+        other_theme_translation = other_initiative.theme.translations.get(
+            language_code='nl'
+        )
+
+        self.assertFacets(
+            'theme',
+            {
+                str(matching_initiative.theme.pk): (matching_theme_translation.name, len(matching)),
+                str(other_initiative.theme.pk): (other_theme_translation.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -810,7 +871,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'upcoming': 1})
 
-        self.assertFacets('upcoming', {0: len(other), 1: len(matching)})
+        self.assertFacets('upcoming', {0: ('No', len(other)), 1: ('Yes', len(matching))})
         self.assertFound(matching)
 
     def test_no_filter(self):
@@ -836,7 +897,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'team_activity': 'teams'})
 
-        self.assertFacets('team_activity', {'teams': len(matching), 'individuals': len(other)})
+        self.assertFacets(
+            'team_activity',
+            {'teams': ('With your team', len(matching)), 'individuals': ('As an individual', len(other))}
+        )
         self.assertFound(matching)
 
     def test_filter_online(self):
@@ -845,7 +909,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'is_online': '1'})
 
-        self.assertFacets('is_online', {1: len(matching), 0: len(other)})
+        self.assertFacets(
+            'is_online',
+            {1: ('Online/remote', len(matching)), 0: ('In-person', len(other))}
+        )
         self.assertFound(matching)
 
     def test_filter_category(self):
@@ -867,7 +934,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'category',
-            {str(matching_category.pk): len(matching), str(other_category.pk): len(other)}
+            {
+                str(matching_category.pk): (matching_category.title, len(matching)),
+                str(other_category.pk): (other_category.title, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -894,7 +964,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'skill',
-            {str(matching_skill.pk): len(matching), str(other_skill.pk): len(other)}
+            {
+                str(matching_skill.pk): (matching_skill.name, len(matching)),
+                str(other_skill.pk): (other_skill.name, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -921,7 +994,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'country',
-            {str(matching_country.pk): len(matching), str(other_country.pk): len(other)}
+            {
+                str(matching_country.pk): (matching_country.name, len(matching)),
+                str(other_country.pk): (other_country.name, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -969,7 +1045,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'country',
-            {str(matching_country.pk): len(matching), str(other_country.pk): len(other)}
+            {
+                str(matching_country.pk): (matching_country.name, len(matching)),
+                str(other_country.pk): (other_country.name, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -989,7 +1068,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'highlight',
-            {1: len(matching), 0: len(other)}
+            {1: (None, len(matching)), 0: (None, len(other))}
         )
         self.assertFound(matching)
 

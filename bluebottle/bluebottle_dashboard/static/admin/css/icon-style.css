@@ -749,3 +749,8 @@
   content: "\ea53";
 }
 */
+
+
+.ui-datepicker .ui-icon {
+  text-indent: 0;
+}

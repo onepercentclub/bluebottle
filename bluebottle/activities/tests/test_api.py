@@ -1157,11 +1157,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
         )
 
-        PeriodActivityFactory.create(
+        further = PeriodActivityFactory.create(
             status="open",
-            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+            location=GeolocationFactory.create(position=Point(lon - 1, lat - 1))
         )
-        PeriodActivityFactory.create(
+        furthest = PeriodActivityFactory.create(
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
         )
@@ -1179,12 +1179,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.search({'distance': '100km', 'is_online': '0'}, place=place.pk)
-
         self.assertFacets(
             'distance', {}
         )
-
         self.assertFound(matching)
+
+        self.search({'distance': '200km', 'is_online': '0'}, place=place.pk)
+        self.assertFound(matching + [further])
+
+        self.search({'distance': '200mi', 'is_online': '0'}, place=place.pk)
+        self.assertFound(matching + [further, furthest])
 
     def test_filter_distance_with_online(self):
         amsterdam = Point(4.922114, 52.362438)

@@ -115,19 +115,41 @@ class MatchingFacet(BooleanFacet):
 
     def add_filter(self, filter_values):
         user = get_current_user()
+        if not user.is_authenticated:
+            return None
+
         expertises_filter = Nested(
             path='expertise',
             query=(
                 Terms(expertise__id=list(user.skills.values_list('id', flat=True)))
             )
         )
-        themes_filters = Nested(
+        themes_filter = Nested(
             path='theme',
             query=(
                 Terms(theme__id=list(user.favourite_themes.values_list('id', flat=True)))
             )
         )
-        return expertises_filter | themes_filters
+        open_filter = Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+
+        filters = (expertises_filter | themes_filter) & open_filter
+
+        if user.exclude_online:
+            filters = filters & ~Term(is_online=True)
+
+        if user.search_distance and user.place and not user.any_search_distance:
+            place = user.place
+            distance_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=user.search_distance,
+                position={
+                    'lat': float(place.position[1]),
+                    'lon': float(place.position[0]),
+                }
+            )
+            return (expertises_filter | themes_filter) & open_filter & distance_filter
+
+        return filters
 
 
 class InitiativeFacet(TermsFacet):

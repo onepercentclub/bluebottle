@@ -130,7 +130,7 @@ class MatchingFacet(BooleanFacet):
                 Terms(theme__id=list(user.favourite_themes.values_list('id', flat=True)))
             )
         )
-        open_filter = Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+        open_filter = Terms(status=['open', 'full', 'running'])
 
         filters = (expertises_filter | themes_filter) & open_filter
 

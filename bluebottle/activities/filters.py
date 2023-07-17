@@ -13,9 +13,9 @@ from bluebottle.activities.documents import activity
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import Theme
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
-from bluebottle.initiatives.models import Theme
 from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
 
 
@@ -111,6 +111,25 @@ class TeamActivityFacet(BooleanFacet):
         return (_('As an individual'), 'individuals')
 
 
+class MatchingFacet(BooleanFacet):
+
+    def add_filter(self, filter_values):
+        user = get_current_user()
+        expertises_filter = Nested(
+            path='expertise',
+            query=(
+                Terms(expertise__id=list(user.skills.values_list('id', flat=True)))
+            )
+        )
+        themes_filters = Nested(
+            path='theme',
+            query=(
+                Terms(theme__id=list(user.favourite_themes.values_list('id', flat=True)))
+            )
+        )
+        return expertises_filter | themes_filters
+
+
 class InitiativeFacet(TermsFacet):
     def __init__(self, **kwargs):
         super().__init__(field='owner', **kwargs)
@@ -181,7 +200,8 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
-        'highlight': TermsFacet(field='highlight'),
+        'matching': MatchingFacet(field='matching'),
+        'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
         'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),

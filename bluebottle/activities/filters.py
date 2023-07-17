@@ -118,21 +118,7 @@ class MatchingFacet(BooleanFacet):
         if not user.is_authenticated:
             return None
 
-        expertises_filter = Nested(
-            path='expertise',
-            query=(
-                Terms(expertise__id=list(user.skills.values_list('id', flat=True)))
-            )
-        )
-        themes_filter = Nested(
-            path='theme',
-            query=(
-                Terms(theme__id=list(user.favourite_themes.values_list('id', flat=True)))
-            )
-        )
-        open_filter = Terms(status=['open', 'full', 'running'])
-
-        filters = (expertises_filter | themes_filter) & open_filter
+        filters = Terms(status=['open', 'full', 'running'])
 
         if user.exclude_online:
             filters = filters & ~Term(is_online=True)
@@ -147,7 +133,7 @@ class MatchingFacet(BooleanFacet):
                     'lon': float(place.position[0]),
                 }
             )
-            return (expertises_filter | themes_filter) & open_filter & distance_filter
+            filters = filters & distance_filter
 
         return filters
 

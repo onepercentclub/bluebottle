@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.members.models import Member
 from bluebottle.activities.models import Activity
+from bluebottle.files.fields import ImageField
 
 
 class Update(models.Model):
@@ -20,3 +21,4 @@ class Update(models.Model):
     )
 
     message = models.TextField(_('message'))
+    image = ImageField(blank=True, null=True)

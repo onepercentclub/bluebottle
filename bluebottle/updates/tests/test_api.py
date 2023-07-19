@@ -1,10 +1,12 @@
 from rest_framework import status
 
+from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.files.models import Image
+
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
 from bluebottle.test.utils import APITestCase
-from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
@@ -14,7 +16,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message']
+    fields = ['activity', 'message', 'image']
 
     def setUp(self):
         super().setUp()
@@ -31,6 +33,29 @@ class UpdateListTestCase(APITestCase):
         self.assertIncluded('author', self.user)
         self.assertRelationship('activity', [self.defaults['activity']])
 
+        self.assertAttribute('message', self.defaults['message'])
+
+    def test_create_image(self):
+        file_path = './bluebottle/files/tests/files/test-image.png'
+        with open(file_path, 'rb') as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
+                user=self.user
+            )
+
+            file_data = response.json()['data']
+
+        self.defaults['image'] = Image.objects.get(pk=file_data['id'])
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('author', self.user)
+        self.assertIncluded('image', self.defaults['image'])
+        self.assertRelationship('activity', [self.defaults['activity']])
         self.assertAttribute('message', self.defaults['message'])
 
     def test_create_incomplete(self):

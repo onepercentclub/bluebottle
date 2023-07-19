@@ -1,7 +1,9 @@
+from bluebottle.files.views import ImageContentView
+
 from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
-from bluebottle.utils.permissions import TenantConditionalOpenClose
 
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
 )
@@ -45,3 +47,8 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
         )
 
     serializer_class = UpdateSerializer
+
+
+class UpdateImageContent(ImageContentView):
+    queryset = Update.objects
+    field = 'image'

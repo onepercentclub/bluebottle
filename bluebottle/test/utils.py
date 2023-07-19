@@ -615,7 +615,7 @@ class APITestCase(BluebottleTestCase):
                     serializer_name = self.serializer.included_serializers[field]
                     (module, cls_name) = serializer_name.rsplit('.', 1)
                     resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
-                except KeyError:
+                except (KeyError, AttributeError):
                     resource_name = self.defaults[field].JSONAPIMeta.resource_name
 
                 data['relationships'][field] = {

@@ -616,8 +616,7 @@ class APITestCase(BluebottleTestCase):
                     (module, cls_name) = serializer_name.rsplit('.', 1)
                     resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
                 except KeyError:
-                    model = getattr(self.serializer.Meta.model, 'accepted_invite').get_queryset().model
-                    resource_name = model.JSONAPIMeta.resource_name
+                    resource_name = self.defaults[field].JSONAPIMeta.resource_name
 
                 data['relationships'][field] = {
                     'data': {

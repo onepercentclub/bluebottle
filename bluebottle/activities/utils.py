@@ -175,6 +175,13 @@ class BaseActivitySerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
 
+    updates = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name='activity-update-list',
+        related_link_url_kwarg='activity_pk',
+    )
+
     segments = SerializerMethodResourceRelatedField(
         source='segments',
         model=Segment,
@@ -243,7 +250,8 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location',
             'office_restriction',
             'segments',
-            'team_activity'
+            'team_activity',
+            'updates'
         )
 
         meta_fields = (

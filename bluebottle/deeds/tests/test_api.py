@@ -155,6 +155,11 @@ class DeedsDetailViewAPITestCase(APITestCase):
             contributors,
             self.accepted_participants + self.withdrawn_participants
         )
+        self.assertTrue(
+            self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
+                reverse('activity-update-list', args=(self.model.pk, ))
+            ),
+        )
 
     def test_get_with_segments(self):
         segment = SegmentFactory.create(

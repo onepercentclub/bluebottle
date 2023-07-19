@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField
+    PolymorphicResourceRelatedField, ResourceRelatedField
 )
 
 from bluebottle.updates.models import Update
@@ -13,6 +13,8 @@ from bluebottle.files.serializers import ImageSerializer, ImageField
 class UpdateSerializer(serializers.ModelSerializer):
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     image = ImageField(required=False, allow_null=True)
+    parent = ResourceRelatedField(queryset=Update.objects.all())
+    replies = ResourceRelatedField(many=True, read_only=True)
 
     class Meta(object):
         model = Update
@@ -22,18 +24,21 @@ class UpdateSerializer(serializers.ModelSerializer):
             'activity',
             'message',
             'image',
+            'parent',
+            'replies'
         )
 
     class JSONAPIMeta(object):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image'
+            'author', 'image', 'replies'
         ]
 
     included_serializers = {
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'image': 'bluebottle.updates.serializers.UpdateImageSerializer',
+        'replies': 'bluebottle.updates.serializers.UpdateSerializer',
     }
 
 

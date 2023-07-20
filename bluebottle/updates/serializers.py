@@ -10,10 +10,17 @@ from bluebottle.activities.models import Activity
 from bluebottle.files.serializers import ImageSerializer, ImageField
 
 
+def no_nested_replies_validator(value):
+    if value and value.parent:
+        raise serializers.ValidationError('Replies cannot be nested')
+
+
 class UpdateSerializer(serializers.ModelSerializer):
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     image = ImageField(required=False, allow_null=True)
-    parent = ResourceRelatedField(queryset=Update.objects.all())
+    parent = ResourceRelatedField(
+        queryset=Update.objects.all(), validators=[no_nested_replies_validator]
+    )
     replies = ResourceRelatedField(many=True, read_only=True)
 
     class Meta(object):

@@ -37,6 +37,14 @@ class UpdateListTestCase(APITestCase):
 
         self.assertAttribute('message', self.defaults['message'])
 
+    def test_create_nested_reply(self):
+        self.defaults['parent'].parent = UpdateFactory.create()
+        self.defaults['parent'].save()
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
     def test_create_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path, 'rb') as test_file:

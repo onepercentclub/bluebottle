@@ -1068,7 +1068,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'highlight',
-            {1: (None, len(matching)), 0: (None, len(other))}
+            {1: ('Yes', len(matching)), 0: ('No', len(other))}
         )
         self.assertFound(matching)
 

@@ -145,7 +145,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
 
-    search_distance = models.IntegerField(_('Distance'), default=50, blank=True, null=True)
+    search_distance = models.CharField(_('Distance'), max_length=10, default='50km', blank=True, null=True)
     any_search_distance = models.BooleanField(_('Any distance'), default=True)
     exclude_online = models.BooleanField(_('Don’t show online/remote activities'), default=False)
 

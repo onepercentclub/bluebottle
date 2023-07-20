@@ -28,6 +28,13 @@ def initiative_is_approved(effect):
     return effect.instance.initiative.status == 'approved'
 
 
+def has_organizer(effect):
+    """
+    Has an organizer
+    """
+    return getattr(effect.instance, 'organizer', False)
+
+
 class ActivityTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
@@ -60,42 +67,65 @@ class ActivityTriggers(TriggerManager):
         TransitionTrigger(
             ActivityStateMachine.reject,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                    conditions=[has_organizer]
+                )
             ]
         ),
 
         TransitionTrigger(
             ActivityStateMachine.auto_approve,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
             ]
         ),
 
         TransitionTrigger(
             ActivityStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                    conditions=[has_organizer]
+                )
             ]
         ),
 
         TransitionTrigger(
             ActivityStateMachine.expire,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                    conditions=[has_organizer]),
             ]
         ),
 
         TransitionTrigger(
             ActivityStateMachine.restore,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset)
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.reset,
+                    conditions=[has_organizer]
+                )
             ]
         ),
 
         TransitionTrigger(
             ActivityStateMachine.delete,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                    conditions=[has_organizer]
+                )
             ]
         ),
     ]

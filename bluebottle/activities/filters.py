@@ -13,9 +13,9 @@ from bluebottle.activities.documents import activity
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import Theme
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
-from bluebottle.initiatives.models import Theme
 from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
 
 
@@ -35,7 +35,7 @@ class DistanceFacet(Facet):
             if place and place.position and filter_value:
                 geo_filter = GeoDistance(
                     _expand__to_dot=False,
-                    distance=f'{filter_value}km',
+                    distance=filter_value,
                     position={
                         'lat': float(place.position[1]),
                         'lon': float(place.position[0]),
@@ -111,6 +111,33 @@ class TeamActivityFacet(BooleanFacet):
         return (_('As an individual'), 'individuals')
 
 
+class MatchingFacet(BooleanFacet):
+
+    def add_filter(self, filter_values):
+        user = get_current_user()
+        if not user.is_authenticated:
+            return None
+
+        filters = Terms(status=['open', 'full', 'running'])
+
+        if user.exclude_online:
+            filters = filters & ~Term(is_online=True)
+
+        if user.search_distance and user.place and not user.any_search_distance:
+            place = user.place
+            distance_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=user.search_distance,
+                position={
+                    'lat': float(place.position[1]),
+                    'lon': float(place.position[0]),
+                }
+            )
+            filters = filters & distance_filter
+
+        return filters
+
+
 class InitiativeFacet(TermsFacet):
     def __init__(self, **kwargs):
         super().__init__(field='owner', **kwargs)
@@ -181,7 +208,8 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
-        'highlight': TermsFacet(field='highlight'),
+        'matching': MatchingFacet(field='matching'),
+        'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
         'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),

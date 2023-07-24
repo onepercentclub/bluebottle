@@ -36,6 +36,7 @@ class UpdateListTestCase(APITestCase):
         self.assertRelationship('parent', [self.defaults['parent']])
 
         self.assertAttribute('message', self.defaults['message'])
+        self.assertAttribute('created')
 
     def test_create_nested_reply(self):
         self.defaults['parent'].parent = UpdateFactory.create()

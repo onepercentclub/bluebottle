@@ -19,7 +19,9 @@ class UpdateSerializer(serializers.ModelSerializer):
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     image = ImageField(required=False, allow_null=True)
     parent = ResourceRelatedField(
-        queryset=Update.objects.all(), validators=[no_nested_replies_validator]
+        queryset=Update.objects.all(),
+        validators=[no_nested_replies_validator],
+        required=False
     )
     replies = ResourceRelatedField(many=True, read_only=True)
 
@@ -27,10 +29,11 @@ class UpdateSerializer(serializers.ModelSerializer):
         model = Update
 
         fields = (
+            'message',
+            'created',
+            'image',
             'author',
             'activity',
-            'message',
-            'image',
             'parent',
             'replies'
         )

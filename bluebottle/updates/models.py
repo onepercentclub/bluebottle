@@ -3,12 +3,14 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.fsm.triggers import TriggerMixin
+
 from bluebottle.members.models import Member
 from bluebottle.activities.models import Activity
 from bluebottle.files.fields import ImageField
 
 
-class Update(models.Model):
+class Update(TriggerMixin, models.Model):
     author = models.ForeignKey(
         Member,
         verbose_name=_('Author'),
@@ -30,6 +32,7 @@ class Update(models.Model):
     )
 
     message = models.TextField(_('message'))
+    notify = models.BooleanField(_('notify supporters'), default=False)
     image = ImageField(blank=True, null=True)
     created = models.DateTimeField(_("created"), default=now)
 

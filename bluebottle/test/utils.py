@@ -700,7 +700,7 @@ class TriggerTestCase(BluebottleTestCase):
     def create(self):
         self.model = self.factory.create(**self.defaults)
 
-    @ contextmanager
+    @contextmanager
     def execute(self, user=None, **kwargs):
         try:
             self.effects = self.model.execute_triggers(user=user, **kwargs)

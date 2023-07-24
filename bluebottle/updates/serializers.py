@@ -35,7 +35,8 @@ class UpdateSerializer(serializers.ModelSerializer):
             'author',
             'activity',
             'parent',
-            'replies'
+            'replies',
+            'notify',
         )
 
     class JSONAPIMeta(object):

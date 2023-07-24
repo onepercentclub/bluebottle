@@ -11,13 +11,27 @@ from bluebottle.utils.views import (
 from rest_framework import permissions
 
 
+class ActivityOwnerUpdatePermision(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is author of the update, `False` otherwise.
+        """
+        return obj.author == obj.activity.owner or not obj.notify
+
+
 class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
 
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated, ActivityOwnerUpdatePermision)
 
     def perform_create(self, serializer):
+        if hasattr(serializer.Meta, 'model'):
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+            )
+
         serializer.save(author=self.request.user)
 
 

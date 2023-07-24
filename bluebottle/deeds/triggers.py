@@ -33,6 +33,10 @@ from bluebottle.time_based.messages import (
     NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
+
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
+)
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
 
 
@@ -310,7 +314,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 CreateTeamEffect,
-                CreateInviteEffect
+                CreateInviteEffect,
+                FollowActivityEffect,
             ]
         ),
         TransitionTrigger(
@@ -329,6 +334,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_owner]
                 ),
                 NotificationEffect(TeamMemberRemovedMessage),
+                UnFollowActivityEffect
             ]
         ),
 
@@ -366,6 +372,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             DeedParticipantStateMachine.re_accept,
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
+                FollowActivityEffect
             ]
         ),
         TransitionTrigger(
@@ -375,6 +382,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
                 NotificationEffect(TeamMemberWithdrewMessage),
+                UnFollowActivityEffect
             ]
         ),
 
@@ -386,6 +394,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_did_start, team_is_active]
                 ),
+                UnFollowActivityEffect
             ]
         ),
 

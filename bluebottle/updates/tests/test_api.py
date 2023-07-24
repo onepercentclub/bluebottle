@@ -1,6 +1,8 @@
 from rest_framework import status
 
-from bluebottle.deeds.tests.factories import DeedFactory
+from django.core import mail
+
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.models import Image
 
 from bluebottle.updates.serializers import UpdateSerializer
@@ -16,7 +18,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'image', 'parent']
+    fields = ['activity', 'message', 'image', 'parent', 'notify']
 
     def setUp(self):
         super().setUp()
@@ -24,10 +26,12 @@ class UpdateListTestCase(APITestCase):
         self.defaults = {
             'activity': DeedFactory.create(),
             'parent': self.factory.create(),
-            'message': 'Some message'
+            'message': 'Some message',
+            'notify': False
         }
 
     def test_create(self):
+        mail.outbox = []
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -37,6 +41,32 @@ class UpdateListTestCase(APITestCase):
 
         self.assertAttribute('message', self.defaults['message'])
         self.assertAttribute('created')
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_notify(self):
+        DeedParticipantFactory.create(activity=self.defaults['activity'])
+        mail.outbox = []
+        self.defaults['notify'] = True
+
+        self.perform_create(user=self.defaults['activity'].owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('author', self.defaults['activity'].owner)
+        self.assertRelationship('activity', [self.defaults['activity']])
+        self.assertRelationship('parent', [self.defaults['parent']])
+
+        self.assertAttribute('message', self.defaults['message'])
+        self.assertAttribute('created')
+        self.assertEqual(len(mail.outbox), 2)
+        title = self.defaults['activity'].title
+        self.assertEqual(mail.outbox[0].subject, f"Update from '{title}'")
+
+    def test_create_notify_not_owner(self):
+        self.defaults['notify'] = True
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_create_nested_reply(self):
         self.defaults['parent'].parent = UpdateFactory.create()

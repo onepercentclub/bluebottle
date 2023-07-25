@@ -217,12 +217,32 @@ class ActivityUpdateListTestCase(APITestCase):
         self.assertObjectList(self.models)
 
         self.assertAttribute('message')
+        self.assertAttribute('created')
+        self.assertAttribute('pinned')
         self.assertRelationship('activity')
         self.assertIncluded('author')
 
         for update in self.models:
             for reply in update.replies.all():
                 self.assertIncluded('replies', reply)
+
+    def test_get_pinned(self):
+        pinned_models = UpdateFactory.create_batch(2, activity=self.activity, pinnded=True)
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.models))
+        self.assertObjectList(self.models)
+
+        self.assertAttribute('message')
+        self.assertRelationship('activity')
+        self.assertIncluded('author')
+
+        for update in self.models:
+            for reply in update.replies.all():
+                self.assertIncluded('replies', reply)
+
+        self.assertObjectList(pinned_models + self.models)
 
     def test_get_logged_in(self):
         self.perform_get(user=BlueBottleUserFactory.create())

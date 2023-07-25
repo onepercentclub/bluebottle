@@ -10,7 +10,7 @@ class UpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['created', 'notify']
 
     raw_id_fields = ['author', 'parent']
-    fields = ['created', 'author', 'parent', 'notify', 'image', 'video_url', 'message']
+    fields = ['created', 'author', 'parent', 'notify', 'image', 'video_url', 'message', 'pinned']
 
 
 class UpdateInline(TabularInlinePaginated):

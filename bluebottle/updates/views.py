@@ -54,7 +54,7 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
-    queryset = Update.objects.order_by('-created')
+    queryset = Update.objects.order_by('pinned', '-created')
 
     def get_queryset(self):
         return super().get_queryset().filter(

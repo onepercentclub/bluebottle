@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='slide',
             name='title',
-            field=models.CharField(blank=True, max_length=90, verbose_name='Title'),
+            field=models.CharField(blank=True, max_length=110, verbose_name='Title'),
         ),
         migrations.AlterField(
             model_name='slide',

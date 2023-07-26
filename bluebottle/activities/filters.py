@@ -115,10 +115,10 @@ class MatchingFacet(BooleanFacet):
 
     def add_filter(self, filter_values):
         user = get_current_user()
-        if not user.is_authenticated:
-            return None
-
         filters = Terms(status=['open', 'full', 'running'])
+
+        if not user.is_authenticated:
+            return filters
 
         if user.exclude_online:
             filters = filters & ~Term(is_online=True)

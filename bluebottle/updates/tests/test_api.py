@@ -18,7 +18,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'image', 'parent', 'notify']
+    fields = ['activity', 'message', 'image', 'parent', 'notify', 'pinned']
 
     def setUp(self):
         super().setUp()
@@ -27,7 +27,8 @@ class UpdateListTestCase(APITestCase):
             'activity': DeedFactory.create(),
             'parent': self.factory.create(),
             'message': 'Some message',
-            'notify': False
+            'notify': False,
+            'pinned': False,
         }
 
     def test_create(self):
@@ -63,6 +64,13 @@ class UpdateListTestCase(APITestCase):
 
     def test_create_notify_not_owner(self):
         self.defaults['notify'] = True
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_create_pinned_not_owner(self):
+        self.defaults['pinned'] = True
 
         self.perform_create(user=self.user)
 

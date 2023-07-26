@@ -16,7 +16,7 @@ class ActivityOwnerUpdatePermision(permissions.BasePermission):
         """
         Return `True` if user is author of the update, `False` otherwise.
         """
-        return obj.author == obj.activity.owner or not obj.notify
+        return obj.author == obj.activity.owner or (not obj.notify and not obj.pinned)
 
 
 class UpdateList(JsonApiViewMixin, CreateAPIView):

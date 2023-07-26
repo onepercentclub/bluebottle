@@ -852,7 +852,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_search(self):
-        text = 'lorem ipsun'
+        text = 'lorem ipsum'
         matching = [
             InitiativeFactory.create(title='Lorem ipsum dolor sit amet', status='approved'),
             InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')

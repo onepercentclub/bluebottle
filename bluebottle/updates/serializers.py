@@ -37,7 +37,8 @@ class UpdateSerializer(serializers.ModelSerializer):
             'parent',
             'replies',
             'notify',
-            'video_url'
+            'video_url',
+            'pinned'
         )
 
     class JSONAPIMeta(object):

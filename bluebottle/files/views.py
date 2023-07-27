@@ -88,6 +88,10 @@ class ImageContentView(FileContentView):
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
         file = getattr(instance, self.field).file
+
+        if self.kwargs['size'] not in self.allowed_sizes.values():
+            return HttpResponseNotFound()
+
         thumbnail = get_thumbnail(file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 

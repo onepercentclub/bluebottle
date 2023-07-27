@@ -202,6 +202,12 @@ class ActivityDateRangeFacet(Facet):
             )
 
 
+class UntranslatedModelFacet(ModelFacet):
+    @property
+    def filter(self):
+        return MatchAll()
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -230,7 +236,7 @@ class ActivitySearch(Search):
             labels={'0': _('In-person'), '1': _('Online/remote')}
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': ModelFacet('office', Location),
+        'office': UntranslatedModelFacet('office', Location),
     }
 
     possible_facets = {

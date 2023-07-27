@@ -76,16 +76,24 @@ class OfficeRestrictionFacet(Facet):
 class BooleanFacet(Facet):
     agg_type = 'terms'
 
-    def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
-        self.label_yes = label_yes or _('Yes')
-        self.label_no = label_no or _('No')
+    def __init__(self, metric=None, metric_sort="desc", labels=None, **kwargs):
+        self.labels = labels or {1: _('Yes'), 0: _('No')}
 
-        super().__init__(metric, metric_sort, min_doc_count=0, **kwargs)
+        super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
-        if bucket["key"]:
-            return (self.label_yes, 1)
-        return (self.label_no, 0)
+        return (self.labels[bucket["key"]], 1 if bucket["key"] else 0)
+
+    def get_values(self, data, filter_values):
+        result = super().get_values(data, filter_values)
+        if not len(result) and len(filter_values):
+            result.append((
+                (self.labels[filter_values[0]], filter_values[0]),
+                0,
+                True
+            ))
+
+        return result
 
     def add_filter(self, filter_values):
         if filter_values == ['0']:
@@ -105,10 +113,15 @@ class BooleanFacet(Facet):
 
 
 class TeamActivityFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {
+            'teams': _('With your team'),
+            'individuals': _('As an individual')
+        }
+        super().__init__(*args, labels=labels, **kwargs)
+
     def get_value(self, bucket):
-        if bucket["key"] == 'teams':
-            return (_("With your team"), 'teams')
-        return (_('As an individual'), 'individuals')
+        return (self.labels[bucket["key"]], bucket["key"])
 
 
 class MatchingFacet(BooleanFacet):
@@ -212,7 +225,10 @@ class ActivitySearch(Search):
         'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
-        'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),
+        'is_online': BooleanFacet(
+            field='is_online',
+            labels={0: _('In-person'), 1: _('Online/remote')}
+        ),
         'team_activity': TeamActivityFacet(field='team_activity'),
         'office': ModelFacet('office', Location),
     }

@@ -942,6 +942,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_team_no_matching(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme_activity")
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        PeriodActivityFactory.create_batch(2, status="open", team_activity='teams')
+        PeriodActivityFactory.create_batch(3, status="open", team_activity='individuals')
+
+        self.search({
+            'team_activity': 'teams',
+            'country': 'something-that-does-not-match'
+        })
+
+        self.assertFacets(
+            'team_activity',
+            {'teams': ('With your team', 0)}
+        )
+        self.assertFound([])
+
     def test_filter_online(self):
         matching = PeriodActivityFactory.create_batch(2, status="open", is_online=True)
         other = PeriodActivityFactory.create_batch(3, status="open", is_online=False)

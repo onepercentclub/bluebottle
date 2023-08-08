@@ -1,3 +1,4 @@
+from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -30,12 +31,16 @@ class Update(models.Model):
 
     message = models.TextField(_('message'))
     image = ImageField(blank=True, null=True)
+    created = models.DateTimeField(_("created"), default=now)
 
     def save(self, *args, **kwargs):
         if self.parent and self.parent.parent:
             raise ValidationError('Replies can not be nested')
 
         super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Update')
 
     class JSONAPIMeta():
         resource_name = 'updates'

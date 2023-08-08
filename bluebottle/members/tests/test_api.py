@@ -34,7 +34,7 @@ from bluebottle.time_based.tests.factories import (
 
 class LoginTestCase(BluebottleTestCase):
     """
-    Integration tests for the SignUp token api endpoint.
+    Integration tests for the SignUp token api endpoint.membertestapi
     """
     def setUp(self):
         self.password = 'blablabla'
@@ -91,8 +91,8 @@ class LoginTestCase(BluebottleTestCase):
         token = response.json()['token']
 
         with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
-            mock_datetime.utcnow = mock.Mock(
-                return_value=datetime.utcnow() + timedelta(days=8)
+            mock_datetime.now = mock.Mock(
+                return_value=(datetime.now() + timedelta(days=8))
             )
 
             current_user_response = self.client.get(
@@ -118,8 +118,8 @@ class LoginTestCase(BluebottleTestCase):
         self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
 
         with mock.patch('jwt.api_jwt.datetime') as mock_datetime:
-            mock_datetime.utcnow = mock.Mock(
-                return_value=datetime.utcnow() + timedelta(minutes=61)
+            mock_datetime.now = mock.Mock(
+                return_value=(datetime.now() + timedelta(minutes=61))
             )
 
             current_user_response = self.client.get(

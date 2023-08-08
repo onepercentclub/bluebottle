@@ -1,17 +1,13 @@
-from rest_framework import status
-
 from django.core import mail
+from django.urls import reverse
+from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.models import Image
-
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import APITestCase
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
-
-from bluebottle.test.utils import APITestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from django.urls import reverse
 
 
 class UpdateListTestCase(APITestCase):
@@ -137,7 +133,7 @@ class UpdateDetailView(APITestCase):
             'message': 'some message'
         }
         self.model = self.factory.create(**self.defaults)
-        self.url = reverse('update-detail', args=(self.model.pk, ))
+        self.url = reverse('update-detail', args=(self.model.pk,))
 
     def test_get(self):
         self.perform_get(user=self.user)
@@ -214,7 +210,7 @@ class ActivityUpdateListTestCase(APITestCase):
         for model in self.models:
             UpdateFactory.create_batch(3, parent=model)
 
-        self.url = reverse('activity-update-list', args=(self.activity.pk, ))
+        self.url = reverse('activity-update-list', args=(self.activity.pk,))
         UpdateFactory.create_batch(3)  # Updates for other activities should not be returned
 
     def test_get(self):
@@ -235,21 +231,9 @@ class ActivityUpdateListTestCase(APITestCase):
                 self.assertIncluded('replies', reply)
 
     def test_get_pinned(self):
-        pinned_models = UpdateFactory.create_batch(2, activity=self.activity, pinnded=True)
+        pinned_models = UpdateFactory.create_batch(2, activity=self.activity, pinned=True)
         self.perform_get()
-
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(len(self.models))
-        self.assertObjectList(self.models)
-
-        self.assertAttribute('message')
-        self.assertRelationship('activity')
-        self.assertIncluded('author')
-
-        for update in self.models:
-            for reply in update.replies.all():
-                self.assertIncluded('replies', reply)
-
         self.assertObjectList(pinned_models + self.models)
 
     def test_get_logged_in(self):

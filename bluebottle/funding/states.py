@@ -598,7 +598,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     submit = Transition(
-        [new, incomplete],
+        [new, incomplete, rejected, verified],
         pending,
         name=_('Submit'),
         description=_("Submit payout account for review."),

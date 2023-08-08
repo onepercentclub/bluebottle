@@ -35,7 +35,7 @@ class Slide(PublishableModel):
     # Contents
     title = models.CharField(_("Title"), max_length=72, blank=True)
     body = models.TextField(
-        _("Body text"), max_length=140, blank=True,
+        _("Body text"), max_length=225, blank=True,
         help_text=_('Body text has a limit of 140 characters.')
     )
     background_image = ImageField(

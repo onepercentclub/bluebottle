@@ -34,7 +34,7 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
 class SegmentListSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     logo = SorlImageField('180x180', crop='center')
-    cover_image = SorlImageField('384x288', crop='center')
+    cover_image = SorlImageField('465x262', crop='center')
 
     story = SafeField(required=False, allow_blank=True, allow_null=True)
 
@@ -84,7 +84,7 @@ class SegmentDetailSerializer(SegmentListSerializer):
 class SegmentPublicDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     logo = SorlImageField('180x180', crop='center')
-    cover_image = SorlImageField('1200x900', crop='center')
+    cover_image = SorlImageField('1280x720', crop='center')
 
     class Meta(object):
         model = Segment

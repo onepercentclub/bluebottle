@@ -579,9 +579,9 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
         link += '?page[size]=4'
         activity_type = self.root.data['activity_type']
         if activity_type == 'highlighted':
-            link += '&filter[highlight]=true'
+            link += '&filter[highlight]=1'
         elif activity_type == 'matching':
-            link += '&sort=popularity&filter[matching]'
+            link += '&filter[matching]=1'
         elif activity_type == 'deed':
             link += '&filter[type]=deed&filter[status]=open'
         elif activity_type == 'funding':

@@ -161,6 +161,7 @@ class Search(FacetedSearch):
                             path=path,
                             query=MultiMatch(
                                 fields=[f'{path}.{field}' for field in fields],
+                                type="phrase_prefix",
                                 query=query
                             )
                         )
@@ -168,7 +169,9 @@ class Search(FacetedSearch):
                 else:
                     queries.append(
                         MultiMatch(
-                            fields=fields, query=query
+                            fields=fields,
+                            query=query,
+                            type="phrase_prefix"
                         )
 
                     )

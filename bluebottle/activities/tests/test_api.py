@@ -464,6 +464,45 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
+    def test_search_prefix(self):
+        text = 'consectetur adipiscing elit,'
+        title = PeriodActivityFactory.create(
+            status="open", title=f'title with {text}',
+        )
+        description = PeriodActivityFactory.create(
+            status="open", description=f'description with {text}',
+        )
+
+        initiative_title = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
+        )
+        initiative_story = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+        )
+
+        initiative_pitch = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
+        )
+
+        slot_title = DateActivityFactory.create(status="open")
+        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
+
+        response = self.client.get(
+            f'{self.url}?filter[search]={text[:10]}',
+        )
+
+        data = json.loads(response.content)
+        ids = [int(activity['id']) for activity in data['data']]
+
+        self.assertTrue(title.pk in ids)
+        self.assertTrue(description.pk in ids)
+        self.assertTrue(initiative_title.pk in ids)
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
     def test_sort_upcoming(self):
         today = now().date()
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
@@ -903,6 +942,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_team_no_matching(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme_activity")
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        PeriodActivityFactory.create_batch(2, status="open", team_activity='teams')
+        PeriodActivityFactory.create_batch(3, status="open", team_activity='individuals')
+
+        self.search({
+            'team_activity': 'teams',
+            'country': 'something-that-does-not-match'
+        })
+
+        self.assertFacets(
+            'team_activity',
+            {'teams': ('With your team', 0)}
+        )
+        self.assertFound([])
+
     def test_filter_online(self):
         matching = PeriodActivityFactory.create_batch(2, status="open", is_online=True)
         other = PeriodActivityFactory.create_batch(3, status="open", is_online=False)
@@ -1068,7 +1126,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'highlight',
-            {1: (None, len(matching)), 0: (None, len(other))}
+            {1: ('Yes', len(matching)), 0: ('No', len(other))}
         )
         self.assertFound(matching)
 

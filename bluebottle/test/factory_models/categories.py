@@ -1,7 +1,9 @@
 from builtins import object
-from django.core.files.uploadedfile import SimpleUploadedFile
-from bluebottle.categories.models import Category, CategoryContent
+
 import factory
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from bluebottle.categories.models import Category, CategoryContent
 
 
 class CategoryFactory(factory.DjangoModelFactory):
@@ -22,6 +24,5 @@ class CategoryContentFactory(factory.DjangoModelFactory):
     image = SimpleUploadedFile(name='test_image.jpg',
                                content=b'',
                                content_type='image/jpeg')
-    video_url = factory.Sequence(lambda n: 'http://{}.test-video-url.com'.format(n))
     link_text = factory.Sequence(lambda n: 'read more {}'.format(n))
     link_url = factory.Sequence(lambda n: 'http://{}.test-link-url.com'.format(n))

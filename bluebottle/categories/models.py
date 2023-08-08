@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -30,20 +29,6 @@ class Category(TranslatableModel):
             validate_file_infection
         ]
     )
-    video = models.FileField(
-        _("video"), max_length=255,
-        blank=True, null=True,
-        validators=[
-            validate_video_file_size,
-            FileMimetypeValidator(
-                allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
-            ),
-            validate_file_infection
-        ],
-        help_text=_('This video will autoplay at the background. '
-                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
-                    'File should be smaller then 10MB.'),
-        upload_to='banner_slides/')
 
     image_logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,
@@ -131,11 +116,7 @@ class CategoryContent(SortableMixin, TranslatableModel):
                        null=True,
                        upload_to='categories/content/',
                        help_text=_("Accepted file format: .jpg, .jpeg & .png"))
-    video_url = models.URLField(max_length=100,
-                                blank=True,
-                                default='',
-                                help_text=_("Setting a video url will replace the image. Only YouTube or Vimeo videos "
-                                            "are accepted. Max: %(chars)s characters.") % {'chars': 100})
+
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta(object):

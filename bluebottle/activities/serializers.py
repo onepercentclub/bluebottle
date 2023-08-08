@@ -118,10 +118,37 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_end(self, obj):
         if hasattr(obj, 'slots') and obj.slots:
             upcoming = self.context['request'].GET.get('filter[upcoming]') == '1'
-            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
-            if slots:
-                return slots[-1].end
 
+            tz = get_current_timezone()
+            try:
+                start, end = (
+                    dateutil.parser.parse(date).astimezone(tz)
+                    for date in self.context['request'].GET.get('filter[date]').split(',')
+                )
+            except (ValueError, AttributeError):
+                start = None
+                end = None
+
+            if upcoming or (start and start >= now()):
+                ends = [
+                    slot.end for slot in obj.slots
+                    if (
+                        slot.status not in ['draft', 'cancelled'] and
+                        (not start or dateutil.parser.parse(slot.start).date() >= start.date()) and
+                        (not end or dateutil.parser.parse(slot.end).date() <= end.date())
+                    )
+                ]
+            else:
+                ends = [
+                    slot.end for slot in obj.slots
+                    if (
+                        slot.status not in ['draft', 'cancelled'] and
+                        (not start or dateutil.parser.parse(slot.end).date() > start.date()) and
+                        (not end or dateutil.parser.parse(slot.end).date() <= end.date())
+                    )
+                ]
+            if ends:
+                return max(ends)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 

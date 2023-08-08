@@ -23,6 +23,8 @@ logger = logging.getLogger('bluebottle')
 
 
 def get_matching_activities(user):
+    settings = InitiativePlatformSettings.objects.get()
+
     query = ConstantScore(
         filter=Nested(
             path='expertise',
@@ -58,41 +60,42 @@ def get_matching_activities(user):
         ~Term(contributors=user.pk)
     )
 
-    if user.location:
-        search = search.filter(
-            Nested(
-                path='office_restriction',
-                query=Term(
-                    office_restriction__restriction='all'
-                ) | (
-                    Term(office_restriction__office=user.location.id) &
-                    Term(office_restriction__restriction='office')
-                ) | (
-                    Term(
-                        office_restriction__subregion=user.location.subregion.id
-                        if user.location.subregion else ''
-                    ) &
-                    Term(office_restriction__restriction='office_subregion')
-                ) | (
-                    Term(
-                        office_restriction__region=user.location.subregion.region.id
-                        if user.location.subregion and user.location.subregion.region else ''
-                    ) &
-                    Term(office_restriction__restriction='office_region')
+    if settings.enable_office_restrictions:
+        if user.location:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    ) | (
+                        Term(office_restriction__office=user.location.id) &
+                        Term(office_restriction__restriction='office')
+                    ) | (
+                        Term(
+                            office_restriction__subregion=user.location.subregion.id
+                            if user.location.subregion else ''
+                        ) &
+                        Term(office_restriction__restriction='office_subregion')
+                    ) | (
+                        Term(
+                            office_restriction__region=user.location.subregion.region.id
+                            if user.location.subregion and user.location.subregion.region else ''
+                        ) &
+                        Term(office_restriction__restriction='office_region')
+                    )
                 )
             )
-        )
-    else:
-        search = search.filter(
-            Nested(
-                path='office_restriction',
-                query=Term(
-                    office_restriction__restriction='all'
+        else:
+            search = search.filter(
+                Nested(
+                    path='office_restriction',
+                    query=Term(
+                        office_restriction__restriction='all'
+                    )
                 )
             )
-        )
 
-    if user.include_online is False:
+    if user.exclude_online:
         search = search.filter(
             Term(is_online=True)
         )
@@ -102,17 +105,15 @@ def get_matching_activities(user):
             'lat': float(user.place.position[1]),
             'lon': float(user.place.position[0]),
         }
-        distance = f'{str(user.search_distance)}km'
-
         search = search.filter(
-            GeoDistance(distance=distance, position=position) |
+            GeoDistance(distance=user.search_distance, position=position) |
             Term(is_online=True)
         )
         query = query | ConstantScore(
             boost=0.001,
             filter=Q(
                 'geo_distance',
-                distance=distance,
+                distance=user.search_distance,
                 position=position
             )
         )
@@ -128,8 +129,7 @@ def get_matching_activities(user):
 
 
 @periodic_task(
-    # run_every=(crontab(0, 0, day_of_month='2')),
-    run_every=(crontab(minute=0)),
+    run_every=(crontab(0, 0, day_of_month='2')),
     name="recommend",
     ignore_result=True
 )

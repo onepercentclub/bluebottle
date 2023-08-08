@@ -9,6 +9,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.models import Language
 
 SCORE_MAP = {
     'open': 1,
@@ -27,6 +28,25 @@ initiative.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
+
+
+def deduplicate(items):
+    return [dict(s) for s in set(frozenset(d.items()) for d in items)]
+
+
+def get_translated_list(obj, field='name'):
+    data = []
+
+    for lang in Language.objects.all():
+        obj.set_current_language(lang.full_code)
+        data.append(
+            {
+                'id': obj.pk,
+                field: getattr(obj, field),
+                'language': lang.full_code
+            }
+        )
+    return data
 
 
 @registry.register_document
@@ -51,6 +71,7 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -101,7 +122,7 @@ class InitiativeDocument(Document):
 
     location = fields.NestedField(
         properties={
-            'id': fields.LongField(),
+            'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'city': fields.TextField(),
         }
@@ -182,48 +203,39 @@ class InitiativeDocument(Document):
         if instance.promoter:
             owners.append(instance.promoter.pk)
 
-        return owners
+        return list(set(owners))
 
     def prepare_country(self, instance):
         countries = []
+        if instance.place and instance.place.country:
+            countries.append({
+                'id': instance.place.country.pk,
+                'name': instance.place.country.name,
+            })
+
+        if instance.place and instance.place.country:
+            countries += get_translated_list(instance.place.country)
 
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
             if activity.office_location and activity.office_location.country:
-                countries.append({
-                    'id': activity.office_location.country.pk,
-                    'name': activity.office_location.country.name,
-                })
-            elif hasattr(activity, 'place') and instance.place and activity.place.country:
-                countries.append({
-                    'id': activity.place.country.pk,
-                    'name': activity.place.country.name,
-                })
+                countries += get_translated_list(activity.office_location.country)
 
-        return countries
+            elif hasattr(activity, 'place') and instance.place and activity.place.country:
+                countries += get_translated_list(activity.place.country)
+
+        return deduplicate(countries)
 
     def prepare_theme(self, instance):
         if hasattr(instance, 'theme') and instance.theme:
-            return [
-                {
-                    'id': instance.theme_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.theme.translations.all()
-            ]
+            return get_translated_list(instance.theme)
 
     def prepare_categories(self, instance):
-        return [
-            {
-                'id': category.pk,
-                'title': translation.title,
-                'language': translation.language_code,
-            }
-            for category in instance.categories.all()
-            for translation in category.translations.all()
-        ]
+        categories = []
+        for category in instance.categories.all():
+            categories += get_translated_list(category, 'title')
+        return categories
 
     def prepare_segments(self, instance):
         segments = []
@@ -239,11 +251,16 @@ class InitiativeDocument(Document):
                 for segment in activity.segments.all()
             ]
 
-        return segments
+        return deduplicate(segments)
 
     def prepare_location(self, instance):
-        return [{
-            'id': activity.office_location.id,
-            'name': activity.office_location.name,
-            'city': activity.office_location.city
-        } for activity in instance.activities.all() if activity.office_location]
+        return deduplicate(
+            [
+                {
+                    'id': activity.office_location.id,
+                    'name': activity.office_location.name,
+                    'city': activity.office_location.city
+                }
+                for activity in instance.activities.all() if activity.office_location
+            ]
+        )

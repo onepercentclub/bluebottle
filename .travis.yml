@@ -25,7 +25,7 @@ env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - sudo echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
+  - "echo 'xpack.security.enabled: false' | sudo tee -a /etc/elasticsearch/elasticsearch.yml"
   - sudo systemctl restart elasticsearch
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql

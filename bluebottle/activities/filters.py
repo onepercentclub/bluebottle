@@ -1,20 +1,22 @@
 from datetime import datetime
 
+import dateutil
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user, get_current_request
-from elasticsearch_dsl import TermsFacet, Facet
+from elasticsearch_dsl import TermsFacet, Facet, Q
 from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
+from pytz import UTC
 
 from bluebottle.activities.documents import activity
-from bluebottle.geo.models import Place
+from bluebottle.categories.models import Category
+from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import Theme
 from bluebottle.segments.models import SegmentType
-from bluebottle.utils.filters import (
-    ElasticSearchFilter, Search, TranslatedFacet, DateRangeFacet, NamedNestedFacet,
-    SegmentFacet
-)
+from bluebottle.time_based.models import Skill
+from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
 
 
 class DistanceFacet(Facet):
@@ -33,7 +35,7 @@ class DistanceFacet(Facet):
             if place and place.position and filter_value:
                 geo_filter = GeoDistance(
                     _expand__to_dot=False,
-                    distance=f'{filter_value}km',
+                    distance=filter_value,
                     position={
                         'lat': float(place.position[1]),
                         'lon': float(place.position[0]),
@@ -74,16 +76,24 @@ class OfficeRestrictionFacet(Facet):
 class BooleanFacet(Facet):
     agg_type = 'terms'
 
-    def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
-        self.label_yes = label_yes or _('Yes')
-        self.label_no = label_no or _('No')
+    def __init__(self, metric=None, metric_sort="desc", labels=None, **kwargs):
+        self.labels = labels or {'1': _('Yes'), '0': _('No')}
 
         super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
-        if bucket["key"]:
-            return (self.label_yes, 1)
-        return (self.label_no, 0)
+        return (self.labels[str(bucket["key"])], 1 if bucket["key"] else 0)
+
+    def get_values(self, data, filter_values):
+        result = super().get_values(data, filter_values)
+        if not len(result) and len(filter_values):
+            result.append((
+                (self.labels[filter_values[0]], filter_values[0]),
+                0,
+                True
+            ))
+
+        return result
 
     def add_filter(self, filter_values):
         if filter_values == ['0']:
@@ -103,11 +113,42 @@ class BooleanFacet(Facet):
 
 
 class TeamActivityFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {
+            'teams': _('With your team'),
+            'individuals': _('As an individual')
+        }
+        super().__init__(*args, labels=labels, **kwargs)
 
     def get_value(self, bucket):
-        if bucket["key"] == 'teams':
-            return (_("With your team"), 'teams')
-        return (_('As an individual'), 'individuals')
+        return (self.labels[bucket["key"]], bucket["key"])
+
+
+class MatchingFacet(BooleanFacet):
+
+    def add_filter(self, filter_values):
+        user = get_current_user()
+        filters = Terms(status=['open', 'full', 'running'])
+
+        if not user.is_authenticated:
+            return filters
+
+        if user.exclude_online:
+            filters = filters & ~Term(is_online=True)
+
+        if user.search_distance and user.place and not user.any_search_distance:
+            place = user.place
+            distance_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=user.search_distance,
+                position={
+                    'lat': float(place.position[1]),
+                    'lon': float(place.position[0]),
+                }
+            )
+            filters = filters & distance_filter
+
+        return filters
 
 
 class InitiativeFacet(TermsFacet):
@@ -126,6 +167,45 @@ class InitiativeFacet(TermsFacet):
         if user.is_authenticated:
             return initiative_filter & (Term(manager=user.id) | open_filter) & ~Terms(status=['deleted'])
         return initiative_filter & open_filter
+
+
+class ActivityDateRangeFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        start, end = filter_value.split(',')
+        start = dateutil.parser.parse(start)
+        end = dateutil.parser.parse(end)
+
+        if start.astimezone(UTC) >= now():
+            return Range(
+                _expand__to_dot=False,
+                **{
+                    'duration': {
+                        "gte": start,
+                        "lt": end
+                    }
+                }
+            )
+        else:
+            return Q(
+                'nested',
+                path='dates',
+                query=Q(
+                    'range',
+                    **{'dates.end': {'gt': start, 'lt': end}}
+                )
+            )
+
+
+class UntranslatedModelFacet(ModelFacet):
+    @property
+    def filter(self):
+        return MatchAll()
 
 
 class ActivitySearch(Search):
@@ -147,20 +227,24 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
-        'highlight': TermsFacet(field='highlight'),
+        'matching': MatchingFacet(field='matching'),
+        'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
-        'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),
+        'is_online': BooleanFacet(
+            field='is_online',
+            labels={'0': _('In-person'), '1': _('Online/remote')}
+        ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': NamedNestedFacet('office'),
+        'office': UntranslatedModelFacet('office', Location),
     }
 
     possible_facets = {
-        'theme': TranslatedFacet('theme'),
-        'category': TranslatedFacet('categories', 'title'),
-        'skill': TranslatedFacet('expertise'),
-        'country': NamedNestedFacet('country'),
-        'date': DateRangeFacet(field='duration'),
+        'theme': ModelFacet('theme', Theme),
+        'category': ModelFacet('categories', Category, 'title'),
+        'skill': ModelFacet('expertise', Skill),
+        'country': ModelFacet('country', Country),
+        'date': ActivityDateRangeFacet(),
     }
 
     def sort(self, search):
@@ -215,19 +299,29 @@ class ActivitySearch(Search):
                         "nested": {
                             "path": "dates",
                             "filter": (
-                                Range(**{'dates.start': {'lte': end}}) &
-                                Range(**{'dates.end': {'gte': start}})
+                                    Range(**{'dates.start': {'lte': end}}) &
+                                    Range(**{'dates.end': {'gte': start}})
                             )
                         }
                     },
                 })
             else:
+                start = datetime.min
+                end = now()
+
+                if 'date' in self.filter_values:
+                    start, end = self.filter_values['date'][0].split(',')
+
                 search = search.sort({
                     "dates.end": {
                         "order": "desc",
                         "mode": "max",
                         "nested": {
                             "path": "dates",
+                            "filter": (
+                                Range(**{'dates.end': {'lte': end}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                            )
                         }
                     }
                 })

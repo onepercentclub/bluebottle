@@ -1,3 +1,4 @@
+import datetime
 import io
 import json
 import re
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from openpyxl import load_workbook
+from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
@@ -52,7 +54,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
-    def search(self, filter, sort=None, user=None, place=None):
+    def search(self, filter, sort=None, user=None, place=None, headers=None):
         if isinstance(filter, str):
             url = filter
         else:
@@ -70,9 +72,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
             url = f'{self.url}?{query}'
 
+        if headers is None:
+            headers = {}
+
         response = self.client.get(
             url,
-            user=user
+            user=user,
+            **headers
         )
 
         self.data = json.loads(response.content)
@@ -89,12 +95,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.assertTrue(activity['id'] in ids)
 
     def assertFacets(self, filter, facets):
-        found_facets = dict(
+        counts = dict(
             (facet['id'], facet['count']) for facet in self.data['meta']['facets'][filter]
         )
+        names = dict(
+            (facet['id'], facet.get('name')) for facet in self.data['meta']['facets'][filter]
+        )
 
-        for key, value in facets.items():
-            self.assertEqual(found_facets[key], value)
+        for key, (name, value) in facets.items():
+            self.assertEqual(counts[key], value)
+            self.assertEqual(names[key], name)
 
     def test_images(self):
         DateActivityFactory.create(
@@ -227,11 +237,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         current_slot = DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=7))
 
         start = now()
-        end = start + timedelta(days=8)
+        end = start + timedelta(days=12)
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{},{}-{}-{}'.format(
-                start.year, start.month, start.day,
-                end.year, end.month, end.day),
+            self.url + '?filter[date]={},{}'.format(
+                start.strftime('%Y-%m-%d'),
+                end.strftime('%Y-%m-%d')
+            )
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
@@ -453,6 +464,45 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
+    def test_search_prefix(self):
+        text = 'consectetur adipiscing elit,'
+        title = PeriodActivityFactory.create(
+            status="open", title=f'title with {text}',
+        )
+        description = PeriodActivityFactory.create(
+            status="open", description=f'description with {text}',
+        )
+
+        initiative_title = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
+        )
+        initiative_story = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+        )
+
+        initiative_pitch = PeriodActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
+        )
+
+        slot_title = DateActivityFactory.create(status="open")
+        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
+
+        response = self.client.get(
+            f'{self.url}?filter[search]={text[:10]}',
+        )
+
+        data = json.loads(response.content)
+        ids = [int(activity['id']) for activity in data['data']]
+
+        self.assertTrue(title.pk in ids)
+        self.assertTrue(description.pk in ids)
+        self.assertTrue(initiative_title.pk in ids)
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
     def test_sort_upcoming(self):
         today = now().date()
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
@@ -503,22 +553,51 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [activity['id'] for activity in self.data['data']]
         )
 
+    def test_sort_unknown(self):
+        activities = [
+            PeriodActivityFactory(
+                status='open', start=None, deadline=now() + timedelta(days=1)
+            ),
+            PeriodActivityFactory(
+                status='open', start=None, deadline=None
+            ),
+
+            PeriodActivityFactory(
+                status='open', start=now() - timedelta(days=1), deadline=None
+            ),
+
+        ]
+
+        self.search({}, sort='some-unknown-sort-option')
+
+        self.assertEqual(
+            [str(activity.pk) for activity in activities],
+            [activity['id'] for activity in self.data['data']]
+        )
+
     def test_sort_upcoming_false(self):
         today = now().date()
         first_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         second_date_activity = DateActivityFactory.create(status='succeeded', slots=[])
         activities = [
-            PeriodActivityFactory(
-                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+
+            CollectActivityFactory(
+                status='succeeded',
+                start=today - timedelta(days=10),
+                end=today - timedelta(days=1)
             ),
+
+            second_date_activity,
+            first_date_activity,
+
             PeriodActivityFactory(
                 status='succeeded', start=None, deadline=now() - timedelta(days=6)
             ),
 
-            first_date_activity,
-            second_date_activity,
+            PeriodActivityFactory(
+                status='succeeded', start=None, deadline=now() - timedelta(days=10)
+            ),
 
-            CollectActivityFactory(status='succeeded', start=today + timedelta(days=1)),
         ]
 
         DateActivitySlotFactory.create(
@@ -535,7 +614,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'upcoming': 0})
 
         self.assertEqual(
-            [str(activity.pk) for activity in reversed(activities)],
+            [str(activity.pk) for activity in activities],
             [activity['id'] for activity in self.data['data']]
         )
 
@@ -556,7 +635,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         texel_place = PlaceFactory.create(position=texel.position)
 
         self.search(
-            filter={'distance': '500', 'is_online': '0'},
+            filter={'distance': '500km', 'is_online': '0'},
             sort='distance',
             place=leiden_place.pk
         )
@@ -568,7 +647,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # Widen search and search from Texel
         self.search(
-            filter={'distance': '5000', 'is_online': '0'},
+            filter={'distance': '5000km', 'is_online': '0'},
             sort='distance',
             place=texel_place.pk
         )
@@ -581,7 +660,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         # With online
         self.search(
-            filter={'distance': '500'},
+            filter={'distance': '500km'},
             sort='distance',
             place=leiden_place.pk
         )
@@ -675,10 +754,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             'activity-type',
             {
-                'time': len(matching),
-                'funding': len(funding),
-                'collect': len(collect),
-                'deed': len(deed),
+                'time': (None, len(matching)),
+                'funding': (None, len(funding)),
+                'collect': (None, len(collect)),
+                'deed': (None, len(deed)),
 
             }
         )
@@ -708,8 +787,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFacets(
             f'segment.{segment_type.slug}',
             {
-                f'{matching_segment.pk}': len(matching),
-                f'{other_segment.pk}': len(other)
+                f'{matching_segment.pk}': (matching_segment.name, len(matching)),
+                f'{other_segment.pk}': (other_segment.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -724,14 +803,67 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
 
         self.search({
-            'theme': matching_initiative.theme.pk
+            'theme': matching_initiative.theme.pk,
         })
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): len(matching),
-                str(other_initiative.theme.pk): len(other)
+                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
+                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_theme_no_matches(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme")
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+
+        DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
+        DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+
+        self.search({
+            'theme': matching_initiative.theme.pk,
+            'country': 'something-that-does-not-match'
+        })
+
+        self.assertFacets(
+            'theme',
+            {
+                str(matching_initiative.theme.pk): (matching_initiative.theme.name, 0),
+            }
+        )
+        self.assertFound([])
+
+    def test_filter_theme_dutch(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme")
+
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+
+        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
+        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+
+        self.search(
+            {'theme': matching_initiative.theme.pk},
+            headers={'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
+        )
+
+        matching_theme_translation = matching_initiative.theme.translations.get(
+            language_code='nl'
+        )
+        other_theme_translation = other_initiative.theme.translations.get(
+            language_code='nl'
+        )
+
+        self.assertFacets(
+            'theme',
+            {
+                str(matching_initiative.theme.pk): (matching_theme_translation.name, len(matching)),
+                str(other_initiative.theme.pk): (other_theme_translation.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -778,7 +910,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'upcoming': 1})
 
-        self.assertFacets('upcoming', {0: len(other), 1: len(matching)})
+        self.assertFacets('upcoming', {0: ('No', len(other)), 1: ('Yes', len(matching))})
         self.assertFound(matching)
 
     def test_no_filter(self):
@@ -804,8 +936,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'team_activity': 'teams'})
 
-        self.assertFacets('team_activity', {'teams': len(matching), 'individuals': len(other)})
+        self.assertFacets(
+            'team_activity',
+            {'teams': ('With your team', len(matching)), 'individuals': ('As an individual', len(other))}
+        )
         self.assertFound(matching)
+
+    def test_filter_team_no_matching(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="theme_activity")
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        PeriodActivityFactory.create_batch(2, status="open", team_activity='teams')
+        PeriodActivityFactory.create_batch(3, status="open", team_activity='individuals')
+
+        self.search({
+            'team_activity': 'teams',
+            'country': 'something-that-does-not-match'
+        })
+
+        self.assertFacets(
+            'team_activity',
+            {'teams': ('With your team', 0)}
+        )
+        self.assertFound([])
 
     def test_filter_online(self):
         matching = PeriodActivityFactory.create_batch(2, status="open", is_online=True)
@@ -813,7 +967,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'is_online': '1'})
 
-        self.assertFacets('is_online', {1: len(matching), 0: len(other)})
+        self.assertFacets(
+            'is_online',
+            {1: ('Online/remote', len(matching)), 0: ('In-person', len(other))}
+        )
         self.assertFound(matching)
 
     def test_filter_category(self):
@@ -835,7 +992,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'category',
-            {str(matching_category.pk): len(matching), str(other_category.pk): len(other)}
+            {
+                str(matching_category.pk): (matching_category.title, len(matching)),
+                str(other_category.pk): (other_category.title, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -862,7 +1022,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'skill',
-            {str(matching_skill.pk): len(matching), str(other_skill.pk): len(other)}
+            {
+                str(matching_skill.pk): (matching_skill.name, len(matching)),
+                str(other_skill.pk): (other_skill.name, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -889,7 +1052,61 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'country',
-            {str(matching_country.pk): len(matching), str(other_country.pk): len(other)}
+            {
+                str(matching_country.pk): (matching_country.name, len(matching)),
+                str(other_country.pk): (other_country.name, len(other))
+            }
+        )
+        self.assertFound(matching)
+
+    def test_more_country_facets(self):
+        countries = CountryFactory.create_batch(12)
+        matching = []
+        for country in countries:
+            location = GeolocationFactory.create(country=country)
+            matching.append(PeriodActivityFactory.create(location=location, status='open'))
+
+        self.search({})
+        self.assertEqual(len(self.data['meta']['facets']['country']), 12)
+        self.assertFound(matching)
+
+    def test_filter_country_slots(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
+        matching_country = CountryFactory.create()
+        other_country = CountryFactory.create()
+
+        matching = DateActivityFactory.create_batch(
+            2,
+            status='open',
+        )
+        for activity in matching:
+            DateActivitySlotFactory.create_batch(
+                2,
+                activity=activity,
+                location=GeolocationFactory.create(country=matching_country)
+            )
+
+        other = DateActivityFactory.create_batch(
+            3,
+            status='open',
+        )
+        for activity in other:
+            DateActivitySlotFactory.create_batch(
+                2,
+                activity=activity,
+                location=GeolocationFactory.create(country=other_country)
+            )
+
+        self.search({'country': matching_country.pk})
+
+        self.assertFacets(
+            'country',
+            {
+                str(matching_country.pk): (matching_country.name, len(matching)),
+                str(other_country.pk): (other_country.name, len(other))
+            }
         )
         self.assertFound(matching)
 
@@ -909,7 +1126,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFacets(
             'highlight',
-            {1: len(matching), 0: len(other)}
+            {1: ('Yes', len(matching)), 0: ('No', len(other))}
         )
         self.assertFound(matching)
 
@@ -933,6 +1150,43 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def test_filter_past_dates(self):
+        activity1 = DateActivityFactory.create(status="succeeded")
+        activity2 = DateActivityFactory.create(status="succeeded")
+        activity3 = DateActivityFactory.create(status="succeeded")
+        activity4 = PeriodActivityFactory.create(status="succeeded", start='2022-04-15', deadline='2022-05-15')
+        PeriodActivityFactory.create(status="succeeded", start='2022-03-01', deadline='2022-06-01')
+
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 3, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 25, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 6, 3, tzinfo=UTC))
+
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 5, 30, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 5, 25, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity2, start=datetime.datetime(2022, 4, 25, tzinfo=UTC))
+
+        DateActivitySlotFactory.create(activity=activity3, start=datetime.datetime(2022, 6, 3, tzinfo=UTC))
+        DateActivitySlotFactory.create(activity=activity3, start=datetime.datetime(2022, 4, 23, tzinfo=UTC))
+
+        matching = [
+            activity1, activity2, activity4
+        ]
+
+        self.search({'date': '2022-05-01,2022-05-31'})
+        self.assertFound(matching)
+        self.assertEqual(
+            self.data['data'][0]['attributes']['end'],
+            "2022-05-30T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][1]['attributes']['end'],
+            "2022-05-25T02:00:00+00:00"
+        )
+        self.assertEqual(
+            self.data['data'][2]['attributes']['end'],
+            "2022-05-15"
+        )
 
     def test_filter_distance(self):
         lat = 52.0
@@ -961,11 +1215,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
         )
 
-        PeriodActivityFactory.create(
+        further = PeriodActivityFactory.create(
             status="open",
-            location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
+            location=GeolocationFactory.create(position=Point(lon - 1, lat - 1))
         )
-        PeriodActivityFactory.create(
+        furthest = PeriodActivityFactory.create(
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
         )
@@ -982,13 +1236,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             is_online=True
         )
 
-        self.search({'distance': '100', 'is_online': '0'}, place=place.pk)
-
+        self.search({'distance': '100km', 'is_online': '0'}, place=place.pk)
         self.assertFacets(
             'distance', {}
         )
-
         self.assertFound(matching)
+
+        self.search({'distance': '200km', 'is_online': '0'}, place=place.pk)
+        self.assertFound(matching + [further])
+
+        self.search({'distance': '200mi', 'is_online': '0'}, place=place.pk)
+        self.assertFound(matching + [further, furthest])
 
     def test_filter_distance_with_online(self):
         amsterdam = Point(4.922114, 52.362438)
@@ -1034,7 +1292,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=lyutidol)
         )
 
-        self.search({'distance': '100'}, place=place.pk)
+        self.search({'distance': '100km'}, place=place.pk)
 
         self.assertFacets(
             'distance', {}

@@ -43,9 +43,9 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.user = BlueBottleUserFactory.create(
             subscribed=True,
-            search_distance=50,
+            search_distance='50km',
             any_search_distance=False,
-            include_online=True
+            exclude_online=False
         )
         self.user.place = PlaceFactory.create(
             position=self.amsterdam
@@ -164,7 +164,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         activities = get_matching_activities(self.user)
         self.assertTrue(activity in activities)
 
-    def test_exlcude_office(self):
+    def test_exclude_office(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
         activity = self.matching[-1]
         activity.office_location = LocationFactory.create()
         activity.office_restriction = 'office'
@@ -173,7 +176,20 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         activities = get_matching_activities(self.user)
         self.assertFalse(activity in activities)
 
+    def test_exclude_office_settings_disabled(self):
+
+        activity = self.matching[-1]
+        activity.office_location = LocationFactory.create()
+        activity.office_restriction = 'office'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
+
     def test_exclude_office_no_office(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
         activity = self.matching[-1]
 
         activity.office_restriction = 'office'
@@ -201,7 +217,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         activities = get_matching_activities(self.user)
         self.assertTrue(activity in activities)
 
-    def test_exlcude_office_sub_region(self):
+    def test_exclude_office_sub_region(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
         activity = self.matching[-1]
 
         activity.office_location = LocationFactory.create(
@@ -232,7 +251,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         activities = get_matching_activities(self.user)
         self.assertTrue(activity in activities)
 
-    def test_exlcude_office_region(self):
+    def test_exclude_office_region(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
         activity = self.matching[-1]
         activity.office_location = LocationFactory.create(
             subregion=OfficeSubRegionFactory.create(
@@ -298,7 +320,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.assertFalse(activity in activities)
 
     def test_exclude_online(self):
-        self.user.include_online = False
+        self.user.exclude_online = True
         self.user.save()
 
         activities = get_matching_activities(self.user)

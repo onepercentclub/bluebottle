@@ -16,7 +16,7 @@ class ActivityOwnerUpdatePermision(permissions.BasePermission):
         """
         Return `True` if user is author of the update, `False` otherwise.
         """
-        return obj.author == obj.activity.owner or not obj.notify
+        return obj.author == obj.activity.owner or (not obj.notify and not obj.pinned)
 
 
 class UpdateList(JsonApiViewMixin, CreateAPIView):
@@ -54,7 +54,7 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
-    queryset = Update.objects.order_by('-created')
+    queryset = Update.objects.order_by('pinned', '-created')
 
     def get_queryset(self):
         return super().get_queryset().filter(

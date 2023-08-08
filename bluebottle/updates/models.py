@@ -35,6 +35,8 @@ class Update(TriggerMixin, models.Model):
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 
+    pinned = models.BooleanField(_('Pinned'), default=False)
+
     created = models.DateTimeField(_("created"), default=now)
     notify = models.BooleanField(_('notify supporters'), default=False)
 

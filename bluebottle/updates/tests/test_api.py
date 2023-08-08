@@ -1,10 +1,14 @@
 from rest_framework import status
 
+from django.core import mail
+
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.models import Image
+
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
 from bluebottle.test.utils import APITestCase
-from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 from django.urls import reverse
@@ -14,23 +18,85 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message']
+    fields = ['activity', 'message', 'image', 'parent', 'notify']
 
     def setUp(self):
         super().setUp()
 
         self.defaults = {
             'activity': DeedFactory.create(),
-            'message': 'Some message'
+            'parent': self.factory.create(),
+            'message': 'Some message',
+            'notify': False
         }
 
     def test_create(self):
+        mail.outbox = []
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('author', self.user)
         self.assertRelationship('activity', [self.defaults['activity']])
+        self.assertRelationship('parent', [self.defaults['parent']])
 
+        self.assertAttribute('message', self.defaults['message'])
+        self.assertAttribute('created')
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_notify(self):
+        DeedParticipantFactory.create(activity=self.defaults['activity'])
+        mail.outbox = []
+        self.defaults['notify'] = True
+
+        self.perform_create(user=self.defaults['activity'].owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('author', self.defaults['activity'].owner)
+        self.assertRelationship('activity', [self.defaults['activity']])
+        self.assertRelationship('parent', [self.defaults['parent']])
+
+        self.assertAttribute('message', self.defaults['message'])
+        self.assertAttribute('created')
+        self.assertEqual(len(mail.outbox), 2)
+        title = self.defaults['activity'].title
+        self.assertEqual(mail.outbox[0].subject, f"Update from '{title}'")
+
+    def test_create_notify_not_owner(self):
+        self.defaults['notify'] = True
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_create_nested_reply(self):
+        self.defaults['parent'].parent = UpdateFactory.create()
+        self.defaults['parent'].save()
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_image(self):
+        file_path = './bluebottle/files/tests/files/test-image.png'
+        with open(file_path, 'rb') as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
+                user=self.user
+            )
+
+            file_data = response.json()['data']
+
+        self.defaults['image'] = Image.objects.get(pk=file_data['id'])
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('author', self.user)
+        self.assertIncluded('image', self.defaults['image'])
+        self.assertRelationship('activity', [self.defaults['activity']])
         self.assertAttribute('message', self.defaults['message'])
 
     def test_create_incomplete(self):
@@ -52,7 +118,7 @@ class UpdateDetailView(APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
-    fields = ['activity', 'author', 'messsage']
+    fields = ['activity', 'author', 'messsage', 'image', 'parent']
 
     def setUp(self):
         super().setUp()
@@ -137,6 +203,8 @@ class ActivityUpdateListTestCase(APITestCase):
     def setUp(self):
         self.activity = DeedFactory.create()
         self.models = UpdateFactory.create_batch(5, activity=self.activity)
+        for model in self.models:
+            UpdateFactory.create_batch(3, parent=model)
 
         self.url = reverse('activity-update-list', args=(self.activity.pk, ))
         UpdateFactory.create_batch(3)  # Updates for other activities should not be returned
@@ -151,6 +219,10 @@ class ActivityUpdateListTestCase(APITestCase):
         self.assertAttribute('message')
         self.assertRelationship('activity')
         self.assertIncluded('author')
+
+        for update in self.models:
+            for reply in update.replies.all():
+                self.assertIncluded('replies', reply)
 
     def test_get_logged_in(self):
         self.perform_get(user=BlueBottleUserFactory.create())

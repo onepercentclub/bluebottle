@@ -25,7 +25,7 @@ class Update(TriggerMixin, models.Model):
     )
     parent = models.ForeignKey(
         'self',
-        verbose_name=_('Parent'),
+        verbose_name=_('Reply to'),
         on_delete=models.deletion.CASCADE,
         related_name='replies',
         null=True

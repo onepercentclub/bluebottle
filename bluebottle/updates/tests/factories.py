@@ -12,3 +12,4 @@ class UpdateFactory(factory.DjangoModelFactory):
     message = factory.Faker('sentence')
     author = factory.SubFactory(BlueBottleUserFactory)
     activity = factory.SubFactory(DeedFactory)
+    parent = None

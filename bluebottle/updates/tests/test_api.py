@@ -16,13 +16,14 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'image']
+    fields = ['activity', 'message', 'image', 'parent']
 
     def setUp(self):
         super().setUp()
 
         self.defaults = {
             'activity': DeedFactory.create(),
+            'parent': self.factory.create(),
             'message': 'Some message'
         }
 
@@ -32,8 +33,17 @@ class UpdateListTestCase(APITestCase):
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('author', self.user)
         self.assertRelationship('activity', [self.defaults['activity']])
+        self.assertRelationship('parent', [self.defaults['parent']])
 
         self.assertAttribute('message', self.defaults['message'])
+
+    def test_create_nested_reply(self):
+        self.defaults['parent'].parent = UpdateFactory.create()
+        self.defaults['parent'].save()
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
     def test_create_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
@@ -77,7 +87,7 @@ class UpdateDetailView(APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
-    fields = ['activity', 'author', 'messsage']
+    fields = ['activity', 'author', 'messsage', 'image', 'parent']
 
     def setUp(self):
         super().setUp()
@@ -162,6 +172,8 @@ class ActivityUpdateListTestCase(APITestCase):
     def setUp(self):
         self.activity = DeedFactory.create()
         self.models = UpdateFactory.create_batch(5, activity=self.activity)
+        for model in self.models:
+            UpdateFactory.create_batch(3, parent=model)
 
         self.url = reverse('activity-update-list', args=(self.activity.pk, ))
         UpdateFactory.create_batch(3)  # Updates for other activities should not be returned
@@ -176,6 +188,10 @@ class ActivityUpdateListTestCase(APITestCase):
         self.assertAttribute('message')
         self.assertRelationship('activity')
         self.assertIncluded('author')
+
+        for update in self.models:
+            for reply in update.replies.all():
+                self.assertIncluded('replies', reply)
 
     def test_get_logged_in(self):
         self.perform_get(user=BlueBottleUserFactory.create())

@@ -116,6 +116,16 @@ To run the containers::
 
     $ docker-compose -u -d
 
+
+To run one specific container::
+
+    $ docker-compose -u -d [CONTAINER_NAME]
+
+Or on other systems (some OSX)::
+
+    $ docker compose up -d elasticsearch
+
+
 To shut them down::
 
     $ docker-compose down

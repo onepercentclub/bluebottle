@@ -13,9 +13,9 @@ from bluebottle.activities.documents import activity
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.models import Theme
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
-from bluebottle.initiatives.models import Theme
 from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
 
 
@@ -76,16 +76,24 @@ class OfficeRestrictionFacet(Facet):
 class BooleanFacet(Facet):
     agg_type = 'terms'
 
-    def __init__(self, metric=None, metric_sort="desc", label_yes=None, label_no=None, **kwargs):
-        self.label_yes = label_yes or _('Yes')
-        self.label_no = label_no or _('No')
+    def __init__(self, metric=None, metric_sort="desc", labels=None, **kwargs):
+        self.labels = labels or {'1': _('Yes'), '0': _('No')}
 
-        super().__init__(metric, metric_sort, min_doc_count=0, **kwargs)
+        super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
-        if bucket["key"]:
-            return (self.label_yes, 1)
-        return (self.label_no, 0)
+        return (self.labels[str(bucket["key"])], 1 if bucket["key"] else 0)
+
+    def get_values(self, data, filter_values):
+        result = super().get_values(data, filter_values)
+        if not len(result) and len(filter_values):
+            result.append((
+                (self.labels[filter_values[0]], filter_values[0]),
+                0,
+                True
+            ))
+
+        return result
 
     def add_filter(self, filter_values):
         if filter_values == ['0']:
@@ -105,10 +113,42 @@ class BooleanFacet(Facet):
 
 
 class TeamActivityFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {
+            'teams': _('With your team'),
+            'individuals': _('As an individual')
+        }
+        super().__init__(*args, labels=labels, **kwargs)
+
     def get_value(self, bucket):
-        if bucket["key"] == 'teams':
-            return (_("With your team"), 'teams')
-        return (_('As an individual'), 'individuals')
+        return (self.labels[bucket["key"]], bucket["key"])
+
+
+class MatchingFacet(BooleanFacet):
+
+    def add_filter(self, filter_values):
+        user = get_current_user()
+        filters = Terms(status=['open', 'full', 'running'])
+
+        if not user.is_authenticated:
+            return filters
+
+        if user.exclude_online:
+            filters = filters & ~Term(is_online=True)
+
+        if user.search_distance and user.place and not user.any_search_distance:
+            place = user.place
+            distance_filter = GeoDistance(
+                _expand__to_dot=False,
+                distance=user.search_distance,
+                position={
+                    'lat': float(place.position[1]),
+                    'lon': float(place.position[0]),
+                }
+            )
+            filters = filters & distance_filter
+
+        return filters
 
 
 class InitiativeFacet(TermsFacet):
@@ -162,6 +202,12 @@ class ActivityDateRangeFacet(Facet):
             )
 
 
+class UntranslatedModelFacet(ModelFacet):
+    @property
+    def filter(self):
+        return MatchAll()
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -181,12 +227,16 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
         'activity-type': TermsFacet(field='activity_type'),
-        'highlight': TermsFacet(field='highlight'),
+        'matching': MatchingFacet(field='matching'),
+        'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),
         'office_restriction': OfficeRestrictionFacet(),
-        'is_online': BooleanFacet(field='is_online', label_no=_('In-person'), label_yes=_('Online/remote')),
+        'is_online': BooleanFacet(
+            field='is_online',
+            labels={'0': _('In-person'), '1': _('Online/remote')}
+        ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': ModelFacet('office', Location),
+        'office': UntranslatedModelFacet('office', Location),
     }
 
     possible_facets = {

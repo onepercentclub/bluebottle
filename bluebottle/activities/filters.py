@@ -77,12 +77,12 @@ class BooleanFacet(Facet):
     agg_type = 'terms'
 
     def __init__(self, metric=None, metric_sort="desc", labels=None, **kwargs):
-        self.labels = labels or {1: _('Yes'), 0: _('No')}
+        self.labels = labels or {'1': _('Yes'), '0': _('No')}
 
         super().__init__(metric, metric_sort, **kwargs)
 
     def get_value(self, bucket):
-        return (self.labels[bucket["key"]], 1 if bucket["key"] else 0)
+        return (self.labels[str(bucket["key"])], 1 if bucket["key"] else 0)
 
     def get_values(self, data, filter_values):
         result = super().get_values(data, filter_values)
@@ -202,6 +202,12 @@ class ActivityDateRangeFacet(Facet):
             )
 
 
+class UntranslatedModelFacet(ModelFacet):
+    @property
+    def filter(self):
+        return MatchAll()
+
+
 class ActivitySearch(Search):
     doc_types = [activity]
 
@@ -227,10 +233,10 @@ class ActivitySearch(Search):
         'office_restriction': OfficeRestrictionFacet(),
         'is_online': BooleanFacet(
             field='is_online',
-            labels={0: _('In-person'), 1: _('Online/remote')}
+            labels={'0': _('In-person'), '1': _('Online/remote')}
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': ModelFacet('office', Location),
+        'office': UntranslatedModelFacet('office', Location),
     }
 
     possible_facets = {

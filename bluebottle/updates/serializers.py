@@ -1,13 +1,17 @@
-from rest_framework import serializers
+import hashlib
+import os
 
+from django.urls import reverse
+from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
 
-from bluebottle.updates.models import Update
-from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.activities.models import Activity
-from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.files.models import Image
+from bluebottle.files.serializers import ImageSerializer
+from bluebottle.updates.models import Update, UpdateImage
 
 
 def no_nested_replies_validator(value):
@@ -17,7 +21,10 @@ def no_nested_replies_validator(value):
 
 class UpdateSerializer(serializers.ModelSerializer):
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
-    image = ImageField(required=False, allow_null=True)
+    images = ResourceRelatedField(
+        many=True,
+        read_only=True
+    )
     parent = ResourceRelatedField(
         queryset=Update.objects.all(),
         validators=[no_nested_replies_validator],
@@ -31,7 +38,7 @@ class UpdateSerializer(serializers.ModelSerializer):
         fields = (
             'message',
             'created',
-            'image',
+            'images',
             'author',
             'activity',
             'parent',
@@ -45,22 +52,54 @@ class UpdateSerializer(serializers.ModelSerializer):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image', 'replies'
+            'author', 'image', 'replies', 'images'
         ]
 
     included_serializers = {
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'image': 'bluebottle.updates.serializers.UpdateImageSerializer',
+        'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',
     }
 
 
 IMAGE_SIZES = {
-    'large': '600x337',
+    'small': '150x150',
+    'large': '600x600',
 }
+
+
+class UpdateImageListSerializer(serializers.ModelSerializer):
+    image = ResourceRelatedField(queryset=Image.objects.all())
+    update = ResourceRelatedField(queryset=Update.objects.all())
+
+    class JSONAPIMeta(object):
+        resource_name = 'updates/images'
+
+    class Meta(object):
+        model = UpdateImage
+        fields = ('id', 'update', 'image')
+        meta_fields = ['filename']
 
 
 class UpdateImageSerializer(ImageSerializer):
     sizes = IMAGE_SIZES
     content_view_name = 'update-image'
-    relationship = 'update_set'
+    relationship = 'update'
+
+    class JSONAPIMeta(object):
+        resource_name = 'updates/images'
+
+    def get_links(self, obj):
+        if hasattr(self, 'sizes'):
+            parent = getattr(obj, self.relationship)
+            if parent:
+                hash = hashlib.md5(obj.image.file.name.encode('utf-8')).hexdigest()
+                return dict(
+                    (
+                        key,
+                        reverse(self.content_view_name, args=(obj.pk, size, )) + '?_={}'.format(hash)
+                    ) for key, size in list(self.sizes.items())
+                )
+
+    def get_filename(self, instance):
+        return os.path.basename(instance.image.file.name)

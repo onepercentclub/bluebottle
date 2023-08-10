@@ -38,7 +38,6 @@ urlpatterns = [
         name='activity-image'
     ),
 
-
     url(r'^/related-images$',
         RelatedActivityImageList.as_view(),
         name='related-activity-image-list'),

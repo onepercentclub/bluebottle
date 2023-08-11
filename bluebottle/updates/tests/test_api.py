@@ -3,7 +3,6 @@ from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.files.models import Image
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.updates.serializers import UpdateSerializer
@@ -14,7 +13,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'image', 'parent', 'notify', 'pinned']
+    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned']
 
     def setUp(self):
         super().setUp()
@@ -93,13 +92,13 @@ class UpdateListTestCase(APITestCase):
 
             file_data = response.json()['data']
 
-        self.defaults['image'] = Image.objects.get(pk=file_data['id'])
+        self.defaults['images'] = [file_data['id']]
 
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('author', self.user)
-        self.assertIncluded('image', self.defaults['image'])
+        self.assertIncluded('images', self.defaults['images'])
         self.assertRelationship('activity', [self.defaults['activity']])
         self.assertAttribute('message', self.defaults['message'])
 
@@ -122,7 +121,7 @@ class UpdateDetailView(APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
-    fields = ['activity', 'author', 'messsage', 'image', 'parent']
+    fields = ['activity', 'author', 'messsage', 'images', 'parent']
 
     def setUp(self):
         super().setUp()
@@ -211,7 +210,7 @@ class ActivityUpdateListTestCase(APITestCase):
             UpdateFactory.create_batch(3, parent=model)
 
         self.url = reverse('activity-update-list', args=(self.activity.pk,))
-        UpdateFactory.create_batch(3)  # Updates for other activities should not be returned
+        UpdateFactory.create_batch(3)
 
     def test_get(self):
         self.perform_get()

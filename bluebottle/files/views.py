@@ -42,7 +42,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         uploaded_file = self.request.FILES['file']
         mime_type = mime.from_buffer(uploaded_file.read())
         if not mime_type == uploaded_file.content_type:
-            raise ValidationError('Mime-type does not match Content-Type')
+            raise ValidationError(f'Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}')
 
         if mime_type not in self.allowed_mime_types:
             raise ValidationError('Mime-type is not allowed for this endpoint')
@@ -117,3 +117,8 @@ class ImageList(FileList):
     serializer_class = ImageSerializer
 
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
+
+
+class ImageDetail(RetrieveAPIView):
+    queryset = Image.objects.all()
+    serializer_class = ImageSerializer

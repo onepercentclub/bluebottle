@@ -1,17 +1,15 @@
+from rest_framework import permissions
+
 from bluebottle.files.views import ImageContentView
-
-from bluebottle.updates.models import Update
-from bluebottle.updates.serializers import UpdateSerializer
-
+from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
 )
 
-from rest_framework import permissions
 
-
-class ActivityOwnerUpdatePermision(permissions.BasePermission):
+class ActivityOwnerUpdatePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """
         Return `True` if user is author of the update, `False` otherwise.
@@ -23,7 +21,7 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
 
-    permission_classes = (permissions.IsAuthenticated, ActivityOwnerUpdatePermision)
+    permission_classes = (permissions.IsAuthenticated, ActivityOwnerUpdatePermission)
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
@@ -33,6 +31,12 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
             )
 
         serializer.save(author=self.request.user)
+
+
+class UpdateImageList(JsonApiViewMixin, CreateAPIView):
+    queryset = UpdateImage.objects.all()
+    serializer_class = UpdateImageListSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class IsAuthorPermission(permissions.BasePermission):
@@ -65,5 +69,5 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
 
 
 class UpdateImageContent(ImageContentView):
-    queryset = Update.objects
+    queryset = UpdateImage.objects
     field = 'image'

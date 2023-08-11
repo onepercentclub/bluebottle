@@ -51,3 +51,8 @@ class Update(TriggerMixin, models.Model):
 
     class JSONAPIMeta():
         resource_name = 'updates'
+
+
+class UpdateImage(models.Model):
+    image = ImageField()
+    update = models.ForeignKey(Update, related_name='images', on_delete=models.CASCADE)

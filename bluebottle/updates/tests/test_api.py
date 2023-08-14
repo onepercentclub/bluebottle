@@ -79,7 +79,7 @@ class UpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-    def test_create_image(self):
+    def test_create_images(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path, 'rb') as test_file:
             response = self.client.post(
@@ -92,7 +92,19 @@ class UpdateListTestCase(APITestCase):
 
             file_data = response.json()['data']
 
-        self.defaults['images'] = [file_data['id']]
+        file_path2 = './bluebottle/files/tests/files/Test-Image2.PNG'
+        with open(file_path2, 'rb') as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test-image2.png"',
+                user=self.user
+            )
+
+            file_data2 = response.json()['data']
+
+        self.defaults['images'] = [file_data['id'], file_data2['id']]
 
         self.perform_create(user=self.user)
 

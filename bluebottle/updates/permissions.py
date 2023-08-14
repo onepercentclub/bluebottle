@@ -18,6 +18,19 @@ class IsAuthorPermission(permissions.BasePermission):
         return True
 
 
+class IsStaffMember(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_staff or request.user.is_superuser
+
+    def has_object_action_permission(self, method, user, obj):
+        if method in SAFE_METHODS:
+            return True
+        return user.is_staff or user.is_superuser
+
+    def has_action_permission(self, method, user, obj):
+        return True
+
+
 class ActivityOwnerUpdatePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """

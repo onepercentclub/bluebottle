@@ -3,7 +3,7 @@ from rest_framework import permissions
 from bluebottle.files.views import ImageContentView
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.updates.permissions import IsAuthorPermission, ActivityOwnerUpdatePermission, \
-    UpdateRelatedActivityPermission
+    UpdateRelatedActivityPermission, IsStaffMember
 from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
 from bluebottle.utils.views import (
@@ -38,7 +38,7 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = UpdateSerializer
 
     permission_classes = [
-        OneOf(IsAuthorPermission, UpdateRelatedActivityPermission)
+        OneOf(IsAuthorPermission, UpdateRelatedActivityPermission, IsStaffMember)
     ]
 
 

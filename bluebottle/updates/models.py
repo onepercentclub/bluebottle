@@ -15,11 +15,14 @@ class Update(TriggerMixin, models.Model):
         Member,
         verbose_name=_('Author'),
         null=True,
+        blank=True,
         on_delete=models.deletion.CASCADE
     )
     activity = models.ForeignKey(
         Activity,
         verbose_name=_('Activity'),
+        null=True,
+        blank=True,
         on_delete=models.deletion.CASCADE,
         related_name='updates'
     )
@@ -28,6 +31,7 @@ class Update(TriggerMixin, models.Model):
         verbose_name=_('Reply to'),
         on_delete=models.deletion.CASCADE,
         related_name='replies',
+        blank=True,
         null=True
     )
 
@@ -55,4 +59,8 @@ class Update(TriggerMixin, models.Model):
 
 class UpdateImage(models.Model):
     image = ImageField()
-    update = models.ForeignKey(Update, related_name='images', on_delete=models.CASCADE)
+    update = models.ForeignKey(
+        Update,
+        related_name='images',
+        on_delete=models.CASCADE
+    )

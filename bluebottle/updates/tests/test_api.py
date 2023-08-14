@@ -79,7 +79,7 @@ class UpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-    def test_create_image(self):
+    def test_create_images(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path, 'rb') as test_file:
             response = self.client.post(
@@ -92,7 +92,19 @@ class UpdateListTestCase(APITestCase):
 
             file_data = response.json()['data']
 
-        self.defaults['images'] = [file_data['id']]
+        file_path2 = './bluebottle/files/tests/files/Test-Image2.PNG'
+        with open(file_path2, 'rb') as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test-image2.png"',
+                user=self.user
+            )
+
+            file_data2 = response.json()['data']
+
+        self.defaults['images'] = [file_data['id'], file_data2['id']]
 
         self.perform_create(user=self.user)
 
@@ -144,21 +156,34 @@ class UpdateDetailView(APITestCase):
         self.assertRelationship('activity')
 
     def test_get_other_user(self):
-        self.perform_get(user=BlueBottleUserFactory.create())
 
-        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
 
     def test_get_anonymous(self):
         self.perform_get()
-
-        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+        self.assertStatus(status.HTTP_200_OK)
 
     def test_put(self):
         new_message = 'New message'
         self.perform_update({'message': new_message}, user=self.user)
-
         self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('message', new_message)
 
+    def test_put_anonymous(self):
+        new_message = 'New message'
+        self.perform_update({'message': new_message})
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_other_user(self):
+        new_message = 'New message'
+        self.perform_update({'message': new_message}, user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_put_staff(self):
+        new_message = 'New message'
+        self.perform_update({'message': new_message}, user=BlueBottleUserFactory.create(is_staff=True))
+        self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('message', new_message)
 
     def test_put_change_author(self):
@@ -170,16 +195,6 @@ class UpdateDetailView(APITestCase):
         self.perform_update({'author': DeedFactory.create()}, user=self.user)
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
-
-    def test_put_other_user(self):
-        self.perform_update({'message': 'New message'}, user=BlueBottleUserFactory.create())
-
-        self.assertStatus(status.HTTP_403_FORBIDDEN)
-
-    def test_put_anonymous(self):
-        self.perform_update({'message': 'New message'})
-
-        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_delete(self):
         self.perform_delete(user=self.user)

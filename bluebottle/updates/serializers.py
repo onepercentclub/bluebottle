@@ -12,6 +12,7 @@ from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
 from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 def no_nested_replies_validator(value):
@@ -20,7 +21,11 @@ def no_nested_replies_validator(value):
 
 
 class UpdateSerializer(serializers.ModelSerializer):
-    activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+        required=False
+    )
     images = ResourceRelatedField(
         many=True,
         read_only=True
@@ -31,6 +36,8 @@ class UpdateSerializer(serializers.ModelSerializer):
         required=False
     )
     replies = ResourceRelatedField(many=True, read_only=True)
+
+    permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
     class Meta(object):
         model = Update
@@ -45,7 +52,11 @@ class UpdateSerializer(serializers.ModelSerializer):
             'replies',
             'notify',
             'video_url',
-            'pinned'
+            'pinned',
+            'permissions'
+        )
+        meta_fields = (
+            'permissions',
         )
 
     class JSONAPIMeta(object):

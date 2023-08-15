@@ -88,7 +88,12 @@ class ImageContentView(FileContentView):
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
         file = getattr(instance, self.field).file
-        thumbnail = get_thumbnail(file, self.kwargs['size'])
+        size = self.kwargs['size']
+        width, height = size.split('x')
+        if width == height and int(width) < 300:
+            thumbnail = get_thumbnail(file, size, crop='center')
+        else:
+            thumbnail = get_thumbnail(file, size)
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:

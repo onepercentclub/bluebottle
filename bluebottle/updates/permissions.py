@@ -59,3 +59,6 @@ class UpdateRelatedActivityPermission(permissions.BasePermission):
             getattr(activity.initiative, 'owner', None),
             getattr(activity.initiative, 'promoter', None)
         ] + list(activity.initiative.activity_managers.all())
+
+    def has_action_permission(self, method, user, obj):
+        return True

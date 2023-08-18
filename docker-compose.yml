@@ -2,9 +2,10 @@ version: "3.7"
 services:
   bluebottle:
     build: .
+    working_dir: /source 
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
-    container_name: bluebottle
+    container_name: bluebottle 
     depends_on:
       elasticsearch:
         condition: service_started
@@ -14,7 +15,8 @@ services:
       - 8000:8000
     restart: always
     volumes:
-      - ./bluebottle-data:/var/lib/elasticsearch/data
+      - ./:/source 
+      - ./docker/bluebottle:/opt/data
 
   elasticsearch:
     container_name: elasticsearch
@@ -23,7 +25,7 @@ services:
       - 9200:9200
     restart: always
     volumes:
-      - ./elasticsearch-data:/var/lib/elasticsearch/data
+      - ./docker/elasticsearch:/var/lib/elasticsearch/data
     environment:
       - discovery.type=single-node
   postgres:
@@ -37,7 +39,7 @@ services:
       - 5432:5432
     restart: always
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s

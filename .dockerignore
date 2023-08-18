@@ -1,5 +1,2 @@
-/bluebottle-data
-/bluebottle.egg-info
-/elasticsearch-data
+/docker
 /env
-/postgres-data

@@ -20,4 +20,5 @@ class Command(InteractiveTenantOption, BaseCommand):
             schema_name=schema_name, **options
         )
         connection.set_tenant(tenant)
+        del options['skip_checks']
         call_command(command, *command_args, *args, **options)

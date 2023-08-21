@@ -764,6 +764,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFound(matching)
 
+    def test_filter_type_missing(self):
+        matching = (
+            DateActivityFactory.create_batch(3, status='open') +
+            PeriodActivityFactory.create_batch(2, status='open')
+        )
+        funding = FundingFactory.create_batch(1, status='open')
+        collect = CollectActivityFactory.create_batch(4, status='cancelled')
+        deed = DeedFactory.create_batch(3, status='open')
+
+        self.search({'activity-type': 'time'})
+
+        self.assertFacets(
+            'activity-type',
+            {
+                'time': (None, len(matching)),
+                'funding': (None, len(funding)),
+                'collect': (None, 0),
+                'deed': (None, len(deed)),
+
+            }
+        )
+
+        self.assertFound(matching)
+
     def test_filter_segment(self):
         segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
         matching_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)

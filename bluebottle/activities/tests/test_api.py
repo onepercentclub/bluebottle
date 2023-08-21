@@ -1203,7 +1203,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             ),
             PeriodActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
-            )
+            ),
+            CollectActivityFactory.create(
+                status="open", location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+            ),
         ]
 
         DateActivitySlotFactory.create(
@@ -1223,7 +1226,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
         )
-        DeedFactory.create()
 
         other = DateActivityFactory.create(slots=[])
         DateActivitySlotFactory.create(
@@ -1265,7 +1267,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             ),
             PeriodActivityFactory.create(
                 status="open", is_online=True,
-            )
+            ),
+            DeedFactory.create(status="open"),
+            FundingFactory.create(status="open"),
+            CollectActivityFactory.create(status="open", location=None)
 
         ]
 
@@ -1284,7 +1289,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         PeriodActivityFactory.create(
             status="open", location=GeolocationFactory.create(position=lyutidol)
         )
-        DeedFactory.create(status="open")
 
         other = DateActivityFactory.create(status="open", slots=[])
         DateActivitySlotFactory.create(

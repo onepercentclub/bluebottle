@@ -14,8 +14,9 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer
-from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
+from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer, UploadImageSerializer
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
 mime = magic.Magic(mime=True)
 
@@ -124,6 +125,41 @@ class ImageList(FileList):
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
 
-class ImageDetail(RetrieveAPIView):
+class ImageDetail(JsonApiViewMixin, RetrieveAPIView):
+    permission_classes = (IsOwner,)
     queryset = Image.objects.all()
-    serializer_class = ImageSerializer
+    serializer_class = UploadImageSerializer
+
+
+class ImagePreview(ImageContentView):
+
+    queryset = Image.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def retrieve(self, *args, **kwargs):
+        instance = self.get_object()
+        file = instance.file.file
+        thumbnail = get_thumbnail(file, '200x200', crop='center')
+        content_type = mimetypes.guess_type(file.name)[0]
+
+        if settings.DEBUG:
+            try:
+                response = HttpResponse(content=thumbnail.read())
+                response['Content-Type'] = content_type
+            except FileNotFoundError:
+                if settings.RANDOM_IMAGE_PROVIDER:
+                    response = HttpResponseRedirect(self.get_random_image_url())
+                else:
+                    response = HttpResponseNotFound()
+        else:
+            response = HttpResponse()
+            if exists(file.path):
+                response['Content-Type'] = content_type
+                response['X-Accel-Redirect'] = thumbnail.url
+            elif settings.RANDOM_IMAGE_PROVIDER:
+                response = HttpResponseRedirect(self.get_random_image_url())
+            else:
+                response = HttpResponseNotFound()
+        return response

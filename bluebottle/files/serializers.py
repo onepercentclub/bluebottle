@@ -1,10 +1,10 @@
-from builtins import object
 import hashlib
 import os
+from builtins import object
 
-from django.urls import reverse
 from django.db.models import QuerySet
-from rest_framework import serializers
+from django.urls import reverse
+from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -65,7 +65,7 @@ class FileSerializer(ModelSerializer):
 
     class Meta(object):
         model = Document
-        fields = ('id', 'file', 'filename', 'owner', )
+        fields = ('id', 'file', 'filename', 'owner',)
         meta_fields = ['filename']
 
     class JSONAPIMeta(object):
@@ -76,10 +76,9 @@ class FileSerializer(ModelSerializer):
 
 
 class PrivateFileSerializer(FileSerializer):
-
     class Meta(object):
         model = PrivateDocument
-        fields = ('id', 'file', 'filename', 'owner', )
+        fields = ('id', 'file', 'filename', 'owner',)
         meta_fields = ['filename']
 
 
@@ -120,7 +119,7 @@ class PrivateDocumentSerializer(DocumentSerializer):
     def get_link(self, obj):
         parent = getattr(obj, self.relationship).first()
         if parent:
-            return reverse_signed(self.content_view_name, args=(parent.pk, ))
+            return reverse_signed(self.content_view_name, args=(parent.pk,))
 
     class Meta(object):
         model = PrivateDocument
@@ -143,7 +142,7 @@ class ImageSerializer(DocumentSerializer):
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(parent.pk, size, )) + '?_={}'.format(hash)
+                        reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
 
@@ -151,3 +150,19 @@ class ImageSerializer(DocumentSerializer):
         model = Image
         fields = ('id', 'file', 'filename', 'owner', 'links',)
         meta_fields = ['filename']
+
+
+class UploadImageSerializer(serializers.ModelSerializer):
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, obj):
+        return {
+            'preview': reverse('upload-image-preview', args=(obj.id,))
+        }
+
+    class JSONAPIMeta(object):
+        resource_name = 'images'
+
+    class Meta(object):
+        model = Image
+        fields = ('id', 'owner', 'links',)

@@ -130,7 +130,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], None)
+        self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
 
@@ -375,7 +375,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], None)
+        self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], None)
@@ -397,7 +397,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], None)
+        self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.initiative.theme.name)
         self.assertEqual(attributes['expertise'], None)
@@ -1203,7 +1203,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             ),
             PeriodActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
-            )
+            ),
+            CollectActivityFactory.create(
+                status="open", location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
+            ),
         ]
 
         DateActivitySlotFactory.create(
@@ -1223,7 +1226,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
         )
-        DeedFactory.create()
 
         other = DateActivityFactory.create(slots=[])
         DateActivitySlotFactory.create(
@@ -1265,7 +1267,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             ),
             PeriodActivityFactory.create(
                 status="open", is_online=True,
-            )
+            ),
+            DeedFactory.create(status="open"),
+            FundingFactory.create(status="open"),
+            CollectActivityFactory.create(status="open", location=None)
 
         ]
 
@@ -1284,7 +1289,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         PeriodActivityFactory.create(
             status="open", location=GeolocationFactory.create(position=lyutidol)
         )
-        DeedFactory.create(status="open")
 
         other = DateActivityFactory.create(status="open", slots=[])
         DateActivitySlotFactory.create(

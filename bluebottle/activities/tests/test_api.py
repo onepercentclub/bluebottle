@@ -770,7 +770,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             PeriodActivityFactory.create_batch(2, status='open')
         )
         funding = FundingFactory.create_batch(1, status='open')
-        collect = CollectActivityFactory.create_batch(4, status='cancelled')
+        CollectActivityFactory.create_batch(4, status='cancelled')
         deed = DeedFactory.create_batch(3, status='open')
 
         self.search({'activity-type': 'time'})

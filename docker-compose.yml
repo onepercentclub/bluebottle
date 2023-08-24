@@ -16,6 +16,7 @@ services:
     restart: always
     volumes:
       - ./:/source 
+      - ./docker/bluebottle:/opt/data
 
   elasticsearch:
     container_name: elasticsearch

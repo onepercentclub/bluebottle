@@ -29,7 +29,7 @@ COPY bluebottle/__init__.py ./bluebottle
 COPY ["README.rst", "setup.py", "./"]
 
 # Install any (missing) requirements
-RUN pip install -e .
+RUN pip install -e .[env]
 
 ################
 #  BLUEBOTTLE  #
@@ -57,3 +57,7 @@ COPY . .
 
 # Set the env
 ENV PATH="/bluebottle/venv/bin:$PATH"
+
+# Keep bash history
+#
+ENV HISTFILE="/opt/data/.bash_history"

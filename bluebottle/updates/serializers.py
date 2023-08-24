@@ -2,7 +2,9 @@ import hashlib
 import os
 
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
@@ -38,6 +40,14 @@ class UpdateSerializer(serializers.ModelSerializer):
     replies = ResourceRelatedField(many=True, read_only=True)
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
+
+    def validate(self, value):
+        image_count = self.context['request'].data.get('images', [])
+        if not (value.get('message') or value.get('video_url') or image_count):
+            raise ValidationError(
+                _("At least one of 'message', 'images', or 'video_url' must be set.")
+            )
+        return value
 
     class Meta(object):
         model = Update

@@ -69,7 +69,7 @@ IMAGE_SIZES = {
     'preview': '300x168',
     'small': '320x180',
     'large': '600x337',
-    'cover': '960x540'
+    'cover': '1568x882'
 }
 
 

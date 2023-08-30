@@ -1,13 +1,12 @@
-from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.fsm.triggers import TriggerMixin
-
-from bluebottle.members.models import Member
 from bluebottle.activities.models import Activity
 from bluebottle.files.fields import ImageField
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.members.models import Member
 
 
 class Update(TriggerMixin, models.Model):
@@ -35,13 +34,14 @@ class Update(TriggerMixin, models.Model):
         null=True
     )
 
-    message = models.TextField(_('message'))
+    message = models.TextField(_('message'), blank=True, null=True)
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 
     pinned = models.BooleanField(_('Pinned'), default=False)
 
     created = models.DateTimeField(_("created"), default=now)
+
     notify = models.BooleanField(_('notify supporters'), default=False)
 
     def save(self, *args, **kwargs):

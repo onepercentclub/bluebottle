@@ -13,7 +13,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned']
+    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned', 'video_url']
 
     def setUp(self):
         super().setUp()
@@ -21,6 +21,7 @@ class UpdateListTestCase(APITestCase):
         self.defaults = {
             'activity': DeedFactory.create(),
             'parent': self.factory.create(),
+            'video_url': '',
             'message': 'Some message',
             'notify': False,
             'pinned': False,
@@ -38,6 +39,19 @@ class UpdateListTestCase(APITestCase):
         self.assertAttribute('message', self.defaults['message'])
         self.assertAttribute('created')
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_without_message(self):
+        mail.outbox = []
+        self.defaults['message'] = ''
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_without_message_with_video(self):
+        mail.outbox = []
+        self.defaults['message'] = ''
+        self.defaults['video_url'] = 'https://www.youtube.com/watch?v=9J68GxO02xE'
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
 
     def test_create_notify(self):
         DeedParticipantFactory.create(activity=self.defaults['activity'])
@@ -113,6 +127,24 @@ class UpdateListTestCase(APITestCase):
         self.assertIncluded('images', self.defaults['images'])
         self.assertRelationship('activity', [self.defaults['activity']])
         self.assertAttribute('message', self.defaults['message'])
+
+    def test_create_no_message_with_images(self):
+        file_path = './bluebottle/files/tests/files/test-image.png'
+        with open(file_path, 'rb') as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
+                user=self.user
+            )
+
+            file_data = response.json()['data']
+
+        self.defaults['images'] = [file_data['id']]
+        self.defaults['message'] = ''
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
 
     def test_create_incomplete(self):
         self.defaults['message'] = ''

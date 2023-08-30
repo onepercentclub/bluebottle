@@ -1,5 +1,6 @@
 from django.core import mail
 from django.urls import reverse
+from django.conf import settings
 from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
@@ -252,6 +253,7 @@ class ActivityUpdateListTestCase(APITestCase):
 
     def setUp(self):
         self.activity = DeedFactory.create()
+
         self.models = UpdateFactory.create_batch(5, activity=self.activity)
         for model in self.models:
             UpdateFactory.create_batch(3, parent=model)

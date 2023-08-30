@@ -42,6 +42,7 @@ class UpdateSerializer(serializers.ModelSerializer):
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
     def validate(self, value):
+        return value
         image_count = self.context['request'].data.get('images', [])
         if not (value.get('message') or value.get('video_url') or image_count):
             raise ValidationError(

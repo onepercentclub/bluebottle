@@ -241,7 +241,7 @@ class APITestCase(BluebottleTestCase):
 
         `to_change` should be a dictionary of fields to update
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         data = {
             'type': self.serializer.JSONAPIMeta.resource_name,

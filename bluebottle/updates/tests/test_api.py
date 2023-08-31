@@ -1,11 +1,11 @@
 from django.core import mail
 from django.urls import reverse
-from django.conf import settings
 from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
+from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
@@ -53,6 +53,17 @@ class UpdateListTestCase(APITestCase):
         self.defaults['video_url'] = 'https://www.youtube.com/watch?v=9J68GxO02xE'
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_patch_pinned(self):
+        mail.outbox = []
+        self.defaults['message'] = 'Yeah'
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.model = Update.objects.get(pk=self.response.json()['data']['id'])
+        self.url = reverse('update-detail', args=(self.model.pk,))
+        self.perform_update(to_change={'pinned': True}, user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
 
     def test_create_notify(self):
         DeedParticipantFactory.create(activity=self.defaults['activity'])

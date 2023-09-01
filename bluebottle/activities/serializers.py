@@ -66,7 +66,7 @@ class ActivityLocationSerializer(Serializer):
 
 
 IMAGE_SIZES = {
-    'preview': '300x168',
+    'preview': '292x164',
     'small': '320x180',
     'large': '600x337',
     'cover': '1568x882'

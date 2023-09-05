@@ -4,7 +4,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class FollowersNotification(TransitionMessage):
-    subject = pgettext('email', "Update from '{title}'")
+    subject = pgettext('email', "New update from '{title}'")
 
     template = 'messages/update_followers'
     context = {
@@ -24,7 +24,7 @@ class FollowersNotification(TransitionMessage):
 
 
 class OwnerNotification(TransitionMessage):
-    subject = pgettext('email', "You have a new update on '{title}'")
+    subject = pgettext('email', "A new message is posted on '{title}'")
 
     template = 'messages/update_owner'
     context = {
@@ -40,7 +40,7 @@ class OwnerNotification(TransitionMessage):
 
 
 class ParentNotification(TransitionMessage):
-    subject = pgettext('email', "You have a new reply on '{title}'")
+    subject = pgettext('email', "You have a reply on '{title}'")
 
     template = 'messages/update_parent'
     context = {

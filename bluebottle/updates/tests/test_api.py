@@ -39,6 +39,7 @@ class UpdateListTestCase(APITestCase):
 
         self.assertAttribute('message', self.defaults['message'])
         self.assertAttribute('created')
+        __import__('ipdb').set_trace()
         self.assertEqual(len(mail.outbox), 2)
 
     def test_create_without_message(self):

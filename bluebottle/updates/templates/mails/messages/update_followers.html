@@ -2,10 +2,10 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=to.first_name title=obj.content_object.title author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
+    {% blocktrans with text=obj.message|truncatechars:250 context 'email' %}
         Hi {{ recipient_name }},
         <br><br>
-        {{ author_name }} posted an update to {{ title }}:
+        {{ author }} posted an update to {{ title }}:
         <br>
         '{{ text }}'
 
@@ -13,8 +13,8 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.content_object.get_absolute_url }}"
-       class="action-email">{% blocktrans context 'email' %}View update{% endblocktrans %}</a>
+    <a href="{{ action_link_ }}"
+       class="action-email">{% blocktrans context 'email' %}View message{% endblocktrans %}</a>
 {% endblock %}`
 
 {% block end_message %}

@@ -1039,9 +1039,9 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
             {
                 'name': 'succeed_manually',
                 'target': 'succeeded',
-                'available': True,
                 'label': 'Succeed',
-                'description': 'Close this activity and allocate the hours to the participants.'
+                'description': 'Close this activity and allocate the hours to the participants.',
+                'available': True
             }
             in self.data['meta']['transitions']
         )

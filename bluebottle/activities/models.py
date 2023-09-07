@@ -170,13 +170,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
-            domain, language,
-            self.get_real_instance().__class__.__name__.lower(),
-            self.pk,
-            self.slug
-        )
-        return link
+        type = self.get_real_instance().__class__.__name__.lower()
+        if type == 'deed'
+            return f'{domain}/{language}/activities/details/deed/{self.id}/{self.slug}'
+        else:
+            return f'{domain}/{language}/initiatives/activities/details/deed/{self.id}/{self.slug}'
 
     @property
     def organizer(self):

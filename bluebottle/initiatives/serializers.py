@@ -337,7 +337,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
-            'errors', 'required', 'stats', 'is_open', 'is_global',
+            'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
         )
 
         meta_fields = (

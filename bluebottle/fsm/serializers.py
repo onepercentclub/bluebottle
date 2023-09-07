@@ -26,8 +26,8 @@ class AvailableTransitionsField(ReadOnlyField):
             {
                 'name': transition.field,
                 'target': transition.target.value,
-                'label': transition.target.name,
-                'description': transition.target.description,
+                'label': transition.name,
+                'description': transition.description,
                 'available': True,
             }
             for transition in states.possible_transitions(user=user)

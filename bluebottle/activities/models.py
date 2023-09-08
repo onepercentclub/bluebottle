@@ -171,7 +171,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         domain = get_current_host()
         language = get_current_language()
         type = self.get_real_instance().__class__.__name__.lower()
-        if type == 'deed'
+        if type == 'deed':
             return f'{domain}/{language}/activities/details/deed/{self.id}/{self.slug}'
         else:
             return f'{domain}/{language}/initiatives/activities/details/deed/{self.id}/{self.slug}'

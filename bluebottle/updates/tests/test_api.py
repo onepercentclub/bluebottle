@@ -42,6 +42,7 @@ class UpdateListTestCase(APITestCase):
         self.assertEqual(len(mail.outbox), 2)
 
     def test_create_without_message(self):
+
         mail.outbox = []
         self.defaults['message'] = ''
         self.perform_create(user=self.user)
@@ -81,7 +82,7 @@ class UpdateListTestCase(APITestCase):
         self.assertAttribute('created')
         self.assertEqual(len(mail.outbox), 2)
         title = self.defaults['activity'].title
-        self.assertEqual(mail.outbox[0].subject, f"Update from '{title}'")
+        self.assertEqual(mail.outbox[0].subject, f"New update from '{title}'")
 
     def test_create_notify_not_owner(self):
         self.defaults['notify'] = True

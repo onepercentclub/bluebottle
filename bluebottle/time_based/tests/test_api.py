@@ -1023,7 +1023,13 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         response = self.client.get(self.url, user=self.activity.owner)
         self.data = response.json()['data']
         self.assertTrue(
-            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            {
+                'name': 'succeed_manually',
+                'target': 'succeeded',
+                'available': True,
+                'label': 'Succeed',
+                'description': 'Close this activity and allocate the hours to the participants.'
+            }
             in self.data['meta']['transitions']
         )
 

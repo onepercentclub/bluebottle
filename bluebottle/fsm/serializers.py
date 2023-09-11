@@ -38,6 +38,15 @@ class AvailableTransitionsField(ReadOnlyField):
         return instance
 
 
+class CurrentStatusField(ReadOnlyField):
+    def to_representation(self, value):
+        return {
+            'name': value.value,
+            'label': value.name.title(),
+            'description': value.description,
+        }
+
+
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)

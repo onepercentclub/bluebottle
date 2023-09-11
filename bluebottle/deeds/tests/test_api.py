@@ -1,23 +1,21 @@
-from datetime import timedelta, date
 import io
+from datetime import timedelta, date
 
-from rest_framework import status
+from django.urls import reverse
 from openpyxl import load_workbook
+from rest_framework import status
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory
-
-from bluebottle.test.utils import APITestCase
 from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from django.urls import reverse
+from bluebottle.test.utils import APITestCase
 
 
 class DeedsListViewAPITestCase(APITestCase):
@@ -335,7 +333,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedTranistionListViewAPITestCase(APITestCase):
+class DeedTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
@@ -552,7 +550,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedParticipantTranistionListViewAPITestCase(APITestCase):
+class DeedParticipantTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 

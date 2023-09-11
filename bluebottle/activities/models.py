@@ -174,7 +174,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         if type == 'deed':
             return f'{domain}/{language}/activities/details/deed/{self.id}/{self.slug}'
         else:
-            return f'{domain}/{language}/initiatives/activities/details/deed/{self.id}/{self.slug}'
+            return f"{domain}/{language}/initiatives/activities/details/{type}/{self.id}/{self.slug}"
 
     @property
     def organizer(self):

@@ -21,7 +21,7 @@ from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import (
-    AvailableTransitionsField, TransitionSerializer
+    AvailableTransitionsField, TransitionSerializer, CurrentStatusField
 )
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.geo.models import Location
@@ -190,6 +190,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
+    current_status = CurrentStatusField()
 
     def get_image(self, obj):
         if obj.image:
@@ -220,6 +221,7 @@ class InitiativePreviewSerializer(ModelSerializer):
         fields = (
             'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
         )
+        meta_fields = ('current_status',)
 
     class JSONAPIMeta(object):
         resource_name = 'initiatives/preview'
@@ -241,6 +243,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
+    current_status = CurrentStatusField(source='states.current_status')
 
     activities = ActivitiesField()
 
@@ -342,7 +345,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats',
+            'errors', 'stats', 'current_status'
         )
 
     class JSONAPIMeta(object):

@@ -41,8 +41,8 @@ class AvailableTransitionsField(ReadOnlyField):
 class CurrentStatusField(ReadOnlyField):
     def to_representation(self, value):
         return {
-            'name': value.value,
-            'label': value.name.title(),
+            'value': value.value,
+            'name': value.name.title(),
             'description': value.description,
         }
 

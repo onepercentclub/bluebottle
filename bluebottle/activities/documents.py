@@ -196,9 +196,9 @@ class ActivityDocument(Document):
 
     def prepare_current_status(self, instance):
         return {
-            'name': instance.states.current_status.value,
-            'label': instance.states.current_status.name,
-            'description': instance.states.current_status.description,
+            'value': instance.states.current_state.value,
+            'name': str(instance.states.current_state.name),
+            'description': str(instance.states.current_state.description),
         }
 
     def prepare_image(self, instance):

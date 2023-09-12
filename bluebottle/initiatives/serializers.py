@@ -243,7 +243,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
     reviewer = AnonymizedResourceRelatedField(read_only=True)
     promoter = AnonymizedResourceRelatedField(read_only=True)
-    current_status = CurrentStatusField(source='states.current_status')
+    current_status = CurrentStatusField(source='states.current_state')
 
     activities = ActivitiesField()
 
@@ -372,6 +372,7 @@ class InitiativeListSerializer(ModelSerializer):
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
     transitions = AvailableTransitionsField(source='states')
+    current_status = CurrentStatusField(source='states.current_state')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -392,7 +393,7 @@ class InitiativeListSerializer(ModelSerializer):
             'story', 'image', 'theme', 'place',
         )
 
-        meta_fields = ('permissions', 'status', 'created', 'transitions',)
+        meta_fields = ('permissions', 'status', 'current_status', 'created', 'transitions',)
 
     class JSONAPIMeta(object):
         included_resources = [

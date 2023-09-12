@@ -90,8 +90,6 @@ class ImageContentView(FileContentView):
         instance = self.get_object()
         file = getattr(instance, self.field).file
 
-        # import ipdb; ipdb.set_trace()
-
         if 'x' in self.kwargs['size']:
             if self.kwargs['size'] not in self.allowed_sizes.values():
                 return HttpResponseNotFound()

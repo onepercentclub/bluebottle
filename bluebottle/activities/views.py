@@ -215,7 +215,7 @@ class RelatedActivityImageContent(ImageContentView):
         )
 
     field = 'image'
-    allowed_sized = RelatedActivityImageContentSerializer.sizes
+    allowed_sizes = RelatedActivityImageContentSerializer.sizes
 
 
 class ActivityTransitionList(TransitionList):

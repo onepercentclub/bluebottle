@@ -46,6 +46,18 @@ class CreatePreparationTimeContributionEffect(Effect):
             contribution.save()
 
 
+class UpdateSlotTimeContributionEffect(Effect):
+    title = _('Update related contributions')
+    template = 'admin/update_slot_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        slot = self.instance
+        for participant in slot.accepted_participants.all():
+            for contribution in participant.contributions.all():
+                contribution.start = slot.start
+                contribution.save()
+
+
 class CreateOverallTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_period_time_contribution.html'

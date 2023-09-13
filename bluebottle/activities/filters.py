@@ -226,7 +226,7 @@ class ActivitySearch(Search):
     facets = {
         'initiative.id': InitiativeFacet(),
         'upcoming': BooleanFacet(field='is_upcoming'),
-        'activity-type': TermsFacet(field='activity_type'),
+        'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
         'matching': MatchingFacet(field='matching'),
         'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),

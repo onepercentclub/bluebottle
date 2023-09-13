@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Update time contributions" %}</h3>
+
+<p>
+{% blocktrans with slot=effects.0.instance activity=effects.0.instance.activity  %}
+    Update related contributions to "{{slot}}" for "{{activity}}"?
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

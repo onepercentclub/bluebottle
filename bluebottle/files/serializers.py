@@ -152,13 +152,27 @@ class ImageSerializer(DocumentSerializer):
         meta_fields = ['filename']
 
 
+IMAGE_SIZES = {
+    'preview': '292x164',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '1568x882'
+}
+
+
 class UploadImageSerializer(serializers.ModelSerializer):
     links = serializers.SerializerMethodField()
 
+    sizes = IMAGE_SIZES
+
     def get_links(self, obj):
-        return {
-            'preview': reverse('upload-image-preview', args=(obj.id,))
-        }
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        return dict(
+            (
+                key,
+                reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+            ) for key, size in list(self.sizes.items())
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'images'

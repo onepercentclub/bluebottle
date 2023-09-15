@@ -7,5 +7,5 @@ urlpatterns = [
     url(r'^private-documents$', PrivateFileList.as_view(), name='private-document-list'),
     url(r'^images$', ImageList.as_view(), name='image-list'),
     url(r'^images/(?P<pk>[\w\-]*)$', ImageDetail.as_view(), name='image-detail'),
-    url(r'^images/(?P<pk>.*)/preview$', ImagePreview.as_view(), name='upload-image-preview'),
+    url(r'^images/(?P<pk>.*)/(?P<size>\d+(x\d+)?)$', ImagePreview.as_view(), name='upload-image-preview'),
 ]

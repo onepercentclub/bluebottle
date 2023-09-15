@@ -5,6 +5,7 @@ from rest_framework import status
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
+from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
@@ -41,6 +42,7 @@ class UpdateListTestCase(APITestCase):
         self.assertEqual(len(mail.outbox), 2)
 
     def test_create_without_message(self):
+
         mail.outbox = []
         self.defaults['message'] = ''
         self.perform_create(user=self.user)
@@ -52,6 +54,17 @@ class UpdateListTestCase(APITestCase):
         self.defaults['video_url'] = 'https://www.youtube.com/watch?v=9J68GxO02xE'
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_patch_pinned(self):
+        mail.outbox = []
+        self.defaults['message'] = 'Yeah'
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.model = Update.objects.get(pk=self.response.json()['data']['id'])
+        self.url = reverse('update-detail', args=(self.model.pk,))
+        self.perform_update(to_change={'pinned': True}, user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
 
     def test_create_notify(self):
         DeedParticipantFactory.create(activity=self.defaults['activity'])
@@ -69,7 +82,7 @@ class UpdateListTestCase(APITestCase):
         self.assertAttribute('created')
         self.assertEqual(len(mail.outbox), 2)
         title = self.defaults['activity'].title
-        self.assertEqual(mail.outbox[0].subject, f"Update from '{title}'")
+        self.assertEqual(mail.outbox[0].subject, f"New update from '{title}'")
 
     def test_create_notify_not_owner(self):
         self.defaults['notify'] = True
@@ -252,6 +265,7 @@ class ActivityUpdateListTestCase(APITestCase):
 
     def setUp(self):
         self.activity = DeedFactory.create()
+
         self.models = UpdateFactory.create_batch(5, activity=self.activity)
         for model in self.models:
             UpdateFactory.create_batch(3, parent=model)

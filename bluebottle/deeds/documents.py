@@ -47,3 +47,6 @@ class DeedDocument(ActivityDocument):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
         return {'gte': instance.start, 'lte': instance.end}
+
+    def prepare_is_online(self, instance):
+        return True

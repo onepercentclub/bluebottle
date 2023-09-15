@@ -18,7 +18,7 @@ class FollowerNotificationTestCase(NotificationTestCase):
         self.create()
 
     def test_subject(self):
-        self.assertSubject(f"Update from '{self.obj.activity.title}'")
+        self.assertSubject(f"New update from '{self.obj.activity.title}'")
 
     def test_recipients(self):
         self.assertRecipients([participant.user for participant in self.participants])
@@ -33,7 +33,7 @@ class OwnerNotificationTestCase(NotificationTestCase):
         self.create()
 
     def test_subject(self):
-        self.assertSubject(f"You have a new update on '{self.obj.activity.title}'")
+        self.assertSubject(f"A new message is posted on '{self.obj.activity.title}'")
 
     def test_recipients(self):
         self.assertRecipients([self.obj.activity.owner])
@@ -48,7 +48,7 @@ class ParentNotificationTestCase(NotificationTestCase):
         self.create()
 
     def test_subject(self):
-        self.assertSubject(f"You have a new reply on '{self.obj.activity.title}'")
+        self.assertSubject(f"You have a reply on '{self.obj.activity.title}'")
 
     def test_recipients(self):
         self.assertRecipients([self.obj.parent.author])

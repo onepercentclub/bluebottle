@@ -230,7 +230,7 @@ class ActivitiesField(HyperlinkedRelatedField):
         super().__init__(Activity, many=many, read_only=read_only, *args, **kwargs)
 
     def get_url(self, name, view_name, kwargs, request):
-        return f"{self.reverse('activity-preview-list')}?filter[initiative.id]={kwargs['pk']}&page[size]=100"
+        return f"{self.reverse('activity-preview-list')}?filter[initiative.id]={kwargs['pk']}&page[size]=1000"
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
@@ -337,7 +337,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
-            'errors', 'required', 'stats', 'is_open', 'is_global',
+            'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
         )
 
         meta_fields = (

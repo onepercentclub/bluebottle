@@ -42,6 +42,8 @@ class UpdateSerializer(serializers.ModelSerializer):
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
     def validate(self, value):
+        if self.partial:
+            return value
         image_count = self.context['request'].data.get('images', [])
         if not (value.get('message') or value.get('video_url') or image_count):
             raise ValidationError(
@@ -85,7 +87,8 @@ class UpdateSerializer(serializers.ModelSerializer):
 
 IMAGE_SIZES = {
     'small': '150x150',
-    'large': '600x600',
+    'medium': '800x450',
+    'large': '1600x900',
 }
 
 

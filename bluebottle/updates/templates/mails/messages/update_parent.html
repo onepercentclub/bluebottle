@@ -2,14 +2,14 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=to.first_name title=obj.wallpost.content_object.title author_name=obj.author.first_name context 'email' %}
+    {% blocktrans context 'email' %}
         Hi {{ recipient_name }},
         <br><br>
-        {{ author_name }} responded to your update on '{{ title }}'.
+        {{ author }} replied to your message on '{{ title }}'.
     {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.wallpost.content_object.get_absolute_url }}"
-       class="action-email">{% blocktrans context 'email' %}View response{% endblocktrans %}</a>
+    <a href="{{ action_link }}"
+       class="action-email">{% blocktrans context 'email' %}View reply{% endblocktrans %}</a>
 {% endblock %}`

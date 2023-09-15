@@ -24,7 +24,9 @@ from bluebottle.initiatives.permissions import (
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativePreviewSerializer, InitiativeRedirectSerializer,
-    RelatedInitiativeImageSerializer, ThemeSerializer
+    RelatedInitiativeImageSerializer, ThemeSerializer,
+    RelatedInitiativeImageContentSerializer,
+    InitiativeImageSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
@@ -165,6 +167,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 class InitiativeImage(ImageContentView):
     queryset = Initiative.objects
     field = 'image'
+    allowed_sizes = InitiativeImageSerializer.sizes
 
 
 class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -185,6 +188,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
 class RelatedInitiativeImageContent(ImageContentView):
     queryset = RelatedImage.objects
     field = 'image'
+    allowed_sizes = RelatedInitiativeImageContentSerializer
 
 
 class InitiativeReviewTransitionList(TransitionList):

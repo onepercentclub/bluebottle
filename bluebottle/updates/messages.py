@@ -3,13 +3,20 @@ from django.utils.translation import pgettext_lazy as pgettext
 from bluebottle.notifications.messages import TransitionMessage
 
 
-class FollowersNotification(TransitionMessage):
-    subject = pgettext('email', "New update from '{title}'")
+class UpdateMessage(TransitionMessage):
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
 
-    template = 'messages/update_followers'
     context = {
-        'title': 'activity.title'
+        'title': 'activity.title',
+        'author': 'author.short_name'
     }
+
+
+class FollowersNotification(UpdateMessage):
+    subject = pgettext('email', "New update from '{title}'")
+    template = 'messages/update_followers'
 
     def get_recipients(self):
         """followers of the activity"""
@@ -23,13 +30,9 @@ class FollowersNotification(TransitionMessage):
         return [follow.user for follow in follows]
 
 
-class OwnerNotification(TransitionMessage):
+class OwnerNotification(UpdateMessage):
     subject = pgettext('email', "A new message is posted on '{title}'")
-
     template = 'messages/update_owner'
-    context = {
-        'title': 'activity.title'
-    }
 
     def get_recipients(self):
         """followers of the activity"""
@@ -39,13 +42,9 @@ class OwnerNotification(TransitionMessage):
             return []
 
 
-class ParentNotification(TransitionMessage):
+class ParentNotification(UpdateMessage):
     subject = pgettext('email', "You have a reply on '{title}'")
-
     template = 'messages/update_parent'
-    context = {
-        'title': 'activity.title'
-    }
 
     def get_recipients(self):
         """followers of the activity"""

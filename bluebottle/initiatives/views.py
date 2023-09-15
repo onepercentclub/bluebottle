@@ -188,7 +188,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
 class RelatedInitiativeImageContent(ImageContentView):
     queryset = RelatedImage.objects
     field = 'image'
-    allowed_sizes = RelatedInitiativeImageContentSerializer
+    allowed_sizes = RelatedInitiativeImageContentSerializer.sizes
 
 
 class InitiativeReviewTransitionList(TransitionList):

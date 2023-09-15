@@ -131,27 +131,6 @@ class ImageField(ResourceRelatedField):
     queryset = Image.objects
 
 
-class ImageSerializer(DocumentSerializer):
-    links = serializers.SerializerMethodField()
-
-    def get_links(self, obj):
-        if hasattr(self, 'sizes'):
-            parent = getattr(obj, self.relationship).first()
-            if parent:
-                hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
-                return dict(
-                    (
-                        key,
-                        reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
-                    ) for key, size in list(self.sizes.items())
-                )
-
-    class Meta(object):
-        model = Image
-        fields = ('id', 'file', 'filename', 'owner', 'links',)
-        meta_fields = ['filename']
-
-
 IMAGE_SIZES = {
     'preview': '292x164',
     'small': '320x180',
@@ -160,8 +139,39 @@ IMAGE_SIZES = {
 }
 
 
+class ImageSerializer(DocumentSerializer):
+    links = serializers.SerializerMethodField()
+
+    sizes = IMAGE_SIZES
+
+    def get_links(self, obj):
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        if self.relationship:
+            parent = getattr(obj, self.relationship).first()
+            if parent:
+                return dict(
+                    (
+                        key,
+                        reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
+                    ) for key, size in list(self.sizes.items())
+                )
+        else:
+            return dict(
+                (
+                    key,
+                    reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+                ) for key, size in list(self.sizes.items())
+            )
+
+    class Meta(object):
+        model = Image
+        fields = ('id', 'file', 'filename', 'owner', 'links',)
+        meta_fields = ['filename']
+
+
 class UploadImageSerializer(serializers.ModelSerializer):
     links = serializers.SerializerMethodField()
+    file = serializers.FileField(write_only=True)
 
     sizes = IMAGE_SIZES
 
@@ -179,4 +189,4 @@ class UploadImageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Image
-        fields = ('id', 'owner', 'links',)
+        fields = ('id', 'file', 'owner', 'links', 'owner')

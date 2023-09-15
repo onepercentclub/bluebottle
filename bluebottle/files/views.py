@@ -14,7 +14,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer, UploadImageSerializer
+from bluebottle.files.serializers import FileSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 

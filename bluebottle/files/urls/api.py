@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from bluebottle.files.views import FileList, ImageList, PrivateFileList, ImageDetail, ImagePreview
+from bluebottle.files.views import FileList, ImageList, PrivateFileList, ImagePreview, ImageDetail
 
 urlpatterns = [
     url(r'^documents$', FileList.as_view(), name='document-list'),

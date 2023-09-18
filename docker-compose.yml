@@ -24,10 +24,12 @@ services:
     ports:
       - 9200:9200
     restart: always
+    mem_limit: 2048m
     volumes:
       - ./docker/elasticsearch:/var/lib/elasticsearch/data
     environment:
       - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m
   postgres:
     container_name: postgres
     environment:

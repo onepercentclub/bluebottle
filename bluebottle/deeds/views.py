@@ -1,3 +1,5 @@
+from rest_framework.exceptions import ValidationError
+
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -84,6 +86,9 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
+
+        if self.request.user.required:
+            raise ValidationError('Required fields', code="required")
 
         serializer.save(user=self.request.user)
 

@@ -22,7 +22,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonorListSerializer, TinyFundingSerializer
@@ -102,6 +102,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
+    current_status = CurrentStatusField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -324,6 +325,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type', 'highlight', 'contribution_duration',
         )
+        meta_fields = ('current_status',)
 
     class JSONAPIMeta:
         resource_name = 'activities/preview'

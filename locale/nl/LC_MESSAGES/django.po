@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-07-12 07:55\n"
+"PO-Revision-Date: 2023-09-19 07:32\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -206,7 +206,7 @@ msgstr "Nee"
 
 #: bluebottle/activities/filters.py:111
 msgid "With your team"
-msgstr "Met jou team"
+msgstr "Met je team"
 
 #: bluebottle/activities/filters.py:112
 msgid "As an individual"

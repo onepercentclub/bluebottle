@@ -104,7 +104,6 @@ class ImageContentView(FileContentView):
             thumbnail = get_thumbnail(file, size, crop='center')
         else:
             thumbnail = get_thumbnail(file, size)
-              
 
         content_type = mimetypes.guess_type(file.name)[0]
 

@@ -70,3 +70,11 @@ class CollectDocument(ActivityDocument):
             {'name': translation.name, 'language': translation.language_code}
             for translation in instance.collect_type.translations.all()
         ]
+
+    def prepare_position(self, instance):
+        if instance.location:
+            position = instance.location.position
+            return [{'lat': position.y, 'lon': position.x}]
+
+    def prepare_is_online(self, instance):
+        return not instance.location

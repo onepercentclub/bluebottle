@@ -16,9 +16,11 @@ from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
+    RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
     ContributorListSerializer,
     TeamTransitionSerializer,
+    ActivityImageSerializer,
 )
 from bluebottle.activities.utils import TeamSerializer, InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
@@ -178,6 +180,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
 class ActivityImage(ImageContentView):
     queryset = Activity.objects
     field = 'image'
+    allowed_sizes = ActivityImageSerializer.sizes
 
 
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -212,6 +215,7 @@ class RelatedActivityImageContent(ImageContentView):
         )
 
     field = 'image'
+    allowed_sizes = RelatedActivityImageContentSerializer.sizes
 
 
 class ActivityTransitionList(TransitionList):

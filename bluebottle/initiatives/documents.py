@@ -54,11 +54,18 @@ def get_translated_list(obj, field='name'):
 class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
+    slug = fields.KeywordField()
     story = fields.TextField()
 
     pitch = fields.TextField()
     status = fields.KeywordField()
     created = fields.DateField()
+
+    current_status = fields.NestedField(properties={
+        'name': fields.KeywordField(),
+        'label': fields.KeywordField(),
+        'description': fields.KeywordField(),
+    })
 
     image = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -152,6 +159,14 @@ class InitiativeDocument(Document):
             return related_instance.initiative_set.all()
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
+
+    def prepare_current_status(self, instance):
+        if instance.states.current_state:
+            return {
+                'value': instance.states.current_state.value,
+                'name': str(instance.states.current_state.name),
+                'description': str(instance.states.current_state.description),
+            }
 
     def prepare_image(self, instance):
         if instance.image and instance.image.file:

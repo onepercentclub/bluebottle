@@ -165,7 +165,7 @@ class Segment(models.Model):
     cover_image = ImageField(
         _("cover image"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("The uploaded image will be cropped to fit a 4:3 rectangle."),
+        help_text=_("The uploaded image will be cropped to fit a 16:9 rectangle."),
 
         validators=[
             FileMimetypeValidator(

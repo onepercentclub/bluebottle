@@ -380,7 +380,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(
             data['relationships']['activities']['links']['related'],
-            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=100'
+            f'/api/activities/search?filter[initiative.id]={self.initiative.id}&page[size]=1000'
         )
 
     def test_get_image_used_twice(self):

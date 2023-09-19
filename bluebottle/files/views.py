@@ -83,18 +83,29 @@ class ImageContentView(FileContentView):
             width, height = self.kwargs['size'].split('x')
         else:
             width = self.kwargs['size']
-            height = int(width) / 1.5
+            height = int(int(width) / 1.5)
         return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
 
     def retrieve(self, *args, **kwargs):
+
         instance = self.get_object()
         file = getattr(instance, self.field).file
         size = self.kwargs['size']
         width, height = size.split('x')
+
+        if 'x' in self.kwargs['size']:
+            if self.kwargs['size'] not in self.allowed_sizes.values():
+                return HttpResponseNotFound()
+        else:
+            if not self.kwargs['size'] in [val.split('x')[0] for val in self.allowed_sizes.values()]:
+                return HttpResponseNotFound()
+
         if width == height and int(width) < 300:
             thumbnail = get_thumbnail(file, size, crop='center')
         else:
             thumbnail = get_thumbnail(file, size)
+
+        thumbnail = get_thumbnail(file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:

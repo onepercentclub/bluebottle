@@ -65,3 +65,6 @@ class FundingDocument(ActivityDocument):
 
     def prepare_amount_raised(self, instance):
         return self.prepare_amount(instance.amount_raised)
+
+    def prepare_is_online(self, instance):
+        return True

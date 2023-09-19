@@ -1234,10 +1234,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ]
 
         DateActivitySlotFactory.create(
+            status="draft",
             activity=matching[0],
             location=GeolocationFactory.create(position=Point(lon + 0.05, lat + 0.05))
         )
         DateActivitySlotFactory.create(
+            status="draft",
             activity=matching[1],
             location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
         )

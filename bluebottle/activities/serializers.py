@@ -21,6 +21,7 @@ from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedParticipantListSerializer
 )
 from bluebottle.files.models import RelatedImage
+from bluebottle.files.serializers import IMAGE_SIZES
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
 from bluebottle.funding.serializers import (
@@ -63,14 +64,6 @@ class ActivityLocationSerializer(Serializer):
 
     class JSONAPIMeta:
         resource_name = 'activity-locations'
-
-
-IMAGE_SIZES = {
-    'preview': '292x164',
-    'small': '320x180',
-    'large': '600x337',
-    'cover': '1568x882'
-}
 
 
 class ActivityImageSerializer(ImageSerializer):

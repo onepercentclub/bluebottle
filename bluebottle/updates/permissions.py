@@ -36,7 +36,14 @@ class ActivityOwnerUpdatePermission(permissions.BasePermission):
         """
         Return `True` if user is author of the update, `False` otherwise.
         """
-        return obj.author == obj.activity.owner or (not obj.notify and not obj.pinned)
+        return (
+            obj.author == obj.activity.owner or
+            obj.author == obj.activity.initiative.owner or
+            obj.author in obj.activity.initiative.activity_managers.all() or
+            (not obj.notify and not obj.pinned) or
+            request.user.is_staff or
+            request.user.is_superuser
+        )
 
 
 class UpdateRelatedActivityPermission(permissions.BasePermission):

@@ -930,7 +930,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = PeriodActivityFactory.create_batch(2, status='succeeded')
 
         PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='needs_works')
+        PeriodActivityFactory.create_batch(2, status='needs_work')
 
         self.search({'upcoming': 1})
 
@@ -945,8 +945,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             PeriodActivityFactory.create_batch(2, status='partially_funded')
         )
         PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='needs_works')
-        PeriodActivityFactory.create_batch(2, status='needs_works')
+        PeriodActivityFactory.create_batch(2, status='needs_work')
+        PeriodActivityFactory.create_batch(2, status='needs_work')
 
         self.search({})
 

@@ -531,6 +531,15 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertTransition('withdraw')
         self.assertIncluded('invite')
 
+    def test_create_required_question(self):
+        MemberPlatformSettings.objects.update_or_create(
+            required_questions_location='contribution', require_birthdate=True
+        )
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'required')
+
     def test_create_with_team_invite(self):
         self.activity.team_activity = 'teams'
         self.activity.save()

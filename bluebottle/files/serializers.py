@@ -131,20 +131,37 @@ class ImageField(ResourceRelatedField):
     queryset = Image.objects
 
 
+IMAGE_SIZES = {
+    'preview': '292x164',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '1568x882'
+}
+
+
 class ImageSerializer(DocumentSerializer):
     links = serializers.SerializerMethodField()
 
+    sizes = IMAGE_SIZES
+
     def get_links(self, obj):
-        if hasattr(self, 'sizes'):
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        if self.relationship:
             parent = getattr(obj, self.relationship).first()
             if parent:
-                hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,
                         reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
+        else:
+            return dict(
+                (
+                    key,
+                    reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+                ) for key, size in list(self.sizes.items())
+            )
 
     class Meta(object):
         model = Image
@@ -154,15 +171,22 @@ class ImageSerializer(DocumentSerializer):
 
 class UploadImageSerializer(serializers.ModelSerializer):
     links = serializers.SerializerMethodField()
+    file = serializers.FileField(write_only=True)
+
+    sizes = IMAGE_SIZES
 
     def get_links(self, obj):
-        return {
-            'preview': reverse('upload-image-preview', args=(obj.id,))
-        }
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        return dict(
+            (
+                key,
+                reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+            ) for key, size in list(self.sizes.items())
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'images'
 
     class Meta(object):
         model = Image
-        fields = ('id', 'owner', 'links',)
+        fields = ('id', 'file', 'owner', 'links', 'owner')

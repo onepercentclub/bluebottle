@@ -406,6 +406,7 @@ class TeamStateMachine(ModelStateMachine):
     accept = Transition(
         new,
         open,
+        automatic=False,
         name=_('Accept'),
         description=_('The team will be accepted.'),
     )

@@ -743,6 +743,16 @@ class ImagePlainTextItem(TitledContent):
             validate_file_infection
         ]
     )
+    action_text = models.CharField(
+        max_length=80,
+        blank=True,
+        null=True
+    )
+    action_link = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
     preview_template = 'admin/cms/preview/default.html'
 
     ALIGN_CHOICES = (

@@ -763,7 +763,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImagePlainTextItem
         fields = (
-            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title', 
+            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',
             'action_text', 'action_link'
         )
 

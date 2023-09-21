@@ -882,7 +882,7 @@ class OldPageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
 
 class PageSerializer(ModelSerializer):
@@ -891,7 +891,7 @@ class PageSerializer(ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
     class JSONAPIMeta(object):
         resource_name = 'pages'

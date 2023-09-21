@@ -377,7 +377,7 @@ class APITestCase(BluebottleTestCase):
             if error['source']['pointer'] == pointer:
                 if message:
                     self.assertEqual(error['detail'], message)
-                return 
+                return
 
         self.fail(f'Error for field {field} not found')
 

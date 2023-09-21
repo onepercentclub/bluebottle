@@ -33,7 +33,6 @@ class ImpactGoalSerializer(ModelSerializer):
 
     included_serializers = {
         'type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
     }
 
     class Meta(object):
@@ -46,4 +45,4 @@ class ImpactGoalSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/impact-goals'
-        included_resources = ['type', 'activity']
+        included_resources = ['type']

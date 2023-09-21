@@ -367,6 +367,20 @@ class APITestCase(BluebottleTestCase):
         finally:
             MemberPlatformSettings.objects.update(closed=False)
 
+    def assertError(self, field, message=None):
+        if isinstance(self.serializer().get_fields()[field], RelatedField):
+            pointer = f'/data/relationships/{field}'
+        else:
+            pointer = f'/data/attributes/{field}'
+
+        for error in self.response.json()['errors']:
+            if error['source']['pointer'] == pointer:
+                if message:
+                    self.assertEqual(error['detail'], message)
+                return 
+
+        self.fail(f'Error for field {field} not found')
+
     def assertStatus(self, status):
         """
         Assert that the status code of the response is as expected
@@ -488,10 +502,8 @@ class APITestCase(BluebottleTestCase):
         data = data or self.response.json()['data']
         if models:
             ids = [resource['id'] for resource in data]
-            for model in models:
-                self.assertTrue(
-                    str(model.pk) in ids
-                )
+            model_ids = [str(model.pk) for model in models]
+            self.assertEqual(ids, model_ids)
 
     def assertAttribute(self, attr, value=None):
         """

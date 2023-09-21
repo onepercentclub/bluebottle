@@ -755,14 +755,17 @@ class TextBlockSerializer(BaseBlockSerializer):
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = serializers.SerializerMethodField()
+    text = SafeField()
 
     def get_text(self, obj):
-        return strip_tags(obj.text)
+        return obj.text
 
     class Meta(object):
         model = ImagePlainTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',)
+        fields = (
+            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title', 
+            'action_text', 'action_link'
+        )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'

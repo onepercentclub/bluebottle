@@ -12,6 +12,8 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
+from django_summernote.widgets import SummernoteWidget
+
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.utils.fields import ImageField
@@ -709,6 +711,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         verbose_name = _('site platform settings')
 
 
+
 class PlainTextItem(TitledContent):
     """
     Just a plain text block
@@ -742,6 +745,16 @@ class ImagePlainTextItem(TitledContent):
             ),
             validate_file_infection
         ]
+    )
+    action_text = models.CharField(
+        max_length=80,
+        blank=True, 
+        null=True
+    )
+    action_link = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True
     )
     preview_template = 'admin/cms/preview/default.html'
 

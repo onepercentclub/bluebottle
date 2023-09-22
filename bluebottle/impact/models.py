@@ -128,7 +128,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
     def impact_realized(self):
         if self.realized:
             return self.realized
-        if self.activity.succeeded_contributor_count:
+        if self.participant_impact:
             return self.activity.succeeded_contributor_count * self.participant_impact
         return self.realized_from_contributions
 

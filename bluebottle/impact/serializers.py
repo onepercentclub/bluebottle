@@ -33,16 +33,22 @@ class ImpactGoalSerializer(ModelSerializer):
 
     included_serializers = {
         'type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class Meta(object):
         model = ImpactGoal
         fields = (
-            'id', 'target', 'realized', 'realized_from_contributions', 'activity', 'type',
-            'required', 'errors', 'participant_impact', 'impact_realized'
+            'id', 'target', 'impact_realized',
+            'realized',
+            'realized_from_contributions',
+            'activity', 'type',
+            'required', 'errors',
+            'participant_impact',
+
         )
         meta_fields = ['errors', 'required']
 
     class JSONAPIMeta(object):
         resource_name = 'activities/impact-goals'
-        included_resources = ['type']
+        included_resources = ['type', 'activity']

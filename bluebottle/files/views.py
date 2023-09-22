@@ -101,11 +101,15 @@ class ImageContentView(FileContentView):
                 return HttpResponseNotFound()
 
         size = self.kwargs['size']
-        width, height = size.split('x')
-        if width == height and int(width) < 300:
-            thumbnail = get_thumbnail(file, size, crop='center')
-        else:
+        try:
+            width, height = size.split('x')
+            if width == height and int(width) < 300:
+                thumbnail = get_thumbnail(file, size, crop='center')
+            else:
+                thumbnail = get_thumbnail(file, size)
+        except ValueError: 
             thumbnail = get_thumbnail(file, size)
+
 
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -144,6 +148,7 @@ class ImageDetail(JsonApiViewMixin, RetrieveAPIView):
 
 
 class ImagePreview(ImageContentView):
+    allowed_sizes = {'large': '1568x882'}
 
     queryset = Image.objects.all()
 

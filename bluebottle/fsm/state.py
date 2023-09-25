@@ -1,7 +1,8 @@
-from builtins import str
 from builtins import object
-from django.utils.translation import gettext_lazy as _
+from builtins import str
+
 from django.dispatch import Signal
+from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
 from stripe.six import python_2_unicode_compatible
 
@@ -25,7 +26,7 @@ def register(model_cls):
 
 @python_2_unicode_compatible
 class BaseTransition(object):
-    def __init__(self, sources, target, name='', description='',
+    def __init__(self, sources, target, name='', description='', description_front_end='',
                  automatic=True, conditions=None, effects=None, **options):
         self.name = name
 
@@ -38,6 +39,7 @@ class BaseTransition(object):
         self.conditions = conditions or []
         self.effects = effects or []
         self.description = description
+        self.description_front_end = description_front_end or description
 
         assert not (
             not self.automatic and not self.name), 'Automatic transitions should have a name'
@@ -141,10 +143,11 @@ class Transition(BaseTransition):
 class State(object):
     transition_class = Transition
 
-    def __init__(self, name, value=None, description=''):
+    def __init__(self, name, value=None, description='', description_front_end=''):
         self.name = name
         self.value = value
         self.description = description
+        self.description_front_end = description_front_end or description
 
     def __repr__(self):
         return '<State {}>'.format(self.name)

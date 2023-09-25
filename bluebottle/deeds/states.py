@@ -70,8 +70,7 @@ class DeedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
         automatic=False,
         description=_(
-            "Manually reopen the activity. "
-            "This will unset the end date if the date is in the past. "
+            "Reopen the activity. "
             "People can sign up again for the task."
         )
     )
@@ -90,6 +89,10 @@ class DeedStateMachine(ActivityStateMachine):
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
+        ),
+        description_front_end=_(
+            'The activity will not executed. It will no longer appear in search. '
+            'You can still edit or re-open it later.'
         ),
         automatic=False,
     )

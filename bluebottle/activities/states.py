@@ -44,7 +44,7 @@ class ActivityStateMachine(ModelStateMachine):
         _(
             'The activity is not executed. The activity does not appear on the platform, '
             'but counts in the report. The activity cannot be edited by an activity manager.'
-        )
+        ),
     )
 
     expired = State(
@@ -260,7 +260,7 @@ class ContributorStateMachine(ModelStateMachine):
         description=_('The contribution was created.')
     )
     fail = Transition(
-        (new, succeeded, failed, ),
+        (new, succeeded, failed,),
         failed,
         name=_('fail'),
         description=_("The contribution failed. It will not be visible in reports."),

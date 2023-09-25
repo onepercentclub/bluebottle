@@ -402,6 +402,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'updated',
             'errors',
             'required',
+            'current_status',
+            'contributor_count',
+            'deleted_successful_contributors'
         )
 
     class JSONAPIMeta(object):

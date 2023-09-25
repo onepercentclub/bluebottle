@@ -755,14 +755,17 @@ class TextBlockSerializer(BaseBlockSerializer):
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = serializers.SerializerMethodField()
+    text = SafeField()
 
     def get_text(self, obj):
-        return strip_tags(obj.text)
+        return obj.text
 
     class Meta(object):
         model = ImagePlainTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',)
+        fields = (
+            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',
+            'action_text', 'action_link'
+        )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'
@@ -882,7 +885,7 @@ class OldPageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
 
 class PageSerializer(ModelSerializer):
@@ -891,7 +894,7 @@ class PageSerializer(ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
     class JSONAPIMeta(object):
         resource_name = 'pages'

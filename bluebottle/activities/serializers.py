@@ -202,7 +202,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                 location = places[0]
         elif len(obj.location):
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
-            location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
+            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
 
         if location:
             if location.locality:

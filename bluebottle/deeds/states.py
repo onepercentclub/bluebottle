@@ -47,7 +47,7 @@ class DeedStateMachine(ActivityStateMachine):
         name=_("Succeed"),
         conditions=[has_no_end_date, can_succeed],
         permission=ActivityStateMachine.is_owner,
-        description=_("The activity ends ans people can no longer register. ")
+        description=_("The activity ends and people can no longer register. ")
     )
 
     reopen = Transition(

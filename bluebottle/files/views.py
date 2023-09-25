@@ -6,6 +6,7 @@ import magic
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -107,9 +108,8 @@ class ImageContentView(FileContentView):
                 thumbnail = get_thumbnail(file, size, crop='center')
             else:
                 thumbnail = get_thumbnail(file, size)
-        except ValueError: 
+        except ValueError:
             thumbnail = get_thumbnail(file, size)
-
 
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -141,14 +141,14 @@ class ImageList(FileList):
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
 
-class ImageDetail(JsonApiViewMixin, RetrieveAPIView):
+class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()
     serializer_class = UploadImageSerializer
 
 
 class ImagePreview(ImageContentView):
-    allowed_sizes = {'large': '1568x882'}
+    allowed_sizes = {'preview': '292x164', 'large': '1568x882'}
 
     queryset = Image.objects.all()
 

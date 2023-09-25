@@ -122,6 +122,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     activity_type = _('Activity')
 
     @property
+    def succeeded_contributor_count(self):
+        raise NotImplementedError
+
+    @property
     def activity_date(self):
         raise NotImplementedError
 

@@ -773,6 +773,11 @@ class TeamSlotAdmin(SlotAdmin):
         RequiredSlotFilter,
     ]
     detail_fields = SlotAdmin.detail_fields + [
+        'start',
+        'duration',
+        'location',
+        'is_online',
+        'status',
         'team',
     ]
 

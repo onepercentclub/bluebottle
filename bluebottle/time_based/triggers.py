@@ -31,7 +31,7 @@ from bluebottle.time_based.effects import (
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
     ResetSlotSelectionEffect, UnsetCapacityEffect,
-    RescheduleOverallPeriodActivityDurationsEffect,
+    RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -797,6 +797,7 @@ class TeamSlotTriggers(TriggerManager):
         ModelChangedTrigger(
             'start',
             effects=[
+                UpdateSlotTimeContributionEffect,
                 NotificationEffect(
                     TeamSlotChangedNotification,
                     conditions=[has_future_date]

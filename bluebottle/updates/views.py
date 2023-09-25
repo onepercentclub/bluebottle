@@ -1,5 +1,5 @@
-
 from rest_framework import permissions
+
 from bluebottle.files.views import ImageContentView
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.updates.permissions import IsAuthorPermission, ActivityOwnerUpdatePermission, \
@@ -58,5 +58,10 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
 
 
 class UpdateImageContent(ImageContentView):
+    allowed_sizes = {
+        'preview': '292x164',
+        'large': '1600x900',
+    }
+
     queryset = UpdateImage.objects
     field = 'image'

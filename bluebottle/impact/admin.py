@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-
 from parler.admin import TranslatableAdmin
 
 from bluebottle.impact.models import ImpactType, ImpactGoal
@@ -13,7 +12,7 @@ class ImpactGoalInline(admin.TabularInline):
     model = ImpactGoal
     extra = 0
     readonly_fields = ('unit', 'realized_from_contributions', )
-    fields = ('type', 'target', 'unit', 'realized', 'realized_from_contributions', )
+    fields = ('type', 'target', 'unit', 'realized', 'realized_from_contributions', 'participant_impact')
 
     def unit(self, obj):
         return obj.type.unit

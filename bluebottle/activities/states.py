@@ -36,7 +36,7 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity has been removed. The activity does not appear on '
             'the platform and does not count in the report. '
             'The activity cannot be edited by an activity manager.'
-        )
+        ),
     )
     cancelled = State(
         _('cancelled'),
@@ -180,6 +180,9 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
+        description_front_end=_(
+            'The activity ends and people no longer register. All current participants will fail too.'
+        ),
         permission=is_owner,
         automatic=False,
     )
@@ -194,8 +197,7 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Restore'),
         description=_(
             "The activity status is changed to 'Needs work'. "
-            "An manager of the activity has to enter a new date and can make changes. "
-            "The activity will then be reopened to participants."
+            "Then you can make changes to the activity and submit it again."
         ),
         automatic=False,
         permission=is_owner

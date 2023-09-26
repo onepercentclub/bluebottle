@@ -22,6 +22,9 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
 )
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
@@ -32,10 +35,6 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
     NewParticipantNotification, ParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
-)
-
-from bluebottle.follow.effects import (
-    FollowActivityEffect, UnFollowActivityEffect
 )
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
 
@@ -394,7 +393,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_did_start, team_is_active]
                 ),
-                UnFollowActivityEffect
+                FollowActivityEffect,
             ]
         ),
 

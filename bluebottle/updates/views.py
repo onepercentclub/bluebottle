@@ -15,7 +15,10 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
 
-    permission_classes = (permissions.IsAuthenticated, ActivityOwnerUpdatePermission)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        ActivityOwnerUpdatePermission
+    )
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):

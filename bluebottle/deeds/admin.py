@@ -10,6 +10,7 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -67,7 +68,7 @@ class DeedParticipantInline(TabularInlinePaginated):
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
-    inlines = (TeamInline, DeedParticipantInline, UpdateInline) + ActivityChildAdmin.inlines
+    inlines = (TeamInline, DeedParticipantInline, UpdateInline, FollowAdminInline)
     list_filter = ['status']
     search_fields = ['title', 'description']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']

@@ -1,4 +1,4 @@
-from bluebottle.settings.testing import *
+from bluebottle.settings.testing import *  # noqa
 
 # Database
 DATABASES = {

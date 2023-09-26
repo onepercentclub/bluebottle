@@ -199,6 +199,10 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity status is changed to 'Needs work'. "
             "Then you can make changes to the activity and submit it again."
         ),
+        description_front_end=_(
+            "The activity will be set to the status ‘Needs work’. "
+            "Then you can make changes to the activity and submit it again."
+        ),
         automatic=False,
         permission=is_owner
     )
@@ -225,6 +229,7 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity will no longer be visible on the platform, '
             'but will still be available in the back office.'
         ),
+        description_front_end=_('Delete the activity. You will not be able to retrieve it afterwards.')
     )
 
     succeed = Transition(

@@ -709,7 +709,7 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To <b>boldly</b> go were no man has gone before!"
+            "To boldly go were no man has gone before!"
         )
 
     def test_plain_text_link(self):
@@ -749,7 +749,7 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To boldly go were no man has gone before!"
+            "To <b>boldly</b> go were no man has gone before!"
         )
         self.assertIsNotNone(
             text_block['attributes']['image']['full']

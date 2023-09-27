@@ -120,6 +120,7 @@ class CurrentMemberSerializer(MemberSerializer):
         related_link_view_name="member-profile-detail",
     )
     segments = ResourceRelatedField(many=True, read_only=True)
+    location = ResourceRelatedField(read_only=True)
     has_initiatives = serializers.SerializerMethodField()
 
     def get_has_initiatives(self, obj):
@@ -131,6 +132,7 @@ class CurrentMemberSerializer(MemberSerializer):
             'hours_planned',
             'has_initiatives',
             'segments',
+            'location',
             'has_initiatives',
             'profile',
         )
@@ -140,10 +142,16 @@ class CurrentMemberSerializer(MemberSerializer):
         resource_name = 'members'
         included_resources = [
             'segments',
+            'location',
+            'location.subregion',
+            'location.subregion.region',
         ]
 
     included_serializers = {
         'segments': 'bluebottle.segments.serializers.SegmentDetailSerializer',
+        'location': 'bluebottle.geo.serializers.OfficeSerializer',
+        'location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
+        'location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
     }
 
 

@@ -4,6 +4,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
@@ -11,7 +12,6 @@ from bluebottle.collect.serializers import (
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )

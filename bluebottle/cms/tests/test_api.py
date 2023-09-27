@@ -7,8 +7,8 @@ from decimal import Decimal
 from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File
-from django.urls import reverse
 from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils.timezone import now
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -23,14 +23,13 @@ from bluebottle.cms.models import (
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
 from bluebottle.contentplugins.models import PictureItem
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.statistics.tests.factories import ManualStatisticFactory
-from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.time_based.tests.factories import DateActivityFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
+from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
     QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
@@ -38,6 +37,7 @@ from bluebottle.test.factory_models.cms import (
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class ResultPageTestCase(BluebottleTestCase):
@@ -712,6 +712,25 @@ class HomeTestCase(APITestCase):
             "To boldly go were no man has gone before!"
         )
 
+    def test_plain_text_link(self):
+        block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
+        block.text = "To <a href='javascript:alert(\"Owned!\")'>link</a> to the dark side!"
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        text_block = get_include(response, 'pages/blocks/plain-text')
+
+        self.assertEqual(
+            text_block['type'],
+            'pages/blocks/plain-text'
+        )
+
+        self.assertEqual(
+            text_block['attributes']['text'],
+            "To link to the dark side!"
+        )
+
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
         block.text = "To <b>boldly</b> go were no man has gone before!"
@@ -730,7 +749,7 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To boldly go were no man has gone before!"
+            "To <b>boldly</b> go were no man has gone before!"
         )
         self.assertIsNotNone(
             text_block['attributes']['image']['full']

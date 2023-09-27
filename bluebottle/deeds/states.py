@@ -70,8 +70,8 @@ class DeedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
         automatic=False,
         description=_(
-            "The activity will be set to the status 'Draft'. "
-            "Then you can make changes to the activity and submit it again"
+            "The activity will be set to the status ‘Needs work’. "
+            "Then you can make changes to the activity and submit it again."
         ),
     )
 
@@ -91,8 +91,7 @@ class DeedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         description_front_end=_(
-            'The activity will not executed. It will no longer appear in search. '
-            'You can still edit or re-open it later.'
+            'The activity ends and people can no longer register.'
         ),
         automatic=False,
     )

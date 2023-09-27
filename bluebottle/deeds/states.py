@@ -168,7 +168,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         accepted,
         name=_('Reapply'),
-        description=_("User re-applies after previously withdrawing."),
+        description=_("Re-apply after previously withdrawing."),
         automatic=False,
         conditions=[activity_is_open],
         permission=is_user,
@@ -190,7 +190,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         rejected,
         accepted,
         name=_('Re-Accept'),
-        description=_("User is re-accepted after previously withdrawing."),
+        description=_("Re-accept user after previously withdrawing."),
         automatic=False,
         permission=is_owner,
     )

@@ -411,6 +411,22 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         for member in self.get_included('user'):
             self.assertIsNotNone(member['attributes']['last-name'])
 
+    def test_get(self):
+        self.perform_get(user=BlueBottleUserFactory.create(is_superuser=True, is_staff=True))
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(10)
+
+        self.assertTrue(
+            all(
+                participant['attributes']['status'] in ('accepted', 'withdrawn')
+                for participant in self.response.json()['data']
+            )
+        )
+
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
     def test_get_hide_first_name(self):
         MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
 

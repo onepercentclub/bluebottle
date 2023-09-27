@@ -373,12 +373,14 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded',))
-            ).order_by('-id')
+            if self.request.user.is_superuser:
+                queryset = self.queryset
+            else:
+                queryset = self.queryset.filter( Q(user=self.request.user) |
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__activity_manager=self.request.user) |
+                    Q(status__in=('accepted', 'succeeded',))
+                ).order_by('-id')
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded',)

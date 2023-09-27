@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -71,6 +71,23 @@ class ActivitySegmentPermission(BasePermission):
 
     def has_action_permission(self, action, user, model_cls):
         return True
+
+
+class ActivityOfficeRestrictionPermission(BasePermission):
+
+    def has_object_action_permission(self, action, user, obj):
+        activity_office = obj.office_location
+        office_restriction = obj.office_restriction
+        user_office = user.location
+        if office_restriction == 'all' or not office_restriction:
+            return True
+        if office_restriction == 'office':
+            return user_office and activity_office == user_office
+        if office_restriction == 'office_subregion':
+            return user_office and activity_office.subregion == user_office.subregion
+        if office_restriction == 'office_region':
+            return user_office and activity_office.subregion.region == user_office.subregion.region
+        return False
 
 
 class ContributorPermission(ResourcePermission):

@@ -13,6 +13,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.offices.tests.factories import LocationFactory, OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
@@ -557,6 +558,28 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.perform_create()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_office_restriction(self):
+        subregion = OfficeSubRegionFactory.create()
+        self.activity.office_location = LocationFactory.create(subregion=subregion)
+        self.activity.office_restriction = 'office_subregion'
+        self.activity.save()
+
+        self.user.location = LocationFactory.create(subregion=subregion)
+        self.user.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_office_restriction_denied(self):
+        subregion = OfficeSubRegionFactory.create()
+        self.activity.office_location = LocationFactory.create(subregion=subregion)
+        self.activity.office_restriction = 'office_subregion'
+        self.activity.save()
+
+        self.user.location = LocationFactory.create()
+        self.user.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
 class DeedParticipantTransitionListViewAPITestCase(APITestCase):

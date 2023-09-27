@@ -1,10 +1,10 @@
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityOfficeRestrictionPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
@@ -73,6 +73,12 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+    related_permission_classes = {
+        'activity': (
+            ActivityOfficeRestrictionPermission,
+        ),
+    }
+
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer
 

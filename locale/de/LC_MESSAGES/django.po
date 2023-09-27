@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-07-10 14:50\n"
+"PO-Revision-Date: 2023-09-27 14:12\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -57,11 +57,11 @@ msgstr "Mitwirkender"
 
 #: bluebottle/activities/admin.py:259
 msgid "Edit"
-msgstr ""
+msgstr "Bearbeiten"
 
 #: bluebottle/activities/admin.py:278
 msgid "Add time slot"
-msgstr ""
+msgstr "Zeitraum hinzufügen"
 
 #: bluebottle/activities/admin.py:280 bluebottle/time_based/admin.py:270
 #: bluebottle/time_based/admin.py:271

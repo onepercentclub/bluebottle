@@ -1,4 +1,7 @@
+import dateutil
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
@@ -16,6 +19,24 @@ from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
+class StartDateValidator():
+    requires_context = True
+
+    def __call__(self, value, serializer):
+        __import__('ipdb').set_trace()
+        parent = serializer.parent
+        try:
+            end = dateutil.parser.parse(parent.initial_data['end'])
+        except KeyError:
+            try:
+                end = parent.instance.end
+            except AttributeError:
+                return
+
+        if value and value > end.date():
+            raise ValidationError('The activity should start before it ends')
+
+
 class DeedSerializer(BaseActivitySerializer):
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -29,7 +50,7 @@ class DeedSerializer(BaseActivitySerializer):
 
     title = serializers.CharField()
     description = serializers.CharField()
-    start = serializers.DateField()
+    start = serializers.DateField(validators=[StartDateValidator()])
     end = serializers.DateField()
 
     permissions = ResourcePermissionField('deed-detail', view_args=('pk',))

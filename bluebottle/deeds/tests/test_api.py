@@ -303,6 +303,17 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertAttribute('description', new_description)
 
+    def test_put_start_after_end(self):
+        self.model.status = 'open'
+        self.model.save()
+
+        self.perform_update(
+            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)}, 
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
     def test_put_missing_description(self):
         self.perform_update(
             {

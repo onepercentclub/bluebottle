@@ -3,7 +3,6 @@ from builtins import str
 
 from django.db.models import Sum
 from django.urls import reverse
-from django.utils.html import strip_tags
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem

@@ -376,7 +376,8 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
             if self.request.user.is_staff:
                 queryset = self.queryset
             else:
-                queryset = self.queryset.filter( Q(user=self.request.user) |
+                queryset = self.queryset.filter(
+                    Q(user=self.request.user) |
                     Q(activity__owner=self.request.user) |
                     Q(activity__initiative__activity_manager=self.request.user) |
                     Q(status__in=('accepted', 'succeeded',))

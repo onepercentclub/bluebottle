@@ -1,5 +1,4 @@
 import dateutil
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
@@ -65,8 +64,8 @@ class DeedSerializer(BaseActivitySerializer):
     contributors = SerializerMethodHyperlinkedRelatedField(
         model=DeedParticipant,
         many=True,
-        related_link_url_kwarg='activity_id'
-        related_link_view_name='related-deed-participants',
+        related_link_url_kwarg='activity_id',
+        related_link_view_name='related-deed-participants'
     )
 
     participants_export_url = PrivateFileSerializer(

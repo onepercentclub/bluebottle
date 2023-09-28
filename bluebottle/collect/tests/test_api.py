@@ -1,8 +1,9 @@
-from datetime import timedelta, date
 import io
+from datetime import timedelta, date
 
-from rest_framework import status
+from django.urls import reverse
 from openpyxl import load_workbook
+from rest_framework import status
 
 from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
@@ -11,17 +12,12 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
-
-from bluebottle.test.factory_models.geo import GeolocationFactory
-
 from bluebottle.initiatives.models import InitiativePlatformSettings
-
-from bluebottle.test.utils import APITestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from django.urls import reverse
+from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.utils import APITestCase
 
 
 class CollectActivityListViewAPITestCase(APITestCase):
@@ -157,7 +153,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.active_contributors + self.withdrawn_contributors
+            (self.active_contributors + self.withdrawn_contributors).reverse()
         )
 
     def test_get_calendar_links(self):
@@ -200,7 +196,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.active_contributors + [contributor]
+            (self.active_contributors + [contributor]).reverse()
         )
         links = self.response.data['links']
 
@@ -224,7 +220,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.active_contributors
+            self.active_contributors.reverse()
         )
 
     def test_get_closed_site(self):

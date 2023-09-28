@@ -151,7 +151,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + self.withdrawn_participants
+            (self.accepted_participants + self.withdrawn_participants).reverse()
         )
         self.assertTrue(
             self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
@@ -248,7 +248,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + [participant]
+            (self.accepted_participants + [participant]).reverse()
         )
 
     def test_get_with_participant_team(self):
@@ -284,7 +284,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants
+            self.accepted_participants.reverse()
         )
 
     def test_get_closed_site(self):

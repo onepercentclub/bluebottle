@@ -365,6 +365,13 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     location_info = serializers.SerializerMethodField()
     slot_count = serializers.SerializerMethodField()
 
+    slots = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        self_link_view_name='date-slots',
+        related_link_url_kwarg='pk',
+    )
+
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
     my_contributor = SerializerMethodResourceRelatedField(
         model=DateParticipant,
@@ -454,6 +461,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
             'participants_export_url',
             'date_info',
             'location_info',
+            'slots'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

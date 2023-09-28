@@ -148,7 +148,7 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         try:
-            activity_id = self.request.GET['activity']
+            activity_id = self.kwargs.get('pk', None) or self.request.GET.get('activity')
             queryset = queryset.filter(activity_id=int(activity_id))
         except KeyError:
             raise ValidationError('Missing required parameter: activity')

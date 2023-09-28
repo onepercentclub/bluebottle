@@ -43,6 +43,10 @@ urlpatterns = [
         DateSlotListView.as_view(),
         name='date-slot-list'),
 
+    url(r'^/date/(?P<pk>\d+)/(?P<related_field>\w+)$',
+        DateSlotListView.as_view(),
+        name='date-slots'),
+
     url(r'^/date/slots/(?P<pk>\d+)$',
         DateSlotDetailView.as_view(),
         name='date-slot-detail'),

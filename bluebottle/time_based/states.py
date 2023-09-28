@@ -179,6 +179,16 @@ class ActivitySlotStateMachine(ModelStateMachine):
         _('The slot is cancelled.')
     )
 
+    def is_activity_owner(self, user):
+        """Is manager of related activity"""
+        return (
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
+        )
+
     initiate = Transition(
         EmptyState(),
         draft,
@@ -211,6 +221,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         automatic=False,
+        permission=is_activity_owner,
         description=_(
             'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
         ),

@@ -10,6 +10,7 @@ from bluebottle.deeds.serializers import (
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -111,6 +112,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
+            'description': 'Some descrpition',
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
         }
@@ -300,6 +302,55 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertAttribute('description', new_description)
+
+    def test_put_start_after_end(self):
+        self.model.status = 'open'
+        self.model.save()
+
+        self.perform_update(
+            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)}, 
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_put_missing_description(self):
+        self.perform_update(
+            {
+                'title': '',
+                'description': '', 
+                'start': None,
+                'end': None,
+            }, 
+            user=self.model.owner
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.model.refresh_from_db()
+        self.assertAttribute('description', '')
+        self.assertAttribute('title', '')
+        self.assertAttribute('start', None)
+        self.assertAttribute('end', None)
+
+    def test_put_open_missing_description(self):
+        self.model.status = 'open'
+        self.model.save()
+
+        self.perform_update(
+            {
+                'title': '',
+                'description': '', 
+                'start': None,
+                'end': None,
+            }, 
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertError('title')
+        self.assertError('description')
+        self.assertError('start')
+        self.assertError('end')
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'

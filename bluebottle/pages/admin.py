@@ -1,14 +1,13 @@
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
-from django.urls import reverse
 from django.shortcuts import render
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 
@@ -35,7 +34,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'body'),
+            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'show_title', 'body'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date', 'online'),

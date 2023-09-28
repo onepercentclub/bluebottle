@@ -3,7 +3,6 @@ from builtins import str
 
 from django.db.models import Sum
 from django.urls import reverse
-from django.utils.html import strip_tags
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -740,10 +739,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
-    text = serializers.SerializerMethodField()
-
-    def get_text(self, obj):
-        return strip_tags(obj.text)
+    text = SafeField()
 
     class Meta(object):
         model = PlainTextItem
@@ -755,14 +751,14 @@ class TextBlockSerializer(BaseBlockSerializer):
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = serializers.SerializerMethodField()
-
-    def get_text(self, obj):
-        return strip_tags(obj.text)
+    text = SafeField()
 
     class Meta(object):
         model = ImagePlainTextItem
-        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',)
+        fields = (
+            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',
+            'action_text', 'action_link'
+        )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/plain-text-image'
@@ -882,7 +878,7 @@ class OldPageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
 
 class PageSerializer(ModelSerializer):
@@ -891,7 +887,7 @@ class PageSerializer(ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
 
     class JSONAPIMeta(object):
         resource_name = 'pages'

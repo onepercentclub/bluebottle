@@ -1,4 +1,4 @@
-from bluebottle.settings.testing import *
+from bluebottle.settings.testing import *  # noqa
 
 DATABASES = {
     'default': {
@@ -13,4 +13,14 @@ DATABASES = {
 
 }
 
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'elasticsearch:9200'
+    },
+
+}
+
 SLOW_TEST_THRESHOLD_MS = 1000
+ELASTICSEARCH_DSL_AUTOSYNC = False
+
+CELERY_MAIL = False

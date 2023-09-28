@@ -153,7 +153,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + self.withdrawn_participants
+            (self.accepted_participants + self.withdrawn_participants).reverse()
         )
         self.assertTrue(
             self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
@@ -250,7 +250,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + [participant]
+            (self.accepted_participants + [participant]).reverse()
         )
 
     def test_get_with_participant_team(self):
@@ -286,7 +286,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants
+            self.accepted_participants.reverse()
         )
 
     def test_get_closed_site(self):
@@ -448,6 +448,22 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
 
     def test_get(self):
         self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(10)
+
+        self.assertTrue(
+            all(
+                participant['attributes']['status'] in ('accepted', 'withdrawn')
+                for participant in self.response.json()['data']
+            )
+        )
+
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
+    def test_get_staff(self):
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertTotal(10)

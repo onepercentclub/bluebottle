@@ -210,6 +210,11 @@ class Page(PublishableModel):
         help_text=_('Show this page in full width and hide the sub-navigation')
     )
 
+    show_title = models.BooleanField(
+        default=True,
+        help_text=_('Show the title of this page in the header')
+    )
+
     # Contents
     language = models.CharField(
         _('language'),

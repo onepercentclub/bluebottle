@@ -22,7 +22,6 @@ class StartDateValidator():
     requires_context = True
 
     def __call__(self, value, serializer):
-        __import__('ipdb').set_trace()
         parent = serializer.parent
         try:
             end = dateutil.parser.parse(parent.initial_data['end'])

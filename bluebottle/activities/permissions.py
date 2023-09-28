@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -129,6 +129,21 @@ class CanExportTeamParticipantsPermission(IsOwner):
             obj.owner == user or
             obj.activity.owner == user or
             user in obj.activity.initiative.activity_managers.all()
+        ) and InitiativePlatformSettings.load().enable_participant_exports
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
+class RelatedActivityPermissions(permissions.BasePermission):
+    def has_object_action_permission(self, action, user, obj):
+        activity = Activity.objects.filter(image=obj).first()
+        return (
+            obj.owner == user or
+            activity.owner == user or
+            user in activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
         ) and InitiativePlatformSettings.load().enable_participant_exports
 
     def has_action_permission(self, action, user, model_cls):

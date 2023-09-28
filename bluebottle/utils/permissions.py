@@ -19,6 +19,9 @@ class IsOwner(permissions.BasePermission):
         """
         return obj.owner == request.user
 
+    def has_object_action_permission(self, action, user, obj):
+        return obj.owner == user
+
 
 class IsUser(permissions.BasePermission):
 

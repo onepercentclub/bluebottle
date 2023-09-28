@@ -13,10 +13,11 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from bluebottle.activities.permissions import RelatedActivityPermissions
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
 from bluebottle.files.serializers import FileSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
-from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import IsOwner, OneOf
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
 mime = magic.Magic(mime=True)
@@ -142,7 +143,9 @@ class ImageList(FileList):
 
 
 class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
-    permission_classes = (IsOwner,)
+    permission_classes = (
+        OneOf(IsOwner, RelatedActivityPermissions),
+    )
     queryset = Image.objects.all()
     serializer_class = UploadImageSerializer
 

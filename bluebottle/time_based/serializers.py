@@ -108,7 +108,7 @@ class ActivitySlotSerializer(ModelSerializer):
     class Meta:
         fields = (
             'id',
-            'activity',
+            # 'activity',
             'start',
             'transitions',
             'is_online',
@@ -368,7 +368,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     slots = HyperlinkedRelatedField(
         many=True,
         read_only=True,
-        self_link_view_name='date-slots',
+        related_link_view_name='date-slots',
         related_link_url_kwarg='pk',
     )
 

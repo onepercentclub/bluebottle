@@ -10,7 +10,6 @@ from bluebottle.deeds.serializers import (
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -125,7 +124,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             4, activity=self.model, status='withdrawn'
         )
 
-        self.url = reverse('deed-detail', args=(self.model.pk, ))
+        self.url = reverse('deed-detail', args=(self.model.pk,))
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
 
@@ -157,7 +156,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         )
         self.assertTrue(
             self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
-                reverse('activity-update-list', args=(self.model.pk, ))
+                reverse('activity-update-list', args=(self.model.pk,))
             ),
         )
 
@@ -222,7 +221,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertTrue(
             links['ical'].startswith(
-                reverse('deed-ical', args=(self.model.pk, ))
+                reverse('deed-ical', args=(self.model.pk,))
             )
         )
 
@@ -308,7 +307,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.model.save()
 
         self.perform_update(
-            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)}, 
+            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)},
             user=self.model.owner
         )
 
@@ -318,10 +317,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.perform_update(
             {
                 'title': '',
-                'description': '', 
+                'description': '',
                 'start': None,
                 'end': None,
-            }, 
+            },
             user=self.model.owner
         )
         self.assertStatus(status.HTTP_200_OK)
@@ -339,10 +338,10 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.perform_update(
             {
                 'title': '',
-                'description': '', 
+                'description': '',
                 'start': None,
                 'end': None,
-            }, 
+            },
             user=self.model.owner
         )
 
@@ -444,7 +443,7 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         DeedParticipantFactory.create_batch(5, activity=self.activity, status='accepted')
         DeedParticipantFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
-        self.url = reverse('related-deed-participants', args=(self.activity.pk, ))
+        self.url = reverse('related-deed-participants', args=(self.activity.pk,))
 
     def test_get(self):
         self.perform_get(user=self.activity.owner)
@@ -687,7 +686,7 @@ class ParticipantExportViewAPITestCase(APITestCase):
         self.participants = DeedParticipantFactory.create_batch(
             5, activity=self.activity
         )
-        self.url = reverse('deed-detail', args=(self.activity.pk, ))
+        self.url = reverse('deed-detail', args=(self.activity.pk,))
 
     @property
     def export_url(self):
@@ -737,7 +736,7 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
         self.participant = DeedParticipantFactory.create(activity=self.activity)
-        self.url = reverse('deed-participant-detail', args=(self.participant.pk, ))
+        self.url = reverse('deed-participant-detail', args=(self.participant.pk,))
 
     def test_get_user(self):
         self.perform_get(user=self.participant.user)

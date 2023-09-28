@@ -728,7 +728,7 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To link to the dark side!"
+            "To <a>link</a> to the dark side!"
         )
 
     def test_plain_text_image(self):

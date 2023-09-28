@@ -373,7 +373,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            if self.request.user.is_superuser:
+            if self.request.user.is_staff:
                 queryset = self.queryset
             else:
                 queryset = self.queryset.filter( Q(user=self.request.user) |

@@ -411,8 +411,8 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         for member in self.get_included('user'):
             self.assertIsNotNone(member['attributes']['last-name'])
 
-    def test_get(self):
-        self.perform_get(user=BlueBottleUserFactory.create(is_superuser=True, is_staff=True))
+    def test_get_staff(self):
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertTotal(10)

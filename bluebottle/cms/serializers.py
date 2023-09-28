@@ -740,10 +740,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
-    text = serializers.SerializerMethodField()
-
-    def get_text(self, obj):
-        return strip_tags(obj.text)
+    text = SafeField()
 
     class Meta(object):
         model = PlainTextItem
@@ -756,9 +753,6 @@ class TextBlockSerializer(BaseBlockSerializer):
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
     text = SafeField()
-
-    def get_text(self, obj):
-        return obj.text
 
     class Meta(object):
         model = ImagePlainTextItem

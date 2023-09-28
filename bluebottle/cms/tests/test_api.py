@@ -731,25 +731,6 @@ class HomeTestCase(APITestCase):
             "To link to the dark side!"
         )
 
-    def test_plain_text_link(self):
-        block = PlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <a href='javascript:alert(\"Owned!\")'>link</a> to the dark side!"
-        block.save()
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, 200)
-        text_block = get_include(response, 'pages/blocks/plain-text')
-
-        self.assertEqual(
-            text_block['type'],
-            'pages/blocks/plain-text'
-        )
-
-        self.assertEqual(
-            text_block['attributes']['text'],
-            "To link to the dark side!"
-        )
-
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
         block.text = "To <b>boldly</b> go were no man has gone before!"

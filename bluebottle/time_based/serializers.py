@@ -933,7 +933,6 @@ class SlotParticipantSerializer(ModelSerializer):
     def validate(self, data):
         if data['slot'].status != 'open':
             raise ValidationError('Participants cannot sign up for full slots')
-
         return data
 
     class Meta:
@@ -942,11 +941,11 @@ class SlotParticipantSerializer(ModelSerializer):
         meta_fields = ('status', 'transitions',)
 
         validators = [
-            UniqueTogetherValidator(
-                queryset=SlotParticipant.objects.all(),
-                fields=('slot', 'participant')
-            ),
-            activity_matches_participant_and_slot
+            # UniqueTogetherValidator(
+            #     queryset=SlotParticipant.objects.all(),
+            #     fields=('slot', 'participant')
+            # ),
+            # activity_matches_participant_and_slot
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):

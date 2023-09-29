@@ -645,7 +645,8 @@ class SlotParticipant(TriggerMixin, models.Model):
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
     )
     participant = models.ForeignKey(
-        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE,
+        blank=True, null=True
     )
 
     status = models.CharField(max_length=40)

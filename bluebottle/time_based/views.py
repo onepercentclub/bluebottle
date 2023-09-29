@@ -432,6 +432,15 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
             participant__status__in=['new', 'accepted']
         )
 
+    def perform_create(self, serializer):
+        slot = serializer.validated_data['slot']
+        participant, _created = DateParticipant.objects.get_or_create(
+            activity=slot.activity,
+            user=self.request.user,
+        )
+        serializer.save(participant=participant)
+        serializer.save()
+
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [SlotParticipantPermission]

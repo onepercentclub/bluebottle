@@ -20,7 +20,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
-from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField
+from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
@@ -104,12 +104,14 @@ class ActivitySlotSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
     location = ResourceRelatedField(queryset=Geolocation.objects, required=False, allow_null=True)
+    current_status = CurrentStatusField(source='states.current_state')
 
     class Meta:
         fields = (
             'id',
             # 'activity',
             'start',
+            'end',
             'transitions',
             'is_online',
             'location_hint',
@@ -118,6 +120,8 @@ class ActivitySlotSerializer(ModelSerializer):
         )
         meta_fields = (
             'status',
+            'current_status',
+            'contributor_count',
             'permissions',
             'transitions',
             'required',

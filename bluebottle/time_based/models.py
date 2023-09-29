@@ -1,7 +1,6 @@
 from html import unescape
 from urllib.parse import urlencode
 
-
 import pytz
 from django.db import connection
 from django.utils import timezone
@@ -342,6 +341,12 @@ class DateActivitySlot(ActivitySlot):
         if len(ids) and self.id and self.id in ids:
             return ids.index(self.id) + 1
         return '-'
+
+    @property
+    def contributor_count(self):
+        return self.slot_participants.filter(
+            status__in=['registered', 'succeeded']
+        ).filter(participant__status__in=['accepted']).count()
 
     @property
     def local_timezone(self):

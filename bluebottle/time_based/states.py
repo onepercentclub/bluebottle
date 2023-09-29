@@ -95,6 +95,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
+        permission=ActivityStateMachine.is_owner,
     )
 
 

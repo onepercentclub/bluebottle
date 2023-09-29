@@ -24,14 +24,15 @@ class StartDateValidator():
     def __call__(self, value, serializer):
         parent = serializer.parent
         try:
+
             end = dateutil.parser.parse(parent.initial_data['end'])
-        except KeyError:
+        except (KeyError, TypeError):
             try:
                 end = parent.instance.end
             except AttributeError:
                 return
 
-        if value and value > end.date():
+        if value and end and value > end.date():
             raise ValidationError('The activity should start before it ends')
 
 
@@ -48,8 +49,8 @@ class DeedSerializer(BaseActivitySerializer):
 
     title = serializers.CharField()
     description = serializers.CharField()
-    start = serializers.DateField(validators=[StartDateValidator()])
-    end = serializers.DateField()
+    start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
+    end = serializers.DateField(allow_null=True)
 
     permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
     links = serializers.SerializerMethodField()

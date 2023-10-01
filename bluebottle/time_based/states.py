@@ -4,7 +4,7 @@ from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
 from bluebottle.fsm.state import (
-    register, State, Transition, EmptyState, AllStates, ModelStateMachine
+    register, State, Transition, EmptyState, ModelStateMachine
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -218,7 +218,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        AllStates(),
+        [open, finished, full],
         cancelled,
         name=_('Cancel'),
         automatic=False,
@@ -232,6 +232,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         cancelled,
         open,
         name=_('Reopen'),
+        automatic=False,
         description=_(
             'Reopen a cancelled slot. People can apply again. Contributions are counted again'
         ),
@@ -541,7 +542,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
-        description=_("Accept the previously person as a participant to the slot."),
+        description=_("Accept the previously rejected person as a participant to the slot."),
         automatic=False,
         permission=can_accept_participant,
     )

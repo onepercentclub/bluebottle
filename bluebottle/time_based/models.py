@@ -639,7 +639,7 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
+class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
 
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
@@ -678,6 +678,7 @@ class SlotParticipant(TriggerMixin, models.Model):
             ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
         )
         unique_together = ['slot', 'participant']
+        ordering = ['slot__start']
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'

@@ -41,7 +41,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer, DateSlotTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -298,6 +298,11 @@ class PeriodActivityRelatedParticipantList(RelatedContributorListView):
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
     queryset = DateActivity.objects.all()
+
+
+class DateSlotTransitionList(TransitionList):
+    serializer_class = DateSlotTransitionSerializer
+    queryset = DateActivitySlot.objects.all()
 
 
 class PeriodTransitionList(TransitionList):

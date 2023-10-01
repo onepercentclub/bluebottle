@@ -434,12 +434,20 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.reopen,
             effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reschedule,
             effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),

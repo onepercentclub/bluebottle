@@ -955,6 +955,7 @@ class SlotParticipantSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
+    permissions = ResourcePermissionField('slot-participant-detail', view_args=('pk',))
     user = AnonymizedResourceRelatedField(
         read_only=True,
         model=BlueBottleBaseUser,
@@ -970,7 +971,7 @@ class SlotParticipantSerializer(ModelSerializer):
     class Meta:
         model = SlotParticipant
         fields = ['id', 'participant', 'current_status', 'user', 'slot']
-        meta_fields = ('status', 'transitions', 'current_status')
+        meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
         validators = [
             # UniqueTogetherValidator(

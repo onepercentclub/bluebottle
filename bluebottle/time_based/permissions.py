@@ -30,9 +30,14 @@ class DateSlotActivityStatusPermission(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         return (
             request.method not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            obj.activity.status not in ['cancelled', 'rejected']
+            obj.activity.owner == user or
+            user in obj.activity.initiative.activity_managers.all() or
+            obj.activity.initiative.owner == user or
+            user.is_staff or
+            user.is_superuser
         )
 
 

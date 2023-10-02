@@ -120,7 +120,7 @@ class ActivitySlotSerializer(ModelSerializer):
     class Meta:
         fields = (
             'id',
-            # 'activity',
+            'activity',
             'start',
             'end',
             'transitions',
@@ -144,14 +144,14 @@ class ActivitySlotSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'activity',
+            # 'activity',
             'location',
             'my_contributor',
         ]
 
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+        # 'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         'my_contributor': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
     }
 

@@ -374,6 +374,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     accept = Transition(
         [
             ContributorStateMachine.new,
+            withdrawn,
             rejected
         ],
         accepted,

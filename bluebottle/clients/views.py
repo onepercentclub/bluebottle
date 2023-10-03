@@ -20,9 +20,11 @@ class SettingsView(views.APIView):
 
         member_settings = obj['platform']['members']
         content_settings = obj['platform']['content']
+        languages = obj['languages']
         if member_settings['closed'] and not request.user.is_authenticated:
             obj = {
                 'tenant': connection.tenant.client_name,
+                'languages': languages,
                 'platform': {
                     'content': content_settings,
                     'members': {

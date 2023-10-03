@@ -4,7 +4,7 @@ from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
 from bluebottle.fsm.state import (
-    register, State, Transition, EmptyState, AllStates, ModelStateMachine
+    register, State, Transition, EmptyState, ModelStateMachine
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -95,6 +95,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'and will continue to count in the reporting.'
         ),
         automatic=False,
+        permission=ActivityStateMachine.is_owner,
     )
 
 
@@ -179,6 +180,16 @@ class ActivitySlotStateMachine(ModelStateMachine):
         _('The slot is cancelled.')
     )
 
+    def is_activity_owner(self, user):
+        """Is manager of related activity"""
+        return (
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
+        )
+
     initiate = Transition(
         EmptyState(),
         draft,
@@ -207,10 +218,11 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        AllStates(),
+        [open, finished, full],
         cancelled,
         name=_('Cancel'),
         automatic=False,
+        permission=is_activity_owner,
         description=_(
             'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
         ),
@@ -220,6 +232,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         cancelled,
         open,
         name=_('Reopen'),
+        automatic=False,
         description=_(
             'Reopen a cancelled slot. People can apply again. Contributions are counted again'
         ),
@@ -361,6 +374,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     accept = Transition(
         [
             ContributorStateMachine.new,
+            withdrawn,
             rejected
         ],
         accepted,
@@ -529,7 +543,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
-        description=_("Accept the previously person as a participant to the slot."),
+        description=_("Accept the previously rejected person as a participant to the slot."),
         automatic=False,
         permission=can_accept_participant,
     )

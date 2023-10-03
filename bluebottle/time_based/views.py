@@ -41,7 +41,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer, DateSlotTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -148,7 +148,7 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         try:
-            activity_id = self.request.GET['activity']
+            activity_id = self.kwargs.get('pk', None) or self.request.GET.get('activity')
             queryset = queryset.filter(activity_id=int(activity_id))
         except KeyError:
             raise ValidationError('Missing required parameter: activity')
@@ -192,13 +192,13 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    related_permission_classes = {
-        'activity': [
-            ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-            DeleteActivityPermission
-        ]
-    }
+    # related_permission_classes = {
+    #     'activity': [
+    #         ActivityStatusPermission,
+    #         OneOf(ResourcePermission, ActivityOwnerPermission),
+    #         DeleteActivityPermission
+    #     ]
+    # }
     permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
@@ -298,6 +298,11 @@ class PeriodActivityRelatedParticipantList(RelatedContributorListView):
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
     queryset = DateActivity.objects.all()
+
+
+class DateSlotTransitionList(TransitionList):
+    serializer_class = DateSlotTransitionSerializer
+    queryset = DateActivitySlot.objects.all()
 
 
 class PeriodTransitionList(TransitionList):
@@ -431,6 +436,15 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         return super().queryset(*args, **kwargs).filter(
             participant__status__in=['new', 'accepted']
         )
+
+    def perform_create(self, serializer):
+        slot = serializer.validated_data['slot']
+        participant, _created = DateParticipant.objects.get_or_create(
+            activity=slot.activity,
+            user=self.request.user,
+        )
+        serializer.save(participant=participant)
+        serializer.save()
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

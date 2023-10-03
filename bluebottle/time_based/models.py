@@ -1,7 +1,6 @@
 from html import unescape
 from urllib.parse import urlencode
 
-
 import pytz
 from django.db import connection
 from django.utils import timezone
@@ -344,6 +343,12 @@ class DateActivitySlot(ActivitySlot):
         return '-'
 
     @property
+    def contributor_count(self):
+        return self.slot_participants.filter(
+            status__in=['registered', 'succeeded']
+        ).filter(participant__status__in=['accepted']).count()
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -634,13 +639,14 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
+class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
 
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
     )
     participant = models.ForeignKey(
-        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE,
+        blank=True, null=True
     )
 
     status = models.CharField(max_length=40)
@@ -672,6 +678,7 @@ class SlotParticipant(TriggerMixin, models.Model):
             ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
         )
         unique_together = ['slot', 'participant']
+        ordering = ['slot__start']
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'

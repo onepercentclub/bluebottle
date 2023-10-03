@@ -1,5 +1,6 @@
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from rest_framework import permissions
+
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.permissions import IsOwner, BasePermission
 
 
@@ -17,17 +18,26 @@ class SlotParticipantPermission(IsOwner):
 class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (
-            action not in ('POST', 'DELETE') or
-            obj.activity.status not in ['cancelled', 'rejected']
+            action not in ('POST', 'DELETE', 'PATCH', 'PUT') or
+            obj.activity.owner == user or
+            user in obj.activity.initiative.activity_managers.all() or
+            obj.activity.initiative.owner == user or
+            user.is_staff or
+            user.is_superuser
         )
 
     def has_action_permission(self, action, user, model_cls):
         return True
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         return (
-            request.method not in ('POST', 'DELETE') or
-            obj.activity.status not in ['cancelled', 'rejected']
+            request.method not in ('POST', 'DELETE', 'PATCH', 'PUT') or
+            obj.activity.owner == user or
+            user in obj.activity.initiative.activity_managers.all() or
+            obj.activity.initiative.owner == user or
+            user.is_staff or
+            user.is_superuser
         )
 
 

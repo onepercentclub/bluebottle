@@ -13,20 +13,19 @@ def migrate_related_reactions(old_wallpost, new_update, update_model):
             parent=new_update
         )
 
-def migrate_deed_wallposts(apps, schema_editor):
+def migrate_date_wallposts(apps, schema_editor):
     ContentType = apps.get_model('contenttypes', 'ContentType')
-    Deed = apps.get_model('deeds', 'Deed')
+    DateActivity = apps.get_model('time_based', 'DateActivity')
 
     SystemWallpost = apps.get_model('wallposts', 'SystemWallpost')
     TextWallpost = apps.get_model('wallposts', 'TextWallpost')
     MediaWallpost = apps.get_model('wallposts', 'MediaWallpost')
     MediaWallpostPhoto = apps.get_model('wallposts', 'MediaWallpostPhoto')
-    Reaction = apps.get_model('wallposts', 'Reaction')
 
     Update = apps.get_model('updates', 'Update')
     UpdateImage = apps.get_model('updates', 'UpdateImage')
     Image = apps.get_model('files', 'Image')
-    deed_content_type = ContentType.objects.get_for_model(Deed)
+    deed_content_type = ContentType.objects.get_for_model(DateActivity)
 
     for wallpost in MediaWallpost.objects.filter(content_type=deed_content_type):
         update = Update.objects.create(
@@ -41,20 +40,19 @@ def migrate_deed_wallposts(apps, schema_editor):
 
         photos = MediaWallpostPhoto.objects.filter(mediawallpost_id=wallpost.pk, deleted__isnull=True)
         for photo in photos:
-            if wallpost.author:
-                try:
-                    image = Image.objects.create(
-                        file=photo.photo,
-                        owner=wallpost.author,
-                        used=True
-                    )
-                    UpdateImage.objects.create(
-                        image=image,
-                        update=update
-                    )
-                    print(f'created image for update: {update.pk}')
-                except FileNotFoundError:
-                    pass
+            try:
+                image = Image.objects.create(
+                    file=photo.photo,
+                    owner=wallpost.author,
+                    used=True
+                )
+                UpdateImage.objects.create(
+                    image=image,
+                    update=update
+                )
+                print(f'created image for update: {update.pk}')
+            except FileNotFoundError:
+                pass
 
     for wallpost in TextWallpost.objects.filter(content_type=deed_content_type):
         update = Update.objects.create(
@@ -80,9 +78,9 @@ def migrate_deed_wallposts(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('updates', '0010_auto_20230812_0804'),
+        ('updates', '0011_migrate_deed_wallposts'),
     ]
 
     operations = [
-        migrations.RunPython(migrate_deed_wallposts, migrations.RunPython.noop)
+        migrations.RunPython(migrate_date_wallposts, migrations.RunPython.noop)
     ]

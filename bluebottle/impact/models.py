@@ -126,7 +126,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
 
     @property
     def impact_realized(self):
-        if self.realized:
+        if self.realized and self.activity.status == 'succeeded':
             return self.realized
         if self.participant_impact:
             return self.activity.succeeded_contributor_count * self.participant_impact

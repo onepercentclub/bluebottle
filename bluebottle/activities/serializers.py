@@ -106,12 +106,18 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
 
     def get_start(self, obj):
+        homepage = self.context['request'].GET.get('page[size]') == '4'
+        upcoming = self.context['request'].GET.get('filter[upcoming]') == '1'
+
         if hasattr(obj, 'slots') and obj.slots:
-            upcoming = self.context['request'].GET.get('filter[upcoming]') == '1'
+            if homepage:
+                slots = self.get_filtered_slots(obj, only_upcoming=True)
+                if slots:
+                    return slots[0].start
+                return obj.start[-1]
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
-
         elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 

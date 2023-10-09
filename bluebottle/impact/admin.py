@@ -11,8 +11,8 @@ from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 class ImpactGoalInline(admin.TabularInline):
     model = ImpactGoal
     extra = 0
-    readonly_fields = ('unit', 'realized_from_contributions', )
-    fields = ('type', 'target', 'unit', 'realized', 'realized_from_contributions', 'participant_impact')
+    readonly_fields = ('unit', 'realized_from_contributions', 'participant_impact')
+    fields = ('type', 'target', 'unit', 'realized', 'realized_from_contributions', 'participant_target')
 
     def unit(self, obj):
         return obj.type.unit

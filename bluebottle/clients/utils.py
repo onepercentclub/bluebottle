@@ -234,7 +234,11 @@ def get_public_properties(request):
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'siteName': current_tenant.name,
-            'languages': [{'code': lang.full_code, 'name': lang.language_name, 'default': lang.default} for lang in Language.objects.all()],
+            'languages': [{
+                'code': lang.full_code,
+                'name': lang.language_name,
+                'default': lang.default
+            } for lang in Language.objects.all()],
             'languageCode': get_current_language().full_code,
             'siteLinks': get_user_site_links(request.user),
             'platform': {

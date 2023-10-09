@@ -39,13 +39,17 @@ class ImpactGoalSerializer(ModelSerializer):
     class Meta(object):
         model = ImpactGoal
         fields = (
-            'id', 'target', 'impact_realized',
+            'id',
+            'target',
+            'participant_target',
+            'impact_realized',
             'realized',
             'realized_from_contributions',
-            'activity', 'type',
-            'required', 'errors',
+            'activity',
+            'type',
+            'required',
+            'errors',
             'participant_impact',
-
         )
         meta_fields = ['errors', 'required']
 

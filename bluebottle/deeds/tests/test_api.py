@@ -225,6 +225,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
             )
         )
 
+        response = self.client.get(links['ical'])
+        self.assertTrue(response.status_code, 200)
+
     def test_get_with_participant(self):
         participant = DeedParticipantFactory.create(
             activity=self.model,

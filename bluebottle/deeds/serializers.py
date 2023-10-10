@@ -1,5 +1,8 @@
 import re
 import dateutil
+
+from django.urls import reverse
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
@@ -8,6 +11,7 @@ from rest_framework_json_api.relations import (
     SerializerMethodResourceRelatedField, SerializerMethodHyperlinkedRelatedField
 )
 
+from bluebottle.files.models import Image, RelatedImage
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
@@ -46,6 +50,27 @@ class DeedSerializer(BaseActivitySerializer):
                 self.fields[key].validators = []
                 self.fields[key].allow_null = True
                 self.fields[key].required = False
+
+            from bluebottle.files.models import Image, RelatedImage
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        image_ids = re.findall('/api/files/images/([\w-]+)/(\d+x\d+)', self.instance.description) 
+
+        for (id, size) in image_ids:
+            image = Image.objects.get(pk=id)
+            related_image = RelatedImage.objects.create(
+                content_object=self.instance,
+                image=image
+            )
+
+            self.instance.description = self.instance.description.replace(
+                reverse('upload-image-preview', args=(image.pk, size)),
+                reverse('related-activity-image-content', args=(related_image.pk, '600'))
+            )
+
+        if image_ids:
+            self.instance.save()
 
     title = serializers.CharField()
     description = serializers.CharField()

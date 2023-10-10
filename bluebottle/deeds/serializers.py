@@ -48,8 +48,8 @@ class DeedSerializer(BaseActivitySerializer):
 
     title = serializers.CharField()
     description = serializers.CharField()
-    start = serializers.DateField(validators=[StartDateValidator()])
-    end = serializers.DateField()
+    start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
+    end = serializers.DateField(allow_null=True)
 
     permissions = ResourcePermissionField('deed-detail', view_args=('pk',))
     links = serializers.SerializerMethodField()

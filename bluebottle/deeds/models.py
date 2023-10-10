@@ -1,12 +1,15 @@
+import re
 import datetime
 from urllib.parse import urlencode
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.activities.models import Organizer
+from bluebottle.files.models import Image, RelatedImage
 from bluebottle.deeds.validators import EndDateValidator
 
 
@@ -49,6 +52,25 @@ class Deed(Activity):
         resource_name = 'activities/deeds'
 
     validators = [EndDateValidator]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        image_ids = re.findall('/api/files/images/([\w-]+)/(\d+x\d+)', self.description) 
+
+        for (id, size) in image_ids:
+            image = Image.objects.get(pk=id)
+            related_image = RelatedImage.objects.create(
+                content_object=self,
+                image=image
+            )
+
+            self.description = self.description.replace(
+                reverse('upload-image-preview', args=(image.pk, size)),
+                reverse('related-activity-image-content', args=(related_image.pk, '600'))
+            )
+        if image_ids:
+            self.save()
 
     @property
     def required_fields(self):

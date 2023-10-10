@@ -5,11 +5,13 @@ from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.files.models import RelatedImage
 from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -54,6 +56,26 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertTransition('submit')
         self.assertTransition('delete')
+
+    def test_create_description_images(self):
+        image1 = ImageFactory.create()
+        image2 = ImageFactory.create()
+
+        self.defaults['description'] = f"""
+            <img src="{reverse('upload-image-preview', args=(image1.pk, '292x164'))}"> Text with an image
+            <img src="{reverse('upload-image-preview', args=(image2.pk, '292x164'))}"> and another one
+        """
+        
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertEqual(RelatedImage.objects.count(), 2)
+
+        for image in RelatedImage.objects.all():
+            self.assertTrue(
+                reverse('related-activity-image-content', args=(image.pk, '600')) 
+                in self.response.json()['data']['attributes']['description']
+            )
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''

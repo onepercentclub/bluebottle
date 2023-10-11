@@ -147,10 +147,10 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     re_accept = Transition(
-        [withdrawn, rejected],
+        ContributorStateMachine.succeeded,
         accepted,
         name=_('Reaccept'),
-        description=_("Reaccept participant after previously withdrawing or rejecting."),
+        description=_("Put a participant back as participating after it was successful."),
     )
 
     withdraw = Transition(

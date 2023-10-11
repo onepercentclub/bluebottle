@@ -171,7 +171,7 @@ class BaseActivitySerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-    goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
+    goals = ResourceRelatedField(required=False, many=True, read_only=True)
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')

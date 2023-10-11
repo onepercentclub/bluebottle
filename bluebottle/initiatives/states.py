@@ -47,13 +47,9 @@ class ReviewStateMachine(ModelStateMachine):
           'The initiative cannot be edited by the initiator.')
     )
     approved = State(
-        _('approved'),
+        _('Support needed'),
         'approved',
-        _('The initiative is visible in the frontend and completed activities are open for contributions. '
-          'All activities, except the crowdfunding campaigns, '
-          'that will be completed at a later stage, '
-          'will also be automatically opened up for contributions. '
-          'The crowdfunding campaigns must be approved separately.')
+        _('The initiative is visible in the frontend and completed activities are open for contributions.')
     )
 
     def is_complete(self):

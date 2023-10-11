@@ -11,7 +11,7 @@ from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
 )
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, TeamTriggers
+    ActivityTriggers, ContributorTriggers, TeamTriggers, has_organizer
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -156,6 +156,19 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+            ]
+        ),
+        TransitionTrigger(
+            DeedStateMachine.publish,
+            effects=[
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
             ]
         ),
 

@@ -44,22 +44,20 @@ class DeedTriggersTestCase(TriggerTestCase):
         }
         super().setUp()
 
-    def test_submit(self):
+    def test_publish(self):
         self.create()
-        self.model.states.submit()
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(DeedStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
     def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(DeedStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
@@ -67,17 +65,16 @@ class DeedTriggersTestCase(TriggerTestCase):
         self.defaults['start'] = date.today() - timedelta(days=2)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(DeedStateMachine.auto_approve)
             self.assertTransitionEffect(DeedStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
     def test_reject(self):
         self.create()
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.states.reject()
 
         with self.execute():
@@ -86,7 +83,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
     def test_cancel(self):
         self.create()
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.states.cancel()
 
         with self.execute():
@@ -182,7 +179,7 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_expire(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
@@ -199,7 +196,7 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_set_end_date(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         participant = DeedParticipantFactory.create(activity=self.model)
 
         self.model.end = date.today() - timedelta(days=1)
@@ -219,7 +216,7 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_succeed(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         participant = DeedParticipantFactory.create(activity=self.model)
 
         self.model.states.succeed()
@@ -485,7 +482,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.defaults['activity'].save()
 
         self.create()
-        self.model.activity.states.submit(save=True)
+        self.model.activity.states.publish(save=True)
 
         self.model.states.withdraw(save=True)
         self.model.states.reapply()
@@ -502,7 +499,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
     def test_reapply_started(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
         self.defaults['activity'].end = None
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         self.create()
 
@@ -523,7 +520,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
         self.defaults['activity'].start = date.today() - timedelta(days=2)
         self.defaults['activity'].end = None
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         self.create()
 
@@ -552,7 +549,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_reapply_to_new(self):
         self.create()
-        self.model.activity.states.submit(save=True)
+        self.model.activity.states.publish(save=True)
 
         self.model.states.withdraw(save=True)
         self.model.states.reapply()
@@ -592,7 +589,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_expire_remove(self):
         self.create()
-        self.model.activity.states.submit(save=True)
+        self.model.activity.states.publish(save=True)
 
         self.model.activity.start = date.today() - timedelta(days=10)
         self.model.activity.end = date.today() - timedelta(days=5)
@@ -605,7 +602,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
 
     def test_not_expire_remove_one_left(self):
         self.create()
-        self.model.activity.states.submit(save=True)
+        self.model.activity.states.publish(save=True)
 
         DeedParticipantFactory.create(activity=self.model.activity)
 
@@ -624,7 +621,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         self.defaults['activity'].save()
 
         self.create()
-        self.model.activity.states.submit(save=True)
+        self.model.activity.states.publish(save=True)
 
         self.model.states.remove(save=True)
         self.model.states.accept()
@@ -641,7 +638,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
     def test_accept_started_no_end(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)
         self.defaults['activity'].end = None
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         self.create()
 

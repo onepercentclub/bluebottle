@@ -29,8 +29,8 @@ class DeedStateMachine(ActivityStateMachine):
         name=_('Publish'),
         permission=ActivityStateMachine.is_owner,
         conditions=[
-            ActivityStateMachine.is_complete, 
-            ActivityStateMachine.is_valid, 
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
             ActivityStateMachine.initiative_is_submitted
         ],
     )

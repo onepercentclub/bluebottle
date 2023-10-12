@@ -211,7 +211,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
         }
 
 
-class DateActivityASlotInline(TabularInlinePaginated):
+class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
     per_page = 20
     can_delete = True
@@ -304,7 +304,7 @@ class TeamSlotInline(admin.StackedInline):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [

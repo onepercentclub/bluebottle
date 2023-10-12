@@ -53,7 +53,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
         url = super().get_url(*args, **kwargs)
 
         if url:
-            return f"{url}?filter[status]=new&page[size]=100"
+            return f"{url}?filter[status]=new"
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):

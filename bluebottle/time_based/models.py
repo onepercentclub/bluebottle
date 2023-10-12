@@ -649,6 +649,9 @@ class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
         blank=True, null=True
     )
 
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
+
     status = models.CharField(max_length=40)
     auto_approve = True
 

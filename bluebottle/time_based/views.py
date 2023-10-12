@@ -439,12 +439,23 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         slot = serializer.validated_data['slot']
-        participant, _created = DateParticipant.objects.get_or_create(
-            activity=slot.activity,
-            user=self.request.user,
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
         )
+
+        if 'participant' in serializer.validated_data:
+            participant = serializer.validated_data['participant']
+            if participant.activity != slot.activity:
+                raise ValidationError(_('Participant does not belong to this activity'))
+        else:
+            participant, _created = DateParticipant.objects.get_or_create(
+                activity=slot.activity,
+                user=self.request.user,
+            )
+        if slot.slot_participants.filter(participant__user=self.request.user).exists():
+            raise ValidationError(_('Participant already registered for this slot'))
         serializer.save(participant=participant)
-        serializer.save()
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

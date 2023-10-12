@@ -233,6 +233,11 @@ class TeamSlotSerializer(ActivitySlotSerializer):
         else:
             return {}
 
+    def get_my_contributor(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.team.members.filter(periodparticipant__user=user).first()
+
     class Meta(ActivitySlotSerializer.Meta):
         model = TeamSlot
         fields = ActivitySlotSerializer.Meta.fields + (

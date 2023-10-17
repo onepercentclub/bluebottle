@@ -171,6 +171,7 @@ except ImportError:
     pass
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
+ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
 
 STRIPE = {
     'secret_key': 'test-key',

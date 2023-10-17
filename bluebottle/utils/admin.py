@@ -194,7 +194,7 @@ class TranslatableAdminOrderingMixin(object):
         return queryset.filter(
             translations__pk__in=self.model.translations.field.model.objects.annotate(
                 is_translated=ExpressionWrapper(
-                    Q(language_code=language_code), 
+                    Q(language_code=language_code),
                     output_field=fields.BooleanField()
                 )
             ).order_by('master_id', '-is_translated').distinct('master_id').values('pk')

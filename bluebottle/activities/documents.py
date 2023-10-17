@@ -160,10 +160,6 @@ class ActivityDocument(Document):
 
         if isinstance(related_instance, Initiative):
             return model.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Theme):
-            return model.objects.filter(initiative__theme=related_instance)
-        if isinstance(related_instance, Theme.translations.field.model):
-            return model.objects.filter(initiative__theme=related_instance.master)
 
     class Django:
         related_models = (Initiative, Theme, Theme.translations.field.model)

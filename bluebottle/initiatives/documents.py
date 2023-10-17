@@ -148,8 +148,6 @@ class InitiativeDocument(Document):
         )
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, (Theme, Geolocation, Category)):
-            return related_instance.initiative_set.all()
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
 

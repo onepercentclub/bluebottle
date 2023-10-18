@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import ExpressionWrapper, Q, fields
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
@@ -189,8 +190,15 @@ class TranslatableAdminOrderingMixin(object):
 
     def get_queryset(self, request):
         language_code = self.get_queryset_language(request)
-        return super(TranslatableAdminOrderingMixin, self).get_queryset(request). \
-            translated(language_code).order_by(self.translatable_ordering)
+        queryset = super(TranslatableAdminOrderingMixin, self).get_queryset(request)
+        return queryset.filter(
+            translations__pk__in=self.model.translations.field.model.objects.annotate(
+                is_translated=ExpressionWrapper(
+                    Q(language_code=language_code),
+                    output_field=fields.BooleanField()
+                )
+            ).order_by('master_id', '-is_translated').distinct('master_id').values('pk')
+        ).order_by('translations__name')
 
 
 def admin_info_box(text):

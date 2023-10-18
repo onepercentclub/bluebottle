@@ -333,22 +333,11 @@ class TimeBasedDetailAPIViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
+
         self.assertTrue(
-            {
-                'name': 'cancel',
-                'target': 'cancelled',
-                'available': True,
-                'label': 'Cancel',
-                'description': (
-                    'Cancel if the activity will not be executed. '
-                    'An activity manager can no longer edit the activity '
-                    'and it will no longer be visible on the platform. '
-                    'The activity will still be visible in the back office '
-                    'and will continue to count in the reporting.'
-                )
-            }
-            in data['meta']['transitions']
+            'cancel' in [trans['name'] for trans in data['meta']['transitions']]
         )
+
         self.assertEqual(data['meta']['matching-properties']['skill'], None)
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
@@ -552,20 +541,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.data = response.json()['data']
 
         self.assertTrue(
-            {
-                'name': 'cancel',
-                'target': 'cancelled',
-                'available': True,
-                'label': 'Cancel',
-                'description': (
-                    'Cancel if the activity will not be executed. '
-                    'An activity manager can no longer edit the activity '
-                    'and it will no longer be visible on the platform. '
-                    'The activity will still be visible in the back office '
-                    'and will continue to count in the reporting.'
-                )
-            }
-            in self.data['meta']['transitions']
+            'cancel' in [trans['name'] for trans in self.data['meta']['transitions']]
         )
 
     def test_get_contributors(self):

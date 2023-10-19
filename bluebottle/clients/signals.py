@@ -1,7 +1,5 @@
 
-from importlib import import_module
 from django.db import models, connection
-from django.apps import apps
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import CelerySignalProcessor
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +7,7 @@ from celery import shared_task
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
+
 
 class TenantCelerySignalProcessor(CelerySignalProcessor):
     """Celery signal processor.
@@ -77,8 +76,8 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
     def registry_delete_task(doc_label, data, tenant):
         """
         Handle the bulk delete data on the registry as a Celery task.
-        The different implementations used are due to the difference between delete and update operations. 
-        The update operation can re-read the updated data from the database to ensure eventual consistency, 
+        The different implementations used are due to the difference between delete and update operations.
+        The update operation can re-read the updated data from the database to ensure eventual consistency,
         but the delete needs to be processed before the database record is deleted to obtain the associated data.
         """
         with LocalTenant(Client.objects.get(schema_name=tenant)):
@@ -109,7 +108,7 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
     def registry_update_task(pk, app_label, model_name, tenant):
         """Handle the update on the registry as a Celery task."""
         with LocalTenant(Client.objects.get(schema_name=tenant)):
-           CelerySignalProcessor.registry_update_task(pk, app_label, model_name)
+            CelerySignalProcessor.registry_update_task(pk, app_label, model_name)
 
     @shared_task()
     def registry_update_related_task(pk, app_label, model_name, tenant):

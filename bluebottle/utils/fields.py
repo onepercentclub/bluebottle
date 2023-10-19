@@ -1,22 +1,20 @@
 import mimetypes
 import xml.etree.cElementTree as et
+from builtins import object
+from builtins import str
 
 import inflection
 import sorl.thumbnail
-from builtins import object
-from builtins import str
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import gettext as _
 from django.utils.encoding import force_str
-
+from django.utils.translation import gettext as _
 from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
 from rest_framework.fields import Field
-
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
     MANY_RELATION_KWARGS,

@@ -45,8 +45,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
-    MoneySerializer, ResourcePermissionField, NoCommitMixin,
-)
+    MoneySerializer, ResourcePermissionField, )
 
 
 class FundingCurrencyValidator(object):
@@ -203,7 +202,7 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
-class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
+class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -247,8 +246,8 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             self.instance.initiative.owner,
         ] and user not in self.instance.initiative.activity_managers.all():
             del fields['bank_account']
-            del fields['required']
-            del fields['errors']
+            # del fields['required']
+            # del fields['errors']
         return fields
 
     def get_co_financers(self, instance):

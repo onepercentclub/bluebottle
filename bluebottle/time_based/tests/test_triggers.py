@@ -2158,7 +2158,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
             self.assertNoNotificationEffect(ParticipantCreatedNotification)
             self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
-            self.assertNotificationEffect(TeamParticipantAppliedNotification)
+            self.assertNoNotificationEffect(TeamParticipantAppliedNotification)
             self.assertNotificationEffect(TeamMemberAddedMessage)
 
     def test_remove_participant(self):

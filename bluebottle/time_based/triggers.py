@@ -1152,6 +1152,7 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[
                         needs_review,
                         is_team_activity,
+                        is_team_captain,
                         is_user
                     ]
                 ),

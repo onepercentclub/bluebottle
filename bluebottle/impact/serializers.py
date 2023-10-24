@@ -36,6 +36,12 @@ class ImpactGoalSerializer(ModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
+    def to_internal_value(self, data):
+        # Change '' to None
+        data['target'] = data.get('target', None) or None
+        data['participant_target'] = data.get('participant_target', None) or None
+        return super().to_internal_value(data)
+
     class Meta(object):
         model = ImpactGoal
         fields = (

@@ -41,7 +41,7 @@ install_requires = [
     'django-cors-headers==3.7.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==1.9.5',
-    'django-elasticsearch-dsl==7.3',
+    'django-elasticsearch-dsl==7.4',
     'django-extensions==1.7.9',
     'django-filter==2.4.0',
     'django-fluent-contents==3.0',

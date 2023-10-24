@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-07-12 07:56\n"
+"PO-Revision-Date: 2023-10-18 12:46\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: nl\n"
-"X-Crowdin-File: /demo.search-pages/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 1883\n"
+"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 233\n"
 
 #: bluebottle/activities/admin.py:64 bluebottle/activities/admin.py:643
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:235
@@ -206,7 +206,7 @@ msgstr "Nee"
 
 #: bluebottle/activities/filters.py:111
 msgid "With your team"
-msgstr "Met jou team"
+msgstr "Met je team"
 
 #: bluebottle/activities/filters.py:112
 msgid "As an individual"
@@ -5401,12 +5401,12 @@ msgstr "Je bent aangewezen als beoordelaar voor \"{title}\"."
 #: bluebottle/initiatives/messages.py:118
 #, python-brace-format
 msgid "You have a new post on '{title}'"
-msgstr "Je hebt een nieuw bericht op '{title}'"
+msgstr "Je hebt een nieuwe reactie op '{title}'"
 
 #: bluebottle/initiatives/messages.py:134
 #, python-brace-format
 msgid "Update from '{title}'"
-msgstr "Update van '{title}'"
+msgstr "Nieuwe update van '{title}'"
 
 #: bluebottle/initiatives/models.py:49
 msgid "reviewer"
@@ -5474,7 +5474,7 @@ msgstr "Online / Op locatie"
 
 #: bluebottle/initiatives/models.py:251 bluebottle/time_based/models.py:738
 msgid "Skill"
-msgstr "Expertise"
+msgstr "Vaardigheid"
 
 #: bluebottle/initiatives/models.py:252
 msgid "Individual / Team"
@@ -7609,7 +7609,7 @@ msgstr "registratiedeadline"
 
 #: bluebottle/time_based/models.py:49
 msgid "skill"
-msgstr "expertise"
+msgstr "vaardigheid"
 
 #: bluebottle/time_based/models.py:56
 msgid "review participants"
@@ -7772,11 +7772,11 @@ msgstr "op basis van expertise"
 
 #: bluebottle/time_based/models.py:722
 msgid "Is this skill expertise based, or could anyone do it?"
-msgstr "Is deze vaardigheidsexpertise gebaseerd, of zou iemand het kunnen doen?"
+msgstr "Vereist deze vaardigheid een bepaalde expertise, of kan iedereen dit?"
 
 #: bluebottle/time_based/models.py:739
 msgid "Skills"
-msgstr "Expertise"
+msgstr "Vaardigheden"
 
 #: bluebottle/time_based/periodic_tasks.py:39
 msgid "Lock an activity when the registration date has passed."

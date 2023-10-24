@@ -128,7 +128,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
     def participant_impact(self):
         if not self.participant_target:
             return 0
-        return self.target / self.participant_target
+        return (self.target or 0) / self.participant_target
 
     @property
     def impact_realized(self):

@@ -117,12 +117,18 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         null=True
     )
 
-    participant_impact = models.FloatField(
-        _('impact per participant'),
-        help_text=_('Mean impact each participants makes'),
+    participant_target = models.IntegerField(
+        _('Number of participants'),
+        help_text=_('How many people you expect to join?'),
         blank=True,
         null=True
     )
+
+    @property
+    def participant_impact(self):
+        if not self.participant_target:
+            return 0
+        return (self.target or 0) / self.participant_target
 
     @property
     def impact_realized(self):
@@ -131,7 +137,6 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         if self.participant_impact:
             return self.activity.succeeded_contributor_count * self.participant_impact
         return self.realized_from_contributions
-
     realized_from_contributions = models.FloatField(
         _('realized from contributions'),
         blank=True,

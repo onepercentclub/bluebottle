@@ -21,7 +21,8 @@ from bluebottle.time_based.messages import (
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
     ParticipantRejectedNotification, ParticipantAddedOwnerNotification, TeamSlotChangedNotification,
-    ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification
+    ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification,
+    ParticipantCreatedNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -2135,6 +2136,29 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
             self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
             self.assertNotificationEffect(TeamMemberJoinedNotification)
+            self.assertNotificationEffect(TeamMemberAddedMessage)
+
+    def test_join_team_participant_review(self):
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+
+        user = BlueBottleUserFactory.create()
+        captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+        self.model = self.participant_factory.build(
+            accepted_invite=captain.invite,
+            activity=self.activity,
+            user=user
+        )
+        with self.execute(user=user, send_messages=True):
+            self.assertNoNotificationEffect(NewParticipantNotification)
+            self.assertNoNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(ParticipantCreatedNotification)
+            self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
+            self.assertNotificationEffect(TeamParticipantAppliedNotification)
             self.assertNotificationEffect(TeamMemberAddedMessage)
 
     def test_remove_participant(self):

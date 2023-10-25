@@ -364,7 +364,7 @@ class ActivitySearch(Search):
 
         if 'initiative.id' not in self._filters:
             search = search.filter(
-                Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+                Terms(status=['succeeded', 'open', 'full', 'partially_funded', 'refunded'])
             )
 
         return search

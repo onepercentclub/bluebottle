@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-10-25 15:34\n"
+"PO-Revision-Date: 2023-10-25 16:38\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -476,7 +476,7 @@ msgstr "Heeft geanonimiseerde en/of verwijderde gegevens"
 
 #: bluebottle/activities/models.py:70
 msgid "Due to company policies and local laws, user data maybe deleted in this activity."
-msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd worden in deze activiteit."
+msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd zijn in deze activiteit."
 
 #: bluebottle/activities/models.py:74
 msgid "Number of deleted successful contributors"
@@ -3050,7 +3050,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/models.py:22
 msgid "The number of users you want to participate."
-msgstr "Het aantal gebruikers dat jij wilt dat deelneemt."
+msgstr "Het verwachte aantal deelnemers. We gebruiken dit om de impact per deelnemer te berekenen, wanneer het meten van impact aanstaat."
 
 #: bluebottle/deeds/models.py:27 bluebottle/deeds/models.py:34
 #: bluebottle/initiatives/models.py:278
@@ -4368,7 +4368,7 @@ msgstr "Totalen herberekenen voor"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:14
 msgid "Target"
-msgstr "Doel"
+msgstr "Deelnemer doelstelling"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:16
 msgid "Deadline"
@@ -5345,7 +5345,7 @@ msgstr "Mijn initiatieven"
 
 #: bluebottle/initiatives/admin.py:219
 msgid "Steps to complete initiative"
-msgstr "Stappen om initiatief compleet te maken"
+msgstr "Stappen om het initiatief compleet te maken"
 
 #: bluebottle/initiatives/admin.py:250
 msgid "Activity types"
@@ -6810,7 +6810,7 @@ msgstr "Token opnieuw instellen"
 
 #: bluebottle/segments/admin.py:77 bluebottle/settings/admin_dashboard.py:191
 msgid "Content"
-msgstr "Inhoud"
+msgstr "Content"
 
 #: bluebottle/segments/admin.py:85
 msgid "SSO"

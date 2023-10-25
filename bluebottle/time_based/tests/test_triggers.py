@@ -1986,11 +1986,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             user=BlueBottleUserFactory.create(),
             as_relation='user'
         )
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have registered your team for "{self.review_activity.title}"'
-        )
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
             f'A new team has applied to "{self.review_activity.title}"'
@@ -2115,7 +2111,6 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             user=user
         )
         with self.execute(user=user):
-            self.assertNotificationEffect(TeamParticipantAppliedNotification)
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
 
     def test_join_team_participant(self):

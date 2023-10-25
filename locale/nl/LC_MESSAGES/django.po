@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-24 16:26+0100\n"
-"PO-Revision-Date: 2023-10-18 12:46\n"
+"PO-Revision-Date: 2023-10-25 12:31\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -2897,7 +2897,7 @@ msgstr "Deze persoon heeft zich aangemeld voor de activiteit en is automatisch g
 
 #: bluebottle/deeds/states.py:158
 msgid "Stop your participation in the activity."
-msgstr "Meldt je af voor deze activiteit."
+msgstr "Meld je af voor deze activiteit."
 
 #: bluebottle/deeds/states.py:168
 msgid "User re-applies after previously withdrawing."
@@ -7779,7 +7779,7 @@ msgstr "Verwijder deze deelnemer van dit tijdsblok."
 
 #: bluebottle/time_based/states.py:549
 msgid "Stop your participation in the slot."
-msgstr "Meldt je af voor dit tijdsblok."
+msgstr "Meld je af voor dit tijdsblok."
 
 #: bluebottle/time_based/states.py:559
 msgid "User re-applies to the slot after previously withdrawing."

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-25 14:57+0200\n"
-"PO-Revision-Date: 2023-10-25 13:00\n"
+"PO-Revision-Date: 2023-10-25 14:29\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -3077,11 +3077,11 @@ msgstr "Deelnemer"
 
 #: bluebottle/deeds/states.py:50
 msgid "The activity ends and people can no longer register. "
-msgstr ""
+msgstr "De activiteit eindigt en mensen kunnen zich niet meer registreren. "
 
 #: bluebottle/deeds/states.py:94
 msgid "The activity ends and people can no longer register."
-msgstr ""
+msgstr "De activiteit eindigt en mensen kunnen zich niet meer registreren."
 
 #: bluebottle/deeds/states.py:105
 msgid "This person has withdrawn."

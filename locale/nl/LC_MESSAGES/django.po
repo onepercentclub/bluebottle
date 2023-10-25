@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-10-25 12:31\n"
+"PO-Revision-Date: 2023-10-25 15:34\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -711,7 +711,7 @@ msgstr "Afwijzen"
 
 #: bluebottle/activities/states.py:130
 msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
-msgstr "Wijs de activiteit af als deze niet in overeenstemming is met het programma of niet voldoet aan de regels. Een activiteitenmanager kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en in de rapporten blijven tellen."
+msgstr "Wijs de activiteit af als deze niet past binnen het programma of niet aan de regels voldoet. De manager van de activiteit kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en meetellen in de rapportages."
 
 #: bluebottle/activities/states.py:147
 msgid "Submit the activity for approval."

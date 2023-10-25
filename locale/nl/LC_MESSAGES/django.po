@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-25 14:57+0200\n"
-"PO-Revision-Date: 2023-10-25 14:29\n"
+"PO-Revision-Date: 2023-10-25 16:05\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -711,7 +711,7 @@ msgstr "Afwijzen"
 
 #: bluebottle/activities/states.py:130
 msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
-msgstr "Wijs de activiteit af als deze niet in overeenstemming is met het programma of niet voldoet aan de regels. Een activiteitenmanager kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en in de rapporten blijven tellen."
+msgstr "Wijs de activiteit af als deze niet past binnen het programma of niet aan de regels voldoet. De manager van de activiteit kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en meetellen in de rapportages."
 
 #: bluebottle/activities/states.py:147
 msgid "Submit the activity for approval."
@@ -741,7 +741,7 @@ msgstr "Annuleren indien de activiteit niet wordt uitgevoerd. Een activiteitenma
 
 #: bluebottle/activities/states.py:184
 msgid "The activity ends and people no longer register. All current participants will fail too."
-msgstr ""
+msgstr "De activiteit wordt beëindigd en mensen kunnen zich niet meer aanmelden. De bijdrages van alle deelnemers zal niet worden meegeteld."
 
 #: bluebottle/activities/states.py:197 bluebottle/initiatives/states.py:162
 msgid "Restore"
@@ -749,11 +749,11 @@ msgstr "Herstellen"
 
 #: bluebottle/activities/states.py:199
 msgid "The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again."
-msgstr ""
+msgstr "De status van de activiteit wordt veranderd naar 'Aanpassingen nodig'. Daarna kun je aanpassingen maken en de activiteit opnieuw indienen."
 
 #: bluebottle/activities/states.py:203 bluebottle/deeds/states.py:73
 msgid "The activity will be set to the status ‘Needs work’. Then you can make changes to the activity and submit it again."
-msgstr ""
+msgstr "De status van de activiteit wordt veranderd naar 'Aanpassingen nodig'. Daarna kun je aanpassingen maken en de activiteit opnieuw indienen."
 
 #: bluebottle/activities/states.py:213 bluebottle/collect/states.py:34
 #: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:159
@@ -777,7 +777,7 @@ msgstr "Verwijder de activiteit om het niet meer in reporting te tonen. Het is n
 
 #: bluebottle/activities/states.py:232
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
-msgstr ""
+msgstr "Verwijder de activiteit. Dit kun je niet ongedaan maken."
 
 #: bluebottle/activities/states.py:238 bluebottle/collect/states.py:24
 #: bluebottle/collect/states.py:138 bluebottle/deeds/states.py:25
@@ -3097,7 +3097,7 @@ msgstr "Deze persoon heeft zich aangemeld voor de activiteit en is automatisch g
 
 #: bluebottle/deeds/states.py:152 bluebottle/deeds/states.py:191
 msgid "Reaccept"
-msgstr ""
+msgstr "Opnieuw accepteren"
 
 #: bluebottle/deeds/states.py:153
 msgid "Put a participant back as participating after it was successful."
@@ -5350,11 +5350,11 @@ msgstr "Zet een doel voor de impact die je verwacht te maken"
 
 #: bluebottle/impact/models.py:121
 msgid "Number of participants"
-msgstr ""
+msgstr "Aantal deelnemers"
 
 #: bluebottle/impact/models.py:122
 msgid "How many people you expect to join?"
-msgstr ""
+msgstr "Hoeveel mensen verwacht je dat er mee doen?"
 
 #: bluebottle/impact/models.py:141
 msgid "realized from contributions"
@@ -5653,11 +5653,11 @@ msgstr "Het initiatief is niet zichtbaar aan de voorkant en telt niet in de rapp
 
 #: bluebottle/initiatives/states.py:50
 msgid "Support needed"
-msgstr ""
+msgstr "Steun nodig"
 
 #: bluebottle/initiatives/states.py:52
 msgid "The initiative is visible in the frontend and completed activities are open for contributions."
-msgstr ""
+msgstr "Het initiatief zal zichtbaar zijn aan de voorkant en alle activiteiten die compleet zijn zullen open zijn voor bijdrages."
 
 #: bluebottle/initiatives/states.py:82
 msgid "The initiative will be created."
@@ -6765,7 +6765,7 @@ msgstr "Toon deze pagina in de volledige breedte en verberg de subnavigatie"
 
 #: bluebottle/pages/models.py:215
 msgid "Show the title of this page in the header"
-msgstr ""
+msgstr "Toon de titel van deze pagina als de pagina titel"
 
 #: bluebottle/projects/models.py:19
 msgid "project image"
@@ -6859,7 +6859,7 @@ msgstr "Token opnieuw instellen"
 
 #: bluebottle/segments/admin.py:77 bluebottle/settings/admin_dashboard.py:191
 msgid "Content"
-msgstr "Inhoud"
+msgstr "Content"
 
 #: bluebottle/segments/admin.py:85
 msgid "SSO"
@@ -8725,7 +8725,7 @@ msgstr "Moet minstens 1 tijdsblok bevatten."
 
 #: bluebottle/updates/admin.py:40
 msgid "has images"
-msgstr ""
+msgstr "heeft afbeeldingen"
 
 #: bluebottle/updates/admin.py:44
 msgid "has video"

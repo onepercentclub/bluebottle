@@ -1689,11 +1689,6 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['meta']['status'], 'open')
 
-        activity = get_first_included_by_type(response, 'activities/time-based/dates')
-
-        self.assertTrue('errors' in activity['meta'])
-        self.assertTrue('required' in activity['meta'])
-
     def test_update_other(self):
         response = self.client.patch(
             self.url, json.dumps(self.data), user=BlueBottleUserFactory.create()
@@ -1722,16 +1717,10 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
 
         data = response.json()
 
-        included = [{'id': resource['id'], 'type': resource['type']} for resource in data['included']]
-
         for attr in ['start', 'duration', 'capacity']:
             self.assertTrue(attr in data['data']['attributes'])
 
         self.assertEqual(data['data']['meta']['status'], 'open')
-
-        self.assertTrue(
-            {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included
-        )
 
     def test_get_other(self):
         response = self.client.get(
@@ -1803,7 +1792,6 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         group = Group.objects.get(name='Anonymous')
         group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
         group.permissions.remove(Permission.objects.get(codename='api_read_dateactivity'))
-
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 

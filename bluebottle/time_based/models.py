@@ -666,6 +666,12 @@ class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
     def activity(self):
         return self.slot.activity
 
+    @property
+    def calculated_status(self):
+        if self.participant.status != 'accepted':
+            return self.participant.status
+        return self.status
+
     class Meta():
         verbose_name = _("Slot participant")
         verbose_name_plural = _("Slot participants")

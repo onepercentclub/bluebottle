@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, time
 
 import dateutil
@@ -592,51 +593,28 @@ class DateParticipantExportView(ExportView):
     filename = "participants"
 
     fields = (
-        ('user__email', 'Email'),
-        ('user__full_name', 'Name'),
-        ('motivation', 'Motivation'),
-        ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('participant__user__email', 'Email'),
+        ('participant__user__full_name', 'Name'),
+        ('participant__motivation', 'Motivation'),
+        ('participant__created', 'Registration Date'),
+        ('calculated_status', 'Status'),
     )
 
     model = DateActivity
 
-    def get_row(self, instance):
-        row = []
-        slots = dict(
-            (str(slot_participant.slot.pk), slot_participant.status)
-            for slot_participant in instance.slot_participants.all()
-        )
+    def write_data(self, workbook):
+        activity = self.get_object()
+        for slot in activity.active_slots.order_by('start'):
 
-        for (field, name) in self.get_fields():
-            if field.startswith('segment.'):
-                row.append(
-                    ", ".join(
-                        instance.user.segments.filter(
-                            segment_type_id=field.split('.')[-1]
-                        ).values_list('name', flat=True)
-                    )
-                )
-            elif field.startswith('slot.'):
-                row.append(slots.get(field.split('.')[-1], '-'))
-            else:
-                row.append(prep_field(self.request, instance, field))
-
-        return row
-
-    def get_fields(self):
-        fields = super().get_fields()
-
-        slots = tuple(
-            (f"slot.{slot.pk}", f"{slot.title or str(slot)}\n{slot.start.strftime('%d-%m-%y %H:%M %Z')}")
-            for slot in self.get_object().active_slots.order_by('start')
-        )
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-
-        return fields + segments + slots
+            title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
+            worksheet = workbook.add_worksheet(title)
+            worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
+            t = 0
+            for participant in slot.slot_participants.all():
+                row = [prep_field(self.request, participant, field[0]) for field in self.get_fields()]
+                t += 1
+                worksheet.write_row(t, 0, row)
 
     def get_instances(self):
         return self.get_object().contributors.instance_of(

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-10 15:25+0200\n"
-"PO-Revision-Date: 2023-07-12 07:56\n"
+"PO-Revision-Date: 2023-10-26 09:47\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -476,7 +476,7 @@ msgstr "Heeft geanonimiseerde en/of verwijderde gegevens"
 
 #: bluebottle/activities/models.py:70
 msgid "Due to company policies and local laws, user data maybe deleted in this activity."
-msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd worden in deze activiteit."
+msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd zijn in deze activiteit."
 
 #: bluebottle/activities/models.py:74
 msgid "Number of deleted successful contributors"
@@ -711,7 +711,7 @@ msgstr "Afwijzen"
 
 #: bluebottle/activities/states.py:130
 msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
-msgstr "Wijs de activiteit af als deze niet in overeenstemming is met het programma of niet voldoet aan de regels. Een activiteitenmanager kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en in de rapporten blijven tellen."
+msgstr "Wijs de activiteit af als deze niet past binnen het programma of niet aan de regels voldoet. De manager van de activiteit kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en meetellen in de rapportages."
 
 #: bluebottle/activities/states.py:147
 msgid "Submit the activity for approval."
@@ -3050,7 +3050,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/models.py:22
 msgid "The number of users you want to participate."
-msgstr "Het aantal gebruikers dat jij wilt dat deelneemt."
+msgstr "Het verwachte aantal deelnemers. We gebruiken dit om de impact per deelnemer te berekenen, wanneer het meten van impact aanstaat."
 
 #: bluebottle/deeds/models.py:27 bluebottle/deeds/models.py:34
 #: bluebottle/initiatives/models.py:278
@@ -3080,7 +3080,7 @@ msgstr "Deze persoon heeft zich aangemeld voor de activiteit en is automatisch g
 
 #: bluebottle/deeds/states.py:158
 msgid "Stop your participation in the activity."
-msgstr "Meldt je af voor deze activiteit."
+msgstr "Meld je af voor deze activiteit."
 
 #: bluebottle/deeds/states.py:168
 msgid "User re-applies after previously withdrawing."
@@ -4368,7 +4368,7 @@ msgstr "Totalen herberekenen voor"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:14
 msgid "Target"
-msgstr "Doel"
+msgstr "Deelnemer doelstelling"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:16
 msgid "Deadline"
@@ -5345,7 +5345,7 @@ msgstr "Mijn initiatieven"
 
 #: bluebottle/initiatives/admin.py:219
 msgid "Steps to complete initiative"
-msgstr "Stappen om initiatief compleet te maken"
+msgstr "Stappen om het initiatief compleet te maken"
 
 #: bluebottle/initiatives/admin.py:250
 msgid "Activity types"
@@ -5474,7 +5474,7 @@ msgstr "Online / Op locatie"
 
 #: bluebottle/initiatives/models.py:251 bluebottle/time_based/models.py:738
 msgid "Skill"
-msgstr "Expertise"
+msgstr "Vaardigheid"
 
 #: bluebottle/initiatives/models.py:252
 msgid "Individual / Team"
@@ -6810,7 +6810,7 @@ msgstr "Token opnieuw instellen"
 
 #: bluebottle/segments/admin.py:77 bluebottle/settings/admin_dashboard.py:191
 msgid "Content"
-msgstr "Inhoud"
+msgstr "Content"
 
 #: bluebottle/segments/admin.py:85
 msgid "SSO"
@@ -7609,7 +7609,7 @@ msgstr "registratiedeadline"
 
 #: bluebottle/time_based/models.py:49
 msgid "skill"
-msgstr "expertise"
+msgstr "vaardigheid"
 
 #: bluebottle/time_based/models.py:56
 msgid "review participants"
@@ -7772,11 +7772,11 @@ msgstr "op basis van expertise"
 
 #: bluebottle/time_based/models.py:722
 msgid "Is this skill expertise based, or could anyone do it?"
-msgstr "Is deze vaardigheidsexpertise gebaseerd, of zou iemand het kunnen doen?"
+msgstr "Vereist deze vaardigheid een bepaalde expertise, of kan iedereen dit?"
 
 #: bluebottle/time_based/models.py:739
 msgid "Skills"
-msgstr "Expertise"
+msgstr "Vaardigheden"
 
 #: bluebottle/time_based/periodic_tasks.py:39
 msgid "Lock an activity when the registration date has passed."
@@ -8030,7 +8030,7 @@ msgstr "Verwijder deze deelnemer van dit tijdsblok."
 
 #: bluebottle/time_based/states.py:549
 msgid "Stop your participation in the slot."
-msgstr "Meldt je af voor dit tijdsblok."
+msgstr "Meld je af voor dit tijdsblok."
 
 #: bluebottle/time_based/states.py:559
 msgid "User re-applies to the slot after previously withdrawing."

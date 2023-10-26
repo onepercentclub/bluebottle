@@ -51,10 +51,35 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
+    review_document_enabled = models.BooleanField(
+        _('Review document enabled'),
+        help_text=_('Can participants upload a document in the review step'),
+        null=True, default=False
+    )
+
     review = models.BooleanField(
-        _('review participants'),
+        _('Review participants'),
         help_text=_('Activity manager accepts or rejects participants or teams'),
         null=True, default=None)
+
+    review_title = models.CharField(
+        _('Registration step title'),
+        help_text=_('Title of the registration step'),
+        max_length=255,
+        null=True, blank=True
+    )
+
+    review_description = models.TextField(
+        _('Registration description'),
+        help_text=_('Description of the registration step'),
+        null=True, blank=True
+    )
+
+    review_document_enabled = models.BooleanField(
+        _('Registration document enabled'),
+        help_text=_('Can participants upload a document in the registration step'),
+        null=True, default=False
+    )
 
     preparation = models.DurationField(
         _('Preparation time'),

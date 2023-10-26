@@ -173,6 +173,22 @@ class TimeBasedAdmin(ActivityChildAdmin):
         },
     }
 
+    registration_fields = [
+        'registration_deadline',
+        'capacity',
+        'review',
+        'review_title',
+        'review_description',
+        'review_document_enabled'
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Registration'), {'fields': self.registration_fields}
+        ))
+        return fieldsets
+
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter]
 
@@ -332,14 +348,8 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     detail_fields = ActivityChildAdmin.detail_fields + (
         'slot_selection',
-
         'preparation',
-        'registration_deadline',
-
         'expertise',
-        'capacity',
-        'review',
-
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields

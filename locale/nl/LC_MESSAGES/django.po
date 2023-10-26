@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-23 16:04+0100\n"
-"PO-Revision-Date: 2023-01-24 15:40\n"
+"POT-Creation-Date: 2023-01-24 16:26+0100\n"
+"PO-Revision-Date: 2023-10-26 09:47\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -447,7 +447,7 @@ msgstr "Heeft geanonimiseerde en/of verwijderde gegevens"
 
 #: bluebottle/activities/models.py:70
 msgid "Due to company policies and local laws, user data maybe deleted in this activity."
-msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd worden in deze activiteit."
+msgstr "Als gevolg van bedrijfsbeleid en lokale wetten kunnen gebruikersgegevens mogelijk verwijderd zijn in deze activiteit."
 
 #: bluebottle/activities/models.py:74
 msgid "Number of deleted successful contributors"
@@ -684,7 +684,7 @@ msgstr "Afwijzen"
 
 #: bluebottle/activities/states.py:130
 msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
-msgstr "Wijs de activiteit af als deze niet in overeenstemming is met het programma of niet voldoet aan de regels. Een activiteitenmanager kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en in de rapporten blijven tellen."
+msgstr "Wijs de activiteit af als deze niet past binnen het programma of niet aan de regels voldoet. De manager van de activiteit kan de activiteit niet langer bewerken en de activiteit zal niet meer zichtbaar zijn op het platform. De activiteit zal nog steeds zichtbaar zijn in de backoffice en meetellen in de rapportages."
 
 #: bluebottle/activities/states.py:147
 msgid "Submit the activity for approval."
@@ -2093,7 +2093,7 @@ msgstr "Opmaak"
 #: bluebottle/cms/content_plugins.py:46 bluebottle/segments/admin.py:77
 #: bluebottle/settings/admin_dashboard.py:191
 msgid "Content"
-msgstr "Inhoud"
+msgstr "Content"
 
 #: bluebottle/cms/content_plugins.py:53 bluebottle/cms/content_plugins.py:59
 #: bluebottle/cms/content_plugins.py:85
@@ -2864,7 +2864,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/models.py:23
 msgid "The number of users you want to participate."
-msgstr "Het aantal gebruikers dat jij wilt dat deelneemt."
+msgstr "Het verwachte aantal deelnemers. We gebruiken dit om de impact per deelnemer te berekenen, wanneer het meten van impact aanstaat."
 
 #: bluebottle/deeds/models.py:33 bluebottle/initiatives/models.py:253
 msgid "Deed"
@@ -2897,7 +2897,7 @@ msgstr "Deze persoon heeft zich aangemeld voor de activiteit en is automatisch g
 
 #: bluebottle/deeds/states.py:158
 msgid "Stop your participation in the activity."
-msgstr "Meldt je af voor deze activiteit."
+msgstr "Meld je af voor deze activiteit."
 
 #: bluebottle/deeds/states.py:168
 msgid "User re-applies after previously withdrawing."
@@ -4169,7 +4169,7 @@ msgstr "Totalen herberekenen voor"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:14
 msgid "Target"
-msgstr "Doel"
+msgstr "Deelnemer doelstelling"
 
 #: bluebottle/funding/templates/dashboard/recent_funding.html:16
 msgid "Deadline"
@@ -5146,7 +5146,7 @@ msgstr "Mijn initiatieven"
 
 #: bluebottle/initiatives/admin.py:216
 msgid "Steps to complete initiative"
-msgstr "Stappen om initiatief compleet te maken"
+msgstr "Stappen om het initiatief compleet te maken"
 
 #: bluebottle/initiatives/admin.py:223
 msgid "Activity types"
@@ -5293,7 +5293,7 @@ msgstr "Kantoor locatie"
 
 #: bluebottle/initiatives/models.py:261 bluebottle/time_based/models.py:751
 msgid "Skill"
-msgstr "Expertise"
+msgstr "Vaardigheid"
 
 #: bluebottle/initiatives/models.py:262 bluebottle/statistics/admin.py:77
 #: bluebottle/statistics/models.py:215
@@ -7374,7 +7374,7 @@ msgstr "registratiedeadline"
 
 #: bluebottle/time_based/models.py:64
 msgid "skill"
-msgstr "expertise"
+msgstr "vaardigheid"
 
 #: bluebottle/time_based/models.py:71
 msgid "review participants"
@@ -7525,11 +7525,11 @@ msgstr "op basis van expertise"
 
 #: bluebottle/time_based/models.py:735
 msgid "Is this skill expertise based, or could anyone do it?"
-msgstr "Is deze vaardigheidsexpertise gebaseerd, of zou iemand het kunnen doen?"
+msgstr "Vereist deze vaardigheid een bepaalde expertise, of kan iedereen dit?"
 
 #: bluebottle/time_based/models.py:752
 msgid "Skills"
-msgstr "Expertise"
+msgstr "Vaardigheden"
 
 #: bluebottle/time_based/periodic_tasks.py:39
 msgid "Lock an activity when the registration date has passed."
@@ -7779,7 +7779,7 @@ msgstr "Verwijder deze deelnemer van dit tijdsblok."
 
 #: bluebottle/time_based/states.py:549
 msgid "Stop your participation in the slot."
-msgstr "Meldt je af voor dit tijdsblok."
+msgstr "Meld je af voor dit tijdsblok."
 
 #: bluebottle/time_based/states.py:559
 msgid "User re-applies to the slot after previously withdrawing."
@@ -8042,7 +8042,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page to see the changes.\n"
-msgstr ""
+msgstr "\n"
+"Bekijk je team vanaf de activiteitspagina om de wijzigingen te zien.\n"
 
 #: bluebottle/time_based/templates/mails/messages/deadline_changed.html:5
 #, python-format
@@ -8293,13 +8294,15 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "The team activity is just a few days away!\n"
-msgstr ""
+msgstr "\n"
+"De teamactiviteit vindt over een paar dagen plaats!\n"
 
 #: bluebottle/time_based/templates/mails/messages/reminder_team_slot.html:20
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page.\n"
-msgstr ""
+msgstr "\n"
+"Bekijk je team op de activiteitspagina.\n"
 
 #: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:6
 #, python-format
@@ -8327,14 +8330,16 @@ msgctxt "email"
 msgid "\n"
 "            You joined %(team_name)s for an activity on <b>%(site_name)s!</b>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Je neemt deel aan %(team_name)s voor een activiteit op <b>%(site_name)s!</b>        "
 
 #: bluebottle/time_based/templates/mails/messages/team_member_joined.html:19
 msgctxt "email"
 msgid "\n"
 "                The activity manager will be in touch to confirm details such as time, date and location.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"De activiteitenbeheerder zal via e-mail contact opnemen om details zoals tijd, datum en locatie te bevestigen.            "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_added.html:4
 #, python-format
@@ -8385,7 +8390,9 @@ msgctxt "email"
 msgid "\n"
 "            The activity manager will be in touch to confirm details such as time, date and location. You can start inviting team members, or wait until the details have been set.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            De activiteit manager zal contact opnemen om details zoals tijd, datum en locatie te bevestigen. Je kan beginnen met het uitnodigen van teamleden, of wachten tot de details zijn ingesteld.\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_joined.html:23
 msgctxt "email"

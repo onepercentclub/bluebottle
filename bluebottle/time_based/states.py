@@ -92,6 +92,9 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'It will no longer be visible on the platform. '
             'Contributions will not be counted in reporting.'
         ),
+        description_front_end=_(
+            'The activity will not be executed. Any contributions will be cancelled too.'
+        ),
         automatic=False,
         permission=ActivityStateMachine.is_owner,
     )
@@ -559,7 +562,8 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         withdrawn,
         name=_('Withdraw'),
-        description=_("Stop your participation in the slot."),
+        description=_("Cancel the participation in this slot."),
+        description_front_end=_("Cancel your participation in this slot."),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,

@@ -241,7 +241,7 @@ class APITestCase(BluebottleTestCase):
 
         `to_change` should be a dictionary of fields to update
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         data = {
             'type': self.serializer.JSONAPIMeta.resource_name,
@@ -436,10 +436,17 @@ class APITestCase(BluebottleTestCase):
             except IndexError:
                 return self.fail('Included relation not found')
 
-            self.assertTrue(
-                {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
-                in included_resources
-            )
+            if isinstance(relationship, (list, tuple)):
+                for rel in relationship:
+                    self.assertTrue(
+                        {'type': rel['type'], 'id': str(model.pk) if model else rel['id']}
+                        in included_resources
+                    )
+            else:
+                self.assertTrue(
+                    {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
+                    in included_resources
+                )
 
     def assertNotIncluded(self, included):
         """
@@ -622,14 +629,13 @@ class APITestCase(BluebottleTestCase):
                 except AttributeError:
                     value = None
 
-            if isinstance(self.serializer().get_fields()[field], RelatedField):
+            if isinstance(self.serializer().get_fields()[field], RelatedField) and value:
                 try:
                     serializer_name = self.serializer.included_serializers[field]
                     (module, cls_name) = serializer_name.rsplit('.', 1)
                     resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
-                except KeyError:
-                    model = getattr(self.serializer.Meta.model, 'accepted_invite').get_queryset().model
-                    resource_name = model.JSONAPIMeta.resource_name
+                except (KeyError, AttributeError):
+                    resource_name = value.JSONAPIMeta.resource_name
 
                 data['relationships'][field] = {
                     'data': {
@@ -706,7 +712,7 @@ class TriggerTestCase(BluebottleTestCase):
     def create(self):
         self.model = self.factory.create(**self.defaults)
 
-    @ contextmanager
+    @contextmanager
     def execute(self, user=None, **kwargs):
         try:
             self.effects = self.model.execute_triggers(user=user, **kwargs)

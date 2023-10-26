@@ -18,7 +18,7 @@ class OfficeRegion(models.Model):
         return self.name
 
     class JSONAPIMeta(object):
-        resource_name = 'offices/region'
+        resource_name = 'offices/regions'
 
 
 class OfficeSubRegion(models.Model):
@@ -39,7 +39,7 @@ class OfficeSubRegion(models.Model):
         return self.name
 
     class JSONAPIMeta(object):
-        resource_name = 'offices/subregion'
+        resource_name = 'offices/subregions'
 
 
 class OfficeRestrictionChoices(DjangoChoices):

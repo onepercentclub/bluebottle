@@ -78,10 +78,14 @@ class ModelChangedTrigger(Trigger):
         return str(_("Object has been changed"))
 
 
-@python_2_unicode_compatible
 class ModelDeletedTrigger(Trigger):
     def __str__(self):
         return str(_("Model has been deleted"))
+
+
+class ModelCreatedTrigger(Trigger):
+    def __str__(self):
+        return str(_("Model has been created"))
 
 
 @receiver(pre_delete)
@@ -185,6 +189,12 @@ class TriggerMixin(object):
                     if trigger.changed(self):
                         self._triggers.append(BoundTrigger(self, trigger))
 
+    def _check_model_created_triggers(self):
+        if hasattr(self, 'triggers') and not self.pk:
+            for trigger in self.triggers.triggers:
+                if isinstance(trigger, ModelCreatedTrigger):
+                    self._triggers.append(BoundTrigger(self, trigger))
+
     def execute_triggers(self, effects=None, **options):
         if 'user' not in options and get_current_user():
             options['user'] = get_current_user()
@@ -195,6 +205,7 @@ class TriggerMixin(object):
                     machine.initial_transition.execute(machine)
 
         self._check_model_changed_triggers()
+        self._check_model_created_triggers()
 
         if effects is None:
             effects = []

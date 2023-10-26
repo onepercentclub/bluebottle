@@ -1,10 +1,10 @@
-from builtins import object
 import hashlib
 import os
+from builtins import object
 
-from django.urls import reverse
 from django.db.models import QuerySet
-from rest_framework import serializers
+from django.urls import reverse
+from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -65,7 +65,7 @@ class FileSerializer(ModelSerializer):
 
     class Meta(object):
         model = Document
-        fields = ('id', 'file', 'filename', 'owner', )
+        fields = ('id', 'file', 'filename', 'owner',)
         meta_fields = ['filename']
 
     class JSONAPIMeta(object):
@@ -76,10 +76,9 @@ class FileSerializer(ModelSerializer):
 
 
 class PrivateFileSerializer(FileSerializer):
-
     class Meta(object):
         model = PrivateDocument
-        fields = ('id', 'file', 'filename', 'owner', )
+        fields = ('id', 'file', 'filename', 'owner',)
         meta_fields = ['filename']
 
 
@@ -120,7 +119,7 @@ class PrivateDocumentSerializer(DocumentSerializer):
     def get_link(self, obj):
         parent = getattr(obj, self.relationship).first()
         if parent:
-            return reverse_signed(self.content_view_name, args=(parent.pk, ))
+            return reverse_signed(self.content_view_name, args=(parent.pk,))
 
     class Meta(object):
         model = PrivateDocument
@@ -132,22 +131,62 @@ class ImageField(ResourceRelatedField):
     queryset = Image.objects
 
 
+IMAGE_SIZES = {
+    'preview': '292x164',
+    'small': '320x180',
+    'large': '600x337',
+    'cover': '1568x882'
+}
+
+
 class ImageSerializer(DocumentSerializer):
     links = serializers.SerializerMethodField()
 
+    sizes = IMAGE_SIZES
+
     def get_links(self, obj):
-        if hasattr(self, 'sizes'):
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        if self.relationship:
             parent = getattr(obj, self.relationship).first()
             if parent:
-                hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(parent.pk, size, )) + '?_={}'.format(hash)
+                        reverse(self.content_view_name, args=(parent.pk, size,)) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
+        else:
+            return dict(
+                (
+                    key,
+                    reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+                ) for key, size in list(self.sizes.items())
+            )
 
     class Meta(object):
         model = Image
         fields = ('id', 'file', 'filename', 'owner', 'links',)
         meta_fields = ['filename']
+
+
+class UploadImageSerializer(serializers.ModelSerializer):
+    links = serializers.SerializerMethodField()
+    file = serializers.FileField(write_only=True)
+
+    sizes = IMAGE_SIZES
+
+    def get_links(self, obj):
+        hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
+        return dict(
+            (
+                key,
+                reverse('upload-image-preview', args=(obj.id, size)) + '?_={}'.format(hash)
+            ) for key, size in list(self.sizes.items())
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'images'
+
+    class Meta(object):
+        model = Image
+        fields = ('id', 'file', 'owner', 'links', 'owner')

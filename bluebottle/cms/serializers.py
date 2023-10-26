@@ -3,7 +3,6 @@ from builtins import str
 
 from django.db.models import Sum
 from django.urls import reverse
-from django.utils.html import strip_tags
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -740,10 +739,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
-    text = serializers.SerializerMethodField()
-
-    def get_text(self, obj):
-        return strip_tags(obj.text)
+    text = SafeField()
 
     class Meta(object):
         model = PlainTextItem
@@ -756,9 +752,6 @@ class TextBlockSerializer(BaseBlockSerializer):
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
     text = SafeField()
-
-    def get_text(self, obj):
-        return obj.text
 
     class Meta(object):
         model = ImagePlainTextItem

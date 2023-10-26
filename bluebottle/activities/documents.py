@@ -36,6 +36,12 @@ class ActivityDocument(Document):
     type = fields.KeywordField()
     manager = fields.KeywordField()
 
+    current_status = fields.NestedField(properties={
+        'name': fields.KeywordField(),
+        'label': fields.KeywordField(),
+        'description': fields.KeywordField(),
+    })
+
     image = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'type': fields.KeywordField(),
@@ -187,6 +193,14 @@ class ActivityDocument(Document):
             doc_type=[cls],
             model=cls._doc_type.model
         )
+
+    def prepare_current_status(self, instance):
+        if instance.states.current_state:
+            return {
+                'value': instance.states.current_state.value,
+                'name': str(instance.states.current_state.name),
+                'description': str(instance.states.current_state.description),
+            }
 
     def prepare_image(self, instance):
         if instance.image:

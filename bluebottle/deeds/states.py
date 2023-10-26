@@ -44,10 +44,10 @@ class DeedStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         ActivityStateMachine.succeeded,
         automatic=False,
-        name=_("succeed"),
+        name=_("Succeed"),
         conditions=[has_no_end_date, can_succeed],
         permission=ActivityStateMachine.is_owner,
-        description=_("Succeed the activity.")
+        description=_("The activity ends and people can no longer register. ")
     )
 
     reopen = Transition(
@@ -57,7 +57,7 @@ class DeedStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_("Reopen"),
-        description=_("Reopen the activity.")
+        description=_("Reopen the activity."),
     )
 
     reopen_manually = Transition(
@@ -70,10 +70,9 @@ class DeedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
         automatic=False,
         description=_(
-            "Manually reopen the activity. "
-            "This will unset the end date if the date is in the past. "
-            "People can sign up again for the task."
-        )
+            "The activity will be set to the status ‘Needs work’. "
+            "Then you can make changes to the activity and submit it again."
+        ),
     )
 
     cancel = Transition(
@@ -90,6 +89,9 @@ class DeedStateMachine(ActivityStateMachine):
             'and it will no longer be visible on the platform. '
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
+        ),
+        description_front_end=_(
+            'The activity ends and people can no longer register.'
         ),
         automatic=False,
     )
@@ -147,8 +149,8 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     re_accept = Transition(
         ContributorStateMachine.succeeded,
         accepted,
-        name=_('Re-accept'),
-        automatic=True,
+        name=_('Reaccept'),
+        description=_("Put a participant back as participating after it was successful."),
     )
 
     withdraw = Transition(
@@ -165,7 +167,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         accepted,
         name=_('Reapply'),
-        description=_("User re-applies after previously withdrawing."),
+        description=_("Reapply after previously withdrawing."),
         automatic=False,
         conditions=[activity_is_open],
         permission=is_user,
@@ -184,10 +186,10 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     accept = Transition(
-        rejected,
+        [rejected, withdrawn],
         accepted,
-        name=_('Re-Accept'),
-        description=_("User is re-accepted after previously withdrawing."),
+        name=_('Reaccept'),
+        description=_("Reaccept user after previously withdrawing or rejecting."),
         automatic=False,
         permission=is_owner,
     )

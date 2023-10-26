@@ -21,8 +21,9 @@ from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedParticipantListSerializer
 )
 from bluebottle.files.models import RelatedImage
+from bluebottle.files.serializers import IMAGE_SIZES
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonorListSerializer, TinyFundingSerializer
@@ -65,14 +66,6 @@ class ActivityLocationSerializer(Serializer):
         resource_name = 'activity-locations'
 
 
-IMAGE_SIZES = {
-    'preview': '300x168',
-    'small': '320x180',
-    'large': '600x337',
-    'cover': '960x540'
-}
-
-
 class ActivityImageSerializer(ImageSerializer):
     sizes = IMAGE_SIZES
     content_view_name = 'activity-image'
@@ -102,6 +95,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
+    current_status = CurrentStatusField()
 
     collect_type = serializers.SerializerMethodField()
 
@@ -208,7 +202,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                 location = places[0]
         elif len(obj.location):
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
-            location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
+            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
 
         if location:
             if location.locality:
@@ -324,6 +318,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type', 'highlight', 'contribution_duration',
         )
+        meta_fields = ('current_status',)
 
     class JSONAPIMeta:
         resource_name = 'activities/preview'
@@ -407,6 +402,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'updated',
             'errors',
             'required',
+            'current_status',
+            'contributor_count',
+            'deleted_successful_contributors'
         )
 
     class JSONAPIMeta(object):

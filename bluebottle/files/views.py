@@ -6,6 +6,7 @@ import magic
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -14,8 +15,9 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer
-from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
+from bluebottle.files.serializers import FileSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
 mime = magic.Magic(mime=True)
 
@@ -42,7 +44,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         uploaded_file = self.request.FILES['file']
         mime_type = mime.from_buffer(uploaded_file.read())
         if not mime_type == uploaded_file.content_type:
-            raise ValidationError('Mime-type does not match Content-Type')
+            raise ValidationError(f'Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}')
 
         if mime_type not in self.allowed_mime_types:
             raise ValidationError('Mime-type is not allowed for this endpoint')
@@ -85,10 +87,12 @@ class ImageContentView(FileContentView):
             height = int(int(width) / 1.5)
         return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
 
-    def retrieve(self, *args, **kwargs):
-
+    def get_file(self):
         instance = self.get_object()
-        file = getattr(instance, self.field).file
+        return getattr(instance, self.field).file
+
+    def retrieve(self, *args, **kwargs):
+        file = self.get_file()
 
         if 'x' in self.kwargs['size']:
             if self.kwargs['size'] not in self.allowed_sizes.values():
@@ -97,7 +101,16 @@ class ImageContentView(FileContentView):
             if not self.kwargs['size'] in [val.split('x')[0] for val in self.allowed_sizes.values()]:
                 return HttpResponseNotFound()
 
-        thumbnail = get_thumbnail(file, self.kwargs['size'])
+        size = self.kwargs['size']
+        try:
+            width, height = size.split('x')
+            if width == height and int(width) < 300:
+                thumbnail = get_thumbnail(file, size, crop='center')
+            else:
+                thumbnail = get_thumbnail(file, size)
+        except ValueError:
+            thumbnail = get_thumbnail(file, size)
+
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:
@@ -126,3 +139,22 @@ class ImageList(FileList):
     serializer_class = ImageSerializer
 
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
+
+
+class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = Image.objects.all()
+    serializer_class = UploadImageSerializer
+
+
+class ImagePreview(ImageContentView):
+    allowed_sizes = {'preview': '292x164', 'large': '1568x882'}
+
+    queryset = Image.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def get_file(self):
+        instance = self.get_object()
+        return instance.file.file

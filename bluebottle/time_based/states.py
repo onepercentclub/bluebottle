@@ -3,13 +3,13 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
+from bluebottle.fsm.state import (
+    register, State, Transition, EmptyState, AllStates, ModelStateMachine
+)
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
     TeamSlot,
-)
-from bluebottle.fsm.state import (
-    register, State, Transition, EmptyState, AllStates, ModelStateMachine
 )
 
 
@@ -122,6 +122,7 @@ class PeriodStateMachine(TimeBasedStateMachine):
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=False,
+        description=_("Close this activity and allocate the hours to the participants."),
         conditions=[can_succeed],
         permission=ActivityStateMachine.is_owner,
     )

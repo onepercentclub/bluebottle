@@ -70,6 +70,9 @@ urlpatterns = [
     url(r'^api/segments/',
         include('bluebottle.segments.urls.api')),
 
+    url(r'^api/updates/',
+        include('bluebottle.updates.urls.api')),
+
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 

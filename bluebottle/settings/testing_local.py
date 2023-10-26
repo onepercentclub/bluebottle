@@ -1,6 +1,5 @@
-from bluebottle.settings.testing import *
+from bluebottle.settings.testing import *  # noqa
 
-# Database
 DATABASES = {
     'default': {
         'ENGINE': 'bluebottle.clients.postgresql_backend',
@@ -18,6 +17,7 @@ ELASTICSEARCH_DSL = {
     'default': {
         'hosts': 'elasticsearch:9200'
     },
+
 }
 
 SLOW_TEST_THRESHOLD_MS = 1000

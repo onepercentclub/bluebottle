@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans context 'email' %}
+        Hi {{ recipient_name }},
+        <br/>
+        <br/>
+        {{ author}} posted a comment to '{{ title }}'.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ action_link }}"
+       class="action-email">{% blocktrans context 'email' %}View message{% endblocktrans %}</a>
+{% endblock %}`

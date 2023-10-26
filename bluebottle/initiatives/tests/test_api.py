@@ -365,9 +365,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': True,
-                u'name': u'request_changes',
-                u'target': u'needs_work'
+                'available': True,
+                'name': 'request_changes',
+                'target': 'needs_work',
+                'label': 'Needs work',
+                'description': "The status of the initiative is set to 'Needs work'. The " +
+                               "initiator can edit and resubmit the initiative. Don't forget " +
+                               "to inform the initiator of the necessary adjustments."
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))

@@ -273,6 +273,9 @@ class DateActivitySlotInfoMixin():
     def get_date_info(self, obj):
         total = self.get_filtered_slots(obj).count()
         slots = self.get_filtered_slots(obj, only_upcoming=True)
+        last_slot = obj.slots.exclude(status__in=['draft', 'cancelled']).order_by('start').last()
+        end = last_slot.end if last_slot else None
+
         if total > 1:
             starts = set(
                 slots.annotate(date=Trunc('start', kind='day')).values_list('date')
@@ -296,6 +299,7 @@ class DateActivitySlotInfoMixin():
             'is_full': all(slot.status == 'full' for slot in slots),
             'count': count,
             'first': first,
+            'end': end,
             'duration': duration
         }
 

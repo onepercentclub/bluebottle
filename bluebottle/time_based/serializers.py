@@ -304,6 +304,7 @@ class DateActivitySlotInfoMixin():
                 slots.annotate(date=Trunc('start', kind='day')).values_list('date')
             )
             count = len(starts)
+            end = end.date()
             first = min(starts)[0].date() if starts else None
             duration = None
         elif total == 1:

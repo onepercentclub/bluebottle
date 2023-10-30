@@ -33,8 +33,8 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
         model_name = instance.__class__.__name__
 
         tenant = connection.tenant.schema_name
-        self.registry_update_task.delay(pk, app_label, model_name, tenant)
-        self.registry_update_related_task.delay(pk, app_label, model_name, tenant)
+        self.registry_update_task.apply_async(args=[pk, app_label, model_name, tenant], countdown=2)
+        self.registry_update_related_task.apply_async(args=[pk, app_label, model_name, tenant], countdown=2)
 
     def handle_pre_delete(self, sender, instance, **kwargs):
         """Handle removing of instance object from related models instance.

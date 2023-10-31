@@ -298,6 +298,8 @@ class DateActivitySlotInfoMixin():
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         last_slot = obj.slots.exclude(status__in=['draft', 'cancelled']).order_by('start').last()
         end = last_slot.end if last_slot else None
+        capacity = None
+        duration = None
 
         if total > 1:
             starts = set(
@@ -306,7 +308,6 @@ class DateActivitySlotInfoMixin():
             count = len(starts)
             end = end.date()
             first = min(starts)[0].date() if starts else None
-            duration = None
         elif total == 1:
             slot = self.get_filtered_slots(obj).first()
             first = slot.start
@@ -324,7 +325,8 @@ class DateActivitySlotInfoMixin():
             'count': count,
             'first': first,
             'end': end,
-            'duration': duration
+            'duration': duration,
+            'capacity': capacity,
         }
 
     def get_location_info(self, obj):

@@ -57,7 +57,6 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     )
 
     def get_value(self, start=None, end=None):
-        __import__('ipdb').set_trace()
         return self.value
 
     unit = None

@@ -2892,8 +2892,9 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
 
     def test_create_without_participant(self):
         # This will create a participant on the fly
+        user = BlueBottleUserFactory.create()
         del self.data['data']['relationships']['participant']
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

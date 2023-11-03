@@ -1,5 +1,4 @@
 import mimetypes
-from os.path import exists
 from random import randrange
 
 import magic

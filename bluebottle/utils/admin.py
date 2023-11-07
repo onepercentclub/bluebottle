@@ -198,7 +198,7 @@ class TranslatableAdminOrderingMixin(object):
                     output_field=fields.BooleanField()
                 )
             ).order_by('master_id', '-is_translated').distinct('master_id').values('pk')
-        ).order_by('translations__name')
+        ).order_by(self.translatable_ordering)
 
 
 def admin_info_box(text):

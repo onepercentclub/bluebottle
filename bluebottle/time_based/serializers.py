@@ -219,6 +219,13 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
 
+    included_serializers = dict(
+        ActivitySlotSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer'
+        }
+    )
+
 
 class TeamSlotSerializer(ActivitySlotSerializer):
     activity = ResourceRelatedField(read_only=True)
@@ -998,11 +1005,13 @@ class SlotParticipantSerializer(ModelSerializer):
         included_resources = [
             'participant',
             'slot',
+            'slot.activity',
         ]
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'slot.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
 

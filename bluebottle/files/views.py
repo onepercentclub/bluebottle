@@ -15,7 +15,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
+from bluebottle.files.serializers import FileSerializer, PrivateDocumentSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
@@ -146,6 +146,11 @@ class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
     queryset = Image.objects.all()
     serializer_class = UploadImageSerializer
 
+
+class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = PrivateDocument.objects.all()
+    serializer_class = PrivateDocumentSerializer
 
 class ImagePreview(ImageContentView):
     allowed_sizes = {'preview': '292x164', 'large': '1568x882'}

@@ -486,6 +486,11 @@ class Donor(Contributor):
         return self.created
 
     @property
+    def available_payment_methods(self):
+        payment_methods = self.activity.bank_account.payment_methods
+        return payment_methods
+
+    @property
     def payment_method(self):
         if not self.payment:
             return None

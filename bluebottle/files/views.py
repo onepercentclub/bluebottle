@@ -15,7 +15,13 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, PrivateDocumentSerializer, PrivateFileSerializer, UploadImageSerializer, ImageSerializer
+from bluebottle.files.serializers import (
+    FileSerializer, 
+    PrivateDocumentSerializer, 
+    PrivateFileSerializer, 
+    UploadImageSerializer, 
+    ImageSerializer
+)
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
@@ -139,7 +145,6 @@ class ImageList(FileList):
     serializer_class = ImageSerializer
 
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
-
 
 class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
     permission_classes = (IsOwner,)

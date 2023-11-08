@@ -40,6 +40,7 @@ class File(AnonymizationMixin, models.Model):
     )
     used = models.BooleanField(_('used'), default=False)
     name = models.CharField(null=True, blank=True, max_length=50)
+
     def save(self, *args, **kwargs):
         if not self.name:
             self.name = self.file.name
@@ -80,7 +81,6 @@ class PrivateDocument(File):
 
     class JSONAPIMeta(object):
         resource_name = 'private-documents'
-
 
 
 class RelatedImage(models.Model):

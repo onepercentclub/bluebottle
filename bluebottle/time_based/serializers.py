@@ -218,6 +218,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
+        included_resources = ['activity']
 
     included_serializers = dict(
         ActivitySlotSerializer.included_serializers,

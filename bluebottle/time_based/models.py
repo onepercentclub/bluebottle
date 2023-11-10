@@ -558,6 +558,24 @@ class TeamSlot(ActivitySlot):
     def accepted_participants(self):
         return self.team.members.filter(status='accepted')
 
+    @property
+    def event_data(self):
+        title = f'{self.activity.title} - {self.team.name}'
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = f"{self.location.locality} {self.location_hint}"
+        return {
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.activity.owner.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
+
 
 class Participant(Contributor):
 

@@ -294,6 +294,10 @@ class TeamSlotChangedNotification(TransitionMessage):
     }
 
     @property
+    def event_data(self):
+        return self.obj.event_data
+
+    @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 

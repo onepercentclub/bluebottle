@@ -5,6 +5,7 @@ from operator import attrgetter
 from functools import partial
 import logging
 
+import icalendar
 from celery import shared_task
 
 from django.db import connection
@@ -38,6 +39,7 @@ class TransitionMessage(object):
     subject = 'Status changed'
     template = 'messages/base'
     context = {}
+    event_data = None
     send_once = False
     delay = None
 
@@ -98,6 +100,21 @@ class TransitionMessage(object):
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
+    def get_calendar_attachement(self):
+        event = self.event_data
+        cal = icalendar.Calendar()
+        event_item = icalendar.Event()
+        event_item.add('summary', event['summary'])
+        event_item.add('organizer', event['organizer'])
+        event_item.add('description', event['description'])
+        event_item.add('url', event['url'])
+        event_item.add('location', event['location'])
+        event_item.add('dtstart', event['start_time'])
+        event_item.add('dtend', event['end_time'])
+        cal.add_component(event_item)
+        ical_data = cal.to_ical()
+        return ('event.ics', ical_data, 'text/calendar')
+
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
@@ -118,6 +135,9 @@ class TransitionMessage(object):
 
         if 'context' in self.options:
             context.update(self.options['context'])
+
+        if self.event_data:
+            context['attachments'] = [self.get_calendar_attachement()]
 
         return context
 
@@ -190,6 +210,7 @@ class TransitionMessage(object):
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
             message.save()
+
             message.send(**context)
 
     @property

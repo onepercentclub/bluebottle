@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-10-25 14:57+0200\n"
-"PO-Revision-Date: 2023-10-26 09:46\n"
+"PO-Revision-Date: 2023-11-14 13:32\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -349,7 +349,7 @@ msgstr "begint onmiddellijk"
 #: bluebottle/time_based/messages.py:677 bluebottle/time_based/messages.py:698
 msgctxt "email"
 msgid "View activity"
-msgstr "Activiteit bewerken"
+msgstr "Activiteit bekijken"
 
 #: bluebottle/activities/messages.py:297
 #, python-brace-format

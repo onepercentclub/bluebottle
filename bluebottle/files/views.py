@@ -4,7 +4,9 @@ from random import randrange
 
 import magic
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.http import (
+    HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+)
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
@@ -16,10 +18,10 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
 from bluebottle.files.serializers import (
-    FileSerializer, 
-    PrivateDocumentSerializer, 
-    PrivateFileSerializer, 
-    UploadImageSerializer, 
+    FileSerializer,
+    PrivateDocumentSerializer,
+    PrivateFileSerializer,
+    UploadImageSerializer,
     ImageSerializer
 )
 from bluebottle.utils.permissions import IsOwner
@@ -146,6 +148,7 @@ class ImageList(FileList):
 
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
+
 class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()
@@ -156,6 +159,7 @@ class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = PrivateDocument.objects.all()
     serializer_class = PrivateDocumentSerializer
+
 
 class ImagePreview(ImageContentView):
     allowed_sizes = {'preview': '292x164', 'large': '1568x882'}

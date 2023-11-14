@@ -470,6 +470,9 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     delay = 60
 
     def get_event_data(self, recipient=None):
+        if isinstance(self.obj.activity, PeriodActivity):
+            # TODO: Come up with calendar events once we've added slots to period activities too
+            return []
         slots = self.obj.activity.slots.filter(
             slot_participants__participant__user=recipient,
             slot_participants__participant__status='accepted',
@@ -605,7 +608,7 @@ class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
         'team_name': 'team.name'
     }
-    # delay = 60
+    delay = 60
 
     @property
     def action_link(self):

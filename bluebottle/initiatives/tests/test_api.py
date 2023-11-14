@@ -455,7 +455,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(days=10),
             end=datetime.date.today() - datetime.timedelta(days=5)
         )
-        deed_activity.states.submit(save=True)
+        deed_activity.states.publish(save=True)
         deed_activity.states.succeed(save=True)
 
         DeedParticipantFactory.create_batch(3, activity=deed_activity)

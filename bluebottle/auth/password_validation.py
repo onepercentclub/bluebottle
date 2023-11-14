@@ -1,5 +1,6 @@
 import re
-from gettext import gettext as _, ngettext
+from django.utils.translation import ngettext, get_language
+from django.utils.translation import gettext as _
 
 from difflib import SequenceMatcher
 from django.contrib.auth.password_validation import (

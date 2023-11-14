@@ -42,7 +42,6 @@ class TransitionMessage(object):
     context = {}
     send_once = False
     delay = None
-    event_data = None
 
     def __reduce__(self):
         return (partial(self.__class__, self.obj, **self.options), ())
@@ -102,7 +101,7 @@ class TransitionMessage(object):
         return to_text.handle(self.get_content_html(recipient))
 
     def get_event_data(self, recipient):
-        return self.event_data
+        return None
 
     def get_event_item(self, event):
         event_item = icalendar.Event()

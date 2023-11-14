@@ -241,8 +241,7 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    @property
-    def event_data(self):
+    def get_event_data(self, recipient=None):
         return self.obj.event_data
 
     def get_recipients(self):
@@ -266,7 +265,7 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    def get_event_data(self, recipient):
+    def get_event_data(self, recipient=None):
         slots = self.obj.activity.slots.filter(
             slot_participants__participant__user=recipient,
             slot_participants__participant__status='accepted',
@@ -305,8 +304,7 @@ class TeamSlotChangedNotification(TransitionMessage):
         'timezone': 'timezone',
     }
 
-    @property
-    def event_data(self):
+    def get_event_data(self, recipient=None):
         return self.obj.event_data
 
     @property
@@ -471,7 +469,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     delay = 60
 
-    def get_event_data(self, recipient):
+    def get_event_data(self, recipient=None):
         slots = self.obj.activity.slots.filter(
             slot_participants__participant__user=recipient,
             slot_participants__participant__status='accepted',
@@ -636,8 +634,7 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    @property
-    def event_data(self):
+    def get_event_data(self, recipient=None):
         return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
 
     def get_recipients(self):

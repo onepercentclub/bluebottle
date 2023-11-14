@@ -102,5 +102,5 @@ class PrivateDocumentField(ForeignKey):
             'queryset': queryset,
             'to_field_name': self.remote_field.field_name,
         }
-        kwargs.update(defaults)
-        return super(PrivateDocumentField, self).formfield(**kwargs)
+        defaults.update(kwargs)
+        return super(PrivateDocumentField, self).formfield(**defaults)

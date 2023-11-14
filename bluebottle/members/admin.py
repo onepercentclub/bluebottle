@@ -639,7 +639,7 @@ class MemberAdmin(UserAdmin):
         initiative_url = reverse('admin:initiatives_initiative_changelist')
         for field in ['owner', 'reviewer', 'promoter', 'activity_managers']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
-                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                link = initiative_url + '?{}__id={}'.format(field, obj.id)
                 initiatives.append(format_html(
                     '<a href="{}">{}</a> draft {}',
                     link,
@@ -647,7 +647,7 @@ class MemberAdmin(UserAdmin):
                     field,
                 ))
             if Initiative.objects.filter(status='approved', **{field: obj}).count():
-                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                link = initiative_url + '?{}__id={}'.format(field, obj.id)
                 initiatives.append(format_html(
                     '<a href="{}">{}</a> open {}',
                     link,

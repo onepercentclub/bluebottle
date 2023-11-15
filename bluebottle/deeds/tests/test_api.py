@@ -399,12 +399,12 @@ class DeedTransitionListViewAPITestCase(APITestCase):
 
         self.defaults = {
             'resource': self.activity,
-            'transition': 'submit',
+            'transition': 'publish',
         }
 
         self.fields = ['resource', 'transition', ]
 
-    def test_submit(self):
+    def test_publish(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('resource', self.activity)

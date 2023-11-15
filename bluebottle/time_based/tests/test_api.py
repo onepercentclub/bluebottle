@@ -2029,7 +2029,7 @@ class ParticipantDetailViewTestCase():
         self.assertTransitionInData('remove', self.data)
 
     def test_get_participant(self):
-        response = self.client.get(self.url, user=self.participant)
+        response = self.client.get(self.url, user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.data = response.json()['data']
 

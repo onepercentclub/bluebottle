@@ -310,7 +310,7 @@ class TimeBasedDetailAPIViewTestCase():
         }
 
     def assertTransitionInData(self, transition, data):
-        self.assertTrue(transition in [trans['name'] for trans in data['meta']['transitions']])
+        self.assertIn(transition, [trans['name'] for trans in data['meta']['transitions']])
 
     def test_get_owner(self):
         self.activity.initiative.states.submit(save=True)
@@ -533,15 +533,13 @@ class TimeBasedDetailAPIViewTestCase():
     def test_get_open(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
+        self.activity.states.submit(save=True)
 
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.data = response.json()['data']
-
-        self.assertTrue(
-            'cancel' in [trans['name'] for trans in self.data['meta']['transitions']]
-        )
+        self.assertTransitionInData('cancel', self.data)
 
     def test_get_contributors(self):
         self.participant_factory.create_batch(4, activity=self.activity)
@@ -974,10 +972,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
     def test_get_open(self):
         self.activity.team_activity = 'teams'
         self.activity.save()
-
         super().test_get_open()
-
-        self.assertTransitionInData('succeed_manually', self.data)
+        self.assertTransitionInData('cancel', self.data)
 
     def test_owner_succeed_manually(self):
         self.initiative = InitiativeFactory.create(status='approved')
@@ -1986,7 +1982,7 @@ class ParticipantDetailViewTestCase():
         }
 
     def assertTransitionInData(self, transition, data):
-        self.assertTrue(transition in [trans['name'] for trans in data['meta']['transitions']])
+        self.assertIn(transition, [trans['name'] for trans in data['meta']['transitions']])
 
     def test_get_user(self):
         response = self.client.get(self.url, user=self.participant.user)

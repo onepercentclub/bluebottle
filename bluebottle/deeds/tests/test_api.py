@@ -52,7 +52,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
@@ -143,7 +143,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         self.assertMeta(
             'contributor-count',

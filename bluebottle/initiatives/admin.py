@@ -262,9 +262,9 @@ class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettin
             'fields': (
                 'contact_method', 'require_organization',
                 'enable_impact',
-                'enable_multiple_dates',
                 'enable_open_initiatives', 'enable_participant_exports',
                 'enable_matching_emails',
+                'include_full_activities'
             )
         }),
     )

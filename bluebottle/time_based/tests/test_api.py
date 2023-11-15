@@ -1985,6 +1985,9 @@ class ParticipantDetailViewTestCase():
             }
         }
 
+    def assertTransitionInData(self, transition, data):
+        self.assertTrue(transition in [trans['name'] for trans in data['meta']['transitions']])
+
     def test_get_user(self):
         response = self.client.get(self.url, user=self.participant.user)
 

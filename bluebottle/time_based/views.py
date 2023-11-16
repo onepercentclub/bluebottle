@@ -150,7 +150,7 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         try:
             activity_id = self.kwargs.get('pk', None) or self.request.GET.get('activity')
             queryset = queryset.filter(activity_id=int(activity_id))
-        except KeyError:
+        except (KeyError, TypeError):
             raise ValidationError('Missing required parameter: activity')
         except ValueError:
             raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))

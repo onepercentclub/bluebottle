@@ -27,8 +27,7 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
             start=date.today() + timedelta(days=10),
             end=date.today() + timedelta(days=20),
         )
-
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         self.tenant = connection.tenant
 

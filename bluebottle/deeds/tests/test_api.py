@@ -52,7 +52,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
@@ -143,7 +143,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         self.assertMeta(
             'contributor-count',
@@ -399,12 +399,12 @@ class DeedTransitionListViewAPITestCase(APITestCase):
 
         self.defaults = {
             'resource': self.activity,
-            'transition': 'submit',
+            'transition': 'publish',
         }
 
         self.fields = ['resource', 'transition', ]
 
-    def test_submit(self):
+    def test_publish(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('resource', self.activity)

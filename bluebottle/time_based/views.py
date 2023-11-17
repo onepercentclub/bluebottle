@@ -6,6 +6,7 @@ from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone
 from django.utils.translation import gettext_lazy as _
+from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.models import Activity
@@ -169,10 +170,16 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')
+        ordering = self.request.GET.get('ordering')
         try:
-            queryset = queryset.filter(
-                start__gte=dateutil.parser.parse(start).astimezone(tz)
-            )
+            if ordering == '-start':
+                queryset = queryset.filter(
+                    start__lte=dateutil.parser.parse(start).astimezone(tz)
+                )
+            else:
+                queryset = queryset.filter(
+                    start__gte=dateutil.parser.parse(start).astimezone(tz)
+                )
         except (ValueError, TypeError):
             pass
 
@@ -189,6 +196,8 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['start']
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

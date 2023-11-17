@@ -199,10 +199,7 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
             DeleteActivityPermission
         ]
     }
-    permission_classes = [
-        DateSlotActivityStatusPermission,
-
-    ]
+    permission_classes = [DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
 

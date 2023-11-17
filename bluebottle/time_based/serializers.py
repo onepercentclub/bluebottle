@@ -218,6 +218,14 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
+        included_resources = ['activity']
+
+    included_serializers = dict(
+        ActivitySlotSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer'
+        }
+    )
 
 
 class TeamSlotSerializer(ActivitySlotSerializer):
@@ -296,13 +304,18 @@ class DateActivitySlotInfoMixin():
     def get_date_info(self, obj):
         total = self.get_filtered_slots(obj).count()
         slots = self.get_filtered_slots(obj, only_upcoming=True)
+        last_slot = obj.slots.exclude(status__in=['draft', 'cancelled']).order_by('start').last()
+        end = last_slot.end if last_slot else None
+        capacity = None
+        duration = None
+
         if total > 1:
             starts = set(
                 slots.annotate(date=Trunc('start', kind='day')).values_list('date')
             )
             count = len(starts)
+            end = end.date()
             first = min(starts)[0].date() if starts else None
-            duration = None
         elif total == 1:
             slot = self.get_filtered_slots(obj).first()
             first = slot.start
@@ -319,7 +332,9 @@ class DateActivitySlotInfoMixin():
             'is_full': all(slot.status == 'full' for slot in slots),
             'count': count,
             'first': first,
-            'duration': duration
+            'end': end,
+            'duration': duration,
+            'capacity': capacity,
         }
 
     def get_location_info(self, obj):
@@ -999,11 +1014,13 @@ class SlotParticipantSerializer(ModelSerializer):
         included_resources = [
             'participant',
             'slot',
+            'slot.activity',
         ]
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'slot.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
 

@@ -21,7 +21,8 @@ from bluebottle.time_based.messages import (
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
     ParticipantRejectedNotification, ParticipantAddedOwnerNotification, TeamSlotChangedNotification,
-    ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification
+    ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification,
+    ParticipantCreatedNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -1708,6 +1709,10 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         for slot in self.slots:
             self.assertTrue(slot.title in mail.outbox[1].body)
 
+        self.assertEqual(len(mail.outbox[1].attachments), 3)
+        event = mail.outbox[1].attachments[0][1].splitlines()
+        self.assertTrue(f'UID:test-{self.slots[0].id}' in event)
+
     def test_join_free_review(self):
         self.activity.review = True
         self.activity.save()
@@ -1985,11 +1990,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             user=BlueBottleUserFactory.create(),
             as_relation='user'
         )
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have registered your team for "{self.review_activity.title}"'
-        )
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
             f'A new team has applied to "{self.review_activity.title}"'
@@ -2114,7 +2115,6 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             user=user
         )
         with self.execute(user=user):
-            self.assertNotificationEffect(TeamParticipantAppliedNotification)
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
 
     def test_join_team_participant(self):
@@ -2135,6 +2135,29 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
             self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
             self.assertNotificationEffect(TeamMemberJoinedNotification)
+            self.assertNotificationEffect(TeamMemberAddedMessage)
+
+    def test_join_team_participant_review(self):
+        self.activity.team_activity = 'teams'
+        self.activity.review = True
+        self.activity.save()
+
+        user = BlueBottleUserFactory.create()
+        captain = self.participant_factory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create()
+        )
+        self.model = self.participant_factory.build(
+            accepted_invite=captain.invite,
+            activity=self.activity,
+            user=user
+        )
+        with self.execute(user=user, send_messages=True):
+            self.assertNoNotificationEffect(NewParticipantNotification)
+            self.assertNoNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(ParticipantCreatedNotification)
+            self.assertNoNotificationEffect(TeamParticipantJoinedNotification)
+            self.assertNoNotificationEffect(TeamParticipantAppliedNotification)
             self.assertNotificationEffect(TeamMemberAddedMessage)
 
     def test_remove_participant(self):

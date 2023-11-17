@@ -14,7 +14,7 @@ class CreateEffortContributionTestCase(BluebottleTestCase):
             realized=0,
         )
 
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.activity.initiative.states.approve(save=True)
 
         participant = DeedParticipantFactory.create(activity=self.activity)

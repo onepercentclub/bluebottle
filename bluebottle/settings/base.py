@@ -1141,6 +1141,7 @@ ELASTICSEARCH_DSL = {
         'hosts': 'localhost:9200'
     },
 }
+ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'bluebottle.clients.signals.TenantCelerySignalProcessor'
 
 LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'

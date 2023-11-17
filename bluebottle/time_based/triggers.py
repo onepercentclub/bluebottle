@@ -1160,6 +1160,7 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[
                         needs_review,
                         is_team_activity,
+                        is_team_captain,
                         is_user
                     ]
                 ),
@@ -1167,7 +1168,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantCreatedNotification,
                     conditions=[
                         needs_review,
-                        not_team_captain,
+                        is_not_team_activity,
                         is_user
                     ]
                 ),
@@ -1220,6 +1221,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantCreatedNotification,
                     conditions=[
                         needs_review,
+                        is_not_team_activity,
                         is_user
                     ]
                 ),

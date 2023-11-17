@@ -385,6 +385,7 @@ class IcalView(PrivateFileView):
         event = icalendar.Event()
         event.add('summary', instance.title)
         event.add('description', self.details)
+        event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start)
         event.add('dtend', instance.end)
@@ -394,7 +395,7 @@ class IcalView(PrivateFileView):
         organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
         event['organizer'] = organizer
-        if instance.location:
+        if hasattr(instance, 'location') and instance.location:
             event['location'] = icalendar.vText(instance.location.formatted_address)
 
         calendar.add_component(event)

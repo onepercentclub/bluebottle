@@ -24,14 +24,14 @@ class StartDateValidator():
     def __call__(self, value, serializer):
         parent = serializer.parent
         try:
-            end = dateutil.parser.parse(parent.initial_data['end'])
-        except KeyError:
+            end = dateutil.parser.parse(parent.initial_data['end']).date()
+        except (KeyError, TypeError):
             try:
                 end = parent.instance.end
             except AttributeError:
                 return
 
-        if value and value > end.date():
+        if value and end and value > end:
             raise ValidationError('The activity should start before it ends')
 
 

@@ -87,7 +87,7 @@ class OldStatisticSerializer(PolymorphicModelSerializer):
 class StatisticSerializer(BaseStatisticSerializer):
     class Meta(object):
         model = ManualStatistic
-        fields = ('value', 'name', 'icon', 'sequence')
+        fields = ('value', 'name', 'icon', 'sequence', 'unit')
 
     class JSONAPIMeta(object):
         resource_name = 'statistics'

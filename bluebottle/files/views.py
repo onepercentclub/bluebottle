@@ -34,9 +34,9 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     queryset = Document.objects.all()
     serializer_class = FileSerializer
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
     parser_classes = (FileUploadParser,)
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,
@@ -66,7 +66,6 @@ class PrivateFileList(FileList):
 
 
 class FileContentView(RetrieveAPIView):
-
     permission_classes = []
 
     def retrieve(self, *args, **kwargs):

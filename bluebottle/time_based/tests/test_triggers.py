@@ -1709,6 +1709,10 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         for slot in self.slots:
             self.assertTrue(slot.title in mail.outbox[1].body)
 
+        self.assertEqual(len(mail.outbox[1].attachments), 3)
+        event = mail.outbox[1].attachments[0][1].splitlines()
+        self.assertTrue(f'UID:test-{self.slots[0].id}' in event)
+
     def test_join_free_review(self):
         self.activity.review = True
         self.activity.save()

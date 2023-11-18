@@ -22,6 +22,8 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
 )
 from bluebottle.activities.models import Team
+from bluebottle.files.fields import PrivateDocumentModelChoiceField
+from bluebottle.files.widgets import DocumentWidget
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -927,6 +929,10 @@ class ParticipantSlotInline(admin.TabularInline):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
+
+    formfield_overrides = {
+        PrivateDocumentModelChoiceField: {'widget': DocumentWidget}
+    }
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)

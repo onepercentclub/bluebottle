@@ -59,6 +59,8 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return self.value
 
+    unit = None
+
     class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
 
@@ -106,6 +108,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         choices=QUERIES,
         db_index=True
     )
+    unit = None
 
     @property
     def icon(self):
@@ -155,20 +158,23 @@ class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
     def get_value(self, start=None, end=None):
+        goals = self.impact_type.goals.filter(
+            activity__status='succeeded',
+        )
+
         if start and end:
-            return self.impact_type.goals.filter(
-                activity__status='succeeded',
+            goals = goals.filter(
                 activity__created__gte=start,
                 activity__created__lt=end,
-            ).aggregate(
-                sum=Sum('realized')
-            )['sum'] or 0
+            )
 
-        return self.impact_type.goals.filter(
-            activity__status='succeeded',
-        ).aggregate(
+        return goals.aggregate(
             sum=Sum('realized')
         )['sum'] or 0
+
+    @property
+    def unit(self):
+        return self.impact_type.unit
 
     @property
     def icon(self):
@@ -178,7 +184,7 @@ class ImpactStatistic(BaseStatistic):
 
     @property
     def name(self):
-        return str(self.impact_type.name)
+        return str(self.impact_type.text_passed)
 
     def __str__(self):
         return str(self.impact_type.name)

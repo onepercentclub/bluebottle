@@ -605,7 +605,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [activity['id'] for activity in self.data['data']]
         )
 
-
     def test_sort_unknown(self):
         activities = [
             PeriodActivityFactory(

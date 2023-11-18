@@ -72,6 +72,7 @@ class OfficeRestrictionFacet(Facet):
             )
         )
 
+
 class UpcomingFacet(Facet):
     agg_type = 'terms'
 
@@ -84,11 +85,9 @@ class UpcomingFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ['1']:
             settings = InitiativePlatformSettings.objects.get()
-
             statuses = ['open', 'running']
             if settings.include_full_activities:
-                statuses.append('full') 
-
+                statuses.append('full')
             return Terms(
                 status=statuses
             )

@@ -1773,10 +1773,8 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
         self.activity.states.submit(save=True)
-
         response = self.client.delete(self.url, user=self.activity.owner)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class ParticipantListViewTestCase():

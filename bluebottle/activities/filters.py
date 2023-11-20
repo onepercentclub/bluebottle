@@ -169,7 +169,8 @@ class MatchingFacet(BooleanFacet):
                     'lat': float(place.position[1]),
                     'lon': float(place.position[0]),
                 }
-            )
+            ) | Term(is_online=True)
+
             filters = filters & distance_filter
 
         return filters

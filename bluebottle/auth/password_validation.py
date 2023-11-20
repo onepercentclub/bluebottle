@@ -1,16 +1,16 @@
 import re
-from gettext import gettext as _, ngettext
-
 from difflib import SequenceMatcher
+
 from django.contrib.auth.password_validation import (
     MinimumLengthValidator,
     CommonPasswordValidator as BaseCommonPasswordValidator,
     UserAttributeSimilarityValidator as BaseUserAttributeSimilarityValidator
 )
-
 from django.core.exceptions import (
     FieldDoesNotExist, ValidationError,
 )
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 
 class CustomMinimumLengthValidator(MinimumLengthValidator):

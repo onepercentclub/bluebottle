@@ -385,6 +385,7 @@ class IcalView(PrivateFileView):
         event = icalendar.Event()
         event.add('summary', instance.title)
         event.add('description', self.details)
+        event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start)
         event.add('dtend', instance.end)

@@ -609,7 +609,7 @@ class DeedStatisticsTest(StatisticsTest):
             start=datetime.date.today() + datetime.timedelta(days=5),
             end=datetime.date.today() + datetime.timedelta(days=10)
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
     def test_open(self):
         self.assertEqual(

@@ -129,10 +129,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_(
             'Reject the activity if it does not fit the programme or '
             'if it does not comply with the rules. '
-            'An activity manager can no longer edit the activity '
-            'and it will no longer be visible on the platform. '
-            'The activity will still be visible in the back '
-            'office and will continue to count in the reporting.'
+            'The activity manager can no longer edit the activity.'
         ),
         automatic=False,
         permission=is_staff,

@@ -89,10 +89,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
         name=_('Cancel'),
         description=_(
             'Cancel if the activity will not be executed. '
-            'An activity manager can no longer edit the activity '
-            'and it will no longer be visible on the platform. '
-            'The activity will still be visible in the back office '
-            'and will continue to count in the reporting.'
+            'It will no longer be visible on the platform. '
+            'Contributions will not be counted in reporting.'
         ),
         description_front_end=_(
             'The activity will not be executed. Any contributions will be cancelled too.'

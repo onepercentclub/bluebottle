@@ -151,7 +151,7 @@ class ActivitySlotSerializer(ModelSerializer):
 
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        # 'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+        'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         'my_contributor': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
     }
 
@@ -218,6 +218,14 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
+        included_resources = ['activity']
+
+    included_serializers = dict(
+        ActivitySlotSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer'
+        }
+    )
 
 
 class TeamSlotSerializer(ActivitySlotSerializer):
@@ -775,7 +783,10 @@ class DateParticipantListSerializer(ParticipantListSerializer):
 
     class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-participants'
-        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + ['slots']
+        included_resources = ParticipantListSerializer.JSONAPIMeta.included_resources + [
+            'slots',
+            'slots.slot'
+        ]
 
     included_serializers = dict(
         ParticipantListSerializer.included_serializers,
@@ -802,10 +813,13 @@ class ParticipantSerializer(BaseContributorSerializer):
         result = super().to_representation(instance)
 
         user = self.context['request'].user
-        if user not in [
+        if (user not in [
             instance.user,
             instance.activity.owner,
-        ] and user not in instance.activity.initiative.activity_managers.all():
+        ] and user not in instance.activity.initiative.activity_managers.all() and
+            not user.is_staff and
+            not user.is_superuser
+        ):
             del result['motivation']
             del result['document']
 
@@ -895,6 +909,7 @@ class DateParticipantSerializer(ParticipantSerializer):
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'slots',
+            'slots.slot'
         ]
         resource_name = 'contributors/time-based/date-participants'
 
@@ -904,6 +919,7 @@ class DateParticipantSerializer(ParticipantSerializer):
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
+            'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
         }
     )
@@ -998,11 +1014,13 @@ class SlotParticipantSerializer(ModelSerializer):
         included_resources = [
             'participant',
             'slot',
+            'slot.activity',
         ]
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'slot.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
 
 

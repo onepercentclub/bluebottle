@@ -193,7 +193,7 @@ class DateActivity(TimeBasedActivity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/activities/details/time-based/date/{}/{}".format(
+        return u"{}/{}/activities/details/date/{}/{}".format(
             domain, language,
             self.pk,
             self.slug

@@ -518,10 +518,6 @@ class SlotParticipantStateMachine(ModelStateMachine):
             user in self.instance.activity.initiative.activity_managers.all()
         )
 
-    def can_reject_participant(self, user):
-        """can accept participant"""
-        return self.can_accept_participant(user) and not user == self.instance.user
-
     def slot_is_open(self):
         """task is open"""
         return self.instance.slot.status in (
@@ -551,7 +547,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         name=_('Remove'),
         description=_("Remove this person as a participant from the slot."),
         automatic=False,
-        permission=can_reject_participant,
+        permission=can_accept_participant,
     )
 
     withdraw = Transition(

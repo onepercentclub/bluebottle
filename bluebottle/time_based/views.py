@@ -652,6 +652,22 @@ class DateParticipantExportView(ExportView):
         ).prefetch_related('user__segments')
 
 
+class SlotParticipantExportView(ExportView):
+    filename = "participants"
+    fields = (
+        ('participant__user__email', 'Email'),
+        ('participant__user__full_name', 'Name'),
+        ('participant__motivation', 'Motivation'),
+        ('created', 'Registration Date'),
+        ('calculated_status', 'Status'),
+    )
+
+    model = DateActivitySlot
+
+    def get_instances(self):
+        return self.get_object().slot_participants.all()
+
+
 class PeriodParticipantExportView(ExportView):
     filename = "participants"
     fields = (

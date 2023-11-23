@@ -250,6 +250,14 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivityslot', self.pk)
 
     @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
+    def initiative(self):
+        return self.activity.initiative
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -715,6 +723,12 @@ class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
     @property
     def activity(self):
         return self.slot.activity
+
+    @property
+    def calculated_status(self):
+        if self.participant.status != 'accepted':
+            return self.participant.status
+        return self.status
 
     class Meta():
         verbose_name = _("Slot participant")

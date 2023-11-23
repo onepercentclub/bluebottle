@@ -112,6 +112,14 @@ class ActivitySlotSerializer(ModelSerializer):
         read_only=True,
     )
 
+    participants_export_url = PrivateFileSerializer(
+        'slot-participant-export',
+        url_args=('pk',),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -128,7 +136,8 @@ class ActivitySlotSerializer(ModelSerializer):
             'location_hint',
             'online_meeting_url',
             'my_contributor',
-            'location'
+            'location',
+            'participants_export_url'
         )
         meta_fields = (
             'status',

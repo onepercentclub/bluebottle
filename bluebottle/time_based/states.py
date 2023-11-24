@@ -225,7 +225,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_activity_owner,
         description=_(
-            'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
+            'This time slot will not take place. People can no longer join and contributions will not be counted.'
         ),
     )
 

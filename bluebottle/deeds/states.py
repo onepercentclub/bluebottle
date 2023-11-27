@@ -31,7 +31,7 @@ class DeedStateMachine(ActivityStateMachine):
         conditions=[
             ActivityStateMachine.is_complete,
             ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_submitted
+            ActivityStateMachine.initiative_is_approved
         ],
     )
 

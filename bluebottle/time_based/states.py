@@ -132,6 +132,21 @@ class DateStateMachine(TimeBasedStateMachine):
         ],
     )
 
+    auto_publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=False,
+        name=_('Auto-publish'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+        ],
+    )
+
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):

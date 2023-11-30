@@ -13,7 +13,7 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers, has_organizer
 )
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
@@ -312,8 +312,25 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            DateStateMachine.auto_publish,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
             DateStateMachine.publish,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+
                 TransitionEffect(
                     DateStateMachine.succeed,
                     conditions=[

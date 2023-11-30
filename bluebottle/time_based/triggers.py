@@ -310,6 +310,24 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
             ]
         ),
+
+        TransitionTrigger(
+            DateStateMachine.publish,
+            effects=[
+                TransitionEffect(
+                    DateStateMachine.succeed,
+                    conditions=[
+                        is_finished, has_participants
+                    ]
+                ),
+                TransitionEffect(
+                    DateStateMachine.expire,
+                    conditions=[
+                        is_finished, has_no_participants
+                    ]
+                ),
+            ]
+        ),
     ]
 
 

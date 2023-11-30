@@ -49,7 +49,7 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
             fields += ('user',)
         return fields
 
-    raw_id_fields = ('user', 'document')
+    raw_id_fields = ('user', )
     extra = 0
     ordering = ['-created']
     template = 'admin/participant_list.html'
@@ -821,7 +821,6 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
     readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
     fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
-    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('document', )
     list_display = ['__str__', 'activity_link', 'status']
 
     def total(self, obj):

@@ -195,6 +195,8 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
     def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.initiative.states.approve(save=True)
+
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
@@ -215,7 +217,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'submit', 'delete'}
+            {'publish', 'delete'}
         )
 
     def test_add_slots_by_other(self):
@@ -533,7 +535,10 @@ class TimeBasedDetailAPIViewTestCase():
     def test_get_open(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
 
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -1595,7 +1600,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         DateActivitySlotFactory.create(activity=self.activity)
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -1647,7 +1652,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_update_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.patch(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -1746,7 +1751,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_get_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -1772,7 +1777,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_delete_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         response = self.client.delete(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -3090,7 +3095,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.slot.save()
 
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.client = JSONAPITestClient()
         response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']

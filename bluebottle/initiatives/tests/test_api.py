@@ -431,7 +431,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
 
         )
-        date_activity.states.submit(save=True)
+        date_activity.states.publish(save=True)
         DateActivitySlotFactory.create(
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),

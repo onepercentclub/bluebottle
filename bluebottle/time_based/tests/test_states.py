@@ -8,7 +8,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
+    DateStateMachine, TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
     PeriodParticipantStateMachine
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -33,10 +33,11 @@ class TimeBasedActivityStatesTestCase():
         self.assertEqual(
             self.activity.status, 'draft'
         )
-        self.assertTrue(
-            TimeBasedStateMachine.submit in
-            self.activity.states.possible_transitions()
-        )
+        if self.activity.states.submit:
+            self.assertTrue(
+                TimeBasedStateMachine.submit in
+                self.activity.states.possible_transitions()
+            )
 
         self.assertTrue(
             TimeBasedStateMachine.delete in
@@ -54,16 +55,8 @@ class TimeBasedActivityStatesTestCase():
             TimeBasedStateMachine.submit not in
             self.activity.states.possible_transitions()
         )
-
-    def test_submitted(self):
-        self.activity.states.submit()
         self.assertTrue(
-            TimeBasedStateMachine.auto_approve in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.reject in
+            DateStateMachine.publish not in
             self.activity.states.possible_transitions()
         )
 
@@ -82,13 +75,21 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_needs_work(self):
+        self.initiative.states.approve(save=True)
+
         self.activity.states.reject()
         self.activity.states.restore()
 
-        self.assertTrue(
-            TimeBasedStateMachine.submit in
-            self.activity.states.possible_transitions()
-        )
+        if self.activity.states.submit:
+            self.assertTrue(
+                TimeBasedStateMachine.submit in
+                self.activity.states.possible_transitions()
+            )
+        else:
+            self.assertTrue(
+                DateStateMachine.publish in
+                self.activity.states.possible_transitions()
+            )
 
         self.assertTrue(
             TimeBasedStateMachine.delete in
@@ -96,8 +97,11 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_approved(self):
-        self.activity.states.submit(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+
         self.initiative.states.approve(save=True)
+
         self.activity.refresh_from_db()
         self.assertEqual(
             self.activity.status, 'open'
@@ -130,8 +134,11 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_succeeded(self):
-        self.activity.states.submit(save=True)
         self.initiative.states.approve(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
         self.activity.states.succeed()
         self.assertEqual(
@@ -143,8 +150,11 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_cancelled(self):
-        self.activity.states.submit(save=True)
         self.initiative.states.approve(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
         self.activity.states.cancel()
         self.assertEqual(
@@ -164,6 +174,18 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
 class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_submitted(self):
+        self.activity.states.submit()
+        self.assertTrue(
+            TimeBasedStateMachine.auto_approve in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertTrue(
+            TimeBasedStateMachine.reject in
+            self.activity.states.possible_transitions()
+        )
 
     def test_succeed_manually_no_participants(self):
         self.activity.duration_period = 'weeks'

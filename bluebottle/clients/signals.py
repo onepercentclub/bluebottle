@@ -73,7 +73,7 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
                 self.registry_delete_task.delay(doc_instance.__class__.__name__, bulk_data, tenant)
 
     @shared_task()
-    def registry_delete_task(doc_label, data, tenant):
+    def registry_delete_task(doc_instance, data, tenant):
         """
         Handle the bulk delete data on the registry as a Celery task.
         The different implementations used are due to the difference between delete and update operations.
@@ -81,7 +81,7 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
         but the delete needs to be processed before the database record is deleted to obtain the associated data.
         """
         with LocalTenant(Client.objects.get(schema_name=tenant)):
-            CelerySignalProcessor.registry_delete_task(doc_label, data)
+            doc_instance._bulk(data, parallel=True)
 
     def prepare_registry_delete_task(self, instance):
         """
@@ -89,20 +89,13 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
         """
         tenant = connection.tenant.schema_name
         action = 'delete'
-        for doc in registry._get_related_doc(instance):
-            doc_instance = doc(related_instance_to_ignore=instance)
-            try:
-                related = doc_instance.get_instances_from_related(instance)
-            except ObjectDoesNotExist:
-                related = None
-            if related is not None:
-                doc_instance.update(related)
-                if isinstance(related, models.Model):
-                    object_list = [related]
-                else:
-                    object_list = related
-                bulk_data = list(doc_instance.get_actions(object_list, action)),
-                self.registry_delete_task.delay(doc_instance.__class__.__name__, bulk_data, tenant)
+        for doc in registry._models[instance.__class__]:
+            doc_instance = doc()
+            bulk_data = list(doc_instance.get_actions([instance], action))
+
+            self.registry_delete_task.delay(
+                doc_instance, bulk_data, tenant
+            )
 
     @shared_task()
     def registry_update_task(pk, app_label, model_name, tenant):

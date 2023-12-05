@@ -392,7 +392,12 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
         status = self.request.query_params.get('filter[status]')
         if status:
-            queryset = queryset.filter(status=status)
+            if status == 'withdrawn':
+                queryset = queryset.filter(slot_participants__status='withdrawn')
+            elif status == 'accepted':
+                queryset = queryset.exclude(slot_participants__status='withdrawn').filter(status=status)
+            else:
+                queryset = queryset.filter(status=status)
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

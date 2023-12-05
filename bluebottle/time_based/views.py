@@ -122,13 +122,16 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
             'activity', 'activity__initiative'
         ).get(pk=self.kwargs['participant_id'])
         queryset = super().get_queryset()
+        queryset = queryset.filter(participant__status='accepted')
 
         if not self.request.user.is_authenticated or (
-            self.request.user != participant.user and
             self.request.user != participant.activity.owner and
-            self.request.user != participant.activity.initiative.owner
+            self.request.user != participant.activity.initiative.owner and
+            self.request.user not in participant.activity.initiative.activity_managers.all() and
+            not self.request.user.is_staff and
+            not self.request.user.is_superuser
         ):
-            queryset = queryset.filter(status='registered', participant__status='accepted')
+            queryset = queryset.filter(status='registered')
 
         return queryset.filter(
             participant_id=self.kwargs['participant_id']
@@ -275,22 +278,20 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
         queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
 
+        queryset = queryset.filter(participant__status='accepted')
+
         if user.is_anonymous:
             queryset = queryset.filter(
                 status__in=('registered', 'succeeded'),
-                participant__status__in=('accepted', 'new'),
             )
-        elif user not in (
-            activity.owner,
-            activity.initiative.owner,
+        elif (
+                user != activity.owner and
+                user != activity.initiative.owner and
+                user not in activity.initiative.activity_managers.all() and
+                not user.is_staff and
+                not user.is_superuser
         ):
-            queryset = queryset.filter(
-                Q(
-                    status__in=('registered', 'succeeded'),
-                    participant__status__in=('accepted', 'new'),
-                ) |
-                Q(participant__user=user)
-            )
+            queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
         return queryset
 

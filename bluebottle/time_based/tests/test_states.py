@@ -3,18 +3,18 @@ from datetime import timedelta
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
-from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
-)
+from bluebottle.activities.tests.factories import TeamFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.states import (
     DateStateMachine, TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
     PeriodParticipantStateMachine
 )
-from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
-from bluebottle.activities.tests.factories import TeamFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, PeriodActivityFactory,
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
+)
 
 
 class TimeBasedActivityStatesTestCase():
@@ -97,10 +97,10 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_approved(self):
-        if self.activity.states.submit:
-            self.activity.states.submit(save=True)
-
         self.initiative.states.approve(save=True)
+
+        if self.activity.states.publish:
+            self.activity.states.publish(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(

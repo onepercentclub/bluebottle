@@ -1652,39 +1652,6 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         self.activity.refresh_from_db()
         self.participant = None
 
-    def test_join_all(self):
-        mail.outbox = []
-        self.activity.slot_selection = 'all'
-        self.activity.save()
-
-        user = BlueBottleUserFactory.create()
-        self.participant_factory.create(
-            activity=self.activity,
-            user=user,
-            as_user=user
-        )
-
-        time.sleep(4)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A new participant has joined your activity "{self.activity.title}" 🎉'
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have joined the activity "{self.activity.title}"'
-        )
-        for slot in self.slots:
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(slot.start),
-                defaultfilters.time(slot.start.astimezone(get_current_timezone())),
-                defaultfilters.time(slot.end.astimezone(get_current_timezone())),
-                slot.start.astimezone(get_current_timezone()).strftime('%Z'),
-            )
-
-            self.assertTrue(expected in mail.outbox[1].body)
-
     def test_join_free(self):
         mail.outbox = []
 

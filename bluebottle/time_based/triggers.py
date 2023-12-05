@@ -30,8 +30,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-    ResetSlotSelectionEffect, UnsetCapacityEffect,
-    RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+     UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -648,7 +647,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
         ),
         ModelDeletedTrigger(
             effects=[
-                ResetSlotSelectionEffect,
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,

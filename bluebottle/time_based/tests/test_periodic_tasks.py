@@ -39,7 +39,11 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
         self.activity = self.factory.create(initiative=self.initiative, review=False)
 
-        self.activity.states.submit(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
+
         self.tenant = connection.tenant
 
     def test_nothing(self):
@@ -739,7 +743,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(status='approved')
         self.initiative.save()
         self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.tenant = connection.tenant
 
@@ -793,7 +797,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.activity = DateActivityFactory.create(
             slot_selection='free', initiative=self.initiative, review=False
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertEqual(self.slot.status, 'open')
         self.participant = DateParticipantFactory.create(activity=self.activity)

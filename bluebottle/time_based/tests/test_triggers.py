@@ -54,7 +54,9 @@ class TimeBasedActivityTriggerTestCase():
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
-        self.activity.states.submit()
+        if self.activity.states.submit:
+            self.activity.states.submit()
+
         self.activity.states.reject(save=True)
         organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
@@ -75,7 +77,10 @@ class TimeBasedActivityTriggerTestCase():
         self.initiative.states.approve(save=True)
 
         activity = self.factory.create(initiative=self.initiative)
-        activity.states.submit(save=True)
+        if activity.states.submit:
+            activity.states.submit(save=True)
+        else:
+            activity.states.publish(save=True)
 
         self.assertEqual(activity.status, 'open')
 
@@ -83,9 +88,10 @@ class TimeBasedActivityTriggerTestCase():
         self.initiative.states.submit(save=True)
 
         activity = self.factory.create(initiative=self.initiative)
-        activity.states.submit(save=True)
+        if self.activity.states.submit:
+            activity.states.submit(save=True)
 
-        self.assertEqual(activity.status, 'submitted')
+            self.assertEqual(activity.status, 'submitted')
 
     def test_approve_initiative(self):
         self.initiative.states.submit(save=True)

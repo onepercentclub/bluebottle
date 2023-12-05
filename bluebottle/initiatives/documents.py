@@ -197,7 +197,6 @@ class InitiativeDocument(Document):
         return instance.activities.filter(
             status__in=(
                 'open',
-                'full',
                 'running'
             )
         ).count()

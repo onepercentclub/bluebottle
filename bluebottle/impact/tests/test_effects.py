@@ -6,16 +6,15 @@ from bluebottle.impact.tests.factories import ImpactGoalFactory
 class CreateEffortContributionTestCase(BluebottleTestCase):
     def setUp(self):
         self.activity = DeedFactory.create(target=10, enable_impact=True)
-        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
 
         self.impact_goal = ImpactGoalFactory.create(
             activity=self.activity,
             target=100,
             realized=0,
         )
-
         self.activity.states.publish(save=True)
-        self.activity.initiative.states.approve(save=True)
 
         participant = DeedParticipantFactory.create(activity=self.activity)
         self.contribution = participant.contributions.first()

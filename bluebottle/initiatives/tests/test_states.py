@@ -257,7 +257,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         activity = DateActivityFactory.create(initiative=self.initiative)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         self.initiative.states.cancel(save=True)
 

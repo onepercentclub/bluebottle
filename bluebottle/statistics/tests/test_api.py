@@ -45,7 +45,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         slot = activity.slots.get()
         slot.start = timezone.now() - datetime.timedelta(hours=1)
@@ -82,7 +82,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
             if resource['id'] == str(self.impact.pk):
                 self.assertEqual(resource['type'], 'statistics')
                 self.assertEqual(resource['attributes']['value'], self.impact_goal.realized)
-                self.assertEqual(resource['attributes']['name'], self.impact_type.name)
+                self.assertEqual(resource['attributes']['name'], self.impact_type.text_passed)
                 self.assertEqual(resource['attributes']['icon'], self.impact_type.icon)
 
             if resource['id'] == str(self.database.pk):
@@ -148,7 +148,7 @@ class OldStatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         slot = activity.slots.get()
         slot.start = timezone.now() - datetime.timedelta(hours=1)

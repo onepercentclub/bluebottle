@@ -83,7 +83,7 @@ class DateActivityStatisticsTest(StatisticsTest):
             start=now() + timedelta(days=2),
             duration=timedelta(minutes=90)
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
     def test_open(self):
         self.assertEqual(
@@ -761,7 +761,7 @@ class StatisticsDateTest(BluebottleTestCase):
                 activity=activity,
                 user=other_user
             )
-            activity.states.submit(save=True)
+            activity.states.publish(save=True)
 
     def test_all(self):
         stats = Statistics()

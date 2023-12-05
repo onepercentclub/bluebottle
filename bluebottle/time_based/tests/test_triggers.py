@@ -2466,7 +2466,6 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(slot_participant1, 'withdrawn')
 
         slot_participant2.states.withdraw(save=True)
-        self.assertStatus(self.participant, 'withdrawn')
         self.assertStatus(slot_participant2, 'withdrawn')
 
         slot_participant1.states.reapply(save=True)

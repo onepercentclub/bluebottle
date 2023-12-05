@@ -30,7 +30,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-     UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+    UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,

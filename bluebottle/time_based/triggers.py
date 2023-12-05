@@ -7,7 +7,8 @@ from bluebottle.activities.messages import (
     ActivitySucceededNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification, ActivityRestoredNotification,
-    TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage,
+    ParticipantWithdrewConfirmationNotification,
+    TeamMemberWithdrewMessage, TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage,
     TeamMemberAddedMessage
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
@@ -40,7 +41,7 @@ from bluebottle.time_based.messages import (
     ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
-    ParticipantAddedOwnerNotification,
+    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
@@ -1465,6 +1466,39 @@ class ParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 UnFollowActivityEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[activity_will_not_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                UnFollowActivityEffect,
+                NotificationEffect(
+                    ParticipantWithdrewNotification,
+                    conditions=[
+                        is_not_team_activity
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantWithdrewConfirmationNotification
+                ),
+                NotificationEffect(
+                    TeamMemberWithdrewMessage,
+                    conditions=[
+                        is_team_activity,
+                        not_team_captain
+                    ]
+
+                ),
             ]
         ),
     ]

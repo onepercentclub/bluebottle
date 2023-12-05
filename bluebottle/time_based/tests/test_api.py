@@ -3344,7 +3344,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.perform_get(user=self.participant.user)
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(3)
+        self.assertTotal(2)
         self.assertIncluded('slot')
 
     def test_get_activity_owner(self):

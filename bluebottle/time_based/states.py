@@ -380,9 +380,6 @@ class ParticipantStateMachine(ContributorStateMachine):
             TimeBasedStateMachine.full.value
         )
 
-    def never(self):
-        return False
-
     initiate = Transition(
         EmptyState(),
         ContributorStateMachine.new,
@@ -434,7 +431,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         description=_("Remove this person as a participant from the activity."),
         automatic=False,
         permission=can_accept_participant,
-        conditions=[never],
     )
 
     withdraw = Transition(
@@ -448,7 +444,6 @@ class ParticipantStateMachine(ContributorStateMachine):
                       "Any hours spent will be kept, but no new hours will be allocated."),
         automatic=False,
         permission=is_user,
-        conditions=[never],
         hide_from_admin=True,
     )
 
@@ -458,7 +453,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Reapply'),
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
-        conditions=[never],
+        conditions=[activity_is_open],
         permission=is_user,
     )
 

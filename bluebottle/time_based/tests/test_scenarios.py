@@ -64,7 +64,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         slot2 = api_update_date_slot(self, slot2, data)
         assert_status(self, slot2, 'draft')
         assert_status(self, activity, 'draft')
-        api_activity_transition(self, activity, 'submit', status_code=400,
+        api_activity_transition(self, activity, 'publish', status_code=400,
                                 msg="Submitting the activity should not yet be allowed")
 
         data = {
@@ -75,7 +75,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         slot2 = api_update_date_slot(self, slot2, data)
         assert_status(self, slot2, 'open')
         assert_status(self, activity, 'draft')
-        api_activity_transition(self, activity, 'submit')
+        api_activity_transition(self, activity, 'publish')
         assert_status(self, activity, 'open')
 
 

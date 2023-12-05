@@ -217,7 +217,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'publish', 'delete'}
+            {'publish', 'delete', 'auto_publish'}
         )
 
     def test_add_slots_by_other(self):

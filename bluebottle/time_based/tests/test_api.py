@@ -1,5 +1,4 @@
 import json
-from os import walk
 import urllib
 from datetime import timedelta, date
 from io import BytesIO

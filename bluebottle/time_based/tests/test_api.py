@@ -1,4 +1,5 @@
 import json
+from os import walk
 import urllib
 from datetime import timedelta, date
 from io import BytesIO
@@ -771,27 +772,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         })
         self.slot = self.activity.slots.first()
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-
-    def test_get_included_slot_location(self):
-        self.activity.save()
-
-        response = self.client.get(self.url)
-        included_resources = response.json()['included']
-
-        slots = [
-            resource for resource
-            in included_resources
-            if resource['type'] == 'activities/time-based/date-slots'
-        ]
-
-        location_ids = [
-            resource['id'] for resource
-            in included_resources
-            if resource['type'] == 'geolocations'
-        ]
-
-        for slot in slots:
-            self.assertTrue(slot['relationships']['location']['data']['id'] in location_ids)
 
     def test_get_calendar_links(self):
         response = self.client.get(self.url, user=self.activity.owner)

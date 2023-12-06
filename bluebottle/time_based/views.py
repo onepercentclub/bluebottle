@@ -276,22 +276,20 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
         queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
 
+        queryset = queryset.filter(participant__status='accepted')
+
         if user.is_anonymous:
             queryset = queryset.filter(
                 status__in=('registered', 'succeeded'),
-                participant__status__in=('accepted', 'new'),
             )
-        elif user not in (
-            activity.owner,
-            activity.initiative.owner,
+        elif (
+                user != activity.owner and
+                user != activity.initiative.owner and
+                user not in activity.initiative.activity_managers.all() and
+                not user.is_staff and
+                not user.is_superuser
         ):
-            queryset = queryset.filter(
-                Q(
-                    status__in=('registered', 'succeeded'),
-                    participant__status__in=('accepted', 'new'),
-                ) |
-                Q(participant__user=user)
-            )
+            queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
         return queryset
 

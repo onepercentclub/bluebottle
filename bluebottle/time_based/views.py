@@ -116,20 +116,24 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
 
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
-        show_past = self.request.GET.get('past', '1')
+        show_past = self.request.GET.get('past', None)
 
         participant = DateParticipant.objects.select_related(
             'activity', 'activity__initiative',
         ).get(pk=self.kwargs['participant_id'])
 
-        queryset = queryset.filter(status='registered', participant__status='accepted')
+        queryset = queryset.filter(status='registered')
 
         if show_past == '1':
+            queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.order_by('-slot__start')
             queryset = queryset.filter(slot__start__lte=now())
-        else:
+        elif show_past == '0':
+            queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.order_by('slot__start')
             queryset = queryset.filter(slot__start__gte=now())
+        else:
+            queryset = queryset.order_by('slot__start')
 
         return queryset.filter(
             participant=participant

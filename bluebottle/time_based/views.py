@@ -4,7 +4,7 @@ import dateutil
 import icalendar
 from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
-from django.utils.timezone import utc, get_current_timezone
+from django.utils.timezone import utc, get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
@@ -110,28 +110,29 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
-    pagination_class = None
-
-    queryset = SlotParticipant.objects.select_related(
+    queryset = SlotParticipant.objects.prefetch_related(
         'slot', 'participant', 'participant__user'
     )
-    model = DateParticipant
 
     def get_queryset(self, *args, **kwargs):
-        participant = DateParticipant.objects.select_related(
-            'activity', 'activity__initiative'
-        ).get(pk=self.kwargs['participant_id'])
-        queryset = super().get_queryset()
+        queryset = super().get_queryset(*args, **kwargs)
+        show_past = self.request.GET.get('past', '1')
 
-        if not self.request.user.is_authenticated or (
-            self.request.user != participant.user and
-            self.request.user != participant.activity.owner and
-            self.request.user != participant.activity.initiative.owner
-        ):
-            queryset = queryset.filter(status='registered', participant__status='accepted')
+        participant = DateParticipant.objects.select_related(
+            'activity', 'activity__initiative',
+        ).get(pk=self.kwargs['participant_id'])
+
+        queryset = queryset.filter(status='registered', participant__status='accepted')
+
+        if show_past == '1':
+            queryset = queryset.order_by('-slot__start')
+            queryset = queryset.filter(slot__start__lte=now())
+        else:
+            queryset = queryset.order_by('slot__start')
+            queryset = queryset.filter(slot__start__gte=now())
 
         return queryset.filter(
-            participant_id=self.kwargs['participant_id']
+            participant=participant
         )
 
     serializer_class = SlotParticipantSerializer

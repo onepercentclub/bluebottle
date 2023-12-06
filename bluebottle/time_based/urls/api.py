@@ -110,6 +110,7 @@ urlpatterns = [
     url(r'^/slot-participants$',
         SlotParticipantListView.as_view(),
         name='slot-participant-list'),
+
     url(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
         RelatedSlotParticipantListView.as_view(),
         name='related-slot-participant-list'),

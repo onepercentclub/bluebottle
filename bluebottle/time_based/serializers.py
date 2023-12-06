@@ -153,7 +153,7 @@ class ActivitySlotSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            # 'activity',
+            'activity',
             'location',
             'my_contributor',
         ]

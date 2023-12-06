@@ -125,11 +125,9 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
         queryset = queryset.filter(status='registered')
 
         if show_past == '1':
-            queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.order_by('-slot__start')
             queryset = queryset.filter(slot__start__lte=now())
         elif show_past == '0':
-            queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.order_by('slot__start')
             queryset = queryset.filter(slot__start__gte=now())
         else:

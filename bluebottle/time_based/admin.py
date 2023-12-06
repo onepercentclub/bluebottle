@@ -333,8 +333,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
-        'slot_selection',
-
         'preparation',
         'registration_deadline',
 

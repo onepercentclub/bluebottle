@@ -326,6 +326,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
     ]
@@ -1638,11 +1639,6 @@ class SlotParticipantTriggers(TriggerManager):
                     'slot',
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
-                ),
-                RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.withdraw,
-                    conditions=[participant_will_not_be_attending]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
             ]

@@ -96,43 +96,6 @@ class TimeBasedActivityStatesTestCase():
             self.activity.states.possible_transitions()
         )
 
-    def test_approved(self):
-        self.initiative.states.approve(save=True)
-
-        if self.activity.states.publish:
-            self.activity.states.publish(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(
-            self.activity.status, 'open'
-        )
-        self.assertTrue(
-            TimeBasedStateMachine.cancel in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.succeed in
-            self.activity.states.possible_transitions()
-        )
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(
-            organizer.status,
-            'succeeded'
-        )
-        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
-        organizer_contribution = organizer.contributions.get()
-        self.assertEqual(
-            organizer_contribution.status,
-            'succeeded'
-        )
-        self.assertAlmostEqual(
-            organizer_contribution.start,
-            now(),
-            delta=timedelta(minutes=2)
-        )
-
     def test_succeeded(self):
         self.initiative.states.approve(save=True)
         if self.activity.states.submit:
@@ -170,10 +133,82 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    def test_approved(self):
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(
+            self.activity.status, 'open'
+        )
+        self.assertTrue(
+            TimeBasedStateMachine.cancel in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertTrue(
+            TimeBasedStateMachine.succeed in
+            self.activity.states.possible_transitions()
+        )
+
+        organizer = self.activity.contributors.instance_of(Organizer).get()
+        self.assertEqual(
+            organizer.status,
+            'succeeded'
+        )
+        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
+        organizer_contribution = organizer.contributions.get()
+        self.assertEqual(
+            organizer_contribution.status,
+            'succeeded'
+        )
+        self.assertAlmostEqual(
+            organizer_contribution.start,
+            now(),
+            delta=timedelta(minutes=2)
+        )
+
 
 class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
+
+    def test_approved(self):
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(
+            self.activity.status, 'open'
+        )
+        self.assertTrue(
+            TimeBasedStateMachine.cancel in
+            self.activity.states.possible_transitions()
+        )
+
+        self.assertTrue(
+            TimeBasedStateMachine.succeed in
+            self.activity.states.possible_transitions()
+        )
+
+        organizer = self.activity.contributors.instance_of(Organizer).get()
+        self.assertEqual(
+            organizer.status,
+            'succeeded'
+        )
+        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
+        organizer_contribution = organizer.contributions.get()
+        self.assertEqual(
+            organizer_contribution.status,
+            'succeeded'
+        )
+        self.assertAlmostEqual(
+            organizer_contribution.start,
+            now(),
+            delta=timedelta(minutes=2)
+        )
 
     def test_submitted(self):
         self.activity.states.submit()

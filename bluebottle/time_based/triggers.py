@@ -326,6 +326,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
     ]

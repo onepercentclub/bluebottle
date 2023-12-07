@@ -13,7 +13,7 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Team
+from bluebottle.activities.models import Team, Organizer
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
     BaseContributorSerializer, BaseContributionSerializer
@@ -449,6 +449,12 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         read_only=True,
         source='get_first_slot'
     )
+
+    def get_contributor_count(self, instance):
+        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'succeeded'],
+            dateparticipant__slot_participants__status='registered'
+        ).count()
 
     def get_first_slot(self, instance):
         return instance.slots.filter(

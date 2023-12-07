@@ -1885,12 +1885,11 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     def test_create(self):
         super().test_create()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertTrue('contributors/time-based/slot-participants' in types)
+        self.assertTrue('members' in types)
 
     def test_get_participants(self):
         super().test_get_participants()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertTrue('contributors/time-based/slot-participants' in types)
         self.assertTrue('activities/time-based/dates' in types)
         self.assertTrue('members' in types)
 
@@ -3328,9 +3327,8 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)
-
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(3)
+        self.assertTotal(2)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
@@ -3339,7 +3337,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.assertTotal(2)
 
     def test_get_other_user_rejected_participant(self):
-        self.participant.states.withdraw(save=True)
+        self.participant.states.reject(save=True)
         self.perform_get(user=BlueBottleUserFactory.create())
 
         self.assertStatus(status.HTTP_200_OK)

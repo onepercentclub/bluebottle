@@ -106,6 +106,8 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 
 class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+    # This view is used by activity manager when reviewing participants
+    # and by the participant when viewing their own registrations e.g. My time slots
     permission_classes = [
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
@@ -121,6 +123,13 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
         participant = DateParticipant.objects.select_related(
             'activity', 'activity__initiative',
         ).get(pk=self.kwargs['participant_id'])
+
+        if not self.request.user.is_authenticated or (
+                self.request.user != participant.user and
+                self.request.user != participant.activity.owner and
+                self.request.user != participant.activity.initiative.owner
+        ):
+            queryset = queryset.filter(participant__status='accepted')
 
         queryset = queryset.filter(status='registered')
 

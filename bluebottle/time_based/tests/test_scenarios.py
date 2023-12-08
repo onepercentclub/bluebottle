@@ -186,11 +186,15 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_slot_participant_transition(self, self.slot1, self.supporter, transition='reapply')
         assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
         assert_status(self, self.slot1, 'full')
-        api_participant_transition(self, self.activity, self.supporter, transition='withdraw')
-        assert_participant_status(self, self.activity, self.supporter, status='withdrawn')
+        api_participant_transition(
+            self, self.activity, self.supporter, transition='reject', request_user=self.owner
+        )
+        assert_participant_status(self, self.activity, self.supporter, status='rejected')
         assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
         assert_status(self, self.slot1, 'open')
-        api_participant_transition(self, self.activity, self.supporter, transition='reapply')
+        api_participant_transition(
+            self, self.activity, self.supporter, transition='accept', request_user=self.owner
+        )
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
         assert_status(self, self.slot1, 'full')
@@ -294,7 +298,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
             'Slot1 should now have 2 accepted participants'
         )
         assert_status(self, self.slot2, 'full')
-        api_participant_transition(self, self.activity, supporter2, 'withdraw')
+        api_participant_transition(self, self.activity, supporter2, 'reject', request_user=self.owner)
         assert_slot_participant_status(self, self.slot2, supporter2, 'registered')
         assert_status(
             self, self.slot2, 'open',

@@ -1638,29 +1638,17 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
             as_user=user
         )
 
-        self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
-            for slot in self.slots
-        ]
+        slot = self.slots[0]
+        self.slot_participant = SlotParticipantFactory.create(slot=slot, participant=participant)
 
         time.sleep(3)
 
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            f'A new participant has joined your activity "{self.activity.title}" 🎉'
+            f'A participant has registered for a time slot for your activity "{self.activity.title}"'
         )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have joined the activity "{self.activity.title}"'
-        )
-
-        for slot in self.slots:
-            self.assertTrue(slot.title in mail.outbox[1].body)
-
-        self.assertEqual(len(mail.outbox[1].attachments), 3)
-        event = mail.outbox[1].attachments[0][1].splitlines()
-        self.assertTrue(f'UID:test-{self.slots[0].id}' in event)
+        self.assertTrue(slot.title in mail.outbox[0].body)
 
     def test_join_free_review(self):
         self.activity.review = True
@@ -1714,28 +1702,31 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
 
     def test_withdraw_free(self):
         self.test_join_free()
+        time.sleep(3)
+        mail.outbox = []
 
-        # TODO Change withdraw mails to follow slots / slot participants, not participants
+        self.slot_participant.states.withdraw(save=True)
 
-        # time.sleep(3)
-        # mail.outbox = []
-        #
-        # for slot_participant in self.slot_participants:
-        #     slot_participant.states.withdraw(save=True)
-        #
-        # time.sleep(3)
-        #
-        # self.assertEqual(len(mail.outbox), 2)
-        #
-        # self.assertEqual(
-        #     mail.outbox[0].subject,
-        #     f'A participant has withdrawn from your activity "{self.activity.title}"'
-        # )
-        #
-        # self.assertEqual(
-        #     mail.outbox[1].subject,
-        #     f'You have withdrawn from the activity "{self.activity.title}"'
-        # )
+        time.sleep(3)
+        self.assertEqual(len(mail.outbox), 1)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A participant has withdrawn from a time slot for '
+            f'your activity "{self.activity.title}"'
+        )
+        mail.outbox = []
+
+        self.slot_participant.states.reapply(save=True)
+
+        time.sleep(3)
+        self.assertEqual(len(mail.outbox), 1)
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'A participant has registered for a time slot for '
+            f'your activity "{self.activity.title}"'
+        )
 
 
 class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCase):

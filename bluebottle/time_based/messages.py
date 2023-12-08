@@ -755,6 +755,61 @@ class ParticipantWithdrewNotification(TransitionMessage):
         return [self.obj.activity.owner]
 
 
+class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
+    """
+    A slot participant withdrew from a time slot for your activity
+    """
+    subject = pgettext('email', 'A participant has withdrawn from a time slot for your activity "{title}"')
+    template = 'messages/manager/slot_participant_withdrew'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.slot.activity.owner]
+
+
+class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
+    """
+    A slot participant registered from a time slot for your activity
+    """
+    subject = pgettext('email', 'A participant has registered for a time slot for your activity "{title}"')
+    template = 'messages/manager/slot_participant_registered'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+
+        return [self.obj.slot.activity.owner]
+
+
 class ParticipantAddedOwnerNotification(TransitionMessage):
     """
     A participant added notify owner

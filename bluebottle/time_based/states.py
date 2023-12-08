@@ -204,7 +204,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     finished = State(
-        _('finished'),
+        _('succeeded'),
         'finished',
         _('The slot has ended.')
     )

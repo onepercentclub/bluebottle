@@ -356,7 +356,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         _('This person takes part in the activity.')
     )
     rejected = State(
-        _('removed'),
+        _('rejected'),
         'rejected',
         _("This person's contribution is removed and the spent hours are reset to zero.")
     )
@@ -590,7 +590,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         withdrawn,
         name=_('Withdraw'),
         description=_("Cancel the participation in this slot."),
-        description_front_end=_("Cancel your participation in this slot."),
+        description_front_end=_("Cancel your participation in this slot. You can rejoin the time slot as long as the activity is open."),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,

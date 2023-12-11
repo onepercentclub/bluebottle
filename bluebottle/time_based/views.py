@@ -4,7 +4,7 @@ import dateutil
 import icalendar
 from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
-from django.utils.timezone import utc, get_current_timezone
+from django.utils.timezone import utc, get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
@@ -106,32 +106,44 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 
 class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+    # This view is used by activity manager when reviewing participants
+    # and by the participant when viewing their own registrations e.g. My time slots
     permission_classes = [
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
-    pagination_class = None
-
-    queryset = SlotParticipant.objects.select_related(
+    queryset = SlotParticipant.objects.prefetch_related(
         'slot', 'participant', 'participant__user'
     )
-    model = DateParticipant
 
     def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        show_past = self.request.GET.get('past', None)
+
         participant = DateParticipant.objects.select_related(
-            'activity', 'activity__initiative'
+            'activity', 'activity__initiative',
         ).get(pk=self.kwargs['participant_id'])
-        queryset = super().get_queryset()
 
         if not self.request.user.is_authenticated or (
-            self.request.user != participant.user and
-            self.request.user != participant.activity.owner and
-            self.request.user != participant.activity.initiative.owner
+                self.request.user != participant.user and
+                self.request.user != participant.activity.owner and
+                self.request.user != participant.activity.initiative.owner
         ):
-            queryset = queryset.filter(status='registered', participant__status='accepted')
+            queryset = queryset.filter(participant__status='accepted')
+
+        queryset = queryset.filter(status='registered')
+
+        if show_past == '1':
+            queryset = queryset.order_by('-slot__start')
+            queryset = queryset.filter(slot__start__lte=now())
+        elif show_past == '0':
+            queryset = queryset.order_by('slot__start')
+            queryset = queryset.filter(slot__start__gte=now())
+        else:
+            queryset = queryset.order_by('slot__start')
 
         return queryset.filter(
-            participant_id=self.kwargs['participant_id']
+            participant=participant
         )
 
     serializer_class = SlotParticipantSerializer
@@ -275,22 +287,20 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
         queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
 
+        queryset = queryset.filter(participant__status='accepted')
+
         if user.is_anonymous:
             queryset = queryset.filter(
                 status__in=('registered', 'succeeded'),
-                participant__status__in=('accepted', 'new'),
             )
-        elif user not in (
-            activity.owner,
-            activity.initiative.owner,
+        elif (
+                user != activity.owner and
+                user != activity.initiative.owner and
+                user not in activity.initiative.activity_managers.all() and
+                not user.is_staff and
+                not user.is_superuser
         ):
-            queryset = queryset.filter(
-                Q(
-                    status__in=('registered', 'succeeded'),
-                    participant__status__in=('accepted', 'new'),
-                ) |
-                Q(participant__user=user)
-            )
+            queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
         return queryset
 

@@ -4,7 +4,6 @@ import re
 from io import BytesIO
 from operator import attrgetter
 
-
 import icalendar
 import magic
 import xlsxwriter
@@ -17,6 +16,7 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework.pagination import PageNumberPagination
@@ -26,8 +26,6 @@ from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from taggit.models import Tag
-
-from elasticsearch_dsl.utils import AttrList
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
@@ -429,7 +427,7 @@ class ExportView(PrivateFileView):
     def write_data(self, workbook):
         title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
         worksheet = workbook.add_worksheet(title)
-
+        worksheet.set_column(0, 10, 30)
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
 
         for (index, row) in enumerate(self.get_data()):

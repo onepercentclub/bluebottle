@@ -147,7 +147,7 @@ class DateActivity(TimeBasedActivity):
         max_length=20,
         blank=True,
         null=True,
-        default=SlotSelectionChoices.all,
+        default=SlotSelectionChoices.free,
         choices=SlotSelectionChoices.choices,
     )
 

@@ -602,7 +602,7 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status, '200 OK')
         self.assertTrue('Initiatives:' in response.text)
         self.assertTrue(
-            '<a href="/en/admin/initiatives/initiative/?owner_id={}">5</a>'.format(user.id)
+            '<a href="/en/admin/initiatives/initiative/?owner__id={}">5</a>'.format(user.id)
             in response.text
         )
 

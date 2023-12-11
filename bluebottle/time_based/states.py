@@ -132,6 +132,21 @@ class DateStateMachine(TimeBasedStateMachine):
         ],
     )
 
+    auto_publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=False,
+        name=_('Auto-publish'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+        ],
+    )
+
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
@@ -244,7 +259,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_activity_owner,
         description=_(
-            'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
+            'This time slot will not take place. People can no longer join and contributions will not be counted.'
         ),
     )
 
@@ -413,6 +428,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     reject = Transition(
         [
             ContributorStateMachine.new,
+            accepted
         ],
         rejected,
         name=_('Reject'),

@@ -13,7 +13,7 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers, has_organizer
 )
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
@@ -30,8 +30,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-    ResetSlotSelectionEffect, UnsetCapacityEffect,
-    RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+    UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -312,8 +311,25 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            DateStateMachine.auto_publish,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
             DateStateMachine.publish,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+
                 TransitionEffect(
                     DateStateMachine.succeed,
                     conditions=[
@@ -326,6 +342,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
     ]
@@ -631,7 +648,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
         ),
         ModelDeletedTrigger(
             effects=[
-                ResetSlotSelectionEffect,
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,
@@ -1638,11 +1654,6 @@ class SlotParticipantTriggers(TriggerManager):
                     'slot',
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
-                ),
-                RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.withdraw,
-                    conditions=[participant_will_not_be_attending]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
             ]

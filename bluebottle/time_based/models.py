@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import pytz
 from django.db import connection
 from django.utils import timezone
+from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
@@ -146,7 +147,7 @@ class DateActivity(TimeBasedActivity):
         max_length=20,
         blank=True,
         null=True,
-        default=SlotSelectionChoices.all,
+        default=SlotSelectionChoices.free,
         choices=SlotSelectionChoices.choices,
     )
 
@@ -192,7 +193,7 @@ class DateActivity(TimeBasedActivity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/activities/details/time-based/date/{}/{}".format(
+        return u"{}/{}/activities/details/date/{}/{}".format(
             domain, language,
             self.pk,
             self.slug
@@ -247,6 +248,14 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivityslot', self.pk)
+
+    @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
+    def initiative(self):
+        return self.activity.initiative
 
     @property
     def local_timezone(self):
@@ -365,6 +374,30 @@ class DateActivitySlot(ActivitySlot):
 
     def __str__(self):
         return "{} {}".format(_("Slot"), self.sequence)
+
+    @property
+    def event_data(self):
+        if self.end < now() or self.status not in ['open', 'full']:
+            return None
+        title = f'{self.activity.title} - {self.title or self.id}'
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality
+            if self.location_hint:
+                location += f" {self.location_hint}"
+
+        return {
+            'uid': f"{connection.tenant.client_name}-{self.id}",
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.activity.owner.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
 
     class Meta:
         verbose_name = _('slot')
@@ -557,6 +590,31 @@ class TeamSlot(ActivitySlot):
     @property
     def accepted_participants(self):
         return self.team.members.filter(status='accepted')
+
+    @property
+    def event_data(self):
+        if self.end < now() or self.status not in ['open', 'full']:
+            return None
+        title = self.activity.title
+        if self.team.name:
+            title += f" - {self.team.name}"
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality
+            if self.location_hint:
+                location += f" {self.location_hint}"
+        return {
+            'uid': self.uid,
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.activity.owner.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
 
 
 class Participant(Contributor):

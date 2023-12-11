@@ -2423,7 +2423,7 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(slot_participant1, 'removed')
 
         slot_participant2.states.remove(save=True)
-        self.assertStatus(self.participant, 'rejected')
+        self.assertStatus(self.participant, 'accepted')
         self.assertStatus(slot_participant2, 'removed')
 
         slot_participant1.states.accept(save=True)

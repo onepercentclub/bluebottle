@@ -590,7 +590,10 @@ class SlotParticipantStateMachine(ModelStateMachine):
         withdrawn,
         name=_('Withdraw'),
         description=_("Cancel the participation in this slot."),
-        description_front_end=_("Cancel your participation in this slot. You can rejoin the time slot as long as the activity is open."),
+        description_front_end=_(
+            "Cancel your participation in this slot. "
+            "You can rejoin the time slot as long as the activity is open."
+        ),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,

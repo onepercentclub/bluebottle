@@ -620,6 +620,23 @@ class DateParticipantExportView(ExportView):
 
     model = DateActivity
 
+    def get_row(self, instance):
+        row = []
+
+        for (field, name) in self.get_fields():
+            if field.startswith('segment.'):
+                row.append(
+                    ", ".join(
+                        instance.user.segments.filter(
+                            segment_type_id=field.split('.')[-1]
+                        ).values_list('name', flat=True)
+                    )
+                )
+            else:
+                row.append(prep_field(self.request, instance, field))
+
+        return row
+
     def write_data(self, workbook):
         activity = self.get_object()
         bold = workbook.add_format({'bold': True})
@@ -633,10 +650,20 @@ class DateParticipantExportView(ExportView):
                 worksheet.write(0, c, field[1], bold)
                 c += 1
             r = 0
+
             for participant in slot.slot_participants.all():
-                row = [prep_field(self.request, participant, field[0]) for field in self.get_fields()]
+                row = self.get_row(participant)
                 r += 1
                 worksheet.write_row(r, 0, row)
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        segments = tuple(
+            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
+        )
+
+        return fields + segments
 
     def get_instances(self):
         return self.get_object().contributors.instance_of(

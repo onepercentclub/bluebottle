@@ -503,11 +503,17 @@ class TimeBasedDetailAPIViewTestCase():
         user.segments.add(workshop)
         user.segments.add(metal)
         user.segments.add(classical)
-        self.participant_factory.create(
+        participant = self.participant_factory.create(
             activity=self.activity,
             user=user,
             status='accepted'
         )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(
+                slot=slot,
+                participant=participant,
+                status='accepted'
+            )
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

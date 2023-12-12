@@ -1030,11 +1030,11 @@ class SlotParticipantSerializer(ModelSerializer):
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
         validators = [
-            # UniqueTogetherValidator(
-            #     queryset=SlotParticipant.objects.all(),
-            #     fields=('slot', 'participant')
-            # ),
-            # activity_matches_participant_and_slot
+            UniqueTogetherValidator(
+                queryset=SlotParticipant.objects.all(),
+                fields=('slot', 'participant')
+            ),
+            activity_matches_participant_and_slot
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):

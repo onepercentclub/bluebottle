@@ -130,6 +130,7 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
                 self.request.user != participant.activity.initiative.owner
         ):
             queryset = queryset.filter(participant__status='accepted')
+            queryset = queryset.filter(status='registered')
 
         if show_past == '1':
             queryset = queryset.order_by('-slot__start')

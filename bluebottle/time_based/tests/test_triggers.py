@@ -1520,7 +1520,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
-            'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
+            'A participant has registered for a time slot for your activity "{}"'.format(self.activity.title)
         )
         self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
         self.assertEqual(

@@ -1557,6 +1557,12 @@ def applicant_is_accepted(effect):
     return effect.instance.participant.status == 'accepted'
 
 
+def is_participant(effect):
+    if 'user' not in effect.options:
+        return False
+    return effect.instance.participant.user == effect.options['user']
+
+
 @register(SlotParticipant)
 class SlotParticipantTriggers(TriggerManager):
 
@@ -1580,7 +1586,10 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
-                    conditions=[applicant_is_accepted]
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
                 )
             ]
         ),

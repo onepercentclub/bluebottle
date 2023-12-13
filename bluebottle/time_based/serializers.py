@@ -351,7 +351,7 @@ class DateActivitySlotInfoMixin():
 
     def get_location_info(self, obj):
         slots = self.get_filtered_slots(obj, only_upcoming=False)
-        is_online = not slots.filter(is_online=False).exists()
+        is_online = all([slot.is_online for slot in slots])
 
         locations = slots.values_list(
             'location__locality',

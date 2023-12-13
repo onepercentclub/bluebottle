@@ -45,7 +45,7 @@ from bluebottle.time_based.messages import (
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
     TeamSlotChangedNotification, TeamMemberJoinedNotification,
     ManagerSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantWithdrewNotification
+    NewParticipantNotification, ManagerSlotParticipantWithdrewNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -1681,6 +1681,18 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreatePeriodTimeContributionEffect,
                 CreateOverallTimeContributionEffect
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    NewParticipantNotification,
+                    conditions=[
+                        is_not_team_activity,
+                        automatically_accept
+                    ]
+                ),
             ]
         ),
 

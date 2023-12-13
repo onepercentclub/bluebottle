@@ -514,7 +514,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
     registered = State(
         _('registered'),
         'registered',
-        _("This person registered to this slot.")
+        _("This person registered.")
     )
     succeeded = State(
         _('succeeded'),
@@ -524,17 +524,17 @@ class SlotParticipantStateMachine(ModelStateMachine):
     removed = State(
         _('removed'),
         'removed',
-        _('This person no longer takes part in this slot.')
+        _('This person no longer takes part.')
     )
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('This person has withdrawn from this slot. Spent hours are retained.')
+        _('This person has withdrawn. Spent hours are retained.')
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
-        _("The slot has been cancelled. This person's contribution "
+        _("The contribution was cancelled. This person's contribution "
           "is removed and the spent hours are reset to zero.")
     )
 
@@ -571,7 +571,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
-        description=_("Accept the previously rejected person as a participant to the slot."),
+        description=_("Accept the previously rejected person as a participant."),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -580,7 +580,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         removed,
         name=_('Remove'),
-        description=_("Remove this person as a participant from the slot."),
+        description=_("Remove this person as a participant."),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -589,9 +589,9 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         withdrawn,
         name=_('Withdraw'),
-        description=_("Cancel the participation in this slot."),
+        description=_("Cancel the participation."),
         description_front_end=_(
-            "Cancel your participation in this slot. "
+            "Cancel your participation. "
             "You can rejoin the time slot as long as the activity is open."
         ),
         automatic=False,
@@ -603,7 +603,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         withdrawn,
         registered,
         name=_('Reapply'),
-        description=_("User re-applies to the slot after previously withdrawing."),
+        description=_("User re-applies after previously withdrawing."),
         automatic=False,
         conditions=[slot_is_open],
         permission=is_user,

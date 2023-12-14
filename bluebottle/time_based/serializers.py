@@ -1029,6 +1029,8 @@ class SlotParticipantSerializer(ModelSerializer):
         fields = ['id', 'participant', 'current_status', 'user', 'slot']
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
+        validators = []
+
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
         included_resources = [

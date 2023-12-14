@@ -2784,11 +2784,11 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_without_participant(self):
-        # Always should create participant first
+        # This will create a participant on the fly
         user = BlueBottleUserFactory.create()
         del self.data['data']['relationships']['participant']
         response = self.client.post(self.url, json.dumps(self.data), user=user)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):

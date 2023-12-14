@@ -3322,13 +3322,13 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.perform_get(user=self.participant.user)
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(2)
+        self.assertTotal(3)
         self.assertIncluded('slot')
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(2)
+        self.assertTotal(3)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())

@@ -1029,14 +1029,6 @@ class SlotParticipantSerializer(ModelSerializer):
         fields = ['id', 'participant', 'current_status', 'user', 'slot']
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
-        validators = [
-            # UniqueTogetherValidator(
-            #     queryset=SlotParticipant.objects.all(),
-            #     fields=('slot', 'participant')
-            # ),
-            # activity_matches_participant_and_slot
-        ]
-
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'
         included_resources = [

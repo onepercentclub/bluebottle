@@ -1034,7 +1034,7 @@ class SlotParticipantSerializer(ModelSerializer):
             #     queryset=SlotParticipant.objects.all(),
             #     fields=('slot', 'participant')
             # ),
-            activity_matches_participant_and_slot
+            # activity_matches_participant_and_slot
         ]
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):

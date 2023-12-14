@@ -1,0 +1,10 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>{{ participant_name }} has withdrawn from a time slot for your activity "{{ title }}"!</p>
+{% endblocktrans %}
+
+{% include 'mails/messages/partial/slot.html' %}
+
+{% endblock %}

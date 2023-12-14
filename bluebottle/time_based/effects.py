@@ -332,30 +332,6 @@ class LockFilledSlotsEffect(Effect):
         return _('Lock filled slots for {activity}').format(activity=self.instance.activity)
 
 
-class ResetSlotSelectionEffect(Effect):
-    """
-    Reset slot selection to 'all' when only 1 slot is left
-    """
-
-    template = 'admin/reset_slot_selection.html'
-
-    def post_save(self):
-        self.instance.activity.slot_selection = 'all'
-        self.instance.activity.save()
-
-    @property
-    def is_valid(self):
-        return (
-            len(self.instance.activity.slots.all()) <= 2 and self.instance.activity.slot_selection == 'free'
-        )
-
-    def __repr__(self):
-        return '<Effect: Reset slot selection to "all">'
-
-    def __str__(self):
-        return _('Reset slot selection to "all" for {activity}').format(activity=self.instance.activity)
-
-
 class UnsetCapacityEffect(Effect):
     """
     Unset the capacity when slot selection becomes free

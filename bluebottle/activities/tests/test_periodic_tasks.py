@@ -8,7 +8,6 @@ from django.utils.timezone import now
 from bluebottle.activities.tasks import do_good_hours_reminder
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
@@ -193,6 +192,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
             participant=self.part3,
             slot=self.slot3
         )
+        mail.outbox = []
         self.run_task(self.q2)
         self.assertEqual(len(mail.outbox), 2)
         recipients = [m.to[0] for m in mail.outbox]
@@ -205,6 +205,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
             participant=self.part3,
             slot=self.slot3
         )
+        mail.outbox = []
         self.run_task(self.q3)
         self.assertEqual(len(mail.outbox), 0, 'Q3 mails should be disabled')
 

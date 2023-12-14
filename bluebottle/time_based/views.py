@@ -4,8 +4,9 @@ import dateutil
 import icalendar
 from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
-from django.utils.timezone import utc, get_current_timezone
+from django.utils.timezone import utc, get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
+from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.models import Activity
@@ -41,7 +42,7 @@ from bluebottle.time_based.serializers import (
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer, DateSlotTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -105,32 +106,43 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
 
 
 class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+    # This view is used by activity manager when reviewing participants
+    # and by the participant when viewing their own registrations e.g. My time slots
     permission_classes = [
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
-    pagination_class = None
-
-    queryset = SlotParticipant.objects.select_related(
+    queryset = SlotParticipant.objects.prefetch_related(
         'slot', 'participant', 'participant__user'
     )
-    model = DateParticipant
 
     def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        show_past = self.request.GET.get('past', None)
+
         participant = DateParticipant.objects.select_related(
-            'activity', 'activity__initiative'
+            'activity', 'activity__initiative',
         ).get(pk=self.kwargs['participant_id'])
-        queryset = super().get_queryset()
 
         if not self.request.user.is_authenticated or (
-            self.request.user != participant.user and
-            self.request.user != participant.activity.owner and
-            self.request.user != participant.activity.initiative.owner
+                self.request.user != participant.user and
+                self.request.user != participant.activity.owner and
+                self.request.user != participant.activity.initiative.owner
         ):
-            queryset = queryset.filter(status='registered', participant__status='accepted')
+            queryset = queryset.filter(participant__status='accepted')
+            queryset = queryset.filter(status='registered')
+
+        if show_past == '1':
+            queryset = queryset.order_by('-slot__start')
+            queryset = queryset.filter(slot__start__lte=now())
+        elif show_past == '0':
+            queryset = queryset.order_by('slot__start')
+            queryset = queryset.filter(slot__start__gte=now())
+        else:
+            queryset = queryset.order_by('slot__start')
 
         return queryset.filter(
-            participant_id=self.kwargs['participant_id']
+            participant=participant
         )
 
     serializer_class = SlotParticipantSerializer
@@ -148,9 +160,9 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
         try:
-            activity_id = self.request.GET['activity']
+            activity_id = self.kwargs.get('pk', None) or self.request.GET.get('activity')
             queryset = queryset.filter(activity_id=int(activity_id))
-        except KeyError:
+        except (KeyError, TypeError):
             raise ValidationError('Missing required parameter: activity')
         except ValueError:
             raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
@@ -169,10 +181,16 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')
+        ordering = self.request.GET.get('ordering')
         try:
-            queryset = queryset.filter(
-                start__gte=dateutil.parser.parse(start).astimezone(tz)
-            )
+            if ordering == '-start':
+                queryset = queryset.filter(
+                    start__lte=dateutil.parser.parse(start).astimezone(tz)
+                )
+            else:
+                queryset = queryset.filter(
+                    start__gte=dateutil.parser.parse(start).astimezone(tz)
+                )
         except (ValueError, TypeError):
             pass
 
@@ -189,14 +207,15 @@ class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['start']
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
         'activity': [
             ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-            DeleteActivityPermission
+            OneOf(ResourcePermission, ActivityOwnerPermission)
         ]
     }
     permission_classes = [DateSlotActivityStatusPermission, ]
@@ -267,22 +286,20 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
         queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
 
+        queryset = queryset.filter(participant__status='accepted')
+
         if user.is_anonymous:
             queryset = queryset.filter(
                 status__in=('registered', 'succeeded'),
-                participant__status__in=('accepted', 'new'),
             )
-        elif user not in (
-            activity.owner,
-            activity.initiative.owner,
+        elif (
+                user != activity.owner and
+                user != activity.initiative.owner and
+                user not in activity.initiative.activity_managers.all() and
+                not user.is_staff and
+                not user.is_superuser
         ):
-            queryset = queryset.filter(
-                Q(
-                    status__in=('registered', 'succeeded'),
-                    participant__status__in=('accepted', 'new'),
-                ) |
-                Q(participant__user=user)
-            )
+            queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
         return queryset
 
@@ -298,6 +315,11 @@ class PeriodActivityRelatedParticipantList(RelatedContributorListView):
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
     queryset = DateActivity.objects.all()
+
+
+class DateSlotTransitionList(TransitionList):
+    serializer_class = DateSlotTransitionSerializer
+    queryset = DateActivitySlot.objects.all()
 
 
 class PeriodTransitionList(TransitionList):
@@ -431,6 +453,26 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         return super().queryset(*args, **kwargs).filter(
             participant__status__in=['new', 'accepted']
         )
+
+    def perform_create(self, serializer):
+        slot = serializer.validated_data['slot']
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        if 'participant' in serializer.validated_data:
+            participant = serializer.validated_data['participant']
+            if participant.activity != slot.activity:
+                raise ValidationError(_('Participant does not belong to this activity'))
+        else:
+            participant, _created = DateParticipant.objects.get_or_create(
+                activity=slot.activity,
+                user=self.request.user,
+            )
+        if slot.slot_participants.filter(participant__user=self.request.user).exists():
+            raise ValidationError(_('Participant already registered for this slot'))
+        serializer.save(participant=participant)
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -617,6 +659,22 @@ class DateParticipantExportView(ExportView):
         return self.get_object().contributors.instance_of(
             DateParticipant
         ).prefetch_related('user__segments')
+
+
+class SlotParticipantExportView(ExportView):
+    filename = "participants"
+    fields = (
+        ('participant__user__email', 'Email'),
+        ('participant__user__full_name', 'Name'),
+        ('participant__motivation', 'Motivation'),
+        ('created', 'Registration Date'),
+        ('calculated_status', 'Status'),
+    )
+
+    model = DateActivitySlot
+
+    def get_instances(self):
+        return self.get_object().slot_participants.all()
 
 
 class PeriodParticipantExportView(ExportView):

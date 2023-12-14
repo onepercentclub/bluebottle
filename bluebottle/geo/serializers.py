@@ -196,13 +196,17 @@ class GeolocationSerializer(ModelSerializer):
     class Meta(object):
         model = Geolocation
         fields = (
-            'id', 'street', 'street_number',
-            'locality', 'province',
+            'id',
+            'street',
+            'street_number',
+            'locality',
+            'province',
             'country',
             'position',
             'static_map_url',
             'formatted_address',
             'timezone',
+            'mapbox_id'
         )
 
     class JSONAPIMeta(object):

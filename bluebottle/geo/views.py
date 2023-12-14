@@ -12,7 +12,6 @@ from bluebottle.geo.serializers import (
     GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
     InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
 )
-
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 
 

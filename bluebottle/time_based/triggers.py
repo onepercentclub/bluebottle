@@ -200,6 +200,27 @@ def start_is_not_passed(effect):
     )
 
 
+def activity_automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not effect.instance.review
+
+
+def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not effect.instance.activity.review
+
+
+def needs_review(effect):
+    """
+    needs review
+    """
+    return effect.instance.activity.review
+
+
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
@@ -259,6 +280,16 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.expire,
             effects=[
                 NotificationEffect(ActivityExpiredNotification),
+            ]
+        ),
+        ModelChangedTrigger(
+            'review',
+            effects=[
+                RelatedTransitionEffect(
+                    'pending_participants',
+                    ParticipantStateMachine.accept,
+                    conditions=[activity_automatically_accept]
+                ),
             ]
         ),
     ]
@@ -995,20 +1026,6 @@ class PeriodActivityTriggers(TimeBasedTriggers):
 @ register(PeriodActivitySlot)
 class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
-
-
-def automatically_accept(effect):
-    """
-    automatically accept participants
-    """
-    return not effect.instance.activity.review
-
-
-def needs_review(effect):
-    """
-    needs review
-    """
-    return effect.instance.activity.review
 
 
 def not_team_captain(effect):

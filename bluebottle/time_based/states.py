@@ -466,7 +466,8 @@ class ParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         ContributorStateMachine.new,
         name=_('Reapply'),
-        description=_("User re-applies for the task after previously withdrawing."),
+        description=_("User re-applies for the activity after previously withdrawing."),
+        description_front_end=_("Do you want to sign up for this activity again?"),
         automatic=False,
         conditions=[activity_is_open],
         permission=is_user,
@@ -572,6 +573,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         name=_('Accept'),
         description=_("Accept the previously rejected person as a participant."),
+        description_front_end=_("Do you want to accept this person as a participant?"),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -604,6 +606,9 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         name=_('Reapply'),
         description=_("User re-applies after previously withdrawing."),
+        description_front_end=_(
+            "Do you want to join this time slot again?"
+        ),
         automatic=False,
         conditions=[slot_is_open],
         permission=is_user,

@@ -453,10 +453,11 @@ class TimeBasedDetailAPIViewTestCase():
             slot = self.activity.slots.first()
             self.assertEqual(
                 tuple(sheet.values)[0],
-                (
-                    'Email', 'Name', 'Motivation', 'Registration Date', 'Status',
-                    f'{slot.title}\n{slot.start.strftime("%d-%m-%y %H:%M %Z")}'
-                )
+                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status')
+            )
+            self.assertEqual(
+                sheet.title,
+                f'{slot.start.strftime("%d-%m-%y %H%M")} {slot.id} {slot.title}'[:29]
             )
 
         wrong_signature_response = self.client.get(export_url + '111')

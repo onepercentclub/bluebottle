@@ -20,7 +20,7 @@ from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
     ParticipantAppliedNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
     NewParticipantNotification, TeamParticipantJoinedNotification, ParticipantAddedNotification,
-    ParticipantRejectedNotification, ParticipantAddedOwnerNotification, TeamSlotChangedNotification,
+    ParticipantRejectedNotification, ManagerParticipantAddedOwnerNotification, TeamSlotChangedNotification,
     ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification,
     ParticipantCreatedNotification
 )
@@ -1654,9 +1654,8 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         self.assertTrue(slot.title in mail.outbox[0].body)
         self.assertEqual(
             mail.outbox[1].subject,
-            f'You have joined the activity "{self.activity.title}"'
+            f'You\'ve registered for a time slot for the activity "{self.activity.title}"'
         )
-        self.assertTrue(slot.title in mail.outbox[1].body)
 
     def test_join_free_review(self):
         self.activity.review = True
@@ -2038,7 +2037,7 @@ class PeriodParticipantTriggerTestCase(ParticipantTriggerTestCase, TriggerTestCa
         )
         staff = BlueBottleUserFactory.create(is_staff=True)
         with self.execute(user=staff):
-            self.assertNotificationEffect(ParticipantAddedOwnerNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
             self.assertNotificationEffect(ParticipantAddedNotification)
 
     def test_start_team(self):

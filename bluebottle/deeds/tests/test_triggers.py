@@ -25,7 +25,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
     TeamParticipantRemovedNotification, ParticipantRemovedNotification, NewParticipantNotification,
-    ParticipantAddedNotification, ParticipantAddedOwnerNotification, ParticipantWithdrewNotification
+    ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
 
@@ -398,7 +398,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute(user=self.staff_user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(ParticipantAddedNotification)
-            self.assertNotificationEffect(ParticipantAddedOwnerNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
     def test_initiate_no_start_no_end(self):
         self.defaults['activity'].start = None

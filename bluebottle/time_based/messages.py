@@ -810,7 +810,38 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
         return [self.obj.slot.activity.owner]
 
 
-class ParticipantAddedOwnerNotification(TransitionMessage):
+class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
+    """
+    Slot participant registered for a time slot for an activity
+    """
+    subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
+    template = 'messages/participant/slot_participant_registered'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_event_data(self, recipient):
+        return self.obj.slot.event_data
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+
+        return [self.obj.participant.user]
+
+
+class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     """
     A participant added notify owner
     """

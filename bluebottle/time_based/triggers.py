@@ -45,7 +45,8 @@ from bluebottle.time_based.messages import (
     ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
     TeamSlotChangedNotification, TeamMemberJoinedNotification,
     ManagerSlotParticipantRegisteredNotification,
-    NewParticipantNotification, ManagerSlotParticipantWithdrewNotification
+    NewParticipantNotification, ManagerSlotParticipantWithdrewNotification,
+    ParticipantSlotParticipantRegisteredNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -1603,6 +1604,13 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantSlotParticipantRegisteredNotification,
                     conditions=[
                         applicant_is_accepted,
                         is_participant

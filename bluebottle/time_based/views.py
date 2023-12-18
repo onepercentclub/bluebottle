@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, time
 
 import dateutil
@@ -130,8 +131,7 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
                 self.request.user != participant.activity.initiative.owner
         ):
             queryset = queryset.filter(participant__status='accepted')
-
-        queryset = queryset.filter(status='registered')
+            queryset = queryset.filter(status='registered')
 
         if show_past == '1':
             queryset = queryset.order_by('-slot__start')
@@ -610,21 +610,17 @@ class DateParticipantExportView(ExportView):
     filename = "participants"
 
     fields = (
-        ('user__email', 'Email'),
-        ('user__full_name', 'Name'),
-        ('motivation', 'Motivation'),
-        ('created', 'Registration Date'),
-        ('status', 'Status'),
+        ('participant__user__email', 'Email'),
+        ('participant__user__full_name', 'Name'),
+        ('participant__motivation', 'Motivation'),
+        ('participant__created', 'Registration Date'),
+        ('calculated_status', 'Status'),
     )
 
     model = DateActivity
 
     def get_row(self, instance):
         row = []
-        slots = dict(
-            (str(slot_participant.slot.pk), slot_participant.status)
-            for slot_participant in instance.slot_participants.all()
-        )
 
         for (field, name) in self.get_fields():
             if field.startswith('segment.'):
@@ -635,26 +631,38 @@ class DateParticipantExportView(ExportView):
                         ).values_list('name', flat=True)
                     )
                 )
-            elif field.startswith('slot.'):
-                row.append(slots.get(field.split('.')[-1], '-'))
             else:
                 row.append(prep_field(self.request, instance, field))
 
         return row
 
+    def write_data(self, workbook):
+        activity = self.get_object()
+        bold = workbook.add_format({'bold': True})
+        for slot in activity.active_slots.filter(start__gt=now()).order_by('start'):
+            title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
+            worksheet = workbook.add_worksheet(title)
+            worksheet.set_column(0, 4, 30)
+            c = 0
+            for field in self.get_fields():
+                worksheet.write(0, c, field[1], bold)
+                c += 1
+            r = 0
+
+            for participant in slot.slot_participants.all():
+                row = self.get_row(participant)
+                r += 1
+                worksheet.write_row(r, 0, row)
+
     def get_fields(self):
         fields = super().get_fields()
-
-        slots = tuple(
-            (f"slot.{slot.pk}", f"{slot.title or str(slot)}\n{slot.start.strftime('%d-%m-%y %H:%M %Z')}")
-            for slot in self.get_object().active_slots.order_by('start')
-        )
 
         segments = tuple(
             (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
         )
 
-        return fields + segments + slots
+        return fields + segments
 
     def get_instances(self):
         return self.get_object().contributors.instance_of(

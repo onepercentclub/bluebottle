@@ -113,6 +113,10 @@ class TimeBasedActivity(Activity):
         return self.contributors.instance_of(PeriodParticipant, DateParticipant)
 
     @property
+    def pending_participants(self):
+        return self.participants.filter(status='new')
+
+    @property
     def cancelled_participants(self):
         return self.participants.filter(status='cancelled')
 

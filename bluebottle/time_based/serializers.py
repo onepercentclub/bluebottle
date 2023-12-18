@@ -916,6 +916,7 @@ class TeamMemberSerializer(BaseContributorSerializer):
 
 
 class DateParticipantSerializer(ParticipantSerializer):
+    slot_count = serializers.SerializerMethodField()
 
     slot_participants = HyperlinkedRelatedField(
         many=True,
@@ -926,9 +927,12 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
 
+    def get_slot_count(self, obj):
+        return obj.slot_participants.count()
+
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions',)
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions', 'slot_count')
         fields = ParticipantSerializer.Meta.fields + ('slot_participants', )
         validators = [
             UniqueTogetherValidator(
@@ -1029,13 +1033,7 @@ class SlotParticipantSerializer(ModelSerializer):
         fields = ['id', 'participant', 'current_status', 'user', 'slot']
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
-        validators = [
-            # UniqueTogetherValidator(
-            #     queryset=SlotParticipant.objects.all(),
-            #     fields=('slot', 'participant')
-            # ),
-            # activity_matches_participant_and_slot
-        ]
+        validators = []
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/slot-participants'

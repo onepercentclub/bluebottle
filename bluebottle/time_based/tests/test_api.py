@@ -453,10 +453,11 @@ class TimeBasedDetailAPIViewTestCase():
             slot = self.activity.slots.first()
             self.assertEqual(
                 tuple(sheet.values)[0],
-                (
-                    'Email', 'Name', 'Motivation', 'Registration Date', 'Status',
-                    f'{slot.title}\n{slot.start.strftime("%d-%m-%y %H:%M %Z")}'
-                )
+                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status')
+            )
+            self.assertEqual(
+                sheet.title,
+                f'{slot.start.strftime("%d-%m-%y %H%M")} {slot.id} {slot.title}'[:29]
             )
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -503,11 +504,17 @@ class TimeBasedDetailAPIViewTestCase():
         user.segments.add(workshop)
         user.segments.add(metal)
         user.segments.add(classical)
-        self.participant_factory.create(
+        participant = self.participant_factory.create(
             activity=self.activity,
             user=user,
             status='accepted'
         )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(
+                slot=slot,
+                participant=participant,
+                status='accepted'
+            )
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -3322,13 +3329,13 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.perform_get(user=self.participant.user)
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(2)
+        self.assertTotal(3)
         self.assertIncluded('slot')
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(2)
+        self.assertTotal(3)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())

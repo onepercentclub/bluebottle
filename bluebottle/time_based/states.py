@@ -271,6 +271,9 @@ class ActivitySlotStateMachine(ModelStateMachine):
         description=_(
             'Reopen a cancelled slot. People can apply again. Contributions are counted again'
         ),
+        description_front_end=_(
+            "Reopening a time slot will allow people to join again and their contributions will be counted."
+        )
     )
 
     lock = Transition(

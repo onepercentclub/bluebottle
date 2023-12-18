@@ -33,7 +33,7 @@ from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
-    NewParticipantNotification, ParticipantAddedOwnerNotification,
+    NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
@@ -318,7 +318,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_user]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification,
+                    ManagerParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
                 ),
                 NotificationEffect(

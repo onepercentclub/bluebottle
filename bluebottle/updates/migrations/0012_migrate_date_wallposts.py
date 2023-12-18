@@ -38,21 +38,22 @@ def migrate_date_wallposts(apps, schema_editor):
         )
         migrate_related_reactions(wallpost, update, Update)
 
-        photos = MediaWallpostPhoto.objects.filter(mediawallpost_id=wallpost.pk, deleted__isnull=True)
-        for photo in photos:
-            try:
-                image = Image.objects.create(
-                    file=photo.photo,
-                    owner=wallpost.author,
-                    used=True
-                )
-                UpdateImage.objects.create(
-                    image=image,
-                    update=update
-                )
-                print(f'created image for update: {update.pk}')
-            except FileNotFoundError:
-                pass
+        if wallpost.author:
+            photos = MediaWallpostPhoto.objects.filter(mediawallpost_id=wallpost.pk, deleted__isnull=True)
+            for photo in photos:
+                try:
+                    image = Image.objects.create(
+                        file=photo.photo,
+                        owner=wallpost.author,
+                        used=True
+                    )
+                    UpdateImage.objects.create(
+                        image=image,
+                        update=update
+                    )
+                    print(f'created image for update: {update.pk}')
+                except FileNotFoundError:
+                    pass
 
     for wallpost in TextWallpost.objects.filter(content_type=deed_content_type):
         update = Update.objects.create(

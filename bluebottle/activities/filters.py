@@ -145,7 +145,8 @@ class MatchingFacet(BooleanFacet):
                     'lat': float(place.position[1]),
                     'lon': float(place.position[0]),
                 }
-            )
+            ) | Term(is_online=True)
+
             filters = filters & distance_filter
 
         return filters
@@ -364,7 +365,7 @@ class ActivitySearch(Search):
 
         if 'initiative.id' not in self._filters:
             search = search.filter(
-                Terms(status=['succeeded', 'open', 'full', 'partially_funded'])
+                Terms(status=['succeeded', 'open', 'full', 'partially_funded', 'refunded'])
             )
 
         return search

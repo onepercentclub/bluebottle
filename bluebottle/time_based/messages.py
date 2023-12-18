@@ -841,7 +841,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
         return [self.obj.participant.user]
 
 
-class ParticipantAddedOwnerNotification(TransitionMessage):
+class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     """
     A participant added notify owner
     """

@@ -39,14 +39,14 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
-    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
+    ParticipantWithdrewNotification, ManagerParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
-    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
+    ParticipantRemovedOwnerNotification, ParticipantAppliedNotification, TeamParticipantAppliedNotification,
+    SlotCancelledNotification,
     TeamSlotChangedNotification, TeamMemberJoinedNotification,
     ManagerSlotParticipantRegisteredNotification,
     NewParticipantNotification, ManagerSlotParticipantWithdrewNotification,
-    ParticipantSlotParticipantRegisteredNotification
+    ParticipantSlotParticipantRegisteredNotification, ParticipantJoinedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -1305,7 +1305,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification
+                    ManagerParticipantAddedOwnerNotification
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1358,13 +1358,6 @@ class ParticipantTriggers(ContributorTriggers):
                     TeamStateMachine.accept,
                     conditions=[
                         has_team
-                    ]
-                ),
-                NotificationEffect(
-                    ParticipantJoinedNotification,
-                    conditions=[
-                        automatically_accept,
-                        is_not_team_activity
                     ]
                 ),
                 NotificationEffect(
@@ -1600,9 +1593,6 @@ class SlotParticipantTriggers(TriggerManager):
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(
-                    ParticipantChangedNotification
-                ),
-                NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[
                         applicant_is_accepted,
@@ -1716,6 +1706,13 @@ class PeriodParticipantTriggers(ParticipantTriggers):
                     conditions=[
                         is_not_team_activity,
                         automatically_accept
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantJoinedNotification,
+                    conditions=[
+                        automatically_accept,
+                        is_not_team_activity
                     ]
                 ),
             ]

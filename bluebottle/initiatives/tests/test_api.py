@@ -369,6 +369,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 'name': 'request_changes',
                 'target': 'needs_work',
                 'label': 'Needs work',
+                'passed_label': None,
                 'description': "The status of the initiative is set to 'Needs work'. The " +
                                "initiator can edit and resubmit the initiative. Don't forget " +
                                "to inform the initiator of the necessary adjustments."

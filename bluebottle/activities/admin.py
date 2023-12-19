@@ -341,6 +341,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'image',
         'video_url',
         'highlight',
+        'next_step_link',
+        'next_step_title',
+        'next_step_description',
     )
 
     status_fields = (
@@ -348,7 +351,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'updated',
         'has_deleted_data',
         'status',
-        'states'
+        'states',
     )
 
     def get_inline_instances(self, request, obj=None):
